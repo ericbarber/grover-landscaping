@@ -1,53 +1,62 @@
+mod db;
+
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
+use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Clone)]
+struct AppState {
+    jobs: JobRepository,
+}
 
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: &'static str,
     service: &'static str,
+    persistence: &'static str,
 }
 
-#[derive(Debug, Serialize)]
-struct JobSummary {
-    id: String,
-    customer_name: String,
-    property_address: String,
-    status: String,
-    scheduled_date: String,
-    before_photos: u32,
-    after_photos: u32,
-    checklist_items: u32,
-    completed_checklist_items: u32,
+#[derive(Clone, Debug, Serialize)]
+pub struct JobSummary {
+    pub id: String,
+    pub customer_name: String,
+    pub property_address: String,
+    pub status: String,
+    pub scheduled_date: String,
+    pub before_photos: u32,
+    pub after_photos: u32,
+    pub checklist_items: u32,
+    pub completed_checklist_items: u32,
 }
 
-#[derive(Debug, Serialize)]
-struct JobDetail {
-    id: String,
-    customer_name: String,
-    property_address: String,
-    status: String,
-    scheduled_date: String,
-    before_photos: u32,
-    after_photos: u32,
-    checklist_items: u32,
-    completed_checklist_items: u32,
-    checklist: Vec<ChecklistItem>,
+#[derive(Clone, Debug, Serialize)]
+pub struct JobDetail {
+    pub id: String,
+    pub customer_name: String,
+    pub property_address: String,
+    pub status: String,
+    pub scheduled_date: String,
+    pub before_photos: u32,
+    pub after_photos: u32,
+    pub checklist_items: u32,
+    pub completed_checklist_items: u32,
+    pub checklist: Vec<ChecklistItem>,
 }
 
-#[derive(Debug, Serialize)]
-struct ChecklistItem {
-    id: String,
-    label: String,
-    completed: bool,
+#[derive(Clone, Debug, Serialize)]
+pub struct ChecklistItem {
+    pub id: String,
+    pub label: String,
+    pub completed: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -57,20 +66,20 @@ struct ActionResponse {
 }
 
 #[derive(Debug, Deserialize)]
-struct PhotoUploadRequest {
-    file_name: String,
-    content_type: String,
-    photo_type: String,
+pub struct PhotoUploadRequest {
+    pub file_name: String,
+    pub content_type: String,
+    pub photo_type: String,
 }
 
-#[derive(Debug, Serialize)]
-struct PhotoUploadResponse {
-    status: &'static str,
-    job_id: String,
-    photo_id: String,
-    upload_mode: &'static str,
-    upload_url: String,
-    object_key: String,
+#[derive(Clone, Debug, Serialize)]
+pub struct PhotoUploadResponse {
+    pub status: &'static str,
+    pub job_id: String,
+    pub photo_id: String,
+    pub upload_mode: &'static str,
+    pub upload_url: String,
+    pub object_key: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -103,141 +112,97 @@ async fn main() {
 }
 
 fn app() -> Router {
+    let persistence = DatabaseConfig::from_env()
+        .map(|config| {
+            tracing::info!(database_url_configured = !config.database_url.is_empty(), "database URL detected");
+            "database-configured"
+        })
+        .unwrap_or("seed-local");
+
+    app_with_state(Arc::new(AppState {
+        jobs: JobRepository::new(),
+    }), persistence)
+}
+
+fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
     Router::new()
-        .route("/health", get(health))
+        .route("/health", get(move || health(persistence)))
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/start", post(start_job))
         .route("/jobs/{id}/complete", post(complete_job))
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
         .route("/jobs/{id}/photos/complete", post(complete_photo_upload))
+        .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
 }
 
-async fn health() -> impl IntoResponse {
+async fn health(persistence: &'static str) -> impl IntoResponse {
     Json(HealthResponse {
         status: "ok",
         service: "grover-landscaping-api",
+        persistence,
     })
 }
 
-async fn list_jobs() -> impl IntoResponse {
-    Json(vec![
-        JobSummary {
-            id: "job_1001".to_string(),
-            customer_name: "Sample Customer".to_string(),
-            property_address: "123 Oak Street".to_string(),
-            status: "scheduled".to_string(),
-            scheduled_date: "2026-06-15".to_string(),
-            before_photos: 0,
-            after_photos: 0,
-            checklist_items: 4,
-            completed_checklist_items: 0,
-        },
-        JobSummary {
-            id: "job_1002".to_string(),
-            customer_name: "Demo Property Owner".to_string(),
-            property_address: "456 Maple Avenue".to_string(),
-            status: "in_progress".to_string(),
-            scheduled_date: "2026-06-15".to_string(),
-            before_photos: 3,
-            after_photos: 1,
-            checklist_items: 4,
-            completed_checklist_items: 2,
-        },
-    ])
+async fn list_jobs(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    Json(state.jobs.list_jobs().await)
 }
 
-async fn get_job(Path(id): Path<String>) -> impl IntoResponse {
-    Json(JobDetail {
-        id,
-        customer_name: "Sample Customer".to_string(),
-        property_address: "123 Oak Street".to_string(),
-        status: "scheduled".to_string(),
-        scheduled_date: "2026-06-15".to_string(),
-        before_photos: 0,
-        after_photos: 0,
-        checklist_items: 4,
-        completed_checklist_items: 0,
-        checklist: vec![
-            ChecklistItem {
-                id: "before-photos".to_string(),
-                label: "Capture before photos".to_string(),
-                completed: false,
-            },
-            ChecklistItem {
-                id: "yard-service".to_string(),
-                label: "Complete yard service".to_string(),
-                completed: false,
-            },
-            ChecklistItem {
-                id: "after-photos".to_string(),
-                label: "Capture after photos".to_string(),
-                completed: false,
-            },
-            ChecklistItem {
-                id: "completion-notes".to_string(),
-                label: "Submit completion notes".to_string(),
-                completed: false,
-            },
-        ],
-    })
+async fn get_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
+    Json(state.jobs.get_job(id).await)
 }
 
-async fn start_job(Path(id): Path<String>) -> impl IntoResponse {
+async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
+    let message = state.jobs.start_job(&id).await;
+
     (
         StatusCode::ACCEPTED,
         Json(ActionResponse {
             status: "accepted",
-            message: format!("Job {id} has been marked as started."),
+            message,
         }),
     )
 }
 
-async fn complete_job(Path(id): Path<String>) -> impl IntoResponse {
+async fn complete_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
+    let message = state.jobs.complete_job(&id).await;
+
     (
         StatusCode::ACCEPTED,
         Json(ActionResponse {
             status: "accepted",
-            message: format!("Job {id} has been marked as complete."),
+            message,
         }),
     )
 }
 
 async fn create_local_photo_upload(
+    State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
     Json(request): Json<PhotoUploadRequest>,
 ) -> impl IntoResponse {
-    let safe_file_name = request.file_name.replace('/', "-");
-    let photo_id = format!("photo_{}_{}", id, request.photo_type);
-    let object_key = format!(
-        "local/jobs/{id}/{photo_type}/{safe_file_name}",
-        photo_type = request.photo_type
-    );
+    let ticket = state.jobs.create_photo_upload(id, request).await;
 
-    (
-        StatusCode::CREATED,
-        Json(PhotoUploadResponse {
-            status: "created",
-            job_id: id,
-            photo_id,
-            upload_mode: "local-placeholder",
-            upload_url: format!("local://{object_key}?content_type={}", request.content_type),
-            object_key,
-        }),
-    )
+    (StatusCode::CREATED, Json(ticket))
 }
 
 async fn complete_photo_upload(
+    State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
     Json(request): Json<PhotoCompleteRequest>,
 ) -> impl IntoResponse {
+    let message = state
+        .jobs
+        .complete_photo_upload(&id, &request.photo_id)
+        .await;
+
     (
         StatusCode::ACCEPTED,
         Json(ActionResponse {
             status: "accepted",
-            message: format!("Photo {} for job {id} has been marked uploaded.", request.photo_id),
+            message,
         }),
     )
 }
