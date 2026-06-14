@@ -10,6 +10,7 @@ import {
   type PhotoUploadTicket,
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
+import { DayPlanPanel } from './components/DayPlanPanel';
 import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
@@ -394,7 +395,9 @@ export function App() {
 
       <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
         <div>
-          <div className="mb-5 flex items-center justify-between">
+          <DayPlanPanel />
+
+          <div className="mt-6 mb-5 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-950">Assigned jobs</h2>
               <p className="text-sm text-slate-600">{statusMessage}</p>
