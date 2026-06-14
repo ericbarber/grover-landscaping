@@ -1,5 +1,7 @@
+mod accounts;
 mod db;
 
+use accounts::AccountRepository;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -16,6 +18,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[derive(Clone)]
 struct AppState {
     jobs: JobRepository,
+    accounts: AccountRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -119,9 +122,13 @@ fn app() -> Router {
         })
         .unwrap_or("seed-local");
 
-    app_with_state(Arc::new(AppState {
-        jobs: JobRepository::new(),
-    }), persistence)
+    app_with_state(
+        Arc::new(AppState {
+            jobs: JobRepository::new(),
+            accounts: AccountRepository::new(),
+        }),
+        persistence,
+    )
 }
 
 fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
@@ -129,6 +136,7 @@ fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
         .route("/health", get(move || health(persistence)))
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
+        .route("/jobs/{id}/account", get(get_account_for_job))
         .route("/jobs/{id}/start", post(start_job))
         .route("/jobs/{id}/complete", post(complete_job))
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
@@ -152,6 +160,13 @@ async fn list_jobs(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
 async fn get_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
     Json(state.jobs.get_job(id).await)
+}
+
+async fn get_account_for_job(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.accounts.get_account_for_job(&id).await)
 }
 
 async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
@@ -246,6 +261,27 @@ mod tests {
 
         assert!(json.as_array().unwrap().len() >= 2);
         assert_eq!(json[0]["before_photos"], 0);
+    }
+
+    #[tokio::test]
+    async fn account_endpoint_returns_status_for_job() {
+        let response = app()
+            .oneshot(
+                Request::builder()
+                    .uri("/jobs/job_1002/account")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["account_id"], "acct_1002");
+        assert_eq!(json["payment_status"], "paid");
     }
 
     #[tokio::test]
