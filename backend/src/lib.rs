@@ -1,3 +1,4 @@
+pub mod accounts;
 pub mod db;
 
 use serde::{Deserialize, Serialize};
