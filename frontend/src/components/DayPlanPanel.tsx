@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
+import { updateStopProgress, type StopProgressStatus } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 
 type DayPlanPanelProps = {
   onSelectJob?: (jobId: string) => void;
 };
 
-type LocalStopState = 'pending' | 'in_progress' | 'finished';
-
-type StopStateMap = Record<string, LocalStopState>;
+type StopStateMap = Record<string, StopProgressStatus>;
 
 function storageKey(dayPlanId: string): string {
   return `grover.dayPlan.${dayPlanId}.stopStates`;
@@ -51,12 +50,19 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
     clickMatchingJobCard(customerName);
   }
 
+  function persistStopState(stopId: string, next: StopStateMap) {
+    saveStopStates(dayPlan.id, next);
+    void updateStopProgress(dayPlan.id, stopId, next[stopId]).catch(() => {
+      saveStopStates(dayPlan.id, next);
+    });
+  }
+
   function advanceStop(stopId: string) {
     setStopStates((current) => {
       const currentState = current[stopId] ?? 'pending';
       const nextState = currentState === 'pending' ? 'in_progress' : 'finished';
       const next = { ...current, [stopId]: nextState };
-      saveStopStates(dayPlan.id, next);
+      persistStopState(stopId, next);
       return next;
     });
   }
