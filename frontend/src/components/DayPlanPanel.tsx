@@ -11,13 +11,22 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [source, setSource] = useState<'api' | 'local'>('local');
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
 
-  function handleStopClick(jobId: string) {
+  function clickMatchingJobCard(customerName: string) {
+    const cards = Array.from(document.querySelectorAll('article'));
+    const card = cards.find((candidate) => candidate.textContent?.includes(customerName));
+    const button = card?.querySelector('button');
+
+    button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  }
+
+  function handleStopClick(jobId: string, customerName: string) {
     if (onSelectJob) {
       onSelectJob(jobId);
       return;
     }
 
     window.location.hash = `job-${jobId}`;
+    clickMatchingJobCard(customerName);
   }
 
   useEffect(() => {
@@ -76,7 +85,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
           <button
             key={stop.id}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-emerald-400 hover:bg-emerald-50"
-            onClick={() => handleStopClick(stop.jobId)}
+            onClick={() => handleStopClick(stop.jobId, stop.customerName)}
           >
             <div className="flex items-start gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
