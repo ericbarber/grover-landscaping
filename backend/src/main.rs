@@ -45,7 +45,8 @@ struct ActionResponse {
 async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG").unwrap_or_else(|_| "grover_landscaping_api=debug,tower_http=debug".into()),
+            std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| "grover_landscaping_api=debug,tower_http=debug".into()),
         ))
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -68,9 +69,9 @@ fn app() -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/jobs", get(list_jobs))
-        .route("/jobs/:id", get(get_job))
-        .route("/jobs/:id/start", post(start_job))
-        .route("/jobs/:id/complete", post(complete_job))
+        .route("/jobs/{id}", get(get_job))
+        .route("/jobs/{id}/start", post(start_job))
+        .route("/jobs/{id}/complete", post(complete_job))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
 }
