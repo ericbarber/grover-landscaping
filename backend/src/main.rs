@@ -1,5 +1,6 @@
 mod accounts;
 mod db;
+mod stop_progress;
 
 use accounts::AccountRepository;
 use axum::{
@@ -12,6 +13,7 @@ use axum::{
 use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
+use stop_progress::{local_stop_progress_response, StopProgressRequest};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -141,6 +143,7 @@ fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
         .route("/jobs/{id}/complete", post(complete_job))
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
         .route("/jobs/{id}/photos/complete", post(complete_photo_upload))
+        .route("/day-plans/{day_plan_id}/stops/{stop_id}/status", post(update_stop_progress))
         .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
@@ -167,6 +170,17 @@ async fn get_account_for_job(
     Path(id): Path<String>,
 ) -> impl IntoResponse {
     Json(state.accounts.get_account_for_job(&id).await)
+}
+
+async fn update_stop_progress(
+    Path((day_plan_id, stop_id)): Path<(String, String)>,
+    Json(request): Json<StopProgressRequest>,
+) -> impl IntoResponse {
+    Json(local_stop_progress_response(
+        &day_plan_id,
+        &stop_id,
+        &request.status,
+    ))
 }
 
 async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
@@ -282,6 +296,33 @@ mod tests {
 
         assert_eq!(json["account_id"], "acct_1002");
         assert_eq!(json["payment_status"], "paid");
+    }
+
+    #[tokio::test]
+    async fn stop_progress_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({ "status": "in_progress" });
+
+        let response = app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_15_crew_1001/stops/stop_1001/status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["day_plan_id"], "day_plan_2026_06_15_crew_1001");
+        assert_eq!(json["stop_id"], "stop_1001");
+        assert_eq!(json["status"], "in_progress");
+        assert_eq!(json["persisted"], false);
     }
 
     #[tokio::test]
