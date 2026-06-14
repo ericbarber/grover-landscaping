@@ -8,10 +8,29 @@ type DayPlanPanelProps = {
 
 type LocalStopState = 'pending' | 'in_progress' | 'finished';
 
+type StopStateMap = Record<string, LocalStopState>;
+
+function storageKey(dayPlanId: string): string {
+  return `grover.dayPlan.${dayPlanId}.stopStates`;
+}
+
+function loadStopStates(dayPlanId: string): StopStateMap {
+  try {
+    const rawValue = window.localStorage.getItem(storageKey(dayPlanId));
+    return rawValue ? (JSON.parse(rawValue) as StopStateMap) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStopStates(dayPlanId: string, stopStates: StopStateMap) {
+  window.localStorage.setItem(storageKey(dayPlanId), JSON.stringify(stopStates));
+}
+
 export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
-  const [stopStates, setStopStates] = useState<Record<string, LocalStopState>>({});
+  const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
 
   function clickMatchingJobCard(customerName: string) {
@@ -36,7 +55,9 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
     setStopStates((current) => {
       const currentState = current[stopId] ?? 'pending';
       const nextState = currentState === 'pending' ? 'in_progress' : 'finished';
-      return { ...current, [stopId]: nextState };
+      const next = { ...current, [stopId]: nextState };
+      saveStopStates(dayPlan.id, next);
+      return next;
     });
   }
 
@@ -47,12 +68,14 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
       .then((apiDayPlan) => {
         if (isMounted) {
           setDayPlan(apiDayPlan);
+          setStopStates(loadStopStates(apiDayPlan.id));
           setSource('api');
         }
       })
       .catch(() => {
         if (isMounted) {
           setDayPlan(seedDayPlan);
+          setStopStates(loadStopStates(seedDayPlan.id));
           setSource('local');
         }
       });
