@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { fetchAccountStatus, type AccountStatus } from '../api/client';
 import {
   billingModelLabel,
   getAccountSummaryForJob,
@@ -9,7 +11,31 @@ type AccountStatusCardProps = {
 };
 
 export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
-  const account = getAccountSummaryForJob(jobId);
+  const [account, setAccount] = useState<AccountStatus>(() => getAccountSummaryForJob(jobId));
+  const [source, setSource] = useState<'api' | 'local'>('local');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchAccountStatus(jobId)
+      .then((apiAccount) => {
+        if (isMounted) {
+          setAccount(apiAccount);
+          setSource('api');
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAccount(getAccountSummaryForJob(jobId));
+          setSource('local');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [jobId]);
+
   const accountIsCurrent =
     account.paymentStatus === 'paid' || account.paymentStatus === 'not_required' || account.paymentStatus === 'waived';
 
@@ -19,6 +45,7 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Account status</p>
           <h3 className="mt-1 text-lg font-bold text-slate-950">{billingModelLabel(account.billingModel)}</h3>
+          <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
