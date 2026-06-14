@@ -1,4 +1,5 @@
 pub mod accounts;
+pub mod day_plans;
 pub mod db;
 
 use serde::{Deserialize, Serialize};
