@@ -1,33 +1,47 @@
 # Grover Landscaping
 
-Grover Landscaping is a proof-of-completion platform for yard care and landscaping crews. The application will help crews capture job photos, track service completion, and provide customers or managers with a reliable visual record of completed work.
+Grover Landscaping is a mobile-first proof-of-completion application for yard care and landscaping crews. Crews can view assigned jobs, follow a daily route, track stop progress, capture service photo placeholders, complete checklists, and prepare completion reports for customer or manager review.
 
-## Target Architecture
+The project is built as a Rust + React application with local-first development support. The frontend can run with seeded browser data when the backend is unavailable, and the backend exposes the first set of job, account, photo-ticket, and stop-progress APIs.
 
-- AWS-first deployment model
-- Rust backend services
-- React and Tailwind mobile-first frontend
-- PostgreSQL for application data
-- Amazon S3 for direct photo storage
-- GitHub Actions for CI/CD automation
+## Features
 
-## Initial Repository Layout
+- Crew completion dashboard
+- Daily crew route / day-plan panel
+- Ordered route stops with drive and service estimates
+- Local stop progress tracking with browser persistence
+- Assigned job list and job detail view
+- Start-job and complete-job actions
+- Before / after / issue photo placeholder flow
+- Completion checklist and completion report panel
+- Customer account status display
+- Browser fallback mode for demos and frontend-only development
+- Rust API endpoints for jobs, accounts, photo tickets, and stop progress
+- PostgreSQL migrations for job and account foundations
+- Docker Compose local stack
+- GitHub Actions CI configuration
+
+## Tech Stack
+
+| Area | Technology |
+| --- | --- |
+| Backend | Rust, Axum, Tokio, SQLx |
+| Frontend | React, TypeScript, Vite, Tailwind CSS |
+| Database | PostgreSQL |
+| Local runtime | Docker Compose |
+| Cloud direction | AWS, S3, RDS, ECS/App Runner or Fargate, Amplify/CloudFront |
+| CI | GitHub Actions |
+
+## Repository Layout
 
 ```text
-.github/workflows/  CI/CD workflows
-backend/            Rust backend application
-frontend/           React/Tailwind frontend application
-infra/              Infrastructure as code
-docs/               Architecture and product planning
+.github/workflows/  GitHub Actions workflows
+backend/            Rust API service
+frontend/           React/Tailwind crew application
+infra/              Infrastructure notes and future IaC location
+docs/               Architecture, data model, and development notes
 scripts/            Local developer utility scripts
 ```
-
-## Development Workflow
-
-1. Work happens on feature branches.
-2. Pull requests run CI checks.
-3. Required tests must pass before merge.
-4. Merges to `main` become candidates for deployment.
 
 ## Local Development
 
@@ -37,19 +51,19 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Run the full local stack with Docker Compose:
+Start the local stack:
 
 ```bash
 docker compose up --build
 ```
 
-Apply local database migrations after PostgreSQL is healthy:
+Apply database migrations after PostgreSQL is healthy:
 
 ```bash
 bash scripts/apply-local-migrations.sh
 ```
 
-The local services will be available at:
+Local services:
 
 ```text
 Frontend: http://localhost:5173
@@ -58,7 +72,7 @@ Health:   http://localhost:8080/health
 Database: localhost:5432
 ```
 
-You can also run only the frontend. It will use seed data and browser-local placeholders if the backend is not reachable:
+The frontend can also run without the backend. In that mode it uses seed data, local photo placeholders, and browser storage for route progress.
 
 ```bash
 cd frontend
@@ -66,7 +80,7 @@ npm install
 npm run dev
 ```
 
-Run backend checks directly:
+## Backend Commands
 
 ```bash
 cd backend
@@ -75,7 +89,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 ```
 
-Run frontend checks directly:
+## Frontend Commands
 
 ```bash
 cd frontend
@@ -85,22 +99,66 @@ npm test
 npm run build
 ```
 
-## Current Capabilities
+## API Endpoints
 
-The project now has a working first vertical slice:
+Current backend endpoints include:
 
-- Rust Axum API skeleton
-- React/Tailwind crew dashboard
-- Backend `/jobs` and `/jobs/{id}` API integration
-- Start-job and complete-job actions
-- Local photo upload-ticket placeholder flow
-- Browser-local fallback when the backend is not running
-- Initial PostgreSQL schema migration
-- Repository abstraction ready for database-backed handlers
-- Backend and frontend tests
-- GitHub Actions CI
-- Docker Compose local stack
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | API health check |
+| GET | `/jobs` | List assigned jobs |
+| GET | `/jobs/{id}` | Read job detail |
+| GET | `/jobs/{id}/account` | Read account status for a job |
+| POST | `/jobs/{id}/start` | Mark a job started |
+| POST | `/jobs/{id}/complete` | Mark a job complete |
+| POST | `/jobs/{id}/photos/presign` | Create a local photo upload ticket |
+| POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete |
+| POST | `/day-plans/{day_plan_id}/stops/{stop_id}/status` | Update crew stop progress |
 
-## Next Step
+The day-plan frontend client is also prepared for:
 
-The next step is to add the Rust database client dependency and switch `JobRepository` from seeded in-memory data to PostgreSQL queries.
+```text
+GET /crews/{crew_id}/day-plan/today
+```
+
+That route is not yet backed by a persisted day-plan repository.
+
+## Data and Persistence
+
+The project currently includes migrations for:
+
+- Service jobs
+- Job checklist items
+- Job photos
+- Customer accounts
+- Account status and service tracking foundations
+
+The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
+
+## Frontend Behavior
+
+The crew dashboard is designed to work on mobile devices. It currently supports:
+
+- Viewing today’s route
+- Opening jobs from route stops
+- Tracking each stop as pending, in progress, or finished
+- Persisting stop progress in browser storage
+- Viewing account status in the completion report
+- Creating local photo upload tickets
+- Preparing a customer-facing completion summary
+
+## Deployment Direction
+
+The application is structured for AWS deployment:
+
+- Frontend hosted with Amplify, S3/CloudFront, or equivalent static hosting
+- Backend hosted with ECS Fargate, App Runner, or a similar container runtime
+- PostgreSQL hosted with RDS or Aurora PostgreSQL
+- Photo storage with S3 presigned uploads
+- Secrets managed with AWS Secrets Manager or SSM Parameter Store
+
+The repository includes an `amplify.yml` for frontend hosting setup and an `infra/` directory for deployment documentation and future infrastructure code.
+
+## Development Notes
+
+This repository is currently in active MVP development. Prefer small vertical slices that keep the app runnable locally. The frontend should continue to degrade gracefully when the backend or database is unavailable.
