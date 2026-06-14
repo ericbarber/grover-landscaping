@@ -1,3 +1,8 @@
+#[path = "postgres_read.rs"]
+mod postgres_read;
+#[path = "postgres_write.rs"]
+mod postgres_write;
+
 use crate::{ChecklistItem, JobDetail, JobSummary, PhotoUploadRequest, PhotoUploadResponse};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
@@ -21,7 +26,10 @@ pub struct JobRepository {
 
 impl JobRepository {
     pub fn new() -> Self {
-        Self { pool: None }
+        let pool = DatabaseConfig::from_env()
+            .and_then(|config| PgPoolOptions::new().max_connections(5).connect_lazy(&config.database_url).ok());
+
+        Self { pool }
     }
 
     pub async fn connect(config: &DatabaseConfig) -> Result<Self, sqlx::Error> {
@@ -36,18 +44,38 @@ impl JobRepository {
     }
 
     pub async fn list_jobs(&self) -> Vec<JobSummary> {
+        if let Some(pool) = &self.pool {
+            if let Ok(jobs) = postgres_read::list_jobs(pool).await {
+                return jobs;
+            }
+        }
+
         seed_job_summaries()
     }
 
     pub async fn get_job(&self, id: String) -> JobDetail {
+        if let Some(pool) = &self.pool {
+            if let Ok(Some(job)) = postgres_read::get_job(pool, &id).await {
+                return job;
+            }
+        }
+
         seed_job_detail(id)
     }
 
     pub async fn start_job(&self, id: &str) -> String {
+        if let Some(pool) = &self.pool {
+            let _ = postgres_write::start_job(pool, id).await;
+        }
+
         format!("Job {id} has been marked as started.")
     }
 
     pub async fn complete_job(&self, id: &str) -> String {
+        if let Some(pool) = &self.pool {
+            let _ = postgres_write::complete_job(pool, id).await;
+        }
+
         format!("Job {id} has been marked as complete.")
     }
 
@@ -63,17 +91,26 @@ impl JobRepository {
             photo_type = request.photo_type
         );
 
-        PhotoUploadResponse {
-            status: "created",
-            job_id,
-            photo_id,
-            upload_mode: "local-placeholder",
-            upload_url: format!("local://{object_key}?content_type={}", request.content_type),
-            object_key,
+        if let Some(pool) = &self.pool {
+            let _ = postgres_write::create_photo_upload(
+                pool,
+                &job_id,
+                &request,
+                &photo_id,
+                &object_key,
+                &safe_file_name,
+            )
+            .await;
         }
+
+        postgres_write::local_photo_response(job_id, request, photo_id, object_key)
     }
 
     pub async fn complete_photo_upload(&self, job_id: &str, photo_id: &str) -> String {
+        if let Some(pool) = &self.pool {
+            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id).await;
+        }
+
         format!("Photo {photo_id} for job {job_id} has been marked uploaded.")
     }
 
