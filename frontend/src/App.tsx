@@ -11,6 +11,8 @@ import {
 } from './api/client';
 import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
 
+type PhotoType = 'before' | 'after' | 'issue' | 'extra';
+
 function StatusBadge({ status }: { status: YardCareJob['status'] }) {
   const label = status.replace('_', ' ');
 
@@ -85,9 +87,9 @@ function JobDetailPanel({
   uploadTickets: PhotoUploadTicket[];
   onStart: () => Promise<void>;
   onComplete: () => Promise<void>;
-  onPhotoSelected: (file: File, photoType: 'before' | 'after' | 'issue' | 'extra') => Promise<void>;
+  onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
 }) {
-  const [photoType, setPhotoType] = useState<'before' | 'after' | 'issue' | 'extra'>('before');
+  const [photoType, setPhotoType] = useState<PhotoType>('before');
 
   if (isLoading) {
     return (
@@ -156,7 +158,7 @@ function JobDetailPanel({
           <select
             className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
             value={photoType}
-            onChange={(event) => setPhotoType(event.target.value as 'before' | 'after' | 'issue' | 'extra')}
+            onChange={(event) => setPhotoType(event.target.value as PhotoType)}
           >
             <option value="before">Before photo</option>
             <option value="after">After photo</option>
@@ -195,6 +197,29 @@ function JobDetailPanel({
       </div>
     </aside>
   );
+}
+
+function fallbackJobDetail(job: YardCareJob): JobDetail {
+  return {
+    ...job,
+    checklist: [
+      { id: 'before-photos', label: 'Capture before photos', completed: job.beforePhotos > 0 },
+      { id: 'yard-service', label: 'Complete yard service', completed: job.status !== 'scheduled' },
+      { id: 'after-photos', label: 'Capture after photos', completed: job.afterPhotos > 0 },
+      { id: 'completion-notes', label: 'Submit completion notes', completed: job.status === 'completed' },
+    ],
+  };
+}
+
+function localPhotoTicket(jobId: string, file: File, photoType: PhotoType): PhotoUploadTicket {
+  return {
+    status: 'created',
+    jobId,
+    photoId: `local_${jobId}_${photoType}_${Date.now()}`,
+    uploadMode: 'browser-local-placeholder',
+    uploadUrl: `local://${file.name}`,
+    objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
+  };
 }
 
 export function App() {
@@ -262,19 +287,7 @@ export function App() {
       .catch(() => {
         if (isMounted) {
           const fallback = jobs.find((job) => job.id === selectedJobId) ?? null;
-          setSelectedJob(
-            fallback
-              ? {
-                  ...fallback,
-                  checklist: [
-                    { id: 'before-photos', label: 'Capture before photos', completed: fallback.beforePhotos > 0 },
-                    { id: 'yard-service', label: 'Complete yard service', completed: fallback.status !== 'scheduled' },
-                    { id: 'after-photos', label: 'Capture after photos', completed: fallback.afterPhotos > 0 },
-                    { id: 'completion-notes', label: 'Submit completion notes', completed: fallback.status === 'completed' },
-                  ],
-                }
-              : null,
-          );
+          setSelectedJob(fallback ? fallbackJobDetail(fallback) : null);
         }
       })
       .finally(() => {
@@ -293,8 +306,13 @@ export function App() {
       return;
     }
 
-    await startJob(selectedJobId);
-    setStatusMessage(`Started ${selectedJobId}.`);
+    try {
+      await startJob(selectedJobId);
+      setStatusMessage(`Started ${selectedJobId}.`);
+    } catch {
+      setStatusMessage(`Started ${selectedJobId} locally because the API is not reachable.`);
+    }
+
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'in_progress' } : job)));
   }
 
@@ -303,21 +321,33 @@ export function App() {
       return;
     }
 
-    await completeJob(selectedJobId);
-    setStatusMessage(`Completed ${selectedJobId}.`);
+    try {
+      await completeJob(selectedJobId);
+      setStatusMessage(`Completed ${selectedJobId}.`);
+    } catch {
+      setStatusMessage(`Completed ${selectedJobId} locally because the API is not reachable.`);
+    }
+
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'completed' } : job)));
   }
 
-  async function handlePhotoSelected(file: File, photoType: 'before' | 'after' | 'issue' | 'extra') {
+  async function handlePhotoSelected(file: File, photoType: PhotoType) {
     if (!selectedJobId) {
       return;
     }
 
-    const ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
-    await completePhotoUpload(selectedJobId, ticket.photoId);
+    let ticket: PhotoUploadTicket;
+
+    try {
+      ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
+      await completePhotoUpload(selectedJobId, ticket.photoId);
+      setStatusMessage(`Prepared ${photoType} photo placeholder for ${file.name}.`);
+    } catch {
+      ticket = localPhotoTicket(selectedJobId, file, photoType);
+      setStatusMessage(`Prepared ${photoType} photo locally because the API is not reachable.`);
+    }
 
     setUploadTickets((current) => [ticket, ...current]);
-    setStatusMessage(`Prepared ${photoType} photo placeholder for ${file.name}.`);
     setJobs((current) =>
       current.map((job) => {
         if (job.id !== selectedJobId) {
