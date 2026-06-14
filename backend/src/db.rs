@@ -1,4 +1,5 @@
-use crate::{ChecklistItem, JobDetail, JobSummary, PhotoUploadRequest, PhotoUploadResponse};
+use crate::{postgres_read, postgres_write, ChecklistItem, JobDetail, JobSummary, PhotoUploadRequest, PhotoUploadResponse};
+use sqlx::{postgres::PgPoolOptions, PgPool};
 
 #[derive(Clone, Debug)]
 pub struct DatabaseConfig {
@@ -14,34 +15,61 @@ impl DatabaseConfig {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct JobRepository;
+pub struct JobRepository {
+    pool: Option<PgPool>,
+}
 
 impl JobRepository {
-    pub fn new() -> Self {
-        Self
+    pub fn new_seeded() -> Self {
+        Self { pool: None }
     }
 
-    pub async fn list_jobs(&self) -> Vec<JobSummary> {
-        seed_job_summaries()
+    pub async fn connect(config: &DatabaseConfig) -> Result<Self, sqlx::Error> {
+        let pool = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(&config.database_url)
+            .await?;
+
+        sqlx::migrate!("./migrations").run(&pool).await?;
+
+        Ok(Self { pool: Some(pool) })
     }
 
-    pub async fn get_job(&self, id: String) -> JobDetail {
-        seed_job_detail(id)
+    pub async fn list_jobs(&self) -> Result<Vec<JobSummary>, sqlx::Error> {
+        match &self.pool {
+            Some(pool) => postgres_read::list_jobs(pool).await,
+            None => Ok(seed_job_summaries()),
+        }
     }
 
-    pub async fn start_job(&self, id: &str) -> String {
-        format!("Job {id} has been marked as started.")
+    pub async fn get_job(&self, id: String) -> Result<Option<JobDetail>, sqlx::Error> {
+        match &self.pool {
+            Some(pool) => postgres_read::get_job(pool, &id).await,
+            None => Ok(Some(seed_job_detail(id))),
+        }
     }
 
-    pub async fn complete_job(&self, id: &str) -> String {
-        format!("Job {id} has been marked as complete.")
+    pub async fn start_job(&self, id: &str) -> Result<String, sqlx::Error> {
+        if let Some(pool) = &self.pool {
+            postgres_write::start_job(pool, id).await?;
+        }
+
+        Ok(format!("Job {id} has been marked as started."))
+    }
+
+    pub async fn complete_job(&self, id: &str) -> Result<String, sqlx::Error> {
+        if let Some(pool) = &self.pool {
+            postgres_write::complete_job(pool, id).await?;
+        }
+
+        Ok(format!("Job {id} has been marked as complete."))
     }
 
     pub async fn create_photo_upload(
         &self,
         job_id: String,
         request: PhotoUploadRequest,
-    ) -> PhotoUploadResponse {
+    ) -> Result<PhotoUploadResponse, sqlx::Error> {
         let safe_file_name = request.file_name.replace('/', "-");
         let photo_id = format!("photo_{}_{}", job_id, request.photo_type);
         let object_key = format!(
@@ -49,18 +77,36 @@ impl JobRepository {
             photo_type = request.photo_type
         );
 
-        PhotoUploadResponse {
-            status: "created",
-            job_id,
-            photo_id,
-            upload_mode: "local-placeholder",
-            upload_url: format!("local://{object_key}?content_type={}", request.content_type),
-            object_key,
+        if let Some(pool) = &self.pool {
+            postgres_write::create_photo_upload(
+                pool,
+                &job_id,
+                &request,
+                &photo_id,
+                &object_key,
+                &safe_file_name,
+            )
+            .await?;
         }
+
+        Ok(postgres_write::local_photo_response(
+            job_id,
+            request,
+            photo_id,
+            object_key,
+        ))
     }
 
-    pub async fn complete_photo_upload(&self, job_id: &str, photo_id: &str) -> String {
-        format!("Photo {photo_id} for job {job_id} has been marked uploaded.")
+    pub async fn complete_photo_upload(
+        &self,
+        job_id: &str,
+        photo_id: &str,
+    ) -> Result<String, sqlx::Error> {
+        if let Some(pool) = &self.pool {
+            postgres_write::complete_photo_upload(pool, job_id, photo_id).await?;
+        }
+
+        Ok(format!("Photo {photo_id} for job {job_id} has been marked uploaded."))
     }
 }
 
