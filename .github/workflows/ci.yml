@@ -30,12 +30,43 @@ jobs:
     name: Backend checks
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: grover_landscaping
+          POSTGRES_USER: grover
+          POSTGRES_PASSWORD: grover
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grover -d grover_landscaping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://grover:grover@localhost:5432/grover_landscaping
+      RUST_LOG: grover_landscaping_api=debug,tower_http=debug
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Apply database migrations
+        run: |
+          for migration in backend/migrations/*.sql; do
+            echo "Applying ${migration}"
+            psql "$DATABASE_URL" -f "$migration"
+          done
 
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
