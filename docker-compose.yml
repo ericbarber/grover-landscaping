@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: grover-landscaping-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-grover_landscaping}
+      POSTGRES_USER: ${POSTGRES_USER:-grover}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grover}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grover} -d ${POSTGRES_DB:-grover_landscaping}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: rust:1.85
+    container_name: grover-landscaping-backend
+    working_dir: /workspace/backend
+    command: cargo run
+    environment:
+      RUST_LOG: ${RUST_LOG:-grover_landscaping_api=debug,tower_http=debug}
+      DATABASE_URL: ${DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - backend-target:/workspace/backend/target
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:22
+    container_name: grover-landscaping-frontend
+    working_dir: /workspace/frontend
+    command: sh -c "npm install && npm run dev"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/workspace
+      - frontend-node-modules:/workspace/frontend/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:
+  cargo-cache:
+  backend-target:
+  frontend-node-modules:
