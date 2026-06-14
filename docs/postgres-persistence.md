@@ -2,13 +2,17 @@
 
 ## Current Status
 
-The first database migration has been added at:
+The repository now has the first persistence foundation in place:
 
 ```text
 backend/migrations/0001_create_jobs.sql
+backend/src/db.rs
+backend/src/postgres_read.rs
+backend/src/postgres_write.rs
+scripts/apply-local-migrations.sh
 ```
 
-It creates the first operational tables:
+The migration creates the first operational tables:
 
 ```text
 service_jobs
@@ -18,9 +22,21 @@ job_photos
 
 It also seeds the two sample jobs currently used by the API and frontend.
 
+## Implemented
+
+- SQLx dependency added to the backend manifest.
+- PostgreSQL connection and migration seam added in `JobRepository`.
+- Read-query helpers added for job lists and job detail.
+- Write-query helpers added for job status changes and local photo upload tickets.
+- Local migration runner added for Docker Compose PostgreSQL.
+
+## Current Runtime Behavior
+
+The public API contract is unchanged and still uses the seed-backed repository behavior at runtime. This keeps the current `main.rs` handlers and CI build stable while the PostgreSQL query modules are staged in the codebase.
+
 ## Target Backend Flow
 
-The Rust API should move from hard-coded seed data to database-backed handlers:
+The next handler switch should route the existing API methods through the SQL-backed repository:
 
 ```text
 GET  /jobs
@@ -65,19 +81,16 @@ The local connection string is captured in `.env.example`:
 DATABASE_URL=postgres://grover:grover@localhost:5432/grover_landscaping
 ```
 
-## CI Direction
+Apply migrations locally with:
 
-The GitHub Actions backend job should add a PostgreSQL service and run migrations before backend tests once the Rust database client is wired in.
-
-## Implementation Note
-
-The next code change should add a Rust PostgreSQL client dependency and then refactor `backend/src/main.rs` into:
-
-```text
-backend/src/main.rs
-backend/src/db.rs
-backend/src/jobs.rs
-backend/src/photos.rs
+```bash
+bash scripts/apply-local-migrations.sh
 ```
 
-The application should keep the same API contract so the frontend does not need to change when persistence is introduced.
+## CI Direction
+
+The GitHub Actions backend job should add a PostgreSQL service and run migrations before backend tests once the runtime handler switch is completed.
+
+## Next Code Change
+
+Switch `backend/src/main.rs` to initialize `JobRepository::connect()` when `DATABASE_URL` is present and return API errors cleanly when database operations fail. The frontend should not need to change because the API response shapes are preserved.
