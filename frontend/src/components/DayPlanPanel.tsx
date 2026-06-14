@@ -6,9 +6,12 @@ type DayPlanPanelProps = {
   onSelectJob?: (jobId: string) => void;
 };
 
+type LocalStopState = 'pending' | 'in_progress' | 'finished';
+
 export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
+  const [stopStates, setStopStates] = useState<Record<string, LocalStopState>>({});
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
 
   function clickMatchingJobCard(customerName: string) {
@@ -27,6 +30,14 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
     window.location.hash = `job-${jobId}`;
     clickMatchingJobCard(customerName);
+  }
+
+  function advanceStop(stopId: string) {
+    setStopStates((current) => {
+      const currentState = current[stopId] ?? 'pending';
+      const nextState = currentState === 'pending' ? 'in_progress' : 'finished';
+      return { ...current, [stopId]: nextState };
+    });
   }
 
   useEffect(() => {
@@ -81,29 +92,40 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
       </div>
 
       <div className="mt-5 space-y-3">
-        {dayPlan.stops.map((stop) => (
-          <button
-            key={stop.id}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-emerald-400 hover:bg-emerald-50"
-            onClick={() => handleStopClick(stop.jobId, stop.customerName)}
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
-                {stop.stopOrder}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-950">{stop.customerName}</p>
-                <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
-                </p>
-              </div>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                {stop.jobStatus.replace('_', ' ')}
-              </span>
-            </div>
-          </button>
-        ))}
+        {dayPlan.stops.map((stop) => {
+          const localState = stopStates[stop.id] ?? 'pending';
+          const actionLabel = localState === 'pending' ? 'Start stop' : localState === 'in_progress' ? 'Finish stop' : 'Finished';
+
+          return (
+            <article key={stop.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <button className="w-full text-left" onClick={() => handleStopClick(stop.jobId, stop.customerName)}>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+                    {stop.stopOrder}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-950">{stop.customerName}</p>
+                    <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                    {localState.replace('_', ' ')}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={localState === 'finished'}
+                onClick={() => advanceStop(stop.id)}
+              >
+                {actionLabel}
+              </button>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
