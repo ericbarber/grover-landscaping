@@ -38,6 +38,8 @@ struct JobDetail {
     scheduled_date: String,
     before_photos: u32,
     after_photos: u32,
+    checklist_items: u32,
+    completed_checklist_items: u32,
     checklist: Vec<ChecklistItem>,
 }
 
@@ -156,6 +158,8 @@ async fn get_job(Path(id): Path<String>) -> impl IntoResponse {
         scheduled_date: "2026-06-15".to_string(),
         before_photos: 0,
         after_photos: 0,
+        checklist_items: 4,
+        completed_checklist_items: 0,
         checklist: vec![
             ChecklistItem {
                 id: "before-photos".to_string(),
