@@ -51,6 +51,14 @@ Health:   http://localhost:8080/health
 Database: localhost:5432
 ```
 
+You can also run only the frontend. It will use seed data and browser-local placeholders if the backend is not reachable:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 Run backend checks directly:
 
 ```bash
@@ -70,15 +78,20 @@ npm test
 npm run build
 ```
 
-## Current Status
+## Current Capabilities
 
-The project now has a working first development scaffold:
+The project now has a working first vertical slice:
 
 - Rust Axum API skeleton
-- React/Tailwind frontend shell
-- Seed job data for the crew dashboard
+- React/Tailwind crew dashboard
+- Backend `/jobs` and `/jobs/{id}` API integration
+- Start-job and complete-job actions
+- Local photo upload-ticket placeholder flow
+- Browser-local fallback when the backend is not running
 - Backend and frontend tests
 - GitHub Actions CI
 - Docker Compose local stack
 
-The next step is to connect the frontend to the backend `/jobs` API and add the first job detail screen.
+## Next Step
+
+The next step is to replace seed/local job state with a PostgreSQL-backed job model and migrations.
