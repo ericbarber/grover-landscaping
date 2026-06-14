@@ -1,4 +1,5 @@
 import { getCompletionProgress } from '../domain/jobs';
+import { AccountStatusCard } from './AccountStatusCard';
 import type { JobDetail, PhotoUploadTicket } from '../api/client';
 
 type CompletionReportProps = {
@@ -28,6 +29,10 @@ export function CompletionReport({ job, uploadTickets }: CompletionReportProps) 
         >
           {readyForCustomer ? 'Ready' : 'Draft'}
         </span>
+      </div>
+
+      <div className="mt-5">
+        <AccountStatusCard jobId={job.id} />
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
