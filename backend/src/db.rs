@@ -32,7 +32,9 @@ impl JobRepository {
         Self { pool }
     }
 
-    pub async fn connect(config: &DatabaseConfig) -> Result<Self, sqlx::Error> {
+    pub async fn connect(
+        config: &DatabaseConfig,
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(&config.database_url)
