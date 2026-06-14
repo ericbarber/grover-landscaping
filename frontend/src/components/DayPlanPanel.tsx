@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 
-export function DayPlanPanel() {
+type DayPlanPanelProps = {
+  onSelectJob?: (jobId: string) => void;
+};
+
+export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
@@ -60,7 +64,11 @@ export function DayPlanPanel() {
 
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => (
-          <article key={stop.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <button
+            key={stop.id}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-left hover:border-emerald-400 hover:bg-emerald-50"
+            onClick={() => onSelectJob?.(stop.jobId)}
+          >
             <div className="flex items-start gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
                 {stop.stopOrder}
@@ -76,7 +84,7 @@ export function DayPlanPanel() {
                 {stop.jobStatus.replace('_', ' ')}
               </span>
             </div>
-          </article>
+          </button>
         ))}
       </div>
     </section>
