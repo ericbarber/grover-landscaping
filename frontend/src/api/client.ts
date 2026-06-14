@@ -60,11 +60,11 @@ function toJobDetail(apiJob: ApiJobDetail): JobDetail {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
     headers: {
       'content-type': 'application/json',
       ...(init?.headers ?? {}),
     },
-    ...init,
   });
 
   if (!response.ok) {
