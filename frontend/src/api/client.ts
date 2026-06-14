@@ -28,6 +28,30 @@ export interface JobDetail extends YardCareJob {
   checklist: ChecklistItem[];
 }
 
+export interface AccountStatus {
+  jobId: string;
+  accountId: string;
+  customerName: string;
+  billingModel: string;
+  paymentStatus: string;
+  serviceApprovalStatus: string;
+  contractedServicesPerPeriod: number;
+  completedServicesThisPeriod: number;
+  billingNotes: string;
+}
+
+interface ApiAccountStatus {
+  job_id: string;
+  account_id: string;
+  customer_name: string;
+  billing_model: string;
+  payment_status: string;
+  service_approval_status: string;
+  contracted_services_per_period: number;
+  completed_services_this_period: number;
+  billing_notes: string;
+}
+
 export interface PhotoUploadTicket {
   status: string;
   jobId: string;
@@ -58,6 +82,20 @@ function toJobDetail(apiJob: ApiJobDetail): JobDetail {
   };
 }
 
+function toAccountStatus(apiAccount: ApiAccountStatus): AccountStatus {
+  return {
+    jobId: apiAccount.job_id,
+    accountId: apiAccount.account_id,
+    customerName: apiAccount.customer_name,
+    billingModel: apiAccount.billing_model,
+    paymentStatus: apiAccount.payment_status,
+    serviceApprovalStatus: apiAccount.service_approval_status,
+    contractedServicesPerPeriod: apiAccount.contracted_services_per_period,
+    completedServicesThisPeriod: apiAccount.completed_services_this_period,
+    billingNotes: apiAccount.billing_notes,
+  };
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -82,6 +120,11 @@ export async function fetchJobs(): Promise<YardCareJob[]> {
 export async function fetchJobDetail(jobId: string): Promise<JobDetail> {
   const job = await request<ApiJobDetail>(`/jobs/${jobId}`);
   return toJobDetail(job);
+}
+
+export async function fetchAccountStatus(jobId: string): Promise<AccountStatus> {
+  const account = await request<ApiAccountStatus>(`/jobs/${jobId}/account`);
+  return toAccountStatus(account);
 }
 
 export async function startJob(jobId: string): Promise<void> {
