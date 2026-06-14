@@ -19,6 +19,7 @@ backend/            Rust backend application
 frontend/           React/Tailwind frontend application
 infra/              Infrastructure as code
 docs/               Architecture and product planning
+scripts/            Local developer utility scripts
 ```
 
 ## Development Workflow
@@ -40,6 +41,12 @@ Run the full local stack with Docker Compose:
 
 ```bash
 docker compose up --build
+```
+
+Apply local database migrations after PostgreSQL is healthy:
+
+```bash
+bash scripts/apply-local-migrations.sh
 ```
 
 The local services will be available at:
@@ -88,10 +95,12 @@ The project now has a working first vertical slice:
 - Start-job and complete-job actions
 - Local photo upload-ticket placeholder flow
 - Browser-local fallback when the backend is not running
+- Initial PostgreSQL schema migration
+- Repository abstraction ready for database-backed handlers
 - Backend and frontend tests
 - GitHub Actions CI
 - Docker Compose local stack
 
 ## Next Step
 
-The next step is to replace seed/local job state with a PostgreSQL-backed job model and migrations.
+The next step is to add the Rust database client dependency and switch `JobRepository` from seeded in-memory data to PostgreSQL queries.
