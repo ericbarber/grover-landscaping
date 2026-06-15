@@ -365,6 +365,7 @@ mod tests {
 
         assert_eq!(json["crew_id"], "crew_1001");
         assert_eq!(json["stops"].as_array().unwrap().len(), 2);
+        assert_eq!(json["stops"][0]["stop_status"], "pending");
     }
 
     #[tokio::test]
