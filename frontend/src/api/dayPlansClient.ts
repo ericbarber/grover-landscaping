@@ -1,4 +1,5 @@
 import type { DayPlan } from '../domain/dayPlans';
+import { localDraftDayPlanResponse } from '../domain/managerDayPlans';
 import type { StopProgressStatus } from '../domain/stopProgress';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
@@ -108,4 +109,14 @@ export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise
 
   const dayPlan = (await response.json()) as ApiDayPlanMutationResponse;
   return toDayPlanMutation(dayPlan);
+}
+
+export async function createDraftDayPlanWithFallback(
+  request: CreateDayPlanRequest,
+): Promise<DayPlanMutationResponse> {
+  try {
+    return await createDraftDayPlan(request);
+  } catch {
+    return localDraftDayPlanResponse(request.crewId, request.serviceDate);
+  }
 }
