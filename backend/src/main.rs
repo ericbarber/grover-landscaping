@@ -1,4 +1,5 @@
 mod accounts;
+mod day_plans;
 mod db;
 mod stop_progress;
 
@@ -10,6 +11,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use day_plans::DayPlanRepository;
 use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
@@ -21,6 +23,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 struct AppState {
     jobs: JobRepository,
     accounts: AccountRepository,
+    day_plans: DayPlanRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -128,6 +131,7 @@ fn app() -> Router {
         Arc::new(AppState {
             jobs: JobRepository::new(),
             accounts: AccountRepository::new(),
+            day_plans: DayPlanRepository::new(),
         }),
         persistence,
     )
@@ -143,6 +147,7 @@ fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
         .route("/jobs/{id}/complete", post(complete_job))
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
         .route("/jobs/{id}/photos/complete", post(complete_photo_upload))
+        .route("/crews/{crew_id}/day-plan/today", get(get_today_day_plan))
         .route("/day-plans/{day_plan_id}/stops/{stop_id}/status", post(update_stop_progress))
         .with_state(state)
         .layer(CorsLayer::permissive())
@@ -170,6 +175,13 @@ async fn get_account_for_job(
     Path(id): Path<String>,
 ) -> impl IntoResponse {
     Json(state.accounts.get_account_for_job(&id).await)
+}
+
+async fn get_today_day_plan(
+    State(state): State<Arc<AppState>>,
+    Path(crew_id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.day_plans.today_for_crew(&crew_id).await)
 }
 
 async fn update_stop_progress(
@@ -296,6 +308,27 @@ mod tests {
 
         assert_eq!(json["account_id"], "acct_1002");
         assert_eq!(json["payment_status"], "paid");
+    }
+
+    #[tokio::test]
+    async fn day_plan_endpoint_returns_seed_route() {
+        let response = app()
+            .oneshot(
+                Request::builder()
+                    .uri("/crews/crew_1001/day-plan/today")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["crew_id"], "crew_1001");
+        assert_eq!(json["stops"].as_array().unwrap().len(), 2);
     }
 
     #[tokio::test]
