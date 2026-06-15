@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { draftDayPlanId, draftPlanPersistenceLabel, localDraftDayPlanResponse } from './managerDayPlans';
+import {
+  draftDayPlanId,
+  draftPlanPersistenceLabel,
+  localDraftDayPlanResponse,
+  localPublishedDayPlanResponse,
+} from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
   it('creates stable draft day plan IDs', () => {
@@ -13,6 +18,16 @@ describe('manager day plan helpers', () => {
       serviceDate: '2026-06-16',
       status: 'draft',
       routeStatus: 'manual',
+      persisted: false,
+    });
+  });
+
+  it('creates local published day plan responses from draft plans', () => {
+    const draftPlan = localDraftDayPlanResponse('crew_1001', '2026-06-16');
+
+    expect(localPublishedDayPlanResponse(draftPlan)).toEqual({
+      ...draftPlan,
+      status: 'published',
       persisted: false,
     });
   });
