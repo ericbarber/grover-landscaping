@@ -8,6 +8,7 @@ type DayPlanPanelProps = {
 };
 
 type StopStateMap = Record<string, StopProgressStatus>;
+type SyncStatus = 'local' | 'syncing' | 'synced';
 
 function storageKey(dayPlanId: string): string {
   return `grover.dayPlan.${dayPlanId}.stopStates`;
@@ -33,6 +34,7 @@ function clearStopStates(dayPlanId: string) {
 export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = dayPlan.stops.filter((stop) => stopStates[stop.id] === 'finished').length;
@@ -57,9 +59,14 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
   function persistStopState(stopId: string, next: StopStateMap) {
     saveStopStates(dayPlan.id, next);
-    void updateStopProgress(dayPlan.id, stopId, next[stopId]).catch(() => {
-      saveStopStates(dayPlan.id, next);
-    });
+    setSyncStatus('syncing');
+
+    void updateStopProgress(dayPlan.id, stopId, next[stopId])
+      .then(() => setSyncStatus('synced'))
+      .catch(() => {
+        saveStopStates(dayPlan.id, next);
+        setSyncStatus('local');
+      });
   }
 
   function advanceStop(stopId: string) {
@@ -75,10 +82,13 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   function resetRouteProgress() {
     clearStopStates(dayPlan.id);
     setStopStates({});
+    setSyncStatus('syncing');
 
-    dayPlan.stops.forEach((stop) => {
-      void updateStopProgress(dayPlan.id, stop.id, 'pending').catch(() => undefined);
-    });
+    void Promise.all(
+      dayPlan.stops.map((stop) => updateStopProgress(dayPlan.id, stop.id, 'pending')),
+    )
+      .then(() => setSyncStatus('synced'))
+      .catch(() => setSyncStatus('local'));
   }
 
   useEffect(() => {
@@ -113,6 +123,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
           <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
           <p className="mt-1 text-sm text-slate-600">{dayPlan.serviceDate}</p>
           <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
+          <p className="mt-1 text-xs text-slate-500">Progress: {syncStatus === 'syncing' ? 'syncing' : syncStatus === 'synced' ? 'synced' : 'saved locally'}</p>
         </div>
         <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
           {dayPlan.routeStatus}
