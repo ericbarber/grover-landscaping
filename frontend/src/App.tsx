@@ -11,6 +11,7 @@ import {
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
 import { DayPlanPanel } from './components/DayPlanPanel';
+import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
@@ -396,6 +397,9 @@ export function App() {
       <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
         <div>
           <DayPlanPanel onSelectJob={setSelectedJobId} />
+          <div className="mt-6">
+            <ManagerDayPlanPanel />
+          </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">
             <div>
