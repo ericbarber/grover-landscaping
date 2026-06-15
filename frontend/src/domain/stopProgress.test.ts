@@ -5,6 +5,7 @@ import {
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
+  stopActionLabel,
   syncStatusFromPersistence,
   syncStatusLabel,
 } from './stopProgress';
@@ -18,6 +19,12 @@ describe('stop progress helpers', () => {
   it('advances in-progress and finished stops to finished', () => {
     expect(getNextStopStatus('in_progress')).toBe('finished');
     expect(getNextStopStatus('finished')).toBe('finished');
+  });
+
+  it('formats stop action labels', () => {
+    expect(stopActionLabel('pending')).toBe('Start stop');
+    expect(stopActionLabel('in_progress')).toBe('Finish stop');
+    expect(stopActionLabel('finished')).toBe('Finished');
   });
 
   it('resolves local status before server status', () => {
