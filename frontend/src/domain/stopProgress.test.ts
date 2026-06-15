@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countFinishedStops, getNextStopStatus, resetStopStates } from './stopProgress';
+import { countFinishedStops, getNextStopStatus, resetStopStates, syncStatusLabel } from './stopProgress';
 
 describe('stop progress helpers', () => {
   it('advances pending stops to in progress', () => {
@@ -23,5 +23,11 @@ describe('stop progress helpers', () => {
 
   it('resets stop state maps', () => {
     expect(resetStopStates()).toEqual({});
+  });
+
+  it('formats route progress sync labels', () => {
+    expect(syncStatusLabel('local')).toBe('saved locally');
+    expect(syncStatusLabel('syncing')).toBe('syncing');
+    expect(syncStatusLabel('synced')).toBe('synced');
   });
 });
