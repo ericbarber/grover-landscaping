@@ -8,6 +8,7 @@ import {
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
+  stopActionLabel,
   syncStatusFromPersistence,
   syncStatusLabel,
   type RouteProgressSyncStatus,
@@ -173,7 +174,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {
           const localState: StopProgressStatus = resolveStopStatus(stopStates[stop.id], stop.stopStatus);
-          const actionLabel = localState === 'pending' ? 'Start stop' : localState === 'in_progress' ? 'Finish stop' : 'Finished';
+          const actionLabel = stopActionLabel(localState);
 
           return (
             <article key={stop.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
