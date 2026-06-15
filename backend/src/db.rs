@@ -1,5 +1,7 @@
 #[path = "postgres_read.rs"]
 mod postgres_read;
+#[path = "postgres_stop_progress.rs"]
+mod postgres_stop_progress;
 #[path = "postgres_write.rs"]
 mod postgres_write;
 
@@ -79,6 +81,28 @@ impl JobRepository {
         }
 
         format!("Job {id} has been marked as complete.")
+    }
+
+    pub async fn update_stop_progress(
+        &self,
+        day_plan_id: &str,
+        stop_id: &str,
+        status: &str,
+    ) -> bool {
+        if let Some(pool) = &self.pool {
+            if let Ok(persisted) = postgres_stop_progress::update_stop_progress(
+                pool,
+                day_plan_id,
+                stop_id,
+                status,
+            )
+            .await
+            {
+                return persisted;
+            }
+        }
+
+        false
     }
 
     pub async fn create_photo_upload(
