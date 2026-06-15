@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { createDraftDayPlan, type DayPlanMutationResponse } from '../api/dayPlansClient';
-import { localDraftDayPlanResponse } from '../domain/managerDayPlans';
+import { useState, type FormEvent } from 'react';
+import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
 import { ManagerDraftDayPlanCard } from './ManagerDraftDayPlanCard';
 
 export function ManagerDayPlanPanel() {
@@ -9,13 +8,12 @@ export function ManagerDayPlanPanel() {
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  function createDraft(event: React.FormEvent<HTMLFormElement>) {
+  function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsCreating(true);
 
-    void createDraftDayPlan({ crewId, serviceDate })
+    void createDraftDayPlanWithFallback({ crewId, serviceDate })
       .then(setDraftPlan)
-      .catch(() => setDraftPlan(localDraftDayPlanResponse(crewId, serviceDate)))
       .finally(() => setIsCreating(false));
   }
 
