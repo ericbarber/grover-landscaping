@@ -167,7 +167,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {
-          const localState: StopProgressStatus = stopStates[stop.id] ?? 'pending';
+          const localState: StopProgressStatus = stopStates[stop.id] ?? stop.stopStatus ?? 'pending';
           const actionLabel = localState === 'pending' ? 'Start stop' : localState === 'in_progress' ? 'Finish stop' : 'Finished';
 
           return (
