@@ -25,6 +25,29 @@ export interface ApiDayPlan {
   stops: ApiDayPlanStop[];
 }
 
+export interface CreateDayPlanRequest {
+  crewId: string;
+  serviceDate: string;
+}
+
+export interface ApiDayPlanMutationResponse {
+  id: string;
+  crew_id: string;
+  service_date: string;
+  status: DayPlan['status'];
+  route_status: DayPlan['routeStatus'];
+  persisted: boolean;
+}
+
+export interface DayPlanMutationResponse {
+  id: string;
+  crewId: string;
+  serviceDate: string;
+  status: DayPlan['status'];
+  routeStatus: DayPlan['routeStatus'];
+  persisted: boolean;
+}
+
 export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   return {
     id: apiDayPlan.id,
@@ -47,6 +70,17 @@ export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   };
 }
 
+export function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutationResponse {
+  return {
+    id: response.id,
+    crewId: response.crew_id,
+    serviceDate: response.service_date,
+    status: response.status,
+    routeStatus: response.route_status,
+    persisted: response.persisted,
+  };
+}
+
 export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
   const response = await fetch(`${API_BASE_URL}/crews/${crewId}/day-plan/today`);
 
@@ -56,4 +90,22 @@ export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
 
   const dayPlan = (await response.json()) as ApiDayPlan;
   return toDayPlan(dayPlan);
+}
+
+export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise<DayPlanMutationResponse> {
+  const response = await fetch(`${API_BASE_URL}/day-plans`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      crew_id: request.crewId,
+      service_date: request.serviceDate,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Create day plan request failed with status ${response.status}`);
+  }
+
+  const dayPlan = (await response.json()) as ApiDayPlanMutationResponse;
+  return toDayPlanMutation(dayPlan);
 }
