@@ -58,6 +58,28 @@ impl DayPlanRepository {
         Self { pool }
     }
 
+    pub async fn create_draft_day_plan(
+        &self,
+        request: CreateDayPlanRequest,
+    ) -> DayPlanMutationResponse {
+        let id = draft_day_plan_id(&request.crew_id, &request.service_date);
+
+        if let Some(pool) = &self.pool {
+            if let Ok(true) = postgres_day_plans::create_draft_day_plan(
+                pool,
+                &id,
+                &request.crew_id,
+                &request.service_date,
+            )
+            .await
+            {
+                return draft_day_plan_response(&request, true);
+            }
+        }
+
+        draft_day_plan_response(&request, false)
+    }
+
     pub async fn today_for_crew(&self, crew_id: &str) -> DayPlanSummary {
         if let Some(pool) = &self.pool {
             if let Ok(Some(day_plan)) = postgres_day_plans::today_for_crew(pool, crew_id).await {
@@ -74,13 +96,20 @@ pub fn draft_day_plan_id(crew_id: &str, service_date: &str) -> String {
 }
 
 pub fn local_draft_day_plan_response(request: &CreateDayPlanRequest) -> DayPlanMutationResponse {
+    draft_day_plan_response(request, false)
+}
+
+fn draft_day_plan_response(
+    request: &CreateDayPlanRequest,
+    persisted: bool,
+) -> DayPlanMutationResponse {
     DayPlanMutationResponse {
         id: draft_day_plan_id(&request.crew_id, &request.service_date),
         crew_id: request.crew_id.clone(),
         service_date: request.service_date.clone(),
         status: "draft".to_string(),
         route_status: "manual".to_string(),
-        persisted: false,
+        persisted,
     }
 }
 
