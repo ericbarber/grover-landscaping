@@ -4,6 +4,7 @@ import {
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
+  syncStatusFromPersistence,
   syncStatusLabel,
 } from './stopProgress';
 
@@ -28,6 +29,14 @@ describe('stop progress helpers', () => {
 
   it('defaults unresolved stops to pending', () => {
     expect(resolveStopStatus(undefined, undefined)).toBe('pending');
+  });
+
+  it('maps persisted backend responses to synced status', () => {
+    expect(syncStatusFromPersistence(true)).toBe('synced');
+  });
+
+  it('maps local-only backend responses to local status', () => {
+    expect(syncStatusFromPersistence(false)).toBe('local');
   });
 
   it('counts finished stops', () => {
