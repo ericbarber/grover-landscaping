@@ -26,11 +26,16 @@ function saveStopStates(dayPlanId: string, stopStates: StopStateMap) {
   window.localStorage.setItem(storageKey(dayPlanId), JSON.stringify(stopStates));
 }
 
+function clearStopStates(dayPlanId: string) {
+  window.localStorage.removeItem(storageKey(dayPlanId));
+}
+
 export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
+  const completedStops = dayPlan.stops.filter((stop) => stopStates[stop.id] === 'finished').length;
 
   function clickMatchingJobCard(customerName: string) {
     const cards = Array.from(document.querySelectorAll('article'));
@@ -65,6 +70,11 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
       persistStopState(stopId, next);
       return next;
     });
+  }
+
+  function resetRouteProgress() {
+    clearStopStates(dayPlan.id);
+    setStopStates({});
   }
 
   useEffect(() => {
@@ -115,10 +125,17 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
           <p className="text-xs text-slate-500">Minutes</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{dayPlan.status}</p>
-          <p className="text-xs text-slate-500">Status</p>
+          <p className="text-2xl font-bold text-slate-950">{completedStops}</p>
+          <p className="text-xs text-slate-500">Finished</p>
         </div>
       </div>
+
+      <button
+        className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+        onClick={resetRouteProgress}
+      >
+        Reset route progress
+      </button>
 
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {
