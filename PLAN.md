@@ -53,6 +53,12 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Stop progress domain helpers
 - Stop progress helper tests
 - Day-plan domain tests
+- Backend stop-progress validation
+- Backend stop-progress persistence helper for PostgreSQL
+- Stop-progress route attempts database persistence and reports whether it persisted
+- Day-plan API response includes stop status
+- Backend day-plan read helper for PostgreSQL-backed crew routes
+- Day-plan repository attempts PostgreSQL reads with seeded fallback
 
 ### Account and service tracking foundation
 
@@ -82,18 +88,19 @@ Current state:
 
 - Frontend has a day-plan API client for `GET /crews/{crew_id}/day-plan/today`
 - Frontend has stop-progress API client for `POST /day-plans/{day_plan_id}/stops/{stop_id}/status`
-- Backend has `GET /crews/{crew_id}/day-plan/today` returning seeded repository data
-- Backend has stop-progress route returning a local response
+- Backend has `GET /crews/{crew_id}/day-plan/today` returning seeded repository data when no persisted route is available
+- Backend has stop-progress route returning `persisted: true` when the PostgreSQL update succeeds and local fallback when it does not
+- Backend has a PostgreSQL day-plan read helper that joins day plans, crews, stops, and jobs
 - Day-plan, crew, and stop tables exist in migrations
 - Frontend syncs route progress to the backend when the endpoint is available
 - Frontend falls back to browser persistence when backend sync is unavailable
-- Backend does not yet read day plans or persist stop status from PostgreSQL
+- Frontend can consume backend `stop_status` values for each route stop
 
 Next implementation work:
 
-- Add PostgreSQL-backed read query for `GET /crews/{crew_id}/day-plan/today`
-- Add PostgreSQL-backed write query for `POST /day-plans/{day_plan_id}/stops/{stop_id}/status`
-- Replace browser-only persistence as the source of truth
+- Wire the route summary finished-count to resolved server-or-local stop status
+- Add database-backed route tests around persisted stop progress and day-plan reads
+- Add manager day-plan creation and publishing workflow
 
 ### Photo evidence flow
 
@@ -204,6 +211,9 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-15 | PostgreSQL-backed day-plan read helper added |
+| 2026-06-15 | Stop-progress route wired to attempt PostgreSQL persistence |
+| 2026-06-15 | Day-plan API response now includes stop status |
 | 2026-06-15 | PLAN.md refreshed to match delivered route-progress work |
 | 2026-06-15 | Route-stop fallback job-selection tightened |
 | 2026-06-15 | Stop-progress domain helpers and tests added |
@@ -218,11 +228,3 @@ Next implementation work:
 | 2026-06-15 | Frontend stop-progress client added |
 | 2026-06-15 | Browser-persisted route stop progress added |
 | 2026-06-15 | Crew day-plan panel added |
-| 2026-06-15 | Account status display added to completion report |
-
-## Maintenance Notes
-
-- Move items from Planned to In Progress when implementation begins.
-- Move items from In Progress to Delivered when they are usable in local development.
-- Keep Backlog items high level until they become prioritized delivery work.
-- Keep detailed architecture decisions in `docs/`, not in this file.
