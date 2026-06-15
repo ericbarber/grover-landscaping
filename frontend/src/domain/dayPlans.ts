@@ -1,3 +1,5 @@
+import type { StopProgressStatus } from './stopProgress';
+
 export interface DayPlanStop {
   id: string;
   jobId: string;
@@ -5,6 +7,7 @@ export interface DayPlanStop {
   propertyAddress: string;
   stopOrder: number;
   jobStatus: 'scheduled' | 'in_progress' | 'completed';
+  stopStatus?: StopProgressStatus;
   estimatedDriveMinutes: number;
   estimatedServiceMinutes: number;
 }
@@ -34,6 +37,7 @@ export const seedDayPlan: DayPlan = {
       propertyAddress: '123 Oak Street',
       stopOrder: 1,
       jobStatus: 'scheduled',
+      stopStatus: 'pending',
       estimatedDriveMinutes: 12,
       estimatedServiceMinutes: 45,
     },
@@ -44,6 +48,7 @@ export const seedDayPlan: DayPlan = {
       propertyAddress: '456 Maple Avenue',
       stopOrder: 2,
       jobStatus: 'in_progress',
+      stopStatus: 'pending',
       estimatedDriveMinutes: 8,
       estimatedServiceMinutes: 60,
     },
