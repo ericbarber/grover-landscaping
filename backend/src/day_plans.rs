@@ -2,7 +2,7 @@
 mod postgres_day_plans;
 
 use crate::db::DatabaseConfig;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 #[derive(Clone, Debug, Serialize)]
@@ -29,6 +29,22 @@ pub struct DayPlanSummary {
     pub stops: Vec<DayPlanStop>,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct CreateDayPlanRequest {
+    pub crew_id: String,
+    pub service_date: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanMutationResponse {
+    pub id: String,
+    pub crew_id: String,
+    pub service_date: String,
+    pub status: String,
+    pub route_status: String,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct DayPlanRepository {
     pool: Option<PgPool>,
@@ -50,6 +66,21 @@ impl DayPlanRepository {
         }
 
         seed_day_plan(crew_id)
+    }
+}
+
+pub fn draft_day_plan_id(crew_id: &str, service_date: &str) -> String {
+    format!("day_plan_{}_{}", service_date.replace('-', "_"), crew_id)
+}
+
+pub fn local_draft_day_plan_response(request: &CreateDayPlanRequest) -> DayPlanMutationResponse {
+    DayPlanMutationResponse {
+        id: draft_day_plan_id(&request.crew_id, &request.service_date),
+        crew_id: request.crew_id.clone(),
+        service_date: request.service_date.clone(),
+        status: "draft".to_string(),
+        route_status: "manual".to_string(),
+        persisted: false,
     }
 }
 
@@ -90,7 +121,7 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
 
 #[cfg(test)]
 mod tests {
-    use super::seed_day_plan;
+    use super::{draft_day_plan_id, local_draft_day_plan_response, seed_day_plan, CreateDayPlanRequest};
 
     #[test]
     fn seeded_day_plan_keeps_ordered_stops() {
@@ -107,5 +138,27 @@ mod tests {
 
         assert_eq!(day_plan.stops[0].stop_status, "pending");
         assert_eq!(day_plan.stops[1].stop_status, "pending");
+    }
+
+    #[test]
+    fn draft_day_plan_ids_are_stable_for_crew_and_date() {
+        assert_eq!(
+            draft_day_plan_id("crew_1001", "2026-06-16"),
+            "day_plan_2026_06_16_crew_1001"
+        );
+    }
+
+    #[test]
+    fn local_draft_day_plan_responses_are_manual_drafts() {
+        let request = CreateDayPlanRequest {
+            crew_id: "crew_1001".to_string(),
+            service_date: "2026-06-16".to_string(),
+        };
+
+        let response = local_draft_day_plan_response(&request);
+
+        assert_eq!(response.status, "draft");
+        assert_eq!(response.route_status, "manual");
+        assert!(!response.persisted);
     }
 }
