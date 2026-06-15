@@ -35,6 +35,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Job completion endpoint
 - Local photo upload-ticket endpoint
 - Photo completion endpoint
+- Crew day-plan endpoint returning the current route
 - Stop-progress endpoint contract and route
 
 ### Crew route and stop progress
@@ -43,9 +44,15 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Ordered route stops
 - Drive and service time estimates
 - Open job from a route stop
+- Tightened route-stop fallback job selection
 - Local stop progress states: pending, in progress, finished
 - Browser persistence for stop progress
-- Frontend client prepared to sync stop progress to backend
+- Route progress reset action
+- Route progress sync status display
+- Frontend client sync attempts for stop progress
+- Stop progress domain helpers
+- Stop progress helper tests
+- Day-plan domain tests
 
 ### Account and service tracking foundation
 
@@ -58,6 +65,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 - Docker Compose local stack
 - PostgreSQL migrations
+- Day-plan, crew, and stop table migration
 - Local migration script
 - Backend test structure
 - Frontend test/build commands
@@ -74,15 +82,17 @@ Current state:
 
 - Frontend has a day-plan API client for `GET /crews/{crew_id}/day-plan/today`
 - Frontend has stop-progress API client for `POST /day-plans/{day_plan_id}/stops/{stop_id}/status`
+- Backend has `GET /crews/{crew_id}/day-plan/today` returning seeded repository data
 - Backend has stop-progress route returning a local response
-- Backend does not yet persist day plans or stop status to PostgreSQL
+- Day-plan, crew, and stop tables exist in migrations
+- Frontend syncs route progress to the backend when the endpoint is available
+- Frontend falls back to browser persistence when backend sync is unavailable
+- Backend does not yet read day plans or persist stop status from PostgreSQL
 
 Next implementation work:
 
-- Add day-plan and stop tables
-- Add backend repository for day plans
-- Back `GET /crews/{crew_id}/day-plan/today` with repository data
-- Back `POST /day-plans/{day_plan_id}/stops/{stop_id}/status` with repository writes
+- Add PostgreSQL-backed read query for `GET /crews/{crew_id}/day-plan/today`
+- Add PostgreSQL-backed write query for `POST /day-plans/{day_plan_id}/stops/{stop_id}/status`
 - Replace browser-only persistence as the source of truth
 
 ### Photo evidence flow
@@ -194,6 +204,15 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-15 | PLAN.md refreshed to match delivered route-progress work |
+| 2026-06-15 | Route-stop fallback job-selection tightened |
+| 2026-06-15 | Stop-progress domain helpers and tests added |
+| 2026-06-15 | Route progress sync status display added |
+| 2026-06-15 | Route reset syncs stops back to pending |
+| 2026-06-15 | Route progress reset action added |
+| 2026-06-15 | Day-plan domain tests added |
+| 2026-06-15 | Crew day-plan API endpoint added |
+| 2026-06-15 | Day-plan, crew, and stop table migration added |
 | 2026-06-15 | README rewritten as practical project documentation |
 | 2026-06-15 | Stop-progress backend route added |
 | 2026-06-15 | Frontend stop-progress client added |
