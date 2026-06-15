@@ -1,4 +1,5 @@
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
+import { draftPlanPersistenceLabel } from '../domain/managerDayPlans';
 
 type ManagerDraftDayPlanCardProps = {
   draftPlan: DayPlanMutationResponse;
@@ -12,9 +13,7 @@ export function ManagerDraftDayPlanCard({ draftPlan }: ManagerDraftDayPlanCardPr
       <p>Service date: {draftPlan.serviceDate}</p>
       <p>Status: {draftPlan.status}</p>
       <p>Route mode: {draftPlan.routeStatus}</p>
-      <p className="mt-2 text-xs text-slate-500">
-        {draftPlan.persisted ? 'Saved to backend' : 'Saved locally until the backend create endpoint is available'}
-      </p>
+      <p className="mt-2 text-xs text-slate-500">{draftPlanPersistenceLabel(draftPlan.persisted)}</p>
     </article>
   );
 }
