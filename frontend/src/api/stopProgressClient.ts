@@ -1,6 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+import type { StopProgressStatus } from '../domain/stopProgress';
 
-export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 export interface StopProgressResponse {
   dayPlanId: string;
@@ -9,14 +9,14 @@ export interface StopProgressResponse {
   persisted: boolean;
 }
 
-interface ApiStopProgressResponse {
+export interface ApiStopProgressResponse {
   day_plan_id: string;
   stop_id: string;
   status: StopProgressStatus;
   persisted: boolean;
 }
 
-function toStopProgress(response: ApiStopProgressResponse): StopProgressResponse {
+export function toStopProgress(response: ApiStopProgressResponse): StopProgressResponse {
   return {
     dayPlanId: response.day_plan_id,
     stopId: response.stop_id,
