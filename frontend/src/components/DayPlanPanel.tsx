@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
 import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
+import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   countFinishedStops,
   getNextStopStatus,
@@ -54,10 +55,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
       const article = candidate.closest('article');
       const buttonText = candidate.textContent ?? '';
 
-      return (
-        article?.textContent?.includes(customerName) &&
-        (buttonText.includes('Open Job') || buttonText.includes('Selected Job'))
-      );
+      return article?.textContent?.includes(customerName) && isJobSelectionButtonText(buttonText);
     });
 
     button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
