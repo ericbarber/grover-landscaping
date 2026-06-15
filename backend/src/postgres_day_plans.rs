@@ -1,6 +1,24 @@
 use crate::day_plans::{DayPlanStop, DayPlanSummary};
 use sqlx::{PgPool, Row};
 
+pub async fn create_draft_day_plan(
+    pool: &PgPool,
+    id: &str,
+    crew_id: &str,
+    service_date: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query(
+        "INSERT INTO day_plans (id, crew_id, service_date, status, route_status) VALUES ($1, $2, $3::date, 'draft', 'manual') ON CONFLICT (id) DO NOTHING",
+    )
+    .bind(id)
+    .bind(crew_id)
+    .bind(service_date)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected() == 1)
+}
+
 pub async fn today_for_crew(
     pool: &PgPool,
     crew_id: &str,
