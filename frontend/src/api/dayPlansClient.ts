@@ -1,4 +1,5 @@
 import type { DayPlan } from '../domain/dayPlans';
+import type { StopProgressStatus } from '../domain/stopProgress';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
@@ -9,6 +10,7 @@ interface ApiDayPlanStop {
   property_address: string;
   stop_order: number;
   job_status: DayPlan['stops'][number]['jobStatus'];
+  stop_status?: StopProgressStatus;
   estimated_drive_minutes: number;
   estimated_service_minutes: number;
 }
@@ -38,6 +40,7 @@ function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
       propertyAddress: stop.property_address,
       stopOrder: stop.stop_order,
       jobStatus: stop.job_status,
+      stopStatus: stop.stop_status,
       estimatedDriveMinutes: stop.estimated_drive_minutes,
       estimatedServiceMinutes: stop.estimated_service_minutes,
     })),
