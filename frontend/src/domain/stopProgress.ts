@@ -11,6 +11,13 @@ export function getNextStopStatus(currentStatus: StopProgressStatus | undefined)
   return 'finished';
 }
 
+export function resolveStopStatus(
+  localStatus: StopProgressStatus | undefined,
+  serverStatus: StopProgressStatus | undefined,
+): StopProgressStatus {
+  return localStatus ?? serverStatus ?? 'pending';
+}
+
 export function countFinishedStops(stopIds: string[], stopStates: StopStateMap): number {
   return stopIds.filter((stopId) => stopStates[stopId] === 'finished').length;
 }
