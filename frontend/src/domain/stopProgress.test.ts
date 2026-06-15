@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   countFinishedStops,
+  countResolvedFinishedStops,
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
@@ -45,6 +46,33 @@ describe('stop progress helpers', () => {
         stop_1001: 'finished',
         stop_1002: 'in_progress',
       }),
+    ).toBe(1);
+  });
+
+  it('counts server-resolved finished stops', () => {
+    expect(
+      countResolvedFinishedStops(
+        [
+          { id: 'stop_1001', stopStatus: 'finished' },
+          { id: 'stop_1002', stopStatus: 'in_progress' },
+        ],
+        {},
+      ),
+    ).toBe(1);
+  });
+
+  it('counts local overrides before server-resolved stop statuses', () => {
+    expect(
+      countResolvedFinishedStops(
+        [
+          { id: 'stop_1001', stopStatus: 'in_progress' },
+          { id: 'stop_1002', stopStatus: 'finished' },
+        ],
+        {
+          stop_1001: 'finished',
+          stop_1002: 'in_progress',
+        },
+      ),
     ).toBe(1);
   });
 
