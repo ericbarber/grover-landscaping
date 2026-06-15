@@ -87,3 +87,25 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
         ],
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::seed_day_plan;
+
+    #[test]
+    fn seeded_day_plan_keeps_ordered_stops() {
+        let day_plan = seed_day_plan("crew_1001");
+
+        assert_eq!(day_plan.stops.len(), 2);
+        assert_eq!(day_plan.stops[0].stop_order, 1);
+        assert_eq!(day_plan.stops[1].stop_order, 2);
+    }
+
+    #[test]
+    fn seeded_day_plan_includes_stop_status() {
+        let day_plan = seed_day_plan("crew_1001");
+
+        assert_eq!(day_plan.stops[0].stop_status, "pending");
+        assert_eq!(day_plan.stops[1].stop_status, "pending");
+    }
+}
