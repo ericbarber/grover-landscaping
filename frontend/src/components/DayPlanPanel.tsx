@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
-import { updateStopProgress, type StopProgressStatus } from '../api/stopProgressClient';
+import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
+import {
+  countFinishedStops,
+  getNextStopStatus,
+  resetStopStates,
+  type StopProgressStatus,
+  type StopStateMap,
+} from '../domain/stopProgress';
 
 type DayPlanPanelProps = {
   onSelectJob?: (jobId: string) => void;
 };
 
-type StopStateMap = Record<string, StopProgressStatus>;
 type SyncStatus = 'local' | 'syncing' | 'synced';
 
 function storageKey(dayPlanId: string): string {
@@ -37,7 +43,10 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
-  const completedStops = dayPlan.stops.filter((stop) => stopStates[stop.id] === 'finished').length;
+  const completedStops = countFinishedStops(
+    dayPlan.stops.map((stop) => stop.id),
+    stopStates,
+  );
 
   function clickMatchingJobCard(customerName: string) {
     const cards = Array.from(document.querySelectorAll('article'));
@@ -71,8 +80,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
   function advanceStop(stopId: string) {
     setStopStates((current) => {
-      const currentState = current[stopId] ?? 'pending';
-      const nextState = currentState === 'pending' ? 'in_progress' : 'finished';
+      const nextState = getNextStopStatus(current[stopId]);
       const next = { ...current, [stopId]: nextState };
       persistStopState(stopId, next);
       return next;
@@ -81,7 +89,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
   function resetRouteProgress() {
     clearStopStates(dayPlan.id);
-    setStopStates({});
+    setStopStates(resetStopStates());
     setSyncStatus('syncing');
 
     void Promise.all(
@@ -154,7 +162,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
 
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {
-          const localState = stopStates[stop.id] ?? 'pending';
+          const localState: StopProgressStatus = stopStates[stop.id] ?? 'pending';
           const actionLabel = localState === 'pending' ? 'Start stop' : localState === 'in_progress' ? 'Finish stop' : 'Finished';
 
           return (
