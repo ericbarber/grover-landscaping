@@ -3,7 +3,7 @@ import type { StopProgressStatus } from '../domain/stopProgress';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
-interface ApiDayPlanStop {
+export interface ApiDayPlanStop {
   id: string;
   job_id: string;
   customer_name: string;
@@ -15,7 +15,7 @@ interface ApiDayPlanStop {
   estimated_service_minutes: number;
 }
 
-interface ApiDayPlan {
+export interface ApiDayPlan {
   id: string;
   crew_id: string;
   crew_name: string;
@@ -25,7 +25,7 @@ interface ApiDayPlan {
   stops: ApiDayPlanStop[];
 }
 
-function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
+export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   return {
     id: apiDayPlan.id,
     crewId: apiDayPlan.crew_id,
