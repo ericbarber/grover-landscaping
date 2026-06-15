@@ -8,6 +8,7 @@ import {
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
+  syncStatusFromPersistence,
   syncStatusLabel,
   type RouteProgressSyncStatus,
   type StopProgressStatus,
@@ -77,7 +78,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
     setSyncStatus('syncing');
 
     void updateStopProgress(dayPlan.id, stopId, next[stopId])
-      .then(() => setSyncStatus('synced'))
+      .then((progress) => setSyncStatus(syncStatusFromPersistence(progress.persisted)))
       .catch(() => {
         saveStopStates(dayPlan.id, next);
         setSyncStatus('local');
@@ -101,7 +102,10 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
     void Promise.all(
       dayPlan.stops.map((stop) => updateStopProgress(dayPlan.id, stop.id, 'pending')),
     )
-      .then(() => setSyncStatus('synced'))
+      .then((progress) => {
+        const allPersisted = progress.every((item) => item.persisted);
+        setSyncStatus(syncStatusFromPersistence(allPersisted));
+      })
       .catch(() => setSyncStatus('local'));
   }
 
