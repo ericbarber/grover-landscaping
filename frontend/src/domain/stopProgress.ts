@@ -18,6 +18,10 @@ export function resolveStopStatus(
   return localStatus ?? serverStatus ?? 'pending';
 }
 
+export function syncStatusFromPersistence(persisted: boolean): RouteProgressSyncStatus {
+  return persisted ? 'synced' : 'local';
+}
+
 export function countFinishedStops(stopIds: string[], stopStates: StopStateMap): number {
   return stopIds.filter((stopId) => stopStates[stopId] === 'finished').length;
 }
