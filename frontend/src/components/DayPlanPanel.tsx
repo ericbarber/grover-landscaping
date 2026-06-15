@@ -49,9 +49,16 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   );
 
   function clickMatchingJobCard(customerName: string) {
-    const cards = Array.from(document.querySelectorAll('article'));
-    const card = cards.find((candidate) => candidate.textContent?.includes(customerName));
-    const button = card?.querySelector('button');
+    const buttons = Array.from(document.querySelectorAll('article button'));
+    const button = buttons.find((candidate) => {
+      const article = candidate.closest('article');
+      const buttonText = candidate.textContent ?? '';
+
+      return (
+        article?.textContent?.includes(customerName) &&
+        (buttonText.includes('Open Job') || buttonText.includes('Selected Job'))
+      );
+    });
 
     button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   }
