@@ -8,7 +8,7 @@ pub async fn create_draft_day_plan(
     service_date: &str,
 ) -> Result<bool, sqlx::Error> {
     let result = sqlx::query(
-        "INSERT INTO day_plans (id, crew_id, service_date, status, route_status) VALUES ($1, $2, $3::date, 'draft', 'manual') ON CONFLICT (id) DO NOTHING",
+        "INSERT INTO day_plans (id, crew_id, service_date, status, route_status) VALUES ($1, $2, $3::date, 'draft', 'manual') ON CONFLICT (id) DO UPDATE SET crew_id = EXCLUDED.crew_id, service_date = EXCLUDED.service_date, status = EXCLUDED.status, route_status = EXCLUDED.route_status, updated_at = now()",
     )
     .bind(id)
     .bind(crew_id)
