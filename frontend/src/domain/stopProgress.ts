@@ -3,6 +3,11 @@ export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
 
 export type StopStateMap = Record<string, StopProgressStatus>;
 
+export type StopStatusSnapshot = {
+  id: string;
+  stopStatus?: StopProgressStatus;
+};
+
 export function getNextStopStatus(currentStatus: StopProgressStatus | undefined): StopProgressStatus {
   if (currentStatus === 'pending' || currentStatus === undefined) {
     return 'in_progress';
@@ -24,6 +29,10 @@ export function syncStatusFromPersistence(persisted: boolean): RouteProgressSync
 
 export function countFinishedStops(stopIds: string[], stopStates: StopStateMap): number {
   return stopIds.filter((stopId) => stopStates[stopId] === 'finished').length;
+}
+
+export function countResolvedFinishedStops(stops: StopStatusSnapshot[], stopStates: StopStateMap): number {
+  return stops.filter((stop) => resolveStopStatus(stopStates[stop.id], stop.stopStatus) === 'finished').length;
 }
 
 export function resetStopStates(): StopStateMap {
