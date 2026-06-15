@@ -16,6 +16,18 @@ export function getNextStopStatus(currentStatus: StopProgressStatus | undefined)
   return 'finished';
 }
 
+export function stopActionLabel(stopStatus: StopProgressStatus): string {
+  if (stopStatus === 'pending') {
+    return 'Start stop';
+  }
+
+  if (stopStatus === 'in_progress') {
+    return 'Finish stop';
+  }
+
+  return 'Finished';
+}
+
 export function resolveStopStatus(
   localStatus: StopProgressStatus | undefined,
   serverStatus: StopProgressStatus | undefined,
