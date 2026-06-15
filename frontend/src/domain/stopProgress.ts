@@ -1,4 +1,5 @@
 export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
+export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
 
 export type StopStateMap = Record<string, StopProgressStatus>;
 
@@ -16,4 +17,16 @@ export function countFinishedStops(stopIds: string[], stopStates: StopStateMap):
 
 export function resetStopStates(): StopStateMap {
   return {};
+}
+
+export function syncStatusLabel(syncStatus: RouteProgressSyncStatus): string {
+  if (syncStatus === 'syncing') {
+    return 'syncing';
+  }
+
+  if (syncStatus === 'synced') {
+    return 'synced';
+  }
+
+  return 'saved locally';
 }
