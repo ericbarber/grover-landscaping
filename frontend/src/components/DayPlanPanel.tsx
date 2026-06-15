@@ -75,6 +75,10 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
   function resetRouteProgress() {
     clearStopStates(dayPlan.id);
     setStopStates({});
+
+    dayPlan.stops.forEach((stop) => {
+      void updateStopProgress(dayPlan.id, stop.id, 'pending').catch(() => undefined);
+    });
   }
 
   useEffect(() => {
