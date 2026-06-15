@@ -113,15 +113,10 @@ Current backend endpoints include:
 | POST | `/jobs/{id}/complete` | Mark a job complete |
 | POST | `/jobs/{id}/photos/presign` | Create a local photo upload ticket |
 | POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete |
+| GET | `/crews/{crew_id}/day-plan/today` | Read the current crew day plan route |
 | POST | `/day-plans/{day_plan_id}/stops/{stop_id}/status` | Update crew stop progress |
 
-The day-plan frontend client is also prepared for:
-
-```text
-GET /crews/{crew_id}/day-plan/today
-```
-
-That route is not yet backed by a persisted day-plan repository.
+The day-plan route currently returns a seeded route from the API. PostgreSQL tables exist for day plans and stops, but the live day-plan read path is not yet backed by the persisted repository.
 
 ## Data and Persistence
 
