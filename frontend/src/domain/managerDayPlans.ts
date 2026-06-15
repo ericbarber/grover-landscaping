@@ -14,3 +14,7 @@ export function localDraftDayPlanResponse(crewId: string, serviceDate: string): 
     persisted: false,
   };
 }
+
+export function draftPlanPersistenceLabel(persisted: boolean): string {
+  return persisted ? 'Saved to backend' : 'Saved locally until the backend create endpoint is available';
+}
