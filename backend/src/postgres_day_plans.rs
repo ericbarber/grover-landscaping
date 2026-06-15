@@ -19,6 +19,17 @@ pub async fn create_draft_day_plan(
     Ok(result.rows_affected() == 1)
 }
 
+pub async fn publish_day_plan(pool: &PgPool, id: &str) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query(
+        "UPDATE day_plans SET status = 'published', updated_at = now() WHERE id = $1",
+    )
+    .bind(id)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected() == 1)
+}
+
 pub async fn today_for_crew(
     pool: &PgPool,
     crew_id: &str,
