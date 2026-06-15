@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftDayPlanId, localDraftDayPlanResponse } from './managerDayPlans';
+import { draftDayPlanId, draftPlanPersistenceLabel, localDraftDayPlanResponse } from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
   it('creates stable draft day plan IDs', () => {
@@ -15,5 +15,10 @@ describe('manager day plan helpers', () => {
       routeStatus: 'manual',
       persisted: false,
     });
+  });
+
+  it('labels persisted and local draft plans', () => {
+    expect(draftPlanPersistenceLabel(true)).toBe('Saved to backend');
+    expect(draftPlanPersistenceLabel(false)).toBe('Saved locally until the backend create endpoint is available');
   });
 });
