@@ -8,6 +8,7 @@ pub struct DayPlanStop {
     pub property_address: String,
     pub stop_order: u32,
     pub job_status: String,
+    pub stop_status: String,
     pub estimated_drive_minutes: u32,
     pub estimated_service_minutes: u32,
 }
@@ -47,6 +48,7 @@ impl DayPlanRepository {
                     property_address: "123 Oak Street".to_string(),
                     stop_order: 1,
                     job_status: "scheduled".to_string(),
+                    stop_status: "pending".to_string(),
                     estimated_drive_minutes: 12,
                     estimated_service_minutes: 45,
                 },
@@ -57,6 +59,7 @@ impl DayPlanRepository {
                     property_address: "456 Maple Avenue".to_string(),
                     stop_order: 2,
                     job_status: "in_progress".to_string(),
+                    stop_status: "pending".to_string(),
                     estimated_drive_minutes: 8,
                     estimated_service_minutes: 60,
                 },
