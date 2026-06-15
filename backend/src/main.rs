@@ -15,7 +15,9 @@ use day_plans::DayPlanRepository;
 use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
-use stop_progress::{local_stop_progress_response, StopProgressRequest};
+use stop_progress::{
+    is_valid_stop_progress_status, local_stop_progress_response, StopProgressRequest,
+};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -70,6 +72,12 @@ pub struct ChecklistItem {
 #[derive(Debug, Serialize)]
 struct ActionResponse {
     status: &'static str,
+    message: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ErrorResponse {
+    error: &'static str,
     message: String,
 }
 
@@ -188,11 +196,23 @@ async fn update_stop_progress(
     Path((day_plan_id, stop_id)): Path<(String, String)>,
     Json(request): Json<StopProgressRequest>,
 ) -> impl IntoResponse {
+    if !is_valid_stop_progress_status(&request.status) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_stop_progress_status",
+                message: format!("Unsupported stop progress status: {}", request.status),
+            }),
+        )
+            .into_response();
+    }
+
     Json(local_stop_progress_response(
         &day_plan_id,
         &stop_id,
         &request.status,
     ))
+    .into_response()
 }
 
 async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
@@ -356,6 +376,30 @@ mod tests {
         assert_eq!(json["stop_id"], "stop_1001");
         assert_eq!(json["status"], "in_progress");
         assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn stop_progress_endpoint_rejects_invalid_status() {
+        let request_body = serde_json::json!({ "status": "done" });
+
+        let response = app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_15_crew_1001/stops/stop_1001/status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "invalid_stop_progress_status");
     }
 
     #[tokio::test]
