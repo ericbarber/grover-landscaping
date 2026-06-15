@@ -16,7 +16,8 @@ use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use stop_progress::{
-    is_valid_stop_progress_status, local_stop_progress_response, StopProgressRequest,
+    is_valid_stop_progress_status, local_stop_progress_response,
+    persisted_stop_progress_response, StopProgressRequest,
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -193,6 +194,7 @@ async fn get_today_day_plan(
 }
 
 async fn update_stop_progress(
+    State(state): State<Arc<AppState>>,
     Path((day_plan_id, stop_id)): Path<(String, String)>,
     Json(request): Json<StopProgressRequest>,
 ) -> impl IntoResponse {
@@ -207,12 +209,26 @@ async fn update_stop_progress(
             .into_response();
     }
 
-    Json(local_stop_progress_response(
-        &day_plan_id,
-        &stop_id,
-        &request.status,
-    ))
-    .into_response()
+    let persisted = state
+        .jobs
+        .update_stop_progress(&day_plan_id, &stop_id, &request.status)
+        .await;
+
+    if persisted {
+        Json(persisted_stop_progress_response(
+            &day_plan_id,
+            &stop_id,
+            &request.status,
+        ))
+        .into_response()
+    } else {
+        Json(local_stop_progress_response(
+            &day_plan_id,
+            &stop_id,
+            &request.status,
+        ))
+        .into_response()
+    }
 }
 
 async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
@@ -427,7 +443,9 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["upload_mode"], "local-placeholder");
+        assert_eq!(json["status"], "created");
         assert_eq!(json["job_id"], "job_1001");
+        assert_eq!(json["upload_mode"], "local-placeholder");
+        assert!(json["upload_url"].as_str().unwrap().starts_with("local://"));
     }
 }
