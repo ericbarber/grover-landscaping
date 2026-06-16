@@ -5,6 +5,8 @@ import {
   getAssignableJobCount,
   getAssignableJobs,
   getAssignedJobIds,
+  getDraftRouteEstimatedMinutes,
+  getDraftRouteStopCount,
   localDraftStopFromJob,
   localDraftStopId,
 } from './managerJobAssignment';
@@ -102,5 +104,13 @@ describe('manager job assignment helpers', () => {
 
   it('does not append duplicate jobs', () => {
     expect(appendJobToDraftStops(draftStops, jobs[0])).toEqual(draftStops);
+  });
+
+  it('summarizes draft route stop count', () => {
+    expect(getDraftRouteStopCount(draftStops)).toBe(1);
+  });
+
+  it('summarizes draft route estimated minutes', () => {
+    expect(getDraftRouteEstimatedMinutes(draftStops)).toBe(57);
   });
 });
