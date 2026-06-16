@@ -66,6 +66,24 @@ export function draftStopsUpdaterForSelectedJob(
   return (currentStops) => nextDraftStopsForSelectedJob(currentStops, jobs, selectedJobId);
 }
 
+export function renumberDraftStops(stops: DayPlanStop[]): DayPlanStop[] {
+  return stops.map((stop, index) => ({ ...stop, stopOrder: index + 1 }));
+}
+
+export function removeJobIdFromDraftStops(stops: DayPlanStop[], jobId: string): DayPlanStop[] {
+  const remainingStops = stops.filter((stop) => stop.jobId !== jobId);
+
+  if (remainingStops.length === stops.length) {
+    return stops;
+  }
+
+  return renumberDraftStops(remainingStops);
+}
+
+export function draftStopsRemoverForSelectedJob(selectedJobId: string): (currentStops: DayPlanStop[]) => DayPlanStop[] {
+  return (currentStops) => removeJobIdFromDraftStops(currentStops, selectedJobId);
+}
+
 export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
   return stops.length;
 }
