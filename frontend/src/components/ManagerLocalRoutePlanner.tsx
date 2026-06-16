@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
-import { draftStopsUpdaterForSelectedJob } from '../domain/managerJobAssignment';
+import {
+  draftStopsMoveDownForSelectedJob,
+  draftStopsMoveUpForSelectedJob,
+  draftStopsUpdaterForSelectedJob,
+} from '../domain/managerJobAssignment';
 import { ManagerDraftRouteWorkspace } from './ManagerDraftRouteWorkspace';
 
 type ManagerLocalRoutePlannerProps = {
@@ -16,5 +20,21 @@ export function ManagerLocalRoutePlanner({ jobs, initialStops = [] }: ManagerLoc
     setDraftStops(draftStopsUpdaterForSelectedJob(jobs, jobId));
   }
 
-  return <ManagerDraftRouteWorkspace jobs={jobs} stops={draftStops} onAddJob={addJob} />;
+  function moveJobUp(jobId: string) {
+    setDraftStops(draftStopsMoveUpForSelectedJob(jobId));
+  }
+
+  function moveJobDown(jobId: string) {
+    setDraftStops(draftStopsMoveDownForSelectedJob(jobId));
+  }
+
+  return (
+    <ManagerDraftRouteWorkspace
+      jobs={jobs}
+      stops={draftStops}
+      onAddJob={addJob}
+      onMoveUp={moveJobUp}
+      onMoveDown={moveJobDown}
+    />
+  );
 }
