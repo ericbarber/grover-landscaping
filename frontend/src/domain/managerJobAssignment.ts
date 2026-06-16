@@ -108,6 +108,14 @@ export function moveDraftStopDown(stops: DayPlanStop[], jobId: string): DayPlanS
   return moveDraftStop(stops, jobId, 1);
 }
 
+export function draftStopsMoveUpForSelectedJob(selectedJobId: string): (currentStops: DayPlanStop[]) => DayPlanStop[] {
+  return (currentStops) => moveDraftStopUp(currentStops, selectedJobId);
+}
+
+export function draftStopsMoveDownForSelectedJob(selectedJobId: string): (currentStops: DayPlanStop[]) => DayPlanStop[] {
+  return (currentStops) => moveDraftStopDown(currentStops, selectedJobId);
+}
+
 export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
   return stops.length;
 }
