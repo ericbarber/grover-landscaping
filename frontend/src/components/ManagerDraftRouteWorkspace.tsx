@@ -7,13 +7,15 @@ type ManagerDraftRouteWorkspaceProps = {
   jobs: YardCareJob[];
   stops: DayPlanStop[];
   onAddJob?: (jobId: string) => void;
+  onMoveUp?: (jobId: string) => void;
+  onMoveDown?: (jobId: string) => void;
   onRemoveJob?: (jobId: string) => void;
 };
 
-export function ManagerDraftRouteWorkspace({ jobs, stops, onAddJob, onRemoveJob }: ManagerDraftRouteWorkspaceProps) {
+export function ManagerDraftRouteWorkspace({ jobs, stops, onAddJob, onMoveUp, onMoveDown, onRemoveJob }: ManagerDraftRouteWorkspaceProps) {
   return (
     <div className="space-y-4">
-      <ManagerEditableDraftRoutePanel stops={stops} onRemoveJob={onRemoveJob} />
+      <ManagerEditableDraftRoutePanel stops={stops} onMoveUp={onMoveUp} onMoveDown={onMoveDown} onRemoveJob={onRemoveJob} />
       <ManagerAssignableJobsPanel jobs={jobs} stops={stops} onAddJob={onAddJob} />
     </div>
   );
