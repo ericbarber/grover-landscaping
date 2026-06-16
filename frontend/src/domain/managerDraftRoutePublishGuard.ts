@@ -1,6 +1,9 @@
 import type { DayPlanStop } from './dayPlans';
 import type { YardCareJob } from './jobs';
-import { getManagerDraftRoutePlanningMetrics } from './managerDraftRoutePlanningMetrics';
+import {
+  getManagerDraftRoutePlanningMetrics,
+  type ManagerDraftRoutePlanningMetrics,
+} from './managerDraftRoutePlanningMetrics';
 import { getManagerDraftRouteReviewMessage } from './managerDraftRouteReviewMessage';
 
 export type ManagerDraftRoutePublishGuard = {
@@ -8,12 +11,9 @@ export type ManagerDraftRoutePublishGuard = {
   disabledReason: string | null;
 };
 
-export function getManagerDraftRoutePublishGuard(
-  jobs: YardCareJob[],
-  stops: DayPlanStop[],
+export function getManagerDraftRoutePublishGuardFromMetrics(
+  metrics: ManagerDraftRoutePlanningMetrics,
 ): ManagerDraftRoutePublishGuard {
-  const metrics = getManagerDraftRoutePlanningMetrics(jobs, stops);
-
   if (metrics.isReadyToReview) {
     return {
       canPublish: true,
@@ -29,4 +29,11 @@ export function getManagerDraftRoutePublishGuard(
       metrics.workload.totalMinutes,
     ),
   };
+}
+
+export function getManagerDraftRoutePublishGuard(
+  jobs: YardCareJob[],
+  stops: DayPlanStop[],
+): ManagerDraftRoutePublishGuard {
+  return getManagerDraftRoutePublishGuardFromMetrics(getManagerDraftRoutePlanningMetrics(jobs, stops));
 }
