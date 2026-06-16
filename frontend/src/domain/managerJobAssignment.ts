@@ -40,3 +40,11 @@ export function appendJobToDraftStops(stops: DayPlanStop[], job: YardCareJob): D
 
   return [...stops, localDraftStopFromJob(job, stops.length + 1)];
 }
+
+export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
+  return stops.length;
+}
+
+export function getDraftRouteEstimatedMinutes(stops: DayPlanStop[]): number {
+  return stops.reduce((total, stop) => total + stop.estimatedDriveMinutes + stop.estimatedServiceMinutes, 0);
+}
