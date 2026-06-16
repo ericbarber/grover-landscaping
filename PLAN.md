@@ -60,6 +60,22 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend day-plan read helper for PostgreSQL-backed crew routes
 - Day-plan repository attempts PostgreSQL reads with seeded fallback
 
+### Manager scheduling foundation
+
+- Frontend draft day-plan API client
+- Frontend create-draft fallback helper
+- Manager create day-plan panel on the dashboard
+- Manager draft day-plan card
+- Manager publish day-plan API client
+- Manager publish fallback helper
+- Manager publish button component
+- Manager draft action wrapper for card plus publish action
+- Manager day-plan helper tests for draft IDs, local draft fallback, local publish fallback, and persistence labels
+- Backend draft day-plan request and mutation response contract
+- Backend draft day-plan repository helper
+- PostgreSQL draft day-plan creation helper
+- PostgreSQL publish day-plan helper
+
 ### Account and service tracking foundation
 
 - Customer account summary model
@@ -100,7 +116,28 @@ Next implementation work:
 
 - Wire the route summary finished-count to resolved server-or-local stop status
 - Add database-backed route tests around persisted stop progress and day-plan reads
-- Add manager day-plan creation and publishing workflow
+- Expose backend manager routes for `POST /day-plans` and `POST /day-plans/{day_plan_id}/publish`
+
+### Manager scheduling workflow
+
+Goal: let managers create, review, and publish day plans before crews start routes.
+
+Current state:
+
+- Frontend manager panel can create draft day plans through the API client with local fallback
+- Frontend manager panel is visible below the crew day-plan panel
+- Frontend can display draft day-plan mutation results
+- Frontend has a publish client and local publish fallback
+- Frontend has a publish button and action wrapper ready for manager panel actions
+- Backend repository and PostgreSQL helpers exist for draft creation
+- PostgreSQL helper exists for publishing a day plan
+
+Next implementation work:
+
+- Expose the backend create and publish routes through Axum
+- Add manager UI affordances for assigning jobs to a draft day plan
+- Add route stop ordering controls
+- Add workload summary for estimated drive and service duration
 
 ### Photo evidence flow
 
@@ -132,7 +169,6 @@ Next implementation work:
 
 ### Manager scheduling workflow
 
-- Create and publish day plans
 - Assign jobs to crews
 - Manually order route stops
 - View crew workload and estimated duration
@@ -211,6 +247,11 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-16 | Manager draft action wrapper added for draft card plus publish action |
+| 2026-06-16 | Manager publish day-plan client, fallback helper, and publish button added |
+| 2026-06-16 | Manager create day-plan panel added to the dashboard |
+| 2026-06-16 | Frontend draft day-plan creation client and local fallback helpers added |
+| 2026-06-16 | Backend draft day-plan repository and PostgreSQL creation helpers added |
 | 2026-06-15 | PostgreSQL-backed day-plan read helper added |
 | 2026-06-15 | Stop-progress route wired to attempt PostgreSQL persistence |
 | 2026-06-15 | Day-plan API response now includes stop status |
@@ -218,13 +259,3 @@ Next implementation work:
 | 2026-06-15 | Route-stop fallback job-selection tightened |
 | 2026-06-15 | Stop-progress domain helpers and tests added |
 | 2026-06-15 | Route progress sync status display added |
-| 2026-06-15 | Route reset syncs stops back to pending |
-| 2026-06-15 | Route progress reset action added |
-| 2026-06-15 | Day-plan domain tests added |
-| 2026-06-15 | Crew day-plan API endpoint added |
-| 2026-06-15 | Day-plan, crew, and stop table migration added |
-| 2026-06-15 | README rewritten as practical project documentation |
-| 2026-06-15 | Stop-progress backend route added |
-| 2026-06-15 | Frontend stop-progress client added |
-| 2026-06-15 | Browser-persisted route stop progress added |
-| 2026-06-15 | Crew day-plan panel added |
