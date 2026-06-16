@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
-import { ManagerDraftDayPlanCard } from './ManagerDraftDayPlanCard';
+import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
 
 export function ManagerDayPlanPanel() {
   const [crewId, setCrewId] = useState('crew_1001');
@@ -41,7 +41,7 @@ export function ManagerDayPlanPanel() {
         </button>
       </form>
 
-      {draftPlan ? <div className="mt-5"><ManagerDraftDayPlanCard draftPlan={draftPlan} /></div> : null}
+      {draftPlan ? <div className="mt-5"><ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={setDraftPlan} /></div> : null}
     </section>
   );
 }
