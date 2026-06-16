@@ -1,12 +1,15 @@
 import type { DayPlanStop } from '../domain/dayPlans';
+import { ManagerMoveDraftStopButtons } from './ManagerMoveDraftStopButtons';
 import { ManagerRemoveDraftStopButton } from './ManagerRemoveDraftStopButton';
 
 type ManagerDraftRouteStopCardProps = {
   stop: DayPlanStop;
+  onMoveUp?: (jobId: string) => void;
+  onMoveDown?: (jobId: string) => void;
   onRemoveJob?: (jobId: string) => void;
 };
 
-export function ManagerDraftRouteStopCard({ stop, onRemoveJob }: ManagerDraftRouteStopCardProps) {
+export function ManagerDraftRouteStopCard({ stop, onMoveUp, onMoveDown, onRemoveJob }: ManagerDraftRouteStopCardProps) {
   return (
     <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -20,7 +23,10 @@ export function ManagerDraftRouteStopCard({ stop, onRemoveJob }: ManagerDraftRou
             <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">{stop.stopStatus ?? 'pending'}</p>
           </div>
         </div>
-        <ManagerRemoveDraftStopButton jobId={stop.jobId} onRemoveJob={onRemoveJob} />
+        <div className="flex flex-col items-end gap-2">
+          <ManagerMoveDraftStopButtons jobId={stop.jobId} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+          <ManagerRemoveDraftStopButton jobId={stop.jobId} onRemoveJob={onRemoveJob} />
+        </div>
       </div>
     </article>
   );
