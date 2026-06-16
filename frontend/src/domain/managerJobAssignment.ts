@@ -84,6 +84,30 @@ export function draftStopsRemoverForSelectedJob(selectedJobId: string): (current
   return (currentStops) => removeJobIdFromDraftStops(currentStops, selectedJobId);
 }
 
+export function moveDraftStop(stops: DayPlanStop[], jobId: string, direction: -1 | 1): DayPlanStop[] {
+  const currentIndex = stops.findIndex((stop) => stop.jobId === jobId);
+  const nextIndex = currentIndex + direction;
+
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= stops.length) {
+    return stops;
+  }
+
+  const reorderedStops = [...stops];
+  const currentStop = reorderedStops[currentIndex];
+  reorderedStops[currentIndex] = reorderedStops[nextIndex];
+  reorderedStops[nextIndex] = currentStop;
+
+  return renumberDraftStops(reorderedStops);
+}
+
+export function moveDraftStopUp(stops: DayPlanStop[], jobId: string): DayPlanStop[] {
+  return moveDraftStop(stops, jobId, -1);
+}
+
+export function moveDraftStopDown(stops: DayPlanStop[], jobId: string): DayPlanStop[] {
+  return moveDraftStop(stops, jobId, 1);
+}
+
 export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
   return stops.length;
 }
