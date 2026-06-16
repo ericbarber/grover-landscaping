@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DayPlanStop } from './dayPlans';
 import {
+  appendJobIdToDraftStops,
   appendJobToDraftStops,
   getAssignableJobCount,
   getAssignableJobs,
@@ -100,6 +101,17 @@ describe('manager job assignment helpers', () => {
       'stop_1001',
       'local_stop_job_1003',
     ]);
+  });
+
+  it('appends jobs by selected job id', () => {
+    expect(appendJobIdToDraftStops(draftStops, jobs, 'job_1003').map((stop) => stop.id)).toEqual([
+      'stop_1001',
+      'local_stop_job_1003',
+    ]);
+  });
+
+  it('preserves draft stops when the selected job id is unknown', () => {
+    expect(appendJobIdToDraftStops(draftStops, jobs, 'job_missing')).toEqual(draftStops);
   });
 
   it('does not append duplicate jobs', () => {
