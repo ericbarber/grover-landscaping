@@ -1,31 +1,20 @@
 import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
 import { getManagerDraftRoutePlanningMetrics } from '../domain/managerDraftRoutePlanningMetrics';
+import { getManagerDraftRouteReviewMessage } from '../domain/managerDraftRouteReviewMessage';
 
 type ManagerDraftRouteReviewStateCardProps = {
   jobs: YardCareJob[];
   stops: DayPlanStop[];
 };
 
-function reviewMessage(isReadyToReview: boolean, hasStops: boolean, totalMinutes: number): string {
-  if (isReadyToReview) {
-    return 'Ready for manager review before publishing.';
-  }
-
-  if (!hasStops) {
-    return 'Add at least one job before reviewing this route.';
-  }
-
-  if (totalMinutes === 0) {
-    return 'Add workload estimates before publishing this route.';
-  }
-
-  return 'Review route details before publishing.';
-}
-
 export function ManagerDraftRouteReviewStateCard({ jobs, stops }: ManagerDraftRouteReviewStateCardProps) {
   const metrics = getManagerDraftRoutePlanningMetrics(jobs, stops);
-  const message = reviewMessage(metrics.isReadyToReview, metrics.summary.hasStops, metrics.workload.totalMinutes);
+  const message = getManagerDraftRouteReviewMessage(
+    metrics.isReadyToReview,
+    metrics.summary.hasStops,
+    metrics.workload.totalMinutes,
+  );
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
