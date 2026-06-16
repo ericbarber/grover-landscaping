@@ -51,6 +51,14 @@ export function appendJobIdToDraftStops(stops: DayPlanStop[], jobs: YardCareJob[
   return appendJobToDraftStops(stops, job);
 }
 
+export function nextDraftStopsForSelectedJob(
+  currentStops: DayPlanStop[],
+  jobs: YardCareJob[],
+  selectedJobId: string,
+): DayPlanStop[] {
+  return appendJobIdToDraftStops(currentStops, jobs, selectedJobId);
+}
+
 export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
   return stops.length;
 }
