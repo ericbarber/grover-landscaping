@@ -4,10 +4,12 @@ import { ManagerDraftRouteStopCard } from './ManagerDraftRouteStopCard';
 
 type ManagerEditableDraftRoutePanelProps = {
   stops: DayPlanStop[];
+  onMoveUp?: (jobId: string) => void;
+  onMoveDown?: (jobId: string) => void;
   onRemoveJob?: (jobId: string) => void;
 };
 
-export function ManagerEditableDraftRoutePanel({ stops, onRemoveJob }: ManagerEditableDraftRoutePanelProps) {
+export function ManagerEditableDraftRoutePanel({ stops, onMoveUp, onMoveDown, onRemoveJob }: ManagerEditableDraftRoutePanelProps) {
   const stopCount = getDraftRouteStopCount(stops);
   const estimatedMinutes = getDraftRouteEstimatedMinutes(stops);
 
@@ -31,7 +33,15 @@ export function ManagerEditableDraftRoutePanel({ stops, onRemoveJob }: ManagerEd
         {stops.length === 0 ? (
           <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">No jobs have been added to this draft route yet.</p>
         ) : (
-          stops.map((stop) => <ManagerDraftRouteStopCard key={stop.id} stop={stop} onRemoveJob={onRemoveJob} />)
+          stops.map((stop) => (
+            <ManagerDraftRouteStopCard
+              key={stop.id}
+              stop={stop}
+              onMoveUp={onMoveUp}
+              onMoveDown={onMoveDown}
+              onRemoveJob={onRemoveJob}
+            />
+          ))
         )}
       </div>
     </section>
