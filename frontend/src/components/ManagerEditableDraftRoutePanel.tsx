@@ -1,4 +1,5 @@
 import type { DayPlanStop } from '../domain/dayPlans';
+import { canMoveDraftStopDown, canMoveDraftStopUp } from '../domain/managerDraftRouteMoveBounds';
 import { getDraftRouteEstimatedMinutes, getDraftRouteStopCount } from '../domain/managerJobAssignment';
 import { ManagerDraftRouteStopCard } from './ManagerDraftRouteStopCard';
 
@@ -37,6 +38,8 @@ export function ManagerEditableDraftRoutePanel({ stops, onMoveUp, onMoveDown, on
             <ManagerDraftRouteStopCard
               key={stop.id}
               stop={stop}
+              canMoveUp={canMoveDraftStopUp(stops, stop.jobId)}
+              canMoveDown={canMoveDraftStopDown(stops, stop.jobId)}
               onMoveUp={onMoveUp}
               onMoveDown={onMoveDown}
               onRemoveJob={onRemoveJob}
