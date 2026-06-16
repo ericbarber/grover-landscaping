@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { getManagerDraftRoutePublishGuard } from './managerDraftRoutePublishGuard';
+import {
+  getManagerDraftRoutePublishGuard,
+  getManagerDraftRoutePublishGuardFromMetrics,
+} from './managerDraftRoutePublishGuard';
 
 const job = {
   id: 'job_1001',
@@ -37,6 +40,30 @@ describe('manager draft route publish guard', () => {
     expect(getManagerDraftRoutePublishGuard([job], [])).toEqual({
       canPublish: false,
       disabledReason: 'Add at least one job before reviewing this route.',
+    });
+  });
+
+  it('allows publishing when precomputed metrics are ready', () => {
+    expect(
+      getManagerDraftRoutePublishGuardFromMetrics({
+        summary: {
+          stopCount: 1,
+          estimatedMinutes: 57,
+          assignableJobCount: 0,
+          hasStops: true,
+          hasAssignableJobs: false,
+        },
+        workload: {
+          driveMinutes: 12,
+          serviceMinutes: 45,
+          totalMinutes: 57,
+        },
+        isReadyToReview: true,
+        needsMoreJobs: false,
+      }),
+    ).toEqual({
+      canPublish: true,
+      disabledReason: null,
     });
   });
 });
