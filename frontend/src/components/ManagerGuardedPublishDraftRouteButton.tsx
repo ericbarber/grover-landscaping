@@ -1,5 +1,6 @@
 import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
+import { getManagerDraftRoutePublishButtonState } from '../domain/managerDraftRoutePublishButtonState';
 import { getManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import { getManagerDraftRoutePublishMessage } from '../domain/managerDraftRoutePublishMessage';
 
@@ -17,18 +18,18 @@ export function ManagerGuardedPublishDraftRouteButton({
   onPublish,
 }: ManagerGuardedPublishDraftRouteButtonProps) {
   const guard = getManagerDraftRoutePublishGuard(jobs, stops);
-  const isDisabled = !guard.canPublish || isPublishing || !onPublish;
+  const buttonState = getManagerDraftRoutePublishButtonState(guard.canPublish, isPublishing, Boolean(onPublish));
   const message = getManagerDraftRoutePublishMessage(guard.disabledReason);
 
   return (
     <div className="space-y-2">
       <button
         className="w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isDisabled}
+        disabled={buttonState.isDisabled}
         onClick={() => onPublish?.()}
         type="button"
       >
-        {isPublishing ? 'Publishing draft route...' : 'Publish draft route'}
+        {buttonState.label}
       </button>
       <p className="text-xs text-slate-600">{message}</p>
     </div>
