@@ -41,6 +41,16 @@ export function appendJobToDraftStops(stops: DayPlanStop[], job: YardCareJob): D
   return [...stops, localDraftStopFromJob(job, stops.length + 1)];
 }
 
+export function appendJobIdToDraftStops(stops: DayPlanStop[], jobs: YardCareJob[], jobId: string): DayPlanStop[] {
+  const job = jobs.find((candidate) => candidate.id === jobId);
+
+  if (!job) {
+    return stops;
+  }
+
+  return appendJobToDraftStops(stops, job);
+}
+
 export function getDraftRouteStopCount(stops: DayPlanStop[]): number {
   return stops.length;
 }
