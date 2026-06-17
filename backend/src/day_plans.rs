@@ -134,7 +134,7 @@ impl DayPlanRepository {
         day_plan_id: &str,
         request: AssignDayPlanStopRequest,
     ) -> DayPlanStopMutationResponse {
-        let stop_id = draft_stop_id(&request.job_id);
+        let stop_id = draft_stop_id(day_plan_id, &request.job_id);
 
         if let Some(pool) = &self.pool {
             if let Ok(Some(response)) =
@@ -214,8 +214,8 @@ pub fn draft_day_plan_id(crew_id: &str, service_date: &str) -> String {
     format!("day_plan_{}_{}", service_date.replace('-', "_"), crew_id)
 }
 
-pub fn draft_stop_id(job_id: &str) -> String {
-    format!("stop_{job_id}")
+pub fn draft_stop_id(day_plan_id: &str, job_id: &str) -> String {
+    format!("stop_{day_plan_id}_{job_id}")
 }
 
 pub fn local_draft_day_plan_response(request: &CreateDayPlanRequest) -> DayPlanMutationResponse {

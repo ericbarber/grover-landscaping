@@ -214,6 +214,7 @@ pub async fn today_for_crew(
             SELECT dp.id
             FROM day_plans dp
             WHERE dp.crew_id = $1
+              AND dp.status = 'published'
               AND EXISTS (
                   SELECT 1
                   FROM day_plan_stops dps
@@ -226,7 +227,8 @@ pub async fn today_for_crew(
                     ELSE 2
                 END,
                 CASE WHEN dp.service_date < CURRENT_DATE THEN dp.service_date END DESC,
-                CASE WHEN dp.service_date > CURRENT_DATE THEN dp.service_date END ASC
+                CASE WHEN dp.service_date > CURRENT_DATE THEN dp.service_date END ASC,
+                dp.updated_at DESC
             LIMIT 1
         )
         SELECT

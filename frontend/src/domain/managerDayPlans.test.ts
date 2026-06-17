@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  defaultManagerServiceDate,
   draftDayPlanId,
   draftPlanPersistenceLabel,
   localDraftDayPlanResponse,
@@ -7,6 +8,10 @@ import {
 } from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
+  it('formats the default manager service date for date inputs', () => {
+    expect(defaultManagerServiceDate(new Date(2026, 0, 9))).toBe('2026-01-09');
+  });
+
   it('creates stable draft day plan IDs', () => {
     expect(draftDayPlanId('crew_1001', '2026-06-16')).toBe('day_plan_2026_06_16_crew_1001');
   });

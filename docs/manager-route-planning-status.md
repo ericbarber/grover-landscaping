@@ -20,9 +20,10 @@
 - Add, remove, and reorder planner actions call backend stop mutation routes when the draft is persisted.
 - Planner actions fall back to local state when the API is unavailable.
 - Route planner displays sync status for persisted, syncing, and local changes.
+- Crew-facing day-plan panel refreshes after a persisted manager publish.
+- Crew-facing day-plan reads ignore draft routes until they are published.
 
 ## Remaining Work
 
 - Add workload summary for estimated drive and service duration.
-- Refresh crew-facing route state after a manager publishes a day plan.
 - Add clearer error recovery for failed manager route mutations.

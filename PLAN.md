@@ -82,6 +82,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager draft route planner is mounted under created draft day plans
 - Manager add/remove/reorder actions call persisted stop mutation endpoints with local fallback
 - Manager route planner shows sync status for persisted and local changes
+- Manager publish success refreshes the crew-facing day plan route
 
 ### Account and service tracking foundation
 
@@ -142,11 +143,12 @@ Current state:
 - Frontend API clients can call manager stop assignment, removal, and ordering routes
 - Frontend manager panel creates a draft plan and renders the editable route planner for that draft
 - Frontend manager route add/remove/reorder actions attempt backend persistence and degrade to local state
+- Crew-facing day-plan panel refreshes after a persisted manager publish
+- Crew-facing day-plan reads ignore draft routes until they are published
 
 Next implementation work:
 
 - Add workload summary for estimated drive and service duration
-- Refresh crew-facing route state after a manager publishes a day plan
 - Add clearer error recovery for failed manager route mutations
 
 ### Photo evidence flow
@@ -259,6 +261,7 @@ Next implementation work:
 | --- | --- |
 | 2026-06-17 | Backend manager stop assignment, removal, and ordering routes added |
 | 2026-06-17 | Manager route planner connected to draft day-plan stop mutation endpoints |
+| 2026-06-17 | Crew route refresh wired after persisted manager day-plan publish |
 | 2026-06-17 | Manager local route planner remove action wired into component state |
 | 2026-06-17 | Backend manager create/publish day-plan routes exposed through Axum |
 | 2026-06-17 | Frontend typecheck restored after account and manager route helper type fixes |

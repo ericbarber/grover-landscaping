@@ -531,7 +531,7 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["day_plan_id"], "day_plan_2026_06_16_crew_1001");
-        assert_eq!(json["stop_id"], "stop_job_1003");
+        assert_eq!(json["stop_id"], "stop_day_plan_2026_06_16_crew_1001_job_1003");
         assert_eq!(json["job_id"], "job_1003");
         assert_eq!(json["persisted"], false);
     }

@@ -1,5 +1,13 @@
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
 
+export function defaultManagerServiceDate(referenceDate = new Date()): string {
+  const year = referenceDate.getFullYear();
+  const month = String(referenceDate.getMonth() + 1).padStart(2, '0');
+  const day = String(referenceDate.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
 export function draftDayPlanId(crewId: string, serviceDate: string): string {
   return `day_plan_${serviceDate.replace(/-/g, '_')}_${crewId}`;
 }

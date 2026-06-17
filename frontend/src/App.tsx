@@ -237,6 +237,7 @@ export function App() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
+  const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
 
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
@@ -396,9 +397,12 @@ export function App() {
 
       <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
         <div>
-          <DayPlanPanel onSelectJob={setSelectedJobId} />
+          <DayPlanPanel onSelectJob={setSelectedJobId} refreshSignal={dayPlanRefreshSignal} />
           <div className="mt-6">
-            <ManagerDayPlanPanel jobs={jobs} />
+            <ManagerDayPlanPanel
+              jobs={jobs}
+              onDayPlanPublished={() => setDayPlanRefreshSignal((current) => current + 1)}
+            />
           </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">

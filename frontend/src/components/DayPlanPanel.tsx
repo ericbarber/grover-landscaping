@@ -18,6 +18,7 @@ import {
 
 type DayPlanPanelProps = {
   onSelectJob?: (jobId: string) => void;
+  refreshSignal?: number;
 };
 
 function storageKey(dayPlanId: string): string {
@@ -41,7 +42,7 @@ function clearStopStates(dayPlanId: string) {
   window.localStorage.removeItem(storageKey(dayPlanId));
 }
 
-export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
+export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
@@ -132,7 +133,7 @@ export function DayPlanPanel({ onSelectJob }: DayPlanPanelProps) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [refreshSignal]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

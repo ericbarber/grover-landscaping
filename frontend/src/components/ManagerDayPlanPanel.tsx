@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from 'react';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
 import type { YardCareJob } from '../domain/jobs';
+import { defaultManagerServiceDate } from '../domain/managerDayPlans';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
 import { ManagerLocalRoutePlanner } from './ManagerLocalRoutePlanner';
 
 type ManagerDayPlanPanelProps = {
   jobs: YardCareJob[];
+  onDayPlanPublished?: (dayPlan: DayPlanMutationResponse) => void;
 };
 
-export function ManagerDayPlanPanel({ jobs }: ManagerDayPlanPanelProps) {
+export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlanPanelProps) {
   const [crewId, setCrewId] = useState('crew_1001');
-  const [serviceDate, setServiceDate] = useState('2026-06-18');
+  const [serviceDate, setServiceDate] = useState(() => defaultManagerServiceDate());
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
@@ -23,6 +25,14 @@ export function ManagerDayPlanPanel({ jobs }: ManagerDayPlanPanelProps) {
     void createDraftDayPlanWithFallback({ crewId, serviceDate })
       .then(setDraftPlan)
       .finally(() => setIsCreating(false));
+  }
+
+  function handleDraftPlanUpdated(dayPlan: DayPlanMutationResponse) {
+    setDraftPlan(dayPlan);
+
+    if (dayPlan.status === 'published' && dayPlan.persisted) {
+      onDayPlanPublished?.(dayPlan);
+    }
   }
 
   return (
@@ -51,7 +61,7 @@ export function ManagerDayPlanPanel({ jobs }: ManagerDayPlanPanelProps) {
 
       {draftPlan ? (
         <div className="mt-5 space-y-5">
-          <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={setDraftPlan} />
+          <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={handleDraftPlanUpdated} />
           <ManagerLocalRoutePlanner
             jobs={planningJobs}
             dayPlanId={draftPlan.id}
