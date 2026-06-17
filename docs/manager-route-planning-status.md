@@ -16,8 +16,13 @@
 - Backend routes for creating and publishing manager day plans.
 - Backend routes for assigning, removing, and reordering manager day-plan stops.
 - Local remove actions are wired into the editable route planner state.
+- Draft day-plan creation mounts an editable route planner for that draft.
+- Add, remove, and reorder planner actions call backend stop mutation routes when the draft is persisted.
+- Planner actions fall back to local state when the API is unavailable.
+- Route planner displays sync status for persisted, syncing, and local changes.
 
 ## Remaining Work
 
-- Connect local route planner actions to backend manager stop mutation routes.
-- Add UI sync-status feedback for persisted manager route changes.
+- Add workload summary for estimated drive and service duration.
+- Refresh crew-facing route state after a manager publishes a day plan.
+- Add clearer error recovery for failed manager route mutations.

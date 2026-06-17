@@ -1,12 +1,20 @@
 import { useState, type FormEvent } from 'react';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
+import type { YardCareJob } from '../domain/jobs';
+import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
+import { ManagerLocalRoutePlanner } from './ManagerLocalRoutePlanner';
 
-export function ManagerDayPlanPanel() {
+type ManagerDayPlanPanelProps = {
+  jobs: YardCareJob[];
+};
+
+export function ManagerDayPlanPanel({ jobs }: ManagerDayPlanPanelProps) {
   const [crewId, setCrewId] = useState('crew_1001');
-  const [serviceDate, setServiceDate] = useState('2026-06-16');
+  const [serviceDate, setServiceDate] = useState('2026-06-18');
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,7 +49,16 @@ export function ManagerDayPlanPanel() {
         </button>
       </form>
 
-      {draftPlan ? <div className="mt-5"><ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={setDraftPlan} /></div> : null}
+      {draftPlan ? (
+        <div className="mt-5 space-y-5">
+          <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={setDraftPlan} />
+          <ManagerLocalRoutePlanner
+            jobs={planningJobs}
+            dayPlanId={draftPlan.id}
+            canPersist={draftPlan.persisted}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

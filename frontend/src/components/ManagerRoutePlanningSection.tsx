@@ -11,7 +11,7 @@ export function ManagerRoutePlanningSection({ jobs }: ManagerRoutePlanningSectio
     <section className="mt-6 space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-slate-950">Manager route planning</h2>
-        <p className="text-sm text-slate-600">Add eligible scheduled jobs to a local draft route before backend assignment is wired.</p>
+        <p className="text-sm text-slate-600">Add eligible scheduled jobs to a draft route and review the offline fallback controls.</p>
       </div>
       <ManagerLocalRoutePlanner jobs={jobs} initialStops={seedDayPlan.stops} />
     </section>

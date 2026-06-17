@@ -12,7 +12,6 @@ import {
 import { CompletionReport } from './components/CompletionReport';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
-import { ManagerRoutePlanningSection } from './components/ManagerRoutePlanningSection';
 import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
@@ -399,9 +398,8 @@ export function App() {
         <div>
           <DayPlanPanel onSelectJob={setSelectedJobId} />
           <div className="mt-6">
-            <ManagerDayPlanPanel />
+            <ManagerDayPlanPanel jobs={jobs} />
           </div>
-          <ManagerRoutePlanningSection jobs={jobs} />
 
           <div className="mt-6 mb-5 flex items-center justify-between">
             <div>
