@@ -1,4 +1,9 @@
-use crate::day_plans::{DayPlanStop, DayPlanSummary};
+use crate::day_plans::{
+    AssignDayPlanStopRequest, DayPlanMutationResponse, DayPlanStop, DayPlanStopMutationResponse,
+    DayPlanSummary,
+};
+use std::collections::HashSet;
+
 use sqlx::{PgPool, Row};
 
 pub async fn create_draft_day_plan(
@@ -19,15 +24,184 @@ pub async fn create_draft_day_plan(
     Ok(result.rows_affected() == 1)
 }
 
-pub async fn publish_day_plan(pool: &PgPool, id: &str) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "UPDATE day_plans SET status = 'published', updated_at = now() WHERE id = $1",
+pub async fn publish_day_plan(
+    pool: &PgPool,
+    id: &str,
+) -> Result<Option<DayPlanMutationResponse>, sqlx::Error> {
+    let Some(row) = sqlx::query(
+        "UPDATE day_plans SET status = 'published', updated_at = now() WHERE id = $1 RETURNING id, crew_id, service_date::text AS service_date, status, route_status",
     )
     .bind(id)
-    .execute(pool)
+    .fetch_optional(pool)
+    .await?
+    else {
+        return Ok(None);
+    };
+
+    Ok(Some(DayPlanMutationResponse {
+        id: row.get("id"),
+        crew_id: row.get("crew_id"),
+        service_date: row.get("service_date"),
+        status: row.get("status"),
+        route_status: row.get("route_status"),
+        persisted: true,
+    }))
+}
+
+pub async fn assign_stop(
+    pool: &PgPool,
+    day_plan_id: &str,
+    stop_id: &str,
+    request: &AssignDayPlanStopRequest,
+) -> Result<Option<DayPlanStopMutationResponse>, sqlx::Error> {
+    let estimated_drive_minutes = request.estimated_drive_minutes.unwrap_or(0) as i32;
+    let estimated_service_minutes = request.estimated_service_minutes.unwrap_or(0) as i32;
+
+    let Some(row) = sqlx::query(
+        r#"
+        WITH next_order AS (
+            SELECT COALESCE(MAX(stop_order), 0) + 1 AS stop_order
+            FROM day_plan_stops
+            WHERE day_plan_id = $1
+        )
+        INSERT INTO day_plan_stops (
+            id,
+            day_plan_id,
+            job_id,
+            stop_order,
+            stop_status,
+            estimated_drive_minutes,
+            estimated_service_minutes
+        )
+        VALUES (
+            $2,
+            $1,
+            $3,
+            (SELECT stop_order FROM next_order),
+            'pending',
+            $4,
+            $5
+        )
+        ON CONFLICT (day_plan_id, job_id) DO UPDATE SET
+            estimated_drive_minutes = EXCLUDED.estimated_drive_minutes,
+            estimated_service_minutes = EXCLUDED.estimated_service_minutes,
+            updated_at = now()
+        RETURNING day_plan_id, id AS stop_id, job_id, stop_order
+        "#,
+    )
+    .bind(day_plan_id)
+    .bind(stop_id)
+    .bind(&request.job_id)
+    .bind(estimated_drive_minutes)
+    .bind(estimated_service_minutes)
+    .fetch_optional(pool)
+    .await?
+    else {
+        return Ok(None);
+    };
+
+    Ok(Some(DayPlanStopMutationResponse {
+        day_plan_id: row.get("day_plan_id"),
+        stop_id: row.get("stop_id"),
+        job_id: row.get("job_id"),
+        stop_order: row.get::<i32, _>("stop_order") as u32,
+        persisted: true,
+    }))
+}
+
+pub async fn remove_stop(
+    pool: &PgPool,
+    day_plan_id: &str,
+    stop_id: &str,
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+
+    let delete_result =
+        sqlx::query("DELETE FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2")
+            .bind(day_plan_id)
+            .bind(stop_id)
+            .execute(&mut *tx)
+            .await?;
+
+    if delete_result.rows_affected() != 1 {
+        tx.commit().await?;
+        return Ok(false);
+    }
+
+    sqlx::query(
+        r#"
+        WITH ordered AS (
+            SELECT id, row_number() OVER (ORDER BY stop_order ASC, id ASC)::int AS next_order
+            FROM day_plan_stops
+            WHERE day_plan_id = $1
+        )
+        UPDATE day_plan_stops dps
+        SET stop_order = ordered.next_order, updated_at = now()
+        FROM ordered
+        WHERE dps.id = ordered.id
+        "#,
+    )
+    .bind(day_plan_id)
+    .execute(&mut *tx)
     .await?;
 
-    Ok(result.rows_affected() == 1)
+    tx.commit().await?;
+    Ok(true)
+}
+
+pub async fn reorder_stops(
+    pool: &PgPool,
+    day_plan_id: &str,
+    stop_ids: &[String],
+) -> Result<bool, sqlx::Error> {
+    if stop_ids.is_empty() {
+        return Ok(false);
+    }
+
+    let unique_stop_ids: HashSet<&str> = stop_ids.iter().map(String::as_str).collect();
+    if unique_stop_ids.len() != stop_ids.len() {
+        return Ok(false);
+    }
+
+    let mut tx = pool.begin().await?;
+
+    let existing_stop_count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM day_plan_stops WHERE day_plan_id = $1")
+            .bind(day_plan_id)
+            .fetch_one(&mut *tx)
+            .await?;
+
+    if existing_stop_count != stop_ids.len() as i64 {
+        tx.commit().await?;
+        return Ok(false);
+    }
+
+    sqlx::query("UPDATE day_plan_stops SET stop_order = stop_order + 10000 WHERE day_plan_id = $1")
+        .bind(day_plan_id)
+        .execute(&mut *tx)
+        .await?;
+
+    let result = sqlx::query(
+        r#"
+        WITH requested(stop_id, next_order) AS (
+            SELECT * FROM unnest($2::text[]) WITH ORDINALITY
+        )
+        UPDATE day_plan_stops dps
+        SET stop_order = requested.next_order::int, updated_at = now()
+        FROM requested
+        WHERE dps.day_plan_id = $1
+          AND dps.id = requested.stop_id
+        "#,
+    )
+    .bind(day_plan_id)
+    .bind(stop_ids)
+    .execute(&mut *tx)
+    .await?;
+
+    let persisted = result.rows_affected() == stop_ids.len() as u64;
+    tx.commit().await?;
+
+    Ok(persisted)
 }
 
 pub async fn today_for_crew(
@@ -35,7 +209,49 @@ pub async fn today_for_crew(
     crew_id: &str,
 ) -> Result<Option<DayPlanSummary>, sqlx::Error> {
     let rows = sqlx::query(
-        "SELECT dp.id AS day_plan_id, dp.crew_id, c.name AS crew_name, dp.service_date::text AS service_date, dp.status AS day_plan_status, dp.route_status, dps.id AS stop_id, dps.job_id, sj.customer_name, sj.property_address, dps.stop_order, sj.status AS job_status, dps.stop_status, dps.estimated_drive_minutes, dps.estimated_service_minutes FROM day_plans dp JOIN crews c ON c.id = dp.crew_id JOIN day_plan_stops dps ON dps.day_plan_id = dp.id JOIN service_jobs sj ON sj.id = dps.job_id WHERE dp.crew_id = $1 AND dp.service_date = CURRENT_DATE ORDER BY dps.stop_order ASC",
+        r#"
+        WITH selected_plan AS (
+            SELECT dp.id
+            FROM day_plans dp
+            WHERE dp.crew_id = $1
+              AND EXISTS (
+                  SELECT 1
+                  FROM day_plan_stops dps
+                  WHERE dps.day_plan_id = dp.id
+              )
+            ORDER BY
+                CASE
+                    WHEN dp.service_date = CURRENT_DATE THEN 0
+                    WHEN dp.service_date < CURRENT_DATE THEN 1
+                    ELSE 2
+                END,
+                CASE WHEN dp.service_date < CURRENT_DATE THEN dp.service_date END DESC,
+                CASE WHEN dp.service_date > CURRENT_DATE THEN dp.service_date END ASC
+            LIMIT 1
+        )
+        SELECT
+            dp.id AS day_plan_id,
+            dp.crew_id,
+            c.name AS crew_name,
+            dp.service_date::text AS service_date,
+            dp.status AS day_plan_status,
+            dp.route_status,
+            dps.id AS stop_id,
+            dps.job_id,
+            sj.customer_name,
+            sj.property_address,
+            dps.stop_order,
+            sj.status AS job_status,
+            dps.stop_status,
+            dps.estimated_drive_minutes,
+            dps.estimated_service_minutes
+        FROM selected_plan sp
+        JOIN day_plans dp ON dp.id = sp.id
+        JOIN crews c ON c.id = dp.crew_id
+        JOIN day_plan_stops dps ON dps.day_plan_id = dp.id
+        JOIN service_jobs sj ON sj.id = dps.job_id
+        ORDER BY dps.stop_order ASC
+        "#,
     )
     .bind(crew_id)
     .fetch_all(pool)

@@ -8,16 +8,18 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::{delete, get, post, put},
     Json, Router,
 };
-use day_plans::DayPlanRepository;
+use day_plans::{
+    AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
+};
 use db::{DatabaseConfig, JobRepository};
 use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::Arc};
 use stop_progress::{
-    is_valid_stop_progress_status, local_stop_progress_response,
-    persisted_stop_progress_response, StopProgressRequest,
+    is_valid_stop_progress_status, local_stop_progress_response, persisted_stop_progress_response,
+    StopProgressRequest,
 };
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -123,15 +125,16 @@ async fn main() {
         .await
         .expect("failed to bind API listener");
 
-    axum::serve(listener, app)
-        .await
-        .expect("API server failed");
+    axum::serve(listener, app).await.expect("API server failed");
 }
 
 fn app() -> Router {
     let persistence = DatabaseConfig::from_env()
         .map(|config| {
-            tracing::info!(database_url_configured = !config.database_url.is_empty(), "database URL detected");
+            tracing::info!(
+                database_url_configured = !config.database_url.is_empty(),
+                "database URL detected"
+            );
             "database-configured"
         })
         .unwrap_or("seed-local");
@@ -157,7 +160,21 @@ fn app_with_state(state: Arc<AppState>, persistence: &'static str) -> Router {
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
         .route("/jobs/{id}/photos/complete", post(complete_photo_upload))
         .route("/crews/{crew_id}/day-plan/today", get(get_today_day_plan))
-        .route("/day-plans/{day_plan_id}/stops/{stop_id}/status", post(update_stop_progress))
+        .route("/day-plans", post(create_draft_day_plan))
+        .route("/day-plans/{day_plan_id}/publish", post(publish_day_plan))
+        .route("/day-plans/{day_plan_id}/stops", post(assign_day_plan_stop))
+        .route(
+            "/day-plans/{day_plan_id}/stops/order",
+            put(reorder_day_plan_stops),
+        )
+        .route(
+            "/day-plans/{day_plan_id}/stops/{stop_id}",
+            delete(remove_day_plan_stop),
+        )
+        .route(
+            "/day-plans/{day_plan_id}/stops/{stop_id}/status",
+            post(update_stop_progress),
+        )
         .with_state(state)
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
@@ -191,6 +208,49 @@ async fn get_today_day_plan(
     Path(crew_id): Path<String>,
 ) -> impl IntoResponse {
     Json(state.day_plans.today_for_crew(&crew_id).await)
+}
+
+async fn create_draft_day_plan(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<CreateDayPlanRequest>,
+) -> impl IntoResponse {
+    (
+        StatusCode::CREATED,
+        Json(state.day_plans.create_draft_day_plan(request).await),
+    )
+}
+
+async fn publish_day_plan(
+    State(state): State<Arc<AppState>>,
+    Path(day_plan_id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.day_plans.publish_day_plan(&day_plan_id).await)
+}
+
+async fn assign_day_plan_stop(
+    State(state): State<Arc<AppState>>,
+    Path(day_plan_id): Path<String>,
+    Json(request): Json<AssignDayPlanStopRequest>,
+) -> impl IntoResponse {
+    (
+        StatusCode::CREATED,
+        Json(state.day_plans.assign_stop(&day_plan_id, request).await),
+    )
+}
+
+async fn remove_day_plan_stop(
+    State(state): State<Arc<AppState>>,
+    Path((day_plan_id, stop_id)): Path<(String, String)>,
+) -> impl IntoResponse {
+    Json(state.day_plans.remove_stop(&day_plan_id, &stop_id).await)
+}
+
+async fn reorder_day_plan_stops(
+    State(state): State<Arc<AppState>>,
+    Path(day_plan_id): Path<String>,
+    Json(request): Json<ReorderDayPlanStopsRequest>,
+) -> impl IntoResponse {
+    Json(state.day_plans.reorder_stops(&day_plan_id, request).await)
 }
 
 async fn update_stop_progress(
@@ -231,7 +291,10 @@ async fn update_stop_progress(
     }
 }
 
-async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
+async fn start_job(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
     let message = state.jobs.start_job(&id).await;
 
     (
@@ -243,7 +306,10 @@ async fn start_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -
     )
 }
 
-async fn complete_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
+async fn complete_job(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
     let message = state.jobs.complete_job(&id).await;
 
     (
@@ -293,10 +359,26 @@ mod tests {
     use serde_json::Value;
     use tower::ServiceExt;
 
+    fn seed_app() -> Router {
+        app_with_state(
+            Arc::new(AppState {
+                jobs: JobRepository::default(),
+                accounts: AccountRepository::default(),
+                day_plans: DayPlanRepository::default(),
+            }),
+            "seed-local",
+        )
+    }
+
     #[tokio::test]
     async fn health_returns_ok() {
-        let response = app()
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -311,7 +393,7 @@ mod tests {
 
     #[tokio::test]
     async fn jobs_endpoint_returns_seed_jobs() {
-        let response = app()
+        let response = seed_app()
             .oneshot(Request::builder().uri("/jobs").body(Body::empty()).unwrap())
             .await
             .unwrap();
@@ -327,7 +409,7 @@ mod tests {
 
     #[tokio::test]
     async fn account_endpoint_returns_status_for_job() {
-        let response = app()
+        let response = seed_app()
             .oneshot(
                 Request::builder()
                     .uri("/jobs/job_1002/account")
@@ -348,7 +430,7 @@ mod tests {
 
     #[tokio::test]
     async fn day_plan_endpoint_returns_seed_route() {
-        let response = app()
+        let response = seed_app()
             .oneshot(
                 Request::builder()
                     .uri("/crews/crew_1001/day-plan/today")
@@ -369,10 +451,147 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn create_day_plan_endpoint_returns_local_draft_response() {
+        let request_body = serde_json::json!({
+            "crew_id": "crew_1001",
+            "service_date": "2026-06-16"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["id"], "day_plan_2026_06_16_crew_1001");
+        assert_eq!(json["status"], "draft");
+        assert_eq!(json["route_status"], "manual");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn publish_day_plan_endpoint_returns_local_published_response() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_16_crew_1001/publish")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["id"], "day_plan_2026_06_16_crew_1001");
+        assert_eq!(json["crew_id"], "crew_1001");
+        assert_eq!(json["service_date"], "2026-06-16");
+        assert_eq!(json["status"], "published");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn assign_day_plan_stop_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({
+            "job_id": "job_1003",
+            "estimated_drive_minutes": 5,
+            "estimated_service_minutes": 30
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_16_crew_1001/stops")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["day_plan_id"], "day_plan_2026_06_16_crew_1001");
+        assert_eq!(json["stop_id"], "stop_job_1003");
+        assert_eq!(json["job_id"], "job_1003");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn remove_day_plan_stop_endpoint_returns_local_response() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri("/day-plans/day_plan_2026_06_16_crew_1001/stops/stop_job_1003")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["day_plan_id"], "day_plan_2026_06_16_crew_1001");
+        assert_eq!(json["stop_id"], "stop_job_1003");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn reorder_day_plan_stops_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({
+            "stop_ids": ["stop_job_1003", "stop_job_1001"]
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/day-plans/day_plan_2026_06_16_crew_1001/stops/order")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["day_plan_id"], "day_plan_2026_06_16_crew_1001");
+        assert_eq!(json["stop_ids"][0], "stop_job_1003");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
     async fn stop_progress_endpoint_returns_local_response() {
         let request_body = serde_json::json!({ "status": "in_progress" });
 
-        let response = app()
+        let response = seed_app()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -399,7 +618,7 @@ mod tests {
     async fn stop_progress_endpoint_rejects_invalid_status() {
         let request_body = serde_json::json!({ "status": "done" });
 
-        let response = app()
+        let response = seed_app()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -427,7 +646,7 @@ mod tests {
             "photo_type": "before"
         });
 
-        let response = app()
+        let response = seed_app()
             .oneshot(
                 Request::builder()
                     .method("POST")

@@ -14,12 +14,8 @@ async fn day_plan_repository_reads_persisted_stop_status() {
         .expect("job repository should connect and run migrations");
 
     assert!(
-        jobs.update_stop_progress(
-            "day_plan_2026_06_15_crew_1001",
-            "stop_1001",
-            "finished",
-        )
-        .await
+        jobs.update_stop_progress("day_plan_2026_06_15_crew_1001", "stop_1001", "finished",)
+            .await
     );
 
     let day_plans = DayPlanRepository::new();

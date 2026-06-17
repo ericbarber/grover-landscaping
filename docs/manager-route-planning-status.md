@@ -13,11 +13,11 @@
 - Draft route summary card component.
 - Route-planning dashboard component that composes the summary card and local planner.
 - Route-planning demo seed job helper for an extra scheduled assignable job.
+- Backend routes for creating and publishing manager day plans.
+- Backend routes for assigning, removing, and reordering manager day-plan stops.
+- Local remove actions are wired into the editable route planner state.
 
 ## Remaining Work
 
-- Wire the route-planning dashboard replacement into the main app shell.
-- Wire remove actions into local route planner state.
-- Persist route assignment, removal, and ordering through backend manager routes.
-- Add backend routes for creating and publishing manager day plans.
-- Add database-backed tests for persisted route assignment and ordering.
+- Connect local route planner actions to backend manager stop mutation routes.
+- Add UI sync-status feedback for persisted manager route changes.

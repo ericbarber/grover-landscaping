@@ -49,6 +49,52 @@ export interface DayPlanMutationResponse {
   persisted: boolean;
 }
 
+export interface AssignDayPlanStopRequest {
+  jobId: string;
+  estimatedDriveMinutes?: number;
+  estimatedServiceMinutes?: number;
+}
+
+export interface ApiDayPlanStopMutationResponse {
+  day_plan_id: string;
+  stop_id: string;
+  job_id: string;
+  stop_order: number;
+  persisted: boolean;
+}
+
+export interface DayPlanStopMutationResponse {
+  dayPlanId: string;
+  stopId: string;
+  jobId: string;
+  stopOrder: number;
+  persisted: boolean;
+}
+
+export interface ApiDayPlanStopRemovalResponse {
+  day_plan_id: string;
+  stop_id: string;
+  persisted: boolean;
+}
+
+export interface DayPlanStopRemovalResponse {
+  dayPlanId: string;
+  stopId: string;
+  persisted: boolean;
+}
+
+export interface ApiDayPlanStopReorderResponse {
+  day_plan_id: string;
+  stop_ids: string[];
+  persisted: boolean;
+}
+
+export interface DayPlanStopReorderResponse {
+  dayPlanId: string;
+  stopIds: string[];
+  persisted: boolean;
+}
+
 export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   return {
     id: apiDayPlan.id,
@@ -82,6 +128,32 @@ export function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlan
   };
 }
 
+export function toDayPlanStopMutation(response: ApiDayPlanStopMutationResponse): DayPlanStopMutationResponse {
+  return {
+    dayPlanId: response.day_plan_id,
+    stopId: response.stop_id,
+    jobId: response.job_id,
+    stopOrder: response.stop_order,
+    persisted: response.persisted,
+  };
+}
+
+export function toDayPlanStopRemoval(response: ApiDayPlanStopRemovalResponse): DayPlanStopRemovalResponse {
+  return {
+    dayPlanId: response.day_plan_id,
+    stopId: response.stop_id,
+    persisted: response.persisted,
+  };
+}
+
+export function toDayPlanStopReorder(response: ApiDayPlanStopReorderResponse): DayPlanStopReorderResponse {
+  return {
+    dayPlanId: response.day_plan_id,
+    stopIds: response.stop_ids,
+    persisted: response.persisted,
+  };
+}
+
 export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
   const response = await fetch(`${API_BASE_URL}/crews/${crewId}/day-plan/today`);
 
@@ -91,6 +163,59 @@ export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
 
   const dayPlan = (await response.json()) as ApiDayPlan;
   return toDayPlan(dayPlan);
+}
+
+export async function assignDayPlanStop(
+  dayPlanId: string,
+  request: AssignDayPlanStopRequest,
+): Promise<DayPlanStopMutationResponse> {
+  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      job_id: request.jobId,
+      estimated_drive_minutes: request.estimatedDriveMinutes,
+      estimated_service_minutes: request.estimatedServiceMinutes,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Assign day plan stop request failed with status ${response.status}`);
+  }
+
+  return toDayPlanStopMutation((await response.json()) as ApiDayPlanStopMutationResponse);
+}
+
+export async function removeDayPlanStop(
+  dayPlanId: string,
+  stopId: string,
+): Promise<DayPlanStopRemovalResponse> {
+  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Remove day plan stop request failed with status ${response.status}`);
+  }
+
+  return toDayPlanStopRemoval((await response.json()) as ApiDayPlanStopRemovalResponse);
+}
+
+export async function reorderDayPlanStops(
+  dayPlanId: string,
+  stopIds: string[],
+): Promise<DayPlanStopReorderResponse> {
+  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/order`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ stop_ids: stopIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Reorder day plan stops request failed with status ${response.status}`);
+  }
+
+  return toDayPlanStopReorder((await response.json()) as ApiDayPlanStopReorderResponse);
 }
 
 export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise<DayPlanMutationResponse> {

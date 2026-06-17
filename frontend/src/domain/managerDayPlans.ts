@@ -1,7 +1,7 @@
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
 
 export function draftDayPlanId(crewId: string, serviceDate: string): string {
-  return `day_plan_${serviceDate.replaceAll('-', '_')}_${crewId}`;
+  return `day_plan_${serviceDate.replace(/-/g, '_')}_${crewId}`;
 }
 
 export function localDraftDayPlanResponse(crewId: string, serviceDate: string): DayPlanMutationResponse {

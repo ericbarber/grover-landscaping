@@ -4,6 +4,7 @@ import type { YardCareJob } from '../domain/jobs';
 import {
   draftStopsMoveDownForSelectedJob,
   draftStopsMoveUpForSelectedJob,
+  draftStopsRemoverForSelectedJob,
   draftStopsUpdaterForSelectedJob,
 } from '../domain/managerJobAssignment';
 import { ManagerDraftRouteWorkspace } from './ManagerDraftRouteWorkspace';
@@ -28,6 +29,10 @@ export function ManagerLocalRoutePlanner({ jobs, initialStops = [] }: ManagerLoc
     setDraftStops(draftStopsMoveDownForSelectedJob(jobId));
   }
 
+  function removeJob(jobId: string) {
+    setDraftStops(draftStopsRemoverForSelectedJob(jobId));
+  }
+
   return (
     <ManagerDraftRouteWorkspace
       jobs={jobs}
@@ -35,6 +40,7 @@ export function ManagerLocalRoutePlanner({ jobs, initialStops = [] }: ManagerLoc
       onAddJob={addJob}
       onMoveUp={moveJobUp}
       onMoveDown={moveJobDown}
+      onRemoveJob={removeJob}
     />
   );
 }

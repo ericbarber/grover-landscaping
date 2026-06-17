@@ -11,11 +11,7 @@ async fn repository_persists_stop_progress_to_postgres() {
         .expect("repository should connect and run migrations");
 
     let persisted = repository
-        .update_stop_progress(
-            "day_plan_2026_06_15_crew_1001",
-            "stop_1001",
-            "finished",
-        )
+        .update_stop_progress("day_plan_2026_06_15_crew_1001", "stop_1001", "finished")
         .await;
 
     assert!(persisted);

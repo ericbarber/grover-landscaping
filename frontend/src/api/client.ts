@@ -1,3 +1,9 @@
+import type {
+  BillingModel,
+  CustomerAccountSummary,
+  PaymentStatus,
+  ServiceApprovalStatus,
+} from '../domain/accounts';
 import type { YardCareJob } from '../domain/jobs';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
@@ -28,25 +34,18 @@ export interface JobDetail extends YardCareJob {
   checklist: ChecklistItem[];
 }
 
-export interface AccountStatus {
-  jobId: string;
-  accountId: string;
-  customerName: string;
-  billingModel: string;
-  paymentStatus: string;
-  serviceApprovalStatus: string;
-  contractedServicesPerPeriod: number;
-  completedServicesThisPeriod: number;
-  billingNotes: string;
+export interface AccountStatus extends CustomerAccountSummary {
+  accountId?: string;
+  customerName?: string;
 }
 
 interface ApiAccountStatus {
   job_id: string;
   account_id: string;
   customer_name: string;
-  billing_model: string;
-  payment_status: string;
-  service_approval_status: string;
+  billing_model: BillingModel;
+  payment_status: PaymentStatus;
+  service_approval_status: ServiceApprovalStatus;
   contracted_services_per_period: number;
   completed_services_this_period: number;
   billing_notes: string;

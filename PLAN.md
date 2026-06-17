@@ -75,6 +75,10 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend draft day-plan repository helper
 - PostgreSQL draft day-plan creation helper
 - PostgreSQL publish day-plan helper
+- Backend manager route for creating draft day plans
+- Backend manager route for publishing day plans
+- Backend manager routes for assigning, removing, and reordering day-plan stops
+- Frontend API clients for manager day-plan stop assignment, removal, and ordering
 
 ### Account and service tracking foundation
 
@@ -116,7 +120,7 @@ Next implementation work:
 
 - Wire the route summary finished-count to resolved server-or-local stop status
 - Add database-backed route tests around persisted stop progress and day-plan reads
-- Expose backend manager routes for `POST /day-plans` and `POST /day-plans/{day_plan_id}/publish`
+- Connect manager route planning UI actions to the persisted stop assignment, removal, and ordering endpoints
 
 ### Manager scheduling workflow
 
@@ -131,12 +135,15 @@ Current state:
 - Frontend has a publish button and action wrapper ready for manager panel actions
 - Backend repository and PostgreSQL helpers exist for draft creation
 - PostgreSQL helper exists for publishing a day plan
+- Backend create and publish routes are exposed through Axum
+- Backend stop assignment, removal, and ordering routes are exposed through Axum
+- Frontend API clients can call manager stop assignment, removal, and ordering routes
 
 Next implementation work:
 
-- Expose the backend create and publish routes through Axum
 - Add manager UI affordances for assigning jobs to a draft day plan
 - Add route stop ordering controls
+- Connect local add/remove/reorder actions to the backend stop mutation endpoints
 - Add workload summary for estimated drive and service duration
 
 ### Photo evidence flow
@@ -247,6 +254,10 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-17 | Backend manager stop assignment, removal, and ordering routes added |
+| 2026-06-17 | Manager local route planner remove action wired into component state |
+| 2026-06-17 | Backend manager create/publish day-plan routes exposed through Axum |
+| 2026-06-17 | Frontend typecheck restored after account and manager route helper type fixes |
 | 2026-06-16 | Manager draft action wrapper added for draft card plus publish action |
 | 2026-06-16 | Manager publish day-plan client, fallback helper, and publish button added |
 | 2026-06-16 | Manager create day-plan panel added to the dashboard |

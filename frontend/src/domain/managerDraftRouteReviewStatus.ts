@@ -1,9 +1,16 @@
-import type { ManagerDraftRoutePlanningMetrics } from './managerDraftRoutePlanningMetrics';
+import type { ManagerDraftRouteSummary } from './managerDraftRouteSummary';
+import type { ManagerDraftRouteWorkload } from './managerDraftRouteWorkload';
 
 export type ManagerDraftRouteReviewStatus = 'empty' | 'missing_workload' | 'ready';
 
+type ManagerDraftRouteReviewMetrics = {
+  isReadyToReview: boolean;
+  summary: Pick<ManagerDraftRouteSummary, 'hasStops'>;
+  workload: Pick<ManagerDraftRouteWorkload, 'totalMinutes'>;
+};
+
 export function getManagerDraftRouteReviewStatus(
-  metrics: Pick<ManagerDraftRoutePlanningMetrics, 'isReadyToReview' | 'summary' | 'workload'>,
+  metrics: ManagerDraftRouteReviewMetrics,
 ): ManagerDraftRouteReviewStatus {
   if (metrics.isReadyToReview) {
     return 'ready';

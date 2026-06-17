@@ -28,8 +28,12 @@ pub struct JobRepository {
 
 impl JobRepository {
     pub fn new() -> Self {
-        let pool = DatabaseConfig::from_env()
-            .and_then(|config| PgPoolOptions::new().max_connections(5).connect_lazy(&config.database_url).ok());
+        let pool = DatabaseConfig::from_env().and_then(|config| {
+            PgPoolOptions::new()
+                .max_connections(5)
+                .connect_lazy(&config.database_url)
+                .ok()
+        });
 
         Self { pool }
     }
@@ -90,13 +94,9 @@ impl JobRepository {
         status: &str,
     ) -> bool {
         if let Some(pool) = &self.pool {
-            if let Ok(persisted) = postgres_stop_progress::update_stop_progress(
-                pool,
-                day_plan_id,
-                stop_id,
-                status,
-            )
-            .await
+            if let Ok(persisted) =
+                postgres_stop_progress::update_stop_progress(pool, day_plan_id, stop_id, status)
+                    .await
             {
                 return persisted;
             }
@@ -188,6 +188,9 @@ fn seed_job_detail(id: String) -> JobDetail {
             completed_checklist_items: 0,
         });
 
+    let yard_service_completed = summary.status != "scheduled";
+    let completion_notes_completed = summary.status == "completed";
+
     JobDetail {
         id: summary.id,
         customer_name: summary.customer_name,
@@ -207,7 +210,7 @@ fn seed_job_detail(id: String) -> JobDetail {
             ChecklistItem {
                 id: "yard-service".to_string(),
                 label: "Complete yard service".to_string(),
-                completed: summary.status != "scheduled",
+                completed: yard_service_completed,
             },
             ChecklistItem {
                 id: "after-photos".to_string(),
@@ -217,7 +220,7 @@ fn seed_job_detail(id: String) -> JobDetail {
             ChecklistItem {
                 id: "completion-notes".to_string(),
                 label: "Submit completion notes".to_string(),
-                completed: summary.status == "completed",
+                completed: completion_notes_completed,
             },
         ],
     }

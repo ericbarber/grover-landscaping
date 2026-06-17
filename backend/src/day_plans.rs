@@ -35,6 +35,18 @@ pub struct CreateDayPlanRequest {
     pub service_date: String,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct AssignDayPlanStopRequest {
+    pub job_id: String,
+    pub estimated_drive_minutes: Option<u32>,
+    pub estimated_service_minutes: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct ReorderDayPlanStopsRequest {
+    pub stop_ids: Vec<String>,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DayPlanMutationResponse {
     pub id: String,
@@ -45,6 +57,29 @@ pub struct DayPlanMutationResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanStopMutationResponse {
+    pub day_plan_id: String,
+    pub stop_id: String,
+    pub job_id: String,
+    pub stop_order: u32,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanStopRemovalResponse {
+    pub day_plan_id: String,
+    pub stop_id: String,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanStopReorderResponse {
+    pub day_plan_id: String,
+    pub stop_ids: Vec<String>,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct DayPlanRepository {
     pool: Option<PgPool>,
@@ -52,8 +87,12 @@ pub struct DayPlanRepository {
 
 impl DayPlanRepository {
     pub fn new() -> Self {
-        let pool = DatabaseConfig::from_env()
-            .and_then(|config| PgPoolOptions::new().max_connections(5).connect_lazy(&config.database_url).ok());
+        let pool = DatabaseConfig::from_env().and_then(|config| {
+            PgPoolOptions::new()
+                .max_connections(5)
+                .connect_lazy(&config.database_url)
+                .ok()
+        });
 
         Self { pool }
     }
@@ -80,6 +119,86 @@ impl DayPlanRepository {
         draft_day_plan_response(&request, false)
     }
 
+    pub async fn publish_day_plan(&self, id: &str) -> DayPlanMutationResponse {
+        if let Some(pool) = &self.pool {
+            if let Ok(Some(day_plan)) = postgres_day_plans::publish_day_plan(pool, id).await {
+                return day_plan;
+            }
+        }
+
+        local_published_day_plan_response(id)
+    }
+
+    pub async fn assign_stop(
+        &self,
+        day_plan_id: &str,
+        request: AssignDayPlanStopRequest,
+    ) -> DayPlanStopMutationResponse {
+        let stop_id = draft_stop_id(&request.job_id);
+
+        if let Some(pool) = &self.pool {
+            if let Ok(Some(response)) =
+                postgres_day_plans::assign_stop(pool, day_plan_id, &stop_id, &request).await
+            {
+                return response;
+            }
+        }
+
+        DayPlanStopMutationResponse {
+            day_plan_id: day_plan_id.to_string(),
+            stop_id,
+            job_id: request.job_id,
+            stop_order: 0,
+            persisted: false,
+        }
+    }
+
+    pub async fn remove_stop(
+        &self,
+        day_plan_id: &str,
+        stop_id: &str,
+    ) -> DayPlanStopRemovalResponse {
+        if let Some(pool) = &self.pool {
+            if let Ok(true) = postgres_day_plans::remove_stop(pool, day_plan_id, stop_id).await {
+                return DayPlanStopRemovalResponse {
+                    day_plan_id: day_plan_id.to_string(),
+                    stop_id: stop_id.to_string(),
+                    persisted: true,
+                };
+            }
+        }
+
+        DayPlanStopRemovalResponse {
+            day_plan_id: day_plan_id.to_string(),
+            stop_id: stop_id.to_string(),
+            persisted: false,
+        }
+    }
+
+    pub async fn reorder_stops(
+        &self,
+        day_plan_id: &str,
+        request: ReorderDayPlanStopsRequest,
+    ) -> DayPlanStopReorderResponse {
+        if let Some(pool) = &self.pool {
+            if let Ok(true) =
+                postgres_day_plans::reorder_stops(pool, day_plan_id, &request.stop_ids).await
+            {
+                return DayPlanStopReorderResponse {
+                    day_plan_id: day_plan_id.to_string(),
+                    stop_ids: request.stop_ids,
+                    persisted: true,
+                };
+            }
+        }
+
+        DayPlanStopReorderResponse {
+            day_plan_id: day_plan_id.to_string(),
+            stop_ids: request.stop_ids,
+            persisted: false,
+        }
+    }
+
     pub async fn today_for_crew(&self, crew_id: &str) -> DayPlanSummary {
         if let Some(pool) = &self.pool {
             if let Ok(Some(day_plan)) = postgres_day_plans::today_for_crew(pool, crew_id).await {
@@ -95,8 +214,25 @@ pub fn draft_day_plan_id(crew_id: &str, service_date: &str) -> String {
     format!("day_plan_{}_{}", service_date.replace('-', "_"), crew_id)
 }
 
+pub fn draft_stop_id(job_id: &str) -> String {
+    format!("stop_{job_id}")
+}
+
 pub fn local_draft_day_plan_response(request: &CreateDayPlanRequest) -> DayPlanMutationResponse {
     draft_day_plan_response(request, false)
+}
+
+pub fn local_published_day_plan_response(id: &str) -> DayPlanMutationResponse {
+    let (service_date, crew_id) = day_plan_parts_from_id(id).unwrap_or_default();
+
+    DayPlanMutationResponse {
+        id: id.to_string(),
+        crew_id,
+        service_date,
+        status: "published".to_string(),
+        route_status: "manual".to_string(),
+        persisted: false,
+    }
 }
 
 fn draft_day_plan_response(
@@ -111,6 +247,18 @@ fn draft_day_plan_response(
         route_status: "manual".to_string(),
         persisted,
     }
+}
+
+fn day_plan_parts_from_id(id: &str) -> Option<(String, String)> {
+    let parts: Vec<&str> = id.strip_prefix("day_plan_")?.split('_').collect();
+    if parts.len() < 4 {
+        return None;
+    }
+
+    let service_date = format!("{}-{}-{}", parts[0], parts[1], parts[2]);
+    let crew_id = parts[3..].join("_");
+
+    Some((service_date, crew_id))
 }
 
 fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
@@ -150,7 +298,10 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
 
 #[cfg(test)]
 mod tests {
-    use super::{draft_day_plan_id, local_draft_day_plan_response, seed_day_plan, CreateDayPlanRequest};
+    use super::{
+        draft_day_plan_id, local_draft_day_plan_response, local_published_day_plan_response,
+        seed_day_plan, CreateDayPlanRequest,
+    };
 
     #[test]
     fn seeded_day_plan_keeps_ordered_stops() {
@@ -187,6 +338,18 @@ mod tests {
         let response = local_draft_day_plan_response(&request);
 
         assert_eq!(response.status, "draft");
+        assert_eq!(response.route_status, "manual");
+        assert!(!response.persisted);
+    }
+
+    #[test]
+    fn local_published_day_plan_responses_parse_stable_ids() {
+        let response = local_published_day_plan_response("day_plan_2026_06_16_crew_1001");
+
+        assert_eq!(response.id, "day_plan_2026_06_16_crew_1001");
+        assert_eq!(response.crew_id, "crew_1001");
+        assert_eq!(response.service_date, "2026-06-16");
+        assert_eq!(response.status, "published");
         assert_eq!(response.route_status, "manual");
         assert!(!response.persisted);
     }
