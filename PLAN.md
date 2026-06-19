@@ -83,6 +83,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager add/remove/reorder actions call persisted stop mutation endpoints with local fallback
 - Manager route planner shows sync status for persisted and local changes
 - Manager route planner shows workload summary for estimated drive and service duration
+- Manager route planner shows recovery notices when route changes fall back to local state
 - Manager publish success refreshes the crew-facing day plan route
 
 ### Account and service tracking foundation
@@ -145,12 +146,13 @@ Current state:
 - Frontend manager panel creates a draft plan and renders the editable route planner for that draft
 - Frontend manager route add/remove/reorder actions attempt backend persistence and degrade to local state
 - Frontend manager route planner shows estimated workload summary
+- Frontend manager route planner explains local fallback recovery when mutation persistence fails
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 
 Next implementation work:
 
-- Add clearer error recovery for failed manager route mutations
+- Add manager mutation retry controls after hosted validation can confirm backend recovery behavior
 
 ### Photo evidence flow
 
@@ -260,6 +262,7 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-19 | Manager route planner recovery notices added for local fallback mutations |
 | 2026-06-19 | Manager route planner workload summary wired into active draft planner |
 | 2026-06-17 | Backend manager stop assignment, removal, and ordering routes added |
 | 2026-06-17 | Manager route planner connected to draft day-plan stop mutation endpoints |
