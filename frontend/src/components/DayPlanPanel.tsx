@@ -4,7 +4,7 @@ import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
-  countFinishedStops,
+  countResolvedFinishedStops,
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
@@ -48,10 +48,7 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
-  const completedStops = countFinishedStops(
-    dayPlan.stops.map((stop) => stop.id),
-    stopStates,
-  );
+  const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
