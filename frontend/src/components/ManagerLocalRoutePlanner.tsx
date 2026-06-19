@@ -6,6 +6,7 @@ import {
 } from '../api/dayPlansClient';
 import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
+import { getManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import {
   draftStopsRemoverForSelectedJob,
   moveDraftStopDown,
@@ -41,7 +42,8 @@ export function ManagerLocalRoutePlanner({
   const [draftStops, setDraftStops] = useState<DayPlanStop[]>(initialStops);
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>(canPersist ? 'synced' : 'local');
   const [mutationNotice, setMutationNotice] = useState<string | null>(null);
-  const nextStep = getManagerNextWorkflowStep(Boolean(dayPlanId), draftStops.length > 0, draftStops.length > 0);
+  const publishGuard = getManagerDraftRoutePublishGuard(jobs, draftStops);
+  const nextStep = getManagerNextWorkflowStep(Boolean(dayPlanId), draftStops.length > 0, publishGuard.canPublish);
 
   useEffect(() => {
     setDraftStops(initialStops);
