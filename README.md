@@ -2,7 +2,7 @@
 
 Grover Landscaping is a mobile-first proof-of-completion application for yard care and landscaping crews. Crews can view assigned jobs, follow a daily route, track stop progress, capture service photo placeholders, complete checklists, and prepare completion reports for customer or manager review.
 
-The project is built as a Rust + React application with local-first development support. The frontend can run with seeded browser data when the backend is unavailable, and the backend exposes the first set of job, account, photo-ticket, and stop-progress APIs.
+The project is built as a Rust + React application with local-first and remote-first development support. The frontend can run with seeded browser data when the backend is unavailable, and the backend exposes the first set of job, account, photo-ticket, stop-progress, and manager day-plan APIs.
 
 ## Features
 
@@ -15,9 +15,11 @@ The project is built as a Rust + React application with local-first development 
 - Before / after / issue photo placeholder flow
 - Completion checklist and completion report panel
 - Customer account status display
+- Manager draft day-plan creation and publishing
+- Manager route stop assignment, removal, and ordering
 - Browser fallback mode for demos and frontend-only development
-- Rust API endpoints for jobs, accounts, photo tickets, and stop progress
-- PostgreSQL migrations for job and account foundations
+- Rust API endpoints for jobs, accounts, photo tickets, stop progress, and manager scheduling
+- PostgreSQL migrations for job, account, crew, stop, and day-plan foundations
 - Docker Compose local stack
 - GitHub Actions CI configuration
 
@@ -29,6 +31,7 @@ The project is built as a Rust + React application with local-first development 
 | Frontend | React, TypeScript, Vite, Tailwind CSS |
 | Database | PostgreSQL |
 | Local runtime | Docker Compose |
+| Remote validation | GitHub Actions and hosted development services |
 | Cloud direction | AWS, S3, RDS, ECS/App Runner or Fargate, Amplify/CloudFront |
 | CI | GitHub Actions |
 
@@ -43,6 +46,25 @@ docs/               Architecture, data model, and development notes
 scripts/            Local developer utility scripts
 ```
 
+## Remote Development
+
+This project can be developed without direct access to a local Docker container. When working remotely:
+
+- Prefer small commits that GitHub Actions can validate independently.
+- Treat database and migration work as code-reviewed until CI or a hosted PostgreSQL environment confirms it.
+- Use frontend fallback behavior for UI development when the backend is unavailable.
+- Use hosted development services for end-to-end validation once they are available.
+- Document any change that requires hosted secrets, external providers, or database migrations before enabling it in production paths.
+
+Recommended remote validation order:
+
+```text
+1. Inspect changed files and keep changes narrowly scoped.
+2. Rely on GitHub Actions for backend format/lint/test and frontend typecheck/test/build.
+3. Use hosted development services for API/database verification when local Docker is unavailable.
+4. Keep browser fallback behavior intact for demos and UI iteration.
+```
+
 ## Local Development
 
 Copy the example environment file:
@@ -51,7 +73,7 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Start the local stack:
+Start the local stack when Docker is available:
 
 ```bash
 docker compose up --build
@@ -132,6 +154,8 @@ The project currently includes migrations for:
 - Job photos
 - Customer accounts
 - Account status and service tracking foundations
+- Crews, day plans, and day-plan stops
+- Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
 
@@ -146,6 +170,8 @@ The crew dashboard is designed to work on mobile devices. It currently supports:
 - Viewing account status in the completion report
 - Creating local photo upload tickets
 - Preparing a customer-facing completion summary
+- Creating manager draft day plans
+- Assigning, removing, and ordering draft route stops with persisted/local fallback behavior
 
 ## Deployment Direction
 
@@ -161,4 +187,4 @@ The repository includes an `amplify.yml` for frontend hosting setup and an `infr
 
 ## Development Notes
 
-This repository is currently in active MVP development. Prefer small vertical slices that keep the app runnable locally. The frontend should continue to degrade gracefully when the backend or database is unavailable.
+This repository is currently in active MVP development. Prefer small vertical slices that GitHub Actions or hosted development services can validate. The frontend should continue to degrade gracefully when the backend or database is unavailable.
