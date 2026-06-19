@@ -14,6 +14,7 @@ import {
   removeJobIdFromDraftStops,
 } from '../domain/managerJobAssignment';
 import { syncStatusFromPersistence, syncStatusLabel, type RouteProgressSyncStatus } from '../domain/stopProgress';
+import { ManagerDraftRouteWorkloadCard } from './ManagerDraftRouteWorkloadCard';
 import { ManagerDraftRouteWorkspace } from './ManagerDraftRouteWorkspace';
 
 type ManagerLocalRoutePlannerProps = {
@@ -143,6 +144,7 @@ export function ManagerLocalRoutePlanner({
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Plan changes: {syncStatusLabel(syncStatus)}
       </p>
+      <ManagerDraftRouteWorkloadCard stops={draftStops} />
       <ManagerDraftRouteWorkspace
         jobs={jobs}
         stops={draftStops}
