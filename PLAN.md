@@ -277,3 +277,29 @@ Next implementation work:
 | 2026-06-15 | Route-stop fallback job-selection tightened |
 | 2026-06-15 | Stop-progress domain helpers and tests added |
 | 2026-06-15 | Route progress sync status display added |
+
+## Notifications Strategy
+
+Goal: add reliable, opt-in notifications without blocking core field workflows.
+
+Recommended sequence:
+
+1. Build an internal notification event model first: day plan published, stop delayed, job completed, completion report ready, account/payment exception, and failed sync needing manager attention.
+2. Store notification preferences per customer, crew member, and manager before sending external messages.
+3. Add an outbox table so route, job, report, and account workflows can enqueue notifications transactionally without coupling request handlers to providers.
+4. Add a worker that sends email through SES first, then add SMS through SNS or Twilio after message templates and opt-out behavior are defined.
+5. Add manager-facing notification history and delivery status before enabling customer-facing SMS.
+6. Keep push notifications as a later PWA/mobile enhancement after authentication and device registration exist.
+
+Initial channels:
+
+- Email for completion reports, manager alerts, and account/payment messages.
+- SMS for time-sensitive customer arrival windows and crew reminders.
+- In-app notifications for managers reviewing route exceptions, failed persistence, and overdue work.
+
+Next implementation slice:
+
+- Add notification event types and preference models to the backend domain.
+- Add PostgreSQL migrations for notification preferences and notification outbox.
+- Add seed notification preferences for demo accounts and crews.
+- Add local-only notification history UI for managers before provider integration.
