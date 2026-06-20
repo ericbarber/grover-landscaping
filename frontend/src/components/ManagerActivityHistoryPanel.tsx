@@ -241,7 +241,7 @@ export function ManagerActivityHistoryPanel({
                 : 'This browser is blocking local storage, so filters will reset after reload.'
             }
           >
-            {canSaveFilters ? 'Saved on this device' : 'Not saved in this browser'}
+            {canSaveFilters ? 'Filters saved locally' : 'Filters not saved locally'}
           </span>
           <span
             className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
