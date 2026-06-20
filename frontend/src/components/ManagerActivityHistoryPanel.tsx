@@ -168,6 +168,49 @@ export function ManagerActivityHistoryPanel({
     setIsConfirmingHistoryReset(false);
   }
 
+  const quickFilters = [
+    {
+      id: 'needs-review',
+      isVisible: totalReviewCount > 0,
+      isActive: isShowingNeedsReview,
+      ariaLabel: 'Show manager activity items that need review',
+      activeLabel: 'Showing needs review',
+      inactiveLabel: 'Show needs review',
+      activeClassName: 'text-amber-700 hover:text-amber-900',
+      onClick: showNeedsReviewActivity,
+    },
+    {
+      id: 'route-review',
+      isVisible: totalRouteReviewCount > 0,
+      isActive: isShowingRouteReview,
+      ariaLabel: 'Show manager activity items from route review',
+      activeLabel: 'Showing route review',
+      inactiveLabel: 'Show route review',
+      activeClassName: 'text-violet-700 hover:text-violet-900',
+      onClick: showRouteReviewActivity,
+    },
+    {
+      id: 'sync-fallback',
+      isVisible: totalSyncFallbackCount > 0,
+      isActive: isShowingSyncFallback,
+      ariaLabel: 'Show manager activity items from sync fallback',
+      activeLabel: 'Showing sync fallback',
+      inactiveLabel: 'Show sync fallback',
+      activeClassName: 'text-sky-700 hover:text-sky-900',
+      onClick: showSyncFallbackActivity,
+    },
+    {
+      id: 'photo-evidence',
+      isVisible: totalPhotoEvidenceCount > 0,
+      isActive: isShowingPhotoEvidence,
+      ariaLabel: 'Show manager activity items from photo evidence',
+      activeLabel: 'Showing photo evidence',
+      inactiveLabel: 'Show photo evidence',
+      activeClassName: 'text-emerald-700 hover:text-emerald-900',
+      onClick: showPhotoEvidenceActivity,
+    },
+  ];
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -259,58 +302,22 @@ export function ManagerActivityHistoryPanel({
       </p>
 
       <div className="mt-3 flex flex-wrap gap-3">
-        {totalReviewCount > 0 ? (
-          <button
-            aria-label="Show manager activity items that need review"
-            aria-pressed={isShowingNeedsReview}
-            className={`text-xs font-semibold underline underline-offset-4 ${
-              isShowingNeedsReview ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
-            }`}
-            onClick={showNeedsReviewActivity}
-            type="button"
-          >
-            {isShowingNeedsReview ? 'Showing needs review' : 'Show needs review'}
-          </button>
-        ) : null}
-        {totalRouteReviewCount > 0 ? (
-          <button
-            aria-label="Show manager activity items from route review"
-            aria-pressed={isShowingRouteReview}
-            className={`text-xs font-semibold underline underline-offset-4 ${
-              isShowingRouteReview ? 'text-violet-700 hover:text-violet-900' : 'text-slate-600 hover:text-slate-950'
-            }`}
-            onClick={showRouteReviewActivity}
-            type="button"
-          >
-            {isShowingRouteReview ? 'Showing route review' : 'Show route review'}
-          </button>
-        ) : null}
-        {totalSyncFallbackCount > 0 ? (
-          <button
-            aria-label="Show manager activity items from sync fallback"
-            aria-pressed={isShowingSyncFallback}
-            className={`text-xs font-semibold underline underline-offset-4 ${
-              isShowingSyncFallback ? 'text-sky-700 hover:text-sky-900' : 'text-slate-600 hover:text-slate-950'
-            }`}
-            onClick={showSyncFallbackActivity}
-            type="button"
-          >
-            {isShowingSyncFallback ? 'Showing sync fallback' : 'Show sync fallback'}
-          </button>
-        ) : null}
-        {totalPhotoEvidenceCount > 0 ? (
-          <button
-            aria-label="Show manager activity items from photo evidence"
-            aria-pressed={isShowingPhotoEvidence}
-            className={`text-xs font-semibold underline underline-offset-4 ${
-              isShowingPhotoEvidence ? 'text-emerald-700 hover:text-emerald-900' : 'text-slate-600 hover:text-slate-950'
-            }`}
-            onClick={showPhotoEvidenceActivity}
-            type="button"
-          >
-            {isShowingPhotoEvidence ? 'Showing photo evidence' : 'Show photo evidence'}
-          </button>
-        ) : null}
+        {quickFilters
+          .filter((quickFilter) => quickFilter.isVisible)
+          .map((quickFilter) => (
+            <button
+              key={quickFilter.id}
+              aria-label={quickFilter.ariaLabel}
+              aria-pressed={quickFilter.isActive}
+              className={`text-xs font-semibold underline underline-offset-4 ${
+                quickFilter.isActive ? quickFilter.activeClassName : 'text-slate-600 hover:text-slate-950'
+              }`}
+              onClick={quickFilter.onClick}
+              type="button"
+            >
+              {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
+            </button>
+          ))}
         {hasActiveFilters ? (
           <button
             aria-label="Reset saved manager activity source and tone filters"
