@@ -93,10 +93,11 @@ export function ManagerActivityHistoryPanel({
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {activitySources.map((source) => (
           <button
             key={source}
+            aria-pressed={sourceFilter === source}
             className={`rounded-xl border px-3 py-2 text-left transition ${
               sourceFilter === source
                 ? 'border-slate-950 bg-slate-950 text-white'
@@ -113,10 +114,11 @@ export function ManagerActivityHistoryPanel({
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div aria-label="Filter manager activity by tone" className="mt-3 flex flex-wrap gap-2">
         {activityTones.map((tone) => (
           <button
             key={tone}
+            aria-pressed={toneFilter === tone}
             className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
               toneFilter === tone
                 ? 'border-slate-950 bg-slate-950 text-white'
@@ -130,7 +132,7 @@ export function ManagerActivityHistoryPanel({
         ))}
       </div>
 
-      <p className="mt-3 text-xs font-medium text-slate-500">
+      <p aria-live="polite" className="mt-3 text-xs font-medium text-slate-500">
         Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
       </p>
 
@@ -149,7 +151,7 @@ export function ManagerActivityHistoryPanel({
 
       <div className="mt-5 space-y-3">
         {filteredItems.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600" role="status">
             <p className="font-semibold text-slate-800">No activity matches these filters.</p>
             <p className="mt-1">Clear the filters to return to the full manager review queue.</p>
           </div>
