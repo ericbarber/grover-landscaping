@@ -102,11 +102,13 @@ export function ManagerActivityHistoryPanel({
   );
   const totalReviewCount = countManagerActivityNeedingReview(items);
   const totalSyncFallbackCount = countManagerActivityBySource(items, 'sync');
+  const totalPhotoEvidenceCount = countManagerActivityBySource(items, 'photo');
   const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
   const isShowingNeedsReview = sourceFilter === 'all' && toneFilter === 'warning';
   const isShowingSyncFallback = sourceFilter === 'sync' && toneFilter === 'all';
+  const isShowingPhotoEvidence = sourceFilter === 'photo' && toneFilter === 'all';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
 
   useEffect(() => {
@@ -134,6 +136,12 @@ export function ManagerActivityHistoryPanel({
 
   function showSyncFallbackActivity() {
     setSourceFilter('sync');
+    setToneFilter('all');
+    setIsConfirmingHistoryReset(false);
+  }
+
+  function showPhotoEvidenceActivity() {
+    setSourceFilter('photo');
     setToneFilter('all');
     setIsConfirmingHistoryReset(false);
   }
@@ -267,6 +275,19 @@ export function ManagerActivityHistoryPanel({
             type="button"
           >
             {isShowingSyncFallback ? 'Showing sync fallback' : 'Show sync fallback'}
+          </button>
+        ) : null}
+        {totalPhotoEvidenceCount > 0 ? (
+          <button
+            aria-label="Show manager activity items from photo evidence"
+            aria-pressed={isShowingPhotoEvidence}
+            className={`text-xs font-semibold underline underline-offset-4 ${
+              isShowingPhotoEvidence ? 'text-emerald-700 hover:text-emerald-900' : 'text-slate-600 hover:text-slate-950'
+            }`}
+            onClick={showPhotoEvidenceActivity}
+            type="button"
+          >
+            {isShowingPhotoEvidence ? 'Showing photo evidence' : 'Show photo evidence'}
           </button>
         ) : null}
         {hasActiveFilters ? (
