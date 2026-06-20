@@ -124,6 +124,12 @@ export function ManagerActivityHistoryPanel({
           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
             {warningCount} needs review
           </span>
+          <span
+            className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800"
+            title="Source and tone filters are saved in this browser when storage is available."
+          >
+            Saved on this device
+          </span>
         </div>
       </div>
 
