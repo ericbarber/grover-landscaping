@@ -1,7 +1,9 @@
 import {
+  countManagerActivityBySource,
   countManagerActivityByTone,
   seedManagerActivityItems,
   type ManagerActivityItem,
+  type ManagerActivitySource,
 } from '../domain/managerActivity';
 
 function activityToneClass(tone: ManagerActivityItem['tone']) {
@@ -16,7 +18,7 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
   return 'border-slate-200 bg-slate-50 text-slate-700';
 }
 
-function sourceLabel(source: ManagerActivityItem['source']) {
+function sourceLabel(source: ManagerActivitySource) {
   if (source === 'route') {
     return 'Route';
   }
@@ -31,6 +33,8 @@ function sourceLabel(source: ManagerActivityItem['source']) {
 
   return 'Sync';
 }
+
+const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
 
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
@@ -54,6 +58,15 @@ export function ManagerActivityHistoryPanel({
         <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
           {warningCount} needs review
         </span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {activitySources.map((source) => (
+          <div key={source} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{sourceLabel(source)}</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">{countManagerActivityBySource(items, source)}</p>
+          </div>
+        ))}
       </div>
 
       <div className="mt-5 space-y-3">
