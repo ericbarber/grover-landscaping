@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   countManagerActivityBySource,
   countManagerActivityByTone,
+  filterManagerActivityItems,
   seedManagerActivityItems,
   type ManagerActivityItem,
   type ManagerActivitySource,
@@ -89,13 +90,7 @@ export function ManagerActivityHistoryPanel({
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
   const [canSaveFilters, setCanSaveFilters] = useState(true);
   const filteredItems = useMemo(
-    () =>
-      items.filter((item) => {
-        const matchesSource = sourceFilter === 'all' || item.source === sourceFilter;
-        const matchesTone = toneFilter === 'all' || item.tone === toneFilter;
-
-        return matchesSource && matchesTone;
-      }),
+    () => filterManagerActivityItems(items, { source: sourceFilter, tone: toneFilter }),
     [items, sourceFilter, toneFilter],
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
