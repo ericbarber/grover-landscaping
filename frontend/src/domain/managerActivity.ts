@@ -54,6 +54,10 @@ export function filterManagerActivityItems(
   });
 }
 
+export function getLatestManagerActivityTimestamp(items: ManagerActivityItem[], emptyLabel = 'No activity yet'): string {
+  return items[0]?.occurredAt ?? emptyLabel;
+}
+
 export function countManagerActivityByTone(items: ManagerActivityItem[], tone: ManagerActivityTone): number {
   return items.filter((item) => item.tone === tone).length;
 }
