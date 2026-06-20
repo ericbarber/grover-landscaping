@@ -7,6 +7,11 @@ import {
   type ManagerActivitySource,
   type ManagerActivityTone,
 } from '../domain/managerActivity';
+import {
+  managerActivityFilterSummary,
+  managerActivitySourceLabel,
+  managerActivityToneLabel,
+} from '../domain/managerActivityLabels';
 
 function activityToneClass(tone: ManagerActivityItem['tone']) {
   if (tone === 'warning') {
@@ -18,34 +23,6 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
   }
 
   return 'border-slate-200 bg-slate-50 text-slate-700';
-}
-
-function sourceLabel(source: ManagerActivitySource) {
-  if (source === 'route') {
-    return 'Route';
-  }
-
-  if (source === 'job') {
-    return 'Job';
-  }
-
-  if (source === 'photo') {
-    return 'Photo';
-  }
-
-  return 'Sync';
-}
-
-function toneLabel(tone: ManagerActivityTone) {
-  if (tone === 'warning') {
-    return 'Warning';
-  }
-
-  if (tone === 'success') {
-    return 'Success';
-  }
-
-  return 'Info';
 }
 
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
@@ -73,10 +50,7 @@ export function ManagerActivityHistoryPanel({
     [items, sourceFilter, toneFilter],
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
-  const activeFilterSummary = [
-    sourceFilter === 'all' ? 'All sources' : `${sourceLabel(sourceFilter)} source`,
-    toneFilter === 'all' ? 'all tones' : `${toneLabel(toneFilter)} tone`,
-  ].join(' · ');
+  const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -112,7 +86,7 @@ export function ManagerActivityHistoryPanel({
             type="button"
           >
             <p className={`text-[10px] font-semibold uppercase tracking-wide ${sourceFilter === source ? 'text-slate-300' : 'text-slate-500'}`}>
-              {sourceLabel(source)}
+              {managerActivitySourceLabel(source)}
             </p>
             <p className="mt-1 text-lg font-bold">{countManagerActivityBySource(items, source)}</p>
           </button>
@@ -132,7 +106,7 @@ export function ManagerActivityHistoryPanel({
             onClick={() => setToneFilter(toneFilter === tone ? 'all' : tone)}
             type="button"
           >
-            {toneLabel(tone)} {countManagerActivityByTone(items, tone)}
+            {managerActivityToneLabel(tone)} {countManagerActivityByTone(items, tone)}
           </button>
         ))}
       </div>
@@ -167,7 +141,7 @@ export function ManagerActivityHistoryPanel({
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-80">
-                      {sourceLabel(item.source)}
+                      {managerActivitySourceLabel(item.source)}
                     </span>
                     <h3 className="text-sm font-semibold">{item.title}</h3>
                   </div>
