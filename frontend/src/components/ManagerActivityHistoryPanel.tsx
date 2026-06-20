@@ -215,6 +215,7 @@ export function ManagerActivityHistoryPanel({
     },
   ];
   const visibleQuickFilters = quickFilters.filter((quickFilter) => quickFilter.isVisible);
+  const hasResetActions = hasActiveFilters || Boolean(onResetHistory) || isConfirmingHistoryReset;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -333,44 +334,49 @@ export function ManagerActivityHistoryPanel({
                 {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
               </button>
             ))}
-            {hasActiveFilters ? (
-              <button
-                aria-label="Reset saved manager activity source and tone filters"
-                className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-                onClick={resetSavedFilters}
-                type="button"
-              >
-                Reset saved filters
-              </button>
-            ) : null}
-            {onResetHistory ? (
-              <button
-                aria-label={
-                  isConfirmingHistoryReset
-                    ? 'Confirm resetting manager activity history to the default review queue'
-                    : 'Reset manager activity history to the default review queue'
-                }
-                className={`text-xs font-semibold underline underline-offset-4 ${
-                  isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
-                }`}
-                onClick={handleResetHistoryClick}
-                type="button"
-              >
-                {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
-              </button>
-            ) : null}
-            {isConfirmingHistoryReset ? (
-              <button
-                aria-label="Cancel manager activity history reset"
-                className="text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-950"
-                onClick={() => setIsConfirmingHistoryReset(false)}
-                type="button"
-              >
-                Cancel reset
-              </button>
-            ) : null}
           </div>
         </>
+      ) : null}
+
+      {hasResetActions ? (
+        <div className="mt-3 flex flex-wrap gap-3">
+          {hasActiveFilters ? (
+            <button
+              aria-label="Reset saved manager activity source and tone filters"
+              className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
+              onClick={resetSavedFilters}
+              type="button"
+            >
+              Reset saved filters
+            </button>
+          ) : null}
+          {onResetHistory ? (
+            <button
+              aria-label={
+                isConfirmingHistoryReset
+                  ? 'Confirm resetting manager activity history to the default review queue'
+                  : 'Reset manager activity history to the default review queue'
+              }
+              className={`text-xs font-semibold underline underline-offset-4 ${
+                isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
+              }`}
+              onClick={handleResetHistoryClick}
+              type="button"
+            >
+              {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
+            </button>
+          ) : null}
+          {isConfirmingHistoryReset ? (
+            <button
+              aria-label="Cancel manager activity history reset"
+              className="text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-950"
+              onClick={() => setIsConfirmingHistoryReset(false)}
+              type="button"
+            >
+              Cancel reset
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {isConfirmingHistoryReset ? (
