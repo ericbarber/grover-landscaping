@@ -3,6 +3,7 @@ import {
   countManagerActivityBySource,
   countManagerActivityByTone,
   filterManagerActivityItems,
+  getLatestManagerActivityTimestamp,
   seedManagerActivityItems,
   type ManagerActivityItem,
   type ManagerActivitySource,
@@ -101,7 +102,7 @@ export function ManagerActivityHistoryPanel({
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
-  const latestActivityAt = items[0]?.occurredAt ?? 'No activity yet';
+  const latestActivityAt = getLatestManagerActivityTimestamp(items);
 
   useEffect(() => {
     setCanSaveFilters(writeStorageValue(activitySourceFilterStorageKey, sourceFilter));
