@@ -29,7 +29,6 @@ type ManagerLocalRoutePlannerProps = {
 const nextStepCopy = {
   create_plan: 'Create a draft day plan before adding route stops.',
   add_stops: 'Add scheduled jobs to build this crew route.',
-  review_route: 'Review workload and stop order before publishing.',
   publish_plan: 'Route looks ready. Publish it when the crew plan is final.',
 };
 
@@ -44,6 +43,9 @@ export function ManagerLocalRoutePlanner({
   const [mutationNotice, setMutationNotice] = useState<string | null>(null);
   const publishGuard = getManagerDraftRoutePublishGuard(jobs, draftStops);
   const nextStep = getManagerNextWorkflowStep(Boolean(dayPlanId), draftStops.length > 0, publishGuard.canPublish);
+  const nextStepMessage = nextStep === 'review_route'
+    ? `Review route before publishing: ${publishGuard.disabledReason ?? 'check workload and stop order.'}`
+    : nextStepCopy[nextStep];
 
   useEffect(() => {
     setDraftStops(initialStops);
@@ -170,7 +172,7 @@ export function ManagerLocalRoutePlanner({
         Plan changes: {syncStatusLabel(syncStatus)}
       </p>
       <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
-        Next step: {nextStepCopy[nextStep]}
+        Next step: {nextStepMessage}
       </p>
       {mutationNotice ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
