@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { filterManagerActivityItems, seedManagerActivityItems } from './managerActivity';
 import {
   managerActivityFilterSummary,
   managerActivitySourceLabel,
@@ -27,5 +28,37 @@ describe('manager activity label helpers', () => {
     expect(managerActivityFilterSummary('route', 'warning')).toBe('Route source · Warning tone');
     expect(managerActivityFilterSummary('photo', 'success')).toBe('Photo source · Success tone');
     expect(managerActivityFilterSummary('sync', 'info')).toBe('Sync source · Info tone');
+  });
+});
+
+describe('manager activity filter helper', () => {
+  it('keeps all activity when both filters are all', () => {
+    expect(filterManagerActivityItems(seedManagerActivityItems, { source: 'all', tone: 'all' })).toEqual(
+      seedManagerActivityItems,
+    );
+  });
+
+  it('filters activity by source', () => {
+    const routeItems = filterManagerActivityItems(seedManagerActivityItems, { source: 'route', tone: 'all' });
+
+    expect(routeItems).toHaveLength(1);
+    expect(routeItems[0].source).toBe('route');
+  });
+
+  it('filters activity by tone', () => {
+    const successItems = filterManagerActivityItems(seedManagerActivityItems, { source: 'all', tone: 'success' });
+
+    expect(successItems).toHaveLength(1);
+    expect(successItems[0].tone).toBe('success');
+  });
+
+  it('filters activity by source and tone together', () => {
+    const matchingItems = filterManagerActivityItems(seedManagerActivityItems, {
+      source: 'sync',
+      tone: 'info',
+    });
+
+    expect(matchingItems).toHaveLength(1);
+    expect(matchingItems[0].id).toBe('sync-fallback-active');
   });
 });
