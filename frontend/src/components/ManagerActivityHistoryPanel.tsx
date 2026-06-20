@@ -88,9 +88,14 @@ export function ManagerActivityHistoryPanel({
             Local activity history for route reviews, completion evidence, and sync fallback events.
           </p>
         </div>
-        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
-          {warningCount} needs review
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            {filteredItems.length} of {items.length} shown
+          </span>
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+            {warningCount} needs review
+          </span>
+        </div>
       </div>
 
       <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
