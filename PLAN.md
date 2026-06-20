@@ -59,6 +59,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Day-plan API response includes stop status
 - Backend day-plan read helper for PostgreSQL-backed crew routes
 - Day-plan repository attempts PostgreSQL reads with seeded fallback
+- Route summary finished count resolves server status plus local browser status
 
 ### Manager scheduling foundation
 
@@ -85,7 +86,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager route planner shows workload summary for estimated drive and service duration
 - Manager route planner shows recovery notices when route changes fall back to local state
 - Manager route planner shows next-step workflow guidance while drafting
+- Manager route planner explains publish blockers from the publish guard
 - Manager publish success refreshes the crew-facing day plan route
+- Manager activity history panel for route review, completion evidence, and sync fallback events
 
 ### Account and service tracking foundation
 
@@ -122,11 +125,12 @@ Current state:
 - Frontend syncs route progress to the backend when the endpoint is available
 - Frontend falls back to browser persistence when backend sync is unavailable
 - Frontend can consume backend `stop_status` values for each route stop
+- Frontend route summary finished count resolves backend stop status plus local browser status
+- Backend repository fallback tests cover day-plan reads and stop mutations without a database pool
 
 Next implementation work:
 
-- Wire the route summary finished-count to resolved server-or-local stop status
-- Add database-backed route tests around persisted stop progress and day-plan reads
+- Add hosted database-backed route tests once CI has a test PostgreSQL service available
 
 ### Manager scheduling workflow
 
@@ -149,6 +153,8 @@ Current state:
 - Frontend manager route planner shows estimated workload summary
 - Frontend manager route planner explains local fallback recovery when mutation persistence fails
 - Frontend manager route planner shows next-step guidance while drafting
+- Frontend manager route planner explains publish blockers from the publish guard
+- Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 
@@ -264,7 +270,11 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-19 | Manager activity history panel added for route review, completion evidence, and sync fallback events |
+| 2026-06-19 | Backend day-plan repository fallback tests added |
+| 2026-06-19 | Manager route planner publish-blocker guidance added |
 | 2026-06-19 | Manager route planner next-step guidance wired into active draft planner |
+| 2026-06-19 | Route summary finished count now resolves backend and browser stop state |
 | 2026-06-19 | Manager route planner recovery notices added for local fallback mutations |
 | 2026-06-19 | Manager route planner workload summary wired into active draft planner |
 | 2026-06-17 | Backend manager stop assignment, removal, and ordering routes added |
@@ -310,4 +320,4 @@ Next implementation slice:
 - Add notification event types and preference models to the backend domain.
 - Add PostgreSQL migrations for notification preferences and notification outbox.
 - Add seed notification preferences for demo accounts and crews.
-- Add local-only notification history UI for managers before provider integration.
+- Connect the manager activity history UI to persisted events after the outbox exists.
