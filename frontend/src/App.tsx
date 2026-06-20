@@ -257,6 +257,7 @@ export function App() {
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
   );
+  const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
 
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
@@ -274,7 +275,7 @@ export function App() {
   }
 
   useEffect(() => {
-    writeStoredManagerActivityItems(managerActivity);
+    setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
 
   useEffect(() => {
@@ -482,7 +483,7 @@ export function App() {
             />
           </div>
           <div className="mt-6">
-            <ManagerActivityHistoryPanel items={managerActivity} />
+            <ManagerActivityHistoryPanel items={managerActivity} isHistoryPersisted={isManagerActivityPersisted} />
           </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">
