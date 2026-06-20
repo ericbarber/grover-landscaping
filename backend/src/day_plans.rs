@@ -299,8 +299,9 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
 #[cfg(test)]
 mod tests {
     use super::{
-        draft_day_plan_id, local_draft_day_plan_response, local_published_day_plan_response,
-        seed_day_plan, CreateDayPlanRequest,
+        draft_day_plan_id, draft_stop_id, local_draft_day_plan_response,
+        local_published_day_plan_response, seed_day_plan, AssignDayPlanStopRequest,
+        CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
     };
 
     #[test]
@@ -329,6 +330,14 @@ mod tests {
     }
 
     #[test]
+    fn draft_stop_ids_are_stable_for_day_plan_and_job() {
+        assert_eq!(
+            draft_stop_id("day_plan_2026_06_16_crew_1001", "job_1002"),
+            "stop_day_plan_2026_06_16_crew_1001_job_1002"
+        );
+    }
+
+    #[test]
     fn local_draft_day_plan_responses_are_manual_drafts() {
         let request = CreateDayPlanRequest {
             crew_id: "crew_1001".to_string(),
@@ -351,6 +360,67 @@ mod tests {
         assert_eq!(response.service_date, "2026-06-16");
         assert_eq!(response.status, "published");
         assert_eq!(response.route_status, "manual");
+        assert!(!response.persisted);
+    }
+
+    #[tokio::test]
+    async fn repository_returns_seed_day_plan_without_database_pool() {
+        let repository = DayPlanRepository::default();
+
+        let day_plan = repository.today_for_crew("crew_2001").await;
+
+        assert_eq!(day_plan.crew_id, "crew_2001");
+        assert_eq!(day_plan.status, "published");
+        assert_eq!(day_plan.stops.len(), 2);
+        assert_eq!(day_plan.stops[0].stop_status, "pending");
+    }
+
+    #[tokio::test]
+    async fn repository_assign_stop_falls_back_without_database_pool() {
+        let repository = DayPlanRepository::default();
+        let request = AssignDayPlanStopRequest {
+            job_id: "job_2001".to_string(),
+            estimated_drive_minutes: Some(14),
+            estimated_service_minutes: Some(45),
+        };
+
+        let response = repository
+            .assign_stop("day_plan_2026_06_16_crew_1001", request)
+            .await;
+
+        assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
+        assert_eq!(response.stop_id, "stop_day_plan_2026_06_16_crew_1001_job_2001");
+        assert_eq!(response.job_id, "job_2001");
+        assert_eq!(response.stop_order, 0);
+        assert!(!response.persisted);
+    }
+
+    #[tokio::test]
+    async fn repository_remove_stop_falls_back_without_database_pool() {
+        let repository = DayPlanRepository::default();
+
+        let response = repository
+            .remove_stop("day_plan_2026_06_16_crew_1001", "stop_1001")
+            .await;
+
+        assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
+        assert_eq!(response.stop_id, "stop_1001");
+        assert!(!response.persisted);
+    }
+
+    #[tokio::test]
+    async fn repository_reorder_stops_falls_back_without_database_pool() {
+        let repository = DayPlanRepository::default();
+        let request = ReorderDayPlanStopsRequest {
+            stop_ids: vec!["stop_1002".to_string(), "stop_1001".to_string()],
+        };
+
+        let response = repository
+            .reorder_stops("day_plan_2026_06_16_crew_1001", request)
+            .await;
+
+        assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
+        assert_eq!(response.stop_ids, vec!["stop_1002".to_string(), "stop_1001".to_string()]);
         assert!(!response.persisted);
     }
 }
