@@ -36,6 +36,7 @@ type ActivityToneFilter = ManagerActivityTone | 'all';
 
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
+  isHistoryPersisted?: boolean;
 };
 
 function readStorageValue(key: string): string | null {
@@ -85,6 +86,7 @@ function readSavedToneFilter(): ActivityToneFilter {
 
 export function ManagerActivityHistoryPanel({
   items = seedManagerActivityItems,
+  isHistoryPersisted = true,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
@@ -142,6 +144,18 @@ export function ManagerActivityHistoryPanel({
             }
           >
             {canSaveFilters ? 'Saved on this device' : 'Not saved in this browser'}
+          </span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+              isHistoryPersisted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+            }`}
+            title={
+              isHistoryPersisted
+                ? 'Activity history is saved in this browser.'
+                : 'This browser is blocking activity history storage, so new history will reset after reload.'
+            }
+          >
+            {isHistoryPersisted ? 'Activity saved locally' : 'Activity not saved locally'}
           </span>
         </div>
       </div>
