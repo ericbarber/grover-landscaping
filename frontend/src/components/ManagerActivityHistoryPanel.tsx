@@ -5,6 +5,7 @@ import {
   seedManagerActivityItems,
   type ManagerActivityItem,
   type ManagerActivitySource,
+  type ManagerActivityTone,
 } from '../domain/managerActivity';
 
 function activityToneClass(tone: ManagerActivityItem['tone']) {
@@ -35,8 +36,22 @@ function sourceLabel(source: ManagerActivitySource) {
   return 'Sync';
 }
 
+function toneLabel(tone: ManagerActivityTone) {
+  if (tone === 'warning') {
+    return 'Warning';
+  }
+
+  if (tone === 'success') {
+    return 'Success';
+  }
+
+  return 'Info';
+}
+
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
+const activityTones: ManagerActivityTone[] = ['warning', 'success', 'info'];
 type ActivitySourceFilter = ManagerActivitySource | 'all';
+type ActivityToneFilter = ManagerActivityTone | 'all';
 
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
@@ -46,9 +61,16 @@ export function ManagerActivityHistoryPanel({
   items = seedManagerActivityItems,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>('all');
+  const [toneFilter, setToneFilter] = useState<ActivityToneFilter>('all');
   const filteredItems = useMemo(
-    () => (sourceFilter === 'all' ? items : items.filter((item) => item.source === sourceFilter)),
-    [items, sourceFilter],
+    () =>
+      items.filter((item) => {
+        const matchesSource = sourceFilter === 'all' || item.source === sourceFilter;
+        const matchesTone = toneFilter === 'all' || item.tone === toneFilter;
+
+        return matchesSource && matchesTone;
+      }),
+    [items, sourceFilter, toneFilter],
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
 
@@ -87,13 +109,33 @@ export function ManagerActivityHistoryPanel({
         ))}
       </div>
 
-      {sourceFilter !== 'all' ? (
+      <div className="mt-3 flex flex-wrap gap-2">
+        {activityTones.map((tone) => (
+          <button
+            key={tone}
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+              toneFilter === tone
+                ? 'border-slate-950 bg-slate-950 text-white'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+            onClick={() => setToneFilter(toneFilter === tone ? 'all' : tone)}
+            type="button"
+          >
+            {toneLabel(tone)} {countManagerActivityByTone(items, tone)}
+          </button>
+        ))}
+      </div>
+
+      {sourceFilter !== 'all' || toneFilter !== 'all' ? (
         <button
           className="mt-3 text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-          onClick={() => setSourceFilter('all')}
+          onClick={() => {
+            setSourceFilter('all');
+            setToneFilter('all');
+          }}
           type="button"
         >
-          Clear {sourceLabel(sourceFilter)} filter
+          Clear activity filters
         </button>
       ) : null}
 
