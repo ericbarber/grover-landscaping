@@ -140,22 +140,29 @@ export function ManagerActivityHistoryPanel({
       ) : null}
 
       <div className="mt-5 space-y-3">
-        {filteredItems.map((item) => (
-          <article key={item.id} className={`rounded-xl border p-3 ${activityToneClass(item.tone)}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-80">
-                    {sourceLabel(item.source)}
-                  </span>
-                  <h3 className="text-sm font-semibold">{item.title}</h3>
+        {filteredItems.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="font-semibold text-slate-800">No activity matches these filters.</p>
+            <p className="mt-1">Clear the filters to return to the full manager review queue.</p>
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <article key={item.id} className={`rounded-xl border p-3 ${activityToneClass(item.tone)}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                      {sourceLabel(item.source)}
+                    </span>
+                    <h3 className="text-sm font-semibold">{item.title}</h3>
+                  </div>
+                  <p className="mt-1 text-sm opacity-90">{item.message}</p>
                 </div>
-                <p className="mt-1 text-sm opacity-90">{item.message}</p>
+                <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>
               </div>
-              <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        )}
       </div>
     </section>
   );
