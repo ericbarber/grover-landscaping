@@ -176,6 +176,7 @@ export function ManagerActivityHistoryPanel({
       ariaLabel: 'Show manager activity items that need review',
       activeLabel: 'Showing needs review',
       inactiveLabel: 'Show needs review',
+      title: 'Show all warning activity that needs manager review.',
       activeClassName: 'text-amber-700 hover:text-amber-900',
       onClick: showNeedsReviewActivity,
     },
@@ -186,6 +187,7 @@ export function ManagerActivityHistoryPanel({
       ariaLabel: 'Show manager activity items from route review',
       activeLabel: 'Showing route review',
       inactiveLabel: 'Show route review',
+      title: 'Show route planning and route review activity.',
       activeClassName: 'text-violet-700 hover:text-violet-900',
       onClick: showRouteReviewActivity,
     },
@@ -196,6 +198,7 @@ export function ManagerActivityHistoryPanel({
       ariaLabel: 'Show manager activity items from sync fallback',
       activeLabel: 'Showing sync fallback',
       inactiveLabel: 'Show sync fallback',
+      title: 'Show local fallback and sync-related activity.',
       activeClassName: 'text-sky-700 hover:text-sky-900',
       onClick: showSyncFallbackActivity,
     },
@@ -206,6 +209,7 @@ export function ManagerActivityHistoryPanel({
       ariaLabel: 'Show manager activity items from photo evidence',
       activeLabel: 'Showing photo evidence',
       inactiveLabel: 'Show photo evidence',
+      title: 'Show photo evidence and completion-report activity.',
       activeClassName: 'text-emerald-700 hover:text-emerald-900',
       onClick: showPhotoEvidenceActivity,
     },
@@ -313,6 +317,7 @@ export function ManagerActivityHistoryPanel({
                 quickFilter.isActive ? quickFilter.activeClassName : 'text-slate-600 hover:text-slate-950'
               }`}
               onClick={quickFilter.onClick}
+              title={quickFilter.title}
               type="button"
             >
               {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
