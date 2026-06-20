@@ -93,6 +93,7 @@ export function ManagerActivityHistoryPanel({
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
   const [canSaveFilters, setCanSaveFilters] = useState(true);
+  const [isConfirmingHistoryReset, setIsConfirmingHistoryReset] = useState(false);
   const filteredItems = useMemo(
     () => filterManagerActivityItems(items, { source: sourceFilter, tone: toneFilter }),
     [items, sourceFilter, toneFilter],
@@ -116,6 +117,20 @@ export function ManagerActivityHistoryPanel({
     setSourceFilter('all');
     setToneFilter('all');
     setCanSaveFilters(sourceSaved && toneSaved);
+  }
+
+  function handleResetHistoryClick() {
+    if (!onResetHistory) {
+      return;
+    }
+
+    if (!isConfirmingHistoryReset) {
+      setIsConfirmingHistoryReset(true);
+      return;
+    }
+
+    onResetHistory();
+    setIsConfirmingHistoryReset(false);
   }
 
   return (
@@ -218,15 +233,37 @@ export function ManagerActivityHistoryPanel({
         ) : null}
         {onResetHistory ? (
           <button
-            aria-label="Reset manager activity history to the default review queue"
-            className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-            onClick={onResetHistory}
+            aria-label={
+              isConfirmingHistoryReset
+                ? 'Confirm resetting manager activity history to the default review queue'
+                : 'Reset manager activity history to the default review queue'
+            }
+            className={`text-xs font-semibold underline underline-offset-4 ${
+              isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
+            }`}
+            onClick={handleResetHistoryClick}
             type="button"
           >
-            Reset activity history
+            {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
+          </button>
+        ) : null}
+        {isConfirmingHistoryReset ? (
+          <button
+            aria-label="Cancel manager activity history reset"
+            className="text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-950"
+            onClick={() => setIsConfirmingHistoryReset(false)}
+            type="button"
+          >
+            Cancel reset
           </button>
         ) : null}
       </div>
+
+      {isConfirmingHistoryReset ? (
+        <p aria-live="polite" className="mt-2 text-xs font-medium text-amber-700">
+          This will replace runtime activity with the default review queue.
+        </p>
+      ) : null}
 
       <div className="mt-5 space-y-3">
         {filteredItems.length === 0 ? (
