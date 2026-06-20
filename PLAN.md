@@ -90,6 +90,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager route planner explains publish blockers from the publish guard
 - Manager publish success refreshes the crew-facing day plan route
 - Manager activity history panel for route review, completion evidence, and sync fallback events
+- Manager activity domain model and history helpers for future persisted activity wiring
 
 ### Account and service tracking foundation
 
@@ -157,6 +158,7 @@ Current state:
 - Frontend manager route planner shows next-step guidance while drafting
 - Frontend manager route planner explains publish blockers from the publish guard
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
+- Frontend manager activity domain model exists for future persisted event wiring
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 
@@ -272,6 +274,7 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-19 | Manager activity domain model and history helpers added |
 | 2026-06-19 | Manager route planner retry controls added for failed route mutation sync attempts |
 | 2026-06-19 | Manager activity history panel added for route review, completion evidence, and sync fallback events |
 | 2026-06-19 | Backend day-plan repository fallback tests added |
