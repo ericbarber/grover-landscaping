@@ -101,12 +101,14 @@ export function ManagerActivityHistoryPanel({
     [items, sourceFilter, toneFilter],
   );
   const totalReviewCount = countManagerActivityNeedingReview(items);
+  const totalRouteReviewCount = countManagerActivityBySource(items, 'route');
   const totalSyncFallbackCount = countManagerActivityBySource(items, 'sync');
   const totalPhotoEvidenceCount = countManagerActivityBySource(items, 'photo');
   const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
   const isShowingNeedsReview = sourceFilter === 'all' && toneFilter === 'warning';
+  const isShowingRouteReview = sourceFilter === 'route' && toneFilter === 'all';
   const isShowingSyncFallback = sourceFilter === 'sync' && toneFilter === 'all';
   const isShowingPhotoEvidence = sourceFilter === 'photo' && toneFilter === 'all';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
@@ -131,6 +133,12 @@ export function ManagerActivityHistoryPanel({
   function showNeedsReviewActivity() {
     setSourceFilter('all');
     setToneFilter('warning');
+    setIsConfirmingHistoryReset(false);
+  }
+
+  function showRouteReviewActivity() {
+    setSourceFilter('route');
+    setToneFilter('all');
     setIsConfirmingHistoryReset(false);
   }
 
@@ -262,6 +270,19 @@ export function ManagerActivityHistoryPanel({
             type="button"
           >
             {isShowingNeedsReview ? 'Showing needs review' : 'Show needs review'}
+          </button>
+        ) : null}
+        {totalRouteReviewCount > 0 ? (
+          <button
+            aria-label="Show manager activity items from route review"
+            aria-pressed={isShowingRouteReview}
+            className={`text-xs font-semibold underline underline-offset-4 ${
+              isShowingRouteReview ? 'text-violet-700 hover:text-violet-900' : 'text-slate-600 hover:text-slate-950'
+            }`}
+            onClick={showRouteReviewActivity}
+            type="button"
+          >
+            {isShowingRouteReview ? 'Showing route review' : 'Show route review'}
           </button>
         ) : null}
         {totalSyncFallbackCount > 0 ? (
