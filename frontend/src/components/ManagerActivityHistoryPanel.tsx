@@ -73,6 +73,10 @@ export function ManagerActivityHistoryPanel({
     [items, sourceFilter, toneFilter],
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
+  const activeFilterSummary = [
+    sourceFilter === 'all' ? 'All sources' : `${sourceLabel(sourceFilter)} source`,
+    toneFilter === 'all' ? 'all tones' : `${toneLabel(toneFilter)} tone`,
+  ].join(' · ');
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -125,6 +129,10 @@ export function ManagerActivityHistoryPanel({
           </button>
         ))}
       </div>
+
+      <p className="mt-3 text-xs font-medium text-slate-500">
+        Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
+      </p>
 
       {sourceFilter !== 'all' || toneFilter !== 'all' ? (
         <button
