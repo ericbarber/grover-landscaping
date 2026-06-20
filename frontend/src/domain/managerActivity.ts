@@ -10,6 +10,11 @@ export type ManagerActivityItem = {
   occurredAt: string;
 };
 
+export type ManagerActivityFilters = {
+  source: ManagerActivitySource | 'all';
+  tone: ManagerActivityTone | 'all';
+};
+
 export const seedManagerActivityItems: ManagerActivityItem[] = [
   {
     id: 'route-review-needed',
@@ -36,6 +41,18 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     occurredAt: 'Today 9:20 AM',
   },
 ];
+
+export function filterManagerActivityItems(
+  items: ManagerActivityItem[],
+  filters: ManagerActivityFilters,
+): ManagerActivityItem[] {
+  return items.filter((item) => {
+    const matchesSource = filters.source === 'all' || item.source === filters.source;
+    const matchesTone = filters.tone === 'all' || item.tone === filters.tone;
+
+    return matchesSource && matchesTone;
+  });
+}
 
 export function countManagerActivityByTone(items: ManagerActivityItem[], tone: ManagerActivityTone): number {
   return items.filter((item) => item.tone === tone).length;
