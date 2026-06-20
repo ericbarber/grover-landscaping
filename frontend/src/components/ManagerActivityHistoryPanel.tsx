@@ -49,15 +49,16 @@ function readStorageValue(key: string): string | null {
   }
 }
 
-function writeStorageValue(key: string, value: string) {
+function writeStorageValue(key: string, value: string): boolean {
   if (typeof window === 'undefined') {
-    return;
+    return false;
   }
 
   try {
     window.localStorage.setItem(key, value);
+    return true;
   } catch {
-    // Browser storage can be unavailable in private or restricted contexts.
+    return false;
   }
 }
 
@@ -86,6 +87,7 @@ export function ManagerActivityHistoryPanel({
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
+  const [canSaveFilters, setCanSaveFilters] = useState(true);
   const filteredItems = useMemo(
     () =>
       items.filter((item) => {
@@ -100,11 +102,11 @@ export function ManagerActivityHistoryPanel({
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
 
   useEffect(() => {
-    writeStorageValue(activitySourceFilterStorageKey, sourceFilter);
+    setCanSaveFilters(writeStorageValue(activitySourceFilterStorageKey, sourceFilter));
   }, [sourceFilter]);
 
   useEffect(() => {
-    writeStorageValue(activityToneFilterStorageKey, toneFilter);
+    setCanSaveFilters((current) => writeStorageValue(activityToneFilterStorageKey, toneFilter) && current);
   }, [toneFilter]);
 
   return (
@@ -125,10 +127,16 @@ export function ManagerActivityHistoryPanel({
             {warningCount} needs review
           </span>
           <span
-            className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800"
-            title="Source and tone filters are saved in this browser when storage is available."
+            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+              canSaveFilters ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+            }`}
+            title={
+              canSaveFilters
+                ? 'Source and tone filters are saved in this browser.'
+                : 'This browser is blocking local storage, so filters will reset after reload.'
+            }
           >
-            Saved on this device
+            {canSaveFilters ? 'Saved on this device' : 'Not saved in this browser'}
           </span>
         </div>
       </div>
