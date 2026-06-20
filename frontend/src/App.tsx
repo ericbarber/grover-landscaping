@@ -274,6 +274,11 @@ export function App() {
     );
   }
 
+  function resetManagerActivityHistory() {
+    setManagerActivity(seedManagerActivityItems);
+    setIsManagerActivityPersisted(writeStoredManagerActivityItems(seedManagerActivityItems));
+  }
+
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
@@ -483,7 +488,11 @@ export function App() {
             />
           </div>
           <div className="mt-6">
-            <ManagerActivityHistoryPanel items={managerActivity} isHistoryPersisted={isManagerActivityPersisted} />
+            <ManagerActivityHistoryPanel
+              items={managerActivity}
+              isHistoryPersisted={isManagerActivityPersisted}
+              onResetHistory={resetManagerActivityHistory}
+            />
           </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">
