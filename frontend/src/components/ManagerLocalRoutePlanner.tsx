@@ -41,6 +41,7 @@ export function ManagerLocalRoutePlanner({
   const [draftStops, setDraftStops] = useState<DayPlanStop[]>(initialStops);
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>(canPersist ? 'synced' : 'local');
   const [mutationNotice, setMutationNotice] = useState<string | null>(null);
+  const [retryAction, setRetryAction] = useState<(() => void) | null>(null);
   const publishGuard = getManagerDraftRoutePublishGuard(jobs, draftStops);
   const nextStep = getManagerNextWorkflowStep(Boolean(dayPlanId), draftStops.length > 0, publishGuard.canPublish);
   const nextStepMessage = nextStep === 'review_route'
@@ -51,25 +52,21 @@ export function ManagerLocalRoutePlanner({
     setDraftStops(initialStops);
     setSyncStatus(canPersist ? 'synced' : 'local');
     setMutationNotice(null);
+    setRetryAction(null);
   }, [canPersist, dayPlanId]);
 
-  async function addJob(jobId: string) {
-    const nextStops = nextDraftStopsForSelectedJob(draftStops, jobs, jobId);
-    const addedStop = nextStops.find((stop) => stop.jobId === jobId);
-
-    if (nextStops === draftStops || !addedStop) {
-      return;
-    }
-
+  async function persistAddedStop(jobId: string, addedStop: DayPlanStop, nextStops: DayPlanStop[]) {
     if (!dayPlanId || !canPersist) {
       setDraftStops(nextStops);
       setSyncStatus('local');
       setMutationNotice('Added locally because backend persistence is unavailable. Review the draft before publishing.');
+      setRetryAction(null);
       return;
     }
 
     setSyncStatus('syncing');
     setMutationNotice(null);
+    setRetryAction(null);
 
     try {
       const response = await assignDayPlanStop(dayPlanId, {
@@ -87,11 +84,24 @@ export function ManagerLocalRoutePlanner({
       );
       setSyncStatus(syncStatusFromPersistence(response.persisted));
       setMutationNotice(response.persisted ? null : 'Added locally. Review the draft before publishing.');
+      setRetryAction(response.persisted ? null : () => () => void persistAddedStop(jobId, addedStop, nextStops));
     } catch {
       setDraftStops(nextStops);
       setSyncStatus('local');
       setMutationNotice('Added locally after backend sync failed. Review the draft before publishing.');
+      setRetryAction(() => () => void persistAddedStop(jobId, addedStop, nextStops));
     }
+  }
+
+  async function addJob(jobId: string) {
+    const nextStops = nextDraftStopsForSelectedJob(draftStops, jobs, jobId);
+    const addedStop = nextStops.find((stop) => stop.jobId === jobId);
+
+    if (nextStops === draftStops || !addedStop) {
+      return;
+    }
+
+    await persistAddedStop(jobId, addedStop, nextStops);
   }
 
   async function persistReorderedStops(nextStops: DayPlanStop[]) {
@@ -99,11 +109,13 @@ export function ManagerLocalRoutePlanner({
       setDraftStops(nextStops);
       setSyncStatus('local');
       setMutationNotice('Reordered locally because backend persistence is unavailable. Review the stop order before publishing.');
+      setRetryAction(null);
       return;
     }
 
     setSyncStatus('syncing');
     setMutationNotice(null);
+    setRetryAction(null);
 
     try {
       const response = await reorderDayPlanStops(
@@ -113,10 +125,12 @@ export function ManagerLocalRoutePlanner({
       setDraftStops(nextStops);
       setSyncStatus(syncStatusFromPersistence(response.persisted));
       setMutationNotice(response.persisted ? null : 'Reordered locally. Review the stop order before publishing.');
+      setRetryAction(response.persisted ? null : () => () => void persistReorderedStops(nextStops));
     } catch {
       setDraftStops(nextStops);
       setSyncStatus('local');
       setMutationNotice('Reordered locally after backend sync failed. Review the stop order before publishing.');
+      setRetryAction(() => () => void persistReorderedStops(nextStops));
     }
   }
 
@@ -136,6 +150,33 @@ export function ManagerLocalRoutePlanner({
     }
   }
 
+  async function persistRemovedStop(jobId: string, stopId: string, nextStops: DayPlanStop[]) {
+    if (!dayPlanId || !canPersist) {
+      setDraftStops(nextStops);
+      setSyncStatus('local');
+      setMutationNotice('Removed locally because backend persistence is unavailable. Review the draft before publishing.');
+      setRetryAction(null);
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setMutationNotice(null);
+    setRetryAction(null);
+
+    try {
+      const response = await removeDayPlanStop(dayPlanId, stopId);
+      setDraftStops(nextStops);
+      setSyncStatus(syncStatusFromPersistence(response.persisted));
+      setMutationNotice(response.persisted ? null : 'Removed locally. Review the draft before publishing.');
+      setRetryAction(response.persisted ? null : () => () => void persistRemovedStop(jobId, stopId, nextStops));
+    } catch {
+      setDraftStops(draftStopsRemoverForSelectedJob(jobId));
+      setSyncStatus('local');
+      setMutationNotice('Removed locally after backend sync failed. Review the draft before publishing.');
+      setRetryAction(() => () => void persistRemovedStop(jobId, stopId, nextStops));
+    }
+  }
+
   async function removeJob(jobId: string) {
     const stop = draftStops.find((candidate) => candidate.jobId === jobId);
     const nextStops = removeJobIdFromDraftStops(draftStops, jobId);
@@ -144,26 +185,7 @@ export function ManagerLocalRoutePlanner({
       return;
     }
 
-    if (!dayPlanId || !canPersist) {
-      setDraftStops(nextStops);
-      setSyncStatus('local');
-      setMutationNotice('Removed locally because backend persistence is unavailable. Review the draft before publishing.');
-      return;
-    }
-
-    setSyncStatus('syncing');
-    setMutationNotice(null);
-
-    try {
-      const response = await removeDayPlanStop(dayPlanId, stop.id);
-      setDraftStops(nextStops);
-      setSyncStatus(syncStatusFromPersistence(response.persisted));
-      setMutationNotice(response.persisted ? null : 'Removed locally. Review the draft before publishing.');
-    } catch {
-      setDraftStops(draftStopsRemoverForSelectedJob(jobId));
-      setSyncStatus('local');
-      setMutationNotice('Removed locally after backend sync failed. Review the draft before publishing.');
-    }
+    await persistRemovedStop(jobId, stop.id, nextStops);
   }
 
   return (
@@ -175,9 +197,18 @@ export function ManagerLocalRoutePlanner({
         Next step: {nextStepMessage}
       </p>
       {mutationNotice ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-          {mutationNotice}
-        </p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          <p>{mutationNotice}</p>
+          {retryAction ? (
+            <button
+              className="mt-2 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={syncStatus === 'syncing'}
+              onClick={() => retryAction()}
+            >
+              Retry backend sync
+            </button>
+          ) : null}
+        </div>
       ) : null}
       <ManagerDraftRouteWorkloadCard stops={draftStops} />
       <ManagerDraftRouteWorkspace
