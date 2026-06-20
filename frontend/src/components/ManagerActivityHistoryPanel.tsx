@@ -204,7 +204,7 @@ export function ManagerActivityHistoryPanel({
         {filteredItems.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600" role="status">
             <p className="font-semibold text-slate-800">No activity matches these filters.</p>
-            <p className="mt-1">Clear the filters to return to the full manager review queue.</p>
+            <p className="mt-1">Reset saved filters to return to the full manager review queue.</p>
           </div>
         ) : (
           filteredItems.map((item) => (
