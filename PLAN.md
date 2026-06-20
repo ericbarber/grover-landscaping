@@ -91,6 +91,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager publish success refreshes the crew-facing day plan route
 - Manager activity history panel for route review, completion evidence, and sync fallback events
 - Manager activity domain model and history helpers for future persisted activity wiring
+- Manager activity history records runtime route, job, photo, and sync events in local state
+- Manager activity history supports source filters, tone filters, filtered empty states, active filter summaries, and accessible filter controls
+- Manager activity filters persist in browser storage with storage-availability detection and reset behavior
 
 ### Account and service tracking foundation
 
@@ -158,13 +161,15 @@ Current state:
 - Frontend manager route planner shows next-step guidance while drafting
 - Frontend manager route planner explains publish blockers from the publish guard
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
-- Frontend manager activity domain model exists for future persisted event wiring
+- Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
+- Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 
 Next implementation work:
 
 - Connect manager activity history to persisted events after the notification outbox exists
+- Add manager activity helper tests when test-file writes are accepted
 
 ### Photo evidence flow
 
@@ -218,112 +223,3 @@ Next implementation work:
 - Configure environment variables/secrets
 - Add S3 bucket for photo evidence
 - Validate mobile browser workflow against hosted environment
-
-### Authentication and roles
-
-- Crew role
-- Manager role
-- Admin role
-- Customer/report viewer role
-- Login flow
-- Basic authorization around jobs, crews, and reports
-
-## Backlog
-
-### Route optimization
-
-- Property latitude/longitude fields
-- Route optimization provider integration
-- Drive time estimates from maps provider
-- Manager override for optimized order
-- Crew navigation handoff
-
-### Payments and invoicing
-
-- Payment provider integration
-- Invoice generation
-- Payment reminders
-- Customer balance tracking
-- Subscription/package billing workflows
-
-### Notifications
-
-- SMS notifications
-- Email notifications
-- Crew reminders
-- Customer report delivery notifications
-- Manager exception alerts
-
-### Mobile/PWA polish
-
-- Offline-first queue for photo and stop updates
-- Installable PWA configuration
-- Camera-first capture flow
-- Better touch targets and field crew ergonomics
-- Background sync when online
-
-### Operations and observability
-
-- Structured request logging
-- Error reporting
-- Metrics dashboard
-- Audit trail for manager changes
-- Backup and restore documentation
-
-## Recently Delivered
-
-| Date | Delivery |
-| --- | --- |
-| 2026-06-19 | Manager activity domain model and history helpers added |
-| 2026-06-19 | Manager route planner retry controls added for failed route mutation sync attempts |
-| 2026-06-19 | Manager activity history panel added for route review, completion evidence, and sync fallback events |
-| 2026-06-19 | Backend day-plan repository fallback tests added |
-| 2026-06-19 | Manager route planner publish-blocker guidance added |
-| 2026-06-19 | Manager route planner next-step guidance wired into active draft planner |
-| 2026-06-19 | Route summary finished count now resolves backend and browser stop state |
-| 2026-06-19 | Manager route planner recovery notices added for local fallback mutations |
-| 2026-06-19 | Manager route planner workload summary wired into active draft planner |
-| 2026-06-17 | Backend manager stop assignment, removal, and ordering routes added |
-| 2026-06-17 | Manager route planner connected to draft day-plan stop mutation endpoints |
-| 2026-06-17 | Crew route refresh wired after persisted manager day-plan publish |
-| 2026-06-17 | Manager local route planner remove action wired into component state |
-| 2026-06-17 | Backend manager create/publish day-plan routes exposed through Axum |
-| 2026-06-17 | Frontend typecheck restored after account and manager route helper type fixes |
-| 2026-06-16 | Manager draft action wrapper added for draft card plus publish action |
-| 2026-06-16 | Manager publish day-plan client, fallback helper, and publish button added |
-| 2026-06-16 | Manager create day-plan panel added to the dashboard |
-| 2026-06-16 | Frontend draft day-plan creation client and local fallback helpers added |
-| 2026-06-16 | Backend draft day-plan repository and PostgreSQL creation helpers added |
-| 2026-06-15 | PostgreSQL-backed day-plan read helper added |
-| 2026-06-15 | Stop-progress route wired to attempt PostgreSQL persistence |
-| 2026-06-15 | Day-plan API response now includes stop status |
-| 2026-06-15 | PLAN.md refreshed to match delivered route-progress work |
-| 2026-06-15 | Route-stop fallback job-selection tightened |
-| 2026-06-15 | Stop-progress domain helpers and tests added |
-| 2026-06-15 | Route progress sync status display added |
-
-## Notifications Strategy
-
-Goal: add reliable, opt-in notifications without blocking core field workflows.
-
-Recommended sequence:
-
-1. Build an internal notification event model first: day plan published, stop delayed, job completed, completion report ready, account/payment exception, and failed sync needing manager attention.
-2. Store notification preferences per customer, crew member, and manager before sending external messages.
-3. Add an outbox table so route, job, report, and account workflows can enqueue notifications transactionally without coupling request handlers to providers.
-4. Add a worker that sends email through SES first, then add SMS through SNS or Twilio after message templates and opt-out behavior are defined.
-5. Add manager-facing notification history and delivery status before enabling customer-facing SMS.
-6. Keep push notifications as a later PWA/mobile enhancement after authentication and device registration exist.
-
-Initial channels:
-
-- Email for completion reports, manager alerts, and account/payment messages.
-- SMS for time-sensitive customer arrival windows and crew reminders.
-- In-app notifications for managers reviewing route exceptions, failed persistence, and overdue work.
-
-Next implementation slice:
-
-- Add notification event types and preference models to the backend domain.
-- Add PostgreSQL migrations for notification preferences and notification outbox.
-- Add seed notification preferences for demo accounts and crews.
-- Connect the manager activity history UI to persisted events after the outbox exists.
