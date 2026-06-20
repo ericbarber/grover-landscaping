@@ -101,10 +101,12 @@ export function ManagerActivityHistoryPanel({
     [items, sourceFilter, toneFilter],
   );
   const totalReviewCount = countManagerActivityNeedingReview(items);
+  const totalSyncFallbackCount = countManagerActivityBySource(items, 'sync');
   const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
   const isShowingNeedsReview = sourceFilter === 'all' && toneFilter === 'warning';
+  const isShowingSyncFallback = sourceFilter === 'sync' && toneFilter === 'all';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
 
   useEffect(() => {
@@ -127,6 +129,12 @@ export function ManagerActivityHistoryPanel({
   function showNeedsReviewActivity() {
     setSourceFilter('all');
     setToneFilter('warning');
+    setIsConfirmingHistoryReset(false);
+  }
+
+  function showSyncFallbackActivity() {
+    setSourceFilter('sync');
+    setToneFilter('all');
     setIsConfirmingHistoryReset(false);
   }
 
@@ -246,6 +254,19 @@ export function ManagerActivityHistoryPanel({
             type="button"
           >
             {isShowingNeedsReview ? 'Showing needs review' : 'Show needs review'}
+          </button>
+        ) : null}
+        {totalSyncFallbackCount > 0 ? (
+          <button
+            aria-label="Show manager activity items from sync fallback"
+            aria-pressed={isShowingSyncFallback}
+            className={`text-xs font-semibold underline underline-offset-4 ${
+              isShowingSyncFallback ? 'text-sky-700 hover:text-sky-900' : 'text-slate-600 hover:text-slate-950'
+            }`}
+            onClick={showSyncFallbackActivity}
+            type="button"
+          >
+            {isShowingSyncFallback ? 'Showing sync fallback' : 'Show sync fallback'}
           </button>
         ) : null}
         {hasActiveFilters ? (
