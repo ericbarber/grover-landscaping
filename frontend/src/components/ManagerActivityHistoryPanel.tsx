@@ -309,7 +309,12 @@ export function ManagerActivityHistoryPanel({
         Quick filters jump to targeted activity groups and update the saved source and tone filters.
       </p>
 
-      <div aria-describedby="manager-activity-quick-filter-help" className="mt-2 flex flex-wrap gap-3">
+      <div
+        aria-describedby="manager-activity-quick-filter-help"
+        aria-label="Manager activity quick filters"
+        className="mt-2 flex flex-wrap gap-3"
+        role="group"
+      >
         {quickFilters
           .filter((quickFilter) => quickFilter.isVisible)
           .map((quickFilter) => (
