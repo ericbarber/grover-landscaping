@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   countManagerActivityBySource,
   countManagerActivityByTone,
@@ -27,6 +27,9 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
 
 const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
 const activityTones: ManagerActivityTone[] = ['warning', 'success', 'info'];
+const activitySourceFilterStorageKey = 'grover.managerActivity.sourceFilter';
+const activityToneFilterStorageKey = 'grover.managerActivity.toneFilter';
+
 type ActivitySourceFilter = ManagerActivitySource | 'all';
 type ActivityToneFilter = ManagerActivityTone | 'all';
 
@@ -34,11 +37,39 @@ type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
 };
 
+function readSavedSourceFilter(): ActivitySourceFilter {
+  if (typeof window === 'undefined') {
+    return 'all';
+  }
+
+  const savedValue = window.localStorage.getItem(activitySourceFilterStorageKey);
+
+  if (savedValue === 'all' || activitySources.includes(savedValue as ManagerActivitySource)) {
+    return savedValue as ActivitySourceFilter;
+  }
+
+  return 'all';
+}
+
+function readSavedToneFilter(): ActivityToneFilter {
+  if (typeof window === 'undefined') {
+    return 'all';
+  }
+
+  const savedValue = window.localStorage.getItem(activityToneFilterStorageKey);
+
+  if (savedValue === 'all' || activityTones.includes(savedValue as ManagerActivityTone)) {
+    return savedValue as ActivityToneFilter;
+  }
+
+  return 'all';
+}
+
 export function ManagerActivityHistoryPanel({
   items = seedManagerActivityItems,
 }: ManagerActivityHistoryPanelProps) {
-  const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>('all');
-  const [toneFilter, setToneFilter] = useState<ActivityToneFilter>('all');
+  const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
+  const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
   const filteredItems = useMemo(
     () =>
       items.filter((item) => {
@@ -51,6 +82,14 @@ export function ManagerActivityHistoryPanel({
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
+
+  useEffect(() => {
+    window.localStorage.setItem(activitySourceFilterStorageKey, sourceFilter);
+  }, [sourceFilter]);
+
+  useEffect(() => {
+    window.localStorage.setItem(activityToneFilterStorageKey, toneFilter);
+  }, [toneFilter]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
