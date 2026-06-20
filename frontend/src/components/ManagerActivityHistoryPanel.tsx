@@ -16,6 +16,22 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
   return 'border-slate-200 bg-slate-50 text-slate-700';
 }
 
+function sourceLabel(source: ManagerActivityItem['source']) {
+  if (source === 'route') {
+    return 'Route';
+  }
+
+  if (source === 'job') {
+    return 'Job';
+  }
+
+  if (source === 'photo') {
+    return 'Photo';
+  }
+
+  return 'Sync';
+}
+
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
 };
@@ -45,7 +61,12 @@ export function ManagerActivityHistoryPanel({
           <article key={item.id} className={`rounded-xl border p-3 ${activityToneClass(item.tone)}`}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold">{item.title}</h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                    {sourceLabel(item.source)}
+                  </span>
+                  <h3 className="text-sm font-semibold">{item.title}</h3>
+                </div>
                 <p className="mt-1 text-sm opacity-90">{item.message}</p>
               </div>
               <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>
