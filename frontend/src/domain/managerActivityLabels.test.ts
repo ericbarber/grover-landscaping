@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { filterManagerActivityItems, seedManagerActivityItems } from './managerActivity';
+import {
+  filterManagerActivityItems,
+  getLatestManagerActivityTimestamp,
+  seedManagerActivityItems,
+} from './managerActivity';
 import {
   managerActivityFilterSummary,
   managerActivitySourceLabel,
@@ -60,5 +64,16 @@ describe('manager activity filter helper', () => {
 
     expect(matchingItems).toHaveLength(1);
     expect(matchingItems[0].id).toBe('sync-fallback-active');
+  });
+});
+
+describe('manager activity latest timestamp helper', () => {
+  it('returns the newest activity timestamp from the first item', () => {
+    expect(getLatestManagerActivityTimestamp(seedManagerActivityItems)).toBe('Today 8:15 AM');
+  });
+
+  it('returns the empty label when activity history is empty', () => {
+    expect(getLatestManagerActivityTimestamp([])).toBe('No activity yet');
+    expect(getLatestManagerActivityTimestamp([], 'Nothing recorded')).toBe('Nothing recorded');
   });
 });
