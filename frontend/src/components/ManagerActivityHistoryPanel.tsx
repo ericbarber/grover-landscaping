@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   countManagerActivityBySource,
   countManagerActivityByTone,
+  countManagerActivityNeedingReview,
   filterManagerActivityItems,
   getLatestManagerActivityTimestamp,
   seedManagerActivityItems,
@@ -99,7 +100,7 @@ export function ManagerActivityHistoryPanel({
     () => filterManagerActivityItems(items, { source: sourceFilter, tone: toneFilter }),
     [items, sourceFilter, toneFilter],
   );
-  const warningCount = countManagerActivityByTone(filteredItems, 'warning');
+  const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
@@ -153,7 +154,7 @@ export function ManagerActivityHistoryPanel({
             Latest {latestActivityAt}
           </span>
           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
-            {warningCount} needs review
+            {reviewCount} needs review
           </span>
           <span
             className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
