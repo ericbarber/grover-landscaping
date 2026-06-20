@@ -214,6 +214,7 @@ export function ManagerActivityHistoryPanel({
       onClick: showPhotoEvidenceActivity,
     },
   ];
+  const visibleQuickFilters = quickFilters.filter((quickFilter) => quickFilter.isVisible);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -305,70 +306,72 @@ export function ManagerActivityHistoryPanel({
         Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
       </p>
 
-      <p id="manager-activity-quick-filter-help" className="mt-3 text-xs text-slate-500">
-        Quick filters jump to targeted activity groups and update the saved source and tone filters.
-      </p>
+      {visibleQuickFilters.length > 0 ? (
+        <>
+          <p id="manager-activity-quick-filter-help" className="mt-3 text-xs text-slate-500">
+            Quick filters jump to targeted activity groups and update the saved source and tone filters.
+          </p>
 
-      <div
-        aria-describedby="manager-activity-quick-filter-help"
-        aria-label="Manager activity quick filters"
-        className="mt-2 flex flex-wrap gap-3"
-        role="group"
-      >
-        {quickFilters
-          .filter((quickFilter) => quickFilter.isVisible)
-          .map((quickFilter) => (
-            <button
-              key={quickFilter.id}
-              aria-label={quickFilter.ariaLabel}
-              aria-pressed={quickFilter.isActive}
-              className={`text-xs font-semibold underline underline-offset-4 ${
-                quickFilter.isActive ? quickFilter.activeClassName : 'text-slate-600 hover:text-slate-950'
-              }`}
-              onClick={quickFilter.onClick}
-              title={quickFilter.title}
-              type="button"
-            >
-              {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
-            </button>
-          ))}
-        {hasActiveFilters ? (
-          <button
-            aria-label="Reset saved manager activity source and tone filters"
-            className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-            onClick={resetSavedFilters}
-            type="button"
+          <div
+            aria-describedby="manager-activity-quick-filter-help"
+            aria-label="Manager activity quick filters"
+            className="mt-2 flex flex-wrap gap-3"
+            role="group"
           >
-            Reset saved filters
-          </button>
-        ) : null}
-        {onResetHistory ? (
-          <button
-            aria-label={
-              isConfirmingHistoryReset
-                ? 'Confirm resetting manager activity history to the default review queue'
-                : 'Reset manager activity history to the default review queue'
-            }
-            className={`text-xs font-semibold underline underline-offset-4 ${
-              isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
-            }`}
-            onClick={handleResetHistoryClick}
-            type="button"
-          >
-            {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
-          </button>
-        ) : null}
-        {isConfirmingHistoryReset ? (
-          <button
-            aria-label="Cancel manager activity history reset"
-            className="text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-950"
-            onClick={() => setIsConfirmingHistoryReset(false)}
-            type="button"
-          >
-            Cancel reset
-          </button>
-        ) : null}
-      </div>
+            {visibleQuickFilters.map((quickFilter) => (
+              <button
+                key={quickFilter.id}
+                aria-label={quickFilter.ariaLabel}
+                aria-pressed={quickFilter.isActive}
+                className={`text-xs font-semibold underline underline-offset-4 ${
+                  quickFilter.isActive ? quickFilter.activeClassName : 'text-slate-600 hover:text-slate-950'
+                }`}
+                onClick={quickFilter.onClick}
+                title={quickFilter.title}
+                type="button"
+              >
+                {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
+              </button>
+            ))}
+            {hasActiveFilters ? (
+              <button
+                aria-label="Reset saved manager activity source and tone filters"
+                className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
+                onClick={resetSavedFilters}
+                type="button"
+              >
+                Reset saved filters
+              </button>
+            ) : null}
+            {onResetHistory ? (
+              <button
+                aria-label={
+                  isConfirmingHistoryReset
+                    ? 'Confirm resetting manager activity history to the default review queue'
+                    : 'Reset manager activity history to the default review queue'
+                }
+                className={`text-xs font-semibold underline underline-offset-4 ${
+                  isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
+                }`}
+                onClick={handleResetHistoryClick}
+                type="button"
+              >
+                {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
+              </button>
+            ) : null}
+            {isConfirmingHistoryReset ? (
+              <button
+                aria-label="Cancel manager activity history reset"
+                className="text-xs font-semibold text-slate-500 underline underline-offset-4 hover:text-slate-950"
+                onClick={() => setIsConfirmingHistoryReset(false)}
+                type="button"
+              >
+                Cancel reset
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
       {isConfirmingHistoryReset ? (
         <p aria-live="polite" className="mt-2 text-xs font-medium text-amber-700">
