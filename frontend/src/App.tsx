@@ -14,8 +14,19 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
+import {
+  prependManagerActivity,
+  seedManagerActivityItems,
+  type ManagerActivityItem,
+} from './domain/managerActivity';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
+
+type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone'>;
+
+function managerActivityTimestamp() {
+  return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+}
 
 function StatusBadge({ status }: { status: YardCareJob['status'] }) {
   const label = status.replace('_', ' ');
@@ -239,11 +250,22 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
+  const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(seedManagerActivityItems);
 
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
     [selectedJobId, uploadTickets],
   );
+
+  function recordManagerActivity(item: NewManagerActivity) {
+    setManagerActivity((current) =>
+      prependManagerActivity(current, {
+        ...item,
+        id: `${item.tone}_${Date.now()}`,
+        occurredAt: managerActivityTimestamp(),
+      }),
+    );
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -266,6 +288,11 @@ export function App() {
         setJobs(seedJobs);
         setSelectedJobId((current) => current ?? seedJobs[0]?.id ?? null);
         setStatusMessage('Using seed data because the local API is not reachable yet.');
+        recordManagerActivity({
+          title: 'Seed data fallback active',
+          message: 'The dashboard is using seed jobs because the API is not reachable.',
+          tone: 'warning',
+        });
       })
       .finally(() => {
         if (isMounted) {
@@ -320,6 +347,11 @@ export function App() {
       setStatusMessage(`Started ${selectedJobId}.`);
     } catch {
       setStatusMessage(`Started ${selectedJobId} locally because the API is not reachable.`);
+      recordManagerActivity({
+        title: 'Job started locally',
+        message: `${selectedJobId} was started in browser state because the API is not reachable.`,
+        tone: 'warning',
+      });
     }
 
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'in_progress' } : job)));
@@ -333,8 +365,18 @@ export function App() {
     try {
       await completeJob(selectedJobId);
       setStatusMessage(`Completed ${selectedJobId}.`);
+      recordManagerActivity({
+        title: 'Job completion ready',
+        message: `${selectedJobId} was completed and is ready for manager review.`,
+        tone: 'success',
+      });
     } catch {
       setStatusMessage(`Completed ${selectedJobId} locally because the API is not reachable.`);
+      recordManagerActivity({
+        title: 'Job completed locally',
+        message: `${selectedJobId} was completed locally because the API is not reachable.`,
+        tone: 'warning',
+      });
     }
 
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'completed' } : job)));
@@ -351,9 +393,19 @@ export function App() {
       ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
       await completePhotoUpload(selectedJobId, ticket.photoId);
       setStatusMessage(`Prepared ${photoType} photo placeholder for ${file.name}.`);
+      recordManagerActivity({
+        title: 'Photo evidence prepared',
+        message: `${photoType} photo evidence was prepared for ${selectedJobId}.`,
+        tone: 'success',
+      });
     } catch {
       ticket = localPhotoTicket(selectedJobId, file, photoType);
       setStatusMessage(`Prepared ${photoType} photo locally because the API is not reachable.`);
+      recordManagerActivity({
+        title: 'Photo evidence saved locally',
+        message: `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
+        tone: 'warning',
+      });
     }
 
     setUploadTickets((current) => [ticket, ...current]);
@@ -402,11 +454,18 @@ export function App() {
           <div className="mt-6">
             <ManagerDayPlanPanel
               jobs={jobs}
-              onDayPlanPublished={() => setDayPlanRefreshSignal((current) => current + 1)}
+              onDayPlanPublished={(dayPlan) => {
+                setDayPlanRefreshSignal((current) => current + 1);
+                recordManagerActivity({
+                  title: 'Day plan published',
+                  message: `${dayPlan.crewId} route for ${dayPlan.serviceDate} was published and crew route refreshed.`,
+                  tone: 'success',
+                });
+              }}
             />
           </div>
           <div className="mt-6">
-            <ManagerActivityHistoryPanel />
+            <ManagerActivityHistoryPanel items={managerActivity} />
           </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">
