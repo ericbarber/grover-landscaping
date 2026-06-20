@@ -37,6 +37,7 @@ type ActivityToneFilter = ManagerActivityTone | 'all';
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
   isHistoryPersisted?: boolean;
+  onResetHistory?: () => void;
 };
 
 function readStorageValue(key: string): string | null {
@@ -87,6 +88,7 @@ function readSavedToneFilter(): ActivityToneFilter {
 export function ManagerActivityHistoryPanel({
   items = seedManagerActivityItems,
   isHistoryPersisted = true,
+  onResetHistory,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
@@ -203,16 +205,28 @@ export function ManagerActivityHistoryPanel({
         Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
       </p>
 
-      {hasActiveFilters ? (
-        <button
-          aria-label="Reset saved manager activity source and tone filters"
-          className="mt-3 text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-          onClick={resetSavedFilters}
-          type="button"
-        >
-          Reset saved filters
-        </button>
-      ) : null}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {hasActiveFilters ? (
+          <button
+            aria-label="Reset saved manager activity source and tone filters"
+            className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
+            onClick={resetSavedFilters}
+            type="button"
+          >
+            Reset saved filters
+          </button>
+        ) : null}
+        {onResetHistory ? (
+          <button
+            aria-label="Reset manager activity history to the default review queue"
+            className="text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
+            onClick={onResetHistory}
+            type="button"
+          >
+            Reset activity history
+          </button>
+        ) : null}
+      </div>
 
       <div className="mt-5 space-y-3">
         {filteredItems.length === 0 ? (
