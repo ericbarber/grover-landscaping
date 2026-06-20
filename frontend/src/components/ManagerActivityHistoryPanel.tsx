@@ -100,9 +100,11 @@ export function ManagerActivityHistoryPanel({
     () => filterManagerActivityItems(items, { source: sourceFilter, tone: toneFilter }),
     [items, sourceFilter, toneFilter],
   );
+  const totalReviewCount = countManagerActivityNeedingReview(items);
   const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
+  const isShowingNeedsReview = sourceFilter === 'all' && toneFilter === 'warning';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
 
   useEffect(() => {
@@ -120,6 +122,12 @@ export function ManagerActivityHistoryPanel({
     setSourceFilter('all');
     setToneFilter('all');
     setCanSaveFilters(sourceSaved && toneSaved);
+  }
+
+  function showNeedsReviewActivity() {
+    setSourceFilter('all');
+    setToneFilter('warning');
+    setIsConfirmingHistoryReset(false);
   }
 
   function handleResetHistoryClick() {
@@ -227,6 +235,19 @@ export function ManagerActivityHistoryPanel({
       </p>
 
       <div className="mt-3 flex flex-wrap gap-3">
+        {totalReviewCount > 0 ? (
+          <button
+            aria-label="Show manager activity items that need review"
+            aria-pressed={isShowingNeedsReview}
+            className={`text-xs font-semibold underline underline-offset-4 ${
+              isShowingNeedsReview ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
+            }`}
+            onClick={showNeedsReviewActivity}
+            type="button"
+          >
+            {isShowingNeedsReview ? 'Showing needs review' : 'Show needs review'}
+          </button>
+        ) : null}
         {hasActiveFilters ? (
           <button
             aria-label="Reset saved manager activity source and tone filters"
