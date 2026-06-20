@@ -37,12 +37,32 @@ type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
 };
 
-function readSavedSourceFilter(): ActivitySourceFilter {
+function readStorageValue(key: string): string | null {
   if (typeof window === 'undefined') {
-    return 'all';
+    return null;
   }
 
-  const savedValue = window.localStorage.getItem(activitySourceFilterStorageKey);
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorageValue(key: string, value: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Browser storage can be unavailable in private or restricted contexts.
+  }
+}
+
+function readSavedSourceFilter(): ActivitySourceFilter {
+  const savedValue = readStorageValue(activitySourceFilterStorageKey);
 
   if (savedValue === 'all' || activitySources.includes(savedValue as ManagerActivitySource)) {
     return savedValue as ActivitySourceFilter;
@@ -52,11 +72,7 @@ function readSavedSourceFilter(): ActivitySourceFilter {
 }
 
 function readSavedToneFilter(): ActivityToneFilter {
-  if (typeof window === 'undefined') {
-    return 'all';
-  }
-
-  const savedValue = window.localStorage.getItem(activityToneFilterStorageKey);
+  const savedValue = readStorageValue(activityToneFilterStorageKey);
 
   if (savedValue === 'all' || activityTones.includes(savedValue as ManagerActivityTone)) {
     return savedValue as ActivityToneFilter;
@@ -84,11 +100,11 @@ export function ManagerActivityHistoryPanel({
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
 
   useEffect(() => {
-    window.localStorage.setItem(activitySourceFilterStorageKey, sourceFilter);
+    writeStorageValue(activitySourceFilterStorageKey, sourceFilter);
   }, [sourceFilter]);
 
   useEffect(() => {
-    window.localStorage.setItem(activityToneFilterStorageKey, toneFilter);
+    writeStorageValue(activityToneFilterStorageKey, toneFilter);
   }, [toneFilter]);
 
   return (
