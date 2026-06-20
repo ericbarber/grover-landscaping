@@ -85,6 +85,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager route planner shows sync status for persisted and local changes
 - Manager route planner shows workload summary for estimated drive and service duration
 - Manager route planner shows recovery notices when route changes fall back to local state
+- Manager route planner shows retry controls for failed route mutation sync attempts
 - Manager route planner shows next-step workflow guidance while drafting
 - Manager route planner explains publish blockers from the publish guard
 - Manager publish success refreshes the crew-facing day plan route
@@ -152,6 +153,7 @@ Current state:
 - Frontend manager route add/remove/reorder actions attempt backend persistence and degrade to local state
 - Frontend manager route planner shows estimated workload summary
 - Frontend manager route planner explains local fallback recovery when mutation persistence fails
+- Frontend manager route planner shows retry controls for failed route mutation sync attempts
 - Frontend manager route planner shows next-step guidance while drafting
 - Frontend manager route planner explains publish blockers from the publish guard
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
@@ -160,7 +162,7 @@ Current state:
 
 Next implementation work:
 
-- Add manager mutation retry controls after hosted validation can confirm backend recovery behavior
+- Connect manager activity history to persisted events after the notification outbox exists
 
 ### Photo evidence flow
 
@@ -270,6 +272,7 @@ Next implementation work:
 
 | Date | Delivery |
 | --- | --- |
+| 2026-06-19 | Manager route planner retry controls added for failed route mutation sync attempts |
 | 2026-06-19 | Manager activity history panel added for route review, completion evidence, and sync fallback events |
 | 2026-06-19 | Backend day-plan repository fallback tests added |
 | 2026-06-19 | Manager route planner publish-blocker guidance added |
