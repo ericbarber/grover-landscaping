@@ -94,6 +94,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager activity history records runtime route, job, photo, and sync events in local state
 - Manager activity history supports source filters, tone filters, filtered empty states, active filter summaries, and accessible filter controls
 - Manager activity filters persist in browser storage with storage-availability detection and reset behavior
+- Manager activity label helper tests
 
 ### Account and service tracking foundation
 
@@ -163,13 +164,13 @@ Current state:
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters
+- Frontend manager activity label helpers have focused tests for source labels, tone labels, and filter summaries
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 
 Next implementation work:
 
 - Connect manager activity history to persisted events after the notification outbox exists
-- Add manager activity helper tests when test-file writes are accepted
 
 ### Photo evidence flow
 
