@@ -16,6 +16,85 @@ import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
+type ManagerActivityItem = {
+  id: string;
+  title: string;
+  message: string;
+  tone: 'info' | 'warning' | 'success';
+  occurredAt: string;
+};
+
+const managerActivityItems: ManagerActivityItem[] = [
+  {
+    id: 'route-review-needed',
+    title: 'Route draft needs review',
+    message: 'North Route Crew has local fallback route edits. Review workload and stop order before publishing.',
+    tone: 'warning',
+    occurredAt: 'Today 8:15 AM',
+  },
+  {
+    id: 'completion-ready',
+    title: 'Completion evidence ready',
+    message: 'Sample Customer has a completion report ready for manager review.',
+    tone: 'success',
+    occurredAt: 'Today 9:05 AM',
+  },
+  {
+    id: 'sync-fallback-active',
+    title: 'Local fallback active',
+    message: 'A route change is saved locally until backend persistence is available.',
+    tone: 'info',
+    occurredAt: 'Today 9:20 AM',
+  },
+];
+
+function activityToneClass(tone: ManagerActivityItem['tone']) {
+  if (tone === 'warning') {
+    return 'border-amber-200 bg-amber-50 text-amber-900';
+  }
+
+  if (tone === 'success') {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-900';
+  }
+
+  return 'border-slate-200 bg-slate-50 text-slate-700';
+}
+
+function ManagerActivityHistoryPanel() {
+  const warningCount = managerActivityItems.filter((item) => item.tone === 'warning').length;
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Manager activity</p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">Review queue</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Local activity history for route reviews, completion evidence, and sync fallback events.
+          </p>
+        </div>
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+          {warningCount} needs review
+        </span>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {managerActivityItems.map((item) => (
+          <article key={item.id} className={`rounded-xl border p-3 ${activityToneClass(item.tone)}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">{item.title}</h3>
+                <p className="mt-1 text-sm opacity-90">{item.message}</p>
+              </div>
+              <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function StatusBadge({ status }: { status: YardCareJob['status'] }) {
   const label = status.replace('_', ' ');
 
@@ -403,6 +482,9 @@ export function App() {
               jobs={jobs}
               onDayPlanPublished={() => setDayPlanRefreshSignal((current) => current + 1)}
             />
+          </div>
+          <div className="mt-6">
+            <ManagerActivityHistoryPanel />
           </div>
 
           <div className="mt-6 mb-5 flex items-center justify-between">
