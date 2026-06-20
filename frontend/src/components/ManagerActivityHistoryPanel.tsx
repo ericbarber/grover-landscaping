@@ -100,6 +100,7 @@ export function ManagerActivityHistoryPanel({
   );
   const warningCount = countManagerActivityByTone(filteredItems, 'warning');
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
+  const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
 
   useEffect(() => {
     setCanSaveFilters(writeStorageValue(activitySourceFilterStorageKey, sourceFilter));
@@ -108,6 +109,15 @@ export function ManagerActivityHistoryPanel({
   useEffect(() => {
     setCanSaveFilters((current) => writeStorageValue(activityToneFilterStorageKey, toneFilter) && current);
   }, [toneFilter]);
+
+  function resetSavedFilters() {
+    const sourceSaved = writeStorageValue(activitySourceFilterStorageKey, 'all');
+    const toneSaved = writeStorageValue(activityToneFilterStorageKey, 'all');
+
+    setSourceFilter('all');
+    setToneFilter('all');
+    setCanSaveFilters(sourceSaved && toneSaved);
+  }
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -184,16 +194,14 @@ export function ManagerActivityHistoryPanel({
         Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
       </p>
 
-      {sourceFilter !== 'all' || toneFilter !== 'all' ? (
+      {hasActiveFilters ? (
         <button
+          aria-label="Reset saved manager activity source and tone filters"
           className="mt-3 text-xs font-semibold text-slate-600 underline underline-offset-4 hover:text-slate-950"
-          onClick={() => {
-            setSourceFilter('all');
-            setToneFilter('all');
-          }}
+          onClick={resetSavedFilters}
           type="button"
         >
-          Clear activity filters
+          Reset saved filters
         </button>
       ) : null}
 
