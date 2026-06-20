@@ -305,7 +305,11 @@ export function ManagerActivityHistoryPanel({
         Showing {filteredItems.length} of {items.length}: {activeFilterSummary}
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-3">
+      <p id="manager-activity-quick-filter-help" className="mt-3 text-xs text-slate-500">
+        Quick filters jump to targeted activity groups and update the saved source and tone filters.
+      </p>
+
+      <div aria-describedby="manager-activity-quick-filter-help" className="mt-2 flex flex-wrap gap-3">
         {quickFilters
           .filter((quickFilter) => quickFilter.isVisible)
           .map((quickFilter) => (
