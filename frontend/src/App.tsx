@@ -22,7 +22,7 @@ import {
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
-type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone'>;
+type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone' | 'source'>;
 
 function managerActivityTimestamp() {
   return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
@@ -261,7 +261,7 @@ export function App() {
     setManagerActivity((current) =>
       prependManagerActivity(current, {
         ...item,
-        id: `${item.tone}_${Date.now()}`,
+        id: `${item.source}_${item.tone}_${Date.now()}`,
         occurredAt: managerActivityTimestamp(),
       }),
     );
@@ -292,6 +292,7 @@ export function App() {
           title: 'Seed data fallback active',
           message: 'The dashboard is using seed jobs because the API is not reachable.',
           tone: 'warning',
+          source: 'sync',
         });
       })
       .finally(() => {
@@ -351,6 +352,7 @@ export function App() {
         title: 'Job started locally',
         message: `${selectedJobId} was started in browser state because the API is not reachable.`,
         tone: 'warning',
+        source: 'job',
       });
     }
 
@@ -369,6 +371,7 @@ export function App() {
         title: 'Job completion ready',
         message: `${selectedJobId} was completed and is ready for manager review.`,
         tone: 'success',
+        source: 'job',
       });
     } catch {
       setStatusMessage(`Completed ${selectedJobId} locally because the API is not reachable.`);
@@ -376,6 +379,7 @@ export function App() {
         title: 'Job completed locally',
         message: `${selectedJobId} was completed locally because the API is not reachable.`,
         tone: 'warning',
+        source: 'job',
       });
     }
 
@@ -397,6 +401,7 @@ export function App() {
         title: 'Photo evidence prepared',
         message: `${photoType} photo evidence was prepared for ${selectedJobId}.`,
         tone: 'success',
+        source: 'photo',
       });
     } catch {
       ticket = localPhotoTicket(selectedJobId, file, photoType);
@@ -405,6 +410,7 @@ export function App() {
         title: 'Photo evidence saved locally',
         message: `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
         tone: 'warning',
+        source: 'photo',
       });
     }
 
@@ -460,6 +466,7 @@ export function App() {
                   title: 'Day plan published',
                   message: `${dayPlan.crewId} route for ${dayPlan.serviceDate} was published and crew route refreshed.`,
                   tone: 'success',
+                  source: 'route',
                 });
               }}
             />
