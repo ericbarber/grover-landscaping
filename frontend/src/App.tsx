@@ -19,6 +19,10 @@ import {
   seedManagerActivityItems,
   type ManagerActivityItem,
 } from './domain/managerActivity';
+import {
+  readStoredManagerActivityItems,
+  writeStoredManagerActivityItems,
+} from './domain/managerActivityLocalStore';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
@@ -250,7 +254,9 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
-  const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(seedManagerActivityItems);
+  const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
+    readStoredManagerActivityItems(seedManagerActivityItems),
+  );
 
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
@@ -266,6 +272,10 @@ export function App() {
       }),
     );
   }
+
+  useEffect(() => {
+    writeStoredManagerActivityItems(managerActivity);
+  }, [managerActivity]);
 
   useEffect(() => {
     let isMounted = true;
