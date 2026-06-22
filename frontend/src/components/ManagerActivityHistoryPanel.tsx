@@ -318,9 +318,12 @@ export function ManagerActivityHistoryPanel({
 
       {visibleQuickFilters.length > 0 ? (
         <>
-          <p id="manager-activity-quick-filter-help" className="mt-3 text-xs text-slate-500">
-            Quick filters jump to targeted activity groups and update the saved source and tone filters.
-          </p>
+          <div className="mt-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quick filters</p>
+            <p id="manager-activity-quick-filter-help" className="mt-1 text-xs text-slate-500">
+              Quick filters jump to targeted activity groups and update the saved source and tone filters.
+            </p>
+          </div>
 
           <div
             aria-describedby="manager-activity-quick-filter-help"
