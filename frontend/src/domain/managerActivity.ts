@@ -15,6 +15,12 @@ export type ManagerActivityFilters = {
   tone: ManagerActivityTone | 'all';
 };
 
+export type ManagerActivityEmptyState = {
+  title: string;
+  message: string;
+  canResetFilters: boolean;
+};
+
 export const seedManagerActivityItems: ManagerActivityItem[] = [
   {
     id: 'route-review-needed',
@@ -52,6 +58,29 @@ export function filterManagerActivityItems(
 
     return matchesSource && matchesTone;
   });
+}
+
+export function hasActiveManagerActivityFilters(filters: ManagerActivityFilters): boolean {
+  return filters.source !== 'all' || filters.tone !== 'all';
+}
+
+export function getManagerActivityEmptyState(
+  items: ManagerActivityItem[],
+  filters: ManagerActivityFilters,
+): ManagerActivityEmptyState {
+  if (items.length === 0) {
+    return {
+      title: 'No manager activity has been recorded yet.',
+      message: 'New route reviews, completion evidence, and sync fallback events will appear here.',
+      canResetFilters: false,
+    };
+  }
+
+  return {
+    title: 'No activity matches these filters.',
+    message: 'Reset saved filters to return to the full manager review queue.',
+    canResetFilters: hasActiveManagerActivityFilters(filters),
+  };
 }
 
 export function getLatestManagerActivityTimestamp(items: ManagerActivityItem[], emptyLabel = 'No activity yet'): string {
