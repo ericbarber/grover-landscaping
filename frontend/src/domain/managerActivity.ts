@@ -108,6 +108,13 @@ export function countManagerActivityNeedingReview(items: ManagerActivityItem[]):
   return countManagerActivityByTone(items, 'warning');
 }
 
+export function countManagerActivityNeedingReviewBySource(
+  items: ManagerActivityItem[],
+  source: ManagerActivitySource,
+): number {
+  return items.filter((item) => item.source === source && item.tone === 'warning').length;
+}
+
 export function countManagerActivityBySource(items: ManagerActivityItem[], source: ManagerActivitySource): number {
   return items.filter((item) => item.source === source).length;
 }
