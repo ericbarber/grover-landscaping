@@ -39,6 +39,14 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     occurredAt: 'Today 9:05 AM',
   },
   {
+    id: 'photo-evidence-review',
+    title: 'Photo evidence needs review',
+    message: 'Backyard after photos are missing from a completed service and should be checked before customer notification.',
+    tone: 'warning',
+    source: 'photo',
+    occurredAt: 'Today 9:12 AM',
+  },
+  {
     id: 'sync-fallback-active',
     title: 'Local fallback active',
     message: 'A route change is saved locally until backend persistence is available.',
