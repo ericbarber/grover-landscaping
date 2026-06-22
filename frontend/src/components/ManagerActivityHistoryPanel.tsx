@@ -403,6 +403,11 @@ export function ManagerActivityHistoryPanel({
                     <h3 className="text-sm font-semibold">{item.title}</h3>
                   </div>
                   <p className="mt-1 text-sm opacity-90">{item.message}</p>
+                  {item.recommendedAction ? (
+                    <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-xs font-medium opacity-90">
+                      Recommended action: {item.recommendedAction}
+                    </p>
+                  ) : null}
                 </div>
                 <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>
               </div>
