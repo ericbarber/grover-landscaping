@@ -8,6 +8,7 @@ export type ManagerActivityItem = {
   tone: ManagerActivityTone;
   source: ManagerActivitySource;
   occurredAt: string;
+  recommendedAction?: string;
 };
 
 export type ManagerActivityFilters = {
@@ -29,6 +30,7 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     tone: 'warning',
     source: 'route',
     occurredAt: 'Today 8:15 AM',
+    recommendedAction: 'Review route workload and publish the final stop order.',
   },
   {
     id: 'completion-ready',
@@ -37,6 +39,7 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     tone: 'success',
     source: 'job',
     occurredAt: 'Today 9:05 AM',
+    recommendedAction: 'Approve the completion report or return it to the crew for correction.',
   },
   {
     id: 'photo-evidence-review',
@@ -45,6 +48,7 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     tone: 'warning',
     source: 'photo',
     occurredAt: 'Today 9:12 AM',
+    recommendedAction: 'Request missing after photos before sending the customer completion notice.',
   },
   {
     id: 'sync-fallback-active',
@@ -53,6 +57,7 @@ export const seedManagerActivityItems: ManagerActivityItem[] = [
     tone: 'info',
     source: 'sync',
     occurredAt: 'Today 9:20 AM',
+    recommendedAction: 'Keep the local draft available until backend sync confirms persistence.',
   },
 ];
 
