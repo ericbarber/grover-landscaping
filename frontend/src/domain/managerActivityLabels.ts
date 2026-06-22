@@ -28,6 +28,10 @@ export function managerActivityToneLabel(tone: ManagerActivityTone): string {
   return 'Info';
 }
 
+export function managerActivityReviewCountLabel(count: number): string {
+  return count === 1 ? '1 needs review' : `${count} need review`;
+}
+
 export function managerActivityFilterSummary(
   source: ManagerActivitySource | 'all',
   tone: ManagerActivityTone | 'all',
