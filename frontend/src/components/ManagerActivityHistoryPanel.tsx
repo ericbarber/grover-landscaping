@@ -5,6 +5,7 @@ import {
   countManagerActivityNeedingReview,
   filterManagerActivityItems,
   getLatestManagerActivityTimestamp,
+  getManagerActivityEmptyState,
   seedManagerActivityItems,
   type ManagerActivityItem,
   type ManagerActivitySource,
@@ -96,9 +97,17 @@ export function ManagerActivityHistoryPanel({
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
   const [canSaveFilters, setCanSaveFilters] = useState(true);
   const [isConfirmingHistoryReset, setIsConfirmingHistoryReset] = useState(false);
+  const activityFilters = useMemo(
+    () => ({ source: sourceFilter, tone: toneFilter }),
+    [sourceFilter, toneFilter],
+  );
   const filteredItems = useMemo(
-    () => filterManagerActivityItems(items, { source: sourceFilter, tone: toneFilter }),
-    [items, sourceFilter, toneFilter],
+    () => filterManagerActivityItems(items, activityFilters),
+    [items, activityFilters],
+  );
+  const emptyState = useMemo(
+    () => getManagerActivityEmptyState(items, activityFilters),
+    [items, activityFilters],
   );
   const totalReviewCount = countManagerActivityNeedingReview(items);
   const totalRouteReviewCount = countManagerActivityBySource(items, 'route');
@@ -388,8 +397,18 @@ export function ManagerActivityHistoryPanel({
       <div className="mt-5 space-y-3">
         {filteredItems.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600" role="status">
-            <p className="font-semibold text-slate-800">No activity matches these filters.</p>
-            <p className="mt-1">Reset saved filters to return to the full manager review queue.</p>
+            <p className="font-semibold text-slate-800">{emptyState.title}</p>
+            <p className="mt-1">{emptyState.message}</p>
+            {emptyState.canResetFilters ? (
+              <button
+                aria-label="Clear manager activity filters from the empty review queue"
+                className="mt-3 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                onClick={resetSavedFilters}
+                type="button"
+              >
+                Show all activity
+              </button>
+            ) : null}
           </div>
         ) : (
           filteredItems.map((item) => (
