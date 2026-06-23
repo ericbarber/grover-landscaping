@@ -1,11 +1,33 @@
 export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
 export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
+export type DayPlanAmendmentType = 'add_stop' | 'remove_stop' | 'add_service';
+export type DayPlanAmendmentStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
 
 export type StopStateMap = Record<string, StopProgressStatus>;
 
 export type StopStatusSnapshot = {
   id: string;
   stopStatus?: StopProgressStatus;
+};
+
+export type ServiceCatalogItem = {
+  id: string;
+  name: string;
+  description?: string;
+  defaultDurationMinutes?: number;
+  defaultPriceCents?: number;
+  requiresManagerApproval: boolean;
+};
+
+export type DayPlanAmendmentRequest = {
+  id: string;
+  dayPlanId: string;
+  amendmentType: DayPlanAmendmentType;
+  status: DayPlanAmendmentStatus;
+  requestedByCrewId: string;
+  stopId?: string;
+  service?: ServiceCatalogItem;
+  note?: string;
 };
 
 export function getNextStopStatus(currentStatus: StopProgressStatus | undefined): StopProgressStatus {
@@ -26,6 +48,22 @@ export function stopActionLabel(stopStatus: StopProgressStatus): string {
   }
 
   return 'Finished';
+}
+
+export function dayPlanAmendmentTypeLabel(amendmentType: DayPlanAmendmentType): string {
+  if (amendmentType === 'add_stop') {
+    return 'Add stop';
+  }
+
+  if (amendmentType === 'remove_stop') {
+    return 'Remove stop';
+  }
+
+  return 'Add service';
+}
+
+export function amendmentRequiresBid(amendment: DayPlanAmendmentRequest): boolean {
+  return amendment.amendmentType === 'add_service' && Boolean(amendment.service?.requiresManagerApproval);
 }
 
 export function resolveStopStatus(
