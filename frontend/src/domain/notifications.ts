@@ -7,6 +7,7 @@ export type NotificationTemplate =
   | 'completion_report_ready'
   | 'bid_approval_requested'
   | 'extra_service_requested';
+export type NotificationDeliveryBlocker = 'status' | 'audience' | 'channel' | 'quiet_hours';
 
 export type NotificationOutboxItem = {
   id: string;
@@ -103,6 +104,30 @@ export function notificationCanSendAtHour(
   hour: number,
 ): boolean {
   return notificationCanAttemptWithPreference(item, preference) && !notificationHourIsQuiet(preference.quietHours, hour);
+}
+
+export function notificationDeliveryBlocker(
+  item: NotificationOutboxItem,
+  preference: NotificationPreference,
+  hour: number,
+): NotificationDeliveryBlocker | undefined {
+  if (!notificationCanAttemptDelivery(item)) {
+    return 'status';
+  }
+
+  if (item.audience !== preference.audience) {
+    return 'audience';
+  }
+
+  if (!notificationChannelIsEnabled(preference, item.channel)) {
+    return 'channel';
+  }
+
+  if (notificationHourIsQuiet(preference.quietHours, hour)) {
+    return 'quiet_hours';
+  }
+
+  return undefined;
 }
 
 export function notificationNeedsRetry(item: NotificationOutboxItem): boolean {
