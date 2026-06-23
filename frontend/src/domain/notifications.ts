@@ -46,6 +46,10 @@ export function notificationStatusLabel(status: NotificationStatus): string {
   return 'Manually resolved';
 }
 
+export function notificationCanAttemptDelivery(item: NotificationOutboxItem): boolean {
+  return item.status === 'queued' || item.status === 'failed';
+}
+
 export function notificationNeedsRetry(item: NotificationOutboxItem): boolean {
   return item.status === 'failed';
 }
