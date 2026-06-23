@@ -92,6 +92,15 @@ export function notificationStatusLabel(status: NotificationStatus): string {
   return 'Manually resolved';
 }
 
+export function notificationOutboxSummaryLabel(item: NotificationOutboxItem): string {
+  return [
+    notificationAudienceLabel(item.audience),
+    notificationTemplateLabel(item.template),
+    notificationChannelLabel(item.channel),
+    notificationStatusLabel(item.status),
+  ].join(' · ');
+}
+
 export function notificationDeliveryBlockerLabel(blocker: NotificationDeliveryBlocker): string {
   if (blocker === 'status') {
     return 'Delivery status is not ready to send';
