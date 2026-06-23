@@ -40,6 +40,18 @@ export function notificationChannelLabel(channel: NotificationChannel): string {
   return channel === 'email' ? 'Email' : 'Text message';
 }
 
+export function notificationAudienceLabel(audience: NotificationAudience): string {
+  if (audience === 'customer') {
+    return 'Customer';
+  }
+
+  if (audience === 'crew') {
+    return 'Crew';
+  }
+
+  return 'Manager';
+}
+
 export function notificationTemplateLabel(template: NotificationTemplate): string {
   if (template === 'day_plan_published') {
     return 'Day plan published';
