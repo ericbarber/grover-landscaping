@@ -97,6 +97,14 @@ export function notificationCanAttemptWithPreference(
   );
 }
 
+export function notificationCanSendAtHour(
+  item: NotificationOutboxItem,
+  preference: NotificationPreference,
+  hour: number,
+): boolean {
+  return notificationCanAttemptWithPreference(item, preference) && !notificationHourIsQuiet(preference.quietHours, hour);
+}
+
 export function notificationNeedsRetry(item: NotificationOutboxItem): boolean {
   return item.status === 'failed';
 }
