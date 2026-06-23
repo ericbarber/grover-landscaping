@@ -146,6 +146,14 @@ export function notificationDeliveryBlocker(
   return undefined;
 }
 
+export function notificationDeliveryIsBlocked(
+  item: NotificationOutboxItem,
+  preference: NotificationPreference,
+  hour: number,
+): boolean {
+  return notificationDeliveryBlocker(item, preference, hour) !== undefined;
+}
+
 export function notificationNeedsRetry(item: NotificationOutboxItem): boolean {
   return item.status === 'failed';
 }
