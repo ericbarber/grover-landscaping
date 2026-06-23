@@ -22,6 +22,19 @@ export type NotificationOutboxItem = {
   errorMessage?: string;
 };
 
+export type NotificationQuietHours = {
+  startHour: number;
+  endHour: number;
+  timezone: string;
+};
+
+export type NotificationPreference = {
+  audience: NotificationAudience;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  quietHours?: NotificationQuietHours;
+};
+
 export function notificationChannelLabel(channel: NotificationChannel): string {
   return channel === 'email' ? 'Email' : 'Text message';
 }
@@ -44,6 +57,13 @@ export function notificationStatusLabel(status: NotificationStatus): string {
   }
 
   return 'Manually resolved';
+}
+
+export function notificationChannelIsEnabled(
+  preference: NotificationPreference,
+  channel: NotificationChannel,
+): boolean {
+  return channel === 'email' ? preference.emailEnabled : preference.smsEnabled;
 }
 
 export function notificationCanAttemptDelivery(item: NotificationOutboxItem): boolean {
