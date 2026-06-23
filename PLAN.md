@@ -191,6 +191,34 @@ Next implementation work:
 
 ## Planned
 
+### Notification strategy
+
+- Add a notification outbox for reliable delivery attempts and retry tracking
+- Support both text/SMS and email channels for customer, crew, and manager notifications
+- Add notification preferences for channel opt-in, quiet hours, and customer contact rules
+- Add templates for day-plan publication, crew route changes, completion reports, bid approvals, and extra-service requests
+- Track notification status: queued, sent, failed, skipped, and manually resolved
+- Connect manager activity history to persisted notification events
+
+### Crew day-plan amendments
+
+- Allow crews to request day-plan changes from the field
+- Support adding an unplanned stop to the current day plan
+- Support removing or skipping a stop with reason capture
+- Support adding an extra service to a stop, such as sprinkler repair or tree-limb removal
+- Require manager approval or pricing review for billable day-plan amendments
+- Preserve an audit trail showing who requested, approved, rejected, or completed each amendment
+- Sync accepted amendments back into the crew-facing route and manager activity history
+
+### Service catalog and project bidding
+
+- Add a service list/catalog for standard yard care and extra services
+- Track service attributes such as name, description, unit, default duration, default price, and whether manager approval is required
+- Allow crews to attach proposed extra services to a stop from the field
+- Add a project bid workspace for managers to review requested work, build line-item bids, and send customer approval requests
+- Support bid statuses: draft, sent, approved, rejected, expired, and converted to work
+- Convert approved bids into scheduled services, day-plan stops, or job add-ons
+
 ### Completion reports
 
 - Persist completion reports
@@ -198,7 +226,7 @@ Next implementation work:
 - Add report endpoint: `GET /jobs/{id}/report`
 - Include crew, checklist, account, and photo evidence
 - Add shareable report link
-- Add customer delivery by email or SMS later
+- Add customer delivery by email and text/SMS
 
 ### Manager scheduling workflow
 
