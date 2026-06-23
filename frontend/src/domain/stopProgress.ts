@@ -2,6 +2,7 @@ export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
 export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
 export type DayPlanAmendmentType = 'add_stop' | 'remove_stop' | 'add_service';
 export type DayPlanAmendmentStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+export type ProjectBidStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'converted';
 
 export type StopStateMap = Record<string, StopProgressStatus>;
 
@@ -28,6 +29,23 @@ export type DayPlanAmendmentRequest = {
   stopId?: string;
   service?: ServiceCatalogItem;
   note?: string;
+};
+
+export type ProjectBidLineItem = {
+  id: string;
+  service: ServiceCatalogItem;
+  quantity: number;
+  unitPriceCents: number;
+  note?: string;
+};
+
+export type ProjectBid = {
+  id: string;
+  customerId: string;
+  sourceAmendmentId?: string;
+  status: ProjectBidStatus;
+  lineItems: ProjectBidLineItem[];
+  customerMessage?: string;
 };
 
 export function getNextStopStatus(currentStatus: StopProgressStatus | undefined): StopProgressStatus {
@@ -64,6 +82,14 @@ export function dayPlanAmendmentTypeLabel(amendmentType: DayPlanAmendmentType): 
 
 export function amendmentRequiresBid(amendment: DayPlanAmendmentRequest): boolean {
   return amendment.amendmentType === 'add_service' && Boolean(amendment.service?.requiresManagerApproval);
+}
+
+export function projectBidTotalCents(bid: ProjectBid): number {
+  return bid.lineItems.reduce((total, item) => total + item.quantity * item.unitPriceCents, 0);
+}
+
+export function projectBidCanConvertToWork(bid: ProjectBid): boolean {
+  return bid.status === 'approved' && bid.lineItems.length > 0;
 }
 
 export function resolveStopStatus(
