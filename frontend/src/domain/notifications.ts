@@ -66,6 +66,22 @@ export function notificationChannelIsEnabled(
   return channel === 'email' ? preference.emailEnabled : preference.smsEnabled;
 }
 
+export function notificationHourIsQuiet(quietHours: NotificationQuietHours | undefined, hour: number): boolean {
+  if (!quietHours) {
+    return false;
+  }
+
+  if (quietHours.startHour === quietHours.endHour) {
+    return true;
+  }
+
+  if (quietHours.startHour < quietHours.endHour) {
+    return hour >= quietHours.startHour && hour < quietHours.endHour;
+  }
+
+  return hour >= quietHours.startHour || hour < quietHours.endHour;
+}
+
 export function notificationCanAttemptDelivery(item: NotificationOutboxItem): boolean {
   return item.status === 'queued' || item.status === 'failed';
 }
