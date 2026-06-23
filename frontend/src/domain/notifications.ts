@@ -70,6 +70,17 @@ export function notificationCanAttemptDelivery(item: NotificationOutboxItem): bo
   return item.status === 'queued' || item.status === 'failed';
 }
 
+export function notificationCanAttemptWithPreference(
+  item: NotificationOutboxItem,
+  preference: NotificationPreference,
+): boolean {
+  return (
+    item.audience === preference.audience &&
+    notificationCanAttemptDelivery(item) &&
+    notificationChannelIsEnabled(preference, item.channel)
+  );
+}
+
 export function notificationNeedsRetry(item: NotificationOutboxItem): boolean {
   return item.status === 'failed';
 }
