@@ -40,6 +40,26 @@ export function notificationChannelLabel(channel: NotificationChannel): string {
   return channel === 'email' ? 'Email' : 'Text message';
 }
 
+export function notificationTemplateLabel(template: NotificationTemplate): string {
+  if (template === 'day_plan_published') {
+    return 'Day plan published';
+  }
+
+  if (template === 'route_changed') {
+    return 'Route changed';
+  }
+
+  if (template === 'completion_report_ready') {
+    return 'Completion report ready';
+  }
+
+  if (template === 'bid_approval_requested') {
+    return 'Bid approval requested';
+  }
+
+  return 'Extra service requested';
+}
+
 export function notificationStatusLabel(status: NotificationStatus): string {
   if (status === 'queued') {
     return 'Queued';
