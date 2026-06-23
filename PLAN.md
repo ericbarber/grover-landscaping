@@ -96,6 +96,16 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager activity filters persist in browser storage with storage-availability detection and reset behavior
 - Manager activity label helper tests
 
+### Crew amendment and bid foundation
+
+- Frontend domain types for crew day-plan amendment requests
+- Frontend service catalog item contract for standard and extra services
+- Frontend project bid contract with bid statuses and line items
+- Helper for detecting when an extra-service amendment requires a bid
+- Helper for totaling project bid line items
+- Helper for determining whether an approved bid can convert to work
+- Frontend tests for amendment labels, bid requirements, bid totals, and bid conversion
+
 ### Account and service tracking foundation
 
 - Customer account summary model
@@ -167,9 +177,12 @@ Current state:
 - Frontend manager activity label helpers have focused tests for source labels, tone labels, and filter summaries
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
+- Frontend has domain contracts for crew amendment requests, service catalog items, and project bids
 
 Next implementation work:
 
+- Add crew-facing amendment request UI for add-stop, remove-stop, and add-service requests
+- Add manager review UI for extra-service amendments that require a bid
 - Connect manager activity history to persisted events after the notification outbox exists
 
 ### Photo evidence flow
