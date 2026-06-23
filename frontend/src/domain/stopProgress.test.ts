@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  amendmentRequiresBid,
   countFinishedStops,
   countResolvedFinishedStops,
+  dayPlanAmendmentTypeLabel,
   getNextStopStatus,
+  projectBidCanConvertToWork,
+  projectBidTotalCents,
   resetStopStates,
   resolveStopStatus,
   stopActionLabel,
@@ -25,6 +29,108 @@ describe('stop progress helpers', () => {
     expect(stopActionLabel('pending')).toBe('Start stop');
     expect(stopActionLabel('in_progress')).toBe('Finish stop');
     expect(stopActionLabel('finished')).toBe('Finished');
+  });
+
+  it('formats day-plan amendment labels', () => {
+    expect(dayPlanAmendmentTypeLabel('add_stop')).toBe('Add stop');
+    expect(dayPlanAmendmentTypeLabel('remove_stop')).toBe('Remove stop');
+    expect(dayPlanAmendmentTypeLabel('add_service')).toBe('Add service');
+  });
+
+  it('requires a bid for manager-approved extra services', () => {
+    expect(
+      amendmentRequiresBid({
+        id: 'amendment_1001',
+        dayPlanId: 'day_plan_1001',
+        amendmentType: 'add_service',
+        status: 'submitted',
+        requestedByCrewId: 'crew_1001',
+        stopId: 'stop_1001',
+        service: {
+          id: 'service_sprinkler_repair',
+          name: 'Sprinkler repair',
+          requiresManagerApproval: true,
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it('does not require a bid for non-billable stop changes', () => {
+    expect(
+      amendmentRequiresBid({
+        id: 'amendment_1002',
+        dayPlanId: 'day_plan_1001',
+        amendmentType: 'remove_stop',
+        status: 'submitted',
+        requestedByCrewId: 'crew_1001',
+        stopId: 'stop_1002',
+      }),
+    ).toBe(false);
+  });
+
+  it('totals project bid line items', () => {
+    expect(
+      projectBidTotalCents({
+        id: 'bid_1001',
+        customerId: 'customer_1001',
+        status: 'draft',
+        lineItems: [
+          {
+            id: 'line_1001',
+            service: {
+              id: 'service_tree_limb_removal',
+              name: 'Tree limb removal',
+              requiresManagerApproval: true,
+            },
+            quantity: 2,
+            unitPriceCents: 7500,
+          },
+          {
+            id: 'line_1002',
+            service: {
+              id: 'service_sprinkler_repair',
+              name: 'Sprinkler repair',
+              requiresManagerApproval: true,
+            },
+            quantity: 1,
+            unitPriceCents: 12500,
+          },
+        ],
+      }),
+    ).toBe(27500);
+  });
+
+  it('allows approved bids with line items to convert to work', () => {
+    expect(
+      projectBidCanConvertToWork({
+        id: 'bid_1002',
+        customerId: 'customer_1001',
+        status: 'approved',
+        lineItems: [
+          {
+            id: 'line_1003',
+            service: {
+              id: 'service_tree_limb_removal',
+              name: 'Tree limb removal',
+              requiresManagerApproval: true,
+            },
+            quantity: 1,
+            unitPriceCents: 9500,
+          },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it('does not convert draft bids to work', () => {
+    expect(
+      projectBidCanConvertToWork({
+        id: 'bid_1003',
+        customerId: 'customer_1001',
+        status: 'draft',
+        lineItems: [],
+      }),
+    ).toBe(false);
   });
 
   it('resolves local status before server status', () => {
