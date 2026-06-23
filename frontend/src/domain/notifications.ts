@@ -60,6 +60,22 @@ export function notificationStatusLabel(status: NotificationStatus): string {
   return 'Manually resolved';
 }
 
+export function notificationDeliveryBlockerLabel(blocker: NotificationDeliveryBlocker): string {
+  if (blocker === 'status') {
+    return 'Delivery status is not ready to send';
+  }
+
+  if (blocker === 'audience') {
+    return 'Notification preference does not match the audience';
+  }
+
+  if (blocker === 'channel') {
+    return 'Notification channel is disabled';
+  }
+
+  return 'Quiet hours are active';
+}
+
 export function notificationChannelIsEnabled(
   preference: NotificationPreference,
   channel: NotificationChannel,
