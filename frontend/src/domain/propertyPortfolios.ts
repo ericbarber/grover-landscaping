@@ -53,6 +53,10 @@ export function portfolioTypeLabel(portfolioType: PropertyPortfolioType): string
   return 'Commercial client';
 }
 
+export function portfolioPropertyCountLabel(propertyCount: number): string {
+  return propertyCount === 1 ? '1 yard' : `${propertyCount} yards`;
+}
+
 export function portfolioCanGroupProperty(
   portfolio: PropertyPortfolio,
   property: CustomerPropertyProfile,
