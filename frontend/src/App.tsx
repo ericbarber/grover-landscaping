@@ -13,7 +13,17 @@ import { CompletionReport } from './components/CompletionReport';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
-import { getCompletionProgress, seedJobs, type YardCareJob } from './domain/jobs';
+import {
+  customerNeedsOnboardingAttention,
+  filterPropertiesForOrganization,
+  getCompletionProgress,
+  getContractedServiceCount,
+  getCustomerPropertyCount,
+  seedJobs,
+  type CustomerAccountProfile,
+  type CustomerPropertyProfile,
+  type YardCareJob,
+} from './domain/jobs';
 import {
   prependManagerActivity,
   seedManagerActivityItems,
@@ -27,6 +37,34 @@ import {
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
 type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone' | 'source'>;
+
+const customerPortalPreviewCustomer: CustomerAccountProfile = {
+  id: 'customer_1001',
+  displayName: 'Sample Customer',
+  onboardingStatus: 'active',
+  organizationId: 'org_demo_landscaping',
+};
+
+const customerPortalPreviewProperties: CustomerPropertyProfile[] = [
+  {
+    id: 'property_1001',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    displayName: 'Sample Customer Home',
+    address: '123 Oak Street',
+    serviceFrequency: 'weekly',
+    contractedServiceIds: ['service_standard_yard_care', 'service_sprinkler_repair'],
+  },
+  {
+    id: 'property_1002',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    displayName: 'Backyard Renovation Area',
+    address: '123 Oak Street',
+    serviceFrequency: 'seasonal',
+    contractedServiceIds: ['service_tree_limb_removal'],
+  },
+];
 
 function managerActivityTimestamp() {
   return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
@@ -90,6 +128,85 @@ function JobCard({
         {isSelected ? 'Selected Job' : 'Open Job'}
       </button>
     </article>
+  );
+}
+
+function frequencyLabel(frequency: CustomerPropertyProfile['serviceFrequency']): string {
+  return frequency.replace('_', ' ');
+}
+
+function CustomerPortalPreviewPanel({
+  customer,
+  properties,
+}: {
+  customer: CustomerAccountProfile;
+  properties: CustomerPropertyProfile[];
+}) {
+  const visibleProperties = filterPropertiesForOrganization(properties, customer.organizationId);
+  const propertyCount = getCustomerPropertyCount(visibleProperties, customer.id);
+  const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Customer portal preview</p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">{customer.displayName}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            Property owners will use this view to track upcoming work, completed services, reports, photos, and bids.
+          </p>
+        </div>
+        <span
+          className={`w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+            needsOnboardingAttention ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+          }`}
+        >
+          {needsOnboardingAttention ? 'Needs onboarding' : 'Portal ready'}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">{propertyCount}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Properties</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">2</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Reports ready</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">1</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Bid to review</p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {visibleProperties.map((property) => (
+          <article key={property.id} className="rounded-xl border border-slate-200 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-950">{property.displayName}</h3>
+                <p className="text-sm text-slate-600">{property.address}</p>
+              </div>
+              <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                {frequencyLabel(property.serviceFrequency)}
+              </span>
+            </div>
+            <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
+              <p>
+                <span className="font-semibold text-slate-800">Services:</span> {getContractedServiceCount(property)}
+              </p>
+              <p>
+                <span className="font-semibold text-slate-800">Next:</span> Scheduled visit
+              </p>
+              <p>
+                <span className="font-semibold text-slate-800">Evidence:</span> Photos and checklist
+              </p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -485,6 +602,12 @@ export function App() {
                   source: 'route',
                 });
               }}
+            />
+          </div>
+          <div className="mt-6">
+            <CustomerPortalPreviewPanel
+              customer={customerPortalPreviewCustomer}
+              properties={customerPortalPreviewProperties}
             />
           </div>
           <div className="mt-6">
