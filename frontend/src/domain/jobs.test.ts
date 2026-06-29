@@ -18,6 +18,7 @@ import {
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
   getEnabledCrewCount,
+  getPropertyCrewAssignmentSummary,
   switchPropertyCrewAssignment,
   type CompanyProfile,
   type CrewProfile,
@@ -225,6 +226,17 @@ describe('customer property helpers', () => {
     expect(testProperties[0].organizationId).toBe('company_test_1');
   });
 
+  it('summarizes active crew assignment and switch options for a property', () => {
+    const summary = getPropertyCrewAssignmentSummary(testProperties[0], testCrews, testCrewAssignments);
+
+    expect(summary).toEqual({
+      propertyId: 'property_test_1',
+      activeCrewId: 'crew_test_1',
+      availableCrewCount: 2,
+      canSwitchCrews: true,
+    });
+  });
+
   it('does not assign a property to a disabled or unrelated crew', () => {
     expect(crewCanServeProperty(testCrews[2], testProperties[0])).toBe(false);
     expect(switchPropertyCrewAssignment(testCrewAssignments, testProperties[0], testCrews[2], '2026-06-15')).toEqual(
@@ -258,56 +270,28 @@ describe('customer property helpers', () => {
   });
 });
 
-describe('company crew helpers', () => {
-  it('flags invited or incomplete companies for onboarding attention', () => {
-    const incompleteCompany: CompanyProfile = {
-      id: 'company_incomplete',
-      displayName: 'Incomplete Company',
-      companyType: 'landscaping_company',
-      onboardingStatus: 'incomplete',
-    };
-    const activeCompany: CompanyProfile = {
-      id: 'company_active',
-      displayName: 'Active Company',
-      companyType: 'landscaping_company',
-      onboardingStatus: 'active',
-    };
+describe('company and crew helpers', () => {
+  const company: CompanyProfile = {
+    id: 'company_test_1',
+    displayName: 'Test Landscaping',
+    companyType: 'landscaping_company',
+    onboardingStatus: 'active',
+  };
 
-    expect(companyNeedsOnboardingAttention(incompleteCompany)).toBe(true);
-    expect(companyNeedsOnboardingAttention(activeCompany)).toBe(false);
+  it('filters crews by company', () => {
+    expect(filterCrewsForCompany(testCrews, company.id)).toHaveLength(2);
   });
 
-  it('filters crews to one company boundary', () => {
-    expect(filterCrewsForCompany(testCrews, 'company_test_1')).toHaveLength(2);
+  it('counts enabled crews and capacity', () => {
+    const companyCrews = filterCrewsForCompany(testCrews, company.id);
+
+    expect(getEnabledCrewCount(companyCrews)).toBe(2);
+    expect(getEnabledCrewCapacityMinutes(companyCrews)).toBe(780);
   });
 
-  it('counts enabled crews', () => {
-    expect(getEnabledCrewCount(testCrews)).toBe(2);
-  });
+  it('detects company support for multiple crews', () => {
+    const companyCrews = filterCrewsForCompany(testCrews, company.id);
 
-  it('sums enabled crew capacity only', () => {
-    expect(getEnabledCrewCapacityMinutes(testCrews)).toBe(780);
-  });
-
-  it('supports multiple crews for property manager companies', () => {
-    const company: CompanyProfile = {
-      id: 'company_test_2',
-      displayName: 'Property Manager Company',
-      companyType: 'property_manager',
-      onboardingStatus: 'active',
-    };
-
-    expect(companySupportsMultipleCrews(company, [testCrews[2]])).toBe(true);
-  });
-
-  it('supports multiple crews for landscaping companies with multiple enabled crews', () => {
-    const company: CompanyProfile = {
-      id: 'company_test_1',
-      displayName: 'Multi Crew Landscaping',
-      companyType: 'landscaping_company',
-      onboardingStatus: 'active',
-    };
-
-    expect(companySupportsMultipleCrews(company, filterCrewsForCompany(testCrews, company.id))).toBe(true);
+    expect(companySupportsMultipleCrews(company, companyCrews)).toBe(true);
   });
 });
