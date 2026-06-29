@@ -24,6 +24,10 @@ export interface PropertyPortfolioSummary {
   propertyCount: number;
 }
 
+export interface PropertyPortfolioDetail extends PropertyPortfolioSummary {
+  properties: CustomerPropertyProfile[];
+}
+
 export function filterPortfoliosForCustomer(
   portfolios: PropertyPortfolio[],
   customer: CustomerAccountProfile,
@@ -90,4 +94,23 @@ export function buildPropertyPortfolioSummaries(
     portfolioType: portfolio.portfolioType,
     propertyCount: getPortfolioPropertyCount(properties, links, portfolio),
   }));
+}
+
+export function buildPropertyPortfolioDetails(
+  portfolios: PropertyPortfolio[],
+  properties: CustomerPropertyProfile[],
+  links: PortfolioPropertyLink[],
+  customer: CustomerAccountProfile,
+): PropertyPortfolioDetail[] {
+  return filterPortfoliosForCustomer(portfolios, customer).map((portfolio) => {
+    const portfolioProperties = filterPropertiesForPortfolio(properties, links, portfolio);
+
+    return {
+      portfolioId: portfolio.id,
+      displayName: portfolio.displayName,
+      portfolioType: portfolio.portfolioType,
+      propertyCount: portfolioProperties.length,
+      properties: portfolioProperties,
+    };
+  });
 }
