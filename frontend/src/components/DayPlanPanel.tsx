@@ -4,14 +4,19 @@ import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
+  amendmentRequiresBid,
   countResolvedFinishedStops,
+  dayPlanAmendmentTypeLabel,
   getNextStopStatus,
   resetStopStates,
   resolveStopStatus,
   stopActionLabel,
   syncStatusFromPersistence,
   syncStatusLabel,
+  type DayPlanAmendmentRequest,
+  type DayPlanAmendmentType,
   type RouteProgressSyncStatus,
+  type ServiceCatalogItem,
   type StopProgressStatus,
   type StopStateMap,
 } from '../domain/stopProgress';
@@ -20,6 +25,32 @@ type DayPlanPanelProps = {
   onSelectJob?: (jobId: string) => void;
   refreshSignal?: number;
 };
+
+const crewExtraServiceCatalog: ServiceCatalogItem[] = [
+  {
+    id: 'service_sprinkler_repair',
+    name: 'Sprinkler repair',
+    description: 'Crew noticed sprinkler work that needs manager pricing review.',
+    defaultDurationMinutes: 45,
+    defaultPriceCents: 12500,
+    requiresManagerApproval: true,
+  },
+  {
+    id: 'service_tree_limb_removal',
+    name: 'Tree limb removal',
+    description: 'Crew noticed tree limb cleanup outside the standard service.',
+    defaultDurationMinutes: 60,
+    defaultPriceCents: 17500,
+    requiresManagerApproval: true,
+  },
+  {
+    id: 'service_gate_latch_adjustment',
+    name: 'Gate latch adjustment',
+    description: 'Small non-billable access correction for the current stop.',
+    defaultDurationMinutes: 15,
+    requiresManagerApproval: false,
+  },
+];
 
 function storageKey(dayPlanId: string): string {
   return `grover.dayPlan.${dayPlanId}.stopStates`;
@@ -42,11 +73,21 @@ function clearStopStates(dayPlanId: string) {
   window.localStorage.removeItem(storageKey(dayPlanId));
 }
 
+function servicePriceLabel(service: ServiceCatalogItem): string {
+  if (!service.defaultPriceCents) {
+    return 'No default charge';
+  }
+
+  return `$${(service.defaultPriceCents / 100).toFixed(2)}`;
+}
+
 export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
+  const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
+  const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
@@ -70,6 +111,26 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
 
     window.location.hash = `job-${jobId}`;
     clickMatchingJobCard(customerName);
+  }
+
+  function submitAmendmentRequest(
+    amendmentType: DayPlanAmendmentType,
+    note: string,
+    stopId?: string,
+    service?: ServiceCatalogItem,
+  ) {
+    const request: DayPlanAmendmentRequest = {
+      id: `local_amendment_${dayPlan.id}_${amendmentType}_${Date.now()}`,
+      dayPlanId: dayPlan.id,
+      amendmentType,
+      status: 'submitted',
+      requestedByCrewId: dayPlan.crewId,
+      stopId,
+      service,
+      note,
+    };
+
+    setAmendmentRequests((current) => [request, ...current].slice(0, 5));
   }
 
   function persistStopState(stopId: string, next: StopStateMap) {
@@ -169,10 +230,57 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
         Reset route progress
       </button>
 
+      <div className="mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-4">
+        <p className="text-sm font-semibold text-emerald-950">Need a route change?</p>
+        <p className="mt-1 text-xs text-emerald-800">
+          Submit a browser-local amendment request now; backend persistence and manager approval come next.
+        </p>
+        <button
+          className="mt-3 rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+          onClick={() =>
+            submitAmendmentRequest(
+              'add_stop',
+              `${dayPlan.crewName} requested an unplanned stop for manager review.`,
+            )
+          }
+          type="button"
+        >
+          Request unplanned stop
+        </button>
+      </div>
+
+      {amendmentRequests.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-950">Submitted amendment requests</p>
+          <div className="mt-3 space-y-2">
+            {amendmentRequests.map((request) => (
+              <article key={request.id} className="rounded-lg bg-white p-3 text-xs text-slate-600 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{dayPlanAmendmentTypeLabel(request.amendmentType)}</p>
+                    <p className="mt-1">{request.note}</p>
+                    {request.service ? (
+                      <p className="mt-1 text-slate-500">
+                        {request.service.name} · {servicePriceLabel(request.service)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 font-semibold uppercase tracking-wide text-slate-600">
+                    {amendmentRequiresBid(request) ? 'Bid review' : request.status}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {
           const localState: StopProgressStatus = resolveStopStatus(stopStates[stop.id], stop.stopStatus);
           const actionLabel = stopActionLabel(localState);
+          const selectedExtraServiceId = selectedExtraServices[stop.id] ?? crewExtraServiceCatalog[0]?.id ?? '';
+          const selectedExtraService = crewExtraServiceCatalog.find((service) => service.id === selectedExtraServiceId);
 
           return (
             <article key={stop.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -201,6 +309,56 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
               >
                 {actionLabel}
               </button>
+
+              <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Crew amendment</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Ask the manager to approve a route change or price an extra service for this stop.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <button
+                    className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                    onClick={() =>
+                      submitAmendmentRequest(
+                        'remove_stop',
+                        `Crew requested manager review to remove or skip ${stop.customerName}.`,
+                        stop.id,
+                      )
+                    }
+                    type="button"
+                  >
+                    Request skip/removal
+                  </button>
+                  <select
+                    className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                    value={selectedExtraServiceId}
+                    onChange={(event) =>
+                      setSelectedExtraServices((current) => ({ ...current, [stop.id]: event.target.value }))
+                    }
+                  >
+                    {crewExtraServiceCatalog.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} · {servicePriceLabel(service)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="rounded-full bg-slate-950 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={!selectedExtraService}
+                    onClick={() =>
+                      submitAmendmentRequest(
+                        'add_service',
+                        `Crew requested ${selectedExtraService?.name ?? 'an extra service'} at ${stop.customerName}.`,
+                        stop.id,
+                        selectedExtraService,
+                      )
+                    }
+                    type="button"
+                  >
+                    Request extra service
+                  </button>
+                </div>
+              </div>
             </article>
           );
         })}
