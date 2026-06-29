@@ -103,6 +103,20 @@ export function filterPropertiesForOrganization(
   return properties.filter((property) => property.organizationId === organizationId);
 }
 
+export function customerCanAccessProperty(
+  customer: CustomerAccountProfile,
+  property: CustomerPropertyProfile,
+): boolean {
+  return property.customerId === customer.id && property.organizationId === customer.organizationId;
+}
+
+export function filterPropertiesForCustomerPortal(
+  properties: CustomerPropertyProfile[],
+  customer: CustomerAccountProfile,
+): CustomerPropertyProfile[] {
+  return properties.filter((property) => customerCanAccessProperty(customer, property));
+}
+
 export function getContractedServiceCount(property: CustomerPropertyProfile): number {
   return property.contractedServiceIds.length;
 }
