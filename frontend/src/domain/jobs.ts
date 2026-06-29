@@ -3,6 +3,7 @@ export type CustomerOnboardingStatus = 'invited' | 'active' | 'incomplete' | 'su
 export type CompanyType = 'landscaping_company' | 'property_manager';
 export type PropertyServiceFrequency = 'one_time' | 'weekly' | 'biweekly' | 'monthly' | 'seasonal';
 export type CustomerPortalWorkStatus = 'scheduled' | 'in_progress' | 'completed' | 'bid_review';
+export type CustomerPortalNextActionKind = 'review_bid' | 'view_report' | 'track_visit';
 
 export interface YardCareJob {
   id: string;
@@ -58,6 +59,13 @@ export interface CustomerPortalWorkSummary {
   status: CustomerPortalWorkStatus;
   reportReady: boolean;
   bidReviewRequired: boolean;
+}
+
+export interface CustomerPortalNextAction {
+  id: string;
+  workSummaryId: string;
+  label: string;
+  actionKind: CustomerPortalNextActionKind;
 }
 
 export const seedJobs: YardCareJob[] = [
@@ -144,6 +152,35 @@ export function countReadyCustomerReports(workSummaries: CustomerPortalWorkSumma
 
 export function countCustomerBidsToReview(workSummaries: CustomerPortalWorkSummary[]): number {
   return workSummaries.filter((workSummary) => workSummary.bidReviewRequired).length;
+}
+
+export function getCustomerPortalNextActions(workSummaries: CustomerPortalWorkSummary[]): CustomerPortalNextAction[] {
+  const bidActions = workSummaries
+    .filter((workSummary) => workSummary.bidReviewRequired)
+    .map((workSummary) => ({
+      id: `review_bid_${workSummary.id}`,
+      workSummaryId: workSummary.id,
+      label: `Review bid: ${workSummary.title}`,
+      actionKind: 'review_bid' as const,
+    }));
+  const reportActions = workSummaries
+    .filter((workSummary) => workSummary.reportReady)
+    .map((workSummary) => ({
+      id: `view_report_${workSummary.id}`,
+      workSummaryId: workSummary.id,
+      label: `View report: ${workSummary.title}`,
+      actionKind: 'view_report' as const,
+    }));
+  const visitActions = workSummaries
+    .filter((workSummary) => workSummary.status === 'scheduled' || workSummary.status === 'in_progress')
+    .map((workSummary) => ({
+      id: `track_visit_${workSummary.id}`,
+      workSummaryId: workSummary.id,
+      label: `Track visit: ${workSummary.title}`,
+      actionKind: 'track_visit' as const,
+    }));
+
+  return [...bidActions, ...reportActions, ...visitActions];
 }
 
 export function getContractedServiceCount(property: CustomerPropertyProfile): number {
