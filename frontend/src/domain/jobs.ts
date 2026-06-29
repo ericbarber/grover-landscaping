@@ -2,6 +2,7 @@ export type YardCareJobStatus = 'scheduled' | 'in_progress' | 'completed';
 export type CustomerOnboardingStatus = 'invited' | 'active' | 'incomplete' | 'suspended' | 'archived';
 export type CompanyType = 'landscaping_company' | 'property_manager';
 export type PropertyServiceFrequency = 'one_time' | 'weekly' | 'biweekly' | 'monthly' | 'seasonal';
+export type CustomerPortalWorkStatus = 'scheduled' | 'in_progress' | 'completed' | 'bid_review';
 
 export interface YardCareJob {
   id: string;
@@ -46,6 +47,17 @@ export interface CustomerPropertyProfile {
   address: string;
   serviceFrequency: PropertyServiceFrequency;
   contractedServiceIds: string[];
+}
+
+export interface CustomerPortalWorkSummary {
+  id: string;
+  customerId: string;
+  organizationId: string;
+  propertyId: string;
+  title: string;
+  status: CustomerPortalWorkStatus;
+  reportReady: boolean;
+  bidReviewRequired: boolean;
 }
 
 export const seedJobs: YardCareJob[] = [
@@ -115,6 +127,23 @@ export function filterPropertiesForCustomerPortal(
   customer: CustomerAccountProfile,
 ): CustomerPropertyProfile[] {
   return properties.filter((property) => customerCanAccessProperty(customer, property));
+}
+
+export function filterWorkSummariesForCustomerPortal(
+  workSummaries: CustomerPortalWorkSummary[],
+  customer: CustomerAccountProfile,
+): CustomerPortalWorkSummary[] {
+  return workSummaries.filter(
+    (workSummary) => workSummary.customerId === customer.id && workSummary.organizationId === customer.organizationId,
+  );
+}
+
+export function countReadyCustomerReports(workSummaries: CustomerPortalWorkSummary[]): number {
+  return workSummaries.filter((workSummary) => workSummary.reportReady).length;
+}
+
+export function countCustomerBidsToReview(workSummaries: CustomerPortalWorkSummary[]): number {
+  return workSummaries.filter((workSummary) => workSummary.bidReviewRequired).length;
 }
 
 export function getContractedServiceCount(property: CustomerPropertyProfile): number {
