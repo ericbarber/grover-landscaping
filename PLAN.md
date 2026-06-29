@@ -318,6 +318,18 @@ Next implementation work:
 - Customer-to-property relationship management
 - Organization-to-customer relationship management for management companies
 
+### Marketing and advertising campaign
+
+- Build segmented campaign messaging for individual homeowners, property manager teams, small yard-care companies, and larger yard-care companies
+- Position individual homeowner messaging around trust, proof of completion, photo evidence, clear service history, bid approvals, and easier communication with service providers
+- Position property manager messaging around multi-property visibility, portfolio grouping, crew accountability, completion evidence, tenant/owner communication, and service issue tracking
+- Position small yard-care company messaging around simple mobile crew workflows, daily route clarity, before/after proof, customer confidence, faster completion reporting, and reduced office follow-up
+- Position larger yard-care company messaging around multi-crew operations, manager scheduling, route oversight, audit trails, role-based access, reporting consistency, and scalable service operations
+- Create landing-page paths for each audience segment with tailored benefits, screenshots, proof points, calls to action, and pilot signup flows
+- Plan advertising channels for local search, social media, industry directories, referral partnerships, property-management associations, landscaping trade groups, and targeted email outreach
+- Add campaign tracking for source, audience segment, landing page, signup intent, demo requests, pilot conversion, and customer acquisition cost
+- Keep campaign claims tied to implemented or planned product capabilities, and avoid promising automations, integrations, or scale features before they are ready
+
 ### Early hosting plan
 
 - Keep the first hosted environment simple and operationally boring: hosted static frontend, containerized Rust API, managed PostgreSQL, managed object storage for photo evidence, managed secrets, and HTTPS by default
