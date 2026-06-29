@@ -205,6 +205,24 @@ Next implementation work:
 - Add photo thumbnail/display flow
 - Attach photo evidence to completion reports
 
+### Property ownership, portfolios, and crew assignments
+
+Goal: keep customer/property ownership separate from crew service assignment while supporting many yards per owner, many yards per crew, and many crews per company.
+
+Current state:
+
+- Customer/property ownership is modeled separately from active crew assignment
+- A property can switch active crews without changing its customer or organization ownership
+- A crew must be enabled and belong to the same service organization before it can serve a property
+
+Next implementation work:
+
+- Add property portfolio/group models for individual owners, property management companies, HOAs, and commercial clients
+- Link yards/properties to portfolios so one person or management company can organize many yards
+- Add helper tests for portfolio-scoped property grouping and account-level access boundaries
+- Surface property portfolio grouping in the customer portal preview
+- Persist portfolios and crew-assignment history in PostgreSQL after the frontend domain model settles
+
 ## Planned
 
 ### Customer portal
