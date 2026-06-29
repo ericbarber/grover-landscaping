@@ -105,6 +105,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Helper for totaling project bid line items
 - Helper for determining whether an approved bid can convert to work
 - Frontend tests for amendment labels, bid requirements, bid totals, and bid conversion
+- Crew-facing browser-local amendment controls for add-stop, remove-stop, and add-service requests
+- Crew-facing submitted amendment request summary with bid-review labeling
 
 ### Account and service tracking foundation
 
@@ -178,10 +180,11 @@ Current state:
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 - Frontend has domain contracts for crew amendment requests, service catalog items, and project bids
+- Crew-facing day-plan panel has browser-local amendment request controls for add-stop, remove-stop, and add-service requests
 
 Next implementation work:
 
-- Add crew-facing amendment request UI for add-stop, remove-stop, and add-service requests
+- Add backend persistence for crew amendment requests
 - Add manager review UI for extra-service amendments that require a bid
 - Connect manager activity history to persisted events after the notification outbox exists
 
@@ -203,6 +206,27 @@ Next implementation work:
 - Attach photo evidence to completion reports
 
 ## Planned
+
+### Customer portal
+
+- Add a customer-facing portal for property owners to track work completed on their property
+- Show scheduled, in-progress, completed, and upcoming services for each property
+- Show completion reports with checklist status, crew notes, account status, and photo evidence
+- Allow customers to view service history by property and service date
+- Allow customers to review and approve project bids or extra-service requests
+- Add customer notification preferences and portal links for email and text/SMS delivery
+- Add role-scoped portal access so customers only see their own accounts, properties, reports, photos, and bids
+
+### Onboarding and organization management
+
+- Add onboarding flows for new customers, properties, yard crews, managers, and management companies
+- Support management companies with multiple crews and multiple managed customer accounts
+- Model organization ownership, crew membership, manager roles, and customer/property relationships
+- Invite users by role: customer, crew member, crew lead, manager, and organization owner
+- Capture property details during onboarding, including address, access notes, service preferences, and contracted services
+- Capture crew operating details, including service area, crew capacity, default schedule, and assigned services
+- Add onboarding status tracking for invited, active, incomplete, suspended, and archived accounts
+- Add tenant-aware data boundaries so each organization only sees its own crews, customers, jobs, reports, bids, and notifications
 
 ### Notification strategy
 
@@ -240,6 +264,7 @@ Next implementation work:
 - Include crew, checklist, account, and photo evidence
 - Add shareable report link
 - Add customer delivery by email and text/SMS
+- Surface completed reports in the customer portal
 
 ### Manager scheduling workflow
 
@@ -256,6 +281,9 @@ Next implementation work:
 - Services contracted per period
 - Services completed this period
 - Manager review flag
+- Property list and property detail page
+- Customer-to-property relationship management
+- Organization-to-customer relationship management for management companies
 
 ### Hosted development environment
 
