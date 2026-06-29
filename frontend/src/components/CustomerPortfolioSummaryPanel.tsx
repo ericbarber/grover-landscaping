@@ -31,7 +31,8 @@ export function CustomerPortfolioSummaryPanel({
 
       {portfolioDetails.length === 0 ? (
         <div className="mt-5 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600">
-          No property groups are available for this customer account yet.
+          <p className="font-semibold text-slate-800">No property groups are available yet.</p>
+          <p className="mt-1">Create a group before assigning yards to customer portal sections.</p>
         </div>
       ) : (
         <div className="mt-5 grid gap-3 md:grid-cols-2">
