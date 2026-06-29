@@ -60,6 +60,13 @@ export interface PropertyCrewAssignment {
   endedAt?: string;
 }
 
+export interface PropertyCrewAssignmentSummary {
+  propertyId: string;
+  activeCrewId?: string;
+  availableCrewCount: number;
+  canSwitchCrews: boolean;
+}
+
 export interface CustomerPortalWorkSummary {
   id: string;
   customerId: string;
@@ -156,6 +163,22 @@ export function getActiveCrewAssignmentForProperty(
   propertyId: string,
 ): PropertyCrewAssignment | undefined {
   return assignments.find((assignment) => assignment.propertyId === propertyId && assignment.active);
+}
+
+export function getPropertyCrewAssignmentSummary(
+  property: CustomerPropertyProfile,
+  crews: CrewProfile[],
+  assignments: PropertyCrewAssignment[],
+): PropertyCrewAssignmentSummary {
+  const availableCrews = crews.filter((crew) => crewCanServeProperty(crew, property));
+  const activeAssignment = getActiveCrewAssignmentForProperty(assignments, property.id);
+
+  return {
+    propertyId: property.id,
+    activeCrewId: activeAssignment?.crewId,
+    availableCrewCount: availableCrews.length,
+    canSwitchCrews: availableCrews.length > 1,
+  };
 }
 
 export function switchPropertyCrewAssignment(
