@@ -1,4 +1,6 @@
 export type YardCareJobStatus = 'scheduled' | 'in_progress' | 'completed';
+export type CustomerOnboardingStatus = 'invited' | 'active' | 'incomplete' | 'suspended' | 'archived';
+export type PropertyServiceFrequency = 'one_time' | 'weekly' | 'biweekly' | 'monthly' | 'seasonal';
 
 export interface YardCareJob {
   id: string;
@@ -10,6 +12,23 @@ export interface YardCareJob {
   afterPhotos: number;
   checklistItems: number;
   completedChecklistItems: number;
+}
+
+export interface CustomerAccountProfile {
+  id: string;
+  displayName: string;
+  onboardingStatus: CustomerOnboardingStatus;
+  organizationId: string;
+}
+
+export interface CustomerPropertyProfile {
+  id: string;
+  customerId: string;
+  organizationId: string;
+  displayName: string;
+  address: string;
+  serviceFrequency: PropertyServiceFrequency;
+  contractedServiceIds: string[];
 }
 
 export const seedJobs: YardCareJob[] = [
@@ -43,4 +62,26 @@ export function getCompletionProgress(job: YardCareJob): number {
   }
 
   return Math.round((job.completedChecklistItems / job.checklistItems) * 100);
+}
+
+export function customerNeedsOnboardingAttention(customer: CustomerAccountProfile): boolean {
+  return customer.onboardingStatus === 'invited' || customer.onboardingStatus === 'incomplete';
+}
+
+export function getCustomerPropertyCount(
+  properties: CustomerPropertyProfile[],
+  customerId: string,
+): number {
+  return properties.filter((property) => property.customerId === customerId).length;
+}
+
+export function filterPropertiesForOrganization(
+  properties: CustomerPropertyProfile[],
+  organizationId: string,
+): CustomerPropertyProfile[] {
+  return properties.filter((property) => property.organizationId === organizationId);
+}
+
+export function getContractedServiceCount(property: CustomerPropertyProfile): number {
+  return property.contractedServiceIds.length;
 }
