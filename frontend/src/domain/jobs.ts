@@ -50,6 +50,16 @@ export interface CustomerPropertyProfile {
   contractedServiceIds: string[];
 }
 
+export interface PropertyCrewAssignment {
+  id: string;
+  propertyId: string;
+  crewId: string;
+  organizationId: string;
+  active: boolean;
+  assignedAt: string;
+  endedAt?: string;
+}
+
 export interface CustomerPortalWorkSummary {
   id: string;
   customerId: string;
@@ -135,6 +145,46 @@ export function filterPropertiesForCustomerPortal(
   customer: CustomerAccountProfile,
 ): CustomerPropertyProfile[] {
   return properties.filter((property) => customerCanAccessProperty(customer, property));
+}
+
+export function crewCanServeProperty(crew: CrewProfile, property: CustomerPropertyProfile): boolean {
+  return crew.enabled && crew.companyId === property.organizationId;
+}
+
+export function getActiveCrewAssignmentForProperty(
+  assignments: PropertyCrewAssignment[],
+  propertyId: string,
+): PropertyCrewAssignment | undefined {
+  return assignments.find((assignment) => assignment.propertyId === propertyId && assignment.active);
+}
+
+export function switchPropertyCrewAssignment(
+  assignments: PropertyCrewAssignment[],
+  property: CustomerPropertyProfile,
+  nextCrew: CrewProfile,
+  assignedAt: string,
+): PropertyCrewAssignment[] {
+  if (!crewCanServeProperty(nextCrew, property)) {
+    return assignments;
+  }
+
+  const closedAssignments = assignments.map((assignment) =>
+    assignment.propertyId === property.id && assignment.active
+      ? { ...assignment, active: false, endedAt: assignedAt }
+      : assignment,
+  );
+
+  return [
+    ...closedAssignments,
+    {
+      id: `assignment_${property.id}_${nextCrew.id}_${assignedAt}`,
+      propertyId: property.id,
+      crewId: nextCrew.id,
+      organizationId: property.organizationId,
+      active: true,
+      assignedAt,
+    },
+  ];
 }
 
 export function filterWorkSummariesForCustomerPortal(
