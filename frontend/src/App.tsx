@@ -18,7 +18,7 @@ import {
   companySupportsMultipleCrews,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
-  filterPropertiesForOrganization,
+  filterPropertiesForCustomerPortal,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
@@ -260,7 +260,7 @@ function CustomerPortalPreviewPanel({
   customer: CustomerAccountProfile;
   properties: CustomerPropertyProfile[];
 }) {
-  const visibleProperties = filterPropertiesForOrganization(properties, customer.organizationId);
+  const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const propertyCount = getCustomerPropertyCount(visibleProperties, customer.id);
   const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
 
