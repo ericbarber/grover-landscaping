@@ -17,6 +17,13 @@ export interface PortfolioPropertyLink {
   organizationId: string;
 }
 
+export interface PropertyPortfolioSummary {
+  portfolioId: string;
+  displayName: string;
+  portfolioType: PropertyPortfolioType;
+  propertyCount: number;
+}
+
 export function filterPortfoliosForCustomer(
   portfolios: PropertyPortfolio[],
   customer: CustomerAccountProfile,
@@ -24,6 +31,22 @@ export function filterPortfoliosForCustomer(
   return portfolios.filter(
     (portfolio) => portfolio.accountId === customer.id && portfolio.organizationId === customer.organizationId,
   );
+}
+
+export function portfolioTypeLabel(portfolioType: PropertyPortfolioType): string {
+  if (portfolioType === 'individual_owner') {
+    return 'Individual owner';
+  }
+
+  if (portfolioType === 'property_management_company') {
+    return 'Property management company';
+  }
+
+  if (portfolioType === 'hoa') {
+    return 'HOA';
+  }
+
+  return 'Commercial client';
 }
 
 export function portfolioCanGroupProperty(
@@ -53,4 +76,18 @@ export function getPortfolioPropertyCount(
   portfolio: PropertyPortfolio,
 ): number {
   return filterPropertiesForPortfolio(properties, links, portfolio).length;
+}
+
+export function buildPropertyPortfolioSummaries(
+  portfolios: PropertyPortfolio[],
+  properties: CustomerPropertyProfile[],
+  links: PortfolioPropertyLink[],
+  customer: CustomerAccountProfile,
+): PropertyPortfolioSummary[] {
+  return filterPortfoliosForCustomer(portfolios, customer).map((portfolio) => ({
+    portfolioId: portfolio.id,
+    displayName: portfolio.displayName,
+    portfolioType: portfolio.portfolioType,
+    propertyCount: getPortfolioPropertyCount(properties, links, portfolio),
+  }));
 }
