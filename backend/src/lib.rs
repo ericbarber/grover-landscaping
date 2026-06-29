@@ -1,6 +1,7 @@
 pub mod accounts;
 pub mod day_plans;
 pub mod db;
+pub mod property_portfolio_requests;
 pub mod property_portfolios;
 pub mod stop_progress;
 
