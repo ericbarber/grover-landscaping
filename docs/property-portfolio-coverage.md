@@ -30,6 +30,16 @@ The customer portal should show three sections:
 - Portfolio grouping must not change crew assignment.
 - Portfolio grouping must not change customer or yard ownership.
 
+## Implementation checklist
+
+- Add fixture data for at least one grouped yard and one ungrouped yard in the customer portal preview.
+- Pass portfolio links and customer-owned yards into `CustomerPortfolioSummaryPanel`.
+- Render portfolio groups first, using existing `PropertyPortfolioDetail` data.
+- Render ungrouped yards in a separate customer-visible section below grouped portfolios.
+- Show the empty-state message only when the account has no portfolio groups.
+- Keep crew assignment controls out of the portfolio grouping UI.
+- Add focused tests for ungrouped-yard display behavior when component testing is available.
+
 ## Next implementation slice
 
 Wire `CustomerPortfolioSummaryPanel` to display `filterCustomerPropertiesWithoutPortfolio` results beneath the grouped portfolio cards.
