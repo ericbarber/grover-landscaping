@@ -1,6 +1,7 @@
 pub mod accounts;
 pub mod day_plans;
 pub mod db;
+pub mod property_portfolios;
 pub mod stop_progress;
 
 use serde::{Deserialize, Serialize};
