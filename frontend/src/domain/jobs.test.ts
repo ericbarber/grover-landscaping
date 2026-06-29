@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
+  customerCanAccessProperty,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
+  filterPropertiesForCustomerPortal,
   filterPropertiesForOrganization,
   getCompletionProgress,
   getContractedServiceCount,
@@ -55,7 +57,7 @@ const testProperties: CustomerPropertyProfile[] = [
     id: 'property_test_3',
     customerId: 'customer_test_2',
     organizationId: 'org_test_2',
-    displayName: 'Other organization property',
+    displayName: 'Other property',
     address: '300 Test Lane',
     serviceFrequency: 'biweekly',
     contractedServiceIds: [],
@@ -128,6 +130,29 @@ describe('customer property helpers', () => {
 
   it('filters properties to one organization boundary', () => {
     expect(filterPropertiesForOrganization(testProperties, 'org_test_1')).toHaveLength(2);
+  });
+
+  it('checks customer portal property access', () => {
+    const customer: CustomerAccountProfile = {
+      id: 'customer_test_1',
+      displayName: 'Test Customer',
+      onboardingStatus: 'active',
+      organizationId: 'org_test_1',
+    };
+
+    expect(customerCanAccessProperty(customer, testProperties[0])).toBe(true);
+    expect(customerCanAccessProperty(customer, testProperties[2])).toBe(false);
+  });
+
+  it('filters customer portal properties by customer and organization', () => {
+    const customer: CustomerAccountProfile = {
+      id: 'customer_test_1',
+      displayName: 'Test Customer',
+      onboardingStatus: 'active',
+      organizationId: 'org_test_1',
+    };
+
+    expect(filterPropertiesForCustomerPortal(testProperties, customer)).toHaveLength(2);
   });
 
   it('counts contracted services for a property', () => {
