@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
+  countCustomerBidsToReview,
+  countReadyCustomerReports,
   customerCanAccessProperty,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
   filterPropertiesForCustomerPortal,
   filterPropertiesForOrganization,
+  filterWorkSummariesForCustomerPortal,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
@@ -15,6 +18,7 @@ import {
   type CompanyProfile,
   type CrewProfile,
   type CustomerAccountProfile,
+  type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
   type YardCareJob,
 } from './jobs';
@@ -33,6 +37,13 @@ function makeJob(overrides: Partial<YardCareJob>): YardCareJob {
     ...overrides,
   };
 }
+
+const testCustomer: CustomerAccountProfile = {
+  id: 'customer_test_1',
+  displayName: 'Test Customer',
+  onboardingStatus: 'active',
+  organizationId: 'org_test_1',
+};
 
 const testProperties: CustomerPropertyProfile[] = [
   {
@@ -61,6 +72,39 @@ const testProperties: CustomerPropertyProfile[] = [
     address: '300 Test Lane',
     serviceFrequency: 'biweekly',
     contractedServiceIds: [],
+  },
+];
+
+const testWorkSummaries: CustomerPortalWorkSummary[] = [
+  {
+    id: 'work_test_1',
+    customerId: 'customer_test_1',
+    organizationId: 'org_test_1',
+    propertyId: 'property_test_1',
+    title: 'Weekly yard care',
+    status: 'completed',
+    reportReady: true,
+    bidReviewRequired: false,
+  },
+  {
+    id: 'work_test_2',
+    customerId: 'customer_test_1',
+    organizationId: 'org_test_1',
+    propertyId: 'property_test_2',
+    title: 'Sprinkler repair bid',
+    status: 'bid_review',
+    reportReady: false,
+    bidReviewRequired: true,
+  },
+  {
+    id: 'work_test_3',
+    customerId: 'customer_test_2',
+    organizationId: 'org_test_2',
+    propertyId: 'property_test_3',
+    title: 'Other customer work',
+    status: 'completed',
+    reportReady: true,
+    bidReviewRequired: true,
   },
 ];
 
@@ -133,26 +177,23 @@ describe('customer property helpers', () => {
   });
 
   it('checks customer portal property access', () => {
-    const customer: CustomerAccountProfile = {
-      id: 'customer_test_1',
-      displayName: 'Test Customer',
-      onboardingStatus: 'active',
-      organizationId: 'org_test_1',
-    };
-
-    expect(customerCanAccessProperty(customer, testProperties[0])).toBe(true);
-    expect(customerCanAccessProperty(customer, testProperties[2])).toBe(false);
+    expect(customerCanAccessProperty(testCustomer, testProperties[0])).toBe(true);
+    expect(customerCanAccessProperty(testCustomer, testProperties[2])).toBe(false);
   });
 
   it('filters customer portal properties by customer and organization', () => {
-    const customer: CustomerAccountProfile = {
-      id: 'customer_test_1',
-      displayName: 'Test Customer',
-      onboardingStatus: 'active',
-      organizationId: 'org_test_1',
-    };
+    expect(filterPropertiesForCustomerPortal(testProperties, testCustomer)).toHaveLength(2);
+  });
 
-    expect(filterPropertiesForCustomerPortal(testProperties, customer)).toHaveLength(2);
+  it('filters customer portal work summaries by customer and organization', () => {
+    expect(filterWorkSummariesForCustomerPortal(testWorkSummaries, testCustomer)).toHaveLength(2);
+  });
+
+  it('counts ready reports and bid reviews for scoped work summaries', () => {
+    const visibleWork = filterWorkSummariesForCustomerPortal(testWorkSummaries, testCustomer);
+
+    expect(countReadyCustomerReports(visibleWork)).toBe(1);
+    expect(countCustomerBidsToReview(visibleWork)).toBe(1);
   });
 
   it('counts contracted services for a property', () => {
