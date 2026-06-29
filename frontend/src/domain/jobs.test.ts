@@ -7,6 +7,7 @@ import {
   crewCanServeProperty,
   customerCanAccessProperty,
   customerNeedsOnboardingAttention,
+  filterCrewAssignmentHistoryForProperty,
   filterCrewsForCompany,
   filterPropertiesForCustomerPortal,
   filterPropertiesForOrganization,
@@ -153,12 +154,29 @@ const testCrews: CrewProfile[] = [
 
 const testCrewAssignments: PropertyCrewAssignment[] = [
   {
+    id: 'assignment_test_0',
+    propertyId: 'property_test_1',
+    crewId: 'crew_test_2',
+    organizationId: 'company_test_1',
+    active: false,
+    assignedAt: '2026-05-01',
+    endedAt: '2026-06-01',
+  },
+  {
     id: 'assignment_test_1',
     propertyId: 'property_test_1',
     crewId: 'crew_test_1',
     organizationId: 'company_test_1',
     active: true,
     assignedAt: '2026-06-01',
+  },
+  {
+    id: 'assignment_test_2',
+    propertyId: 'property_test_2',
+    crewId: 'crew_test_2',
+    organizationId: 'company_test_1',
+    active: true,
+    assignedAt: '2026-06-05',
   },
 ];
 
@@ -235,6 +253,12 @@ describe('customer property helpers', () => {
       availableCrewCount: 2,
       canSwitchCrews: true,
     });
+  });
+
+  it('returns property crew assignment history newest first', () => {
+    const history = filterCrewAssignmentHistoryForProperty(testCrewAssignments, 'property_test_1');
+
+    expect(history.map((assignment) => assignment.id)).toEqual(['assignment_test_1', 'assignment_test_0']);
   });
 
   it('does not assign a property to a disabled or unrelated crew', () => {
