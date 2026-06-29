@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CustomerAccountProfile, CustomerPropertyProfile } from './jobs';
 import {
+  buildPropertyPortfolioSummaries,
   filterPortfoliosForCustomer,
   filterPropertiesForPortfolio,
   getPortfolioPropertyCount,
   portfolioCanGroupProperty,
+  portfolioTypeLabel,
   type PortfolioPropertyLink,
   type PropertyPortfolio,
 } from './propertyPortfolios';
@@ -137,5 +139,23 @@ describe('property portfolio helpers', () => {
   it('keeps portfolio grouping separate from crew ownership', () => {
     expect(filterPortfoliosForCustomer(portfolios, propertyManager)[0].portfolioType).toBe('property_management_company');
     expect(filterPropertiesForPortfolio(properties, links, portfolios[1])[0].customerId).toBe(propertyManager.id);
+  });
+
+  it('labels portfolio types for customer portal display', () => {
+    expect(portfolioTypeLabel('individual_owner')).toBe('Individual owner');
+    expect(portfolioTypeLabel('property_management_company')).toBe('Property management company');
+    expect(portfolioTypeLabel('hoa')).toBe('HOA');
+    expect(portfolioTypeLabel('commercial_client')).toBe('Commercial client');
+  });
+
+  it('builds customer-scoped portfolio summaries with property counts', () => {
+    expect(buildPropertyPortfolioSummaries(portfolios, properties, links, individualOwner)).toEqual([
+      {
+        portfolioId: 'portfolio_owner_homes',
+        displayName: 'My Homes',
+        portfolioType: 'individual_owner',
+        propertyCount: 2,
+      },
+    ]);
   });
 });
