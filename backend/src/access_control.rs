@@ -47,6 +47,23 @@ pub fn can_view_customer_portal(role: &AccessRole) -> bool {
     )
 }
 
+pub fn can_manage_property_portfolios(role: &AccessRole) -> bool {
+    matches!(
+        role,
+        AccessRole::OrganizationOwner
+            | AccessRole::Manager
+            | AccessRole::PropertyManager
+            | AccessRole::SupportAdmin
+    )
+}
+
+pub fn can_manage_crew_assignments(role: &AccessRole) -> bool {
+    matches!(
+        role,
+        AccessRole::OrganizationOwner | AccessRole::Manager | AccessRole::SupportAdmin
+    )
+}
+
 pub fn can_access_organization(context: &AccessContext, organization_id: &str) -> bool {
     context.organization_id == organization_id
 }
@@ -67,11 +84,28 @@ pub fn can_view_customer_portal_for_organization(
         && context.roles.iter().any(can_view_customer_portal)
 }
 
+pub fn can_manage_property_portfolios_for_organization(
+    context: &AccessContext,
+    organization_id: &str,
+) -> bool {
+    can_access_organization(context, organization_id)
+        && context.roles.iter().any(can_manage_property_portfolios)
+}
+
+pub fn can_manage_crew_assignments_for_organization(
+    context: &AccessContext,
+    organization_id: &str,
+) -> bool {
+    can_access_organization(context, organization_id)
+        && context.roles.iter().any(can_manage_crew_assignments)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        can_access_organization, can_manage_organization, can_manage_schedule,
-        can_manage_schedule_for_organization, can_view_crew_route,
+        can_access_organization, can_manage_crew_assignments_for_organization,
+        can_manage_organization, can_manage_property_portfolios_for_organization,
+        can_manage_schedule, can_manage_schedule_for_organization, can_view_crew_route,
         can_view_customer_portal, can_view_customer_portal_for_organization, AccessContext,
         AccessRole,
     };
@@ -89,6 +123,14 @@ mod tests {
             user_id: "user_property_owner_1001".to_string(),
             organization_id: "org_demo_landscaping".to_string(),
             roles: vec![AccessRole::PropertyOwner],
+        }
+    }
+
+    fn property_manager_context() -> AccessContext {
+        AccessContext {
+            user_id: "user_property_manager_1001".to_string(),
+            organization_id: "org_demo_landscaping".to_string(),
+            roles: vec![AccessRole::PropertyManager],
         }
     }
 
@@ -139,6 +181,38 @@ mod tests {
         assert!(!can_view_customer_portal_for_organization(
             &context,
             "org_other_landscaping"
+        ));
+    }
+
+    #[test]
+    fn property_manager_can_manage_portfolios_inside_own_organization() {
+        assert!(can_manage_property_portfolios_for_organization(
+            &property_manager_context(),
+            "org_demo_landscaping"
+        ));
+    }
+
+    #[test]
+    fn property_owner_cannot_manage_portfolios() {
+        assert!(!can_manage_property_portfolios_for_organization(
+            &property_owner_context(),
+            "org_demo_landscaping"
+        ));
+    }
+
+    #[test]
+    fn manager_can_manage_crew_assignments_inside_own_organization() {
+        assert!(can_manage_crew_assignments_for_organization(
+            &manager_context(),
+            "org_demo_landscaping"
+        ));
+    }
+
+    #[test]
+    fn property_manager_cannot_manage_crew_assignments() {
+        assert!(!can_manage_crew_assignments_for_organization(
+            &property_manager_context(),
+            "org_demo_landscaping"
         ));
     }
 }
