@@ -214,6 +214,9 @@ Current state:
 - Customer/property ownership is modeled separately from active crew assignment
 - A property can switch active crews without changing its customer or organization ownership
 - A crew must be enabled and belong to the same service organization before it can serve a property
+- PostgreSQL migrations exist for property portfolios, portfolio-property links, and property crew assignment history
+- Portfolio boundary indexes prevent duplicate portfolio names per account and restrict a property to one portfolio group per service organization
+- Backend API contracts are documented for property portfolio management and property crew assignment workflows
 
 Next implementation work:
 
@@ -221,9 +224,21 @@ Next implementation work:
 - Link yards/properties to portfolios so one person or management company can organize many yards
 - Add helper tests for portfolio-scoped property grouping and account-level access boundaries
 - Surface property portfolio grouping in the customer portal preview
-- Persist portfolios and crew-assignment history in PostgreSQL after the frontend domain model settles
+- Wire portfolio and crew-assignment API routes after authentication and access boundaries are planned
 
 ## Planned
+
+### Authentication, authorization, and access controls
+
+- Add authentication before any customer portal, manager portal, or crew production release
+- Use role-based access control for organization owners, managers, crew leads, crew members, property owners, property managers, and support/admin users
+- Enforce tenant-aware access so users only see the service organization, customer accounts, properties, crews, routes, jobs, reports, bids, notifications, and portfolios they are allowed to access
+- Separate customer portal access from crew access: customers access their accounts, portfolios, properties, reports, bids, and invoices; crews access assigned routes, stops, job details, checklists, and photo capture workflows
+- Separate manager access from owner/admin access: managers can schedule, review, approve, and route work; owners/admins can manage organization settings, users, billing configuration, and data boundaries
+- Support invite-based onboarding for customers, managers, crew leads, and crew members
+- Add authorization middleware and route-level policy checks before exposing persisted customer, portfolio, report, bid, invoice, or crew-assignment APIs
+- Add audit events for login, invite acceptance, role changes, account access, portfolio changes, crew assignment changes, bid approvals, and report delivery
+- Plan for managed authentication in the early release, with a migration path to stronger enterprise identity features such as SSO, MFA enforcement, and SCIM-style user lifecycle management later
 
 ### Customer portal
 
@@ -303,11 +318,25 @@ Next implementation work:
 - Customer-to-property relationship management
 - Organization-to-customer relationship management for management companies
 
-### Hosted development environment
+### Early hosting plan
 
-- Deploy frontend to hosted static environment
-- Deploy backend container
-- Provision PostgreSQL database
-- Configure environment variables/secrets
-- Add S3 bucket for photo evidence
-- Validate mobile browser workflow against hosted environment
+- Keep the first hosted environment simple and operationally boring: hosted static frontend, containerized Rust API, managed PostgreSQL, managed object storage for photo evidence, managed secrets, and HTTPS by default
+- Create separate development, staging, and production environment configuration before customer-facing pilots
+- Use managed authentication for the hosted release rather than custom password storage
+- Store photo evidence in object storage with short-lived upload/download URLs instead of routing large files through the API
+- Run database migrations as an explicit release step with rollback notes
+- Add basic observability for API health, failed requests, job/route mutation errors, upload failures, notification failures, and authentication failures
+- Validate the crew mobile browser workflow, manager scheduling workflow, and customer portal workflow against the hosted environment before inviting external users
+
+### Growth hosting and scale plan
+
+- Scale only after adoption exceeds the initial release assumptions; do not overbuild before pilot usage proves the bottlenecks
+- Move from one small API deployment to horizontally scalable API instances behind a load balancer when traffic requires it
+- Add background workers for notifications, report delivery, image processing, route optimization, and long-running integrations
+- Add queues for retryable work such as SMS/email delivery, photo processing, completion report delivery, and third-party sync jobs
+- Add read replicas, connection pooling, and query/index reviews when PostgreSQL load becomes visible
+- Add CDN caching for frontend assets, public marketing pages, and safe static content
+- Add object lifecycle policies for photo evidence retention, archival, and deletion rules
+- Add organization-level usage limits, rate limiting, and abuse monitoring before broad public sign-up
+- Add structured logs, metrics, traces, alerting, backups, restore drills, and incident runbooks before scaling beyond early customers
+- Consider regional deployment, enterprise SSO, SCIM-style user lifecycle management, and stronger data residency controls only after adoption and customer requirements justify them
