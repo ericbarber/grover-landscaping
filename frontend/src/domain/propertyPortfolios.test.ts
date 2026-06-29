@@ -7,6 +7,7 @@ import {
   filterPropertiesForPortfolio,
   getPortfolioPropertyCount,
   portfolioCanGroupProperty,
+  portfolioPropertyCountLabel,
   portfolioTypeLabel,
   type PortfolioPropertyLink,
   type PropertyPortfolio,
@@ -147,6 +148,12 @@ describe('property portfolio helpers', () => {
     expect(portfolioTypeLabel('property_management_company')).toBe('Property management company');
     expect(portfolioTypeLabel('hoa')).toBe('HOA');
     expect(portfolioTypeLabel('commercial_client')).toBe('Commercial client');
+  });
+
+  it('labels portfolio yard counts for customer portal display', () => {
+    expect(portfolioPropertyCountLabel(0)).toBe('0 yards');
+    expect(portfolioPropertyCountLabel(1)).toBe('1 yard');
+    expect(portfolioPropertyCountLabel(2)).toBe('2 yards');
   });
 
   it('builds customer-scoped portfolio summaries with property counts', () => {
