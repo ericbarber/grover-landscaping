@@ -14,12 +14,19 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import {
+  companyNeedsOnboardingAttention,
+  companySupportsMultipleCrews,
   customerNeedsOnboardingAttention,
+  filterCrewsForCompany,
   filterPropertiesForOrganization,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
+  getEnabledCrewCapacityMinutes,
+  getEnabledCrewCount,
   seedJobs,
+  type CompanyProfile,
+  type CrewProfile,
   type CustomerAccountProfile,
   type CustomerPropertyProfile,
   type YardCareJob,
@@ -37,6 +44,40 @@ import {
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
 type NewManagerActivity = Pick<ManagerActivityItem, 'title' | 'message' | 'tone' | 'source'>;
+
+const managementCompanyPreview: CompanyProfile = {
+  id: 'company_demo_property_manager',
+  displayName: 'Demo Property Management Co.',
+  companyType: 'property_manager',
+  onboardingStatus: 'active',
+};
+
+const managementCompanyPreviewCrews: CrewProfile[] = [
+  {
+    id: 'crew_north_route',
+    companyId: 'company_demo_property_manager',
+    displayName: 'North route crew',
+    serviceArea: 'North service area',
+    defaultCapacityMinutes: 420,
+    enabled: true,
+  },
+  {
+    id: 'crew_south_route',
+    companyId: 'company_demo_property_manager',
+    displayName: 'South route crew',
+    serviceArea: 'South service area',
+    defaultCapacityMinutes: 360,
+    enabled: true,
+  },
+  {
+    id: 'crew_onboarding',
+    companyId: 'company_demo_property_manager',
+    displayName: 'New crew onboarding',
+    serviceArea: 'Pending service area',
+    defaultCapacityMinutes: 300,
+    enabled: false,
+  },
+];
 
 const customerPortalPreviewCustomer: CustomerAccountProfile = {
   id: 'customer_1001',
@@ -131,8 +172,85 @@ function JobCard({
   );
 }
 
+function companyTypeLabel(companyType: CompanyProfile['companyType']): string {
+  return companyType.replace('_', ' ');
+}
+
 function frequencyLabel(frequency: CustomerPropertyProfile['serviceFrequency']): string {
   return frequency.replace('_', ' ');
+}
+
+function ManagementCompanyPreviewPanel({
+  company,
+  crews,
+}: {
+  company: CompanyProfile;
+  crews: CrewProfile[];
+}) {
+  const visibleCrews = filterCrewsForCompany(crews, company.id);
+  const enabledCrewCount = getEnabledCrewCount(visibleCrews);
+  const enabledCapacityHours = Math.round((getEnabledCrewCapacityMinutes(visibleCrews) / 60) * 10) / 10;
+  const needsOnboardingAttention = companyNeedsOnboardingAttention(company);
+  const supportsMultipleCrews = companySupportsMultipleCrews(company, visibleCrews);
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-sky-700">Management company preview</p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">{company.displayName}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            Companies with several crews need a fast view of crew readiness, service areas, and total daily capacity.
+          </p>
+        </div>
+        <span
+          className={`w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+            needsOnboardingAttention ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'
+          }`}
+        >
+          {needsOnboardingAttention ? 'Needs onboarding' : companyTypeLabel(company.companyType)}
+        </span>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">{enabledCrewCount}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Enabled crews</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">{enabledCapacityHours}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Capacity hours</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+          <p className="text-2xl font-bold text-slate-950">{supportsMultipleCrews ? 'Yes' : 'No'}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Multi-crew</p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        {visibleCrews.map((crew) => (
+          <article key={crew.id} className="rounded-xl border border-slate-200 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-950">{crew.displayName}</h3>
+                <p className="text-sm text-slate-600">{crew.serviceArea}</p>
+              </div>
+              <span
+                className={`w-fit rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                  crew.enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                }`}
+              >
+                {crew.enabled ? 'Enabled' : 'Onboarding'}
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">
+              <span className="font-semibold text-slate-800">Daily capacity:</span> {crew.defaultCapacityMinutes} minutes
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function CustomerPortalPreviewPanel({
@@ -602,6 +720,12 @@ export function App() {
                   source: 'route',
                 });
               }}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagementCompanyPreviewPanel
+              company={managementCompanyPreview}
+              crews={managementCompanyPreviewCrews}
             />
           </div>
           <div className="mt-6">
