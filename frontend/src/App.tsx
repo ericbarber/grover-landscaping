@@ -16,9 +16,12 @@ import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
+  countCustomerBidsToReview,
+  countReadyCustomerReports,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
   filterPropertiesForCustomerPortal,
+  filterWorkSummariesForCustomerPortal,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
@@ -28,6 +31,7 @@ import {
   type CompanyProfile,
   type CrewProfile,
   type CustomerAccountProfile,
+  type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
   type YardCareJob,
 } from './domain/jobs';
@@ -107,6 +111,39 @@ const customerPortalPreviewProperties: CustomerPropertyProfile[] = [
   },
 ];
 
+const customerPortalPreviewWorkSummaries: CustomerPortalWorkSummary[] = [
+  {
+    id: 'work_1001',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    propertyId: 'property_1001',
+    title: 'Weekly yard care report',
+    status: 'completed',
+    reportReady: true,
+    bidReviewRequired: false,
+  },
+  {
+    id: 'work_1002',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    propertyId: 'property_1002',
+    title: 'Tree limb removal bid',
+    status: 'bid_review',
+    reportReady: false,
+    bidReviewRequired: true,
+  },
+  {
+    id: 'work_1003',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    propertyId: 'property_1001',
+    title: 'Next weekly visit',
+    status: 'scheduled',
+    reportReady: false,
+    bidReviewRequired: false,
+  },
+];
+
 function managerActivityTimestamp() {
   return `Today ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 }
@@ -178,6 +215,10 @@ function companyTypeLabel(companyType: CompanyProfile['companyType']): string {
 
 function frequencyLabel(frequency: CustomerPropertyProfile['serviceFrequency']): string {
   return frequency.replace('_', ' ');
+}
+
+function workStatusLabel(status: CustomerPortalWorkSummary['status']): string {
+  return status.replace('_', ' ');
 }
 
 function ManagementCompanyPreviewPanel({
@@ -256,12 +297,17 @@ function ManagementCompanyPreviewPanel({
 function CustomerPortalPreviewPanel({
   customer,
   properties,
+  workSummaries,
 }: {
   customer: CustomerAccountProfile;
   properties: CustomerPropertyProfile[];
+  workSummaries: CustomerPortalWorkSummary[];
 }) {
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
+  const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const propertyCount = getCustomerPropertyCount(visibleProperties, customer.id);
+  const reportsReadyCount = countReadyCustomerReports(visibleWorkSummaries);
+  const bidsToReviewCount = countCustomerBidsToReview(visibleWorkSummaries);
   const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
 
   return (
@@ -289,40 +335,56 @@ function CustomerPortalPreviewPanel({
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Properties</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-2xl font-bold text-slate-950">2</p>
+          <p className="text-2xl font-bold text-slate-950">{reportsReadyCount}</p>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Reports ready</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-2xl font-bold text-slate-950">1</p>
+          <p className="text-2xl font-bold text-slate-950">{bidsToReviewCount}</p>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Bid to review</p>
         </div>
       </div>
 
       <div className="mt-5 space-y-3">
-        {visibleProperties.map((property) => (
-          <article key={property.id} className="rounded-xl border border-slate-200 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h3 className="font-semibold text-slate-950">{property.displayName}</h3>
-                <p className="text-sm text-slate-600">{property.address}</p>
+        {visibleProperties.map((property) => {
+          const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
+
+          return (
+            <article key={property.id} className="rounded-xl border border-slate-200 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="font-semibold text-slate-950">{property.displayName}</h3>
+                  <p className="text-sm text-slate-600">{property.address}</p>
+                </div>
+                <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  {frequencyLabel(property.serviceFrequency)}
+                </span>
               </div>
-              <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                {frequencyLabel(property.serviceFrequency)}
-              </span>
-            </div>
-            <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
-              <p>
-                <span className="font-semibold text-slate-800">Services:</span> {getContractedServiceCount(property)}
-              </p>
-              <p>
-                <span className="font-semibold text-slate-800">Next:</span> Scheduled visit
-              </p>
-              <p>
-                <span className="font-semibold text-slate-800">Evidence:</span> Photos and checklist
-              </p>
-            </div>
-          </article>
-        ))}
+              <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
+                <p>
+                  <span className="font-semibold text-slate-800">Services:</span> {getContractedServiceCount(property)}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">Work:</span> {propertyWork.length}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">Evidence:</span> Photos and checklist
+                </p>
+              </div>
+              {propertyWork.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {propertyWork.map((workSummary) => (
+                    <div key={workSummary.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                      <span className="font-semibold text-slate-800">{workSummary.title}</span>
+                      <span className="ml-2 text-xs uppercase tracking-wide text-slate-500">
+                        {workStatusLabel(workSummary.status)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
     </section>
   );
@@ -732,6 +794,7 @@ export function App() {
             <CustomerPortalPreviewPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
+              workSummaries={customerPortalPreviewWorkSummaries}
             />
           </div>
           <div className="mt-6">
