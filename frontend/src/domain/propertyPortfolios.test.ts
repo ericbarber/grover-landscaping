@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CustomerAccountProfile, CustomerPropertyProfile } from './jobs';
 import {
+  buildPropertyPortfolioDetails,
   buildPropertyPortfolioSummaries,
   filterPortfoliosForCustomer,
   filterPropertiesForPortfolio,
@@ -155,6 +156,18 @@ describe('property portfolio helpers', () => {
         displayName: 'My Homes',
         portfolioType: 'individual_owner',
         propertyCount: 2,
+      },
+    ]);
+  });
+
+  it('builds customer-scoped portfolio details with yards', () => {
+    expect(buildPropertyPortfolioDetails(portfolios, properties, links, individualOwner)).toEqual([
+      {
+        portfolioId: 'portfolio_owner_homes',
+        displayName: 'My Homes',
+        portfolioType: 'individual_owner',
+        propertyCount: 2,
+        properties: [properties[0], properties[1]],
       },
     ]);
   });
