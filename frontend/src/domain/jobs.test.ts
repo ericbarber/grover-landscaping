@@ -4,23 +4,27 @@ import {
   companySupportsMultipleCrews,
   countCustomerBidsToReview,
   countReadyCustomerReports,
+  crewCanServeProperty,
   customerCanAccessProperty,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
   filterPropertiesForCustomerPortal,
   filterPropertiesForOrganization,
   filterWorkSummariesForCustomerPortal,
+  getActiveCrewAssignmentForProperty,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPortalNextActions,
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
   getEnabledCrewCount,
+  switchPropertyCrewAssignment,
   type CompanyProfile,
   type CrewProfile,
   type CustomerAccountProfile,
   type CustomerPortalWorkSummary,
   type CustomerPropertyProfile,
+  type PropertyCrewAssignment,
   type YardCareJob,
 } from './jobs';
 
@@ -43,14 +47,14 @@ const testCustomer: CustomerAccountProfile = {
   id: 'customer_test_1',
   displayName: 'Test Customer',
   onboardingStatus: 'active',
-  organizationId: 'org_test_1',
+  organizationId: 'company_test_1',
 };
 
 const testProperties: CustomerPropertyProfile[] = [
   {
     id: 'property_test_1',
     customerId: 'customer_test_1',
-    organizationId: 'org_test_1',
+    organizationId: 'company_test_1',
     displayName: 'Primary property',
     address: '100 Test Lane',
     serviceFrequency: 'weekly',
@@ -59,7 +63,7 @@ const testProperties: CustomerPropertyProfile[] = [
   {
     id: 'property_test_2',
     customerId: 'customer_test_1',
-    organizationId: 'org_test_1',
+    organizationId: 'company_test_1',
     displayName: 'Second property',
     address: '200 Test Lane',
     serviceFrequency: 'monthly',
@@ -68,7 +72,7 @@ const testProperties: CustomerPropertyProfile[] = [
   {
     id: 'property_test_3',
     customerId: 'customer_test_2',
-    organizationId: 'org_test_2',
+    organizationId: 'company_test_2',
     displayName: 'Other property',
     address: '300 Test Lane',
     serviceFrequency: 'biweekly',
@@ -80,7 +84,7 @@ const testWorkSummaries: CustomerPortalWorkSummary[] = [
   {
     id: 'work_test_1',
     customerId: 'customer_test_1',
-    organizationId: 'org_test_1',
+    organizationId: 'company_test_1',
     propertyId: 'property_test_1',
     title: 'Weekly yard care',
     status: 'completed',
@@ -90,7 +94,7 @@ const testWorkSummaries: CustomerPortalWorkSummary[] = [
   {
     id: 'work_test_2',
     customerId: 'customer_test_1',
-    organizationId: 'org_test_1',
+    organizationId: 'company_test_1',
     propertyId: 'property_test_2',
     title: 'Sprinkler repair bid',
     status: 'bid_review',
@@ -100,7 +104,7 @@ const testWorkSummaries: CustomerPortalWorkSummary[] = [
   {
     id: 'work_test_3',
     customerId: 'customer_test_2',
-    organizationId: 'org_test_2',
+    organizationId: 'company_test_2',
     propertyId: 'property_test_3',
     title: 'Other customer work',
     status: 'completed',
@@ -110,7 +114,7 @@ const testWorkSummaries: CustomerPortalWorkSummary[] = [
   {
     id: 'work_test_4',
     customerId: 'customer_test_1',
-    organizationId: 'org_test_1',
+    organizationId: 'company_test_1',
     propertyId: 'property_test_1',
     title: 'Upcoming visit',
     status: 'scheduled',
@@ -146,6 +150,17 @@ const testCrews: CrewProfile[] = [
   },
 ];
 
+const testCrewAssignments: PropertyCrewAssignment[] = [
+  {
+    id: 'assignment_test_1',
+    propertyId: 'property_test_1',
+    crewId: 'crew_test_1',
+    organizationId: 'company_test_1',
+    active: true,
+    assignedAt: '2026-06-01',
+  },
+];
+
 describe('getCompletionProgress', () => {
   it('returns a rounded percentage for checklist completion', () => {
     const job = makeJob({ checklistItems: 4, completedChecklistItems: 3 });
@@ -166,13 +181,13 @@ describe('customer property helpers', () => {
       id: 'customer_invited',
       displayName: 'Invited Customer',
       onboardingStatus: 'invited',
-      organizationId: 'org_test_1',
+      organizationId: 'company_test_1',
     };
     const activeCustomer: CustomerAccountProfile = {
       id: 'customer_active',
       displayName: 'Active Customer',
       onboardingStatus: 'active',
-      organizationId: 'org_test_1',
+      organizationId: 'company_test_1',
     };
 
     expect(customerNeedsOnboardingAttention(invitedCustomer)).toBe(true);
@@ -184,7 +199,7 @@ describe('customer property helpers', () => {
   });
 
   it('filters properties to one organization boundary', () => {
-    expect(filterPropertiesForOrganization(testProperties, 'org_test_1')).toHaveLength(2);
+    expect(filterPropertiesForOrganization(testProperties, 'company_test_1')).toHaveLength(2);
   });
 
   it('checks customer portal property access', () => {
@@ -194,6 +209,27 @@ describe('customer property helpers', () => {
 
   it('filters customer portal properties by customer and organization', () => {
     expect(filterPropertiesForCustomerPortal(testProperties, testCustomer)).toHaveLength(2);
+  });
+
+  it('keeps customer and property ownership separate from crew assignment', () => {
+    const switchedAssignments = switchPropertyCrewAssignment(
+      testCrewAssignments,
+      testProperties[0],
+      testCrews[1],
+      '2026-06-15',
+    );
+    const activeAssignment = getActiveCrewAssignmentForProperty(switchedAssignments, 'property_test_1');
+
+    expect(activeAssignment?.crewId).toBe('crew_test_2');
+    expect(testProperties[0].customerId).toBe('customer_test_1');
+    expect(testProperties[0].organizationId).toBe('company_test_1');
+  });
+
+  it('does not assign a property to a disabled or unrelated crew', () => {
+    expect(crewCanServeProperty(testCrews[2], testProperties[0])).toBe(false);
+    expect(switchPropertyCrewAssignment(testCrewAssignments, testProperties[0], testCrews[2], '2026-06-15')).toEqual(
+      testCrewAssignments,
+    );
   });
 
   it('filters customer portal work summaries by customer and organization', () => {
