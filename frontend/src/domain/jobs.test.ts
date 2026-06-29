@@ -12,6 +12,7 @@ import {
   filterWorkSummariesForCustomerPortal,
   getCompletionProgress,
   getContractedServiceCount,
+  getCustomerPortalNextActions,
   getCustomerPropertyCount,
   getEnabledCrewCapacityMinutes,
   getEnabledCrewCount,
@@ -106,6 +107,16 @@ const testWorkSummaries: CustomerPortalWorkSummary[] = [
     reportReady: true,
     bidReviewRequired: true,
   },
+  {
+    id: 'work_test_4',
+    customerId: 'customer_test_1',
+    organizationId: 'org_test_1',
+    propertyId: 'property_test_1',
+    title: 'Upcoming visit',
+    status: 'scheduled',
+    reportReady: false,
+    bidReviewRequired: false,
+  },
 ];
 
 const testCrews: CrewProfile[] = [
@@ -186,7 +197,7 @@ describe('customer property helpers', () => {
   });
 
   it('filters customer portal work summaries by customer and organization', () => {
-    expect(filterWorkSummariesForCustomerPortal(testWorkSummaries, testCustomer)).toHaveLength(2);
+    expect(filterWorkSummariesForCustomerPortal(testWorkSummaries, testCustomer)).toHaveLength(3);
   });
 
   it('counts ready reports and bid reviews for scoped work summaries', () => {
@@ -194,6 +205,16 @@ describe('customer property helpers', () => {
 
     expect(countReadyCustomerReports(visibleWork)).toBe(1);
     expect(countCustomerBidsToReview(visibleWork)).toBe(1);
+  });
+
+  it('prioritizes next customer portal actions', () => {
+    const visibleWork = filterWorkSummariesForCustomerPortal(testWorkSummaries, testCustomer);
+
+    expect(getCustomerPortalNextActions(visibleWork).map((action) => action.actionKind)).toEqual([
+      'review_bid',
+      'view_report',
+      'track_visit',
+    ]);
   });
 
   it('counts contracted services for a property', () => {
