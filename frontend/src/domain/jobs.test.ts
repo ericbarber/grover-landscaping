@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  companyNeedsOnboardingAttention,
+  companySupportsMultipleCrews,
   customerNeedsOnboardingAttention,
+  filterCrewsForCompany,
   filterPropertiesForOrganization,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPropertyCount,
+  getEnabledCrewCapacityMinutes,
+  getEnabledCrewCount,
+  type CompanyProfile,
+  type CrewProfile,
   type CustomerAccountProfile,
   type CustomerPropertyProfile,
   type YardCareJob,
@@ -55,6 +62,33 @@ const testProperties: CustomerPropertyProfile[] = [
   },
 ];
 
+const testCrews: CrewProfile[] = [
+  {
+    id: 'crew_test_1',
+    companyId: 'company_test_1',
+    displayName: 'North crew',
+    serviceArea: 'North valley',
+    defaultCapacityMinutes: 420,
+    enabled: true,
+  },
+  {
+    id: 'crew_test_2',
+    companyId: 'company_test_1',
+    displayName: 'South crew',
+    serviceArea: 'South valley',
+    defaultCapacityMinutes: 360,
+    enabled: true,
+  },
+  {
+    id: 'crew_test_3',
+    companyId: 'company_test_2',
+    displayName: 'Dormant crew',
+    serviceArea: 'East valley',
+    defaultCapacityMinutes: 300,
+    enabled: false,
+  },
+];
+
 describe('getCompletionProgress', () => {
   it('returns a rounded percentage for checklist completion', () => {
     const job = makeJob({ checklistItems: 4, completedChecklistItems: 3 });
@@ -98,5 +132,59 @@ describe('customer property helpers', () => {
 
   it('counts contracted services for a property', () => {
     expect(getContractedServiceCount(testProperties[0])).toBe(2);
+  });
+});
+
+describe('company crew helpers', () => {
+  it('flags invited or incomplete companies for onboarding attention', () => {
+    const incompleteCompany: CompanyProfile = {
+      id: 'company_incomplete',
+      displayName: 'Incomplete Company',
+      companyType: 'landscaping_company',
+      onboardingStatus: 'incomplete',
+    };
+    const activeCompany: CompanyProfile = {
+      id: 'company_active',
+      displayName: 'Active Company',
+      companyType: 'landscaping_company',
+      onboardingStatus: 'active',
+    };
+
+    expect(companyNeedsOnboardingAttention(incompleteCompany)).toBe(true);
+    expect(companyNeedsOnboardingAttention(activeCompany)).toBe(false);
+  });
+
+  it('filters crews to one company boundary', () => {
+    expect(filterCrewsForCompany(testCrews, 'company_test_1')).toHaveLength(2);
+  });
+
+  it('counts enabled crews', () => {
+    expect(getEnabledCrewCount(testCrews)).toBe(2);
+  });
+
+  it('sums enabled crew capacity only', () => {
+    expect(getEnabledCrewCapacityMinutes(testCrews)).toBe(780);
+  });
+
+  it('supports multiple crews for property manager companies', () => {
+    const company: CompanyProfile = {
+      id: 'company_test_2',
+      displayName: 'Property Manager Company',
+      companyType: 'property_manager',
+      onboardingStatus: 'active',
+    };
+
+    expect(companySupportsMultipleCrews(company, [testCrews[2]])).toBe(true);
+  });
+
+  it('supports multiple crews for landscaping companies with multiple enabled crews', () => {
+    const company: CompanyProfile = {
+      id: 'company_test_1',
+      displayName: 'Multi Crew Landscaping',
+      companyType: 'landscaping_company',
+      onboardingStatus: 'active',
+    };
+
+    expect(companySupportsMultipleCrews(company, filterCrewsForCompany(testCrews, company.id))).toBe(true);
   });
 });
