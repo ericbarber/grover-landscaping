@@ -1,5 +1,6 @@
 export type YardCareJobStatus = 'scheduled' | 'in_progress' | 'completed';
 export type CustomerOnboardingStatus = 'invited' | 'active' | 'incomplete' | 'suspended' | 'archived';
+export type CompanyType = 'landscaping_company' | 'property_manager';
 export type PropertyServiceFrequency = 'one_time' | 'weekly' | 'biweekly' | 'monthly' | 'seasonal';
 
 export interface YardCareJob {
@@ -12,6 +13,22 @@ export interface YardCareJob {
   afterPhotos: number;
   checklistItems: number;
   completedChecklistItems: number;
+}
+
+export interface CompanyProfile {
+  id: string;
+  displayName: string;
+  companyType: CompanyType;
+  onboardingStatus: CustomerOnboardingStatus;
+}
+
+export interface CrewProfile {
+  id: string;
+  companyId: string;
+  displayName: string;
+  serviceArea: string;
+  defaultCapacityMinutes: number;
+  enabled: boolean;
 }
 
 export interface CustomerAccountProfile {
@@ -68,6 +85,10 @@ export function customerNeedsOnboardingAttention(customer: CustomerAccountProfil
   return customer.onboardingStatus === 'invited' || customer.onboardingStatus === 'incomplete';
 }
 
+export function companyNeedsOnboardingAttention(company: CompanyProfile): boolean {
+  return company.onboardingStatus === 'invited' || company.onboardingStatus === 'incomplete';
+}
+
 export function getCustomerPropertyCount(
   properties: CustomerPropertyProfile[],
   customerId: string,
@@ -84,4 +105,20 @@ export function filterPropertiesForOrganization(
 
 export function getContractedServiceCount(property: CustomerPropertyProfile): number {
   return property.contractedServiceIds.length;
+}
+
+export function filterCrewsForCompany(crews: CrewProfile[], companyId: string): CrewProfile[] {
+  return crews.filter((crew) => crew.companyId === companyId);
+}
+
+export function getEnabledCrewCount(crews: CrewProfile[]): number {
+  return crews.filter((crew) => crew.enabled).length;
+}
+
+export function getEnabledCrewCapacityMinutes(crews: CrewProfile[]): number {
+  return crews.reduce((total, crew) => total + (crew.enabled ? crew.defaultCapacityMinutes : 0), 0);
+}
+
+export function companySupportsMultipleCrews(company: CompanyProfile, crews: CrewProfile[]): boolean {
+  return company.companyType === 'property_manager' || getEnabledCrewCount(crews) > 1;
 }
