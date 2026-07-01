@@ -13,7 +13,11 @@ The project is built as a Rust + React application with local-first and remote-f
 - Assigned job list and job detail view
 - Start-job and complete-job actions
 - Before / after / issue photo placeholder flow
+- Persisted photo evidence metadata display
 - Completion checklist and completion report panel
+- Backend completion report endpoint with account and photo evidence
+- PostgreSQL-backed completion report state
+- Stable shareable completion report links
 - Customer account status display
 - Manager draft day-plan creation and publishing
 - Manager route stop assignment, removal, and ordering
@@ -32,7 +36,8 @@ The project is built as a Rust + React application with local-first and remote-f
 | Database | PostgreSQL |
 | Local runtime | Docker Compose |
 | Remote validation | GitHub Actions and hosted development services |
-| Cloud direction | AWS, S3, RDS, ECS/App Runner or Fargate, Amplify/CloudFront |
+| Initial hosting | Render Docker web service and managed PostgreSQL |
+| Growth path | AWS Cognito, S3, RDS, and App Runner/ECS when required |
 | CI | GitHub Actions |
 
 ## Repository Layout
@@ -41,7 +46,7 @@ The project is built as a Rust + React application with local-first and remote-f
 .github/workflows/  GitHub Actions workflows
 backend/            Rust API service
 frontend/           React/Tailwind crew application
-infra/              Infrastructure notes and future IaC location
+infra/              Infrastructure notes and AWS growth plan
 docs/               Architecture, data model, and development notes
 scripts/            Local developer utility scripts
 ```
@@ -79,6 +84,8 @@ Start the local stack when Docker is available:
 docker compose up --build
 ```
 
+The app containers run as `HOST_UID:HOST_GID` from `.env` so generated files in the bind-mounted repo stay writable by your host user. The defaults are `1000:1000`; adjust them with `id -u` and `id -g` if your local account uses different IDs.
+
 Apply database migrations after PostgreSQL is healthy:
 
 ```bash
@@ -91,6 +98,7 @@ Local services:
 Frontend: http://localhost:5173
 Backend:  http://localhost:8080
 Health:   http://localhost:8080/health
+Ready:    http://localhost:8080/health/ready
 Database: localhost:5432
 ```
 
@@ -131,8 +139,12 @@ Current backend endpoints include:
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
+| GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
+| GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
+| GET | `/reports/{share_token}` | Read a shared completion report by token |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
+| GET | `/jobs/{id}/photos` | List persisted photo evidence metadata |
 | POST | `/jobs/{id}/photos/presign` | Create a local photo upload ticket |
 | POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete |
 | GET | `/crews/{crew_id}/day-plan/today` | Read the current crew day plan route |
@@ -142,6 +154,16 @@ Current backend endpoints include:
 | PUT | `/day-plans/{day_plan_id}/stops/order` | Replace manager day-plan stop order |
 | DELETE | `/day-plans/{day_plan_id}/stops/{stop_id}` | Remove a stop from a manager day plan |
 | POST | `/day-plans/{day_plan_id}/stops/{stop_id}/status` | Update crew stop progress |
+| GET | `/day-plans/{day_plan_id}/amendments` | List submitted crew amendment requests |
+| POST | `/day-plans/{day_plan_id}/amendments` | Submit a crew add-stop, remove-stop, or add-service request |
+| PUT | `/day-plans/{day_plan_id}/amendments/{amendment_id}/review` | Approve, reject, or send an amendment to bid review |
+| POST | `/day-plans/{day_plan_id}/amendments/{amendment_id}/bid` | Create or update a draft project bid for an amendment |
+| GET | `/day-plans/{day_plan_id}/bids` | List project bids associated with a day plan |
+| POST | `/day-plans/{day_plan_id}/bids/{bid_id}/send` | Issue a review link and queue email/SMS delivery |
+| POST | `/day-plans/{day_plan_id}/bids/{bid_id}/revoke` | Revoke an unanswered customer review link |
+| POST | `/day-plans/{day_plan_id}/bids/{bid_id}/convert` | Convert an approved bid into scheduled job add-ons |
+| GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
+| POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
 The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable.
 
@@ -152,9 +174,14 @@ The project currently includes migrations for:
 - Service jobs
 - Job checklist items
 - Job photos
+- Job completion reports
 - Customer accounts
 - Account status and service tracking foundations
 - Crews, day plans, and day-plan stops
+- Day-plan amendment requests and bid-review metadata
+- Project bids and ordered bid line items
+- Project-bid conversions and scheduled job add-ons
+- Notification outbox records for queued project-bid delivery
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
@@ -169,21 +196,31 @@ The crew dashboard is designed to work on mobile devices. It currently supports:
 - Persisting stop progress in browser storage
 - Viewing account status in the completion report
 - Creating local photo upload tickets
+- Loading persisted photo evidence metadata when the backend is available
 - Preparing a customer-facing completion summary
 - Creating manager draft day plans
 - Assigning, removing, and ordering draft route stops with persisted/local fallback behavior
+- Submitting day-plan amendment requests with persisted/local fallback behavior
+- Reviewing crew amendments and routing priced extra services into bid preparation
+- Building draft project bids with editable line items and customer messaging
+- Sending tokenized bid review links and recording customer approval or rejection
+- Expiring, revoking, and securely reissuing customer review links
+- Converting approved bid line items into crew-visible scheduled add-on work
 
-## Deployment Direction
+## Production Deployment
 
-The application is structured for AWS deployment:
+The first production target is a protected Render pilot:
 
-- Frontend hosted with Amplify, S3/CloudFront, or equivalent static hosting
-- Backend hosted with ECS Fargate, App Runner, or a similar container runtime
-- PostgreSQL hosted with RDS or Aurora PostgreSQL
-- Photo storage with S3 presigned uploads
-- Secrets managed with AWS Secrets Manager or SSM Parameter Store
+- A multi-stage Docker image builds the React frontend and Rust API
+- The Rust service serves both from one TLS origin
+- Managed PostgreSQL is reachable only over Render's private network
+- SQLx migrations run before the service starts accepting traffic
+- Database-backed readiness gates deploys
+- Cognito managed login authenticates individual users with OAuth authorization code and PKCE
+- The Rust API verifies access-token signatures and enforces Cognito role groups
+- Deploys begin only after GitHub checks pass
 
-The repository includes an `amplify.yml` for frontend hosting setup and an `infra/` directory for deployment documentation and future infrastructure code.
+The infrastructure is declared in `render.yaml`. Provisioning, smoke testing, operating notes, current limitations, and the AWS growth path are documented in [docs/production-deployment.md](docs/production-deployment.md).
 
 ## Development Notes
 

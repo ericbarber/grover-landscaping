@@ -5,6 +5,7 @@ import { defaultManagerServiceDate } from '../domain/managerDayPlans';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
 import { ManagerLocalRoutePlanner } from './ManagerLocalRoutePlanner';
+import { ManagerAmendmentReviewPanel } from './ManagerAmendmentReviewPanel';
 
 type ManagerDayPlanPanelProps = {
   jobs: YardCareJob[];
@@ -69,6 +70,8 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
           />
         </div>
       ) : null}
+
+      <ManagerAmendmentReviewPanel crewId={crewId} />
     </section>
   );
 }

@@ -28,6 +28,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+!*.tfvars.example
+
 # IDEs
 .idea
 .vscode

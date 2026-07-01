@@ -1,6 +1,7 @@
 use crate::day_plans::{
-    AssignDayPlanStopRequest, DayPlanMutationResponse, DayPlanStop, DayPlanStopMutationResponse,
-    DayPlanSummary,
+    AmendmentService, AssignDayPlanStopRequest, DayPlanAmendmentResponse,
+    DayPlanAmendmentReviewResponse, DayPlanMutationResponse, DayPlanStop,
+    DayPlanStopMutationResponse, DayPlanSummary,
 };
 use std::collections::HashSet;
 
@@ -202,6 +203,166 @@ pub async fn reorder_stops(
     tx.commit().await?;
 
     Ok(persisted)
+}
+
+pub async fn create_amendment(
+    pool: &PgPool,
+    amendment: &DayPlanAmendmentResponse,
+) -> Result<Option<DayPlanAmendmentResponse>, sqlx::Error> {
+    let service = amendment.service.as_ref();
+    let result = sqlx::query(
+        r#"
+        INSERT INTO day_plan_amendment_requests (
+            id,
+            day_plan_id,
+            requested_by_crew_id,
+            amendment_type,
+            status,
+            stop_id,
+            service_id,
+            service_name,
+            service_description,
+            default_duration_minutes,
+            default_price_cents,
+            requires_manager_approval,
+            requires_bid,
+            note,
+            manager_note
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        ON CONFLICT (id) DO NOTHING
+        "#,
+    )
+    .bind(&amendment.id)
+    .bind(&amendment.day_plan_id)
+    .bind(&amendment.requested_by_crew_id)
+    .bind(&amendment.amendment_type)
+    .bind(&amendment.status)
+    .bind(&amendment.stop_id)
+    .bind(service.map(|item| item.id.as_str()))
+    .bind(service.map(|item| item.name.as_str()))
+    .bind(service.and_then(|item| item.description.as_deref()))
+    .bind(service.and_then(|item| item.default_duration_minutes.map(|value| value as i32)))
+    .bind(service.and_then(|item| item.default_price_cents.map(|value| value as i32)))
+    .bind(
+        service
+            .map(|item| item.requires_manager_approval)
+            .unwrap_or(false),
+    )
+    .bind(amendment.requires_bid)
+    .bind(&amendment.note)
+    .bind(&amendment.manager_note)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() != 1 {
+        return Ok(None);
+    }
+
+    let mut persisted = amendment.clone();
+    persisted.persisted = true;
+    Ok(Some(persisted))
+}
+
+pub async fn list_amendments(
+    pool: &PgPool,
+    day_plan_id: &str,
+) -> Result<Vec<DayPlanAmendmentResponse>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            id,
+            day_plan_id,
+            amendment_type,
+            status,
+            requested_by_crew_id,
+            stop_id,
+            service_id,
+            service_name,
+            service_description,
+            default_duration_minutes,
+            default_price_cents,
+            requires_manager_approval,
+            requires_bid,
+            note,
+            manager_note
+        FROM day_plan_amendment_requests
+        WHERE day_plan_id = $1
+        ORDER BY created_at DESC, id DESC
+        "#,
+    )
+    .bind(day_plan_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let service_id: Option<String> = row.get("service_id");
+            let service = service_id.map(|id| AmendmentService {
+                id,
+                name: row
+                    .get::<Option<String>, _>("service_name")
+                    .unwrap_or_default(),
+                description: row.get("service_description"),
+                default_duration_minutes: row
+                    .get::<Option<i32>, _>("default_duration_minutes")
+                    .map(|value| value as u32),
+                default_price_cents: row
+                    .get::<Option<i32>, _>("default_price_cents")
+                    .map(|value| value as u32),
+                requires_manager_approval: row.get("requires_manager_approval"),
+            });
+
+            DayPlanAmendmentResponse {
+                id: row.get("id"),
+                day_plan_id: row.get("day_plan_id"),
+                amendment_type: row.get("amendment_type"),
+                status: row.get("status"),
+                requested_by_crew_id: row.get("requested_by_crew_id"),
+                stop_id: row.get("stop_id"),
+                service,
+                note: row.get("note"),
+                requires_bid: row.get("requires_bid"),
+                manager_note: row.get("manager_note"),
+                persisted: true,
+            }
+        })
+        .collect())
+}
+
+pub async fn review_amendment(
+    pool: &PgPool,
+    day_plan_id: &str,
+    amendment_id: &str,
+    status: &str,
+    manager_note: Option<&str>,
+) -> Result<Option<DayPlanAmendmentReviewResponse>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"
+        UPDATE day_plan_amendment_requests
+        SET status = $3, manager_note = $4, reviewed_at = now(), updated_at = now()
+        WHERE id = $1
+          AND day_plan_id = $2
+          AND status IN ('submitted', 'bid_review')
+          AND ($3 <> 'bid_review' OR requires_bid)
+        RETURNING id, day_plan_id, status, manager_note
+        "#,
+    )
+    .bind(amendment_id)
+    .bind(day_plan_id)
+    .bind(status)
+    .bind(manager_note)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| DayPlanAmendmentReviewResponse {
+        id: row.get("id"),
+        day_plan_id: row.get("day_plan_id"),
+        status: row.get("status"),
+        manager_note: row.get("manager_note"),
+        persisted: true,
+    }))
 }
 
 pub async fn today_for_crew(

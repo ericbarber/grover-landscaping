@@ -1,8 +1,8 @@
 import type { DayPlan } from '../domain/dayPlans';
 import { localDraftDayPlanResponse } from '../domain/managerDayPlans';
 import type { StopProgressStatus } from '../domain/stopProgress';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+import { API_BASE_URL } from './baseUrl';
+import { authenticatedFetch } from './authenticatedFetch';
 
 export interface ApiDayPlanStop {
   id: string;
@@ -155,7 +155,7 @@ export function toDayPlanStopReorder(response: ApiDayPlanStopReorderResponse): D
 }
 
 export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
-  const response = await fetch(`${API_BASE_URL}/crews/${crewId}/day-plan/today`);
+  const response = await authenticatedFetch(`${API_BASE_URL}/crews/${crewId}/day-plan/today`);
 
   if (!response.ok) {
     throw new Error(`Day plan request failed with status ${response.status}`);
@@ -169,7 +169,7 @@ export async function assignDayPlanStop(
   dayPlanId: string,
   request: AssignDayPlanStopRequest,
 ): Promise<DayPlanStopMutationResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -190,9 +190,12 @@ export async function removeDayPlanStop(
   dayPlanId: string,
   stopId: string,
 ): Promise<DayPlanStopRemovalResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}`, {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}`,
+    {
     method: 'DELETE',
-  });
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`Remove day plan stop request failed with status ${response.status}`);
@@ -205,7 +208,7 @@ export async function reorderDayPlanStops(
   dayPlanId: string,
   stopIds: string[],
 ): Promise<DayPlanStopReorderResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/order`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/order`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ stop_ids: stopIds }),
@@ -219,7 +222,7 @@ export async function reorderDayPlanStops(
 }
 
 export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise<DayPlanMutationResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({

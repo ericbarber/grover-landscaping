@@ -25,6 +25,8 @@ jobs:
           test -d backend
           test -d frontend
           test -d infra
+          test -f Dockerfile
+          test -f render.yaml
 
   backend:
     name: Backend checks
@@ -94,7 +96,7 @@ jobs:
           node-version: 22
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
         working-directory: frontend
 
       - name: Type-check frontend
@@ -108,3 +110,39 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: frontend
+
+  production-image:
+    name: Production image
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build production container
+        run: docker build --tag grover-landscaping:ci .
+
+  terraform:
+    name: Terraform checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra/terraform
+
+      - name: Validate development Cognito infrastructure
+        run: |
+          terraform -chdir=infra/terraform/environments/dev init -backend=false
+          terraform -chdir=infra/terraform/environments/dev validate
+
+      - name: Validate production Cognito infrastructure
+        run: |
+          terraform -chdir=infra/terraform/environments/prod init -backend=false
+          terraform -chdir=infra/terraform/environments/prod validate

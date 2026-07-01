@@ -67,9 +67,10 @@ async fn day_plan_repository_reads_persisted_stop_status() {
 
     day_plans.publish_day_plan(&draft.id).await;
 
-    assert!(jobs
-        .update_stop_progress(&draft.id, &assigned_stop.stop_id, "finished",)
-        .await);
+    assert!(
+        jobs.update_stop_progress(&draft.id, &assigned_stop.stop_id, "finished",)
+            .await
+    );
 
     let day_plan = day_plans.today_for_crew(crew_id).await;
 

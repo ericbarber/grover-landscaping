@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import {
+  createDayPlanAmendment,
+  fetchDayPlanAmendments,
+} from '../api/dayPlanAmendmentsClient';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
 import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
@@ -128,9 +132,29 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
       stopId,
       service,
       note,
+      requiresBid: amendmentType === 'add_service' && Boolean(service?.requiresManagerApproval),
+      persisted: false,
     };
 
     setAmendmentRequests((current) => [request, ...current].slice(0, 5));
+
+    void createDayPlanAmendment(dayPlan.id, {
+      amendmentType,
+      requestedByCrewId: dayPlan.crewId,
+      stopId,
+      service,
+      note,
+    })
+      .then((created) => {
+        setAmendmentRequests((current) =>
+          [created, ...current.filter((item) => item.id !== request.id)].slice(0, 5),
+        );
+      })
+      .catch(() => {
+        setAmendmentRequests((current) =>
+          current.map((item) => (item.id === request.id ? { ...item, persisted: false } : item)),
+        );
+      });
   }
 
   function persistStopState(stopId: string, next: StopStateMap) {
@@ -193,6 +217,22 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
     };
   }, [refreshSignal]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchDayPlanAmendments(dayPlan.id)
+      .then((amendments) => {
+        if (isMounted && amendments.length > 0) {
+          setAmendmentRequests(amendments.slice(0, 5));
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dayPlan.id]);
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -233,7 +273,7 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
       <div className="mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-4">
         <p className="text-sm font-semibold text-emerald-950">Need a route change?</p>
         <p className="mt-1 text-xs text-emerald-800">
-          Submit a browser-local amendment request now; backend persistence and manager approval come next.
+          Submit an amendment for backend persistence and manager review. Browser fallback remains available offline.
         </p>
         <button
           className="mt-3 rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
@@ -266,9 +306,16 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
                     ) : null}
                   </div>
                   <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 font-semibold uppercase tracking-wide text-slate-600">
-                    {amendmentRequiresBid(request) ? 'Bid review' : request.status}
+                    {request.status === 'bid_review'
+                      ? 'Bid review'
+                      : request.status === 'submitted' && (request.requiresBid ?? amendmentRequiresBid(request))
+                        ? 'Bid required'
+                        : request.status}
                   </span>
                 </div>
+                <p className="mt-2 text-[11px] font-medium text-slate-500">
+                  {request.persisted ? 'Synced with manager workflow' : 'Saved locally; sync pending'}
+                </p>
               </article>
             ))}
           </div>

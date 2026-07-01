@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: grover-landscaping
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: AUTH_MODE
+        value: cognito
+      - key: RUST_LOG
+        value: grover_landscaping_api=info,tower_http=info
+      - key: NOTIFICATION_DISPATCH_MODE
+        value: disabled
+      - key: PUBLIC_APP_URL
+        value: https://grover-landscaping.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: grover-landscaping-db
+          property: connectionString
+      - key: COGNITO_ISSUER_URL
+        sync: false
+      - key: COGNITO_CLIENT_ID
+        sync: false
+      - key: COGNITO_LOGIN_DOMAIN
+        sync: false
+
+databases:
+  - name: grover-landscaping-db
+    plan: basic-256mb
+    region: oregon
+    databaseName: grover_landscaping
+    user: grover_landscaping
+    postgresMajorVersion: "16"
+    ipAllowList: []

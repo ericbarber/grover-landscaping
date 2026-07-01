@@ -22,6 +22,11 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Complete-job action
 - Completion checklist display
 - Completion report panel
+- Completion report API endpoint with job, account, readiness, and photo evidence
+- Frontend completion report snapshot client and selected-job wiring
+- Completion report PostgreSQL table and report-state persistence helper
+- Stable share-token generation for persisted completion reports
+- Shared completion report endpoint by share token
 - Browser fallback mode when backend is unavailable
 
 ### Backend API foundation
@@ -35,8 +40,21 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Job completion endpoint
 - Local photo upload-ticket endpoint
 - Photo completion endpoint
+- Job photo metadata endpoint
+- Persisted photo evidence display in the completion report
 - Crew day-plan endpoint returning the current route
 - Stop-progress endpoint contract and route
+
+### Authentication and production runtime foundation
+
+- Cognito authorization-code flow with PKCE in the React application
+- Rust access-token verification against Cognito JWKS
+- Route-level role gates for manager, crew, and public report access
+- Public runtime authentication configuration endpoint
+- Development-only disabled authentication mode for local seed workflows
+- Terraform definitions for development and production Cognito user pools
+- Single-origin production container and Render deployment definition
+- Database-backed readiness checks and production smoke-test script
 
 ### Crew route and stop progress
 
@@ -105,8 +123,46 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Helper for totaling project bid line items
 - Helper for determining whether an approved bid can convert to work
 - Frontend tests for amendment labels, bid requirements, bid totals, and bid conversion
-- Crew-facing browser-local amendment controls for add-stop, remove-stop, and add-service requests
+- Crew-facing amendment controls for add-stop, remove-stop, and add-service requests
 - Crew-facing submitted amendment request summary with bid-review labeling
+- PostgreSQL persistence for submitted day-plan amendment requests
+- Backend create and list amendment endpoints
+- Frontend amendment API client with authenticated requests
+- Persisted amendment reload and local fallback with visible sync state
+- Manager amendment review panel with pending-request counts and refresh control
+- Manager approval and rejection actions for standard route amendments
+- Persisted bid-review routing and manager notes for priced extra-service requests
+- Role policy preventing crew members from calling manager review operations
+- Project-bid and line-item PostgreSQL tables linked to source amendments and customer accounts
+- Idempotent draft-bid save and day-plan bid list endpoints
+- Manager bid editor for adding, removing, pricing, and annotating line items
+- Customer-facing bid message editing with draft persistence state
+- Server-derived customer account ownership for amendment-sourced bids
+- Manager-only project-bid route policy
+- Cryptographically random customer bid share tokens
+- Manager send action that locks draft editing and creates a customer review link
+- Public customer-safe bid review page with proposal totals and line-item detail
+- Two-step customer approve/reject confirmation
+- One-time persisted customer decision with sent and responded timestamps
+- Generic notification outbox with queued delivery metadata and retry-ready fields
+- Email and E.164 SMS destination validation for bid approval delivery
+- Atomic bid-token issuance and notification enqueueing
+- Seven-day customer approval link expiry enforced on reads and decisions
+- Manager link revocation and secure token reissue
+- Revocation atomically marks queued or failed delivery work as skipped
+- Manager delivery status, channel, recipient, and expiry display
+- Background notification dispatcher with PostgreSQL-safe concurrent row claiming
+- Generic HTTPS webhook adapter for email/SMS delivery gateways
+- Exponential retry backoff capped at one hour and five attempts by default
+- Recovery of abandoned in-progress claims
+- Dead-letter state for exhausted notifications
+- Provider HTTP response code and message ID receipts
+- Absolute production customer links in provider payloads
+- Idempotent approved-bid conversion into source-job add-ons
+- Project-bid conversion records linking bids to execution jobs
+- One scheduled job add-on per approved bid line item
+- Transactional bid, amendment, and conversion status updates
+- Crew job add-on API and job-detail display
 
 ### Account and service tracking foundation
 
@@ -180,13 +236,52 @@ Current state:
 - Crew-facing day-plan panel refreshes after a persisted manager publish
 - Crew-facing day-plan reads ignore draft routes until they are published
 - Frontend has domain contracts for crew amendment requests, service catalog items, and project bids
-- Crew-facing day-plan panel has browser-local amendment request controls for add-stop, remove-stop, and add-service requests
+- Crew-facing day-plan panel submits and reloads amendment requests through the backend
+- Backend persists add-stop, remove-stop, and add-service requests with request status, pricing, approval, and bid-review metadata
+- Backend exposes create and list routes for day-plan amendments
+- Frontend retains a local request and displays sync-pending state when persistence is unavailable
+- PostgreSQL integration coverage verifies amendment creation and retrieval
+- Manager review UI loads current-route amendments and distinguishes submitted, bid-review, approved, and rejected states
+- Manager decisions persist through a dedicated review endpoint with optional manager notes
+- Extra-service requests requiring pricing transition to bid review instead of being treated as approved work
+- Manager bid workspace builds persisted draft bids directly from bid-review amendments
+- Draft saves replace line items atomically and reload through the day-plan bid endpoint
+- Bid responses expose draft approval status, customer message, customer account, and computed total
+- Sent bids expose a shareable customer review link without manager-only identifiers
+- Customer decisions transition sent bids to approved or rejected exactly once
+- Bid delivery requests are recorded as queued rather than falsely reported as provider-delivered
+- Expired and revoked customer tokens cannot read or answer a bid
+- Revoked bids can issue a replacement token and enqueue a new delivery
+- Approved bids convert once without duplicating job add-ons
+- Converted add-ons are visible to crews as scheduled source-job work
 
 Next implementation work:
 
-- Add backend persistence for crew amendment requests
-- Add manager review UI for extra-service amendments that require a bid
-- Connect manager activity history to persisted events after the notification outbox exists
+- Configure and validate an email/SMS provider gateway in the production environment
+- Add job add-on lifecycle updates and include completed add-ons in completion reports
+- Include add-on duration in route workload estimates
+- Add an authenticated customer-scoped bid history after tenant boundaries are persisted
+- Connect manager activity history to persisted notification events
+
+### Authentication, authorization, and access controls
+
+Goal: require managed identity and role-aware API access before production release.
+
+Current state:
+
+- React uses Cognito managed login with OAuth authorization code and PKCE
+- The API verifies bearer access-token signature, issuer, audience/client, expiry, and Cognito groups
+- Manager, crew, customer, and public report route policies are covered by focused tests
+- Runtime authentication configuration is served from `GET /auth/config`
+- Local development can explicitly use disabled authentication outside production
+- Development and production Cognito infrastructure is declared in Terraform
+
+Next implementation work:
+
+- Provision the Cognito environment and create the first organization-owner account
+- Persist organization membership and tenant-aware resource boundaries
+- Add invite-based onboarding and role administration
+- Record audit events for login, role, access, and approval changes
 
 ### Photo evidence flow
 
@@ -196,14 +291,40 @@ Current state:
 
 - Frontend can request a local upload ticket
 - Backend returns a local placeholder upload response
+- Backend stores local photo ticket metadata in PostgreSQL when persistence is available
 - Completion report can display photo-ticket evidence
+- Backend can list persisted job photo metadata
+- Frontend loads persisted photo evidence for the selected job and merges it with browser-local evidence
+- Completion report counts photo evidence without double-counting persisted job photo totals
+- Completion report endpoint attaches persisted photo evidence
 
 Next implementation work:
 
 - Add S3 presigned upload support
-- Store photo metadata in PostgreSQL
-- Add photo thumbnail/display flow
-- Attach photo evidence to completion reports
+- Add S3 object display/thumbnail URLs
+
+### Completion reports
+
+Goal: turn the local completion summary into a backend-backed report that can be reviewed, persisted, and eventually sent to customers.
+
+Current state:
+
+- Frontend displays a completion report panel for the selected job
+- Backend exposes `GET /jobs/{id}/report`
+- Report response includes job detail, checklist progress, account status, readiness state, and photo evidence
+- Frontend loads the selected job's report snapshot when the API is available
+- Report helper tests cover draft and ready states
+- PostgreSQL migration exists for `job_completion_reports`
+- Report endpoint materializes current report state when PostgreSQL is available
+- Backend persistence test verifies stored report status, readiness, and checklist progress
+- Persisted reports receive stable share tokens and return share URLs
+- Backend exposes `GET /reports/{share_token}` for shared report reads
+- Frontend renders the shareable report link when one is available
+
+Next implementation work:
+
+- Add report status transitions beyond draft/ready, including sent
+- Add customer delivery by email or SMS later
 
 ### Property ownership, portfolios, and crew assignments
 
@@ -228,18 +349,6 @@ Next implementation work:
 
 ## Planned
 
-### Authentication, authorization, and access controls
-
-- Add authentication before any customer portal, manager portal, or crew production release
-- Use role-based access control for organization owners, managers, crew leads, crew members, property owners, property managers, and support/admin users
-- Enforce tenant-aware access so users only see the service organization, customer accounts, properties, crews, routes, jobs, reports, bids, notifications, and portfolios they are allowed to access
-- Separate customer portal access from crew access: customers access their accounts, portfolios, properties, reports, bids, and invoices; crews access assigned routes, stops, job details, checklists, and photo capture workflows
-- Separate manager access from owner/admin access: managers can schedule, review, approve, and route work; owners/admins can manage organization settings, users, billing configuration, and data boundaries
-- Support invite-based onboarding for customers, managers, crew leads, and crew members
-- Add authorization middleware and route-level policy checks before exposing persisted customer, portfolio, report, bid, invoice, or crew-assignment APIs
-- Add audit events for login, invite acceptance, role changes, account access, portfolio changes, crew assignment changes, bid approvals, and report delivery
-- Plan for managed authentication in the early release, with a migration path to stronger enterprise identity features such as SSO, MFA enforcement, and SCIM-style user lifecycle management later
-
 ### Customer portal
 
 - Add a customer-facing portal for property owners to track work completed on their property
@@ -263,11 +372,10 @@ Next implementation work:
 
 ### Notification strategy
 
-- Add a notification outbox for reliable delivery attempts and retry tracking
-- Support both text/SMS and email channels for customer, crew, and manager notifications
+- Add provider-specific delivery receipt webhooks and manually resolved failure handling
+- Extend email and SMS templates beyond the implemented project-bid review payload
 - Add notification preferences for channel opt-in, quiet hours, and customer contact rules
 - Add templates for day-plan publication, crew route changes, completion reports, bid approvals, and extra-service requests
-- Track notification status: queued, sent, failed, skipped, and manually resolved
 - Connect manager activity history to persisted notification events
 
 ### Crew day-plan amendments
@@ -291,11 +399,9 @@ Next implementation work:
 
 ### Completion reports
 
-- Persist completion reports
-- Add report status: draft, ready, sent
-- Add report endpoint: `GET /jobs/{id}/report`
-- Include crew, checklist, account, and photo evidence
-- Add shareable report link
+- Add report status transitions beyond draft/ready, including sent
+- Include crew route context in report responses
+- Add immutable report snapshots for customer delivery
 - Add customer delivery by email and text/SMS
 - Surface completed reports in the customer portal
 

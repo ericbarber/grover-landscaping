@@ -5,8 +5,8 @@ import type {
   ServiceApprovalStatus,
 } from '../domain/accounts';
 import type { YardCareJob } from '../domain/jobs';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+import { API_BASE_URL } from './baseUrl';
+import { authenticatedFetch } from './authenticatedFetch';
 
 interface ApiJobSummary {
   id: string;
@@ -26,7 +26,7 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-interface ApiJobDetail extends ApiJobSummary {
+export interface ApiJobDetail extends ApiJobSummary {
   checklist: ChecklistItem[];
 }
 
@@ -34,12 +34,34 @@ export interface JobDetail extends YardCareJob {
   checklist: ChecklistItem[];
 }
 
+export interface ApiJobAddOn {
+  id: string;
+  job_id: string;
+  service_name: string;
+  service_description?: string | null;
+  quantity: number;
+  unit_price_cents: number;
+  note?: string | null;
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+}
+
+export interface JobAddOn {
+  id: string;
+  jobId: string;
+  serviceName: string;
+  serviceDescription?: string;
+  quantity: number;
+  unitPriceCents: number;
+  note?: string;
+  status: ApiJobAddOn['status'];
+}
+
 export interface AccountStatus extends CustomerAccountSummary {
   accountId?: string;
   customerName?: string;
 }
 
-interface ApiAccountStatus {
+export interface ApiAccountStatus {
   job_id: string;
   account_id: string;
   customer_name: string;
@@ -55,9 +77,56 @@ export interface PhotoUploadTicket {
   status: string;
   jobId: string;
   photoId: string;
+  photoType: 'before' | 'after' | 'issue' | 'extra';
+  fileName: string;
+  contentType: string;
   uploadMode: string;
   uploadUrl: string;
   objectKey: string;
+}
+
+export interface ApiPhotoEvidence {
+  id: string;
+  job_id: string;
+  photo_type: 'before' | 'after' | 'issue' | 'extra';
+  file_name: string;
+  content_type: string;
+  object_key: string;
+  status: string;
+  upload_mode: string;
+  display_url: string;
+}
+
+export interface ApiCompletionReport {
+  report_id: string;
+  job_id: string;
+  report_status: 'draft' | 'ready' | 'sent';
+  persisted: boolean;
+  ready_for_customer: boolean;
+  checklist_progress: number;
+  before_photos: number;
+  after_photos: number;
+  issue_photos: number;
+  share_url: string | null;
+  job: ApiJobDetail;
+  account: ApiAccountStatus;
+  photo_evidence: ApiPhotoEvidence[];
+}
+
+export interface CompletionReportSnapshot {
+  reportId: string;
+  jobId: string;
+  reportStatus: 'draft' | 'ready' | 'sent';
+  persisted: boolean;
+  readyForCustomer: boolean;
+  checklistProgress: number;
+  beforePhotos: number;
+  afterPhotos: number;
+  issuePhotos: number;
+  shareUrl: string | null;
+  job: JobDetail;
+  account: AccountStatus;
+  photoEvidence: PhotoUploadTicket[];
 }
 
 function toJob(apiJob: ApiJobSummary): YardCareJob {
@@ -81,6 +150,19 @@ function toJobDetail(apiJob: ApiJobDetail): JobDetail {
   };
 }
 
+export function toJobAddOn(addOn: ApiJobAddOn): JobAddOn {
+  return {
+    id: addOn.id,
+    jobId: addOn.job_id,
+    serviceName: addOn.service_name,
+    serviceDescription: addOn.service_description ?? undefined,
+    quantity: addOn.quantity,
+    unitPriceCents: addOn.unit_price_cents,
+    note: addOn.note ?? undefined,
+    status: addOn.status,
+  };
+}
+
 function toAccountStatus(apiAccount: ApiAccountStatus): AccountStatus {
   return {
     jobId: apiAccount.job_id,
@@ -95,8 +177,49 @@ function toAccountStatus(apiAccount: ApiAccountStatus): AccountStatus {
   };
 }
 
+function toPhotoEvidence(photo: ApiPhotoEvidence): PhotoUploadTicket {
+  return {
+    status: photo.status,
+    jobId: photo.job_id,
+    photoId: photo.id,
+    photoType: photo.photo_type,
+    fileName: photo.file_name,
+    contentType: photo.content_type,
+    uploadMode: photo.upload_mode,
+    uploadUrl: photo.display_url,
+    objectKey: photo.object_key,
+  };
+}
+
+function toApiUrl(pathOrUrl: string): string {
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return pathOrUrl;
+  }
+
+  const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+  return `${API_BASE_URL}${path}`;
+}
+
+export function toCompletionReport(apiReport: ApiCompletionReport): CompletionReportSnapshot {
+  return {
+    reportId: apiReport.report_id,
+    jobId: apiReport.job_id,
+    reportStatus: apiReport.report_status,
+    persisted: apiReport.persisted,
+    readyForCustomer: apiReport.ready_for_customer,
+    checklistProgress: apiReport.checklist_progress,
+    beforePhotos: apiReport.before_photos,
+    afterPhotos: apiReport.after_photos,
+    issuePhotos: apiReport.issue_photos,
+    shareUrl: apiReport.share_url ? toApiUrl(apiReport.share_url) : null,
+    job: toJobDetail(apiReport.job),
+    account: toAccountStatus(apiReport.account),
+    photoEvidence: apiReport.photo_evidence.map(toPhotoEvidence),
+  };
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
       'content-type': 'application/json',
@@ -116,6 +239,11 @@ export async function fetchJobs(): Promise<YardCareJob[]> {
   return jobs.map(toJob);
 }
 
+export async function fetchJobAddOns(jobId: string): Promise<JobAddOn[]> {
+  const addOns = await request<ApiJobAddOn[]>(`/jobs/${jobId}/add-ons`);
+  return addOns.map(toJobAddOn);
+}
+
 export async function fetchJobDetail(jobId: string): Promise<JobDetail> {
   const job = await request<ApiJobDetail>(`/jobs/${jobId}`);
   return toJobDetail(job);
@@ -124,6 +252,11 @@ export async function fetchJobDetail(jobId: string): Promise<JobDetail> {
 export async function fetchAccountStatus(jobId: string): Promise<AccountStatus> {
   const account = await request<ApiAccountStatus>(`/jobs/${jobId}/account`);
   return toAccountStatus(account);
+}
+
+export async function fetchCompletionReport(jobId: string): Promise<CompletionReportSnapshot> {
+  const report = await request<ApiCompletionReport>(`/jobs/${jobId}/report`);
+  return toCompletionReport(report);
 }
 
 export async function startJob(jobId: string): Promise<void> {
@@ -143,6 +276,9 @@ export async function createPhotoUploadTicket(
     status: string;
     job_id: string;
     photo_id: string;
+    photo_type?: 'before' | 'after' | 'issue' | 'extra';
+    file_name?: string;
+    content_type?: string;
     upload_mode: string;
     upload_url: string;
     object_key: string;
@@ -159,10 +295,19 @@ export async function createPhotoUploadTicket(
     status: ticket.status,
     jobId: ticket.job_id,
     photoId: ticket.photo_id,
+    photoType: ticket.photo_type ?? photoType,
+    fileName: ticket.file_name ?? file.name,
+    contentType: ticket.content_type ?? (file.type || 'application/octet-stream'),
     uploadMode: ticket.upload_mode,
     uploadUrl: ticket.upload_url,
     objectKey: ticket.object_key,
   };
+}
+
+export async function fetchJobPhotoEvidence(jobId: string): Promise<PhotoUploadTicket[]> {
+  const photos = await request<ApiPhotoEvidence[]>(`/jobs/${jobId}/photos`);
+
+  return photos.map(toPhotoEvidence);
 }
 
 export async function completePhotoUpload(jobId: string, photoId: string): Promise<void> {

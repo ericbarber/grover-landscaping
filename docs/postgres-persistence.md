@@ -18,6 +18,7 @@ The migration creates the first operational tables:
 service_jobs
 job_checklist_items
 job_photos
+job_completion_reports
 ```
 
 It also seeds the two sample jobs currently used by the API and frontend.

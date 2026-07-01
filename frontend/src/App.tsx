@@ -3,10 +3,14 @@ import {
   completeJob,
   completePhotoUpload,
   createPhotoUploadTicket,
+  fetchCompletionReport,
   fetchJobDetail,
+  fetchJobAddOns,
   fetchJobs,
   startJob,
+  type CompletionReportSnapshot,
   type JobDetail,
+  type JobAddOn,
   type PhotoUploadTicket,
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
@@ -394,6 +398,8 @@ function JobDetailPanel({
   job,
   isLoading,
   uploadTickets,
+  reportSnapshot,
+  addOns,
   onStart,
   onComplete,
   onPhotoSelected,
@@ -401,6 +407,8 @@ function JobDetailPanel({
   job: JobDetail | null;
   isLoading: boolean;
   uploadTickets: PhotoUploadTicket[];
+  reportSnapshot: CompletionReportSnapshot | null;
+  addOns: JobAddOn[];
   onStart: () => Promise<void>;
   onComplete: () => Promise<void>;
   onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
@@ -449,6 +457,27 @@ function JobDetailPanel({
             ))}
           </div>
         </div>
+
+        {addOns.length > 0 ? (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-700">Approved add-on work</h3>
+            <div className="mt-3 space-y-2">
+              {addOns.map((addOn) => (
+                <article key={addOn.id} className="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-sky-950">{addOn.serviceName}</p>
+                      {addOn.serviceDescription ? <p className="mt-1 text-xs text-sky-800">{addOn.serviceDescription}</p> : null}
+                      {addOn.note ? <p className="mt-1 text-xs text-sky-700">{addOn.note}</p> : null}
+                    </div>
+                    <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold uppercase text-sky-800">{addOn.status}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-sky-800">Quantity {addOn.quantity}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
@@ -504,8 +533,16 @@ function JobDetailPanel({
             <div className="mt-4 space-y-2">
               {uploadTickets.map((ticket) => (
                 <div key={ticket.photoId} className="rounded-xl bg-white p-3 text-xs text-slate-600 shadow-sm">
-                  <p className="font-semibold text-slate-800">{ticket.photoId}</p>
-                  <p>{ticket.uploadMode}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-800">{ticket.fileName}</p>
+                      <p className="capitalize">{ticket.photoType} photo</p>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold uppercase text-slate-500">
+                      {ticket.status}
+                    </span>
+                  </div>
+                  <p className="mt-2">{ticket.uploadMode}</p>
                   <p className="break-all">{ticket.objectKey}</p>
                 </div>
               ))}
@@ -514,7 +551,7 @@ function JobDetailPanel({
         </div>
       </aside>
 
-      <CompletionReport job={job} uploadTickets={uploadTickets} />
+      <CompletionReport job={job} uploadTickets={uploadTickets} reportSnapshot={reportSnapshot} />
     </div>
   );
 }
@@ -536,20 +573,39 @@ function localPhotoTicket(jobId: string, file: File, photoType: PhotoType): Phot
     status: 'created',
     jobId,
     photoId: `local_${jobId}_${photoType}_${Date.now()}`,
+    photoType,
+    fileName: file.name,
+    contentType: file.type || 'application/octet-stream',
     uploadMode: 'browser-local-placeholder',
     uploadUrl: `local://${file.name}`,
     objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
   };
 }
 
+function mergePhotoEvidence(
+  current: PhotoUploadTicket[],
+  jobId: string,
+  persistedEvidence: PhotoUploadTicket[],
+): PhotoUploadTicket[] {
+  const persistedIds = new Set(persistedEvidence.map((photo) => photo.photoId));
+  const currentJobLocalEvidence = current.filter(
+    (photo) => photo.jobId === jobId && !persistedIds.has(photo.photoId),
+  );
+  const otherJobEvidence = current.filter((photo) => photo.jobId !== jobId);
+
+  return [...persistedEvidence, ...currentJobLocalEvidence, ...otherJobEvidence];
+}
+
 export function App() {
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
+  const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
+  const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
@@ -622,6 +678,7 @@ export function App() {
   useEffect(() => {
     if (!selectedJobId) {
       setSelectedJob(null);
+      setSelectedCompletionReport(null);
       return;
     }
 
@@ -650,6 +707,58 @@ export function App() {
       isMounted = false;
     };
   }, [jobs, selectedJobId]);
+
+  useEffect(() => {
+    if (!selectedJobId) {
+      setSelectedJobAddOns([]);
+      return;
+    }
+
+    let isMounted = true;
+    fetchJobAddOns(selectedJobId)
+      .then((addOns) => {
+        if (isMounted) setSelectedJobAddOns(addOns);
+      })
+      .catch(() => {
+        if (isMounted) setSelectedJobAddOns([]);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedJobId]);
+
+  useEffect(() => {
+    if (!selectedJobId) {
+      setSelectedCompletionReport(null);
+      return;
+    }
+
+    let isMounted = true;
+    setSelectedCompletionReport(null);
+
+    fetchCompletionReport(selectedJobId)
+      .then((report) => {
+        if (isMounted) {
+          setSelectedCompletionReport(report);
+          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, report.photoEvidence));
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          recordManagerActivity({
+            title: 'Completion report fallback active',
+            message: `${selectedJobId} completion report is using browser-local evidence until the API is reachable.`,
+            tone: 'warning',
+            source: 'photo',
+          });
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedJobId]);
 
   async function handleStartJob() {
     if (!selectedJobId) {
@@ -709,6 +818,7 @@ export function App() {
     try {
       ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
       await completePhotoUpload(selectedJobId, ticket.photoId);
+      ticket = { ...ticket, status: 'uploaded' };
       setStatusMessage(`Prepared ${photoType} photo placeholder for ${file.name}.`);
       recordManagerActivity({
         title: 'Photo evidence prepared',
@@ -827,7 +937,9 @@ export function App() {
         <JobDetailPanel
           job={selectedJob}
           isLoading={isLoadingDetail}
+          addOns={selectedJobAddOns}
           uploadTickets={selectedJobTickets}
+          reportSnapshot={selectedCompletionReport?.jobId === selectedJobId ? selectedCompletionReport : null}
           onStart={handleStartJob}
           onComplete={handleCompleteJob}
           onPhotoSelected={handlePhotoSelected}

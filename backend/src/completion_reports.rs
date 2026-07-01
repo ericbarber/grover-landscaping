@@ -1,0 +1,190 @@
+use crate::{accounts::CustomerAccountSummary, JobDetail, PhotoEvidence};
+use serde::Serialize;
+
+#[derive(Clone, Debug, Default)]
+pub struct CompletionReportPersistence {
+    pub persisted: bool,
+    pub share_token: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct CompletionReportResponse {
+    pub report_id: String,
+    pub job_id: String,
+    pub report_status: String,
+    pub persisted: bool,
+    pub ready_for_customer: bool,
+    pub checklist_progress: u32,
+    pub before_photos: u32,
+    pub after_photos: u32,
+    pub issue_photos: u32,
+    pub share_url: Option<String>,
+    pub job: JobDetail,
+    pub account: CustomerAccountSummary,
+    pub photo_evidence: Vec<PhotoEvidence>,
+}
+
+pub fn build_completion_report(
+    job: JobDetail,
+    account: CustomerAccountSummary,
+    photo_evidence: Vec<PhotoEvidence>,
+) -> CompletionReportResponse {
+    let checklist_progress = completion_progress(&job);
+    let before_photo_evidence = count_photo_type(&photo_evidence, "before");
+    let after_photo_evidence = count_photo_type(&photo_evidence, "after");
+    let issue_photos = count_photo_type(&photo_evidence, "issue");
+    let before_photos = job.before_photos.max(before_photo_evidence);
+    let after_photos = job.after_photos.max(after_photo_evidence);
+    let ready_for_customer = checklist_progress == 100 && before_photos > 0 && after_photos > 0;
+
+    CompletionReportResponse {
+        report_id: completion_report_id(&job.id),
+        job_id: job.id.clone(),
+        report_status: if ready_for_customer { "ready" } else { "draft" }.to_string(),
+        persisted: false,
+        ready_for_customer,
+        checklist_progress,
+        before_photos,
+        after_photos,
+        issue_photos,
+        share_url: None,
+        job,
+        account,
+        photo_evidence,
+    }
+}
+
+pub fn completion_report_id(job_id: &str) -> String {
+    format!("report_{job_id}")
+}
+
+pub fn shared_report_url(share_token: &str) -> String {
+    format!("/reports/{share_token}")
+}
+
+pub fn apply_completion_report_persistence(
+    report: &mut CompletionReportResponse,
+    persistence: CompletionReportPersistence,
+) {
+    report.persisted = persistence.persisted;
+    report.share_url = persistence.share_token.as_deref().map(shared_report_url);
+}
+
+fn completion_progress(job: &JobDetail) -> u32 {
+    if job.checklist_items == 0 {
+        return 0;
+    }
+
+    ((job.completed_checklist_items as f64 / job.checklist_items as f64) * 100.0).round() as u32
+}
+
+fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
+    photo_evidence
+        .iter()
+        .filter(|photo| photo.photo_type == photo_type)
+        .count() as u32
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        apply_completion_report_persistence, build_completion_report, CompletionReportPersistence,
+    };
+    use crate::{accounts::CustomerAccountSummary, ChecklistItem, JobDetail, PhotoEvidence};
+
+    fn job(completed_checklist_items: u32, before_photos: u32, after_photos: u32) -> JobDetail {
+        JobDetail {
+            id: "job_1001".to_string(),
+            customer_name: "Sample Customer".to_string(),
+            property_address: "123 Oak Street".to_string(),
+            status: "completed".to_string(),
+            scheduled_date: "2026-06-15".to_string(),
+            before_photos,
+            after_photos,
+            checklist_items: 4,
+            completed_checklist_items,
+            checklist: vec![ChecklistItem {
+                id: "completion-notes".to_string(),
+                label: "Submit completion notes".to_string(),
+                completed: completed_checklist_items == 4,
+            }],
+        }
+    }
+
+    fn account() -> CustomerAccountSummary {
+        CustomerAccountSummary {
+            job_id: "job_1001".to_string(),
+            account_id: "acct_1001".to_string(),
+            customer_name: "Sample Customer".to_string(),
+            billing_model: "per_job".to_string(),
+            payment_status: "paid".to_string(),
+            service_approval_status: "approved".to_string(),
+            contracted_services_per_period: 1,
+            completed_services_this_period: 1,
+            billing_notes: "Ready for customer delivery.".to_string(),
+        }
+    }
+
+    fn photo(id: &str, photo_type: &str) -> PhotoEvidence {
+        PhotoEvidence {
+            id: id.to_string(),
+            job_id: "job_1001".to_string(),
+            photo_type: photo_type.to_string(),
+            file_name: format!("{photo_type}.jpg"),
+            content_type: "image/jpeg".to_string(),
+            object_key: format!("local/jobs/job_1001/{photo_type}/{id}.jpg"),
+            status: "uploaded".to_string(),
+            upload_mode: "local-placeholder",
+            display_url: format!("local://local/jobs/job_1001/{photo_type}/{id}.jpg"),
+        }
+    }
+
+    #[test]
+    fn report_is_draft_until_checklist_and_required_photos_are_complete() {
+        let report =
+            build_completion_report(job(3, 1, 1), account(), vec![photo("issue_1", "issue")]);
+
+        assert_eq!(report.report_status, "draft");
+        assert_eq!(report.report_id, "report_job_1001");
+        assert!(!report.persisted);
+        assert!(!report.ready_for_customer);
+        assert_eq!(report.checklist_progress, 75);
+        assert_eq!(report.issue_photos, 1);
+    }
+
+    #[test]
+    fn report_is_ready_when_checklist_and_required_photos_are_present() {
+        let report = build_completion_report(
+            job(4, 0, 0),
+            account(),
+            vec![photo("before_1", "before"), photo("after_1", "after")],
+        );
+
+        assert_eq!(report.report_status, "ready");
+        assert_eq!(report.report_id, "report_job_1001");
+        assert!(!report.persisted);
+        assert!(report.ready_for_customer);
+        assert_eq!(report.checklist_progress, 100);
+        assert_eq!(report.before_photos, 1);
+        assert_eq!(report.after_photos, 1);
+    }
+
+    #[test]
+    fn persistence_result_sets_report_share_url() {
+        let mut report = build_completion_report(job(4, 1, 1), account(), Vec::new());
+
+        apply_completion_report_persistence(
+            &mut report,
+            CompletionReportPersistence {
+                persisted: true,
+                share_token: Some("share_report_job_1001".to_string()),
+            },
+        );
+
+        assert!(report.persisted);
+        assert_eq!(
+            report.share_url,
+            Some("/reports/share_report_job_1001".to_string())
+        );
+    }
+}

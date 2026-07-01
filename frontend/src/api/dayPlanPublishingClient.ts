@@ -1,7 +1,7 @@
 import type { DayPlanMutationResponse } from './dayPlansClient';
 import { localPublishedDayPlanResponse } from '../domain/managerDayPlans';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+import { API_BASE_URL } from './baseUrl';
+import { authenticatedFetch } from './authenticatedFetch';
 
 interface ApiDayPlanMutationResponse {
   id: string;
@@ -24,7 +24,9 @@ function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutatio
 }
 
 export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutationResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/publish`, { method: 'POST' });
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/publish`, {
+    method: 'POST',
+  });
 
   if (!response.ok) {
     throw new Error(`Publish day plan request failed with status ${response.status}`);

@@ -1,7 +1,7 @@
 export type StopProgressStatus = 'pending' | 'in_progress' | 'finished';
 export type RouteProgressSyncStatus = 'local' | 'syncing' | 'synced';
 export type DayPlanAmendmentType = 'add_stop' | 'remove_stop' | 'add_service';
-export type DayPlanAmendmentStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+export type DayPlanAmendmentStatus = 'draft' | 'submitted' | 'bid_review' | 'approved' | 'rejected';
 export type ProjectBidStatus = 'draft' | 'sent' | 'approved' | 'rejected' | 'expired' | 'converted';
 
 export type StopStateMap = Record<string, StopProgressStatus>;
@@ -29,6 +29,9 @@ export type DayPlanAmendmentRequest = {
   stopId?: string;
   service?: ServiceCatalogItem;
   note?: string;
+  requiresBid?: boolean;
+  managerNote?: string;
+  persisted?: boolean;
 };
 
 export type ProjectBidLineItem = {
@@ -42,10 +45,33 @@ export type ProjectBidLineItem = {
 export type ProjectBid = {
   id: string;
   customerId: string;
+  dayPlanId?: string;
   sourceAmendmentId?: string;
   status: ProjectBidStatus;
   lineItems: ProjectBidLineItem[];
   customerMessage?: string;
+  shareUrl?: string;
+  sentAt?: string;
+  respondedAt?: string;
+  shareExpiresAt?: string;
+  shareRevokedAt?: string;
+  deliveryStatus?: string;
+  deliveryChannel?: 'email' | 'sms';
+  deliveryRecipient?: string;
+  convertedJobId?: string;
+  convertedAt?: string;
+  persisted?: boolean;
+};
+
+export type CustomerProjectBid = {
+  id: string;
+  status: Extract<ProjectBidStatus, 'sent' | 'approved' | 'rejected' | 'converted'>;
+  lineItems: ProjectBidLineItem[];
+  customerMessage?: string;
+  totalCents: number;
+  sentAt?: string;
+  respondedAt?: string;
+  expiresAt?: string;
 };
 
 export function getNextStopStatus(currentStatus: StopProgressStatus | undefined): StopProgressStatus {

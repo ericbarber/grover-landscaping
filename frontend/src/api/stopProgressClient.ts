@@ -1,6 +1,6 @@
 import type { StopProgressStatus } from '../domain/stopProgress';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+import { API_BASE_URL } from './baseUrl';
+import { authenticatedFetch } from './authenticatedFetch';
 
 export interface StopProgressResponse {
   dayPlanId: string;
@@ -30,13 +30,16 @@ export async function updateStopProgress(
   stopId: string,
   status: StopProgressStatus,
 ): Promise<StopProgressResponse> {
-  const response = await fetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}/status`, {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}/status`,
+    {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
     body: JSON.stringify({ status }),
-  });
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`Stop progress request failed with status ${response.status}`);

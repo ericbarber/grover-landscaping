@@ -1,3 +1,5 @@
+#[path = "postgres_completion_reports.rs"]
+mod postgres_completion_reports;
 #[path = "postgres_read.rs"]
 mod postgres_read;
 #[path = "postgres_stop_progress.rs"]
@@ -5,8 +7,13 @@ mod postgres_stop_progress;
 #[path = "postgres_write.rs"]
 mod postgres_write;
 
-use crate::{ChecklistItem, JobDetail, JobSummary, PhotoUploadRequest, PhotoUploadResponse};
+use crate::{
+    completion_reports::{CompletionReportPersistence, CompletionReportResponse},
+    ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
+    PhotoUploadResponse,
+};
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug)]
 pub struct DatabaseConfig {
@@ -27,6 +34,7 @@ pub struct JobRepository {
 }
 
 impl JobRepository {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let pool = DatabaseConfig::from_env().and_then(|config| {
             PgPoolOptions::new()
@@ -38,6 +46,7 @@ impl JobRepository {
         Self { pool }
     }
 
+    #[allow(dead_code)]
     pub async fn connect(
         config: &DatabaseConfig,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
@@ -49,6 +58,21 @@ impl JobRepository {
         sqlx::migrate!("./migrations").run(&pool).await?;
 
         Ok(Self { pool: Some(pool) })
+    }
+
+    pub fn pool(&self) -> Option<PgPool> {
+        self.pool.clone()
+    }
+
+    pub async fn is_database_healthy(&self) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+
+        sqlx::query_scalar::<_, i32>("SELECT 1")
+            .fetch_one(pool)
+            .await
+            .is_ok()
     }
 
     pub async fn list_jobs(&self) -> Vec<JobSummary> {
@@ -69,6 +93,16 @@ impl JobRepository {
         }
 
         seed_job_detail(id)
+    }
+
+    pub async fn list_job_add_ons(&self, job_id: &str) -> Vec<JobAddOn> {
+        if let Some(pool) = &self.pool {
+            if let Ok(add_ons) = postgres_read::list_job_add_ons(pool, job_id).await {
+                return add_ons;
+            }
+        }
+
+        Vec::new()
     }
 
     pub async fn start_job(&self, id: &str) -> String {
@@ -105,15 +139,56 @@ impl JobRepository {
         false
     }
 
+    pub async fn list_photo_evidence(&self, job_id: &str) -> Vec<PhotoEvidence> {
+        if let Some(pool) = &self.pool {
+            if let Ok(photos) = postgres_read::list_job_photos(pool, job_id).await {
+                return photos;
+            }
+        }
+
+        Vec::new()
+    }
+
+    pub async fn persist_completion_report(
+        &self,
+        report: &CompletionReportResponse,
+    ) -> CompletionReportPersistence {
+        if let Some(pool) = &self.pool {
+            if let Ok(persistence) =
+                postgres_completion_reports::persist_completion_report(pool, report).await
+            {
+                return persistence;
+            }
+        }
+
+        CompletionReportPersistence::default()
+    }
+
+    pub async fn job_id_for_report_share_token(&self, share_token: &str) -> Option<String> {
+        if let Some(pool) = &self.pool {
+            if let Ok(job_id) =
+                postgres_completion_reports::job_id_for_share_token(pool, share_token).await
+            {
+                return job_id;
+            }
+        }
+
+        None
+    }
+
     pub async fn create_photo_upload(
         &self,
         job_id: String,
         request: PhotoUploadRequest,
     ) -> PhotoUploadResponse {
         let safe_file_name = request.file_name.replace('/', "-");
-        let photo_id = format!("photo_{}_{}", job_id, request.photo_type);
+        let upload_nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or(0);
+        let photo_id = format!("photo_{}_{}_{}", job_id, request.photo_type, upload_nonce);
         let object_key = format!(
-            "local/jobs/{job_id}/{photo_type}/{safe_file_name}",
+            "local/jobs/{job_id}/{photo_type}/{upload_nonce}_{safe_file_name}",
             photo_type = request.photo_type
         );
 
@@ -140,6 +215,7 @@ impl JobRepository {
         format!("Photo {photo_id} for job {job_id} has been marked uploaded.")
     }
 
+    #[allow(dead_code)]
     pub fn is_database_ready(&self) -> bool {
         self.pool.is_some()
     }

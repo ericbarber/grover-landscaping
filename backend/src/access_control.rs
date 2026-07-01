@@ -11,6 +11,21 @@ pub enum AccessRole {
     SupportAdmin,
 }
 
+impl AccessRole {
+    pub fn from_cognito_group(group: &str) -> Option<Self> {
+        match group {
+            "OrganizationOwner" => Some(Self::OrganizationOwner),
+            "Manager" => Some(Self::Manager),
+            "CrewLead" => Some(Self::CrewLead),
+            "CrewMember" => Some(Self::CrewMember),
+            "PropertyOwner" => Some(Self::PropertyOwner),
+            "PropertyManager" => Some(Self::PropertyManager),
+            "SupportAdmin" => Some(Self::SupportAdmin),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AccessContext {
     pub user_id: String,
@@ -19,7 +34,10 @@ pub struct AccessContext {
 }
 
 pub fn can_manage_organization(role: &AccessRole) -> bool {
-    matches!(role, AccessRole::OrganizationOwner | AccessRole::SupportAdmin)
+    matches!(
+        role,
+        AccessRole::OrganizationOwner | AccessRole::SupportAdmin
+    )
 }
 
 pub fn can_manage_schedule(role: &AccessRole) -> bool {
@@ -138,6 +156,15 @@ mod tests {
     fn organization_owner_can_manage_organization_and_schedule() {
         assert!(can_manage_organization(&AccessRole::OrganizationOwner));
         assert!(can_manage_schedule(&AccessRole::OrganizationOwner));
+    }
+
+    #[test]
+    fn cognito_groups_map_only_known_application_roles() {
+        assert_eq!(
+            AccessRole::from_cognito_group("CrewLead"),
+            Some(AccessRole::CrewLead)
+        );
+        assert_eq!(AccessRole::from_cognito_group("UnknownRole"), None);
     }
 
     #[test]

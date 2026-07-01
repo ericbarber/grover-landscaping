@@ -86,12 +86,17 @@ pub fn local_photo_response(
     photo_id: String,
     object_key: String,
 ) -> PhotoUploadResponse {
+    let upload_url = format!("local://{object_key}?content_type={}", request.content_type);
+
     PhotoUploadResponse {
         status: "created",
         job_id,
         photo_id,
+        photo_type: request.photo_type,
+        file_name: request.file_name,
+        content_type: request.content_type,
         upload_mode: "local-placeholder",
-        upload_url: format!("local://{object_key}?content_type={}", request.content_type),
+        upload_url,
         object_key,
     }
 }

@@ -1,4 +1,4 @@
-use crate::{ChecklistItem, JobDetail, JobSummary};
+use crate::{ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence};
 use sqlx::{PgPool, Row};
 
 pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
@@ -61,4 +61,76 @@ pub async fn get_job(pool: &PgPool, id: &str) -> Result<Option<JobDetail>, sqlx:
             })
             .collect(),
     }))
+}
+
+pub async fn list_job_photos(
+    pool: &PgPool,
+    job_id: &str,
+) -> Result<Vec<PhotoEvidence>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            id,
+            job_id,
+            photo_type,
+            file_name,
+            content_type,
+            object_key,
+            status
+        FROM job_photos
+        WHERE job_id = $1
+        ORDER BY created_at DESC, id DESC
+        "#,
+    )
+    .bind(job_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let object_key: String = row.get("object_key");
+
+            PhotoEvidence {
+                id: row.get("id"),
+                job_id: row.get("job_id"),
+                photo_type: row.get("photo_type"),
+                file_name: row.get("file_name"),
+                content_type: row.get("content_type"),
+                display_url: format!("local://{object_key}"),
+                object_key,
+                status: row.get("status"),
+                upload_mode: "local-placeholder",
+            }
+        })
+        .collect())
+}
+
+pub async fn list_job_add_ons(pool: &PgPool, job_id: &str) -> Result<Vec<JobAddOn>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT id, job_id, service_name, service_description, quantity,
+               unit_price_cents, note, status
+        FROM service_job_add_ons
+        WHERE job_id = $1
+        ORDER BY created_at, id
+        "#,
+    )
+    .bind(job_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| JobAddOn {
+            id: row.get("id"),
+            job_id: row.get("job_id"),
+            service_name: row.get("service_name"),
+            service_description: row.get("service_description"),
+            quantity: row.get::<i32, _>("quantity") as u32,
+            unit_price_cents: row.get::<i32, _>("unit_price_cents") as u32,
+            note: row.get("note"),
+            status: row.get("status"),
+        })
+        .collect())
 }

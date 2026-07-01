@@ -4,6 +4,7 @@ mod postgres_day_plans;
 use crate::db::DatabaseConfig;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct DayPlanStop {
@@ -47,6 +48,55 @@ pub struct ReorderDayPlanStopsRequest {
     pub stop_ids: Vec<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AmendmentService {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub default_duration_minutes: Option<u32>,
+    pub default_price_cents: Option<u32>,
+    pub requires_manager_approval: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct CreateDayPlanAmendmentRequest {
+    pub amendment_type: String,
+    pub requested_by_crew_id: String,
+    pub stop_id: Option<String>,
+    pub service: Option<AmendmentService>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct ReviewDayPlanAmendmentRequest {
+    pub decision: String,
+    pub manager_note: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanAmendmentResponse {
+    pub id: String,
+    pub day_plan_id: String,
+    pub amendment_type: String,
+    pub status: String,
+    pub requested_by_crew_id: String,
+    pub stop_id: Option<String>,
+    pub service: Option<AmendmentService>,
+    pub note: Option<String>,
+    pub requires_bid: bool,
+    pub manager_note: Option<String>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct DayPlanAmendmentReviewResponse {
+    pub id: String,
+    pub day_plan_id: String,
+    pub status: String,
+    pub manager_note: Option<String>,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct DayPlanMutationResponse {
     pub id: String,
@@ -86,6 +136,7 @@ pub struct DayPlanRepository {
 }
 
 impl DayPlanRepository {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let pool = DatabaseConfig::from_env().and_then(|config| {
             PgPoolOptions::new()
@@ -95,6 +146,10 @@ impl DayPlanRepository {
         });
 
         Self { pool }
+    }
+
+    pub fn from_pool(pool: PgPool) -> Self {
+        Self { pool: Some(pool) }
     }
 
     pub async fn create_draft_day_plan(
@@ -208,6 +263,163 @@ impl DayPlanRepository {
 
         seed_day_plan(crew_id)
     }
+
+    pub async fn create_amendment(
+        &self,
+        day_plan_id: &str,
+        request: CreateDayPlanAmendmentRequest,
+    ) -> DayPlanAmendmentResponse {
+        let response = local_amendment_response(day_plan_id, request);
+
+        if let Some(pool) = &self.pool {
+            if let Ok(Some(persisted)) = postgres_day_plans::create_amendment(pool, &response).await
+            {
+                return persisted;
+            }
+        }
+
+        response
+    }
+
+    pub async fn list_amendments(&self, day_plan_id: &str) -> Vec<DayPlanAmendmentResponse> {
+        if let Some(pool) = &self.pool {
+            if let Ok(amendments) = postgres_day_plans::list_amendments(pool, day_plan_id).await {
+                return amendments;
+            }
+        }
+
+        Vec::new()
+    }
+
+    pub async fn review_amendment(
+        &self,
+        day_plan_id: &str,
+        amendment_id: &str,
+        request: ReviewDayPlanAmendmentRequest,
+    ) -> DayPlanAmendmentReviewResponse {
+        let status = amendment_review_status(&request.decision)
+            .expect("review request must be validated before repository use")
+            .to_string();
+
+        if let Some(pool) = &self.pool {
+            if let Ok(Some(response)) = postgres_day_plans::review_amendment(
+                pool,
+                day_plan_id,
+                amendment_id,
+                &status,
+                request.manager_note.as_deref(),
+            )
+            .await
+            {
+                return response;
+            }
+        }
+
+        DayPlanAmendmentReviewResponse {
+            id: amendment_id.to_string(),
+            day_plan_id: day_plan_id.to_string(),
+            status,
+            manager_note: request.manager_note,
+            persisted: false,
+        }
+    }
+}
+
+pub fn validate_amendment_review(request: &ReviewDayPlanAmendmentRequest) -> Result<(), String> {
+    if amendment_review_status(&request.decision).is_none() {
+        return Err(format!(
+            "unsupported amendment decision: {}",
+            request.decision
+        ));
+    }
+
+    if request
+        .manager_note
+        .as_deref()
+        .is_some_and(|note| note.trim().is_empty())
+    {
+        return Err("manager_note cannot be blank".to_string());
+    }
+
+    Ok(())
+}
+
+fn amendment_review_status(decision: &str) -> Option<&'static str> {
+    match decision {
+        "approve" => Some("approved"),
+        "reject" => Some("rejected"),
+        "send_to_bid_review" => Some("bid_review"),
+        _ => None,
+    }
+}
+
+pub fn validate_amendment_request(request: &CreateDayPlanAmendmentRequest) -> Result<(), String> {
+    if request.requested_by_crew_id.trim().is_empty() {
+        return Err("requested_by_crew_id is required".to_string());
+    }
+
+    if request
+        .note
+        .as_deref()
+        .is_some_and(|note| note.trim().is_empty())
+    {
+        return Err("note cannot be blank".to_string());
+    }
+
+    match request.amendment_type.as_str() {
+        "add_stop" if request.stop_id.is_none() && request.service.is_none() => Ok(()),
+        "remove_stop" if request.stop_id.is_some() && request.service.is_none() => Ok(()),
+        "add_service" if request.stop_id.is_some() && request.service.is_some() => {
+            let service = request.service.as_ref().expect("service checked above");
+            if service.id.trim().is_empty() || service.name.trim().is_empty() {
+                Err("service id and name are required".to_string())
+            } else {
+                Ok(())
+            }
+        }
+        "add_stop" | "remove_stop" | "add_service" => Err(format!(
+            "amendment fields do not match amendment_type {}",
+            request.amendment_type
+        )),
+        _ => Err(format!(
+            "unsupported amendment_type: {}",
+            request.amendment_type
+        )),
+    }
+}
+
+fn local_amendment_response(
+    day_plan_id: &str,
+    request: CreateDayPlanAmendmentRequest,
+) -> DayPlanAmendmentResponse {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+    let requires_bid = request.amendment_type == "add_service"
+        && request
+            .service
+            .as_ref()
+            .is_some_and(|service| service.requires_manager_approval);
+
+    DayPlanAmendmentResponse {
+        id: format!(
+            "amendment_{}_{}_{}",
+            day_plan_id.replace(|character: char| !character.is_ascii_alphanumeric(), "_"),
+            request.amendment_type,
+            nonce
+        ),
+        day_plan_id: day_plan_id.to_string(),
+        amendment_type: request.amendment_type,
+        status: "submitted".to_string(),
+        requested_by_crew_id: request.requested_by_crew_id,
+        stop_id: request.stop_id,
+        service: request.service,
+        note: request.note,
+        requires_bid,
+        manager_note: None,
+        persisted: false,
+    }
 }
 
 pub fn draft_day_plan_id(crew_id: &str, service_date: &str) -> String {
@@ -218,6 +430,7 @@ pub fn draft_stop_id(day_plan_id: &str, job_id: &str) -> String {
     format!("stop_{day_plan_id}_{job_id}")
 }
 
+#[cfg(test)]
 pub fn local_draft_day_plan_response(request: &CreateDayPlanRequest) -> DayPlanMutationResponse {
     draft_day_plan_response(request, false)
 }
@@ -300,8 +513,10 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
 mod tests {
     use super::{
         draft_day_plan_id, draft_stop_id, local_draft_day_plan_response,
-        local_published_day_plan_response, seed_day_plan, AssignDayPlanStopRequest,
-        CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
+        local_published_day_plan_response, seed_day_plan, validate_amendment_request,
+        validate_amendment_review, AmendmentService, AssignDayPlanStopRequest,
+        CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
+        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
     };
 
     #[test]
@@ -319,6 +534,59 @@ mod tests {
 
         assert_eq!(day_plan.stops[0].stop_status, "pending");
         assert_eq!(day_plan.stops[1].stop_status, "pending");
+    }
+
+    #[test]
+    fn amendment_validation_requires_stop_context_for_remove_requests() {
+        let request = CreateDayPlanAmendmentRequest {
+            amendment_type: "remove_stop".to_string(),
+            requested_by_crew_id: "crew_1001".to_string(),
+            stop_id: None,
+            service: None,
+            note: Some("Skip inaccessible property".to_string()),
+        };
+
+        assert!(validate_amendment_request(&request).is_err());
+    }
+
+    #[test]
+    fn amendment_review_validation_accepts_bid_routing() {
+        let request = ReviewDayPlanAmendmentRequest {
+            decision: "send_to_bid_review".to_string(),
+            manager_note: Some("Prepare a customer estimate.".to_string()),
+        };
+
+        assert!(validate_amendment_review(&request).is_ok());
+    }
+
+    #[test]
+    fn amendment_review_validation_rejects_unknown_decisions() {
+        let request = ReviewDayPlanAmendmentRequest {
+            decision: "defer".to_string(),
+            manager_note: None,
+        };
+
+        assert!(validate_amendment_review(&request).is_err());
+    }
+
+    #[test]
+    fn amendment_validation_accepts_complete_extra_service_requests() {
+        let request = CreateDayPlanAmendmentRequest {
+            amendment_type: "add_service".to_string(),
+            requested_by_crew_id: "crew_1001".to_string(),
+            stop_id: Some("stop_1001".to_string()),
+            service: Some(AmendmentService {
+                id: "service_sprinkler_repair".to_string(),
+                name: "Sprinkler repair".to_string(),
+                description: None,
+                default_duration_minutes: Some(30),
+                default_price_cents: Some(8500),
+                requires_manager_approval: true,
+            }),
+            note: Some("Broken sprinkler head".to_string()),
+        };
+
+        assert!(validate_amendment_request(&request).is_ok());
     }
 
     #[test]
@@ -389,7 +657,10 @@ mod tests {
             .await;
 
         assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
-        assert_eq!(response.stop_id, "stop_day_plan_2026_06_16_crew_1001_job_2001");
+        assert_eq!(
+            response.stop_id,
+            "stop_day_plan_2026_06_16_crew_1001_job_2001"
+        );
         assert_eq!(response.job_id, "job_2001");
         assert_eq!(response.stop_order, 0);
         assert!(!response.persisted);
@@ -420,7 +691,10 @@ mod tests {
             .await;
 
         assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
-        assert_eq!(response.stop_ids, vec!["stop_1002".to_string(), "stop_1001".to_string()]);
+        assert_eq!(
+            response.stop_ids,
+            vec!["stop_1002".to_string(), "stop_1001".to_string()]
+        );
         assert!(!response.persisted);
     }
 }

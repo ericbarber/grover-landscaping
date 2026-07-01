@@ -19,17 +19,32 @@ services:
   backend:
     image: rust:1.88
     container_name: grover-landscaping-backend
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     working_dir: /workspace/backend
     command: cargo run
     environment:
+      APP_ENV: local
+      HOME: /tmp
+      CARGO_HOME: /tmp/cargo
+      PORT: 8080
       RUST_LOG: ${RUST_LOG:-grover_landscaping_api=debug,tower_http=debug}
       DATABASE_URL: ${DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      AUTH_MODE: ${AUTH_MODE:-disabled}
+      COGNITO_ISSUER_URL: ${COGNITO_ISSUER_URL:-}
+      COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
+      COGNITO_LOGIN_DOMAIN: ${COGNITO_LOGIN_DOMAIN:-}
+      NOTIFICATION_DISPATCH_MODE: ${NOTIFICATION_DISPATCH_MODE:-disabled}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:5173}
+      NOTIFICATION_WEBHOOK_URL: ${NOTIFICATION_WEBHOOK_URL:-}
+      NOTIFICATION_WEBHOOK_BEARER_TOKEN: ${NOTIFICATION_WEBHOOK_BEARER_TOKEN:-}
+      NOTIFICATION_POLL_SECONDS: ${NOTIFICATION_POLL_SECONDS:-5}
+      NOTIFICATION_BATCH_SIZE: ${NOTIFICATION_BATCH_SIZE:-10}
+      NOTIFICATION_MAX_ATTEMPTS: ${NOTIFICATION_MAX_ATTEMPTS:-5}
     ports:
       - "8080:8080"
     volumes:
       - .:/workspace
-      - cargo-cache:/usr/local/cargo/registry
-      - backend-target:/workspace/backend/target
     depends_on:
       postgres:
         condition: service_healthy
@@ -37,20 +52,19 @@ services:
   frontend:
     image: node:22
     container_name: grover-landscaping-frontend
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     working_dir: /workspace/frontend
     command: sh -c "npm install && npm run dev"
     environment:
+      HOME: /tmp
+      NPM_CONFIG_CACHE: /tmp/npm-cache
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
     ports:
       - "5173:5173"
     volumes:
       - .:/workspace
-      - frontend-node-modules:/workspace/frontend/node_modules
     depends_on:
       - backend
 
 volumes:
   postgres-data:
-  cargo-cache:
-  backend-target:
-  frontend-node-modules:

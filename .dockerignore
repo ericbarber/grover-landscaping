@@ -1,0 +1,12 @@
+.git
+.github
+.agents
+.codex
+.env
+.env.*
+backend/target
+frontend/dist
+frontend/node_modules
+**/*.log
+docs
+infra
