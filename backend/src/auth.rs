@@ -453,6 +453,15 @@ mod tests {
     }
 
     #[test]
+    fn crew_member_can_update_job_add_on_progress() {
+        assert!(is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::PUT,
+            "/jobs/job-1/add-ons/add-on-1/status"
+        ));
+    }
+
+    #[test]
     fn crew_member_can_submit_day_plan_amendments() {
         assert!(is_authorized(
             &principal(AccessRole::CrewMember),

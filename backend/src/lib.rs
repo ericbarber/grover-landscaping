@@ -46,7 +46,7 @@ pub struct ChecklistItem {
     pub completed: bool,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct JobAddOn {
     pub id: String,
     pub job_id: String,

@@ -83,6 +83,21 @@ export function CompletionReport({ job, uploadTickets, reportSnapshot }: Complet
         )}
       </div>
 
+      {reportSnapshot && reportSnapshot.completedAddOns.length > 0 ? (
+        <div className="mt-5">
+          <p className="text-sm font-semibold text-slate-800">Completed add-on work</p>
+          <div className="mt-3 space-y-2">
+            {reportSnapshot.completedAddOns.map((addOn) => (
+              <div key={addOn.id} className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-sm font-semibold text-emerald-950">{addOn.serviceName}</p>
+                <p className="mt-1 text-xs text-emerald-800">Quantity {addOn.quantity} · Completed</p>
+                {addOn.note ? <p className="mt-1 text-xs text-emerald-700">{addOn.note}</p> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {uploadTickets.length > 0 && (
         <div className="mt-5">
           <p className="text-sm font-semibold text-slate-800">Photo evidence</p>

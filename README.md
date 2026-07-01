@@ -141,6 +141,7 @@ Current backend endpoints include:
 | GET | `/jobs/{id}/account` | Read account status for a job |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
+| PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |

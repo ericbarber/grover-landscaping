@@ -29,6 +29,34 @@ pub async fn complete_job(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+pub async fn update_job_add_on_status(
+    pool: &PgPool,
+    job_id: &str,
+    add_on_id: &str,
+    status: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query(
+        r#"
+        UPDATE service_job_add_ons
+        SET status = $3, updated_at = now()
+        WHERE job_id = $1
+          AND id = $2
+          AND (
+              status = $3
+              OR (status = 'scheduled' AND $3 IN ('in_progress', 'cancelled'))
+              OR (status = 'in_progress' AND $3 IN ('completed', 'cancelled'))
+          )
+        "#,
+    )
+    .bind(job_id)
+    .bind(add_on_id)
+    .bind(status)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected() == 1)
+}
+
 pub async fn create_photo_upload(
     pool: &PgPool,
     job_id: &str,

@@ -163,6 +163,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - One scheduled job add-on per approved bid line item
 - Transactional bid, amendment, and conversion status updates
 - Crew job add-on API and job-detail display
+- Crew controls for starting and completing approved job add-ons
+- Guarded add-on lifecycle transitions from scheduled through completion
+- Completed add-on work included in completion report responses and UI
 
 ### Account and service tracking foundation
 
@@ -258,7 +261,6 @@ Current state:
 Next implementation work:
 
 - Configure and validate an email/SMS provider gateway in the production environment
-- Add job add-on lifecycle updates and include completed add-ons in completion reports
 - Include add-on duration in route workload estimates
 - Add an authenticated customer-scoped bid history after tenant boundaries are persisted
 - Connect manager activity history to persisted notification events

@@ -24,7 +24,7 @@ use day_plans::{
     CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
     ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
 };
-use db::{DatabaseConfig, JobRepository};
+use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::auth::{require_api_auth, AuthService};
 use notifications::{
     start_notification_dispatcher, NotificationDispatcherConfig, NotificationOutboxRepository,
@@ -99,7 +99,7 @@ pub struct ChecklistItem {
     pub completed: bool,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct JobAddOn {
     pub id: String,
     pub job_id: String,
@@ -109,6 +109,11 @@ pub struct JobAddOn {
     pub unit_price_cents: u32,
     pub note: Option<String>,
     pub status: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct JobAddOnStatusRequest {
+    status: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -312,6 +317,10 @@ fn app_with_runtime(
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route("/jobs/{id}/report", get(get_completion_report))
         .route("/jobs/{id}/add-ons", get(list_job_add_ons))
+        .route(
+            "/jobs/{id}/add-ons/{add_on_id}/status",
+            put(update_job_add_on_status),
+        )
         .route("/jobs/{id}/start", post(start_job))
         .route("/jobs/{id}/complete", post(complete_job))
         .route("/jobs/{id}/photos", get(list_job_photos))
@@ -500,6 +509,53 @@ async fn list_job_add_ons(
     Json(state.jobs.list_job_add_ons(&id).await)
 }
 
+async fn update_job_add_on_status(
+    State(state): State<Arc<AppState>>,
+    Path((job_id, add_on_id)): Path<(String, String)>,
+    Json(request): Json<JobAddOnStatusRequest>,
+) -> impl IntoResponse {
+    match state
+        .jobs
+        .update_job_add_on_status(&job_id, &add_on_id, &request.status)
+        .await
+    {
+        JobAddOnStatusUpdate::Updated(add_on) => Json(add_on).into_response(),
+        JobAddOnStatusUpdate::InvalidStatus => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_add_on_status",
+                message: "Add-on status must be scheduled, in_progress, completed, or cancelled."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        JobAddOnStatusUpdate::InvalidTransition => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_add_on_transition",
+                message: "The requested add-on status transition is not allowed.".to_string(),
+            }),
+        )
+            .into_response(),
+        JobAddOnStatusUpdate::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "job_add_on_not_found",
+                message: "The requested job add-on was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        JobAddOnStatusUpdate::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "job_add_on_persistence_unavailable",
+                message: "Job add-on status updates require database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
 async fn get_shared_completion_report(
     State(state): State<Arc<AppState>>,
     Path(share_token): Path<String>,
@@ -525,7 +581,8 @@ async fn build_and_persist_completion_report(
     let job = state.jobs.get_job(id.to_string()).await;
     let account = state.accounts.get_account_for_job(id).await;
     let photo_evidence = state.jobs.list_photo_evidence(id).await;
-    let mut report = build_completion_report(job, account, photo_evidence);
+    let add_ons = state.jobs.list_job_add_ons(id).await;
+    let mut report = build_completion_report(job, account, photo_evidence, add_ons);
     let persistence = state.jobs.persist_completion_report(&report).await;
     apply_completion_report_persistence(&mut report, persistence);
 
@@ -1133,6 +1190,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn job_add_on_status_endpoint_rejects_unknown_status() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/jobs/job_1001/add-ons/add_on_1001/status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"status":"deferred"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
     async fn completion_report_endpoint_returns_job_account_and_photo_state() {
         let response = seed_app()
             .oneshot(
@@ -1156,6 +1230,7 @@ mod tests {
         assert_eq!(json["ready_for_customer"], false);
         assert_eq!(json["checklist_progress"], 0);
         assert_eq!(json["job"]["customer_name"], "Sample Customer");
+        assert!(json["completed_add_ons"].as_array().unwrap().is_empty());
         assert_eq!(json["account"]["account_id"], "acct_1001");
         assert_eq!(json["photo_evidence"].as_array().unwrap().len(), 0);
     }

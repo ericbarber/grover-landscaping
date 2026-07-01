@@ -111,6 +111,7 @@ export interface ApiCompletionReport {
   job: ApiJobDetail;
   account: ApiAccountStatus;
   photo_evidence: ApiPhotoEvidence[];
+  completed_add_ons: ApiJobAddOn[];
 }
 
 export interface CompletionReportSnapshot {
@@ -127,6 +128,7 @@ export interface CompletionReportSnapshot {
   job: JobDetail;
   account: AccountStatus;
   photoEvidence: PhotoUploadTicket[];
+  completedAddOns: JobAddOn[];
 }
 
 function toJob(apiJob: ApiJobSummary): YardCareJob {
@@ -215,6 +217,7 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
     job: toJobDetail(apiReport.job),
     account: toAccountStatus(apiReport.account),
     photoEvidence: apiReport.photo_evidence.map(toPhotoEvidence),
+    completedAddOns: apiReport.completed_add_ons.map(toJobAddOn),
   };
 }
 
@@ -242,6 +245,18 @@ export async function fetchJobs(): Promise<YardCareJob[]> {
 export async function fetchJobAddOns(jobId: string): Promise<JobAddOn[]> {
   const addOns = await request<ApiJobAddOn[]>(`/jobs/${jobId}/add-ons`);
   return addOns.map(toJobAddOn);
+}
+
+export async function updateJobAddOnStatus(
+  jobId: string,
+  addOnId: string,
+  status: ApiJobAddOn['status'],
+): Promise<JobAddOn> {
+  const addOn = await request<ApiJobAddOn>(`/jobs/${jobId}/add-ons/${addOnId}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
+  });
+  return toJobAddOn(addOn);
 }
 
 export async function fetchJobDetail(jobId: string): Promise<JobDetail> {

@@ -33,6 +33,15 @@ pub struct JobRepository {
     pool: Option<PgPool>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum JobAddOnStatusUpdate {
+    Updated(JobAddOn),
+    InvalidStatus,
+    InvalidTransition,
+    NotFound,
+    Unavailable,
+}
+
 impl JobRepository {
     #[allow(dead_code)]
     pub fn new() -> Self {
@@ -103,6 +112,46 @@ impl JobRepository {
         }
 
         Vec::new()
+    }
+
+    pub async fn update_job_add_on_status(
+        &self,
+        job_id: &str,
+        add_on_id: &str,
+        status: &str,
+    ) -> JobAddOnStatusUpdate {
+        if !matches!(
+            status,
+            "scheduled" | "in_progress" | "completed" | "cancelled"
+        ) {
+            return JobAddOnStatusUpdate::InvalidStatus;
+        }
+
+        let Some(pool) = &self.pool else {
+            return JobAddOnStatusUpdate::Unavailable;
+        };
+        let current = match postgres_read::get_job_add_on(pool, job_id, add_on_id).await {
+            Ok(Some(add_on)) => add_on,
+            Ok(None) => return JobAddOnStatusUpdate::NotFound,
+            Err(_) => return JobAddOnStatusUpdate::Unavailable,
+        };
+
+        if !valid_add_on_transition(&current.status, status) {
+            return JobAddOnStatusUpdate::InvalidTransition;
+        }
+
+        match postgres_write::update_job_add_on_status(pool, job_id, add_on_id, status).await {
+            Ok(true) => match postgres_read::get_job_add_on(pool, job_id, add_on_id).await {
+                Ok(Some(add_on)) => JobAddOnStatusUpdate::Updated(add_on),
+                _ => JobAddOnStatusUpdate::Unavailable,
+            },
+            Ok(false) => match postgres_read::get_job_add_on(pool, job_id, add_on_id).await {
+                Ok(Some(_)) => JobAddOnStatusUpdate::InvalidTransition,
+                Ok(None) => JobAddOnStatusUpdate::NotFound,
+                Err(_) => JobAddOnStatusUpdate::Unavailable,
+            },
+            Err(_) => JobAddOnStatusUpdate::Unavailable,
+        }
     }
 
     pub async fn start_job(&self, id: &str) -> String {
@@ -219,6 +268,14 @@ impl JobRepository {
     pub fn is_database_ready(&self) -> bool {
         self.pool.is_some()
     }
+}
+
+fn valid_add_on_transition(current: &str, next: &str) -> bool {
+    current == next
+        || matches!(
+            (current, next),
+            ("scheduled", "in_progress" | "cancelled") | ("in_progress", "completed" | "cancelled")
+        )
 }
 
 fn seed_job_summaries() -> Vec<JobSummary> {

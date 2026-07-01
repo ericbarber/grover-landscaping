@@ -8,6 +8,7 @@ import {
   fetchJobAddOns,
   fetchJobs,
   startJob,
+  updateJobAddOnStatus,
   type CompletionReportSnapshot,
   type JobDetail,
   type JobAddOn,
@@ -403,6 +404,7 @@ function JobDetailPanel({
   onStart,
   onComplete,
   onPhotoSelected,
+  onAddOnStatusChange,
 }: {
   job: JobDetail | null;
   isLoading: boolean;
@@ -412,6 +414,7 @@ function JobDetailPanel({
   onStart: () => Promise<void>;
   onComplete: () => Promise<void>;
   onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
+  onAddOnStatusChange: (addOnId: string, status: JobAddOn['status']) => Promise<void>;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
 
@@ -473,6 +476,22 @@ function JobDetailPanel({
                     <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold uppercase text-sky-800">{addOn.status}</span>
                   </div>
                   <p className="mt-2 text-xs text-sky-800">Quantity {addOn.quantity}</p>
+                  {addOn.status === 'scheduled' ? (
+                    <button
+                      className="mt-3 rounded-lg bg-sky-800 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-900"
+                      onClick={() => void onAddOnStatusChange(addOn.id, 'in_progress')}
+                    >
+                      Start add-on
+                    </button>
+                  ) : null}
+                  {addOn.status === 'in_progress' ? (
+                    <button
+                      className="mt-3 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+                      onClick={() => void onAddOnStatusChange(addOn.id, 'completed')}
+                    >
+                      Complete add-on
+                    </button>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -808,6 +827,23 @@ export function App() {
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'completed' } : job)));
   }
 
+  async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
+    if (!selectedJobId) return;
+
+    try {
+      const updated = await updateJobAddOnStatus(selectedJobId, addOnId, status);
+      setSelectedJobAddOns((current) => current.map((addOn) => (addOn.id === updated.id ? updated : addOn)));
+      setStatusMessage(`${updated.serviceName} marked ${status.replace('_', ' ')}.`);
+
+      if (status === 'completed') {
+        const report = await fetchCompletionReport(selectedJobId);
+        setSelectedCompletionReport(report);
+      }
+    } catch {
+      setStatusMessage('Could not update add-on work. Check the API connection and try again.');
+    }
+  }
+
   async function handlePhotoSelected(file: File, photoType: PhotoType) {
     if (!selectedJobId) {
       return;
@@ -943,6 +979,7 @@ export function App() {
           onStart={handleStartJob}
           onComplete={handleCompleteJob}
           onPhotoSelected={handlePhotoSelected}
+          onAddOnStatusChange={handleAddOnStatusChange}
         />
       </section>
     </main>

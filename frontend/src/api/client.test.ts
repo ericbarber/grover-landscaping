@@ -56,6 +56,18 @@ describe('core API client mapping', () => {
           display_url: 'local://local/jobs/job_1001/before/before.jpg',
         },
       ],
+      completed_add_ons: [
+        {
+          id: 'add_on_1001',
+          job_id: 'job_1001',
+          service_name: 'Sprinkler repair',
+          service_description: null,
+          quantity: 1,
+          unit_price_cents: 8500,
+          note: null,
+          status: 'completed',
+        },
+      ],
     };
 
     expect(toCompletionReport(apiReport)).toMatchObject({
@@ -79,6 +91,12 @@ describe('core API client mapping', () => {
           photoId: 'photo_1',
           photoType: 'before',
           fileName: 'before.jpg',
+        },
+      ],
+      completedAddOns: [
+        {
+          id: 'add_on_1001',
+          status: 'completed',
         },
       ],
     });

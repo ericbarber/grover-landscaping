@@ -134,3 +134,33 @@ pub async fn list_job_add_ons(pool: &PgPool, job_id: &str) -> Result<Vec<JobAddO
         })
         .collect())
 }
+
+pub async fn get_job_add_on(
+    pool: &PgPool,
+    job_id: &str,
+    add_on_id: &str,
+) -> Result<Option<JobAddOn>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"
+        SELECT id, job_id, service_name, service_description, quantity,
+               unit_price_cents, note, status
+        FROM service_job_add_ons
+        WHERE job_id = $1 AND id = $2
+        "#,
+    )
+    .bind(job_id)
+    .bind(add_on_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| JobAddOn {
+        id: row.get("id"),
+        job_id: row.get("job_id"),
+        service_name: row.get("service_name"),
+        service_description: row.get("service_description"),
+        quantity: row.get::<i32, _>("quantity") as u32,
+        unit_price_cents: row.get::<i32, _>("unit_price_cents") as u32,
+        note: row.get("note"),
+        status: row.get("status"),
+    }))
+}

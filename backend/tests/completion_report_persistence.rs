@@ -26,7 +26,7 @@ async fn repository_persists_completion_report_state() {
         completed_services_this_period: 0,
         billing_notes: "Payment can be marked complete after service.".to_string(),
     };
-    let report = build_completion_report(job, account, Vec::new());
+    let report = build_completion_report(job, account, Vec::new(), Vec::new());
 
     let persistence = repository.persist_completion_report(&report).await;
     assert!(persistence.persisted);

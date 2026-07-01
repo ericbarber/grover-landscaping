@@ -1,4 +1,4 @@
-use crate::{accounts::CustomerAccountSummary, JobDetail, PhotoEvidence};
+use crate::{accounts::CustomerAccountSummary, JobAddOn, JobDetail, PhotoEvidence};
 use serde::Serialize;
 
 #[derive(Clone, Debug, Default)]
@@ -22,12 +22,14 @@ pub struct CompletionReportResponse {
     pub job: JobDetail,
     pub account: CustomerAccountSummary,
     pub photo_evidence: Vec<PhotoEvidence>,
+    pub completed_add_ons: Vec<JobAddOn>,
 }
 
 pub fn build_completion_report(
     job: JobDetail,
     account: CustomerAccountSummary,
     photo_evidence: Vec<PhotoEvidence>,
+    add_ons: Vec<JobAddOn>,
 ) -> CompletionReportResponse {
     let checklist_progress = completion_progress(&job);
     let before_photo_evidence = count_photo_type(&photo_evidence, "before");
@@ -51,6 +53,10 @@ pub fn build_completion_report(
         job,
         account,
         photo_evidence,
+        completed_add_ons: add_ons
+            .into_iter()
+            .filter(|add_on| add_on.status == "completed")
+            .collect(),
     }
 }
 
@@ -90,7 +96,9 @@ mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report, CompletionReportPersistence,
     };
-    use crate::{accounts::CustomerAccountSummary, ChecklistItem, JobDetail, PhotoEvidence};
+    use crate::{
+        accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
+    };
 
     fn job(completed_checklist_items: u32, before_photos: u32, after_photos: u32) -> JobDetail {
         JobDetail {
@@ -139,10 +147,27 @@ mod tests {
         }
     }
 
+    fn add_on(id: &str, status: &str) -> JobAddOn {
+        JobAddOn {
+            id: id.to_string(),
+            job_id: "job_1001".to_string(),
+            service_name: "Sprinkler repair".to_string(),
+            service_description: None,
+            quantity: 1,
+            unit_price_cents: 12_500,
+            note: None,
+            status: status.to_string(),
+        }
+    }
+
     #[test]
     fn report_is_draft_until_checklist_and_required_photos_are_complete() {
-        let report =
-            build_completion_report(job(3, 1, 1), account(), vec![photo("issue_1", "issue")]);
+        let report = build_completion_report(
+            job(3, 1, 1),
+            account(),
+            vec![photo("issue_1", "issue")],
+            Vec::new(),
+        );
 
         assert_eq!(report.report_status, "draft");
         assert_eq!(report.report_id, "report_job_1001");
@@ -158,6 +183,7 @@ mod tests {
             job(4, 0, 0),
             account(),
             vec![photo("before_1", "before"), photo("after_1", "after")],
+            Vec::new(),
         );
 
         assert_eq!(report.report_status, "ready");
@@ -171,7 +197,7 @@ mod tests {
 
     #[test]
     fn persistence_result_sets_report_share_url() {
-        let mut report = build_completion_report(job(4, 1, 1), account(), Vec::new());
+        let mut report = build_completion_report(job(4, 1, 1), account(), Vec::new(), Vec::new());
 
         apply_completion_report_persistence(
             &mut report,
@@ -186,5 +212,21 @@ mod tests {
             report.share_url,
             Some("/reports/share_report_job_1001".to_string())
         );
+    }
+
+    #[test]
+    fn report_includes_only_completed_add_ons() {
+        let report = build_completion_report(
+            job(4, 1, 1),
+            account(),
+            Vec::new(),
+            vec![
+                add_on("scheduled", "scheduled"),
+                add_on("completed", "completed"),
+            ],
+        );
+
+        assert_eq!(report.completed_add_ons.len(), 1);
+        assert_eq!(report.completed_add_ons[0].id, "completed");
     }
 }

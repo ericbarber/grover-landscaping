@@ -3,7 +3,7 @@ use grover_landscaping_api::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
         ReviewDayPlanAmendmentRequest,
     },
-    db::{DatabaseConfig, JobRepository},
+    db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository},
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidRepository,
         SendProjectBidRequest,
@@ -203,4 +203,25 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .expect("converted add-on should be visible through the job repository");
     assert_eq!(converted_add_on.service_name, "Sprinkler repair");
     assert_eq!(converted_add_on.status, "scheduled");
+
+    let started = jobs
+        .update_job_add_on_status("job_1001", &converted_add_on.id, "in_progress")
+        .await;
+    assert!(matches!(
+        started,
+        JobAddOnStatusUpdate::Updated(ref add_on) if add_on.status == "in_progress"
+    ));
+
+    let completed = jobs
+        .update_job_add_on_status("job_1001", &converted_add_on.id, "completed")
+        .await;
+    assert!(matches!(
+        completed,
+        JobAddOnStatusUpdate::Updated(ref add_on) if add_on.status == "completed"
+    ));
+
+    let invalid_transition = jobs
+        .update_job_add_on_status("job_1001", &converted_add_on.id, "scheduled")
+        .await;
+    assert_eq!(invalid_transition, JobAddOnStatusUpdate::InvalidTransition);
 }
