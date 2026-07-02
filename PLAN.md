@@ -52,6 +52,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Route-level role gates for manager, crew, and public report access
 - Public runtime authentication configuration endpoint
 - Development-only disabled authentication mode for local seed workflows
+- Recoverable authentication initialization when the local API starts after the frontend
 - Terraform definitions for development and production Cognito user pools
 - Single-origin production container and Render deployment definition
 - Database-backed readiness checks and production smoke-test script
@@ -204,10 +205,12 @@ Current state:
 - Frontend can consume backend `stop_status` values for each route stop
 - Frontend route summary finished count resolves backend stop status plus local browser status
 - Backend repository fallback tests cover day-plan reads and stop mutations without a database pool
+- GitHub Actions provisions PostgreSQL, applies migrations, and runs database-backed integration tests
+- Integration tests fail loudly in CI when `DATABASE_URL` is missing instead of silently skipping
 
 Next implementation work:
 
-- Add hosted database-backed route tests once CI has a test PostgreSQL service available
+- Expand database-backed route coverage as new persistence behavior is added
 
 ### Manager scheduling workflow
 
@@ -257,11 +260,11 @@ Current state:
 - Revoked bids can issue a replacement token and enqueue a new delivery
 - Approved bids convert once without duplicating job add-ons
 - Converted add-ons are visible to crews as scheduled source-job work
+- Converted add-on service duration is included in route workload estimates
 
 Next implementation work:
 
 - Configure and validate an email/SMS provider gateway in the production environment
-- Include add-on duration in route workload estimates
 - Add an authenticated customer-scoped bid history after tenant boundaries are persisted
 - Connect manager activity history to persisted notification events
 
@@ -340,13 +343,13 @@ Current state:
 - PostgreSQL migrations exist for property portfolios, portfolio-property links, and property crew assignment history
 - Portfolio boundary indexes prevent duplicate portfolio names per account and restrict a property to one portfolio group per service organization
 - Backend API contracts are documented for property portfolio management and property crew assignment workflows
+- Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
+- Portfolio coverage summary reports total, grouped, and ungrouped yard counts
 
 Next implementation work:
 
 - Add property portfolio/group models for individual owners, property management companies, HOAs, and commercial clients
 - Link yards/properties to portfolios so one person or management company can organize many yards
-- Add helper tests for portfolio-scoped property grouping and account-level access boundaries
-- Surface property portfolio grouping in the customer portal preview
 - Wire portfolio and crew-assignment API routes after authentication and access boundaries are planned
 
 ## Planned

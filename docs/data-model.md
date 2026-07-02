@@ -154,6 +154,8 @@ An approved amendment-sourced bid converts into its source route stop's service 
 
 Conversion locks the bid row and uses unique bid and line-item constraints, so retries return the existing conversion without duplicating scheduled work. The same transaction marks the bid `converted` and its source amendment `approved`.
 
+Route workload reads add the source amendment's service duration once after conversion. Bid line-item quantity does not multiply route time because line items may separately represent labor, materials, or pricing details for the same requested service.
+
 ## audit_events
 
 Suggested fields:

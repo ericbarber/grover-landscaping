@@ -86,6 +86,8 @@ docker compose up --build
 
 The app containers run as `HOST_UID:HOST_GID` from `.env` so generated files in the bind-mounted repo stay writable by your host user. The defaults are `1000:1000`; adjust them with `id -u` and `id -g` if your local account uses different IDs.
 
+`DATABASE_URL` is for backend and database commands run on the host, where PostgreSQL is available at `localhost:5432`. The Compose backend uses `COMPOSE_DATABASE_URL`, where PostgreSQL is available through the service hostname `postgres`. Keep these hostnames distinct when overriding either value.
+
 Apply database migrations after PostgreSQL is healthy:
 
 ```bash
@@ -101,6 +103,8 @@ Health:   http://localhost:8080/health
 Ready:    http://localhost:8080/health/ready
 Database: localhost:5432
 ```
+
+If the frontend opens before the API is ready, the authentication error screen can retry runtime configuration without a full page refresh.
 
 The frontend can also run without the backend. In that mode it uses seed data, local photo placeholders, and browser storage for route progress.
 

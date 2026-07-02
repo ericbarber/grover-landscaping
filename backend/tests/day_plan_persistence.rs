@@ -2,13 +2,14 @@ use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
     },
-    db::{DatabaseConfig, JobRepository},
+    db::JobRepository,
 };
 use sqlx::postgres::PgPoolOptions;
+mod common;
 
 #[tokio::test]
 async fn day_plan_repository_reads_persisted_stop_status() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 

@@ -1,9 +1,7 @@
-use grover_landscaping_api::{
-    db::{DatabaseConfig, JobRepository},
-    notifications::NotificationOutboxRepository,
-};
+use grover_landscaping_api::{db::JobRepository, notifications::NotificationOutboxRepository};
 use sqlx::Row;
 use std::time::{SystemTime, UNIX_EPOCH};
+mod common;
 
 fn unique_id(prefix: &str) -> String {
     let nonce = SystemTime::now()
@@ -15,7 +13,7 @@ fn unique_id(prefix: &str) -> String {
 
 #[tokio::test]
 async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
     let jobs = JobRepository::connect(&config)

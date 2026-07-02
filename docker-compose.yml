@@ -28,7 +28,7 @@ services:
       CARGO_HOME: /tmp/cargo
       PORT: 8080
       RUST_LOG: ${RUST_LOG:-grover_landscaping_api=debug,tower_http=debug}
-      DATABASE_URL: ${DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
+      DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
       AUTH_MODE: ${AUTH_MODE:-disabled}
       COGNITO_ISSUER_URL: ${COGNITO_ISSUER_URL:-}

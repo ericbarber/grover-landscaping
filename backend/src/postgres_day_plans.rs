@@ -407,7 +407,16 @@ pub async fn today_for_crew(
             sj.status AS job_status,
             dps.stop_status,
             dps.estimated_drive_minutes,
-            dps.estimated_service_minutes
+            dps.estimated_service_minutes + COALESCE((
+                SELECT SUM(amendment.default_duration_minutes)
+                FROM day_plan_amendment_requests amendment
+                JOIN project_bids bid ON bid.source_amendment_id = amendment.id
+                JOIN project_bid_conversions conversion ON conversion.project_bid_id = bid.id
+                WHERE amendment.day_plan_id = dp.id
+                  AND amendment.stop_id = dps.id
+                  AND conversion.job_id = dps.job_id
+                  AND bid.status = 'converted'
+            ), 0)::INTEGER AS estimated_service_minutes
         FROM selected_plan sp
         JOIN day_plans dp ON dp.id = sp.id
         JOIN crews c ON c.id = dp.crew_id

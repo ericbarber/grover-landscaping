@@ -3,13 +3,14 @@ use grover_landscaping_api::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
         ReorderDayPlanStopsRequest,
     },
-    db::{DatabaseConfig, JobRepository},
+    db::JobRepository,
 };
 use sqlx::{postgres::PgPoolOptions, Row};
+mod common;
 
 #[tokio::test]
 async fn repository_creates_draft_day_plan() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 
@@ -32,7 +33,7 @@ async fn repository_creates_draft_day_plan() {
 
 #[tokio::test]
 async fn repository_publishes_draft_day_plan() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 
@@ -58,7 +59,7 @@ async fn repository_publishes_draft_day_plan() {
 
 #[tokio::test]
 async fn repository_exposes_published_day_plan_to_crew_route() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 
@@ -131,7 +132,7 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
 
 #[tokio::test]
 async fn repository_assigns_reorders_and_removes_day_plan_stops() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 

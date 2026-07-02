@@ -27,6 +27,7 @@ interface AuthContextValue {
   displayName: string;
   roles: string[];
   authMode: AuthMode | null;
+  retryInitialization: () => void;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -114,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [manager, setManager] = useState<UserManager | null>(null);
   const [config, setConfig] = useState<RuntimeAuthConfig | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [initializationAttempt, setInitializationAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -186,6 +188,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
+  }, [initializationAttempt]);
+
+  const retryInitialization = useCallback(() => {
+    configureApiAuthentication(true, async () => null);
+    setLoading(true);
+    setError(null);
+    setAuthMode(null);
+    setManager(null);
+    setConfig(null);
+    setUser(null);
+    setInitializationAttempt((current) => current + 1);
   }, []);
 
   const signIn = useCallback(async () => {
@@ -211,10 +224,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: authMode === 'disabled' ? 'Local development user' : displayNameFromUser(user),
       roles: authMode === 'disabled' ? ['OrganizationOwner'] : rolesFromUser(user),
       authMode,
+      retryInitialization,
       signIn,
       signOut,
     }),
-    [authMode, error, loading, signIn, signOut, user],
+    [authMode, error, loading, retryInitialization, signIn, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,13 +1,13 @@
 use grover_landscaping_api::{
-    accounts::CustomerAccountSummary,
-    completion_reports::build_completion_report,
-    db::{DatabaseConfig, JobRepository},
+    accounts::CustomerAccountSummary, completion_reports::build_completion_report,
+    db::JobRepository,
 };
 use sqlx::{postgres::PgPoolOptions, Row};
+mod common;
 
 #[tokio::test]
 async fn repository_persists_completion_report_state() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 

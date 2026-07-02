@@ -29,6 +29,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Authentication error</p>
         <h1 className="mt-4 text-2xl font-bold text-white">Unable to initialize sign-in</h1>
         <p className="mt-3 text-sm text-slate-300">{auth.error}</p>
+        <p className="mt-3 text-xs text-slate-400">
+          If the local API was still starting, wait a moment and retry without reloading the page.
+        </p>
+        <button
+          className="mt-6 w-full rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-500"
+          onClick={auth.retryInitialization}
+          type="button"
+        >
+          Retry authentication
+        </button>
       </FullScreenMessage>
     );
   }

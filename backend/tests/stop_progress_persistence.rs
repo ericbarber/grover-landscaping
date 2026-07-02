@@ -1,8 +1,9 @@
-use grover_landscaping_api::db::{DatabaseConfig, JobRepository};
+use grover_landscaping_api::db::JobRepository;
+mod common;
 
 #[tokio::test]
 async fn repository_persists_stop_progress_to_postgres() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 

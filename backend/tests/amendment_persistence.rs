@@ -3,16 +3,17 @@ use grover_landscaping_api::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
         ReviewDayPlanAmendmentRequest,
     },
-    db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository},
+    db::{JobAddOnStatusUpdate, JobRepository},
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidRepository,
         SendProjectBidRequest,
     },
 };
+mod common;
 
 #[tokio::test]
 async fn repository_persists_and_lists_day_plan_amendments() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 
@@ -173,6 +174,15 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .await
         .is_none());
 
+    let service_minutes_before_conversion = repository
+        .today_for_crew("crew_1001")
+        .await
+        .stops
+        .into_iter()
+        .find(|stop| stop.id == "stop_1001")
+        .expect("source stop should remain on the route")
+        .estimated_service_minutes;
+
     let converted = bid_repository
         .convert_to_job_add_ons(day_plan_id, &bid.id)
         .await
@@ -195,6 +205,17 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     .await
     .unwrap();
     assert_eq!(add_on_count, 1);
+
+    let crew_day_plan = repository.today_for_crew("crew_1001").await;
+    let converted_stop = crew_day_plan
+        .stops
+        .iter()
+        .find(|stop| stop.id == "stop_1001")
+        .expect("converted add-on source stop should remain on the route");
+    assert_eq!(
+        converted_stop.estimated_service_minutes,
+        service_minutes_before_conversion + 30
+    );
 
     let crew_add_ons = jobs.list_job_add_ons("job_1001").await;
     let converted_add_on = crew_add_ons

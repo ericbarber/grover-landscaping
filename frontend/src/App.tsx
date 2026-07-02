@@ -15,6 +15,7 @@ import {
   type PhotoUploadTicket,
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
+import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -49,6 +50,7 @@ import {
   readStoredManagerActivityItems,
   writeStoredManagerActivityItems,
 } from './domain/managerActivityLocalStore';
+import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
@@ -113,6 +115,25 @@ const customerPortalPreviewProperties: CustomerPropertyProfile[] = [
     address: '123 Oak Street',
     serviceFrequency: 'seasonal',
     contractedServiceIds: ['service_tree_limb_removal'],
+  },
+];
+
+const customerPortalPreviewPortfolios: PropertyPortfolio[] = [
+  {
+    id: 'portfolio_1001',
+    accountId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    displayName: 'Primary residence',
+    portfolioType: 'individual_owner',
+  },
+];
+
+const customerPortalPreviewPortfolioLinks: PortfolioPropertyLink[] = [
+  {
+    id: 'portfolio_link_1001',
+    portfolioId: 'portfolio_1001',
+    propertyId: 'property_1001',
+    organizationId: 'org_demo_landscaping',
   },
 ];
 
@@ -941,6 +962,14 @@ export function App() {
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
               workSummaries={customerPortalPreviewWorkSummaries}
+            />
+          </div>
+          <div className="mt-6">
+            <CustomerPortfolioSummaryPanel
+              customer={customerPortalPreviewCustomer}
+              portfolios={customerPortalPreviewPortfolios}
+              properties={customerPortalPreviewProperties}
+              links={customerPortalPreviewPortfolioLinks}
             />
           </div>
           <div className="mt-6">

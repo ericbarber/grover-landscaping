@@ -41,6 +41,15 @@ const properties: CustomerPropertyProfile[] = [
     serviceFrequency: 'biweekly',
     contractedServiceIds: ['service_standard_yard_care'],
   },
+  {
+    id: 'property_4',
+    customerId: 'customer_1',
+    organizationId: 'service_company_2',
+    displayName: 'Different organization yard',
+    address: '400 Fourth Lane',
+    serviceFrequency: 'weekly',
+    contractedServiceIds: ['service_standard_yard_care'],
+  },
 ];
 
 const links: PortfolioPropertyLink[] = [
@@ -49,6 +58,12 @@ const links: PortfolioPropertyLink[] = [
     portfolioId: 'portfolio_1',
     propertyId: 'property_1',
     organizationId: 'service_company_1',
+  },
+  {
+    id: 'link_2',
+    portfolioId: 'portfolio_other_organization',
+    propertyId: 'property_2',
+    organizationId: 'service_company_2',
   },
 ];
 

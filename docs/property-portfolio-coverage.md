@@ -42,4 +42,4 @@ The customer portal should show three sections:
 
 ## Next implementation slice
 
-Wire `CustomerPortfolioSummaryPanel` to display `filterCustomerPropertiesWithoutPortfolio` results beneath the grouped portfolio cards.
+Wire portfolio and crew-assignment API routes after organization membership and tenant-aware access boundaries are persisted.

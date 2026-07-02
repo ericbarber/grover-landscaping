@@ -1,11 +1,9 @@
-use grover_landscaping_api::{
-    db::{DatabaseConfig, JobRepository},
-    PhotoUploadRequest,
-};
+use grover_landscaping_api::{db::JobRepository, PhotoUploadRequest};
+mod common;
 
 #[tokio::test]
 async fn repository_persists_and_lists_photo_evidence() {
-    let Some(config) = DatabaseConfig::from_env() else {
+    let Some(config) = common::database_config() else {
         return;
     };
 
