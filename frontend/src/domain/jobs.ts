@@ -165,6 +165,20 @@ export function getActiveCrewAssignmentForProperty(
   return assignments.find((assignment) => assignment.propertyId === propertyId && assignment.active);
 }
 
+export function getActiveCrewForProperty(
+  property: CustomerPropertyProfile,
+  crews: CrewProfile[],
+  assignments: PropertyCrewAssignment[],
+): CrewProfile | undefined {
+  const activeAssignment = getActiveCrewAssignmentForProperty(assignments, property.id);
+
+  if (!activeAssignment) {
+    return undefined;
+  }
+
+  return crews.find((crew) => crew.id === activeAssignment.crewId && crewCanServeProperty(crew, property));
+}
+
 export function filterCrewAssignmentHistoryForProperty(
   assignments: PropertyCrewAssignment[],
   propertyId: string,
