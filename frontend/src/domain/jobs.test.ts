@@ -13,6 +13,7 @@ import {
   filterPropertiesForOrganization,
   filterWorkSummariesForCustomerPortal,
   getActiveCrewAssignmentForProperty,
+  getActiveCrewForProperty,
   getCompletionProgress,
   getContractedServiceCount,
   getCustomerPortalNextActions,
@@ -242,6 +243,12 @@ describe('customer property helpers', () => {
     expect(activeAssignment?.crewId).toBe('crew_test_2');
     expect(testProperties[0].customerId).toBe('customer_test_1');
     expect(testProperties[0].organizationId).toBe('company_test_1');
+  });
+
+  it('resolves the active crew profile for a property', () => {
+    const activeCrew = getActiveCrewForProperty(testProperties[0], testCrews, testCrewAssignments);
+
+    expect(activeCrew?.displayName).toBe('North crew');
   });
 
   it('summarizes active crew assignment and switch options for a property', () => {
