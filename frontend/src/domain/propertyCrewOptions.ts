@@ -20,3 +20,13 @@ export function getCurrentServiceCrewForProperty(
 
   return getServiceCrewsForProperty(property, crews).find((crew) => crew.id === activeAssignment.crewId);
 }
+
+export function getAlternateServiceCrewsForProperty(
+  property: CustomerPropertyProfile,
+  crews: CrewProfile[],
+  assignments: PropertyCrewAssignment[],
+): CrewProfile[] {
+  const currentCrew = getCurrentServiceCrewForProperty(property, crews, assignments);
+
+  return getServiceCrewsForProperty(property, crews).filter((crew) => crew.id !== currentCrew?.id);
+}
