@@ -47,6 +47,14 @@ pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_prese
     status == "delivered" && delivered_at_present
 }
 
+pub fn completion_report_is_ready_for_delivery(
+    status: &str,
+    reviewed_at_present: bool,
+    failed_quality_check_count: u32,
+) -> bool {
+    status == "in_review" && reviewed_at_present && failed_quality_check_count == 0
+}
+
 pub fn build_completion_report(
     job: JobDetail,
     account: CustomerAccountSummary,
@@ -117,8 +125,9 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report,
-        completion_report_is_visible_to_customer, completion_report_manager_queue_label,
-        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
+        completion_report_is_ready_for_delivery, completion_report_is_visible_to_customer,
+        completion_report_manager_queue_label, is_valid_completion_report_lifecycle_status,
+        CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -227,6 +236,15 @@ mod tests {
         assert!(!completion_report_is_visible_to_customer("delivered", false));
         assert!(!completion_report_is_visible_to_customer("in_review", true));
         assert!(!completion_report_is_visible_to_customer("submitted", true));
+    }
+
+    #[test]
+    fn delivery_readiness_requires_review_status_timestamp_and_passing_checks() {
+        assert!(completion_report_is_ready_for_delivery("in_review", true, 0));
+        assert!(!completion_report_is_ready_for_delivery("in_review", false, 0));
+        assert!(!completion_report_is_ready_for_delivery("in_review", true, 1));
+        assert!(!completion_report_is_ready_for_delivery("submitted", true, 0));
+        assert!(!completion_report_is_ready_for_delivery("delivered", true, 0));
     }
 
     #[test]
