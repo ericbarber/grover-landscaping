@@ -1,0 +1,44 @@
+# Completion Report Manager Queue
+
+This note describes how managers should triage completion reports before customer delivery.
+
+## Queue buckets
+
+Manager views should group reports by lifecycle status:
+
+- `draft`: crew evidence is not ready for review yet.
+- `submitted`: crew evidence is ready for manager review.
+- `in_review`: a manager is actively reviewing the report.
+- `changes_requested`: manager feedback requires crew follow-up before delivery.
+- `delivered`: the report has been approved and exposed to the customer portal.
+
+## Queue signals
+
+Useful queue signals include:
+
+- property and customer context,
+- assigned crew context,
+- latest summary version timestamp,
+- latest quality-check run timestamp,
+- passed and failed quality-check counts,
+- latest review note timestamp,
+- delivery timestamp when delivered.
+
+## Manager actions
+
+Managers should be able to:
+
+- open the persisted evidence snapshot,
+- review before and after photos,
+- review service-step snapshots,
+- review completed add-ons,
+- add review notes,
+- create a new summary version,
+- request changes,
+- approve delivery.
+
+## Guardrails
+
+Manager queue actions must not change property ownership, portfolio grouping, or crew service history.
+
+Manager review should work from persisted report snapshots so late job edits do not silently alter a report already under review.
