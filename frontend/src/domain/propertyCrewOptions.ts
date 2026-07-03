@@ -6,6 +6,13 @@ export interface PropertyCrewOption {
   serviceArea: string;
 }
 
+export interface PropertyCrewSwitchOptions {
+  propertyId: string;
+  currentCrew?: PropertyCrewOption;
+  alternateCrews: PropertyCrewOption[];
+  canSwitchCrews: boolean;
+}
+
 export function getServiceCrewsForProperty(
   property: CustomerPropertyProfile,
   crews: CrewProfile[],
@@ -51,4 +58,20 @@ export function getAlternateServiceCrewOptionsForProperty(
   assignments: PropertyCrewAssignment[],
 ): PropertyCrewOption[] {
   return getAlternateServiceCrewsForProperty(property, crews, assignments).map(toPropertyCrewOption);
+}
+
+export function buildPropertyCrewSwitchOptions(
+  property: CustomerPropertyProfile,
+  crews: CrewProfile[],
+  assignments: PropertyCrewAssignment[],
+): PropertyCrewSwitchOptions {
+  const currentCrew = getCurrentServiceCrewForProperty(property, crews, assignments);
+  const alternateCrews = getAlternateServiceCrewOptionsForProperty(property, crews, assignments);
+
+  return {
+    propertyId: property.id,
+    currentCrew: currentCrew ? toPropertyCrewOption(currentCrew) : undefined,
+    alternateCrews,
+    canSwitchCrews: alternateCrews.length > 0,
+  };
 }
