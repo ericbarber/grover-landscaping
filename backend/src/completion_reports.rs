@@ -32,6 +32,21 @@ pub fn is_valid_completion_report_lifecycle_status(status: &str) -> bool {
     )
 }
 
+pub fn completion_report_manager_queue_label(status: &str) -> Option<&'static str> {
+    match status {
+        "draft" => Some("Draft"),
+        "submitted" => Some("Ready for review"),
+        "in_review" => Some("In review"),
+        "changes_requested" => Some("Changes requested"),
+        "delivered" => Some("Delivered"),
+        _ => None,
+    }
+}
+
+pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_present: bool) -> bool {
+    status == "delivered" && delivered_at_present
+}
+
 pub fn build_completion_report(
     job: JobDetail,
     account: CustomerAccountSummary,
@@ -102,6 +117,7 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report,
+        completion_report_is_visible_to_customer, completion_report_manager_queue_label,
         is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
     use crate::{
@@ -181,6 +197,36 @@ mod tests {
     fn rejects_unknown_completion_report_lifecycle_statuses() {
         assert!(!is_valid_completion_report_lifecycle_status("ready"));
         assert!(!is_valid_completion_report_lifecycle_status("archived"));
+    }
+
+    #[test]
+    fn maps_completion_report_statuses_to_manager_queue_labels() {
+        assert_eq!(completion_report_manager_queue_label("draft"), Some("Draft"));
+        assert_eq!(
+            completion_report_manager_queue_label("submitted"),
+            Some("Ready for review")
+        );
+        assert_eq!(
+            completion_report_manager_queue_label("in_review"),
+            Some("In review")
+        );
+        assert_eq!(
+            completion_report_manager_queue_label("changes_requested"),
+            Some("Changes requested")
+        );
+        assert_eq!(
+            completion_report_manager_queue_label("delivered"),
+            Some("Delivered")
+        );
+        assert_eq!(completion_report_manager_queue_label("ready"), None);
+    }
+
+    #[test]
+    fn customer_visibility_requires_delivery_status_and_timestamp() {
+        assert!(completion_report_is_visible_to_customer("delivered", true));
+        assert!(!completion_report_is_visible_to_customer("delivered", false));
+        assert!(!completion_report_is_visible_to_customer("in_review", true));
+        assert!(!completion_report_is_visible_to_customer("submitted", true));
     }
 
     #[test]
