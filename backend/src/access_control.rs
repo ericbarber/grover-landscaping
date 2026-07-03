@@ -100,6 +100,13 @@ pub fn can_review_completion_report(role: &AccessRole) -> bool {
     )
 }
 
+pub fn can_deliver_completion_report(role: &AccessRole) -> bool {
+    matches!(
+        role,
+        AccessRole::OrganizationOwner | AccessRole::Manager | AccessRole::SupportAdmin
+    )
+}
+
 pub fn can_access_organization(context: &AccessContext, organization_id: &str) -> bool {
     context.organization_id == organization_id
 }
@@ -152,15 +159,24 @@ pub fn can_review_completion_report_for_organization(
         && context.roles.iter().any(can_review_completion_report)
 }
 
+pub fn can_deliver_completion_report_for_organization(
+    context: &AccessContext,
+    organization_id: &str,
+) -> bool {
+    can_access_organization(context, organization_id)
+        && context.roles.iter().any(can_deliver_completion_report)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        can_access_organization, can_manage_crew_assignments_for_organization,
-        can_manage_organization, can_manage_property_portfolios_for_organization,
-        can_manage_schedule, can_manage_schedule_for_organization,
-        can_review_completion_report_for_organization, can_submit_completion_report_for_organization,
-        can_view_crew_route, can_view_customer_portal,
-        can_view_customer_portal_for_organization, AccessContext, AccessRole,
+        can_access_organization, can_deliver_completion_report_for_organization,
+        can_manage_crew_assignments_for_organization, can_manage_organization,
+        can_manage_property_portfolios_for_organization, can_manage_schedule,
+        can_manage_schedule_for_organization, can_review_completion_report_for_organization,
+        can_submit_completion_report_for_organization, can_view_crew_route,
+        can_view_customer_portal, can_view_customer_portal_for_organization, AccessContext,
+        AccessRole,
     };
 
     fn manager_context() -> AccessContext {
@@ -313,6 +329,30 @@ mod tests {
     #[test]
     fn manager_cannot_review_completion_reports_in_another_organization() {
         assert!(!can_review_completion_report_for_organization(
+            &manager_context(),
+            "org_other_landscaping"
+        ));
+    }
+
+    #[test]
+    fn manager_can_deliver_completion_reports_inside_own_organization() {
+        assert!(can_deliver_completion_report_for_organization(
+            &manager_context(),
+            "org_demo_landscaping"
+        ));
+    }
+
+    #[test]
+    fn crew_member_cannot_deliver_completion_reports() {
+        assert!(!can_deliver_completion_report_for_organization(
+            &crew_member_context(),
+            "org_demo_landscaping"
+        ));
+    }
+
+    #[test]
+    fn manager_cannot_deliver_completion_reports_in_another_organization() {
+        assert!(!can_deliver_completion_report_for_organization(
             &manager_context(),
             "org_other_landscaping"
         ));
