@@ -55,6 +55,22 @@ pub fn completion_report_is_ready_for_delivery(
     status == "in_review" && reviewed_at_present && failed_quality_check_count == 0
 }
 
+pub fn completion_report_lifecycle_transition_is_allowed(
+    from_status: Option<&str>,
+    to_status: &str,
+) -> bool {
+    matches!(
+        (from_status, to_status),
+        (None, "draft")
+            | (None, "submitted")
+            | (Some("draft"), "submitted")
+            | (Some("submitted"), "in_review")
+            | (Some("in_review"), "changes_requested")
+            | (Some("in_review"), "delivered")
+            | (Some("changes_requested"), "submitted")
+    )
+}
+
 pub fn build_completion_report(
     job: JobDetail,
     account: CustomerAccountSummary,
@@ -126,8 +142,8 @@ mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report,
         completion_report_is_ready_for_delivery, completion_report_is_visible_to_customer,
-        completion_report_manager_queue_label, is_valid_completion_report_lifecycle_status,
-        CompletionReportPersistence,
+        completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
+        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -245,6 +261,28 @@ mod tests {
         assert!(!completion_report_is_ready_for_delivery("in_review", true, 1));
         assert!(!completion_report_is_ready_for_delivery("submitted", true, 0));
         assert!(!completion_report_is_ready_for_delivery("delivered", true, 0));
+    }
+
+    #[test]
+    fn allows_expected_completion_report_lifecycle_transitions() {
+        assert!(completion_report_lifecycle_transition_is_allowed(None, "draft"));
+        assert!(completion_report_lifecycle_transition_is_allowed(None, "submitted"));
+        assert!(completion_report_lifecycle_transition_is_allowed(Some("draft"), "submitted"));
+        assert!(completion_report_lifecycle_transition_is_allowed(Some("submitted"), "in_review"));
+        assert!(completion_report_lifecycle_transition_is_allowed(Some("in_review"), "changes_requested"));
+        assert!(completion_report_lifecycle_transition_is_allowed(Some("in_review"), "delivered"));
+        assert!(completion_report_lifecycle_transition_is_allowed(Some("changes_requested"), "submitted"));
+    }
+
+    #[test]
+    fn rejects_unexpected_completion_report_lifecycle_transitions() {
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("draft"), "delivered"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("submitted"), "delivered"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("changes_requested"), "delivered"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("delivered"), "in_review"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("delivered"), "delivered"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(None, "delivered"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(Some("ready"), "submitted"));
     }
 
     #[test]
