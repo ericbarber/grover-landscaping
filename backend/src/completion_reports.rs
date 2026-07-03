@@ -25,6 +25,13 @@ pub struct CompletionReportResponse {
     pub completed_add_ons: Vec<JobAddOn>,
 }
 
+pub fn is_valid_completion_report_lifecycle_status(status: &str) -> bool {
+    matches!(
+        status,
+        "draft" | "submitted" | "in_review" | "changes_requested" | "delivered"
+    )
+}
+
 pub fn build_completion_report(
     job: JobDetail,
     account: CustomerAccountSummary,
@@ -94,7 +101,8 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_completion_report_persistence, build_completion_report, CompletionReportPersistence,
+        apply_completion_report_persistence, build_completion_report,
+        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -158,6 +166,21 @@ mod tests {
             note: None,
             status: status.to_string(),
         }
+    }
+
+    #[test]
+    fn accepts_completion_report_lifecycle_statuses() {
+        assert!(is_valid_completion_report_lifecycle_status("draft"));
+        assert!(is_valid_completion_report_lifecycle_status("submitted"));
+        assert!(is_valid_completion_report_lifecycle_status("in_review"));
+        assert!(is_valid_completion_report_lifecycle_status("changes_requested"));
+        assert!(is_valid_completion_report_lifecycle_status("delivered"));
+    }
+
+    #[test]
+    fn rejects_unknown_completion_report_lifecycle_statuses() {
+        assert!(!is_valid_completion_report_lifecycle_status("ready"));
+        assert!(!is_valid_completion_report_lifecycle_status("archived"));
     }
 
     #[test]
