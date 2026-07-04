@@ -58,6 +58,30 @@ pub fn completion_report_manager_queue_priority(status: &str) -> Option<u8> {
     }
 }
 
+pub fn completion_report_start_review_action_is_available(status: &str) -> bool {
+    status == "submitted"
+}
+
+pub fn completion_report_request_changes_action_is_available(status: &str) -> bool {
+    status == "in_review"
+}
+
+pub fn completion_report_resubmit_action_is_available(status: &str) -> bool {
+    status == "changes_requested"
+}
+
+pub fn completion_report_delivery_action_is_available(
+    status: &str,
+    reviewed_at_present: bool,
+    failed_quality_check_count: u32,
+) -> bool {
+    completion_report_is_ready_for_delivery(
+        status,
+        reviewed_at_present,
+        failed_quality_check_count,
+    ) && completion_report_lifecycle_transition_is_allowed(Some(status), "delivered")
+}
+
 pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_present: bool) -> bool {
     status == "delivered" && delivered_at_present
 }
@@ -164,11 +188,15 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report,
+        completion_report_delivery_action_is_available,
         completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
         completion_report_is_visible_to_customer, completion_report_lifecycle_transition_is_allowed,
         completion_report_manager_queue_label, completion_report_manager_queue_priority,
-        completion_report_share_link_is_available, is_valid_completion_report_lifecycle_status,
-        CompletionReportPersistence,
+        completion_report_request_changes_action_is_available,
+        completion_report_resubmit_action_is_available,
+        completion_report_share_link_is_available,
+        completion_report_start_review_action_is_available,
+        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -289,6 +317,30 @@ mod tests {
         assert_eq!(completion_report_manager_queue_priority("draft"), Some(3));
         assert_eq!(completion_report_manager_queue_priority("delivered"), Some(4));
         assert_eq!(completion_report_manager_queue_priority("ready"), None);
+    }
+
+    #[test]
+    fn manager_actions_follow_completion_report_lifecycle_state() {
+        assert!(completion_report_start_review_action_is_available("submitted"));
+        assert!(!completion_report_start_review_action_is_available("draft"));
+        assert!(!completion_report_start_review_action_is_available("in_review"));
+
+        assert!(completion_report_request_changes_action_is_available("in_review"));
+        assert!(!completion_report_request_changes_action_is_available("submitted"));
+        assert!(!completion_report_request_changes_action_is_available("changes_requested"));
+
+        assert!(completion_report_resubmit_action_is_available("changes_requested"));
+        assert!(!completion_report_resubmit_action_is_available("draft"));
+        assert!(!completion_report_resubmit_action_is_available("delivered"));
+    }
+
+    #[test]
+    fn delivery_action_requires_readiness_and_allowed_transition() {
+        assert!(completion_report_delivery_action_is_available("in_review", true, 0));
+        assert!(!completion_report_delivery_action_is_available("in_review", false, 0));
+        assert!(!completion_report_delivery_action_is_available("in_review", true, 1));
+        assert!(!completion_report_delivery_action_is_available("submitted", true, 0));
+        assert!(!completion_report_delivery_action_is_available("delivered", true, 0));
     }
 
     #[test]
