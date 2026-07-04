@@ -47,6 +47,14 @@ pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_prese
     status == "delivered" && delivered_at_present
 }
 
+pub fn completion_report_share_link_is_available(
+    status: &str,
+    delivered_at_present: bool,
+    share_token_present: bool,
+) -> bool {
+    completion_report_is_visible_to_customer(status, delivered_at_present) && share_token_present
+}
+
 pub fn completion_report_is_ready_for_delivery(
     status: &str,
     reviewed_at_present: bool,
@@ -143,7 +151,8 @@ mod tests {
         apply_completion_report_persistence, build_completion_report,
         completion_report_is_ready_for_delivery, completion_report_is_visible_to_customer,
         completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
-        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
+        completion_report_share_link_is_available, is_valid_completion_report_lifecycle_status,
+        CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -252,6 +261,15 @@ mod tests {
         assert!(!completion_report_is_visible_to_customer("delivered", false));
         assert!(!completion_report_is_visible_to_customer("in_review", true));
         assert!(!completion_report_is_visible_to_customer("submitted", true));
+    }
+
+    #[test]
+    fn share_link_requires_customer_visibility_and_token() {
+        assert!(completion_report_share_link_is_available("delivered", true, true));
+        assert!(!completion_report_share_link_is_available("delivered", true, false));
+        assert!(!completion_report_share_link_is_available("delivered", false, true));
+        assert!(!completion_report_share_link_is_available("in_review", true, true));
+        assert!(!completion_report_share_link_is_available("submitted", true, true));
     }
 
     #[test]
