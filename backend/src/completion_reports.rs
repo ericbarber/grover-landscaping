@@ -47,6 +47,17 @@ pub fn completion_report_is_active_manager_queue_status(status: &str) -> bool {
     matches!(status, "draft" | "submitted" | "in_review" | "changes_requested")
 }
 
+pub fn completion_report_manager_queue_priority(status: &str) -> Option<u8> {
+    match status {
+        "changes_requested" => Some(0),
+        "submitted" => Some(1),
+        "in_review" => Some(2),
+        "draft" => Some(3),
+        "delivered" => Some(4),
+        _ => None,
+    }
+}
+
 pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_present: bool) -> bool {
     status == "delivered" && delivered_at_present
 }
@@ -155,8 +166,9 @@ mod tests {
         apply_completion_report_persistence, build_completion_report,
         completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
         completion_report_is_visible_to_customer, completion_report_lifecycle_transition_is_allowed,
-        completion_report_manager_queue_label, completion_report_share_link_is_available,
-        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
+        completion_report_manager_queue_label, completion_report_manager_queue_priority,
+        completion_report_share_link_is_available, is_valid_completion_report_lifecycle_status,
+        CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -267,6 +279,16 @@ mod tests {
         assert!(completion_report_is_active_manager_queue_status("changes_requested"));
         assert!(!completion_report_is_active_manager_queue_status("delivered"));
         assert!(!completion_report_is_active_manager_queue_status("ready"));
+    }
+
+    #[test]
+    fn manager_queue_priority_sorts_attention_items_before_history() {
+        assert_eq!(completion_report_manager_queue_priority("changes_requested"), Some(0));
+        assert_eq!(completion_report_manager_queue_priority("submitted"), Some(1));
+        assert_eq!(completion_report_manager_queue_priority("in_review"), Some(2));
+        assert_eq!(completion_report_manager_queue_priority("draft"), Some(3));
+        assert_eq!(completion_report_manager_queue_priority("delivered"), Some(4));
+        assert_eq!(completion_report_manager_queue_priority("ready"), None);
     }
 
     #[test]
