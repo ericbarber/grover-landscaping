@@ -43,6 +43,10 @@ pub fn completion_report_manager_queue_label(status: &str) -> Option<&'static st
     }
 }
 
+pub fn completion_report_is_active_manager_queue_status(status: &str) -> bool {
+    matches!(status, "draft" | "submitted" | "in_review" | "changes_requested")
+}
+
 pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_present: bool) -> bool {
     status == "delivered" && delivered_at_present
 }
@@ -149,10 +153,10 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 mod tests {
     use super::{
         apply_completion_report_persistence, build_completion_report,
-        completion_report_is_ready_for_delivery, completion_report_is_visible_to_customer,
-        completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
-        completion_report_share_link_is_available, is_valid_completion_report_lifecycle_status,
-        CompletionReportPersistence,
+        completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
+        completion_report_is_visible_to_customer, completion_report_lifecycle_transition_is_allowed,
+        completion_report_manager_queue_label, completion_report_share_link_is_available,
+        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -253,6 +257,16 @@ mod tests {
             Some("Delivered")
         );
         assert_eq!(completion_report_manager_queue_label("ready"), None);
+    }
+
+    #[test]
+    fn active_manager_queue_statuses_exclude_delivered_and_unknown_statuses() {
+        assert!(completion_report_is_active_manager_queue_status("draft"));
+        assert!(completion_report_is_active_manager_queue_status("submitted"));
+        assert!(completion_report_is_active_manager_queue_status("in_review"));
+        assert!(completion_report_is_active_manager_queue_status("changes_requested"));
+        assert!(!completion_report_is_active_manager_queue_status("delivered"));
+        assert!(!completion_report_is_active_manager_queue_status("ready"));
     }
 
     #[test]
