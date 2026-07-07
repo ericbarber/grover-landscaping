@@ -3,6 +3,7 @@ import {
   countManagerActivityBySource,
   countManagerActivityByTone,
   countManagerActivityNeedingReview,
+  countManagerActivityNeedingReviewBySource,
   filterManagerActivityItems,
   getLatestManagerActivityTimestamp,
   getManagerActivityEmptyState,
@@ -278,24 +279,44 @@ export function ManagerActivityHistoryPanel({
       </div>
 
       <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {activitySources.map((source) => (
-          <button
-            key={source}
-            aria-pressed={sourceFilter === source}
-            className={`rounded-xl border px-3 py-2 text-left transition ${
-              sourceFilter === source
-                ? 'border-slate-950 bg-slate-950 text-white'
-                : 'border-slate-200 bg-slate-50 text-slate-950 hover:bg-slate-100'
-            }`}
-            onClick={() => setSourceFilter(sourceFilter === source ? 'all' : source)}
-            type="button"
-          >
-            <p className={`text-[10px] font-semibold uppercase tracking-wide ${sourceFilter === source ? 'text-slate-300' : 'text-slate-500'}`}>
-              {managerActivitySourceLabel(source)}
-            </p>
-            <p className="mt-1 text-lg font-bold">{countManagerActivityBySource(items, source)}</p>
-          </button>
-        ))}
+        {activitySources.map((source) => {
+          const sourceActivityCount = countManagerActivityBySource(items, source);
+          const sourceReviewCount = countManagerActivityNeedingReviewBySource(items, source);
+          const sourceLabel = managerActivitySourceLabel(source);
+
+          return (
+            <button
+              key={source}
+              aria-label={`${sourceLabel}: ${sourceActivityCount} activity items, ${sourceReviewCount} need review`}
+              aria-pressed={sourceFilter === source}
+              className={`rounded-xl border px-3 py-2 text-left transition ${
+                sourceFilter === source
+                  ? 'border-slate-950 bg-slate-950 text-white'
+                  : 'border-slate-200 bg-slate-50 text-slate-950 hover:bg-slate-100'
+              }`}
+              onClick={() => setSourceFilter(sourceFilter === source ? 'all' : source)}
+              type="button"
+            >
+              <p className={`text-[10px] font-semibold uppercase tracking-wide ${sourceFilter === source ? 'text-slate-300' : 'text-slate-500'}`}>
+                {sourceLabel}
+              </p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <p className="text-lg font-bold">{sourceActivityCount}</p>
+                <p
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    sourceFilter === source
+                      ? 'bg-white/20 text-white'
+                      : sourceReviewCount > 0
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                  }`}
+                >
+                  {sourceReviewCount > 0 ? `${sourceReviewCount} review` : 'Clear'}
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <div aria-label="Filter manager activity by tone" className="mt-3 flex flex-wrap gap-2">
