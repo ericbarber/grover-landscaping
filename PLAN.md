@@ -463,3 +463,35 @@ Next implementation work:
 - Add organization-level usage limits, rate limiting, and abuse monitoring before broad public sign-up
 - Add structured logs, metrics, traces, alerting, backups, restore drills, and incident runbooks before scaling beyond early customers
 - Consider regional deployment, enterprise SSO, SCIM-style user lifecycle management, and stronger data residency controls only after adoption and customer requirements justify them
+
+### Professional product roadmap
+
+Goal: evolve the MVP into a polished, professional landscaping operations product that can support paying customers, internal office teams, field crews, property managers, and multi-crew service companies.
+
+Priority feature groups:
+
+- Professional onboarding: guided setup for organizations, crews, properties, portfolios, service catalogs, invite roles, sample data, and first-route publishing
+- Branded customer experience: service history timeline, delivered report cards, customer-safe evidence detail, bid history, support requests, communication preferences, and company-branded portal surfaces
+- Field crew excellence: installable mobile PWA experience, offline-ready daily routes, photo capture quality checks, GPS/time context for evidence, issue capture, safety notes, and crew handoff notes
+- Manager command center: dispatch calendar, drag-and-drop route planning, crew capacity heatmaps, work backlog, approval queues, quality review queues, and exception alerts for missed or delayed work
+- Revenue operations: recurring service contracts, estimates, bids, change orders, deposits, invoices, payment status, tax/discount fields, account balances, and customer payment links
+- Communication center: customer and crew message threads, templated updates, notification preferences, quiet-hour rules, delivery receipts, failed-delivery recovery, and manager-visible communication history
+- Quality assurance: completion report review workflow, evidence completeness checks, before/after comparison, manager sign-off, audit trail, and customer-visible approved summary versions
+- Analytics and reporting: crew productivity, route efficiency, service profitability, account health, bid conversion, customer retention, missed-service trends, and marketing campaign attribution
+- Integrations and exports: calendar export, map routing provider integration, accounting export, CSV import/export, webhook events, public API boundaries, and CRM-style lead capture handoff
+- Administration and support: organization settings, role administration, feature flags, support impersonation with audit controls, data retention settings, backup/restore drills, and operational runbooks
+
+Professional release milestones:
+
+- Pilot-ready release: authenticated manager/crew/customer roles, reliable hosted environment, object-storage photo evidence, basic customer portal, completion report delivery, and supportable onboarding
+- Professional operations release: persisted route planning, approval queues, recurring contracts, customer bid history, notification provider integration, and manager analytics dashboard
+- Scale-ready release: multi-tenant administration, billing and payments, integration hooks, observability, incident runbooks, data retention controls, rate limits, and organization-level usage governance
+
+Product quality bar before paid launch:
+
+- Core crew, manager, and customer workflows work without local-only assumptions
+- Every customer-visible report is scoped to the correct customer account and property portfolio
+- Every manager action that changes schedule, price, report status, or customer communication is auditable
+- Photo evidence and completion reports are persisted as immutable customer delivery snapshots
+- Notification, upload, and payment failures are visible to managers with retry or recovery guidance
+- The product has a staging environment, smoke-test checklist, rollback notes, and documented support procedures
