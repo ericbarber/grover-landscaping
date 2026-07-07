@@ -1,9 +1,6 @@
 import type { ManagerActivitySource } from './managerActivity';
-import { managerActivitySourceLabel } from './managerActivityLabels';
-import {
-  managerActivityReviewAriaLabel,
-  managerActivityReviewBadgeLabel,
-} from './managerActivityReviewCopy';
+import { managerActivityReviewBadgeLabel } from './managerActivityReviewCopy';
+import { managerActivitySourceFilterAriaCopy } from './managerActivitySourceFilterAriaCopy';
 
 export function managerActivitySourceFilterStatusLabel(needsReviewCount: number): string {
   return managerActivityReviewBadgeLabel(needsReviewCount);
@@ -14,8 +11,5 @@ export function managerActivitySourceFilterAriaLabel(
   totalCount: number,
   needsReviewCount: number,
 ): string {
-  const label = managerActivitySourceLabel(source);
-  const reviewLabel = managerActivityReviewAriaLabel(needsReviewCount);
-
-  return `${label}: ${totalCount} activity items, ${reviewLabel}`;
+  return managerActivitySourceFilterAriaCopy(source, totalCount, needsReviewCount);
 }
