@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { managerActivitySourceFilterAriaCopy } from './managerActivitySourceFilterAriaCopy';
-import { managerActivitySourceFilterAriaLabel } from './managerActivitySourceFilterLabels';
+import {
+  managerActivitySourceFilterAriaLabel,
+  managerActivitySourceFilterStatusLabel,
+} from './managerActivitySourceFilterLabels';
 
 describe('manager activity source filter aria copy', () => {
   it('formats source filter copy with singular counts', () => {
@@ -13,5 +16,10 @@ describe('manager activity source filter aria copy', () => {
 
   it('matches the source filter label wrapper', () => {
     expect(managerActivitySourceFilterAriaLabel('photo', 1, 0)).toBe('Photo: 1 activity item, 0 items need review');
+  });
+
+  it('matches the source filter status wrapper', () => {
+    expect(managerActivitySourceFilterStatusLabel(0)).toBe('Clear');
+    expect(managerActivitySourceFilterStatusLabel(2)).toBe('2 reviews');
   });
 });
