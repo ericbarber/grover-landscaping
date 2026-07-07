@@ -4,6 +4,7 @@ import {
   type ManagerActivityItem,
   type ManagerActivitySource,
 } from './managerActivity';
+import { managerActivityReviewBadgeLabel } from './managerActivityReviewCopy';
 
 export type ManagerActivitySourceSummary = {
   source: ManagerActivitySource;
@@ -13,7 +14,7 @@ export type ManagerActivitySourceSummary = {
 };
 
 export function managerActivitySourceStatusLabel(needsReviewCount: number): string {
-  return needsReviewCount > 0 ? `${needsReviewCount} review` : 'Clear';
+  return managerActivityReviewBadgeLabel(needsReviewCount);
 }
 
 export function getManagerActivitySourceSummary(
