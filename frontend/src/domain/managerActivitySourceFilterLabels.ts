@@ -1,8 +1,9 @@
-import { managerActivitySourceLabel } from './managerActivityLabels';
 import type { ManagerActivitySource } from './managerActivity';
+import { managerActivitySourceLabel } from './managerActivityLabels';
+import { managerActivityReviewBadgeLabel } from './managerActivityReviewCopy';
 
 export function managerActivitySourceFilterStatusLabel(needsReviewCount: number): string {
-  return needsReviewCount > 0 ? `${needsReviewCount} review` : 'Clear';
+  return managerActivityReviewBadgeLabel(needsReviewCount);
 }
 
 export function managerActivitySourceFilterAriaLabel(
