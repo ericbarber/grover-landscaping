@@ -180,9 +180,10 @@ export function ManagerActivityHistoryPanel({
   const quickFilters = [
     {
       id: 'needs-review',
+      count: totalReviewCount,
       isVisible: totalReviewCount > 0,
       isActive: isShowingNeedsReview,
-      ariaLabel: 'Show manager activity items that need review',
+      ariaLabel: `Show ${totalReviewCount} manager activity items that need review`,
       activeLabel: 'Showing needs review',
       inactiveLabel: 'Show needs review',
       title: 'Show all warning activity that needs manager review.',
@@ -191,9 +192,10 @@ export function ManagerActivityHistoryPanel({
     },
     {
       id: 'route-review',
+      count: totalRouteReviewCount,
       isVisible: totalRouteReviewCount > 0,
       isActive: isShowingRouteReview,
-      ariaLabel: 'Show manager activity items from route review',
+      ariaLabel: `Show ${totalRouteReviewCount} manager activity items from route review`,
       activeLabel: 'Showing route review',
       inactiveLabel: 'Show route review',
       title: 'Show route planning and route review activity.',
@@ -202,9 +204,10 @@ export function ManagerActivityHistoryPanel({
     },
     {
       id: 'sync-fallback',
+      count: totalSyncFallbackCount,
       isVisible: totalSyncFallbackCount > 0,
       isActive: isShowingSyncFallback,
-      ariaLabel: 'Show manager activity items from sync fallback',
+      ariaLabel: `Show ${totalSyncFallbackCount} manager activity items from sync fallback`,
       activeLabel: 'Showing sync fallback',
       inactiveLabel: 'Show sync fallback',
       title: 'Show local fallback and sync-related activity.',
@@ -213,9 +216,10 @@ export function ManagerActivityHistoryPanel({
     },
     {
       id: 'photo-evidence',
+      count: totalPhotoEvidenceCount,
       isVisible: totalPhotoEvidenceCount > 0,
       isActive: isShowingPhotoEvidence,
-      ariaLabel: 'Show manager activity items from photo evidence',
+      ariaLabel: `Show ${totalPhotoEvidenceCount} manager activity items from photo evidence`,
       activeLabel: 'Showing photo evidence',
       inactiveLabel: 'Show photo evidence',
       title: 'Show photo evidence and completion-report activity.',
@@ -336,14 +340,19 @@ export function ManagerActivityHistoryPanel({
                 key={quickFilter.id}
                 aria-label={quickFilter.ariaLabel}
                 aria-pressed={quickFilter.isActive}
-                className={`text-xs font-semibold underline underline-offset-4 ${
+                className={`inline-flex items-center gap-1 text-xs font-semibold transition ${
                   quickFilter.isActive ? quickFilter.activeClassName : 'text-slate-600 hover:text-slate-950'
                 }`}
                 onClick={quickFilter.onClick}
                 title={quickFilter.title}
                 type="button"
               >
-                {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
+                <span className="underline underline-offset-4">
+                  {quickFilter.isActive ? quickFilter.activeLabel : quickFilter.inactiveLabel}
+                </span>
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+                  {quickFilter.count}
+                </span>
               </button>
             ))}
           </div>
