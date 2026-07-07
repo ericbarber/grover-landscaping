@@ -8,7 +8,7 @@ import {
 
 describe('manager activity source summary helpers', () => {
   it('labels sources with review work or clear state', () => {
-    expect(managerActivitySourceStatusLabel(2)).toBe('2 review');
+    expect(managerActivitySourceStatusLabel(2)).toBe('2 reviews');
     expect(managerActivitySourceStatusLabel(1)).toBe('1 review');
     expect(managerActivitySourceStatusLabel(0)).toBe('Clear');
   });
