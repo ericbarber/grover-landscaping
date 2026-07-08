@@ -22,6 +22,14 @@ function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutatio
   };
 }
 
+function assertPublishedDayPlan(response: DayPlanMutationResponse): DayPlanMutationResponse {
+  if (response.status !== 'published' || !response.persisted) {
+    throw new Error('Publish day plan request did not return a persisted published route');
+  }
+
+  return response;
+}
+
 export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutationResponse> {
   const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/publish`, {
     method: 'POST',
@@ -31,5 +39,7 @@ export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutation
     throw new Error(`Publish day plan request failed with status ${response.status}`);
   }
 
-  return toDayPlanMutation((await response.json()) as ApiDayPlanMutationResponse);
+  return assertPublishedDayPlan(
+    toDayPlanMutation((await response.json()) as ApiDayPlanMutationResponse),
+  );
 }
