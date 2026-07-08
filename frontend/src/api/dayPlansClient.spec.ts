@@ -1,12 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import {
   normalizeAssignDayPlanStopRequest,
+  normalizeDayPlanId,
   normalizeDayPlanStopId,
   normalizeDayPlanStopIds,
   validateAssignDayPlanStopRequest,
+  validateDayPlanId,
   validateDayPlanStopId,
   validateDayPlanStopIds,
 } from './dayPlansClient';
+
+describe('day plan client route edit identifiers', () => {
+  it('normalizes day plan IDs before editing route stops', () => {
+    expect(normalizeDayPlanId(' day_plan_2026_06_16_crew_1001 ')).toBe(
+      'day_plan_2026_06_16_crew_1001',
+    );
+  });
+
+  it('rejects blank day plan IDs before editing route stops', () => {
+    expect(() => validateDayPlanId('   ')).toThrow(
+      'dayPlanId is required before editing day plan stops',
+    );
+  });
+});
 
 describe('day plan client stop assignment requests', () => {
   it('normalizes job IDs while preserving workload estimates', () => {
