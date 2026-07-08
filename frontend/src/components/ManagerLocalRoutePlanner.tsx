@@ -6,7 +6,10 @@ import {
 } from '../api/dayPlansClient';
 import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
-import { getManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
+import {
+  getManagerDraftRoutePublishGuard,
+  type ManagerDraftRoutePublishGuard,
+} from '../domain/managerDraftRoutePublishGuard';
 import {
   moveDraftStopDown,
   moveDraftStopUp,
@@ -24,6 +27,7 @@ type ManagerLocalRoutePlannerProps = {
   dayPlanId?: string;
   canPersist?: boolean;
   onStopsChanged?: (stops: DayPlanStop[]) => void;
+  onPublishGuardChanged?: (publishGuard: ManagerDraftRoutePublishGuard) => void;
 };
 
 const nextStepCopy = {
@@ -38,6 +42,7 @@ export function ManagerLocalRoutePlanner({
   dayPlanId,
   canPersist = false,
   onStopsChanged,
+  onPublishGuardChanged,
 }: ManagerLocalRoutePlannerProps) {
   const [draftStops, setDraftStops] = useState<DayPlanStop[]>(initialStops);
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>(canPersist ? 'synced' : 'local');
@@ -51,15 +56,20 @@ export function ManagerLocalRoutePlanner({
 
   useEffect(() => {
     setDraftStops(initialStops);
-    onStopsChanged?.(initialStops);
+    reportRouteReadiness(initialStops);
     setSyncStatus(canPersist ? 'synced' : 'local');
     setMutationNotice(null);
     setRetryAction(null);
   }, [canPersist, dayPlanId]);
 
+  function reportRouteReadiness(stops: DayPlanStop[]) {
+    onStopsChanged?.(stops);
+    onPublishGuardChanged?.(getManagerDraftRoutePublishGuard(jobs, stops));
+  }
+
   function setRouteStops(nextStops: DayPlanStop[]) {
     setDraftStops(nextStops);
-    onStopsChanged?.(nextStops);
+    reportRouteReadiness(nextStops);
   }
 
   function keepPersistedRouteUnchanged(message: string, retry: () => void) {
