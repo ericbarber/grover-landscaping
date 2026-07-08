@@ -166,7 +166,11 @@ pub fn apply_completion_report_persistence(
     persistence: CompletionReportPersistence,
 ) {
     report.persisted = persistence.persisted;
-    report.share_url = persistence.share_token.as_deref().map(shared_report_url);
+    report.share_url = persistence
+        .share_token
+        .as_deref()
+        .filter(|_| report.report_status == "delivered")
+        .map(shared_report_url);
 }
 
 fn completion_progress(job: &JobDetail) -> u32 {
@@ -427,8 +431,26 @@ mod tests {
     }
 
     #[test]
-    fn persistence_result_sets_report_share_url() {
+    fn persistence_result_hides_report_share_url_until_delivery() {
         let mut report = build_completion_report(job(4, 1, 1), account(), Vec::new(), Vec::new());
+
+        apply_completion_report_persistence(
+            &mut report,
+            CompletionReportPersistence {
+                persisted: true,
+                share_token: Some("share_report_job_1001".to_string()),
+            },
+        );
+
+        assert_eq!(report.report_status, "submitted");
+        assert!(report.persisted);
+        assert_eq!(report.share_url, None);
+    }
+
+    #[test]
+    fn persistence_result_sets_report_share_url_for_delivered_report() {
+        let mut report = build_completion_report(job(4, 1, 1), account(), Vec::new(), Vec::new());
+        report.report_status = "delivered".to_string();
 
         apply_completion_report_persistence(
             &mut report,
