@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { seedManagerActivityItems } from './managerActivity';
 import {
   getManagerActivitySourceSummaries,
+  getManagerActivitySourceSummariesWithAriaLabels,
   getManagerActivitySourceSummary,
+  getManagerActivitySourceSummaryWithAriaLabel,
   managerActivitySourceStatusLabel,
 } from './managerActivitySourceSummary';
 
@@ -54,6 +56,35 @@ describe('manager activity source summary helpers', () => {
         totalCount: 1,
         needsReviewCount: 0,
         statusLabel: 'Clear',
+      },
+    ]);
+  });
+
+  it('builds a source summary with accessible copy', () => {
+    expect(getManagerActivitySourceSummaryWithAriaLabel(seedManagerActivityItems, 'route')).toEqual({
+      source: 'route',
+      totalCount: 1,
+      needsReviewCount: 1,
+      statusLabel: '1 review',
+      ariaLabel: 'Route: 1 activity item, 1 item needs review',
+    });
+  });
+
+  it('builds ordered summaries with accessible copy', () => {
+    expect(getManagerActivitySourceSummariesWithAriaLabels(seedManagerActivityItems, ['job', 'sync'])).toEqual([
+      {
+        source: 'job',
+        totalCount: 1,
+        needsReviewCount: 0,
+        statusLabel: 'Clear',
+        ariaLabel: 'Job: 1 activity item, 0 items need review',
+      },
+      {
+        source: 'sync',
+        totalCount: 1,
+        needsReviewCount: 0,
+        statusLabel: 'Clear',
+        ariaLabel: 'Sync: 1 activity item, 0 items need review',
       },
     ]);
   });
