@@ -95,6 +95,25 @@ export interface DayPlanStopReorderResponse {
   persisted: boolean;
 }
 
+export function normalizeCreateDayPlanRequest(
+  request: CreateDayPlanRequest,
+): CreateDayPlanRequest {
+  return {
+    crewId: request.crewId.trim(),
+    serviceDate: request.serviceDate.trim(),
+  };
+}
+
+export function validateCreateDayPlanRequest(request: CreateDayPlanRequest): void {
+  if (request.crewId.trim().length === 0) {
+    throw new Error('crewId is required before creating a draft day plan');
+  }
+
+  if (request.serviceDate.trim().length === 0) {
+    throw new Error('serviceDate is required before creating a draft day plan');
+  }
+}
+
 export function normalizeAssignDayPlanStopRequest(
   request: AssignDayPlanStopRequest,
 ): AssignDayPlanStopRequest {
@@ -290,12 +309,15 @@ export async function reorderDayPlanStops(
 }
 
 export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise<DayPlanMutationResponse> {
+  const normalizedRequest = normalizeCreateDayPlanRequest(request);
+  validateCreateDayPlanRequest(normalizedRequest);
+
   const response = await authenticatedFetch(`${API_BASE_URL}/day-plans`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      crew_id: request.crewId,
-      service_date: request.serviceDate,
+      crew_id: normalizedRequest.crewId,
+      service_date: normalizedRequest.serviceDate,
     }),
   });
 
@@ -310,9 +332,12 @@ export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise
 export async function createDraftDayPlanWithFallback(
   request: CreateDayPlanRequest,
 ): Promise<DayPlanMutationResponse> {
+  const normalizedRequest = normalizeCreateDayPlanRequest(request);
+  validateCreateDayPlanRequest(normalizedRequest);
+
   try {
-    return await createDraftDayPlan(request);
+    return await createDraftDayPlan(normalizedRequest);
   } catch {
-    return localDraftDayPlanResponse(request.crewId, request.serviceDate);
+    return localDraftDayPlanResponse(normalizedRequest.crewId, normalizedRequest.serviceDate);
   }
 }
