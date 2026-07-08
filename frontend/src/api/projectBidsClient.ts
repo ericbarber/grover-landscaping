@@ -4,7 +4,7 @@ import type {
   ProjectBidLineItem,
   ProjectBidStatus,
 } from '../domain/stopProgress';
-import { API_BASE_URL } from './baseUrl';
+import { API_BASE_URL, toBrowserUrl } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
 
 export interface ApiProjectBidLineItem {
@@ -113,15 +113,6 @@ export function toCustomerProjectBid(bid: ApiCustomerProjectBid): CustomerProjec
     respondedAt: bid.responded_at ?? undefined,
     expiresAt: bid.expires_at ?? undefined,
   };
-}
-
-function toBrowserUrl(pathOrUrl: string): string {
-  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
-    return pathOrUrl;
-  }
-
-  const origin = typeof window === 'undefined' ? 'http://localhost:5173' : window.location.origin;
-  return new URL(pathOrUrl, origin).toString();
 }
 
 export async function fetchProjectBids(dayPlanId: string): Promise<ProjectBid[]> {

@@ -13,6 +13,10 @@ A report is ready for delivery when it has:
 - a status history path through manager review,
 - delivery actor and delivery timestamp fields ready to be set.
 
+In the current legacy `job_completion_reports` implementation, the deliver endpoint enforces the available readiness fields: `in_review` status, review timestamp, 100% checklist progress, at least one before photo, at least one after photo, and `ready_for_customer = true`.
+
+The resubmit endpoint applies the same readiness snapshot checks before moving a `changes_requested` report back to `submitted`.
+
 ## Delivery behavior
 
 Delivery should happen only after manager approval. The delivery action should set delivery metadata, create or reuse the share token, move the report to `delivered`, and record the lifecycle change.

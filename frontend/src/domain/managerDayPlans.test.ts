@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultManagerServiceDate,
   draftDayPlanId,
+  draftPlanPersistenceDetail,
   draftPlanPersistenceLabel,
   localDraftDayPlanResponse,
-  localPublishedDayPlanResponse,
 } from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
@@ -27,18 +27,17 @@ describe('manager day plan helpers', () => {
     });
   });
 
-  it('creates local published day plan responses from draft plans', () => {
-    const draftPlan = localDraftDayPlanResponse('crew_1001', '2026-06-16');
-
-    expect(localPublishedDayPlanResponse(draftPlan)).toEqual({
-      ...draftPlan,
-      status: 'published',
-      persisted: false,
-    });
-  });
-
   it('labels persisted and local draft plans', () => {
     expect(draftPlanPersistenceLabel(true)).toBe('Saved to backend');
-    expect(draftPlanPersistenceLabel(false)).toBe('Saved locally until the backend create endpoint is available');
+    expect(draftPlanPersistenceLabel(false)).toBe('Local planning only');
+  });
+
+  it('explains whether draft route changes can be published', () => {
+    expect(draftPlanPersistenceDetail(true)).toBe(
+      'Route changes can sync to the backend and be published when ready.',
+    );
+    expect(draftPlanPersistenceDetail(false)).toBe(
+      'Backend draft was not created, so this route cannot be published to crews until draft creation succeeds.',
+    );
   });
 });

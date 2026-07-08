@@ -17,6 +17,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence
 - PostgreSQL-backed completion report state
+- Audited manager start-review transition for submitted completion reports
 - Stable shareable completion report links
 - Customer account status display
 - Manager draft day-plan creation and publishing
@@ -144,9 +145,14 @@ Current backend endpoints include:
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
+| POST | `/completion-reports/{report_id}/review` | Move a submitted completion report into manager review |
+| POST | `/completion-reports/{report_id}/request-changes` | Record manager feedback and move an in-review report to changes requested |
+| POST | `/completion-reports/{report_id}/resubmit` | Return a change-requested report to submitted after crew follow-up |
+| POST | `/completion-reports/{report_id}/deliver` | Approve a ready in-review report for customer delivery and issue a share link |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |
+| GET | `/report-view/{share_token}` | Open the customer-facing delivered report page |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
 | GET | `/jobs/{id}/photos` | List persisted photo evidence metadata |

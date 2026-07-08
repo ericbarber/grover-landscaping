@@ -326,9 +326,7 @@ impl DayPlanRepository {
     }
 }
 
-pub fn normalize_create_day_plan_request(
-    request: CreateDayPlanRequest,
-) -> CreateDayPlanRequest {
+pub fn normalize_create_day_plan_request(request: CreateDayPlanRequest) -> CreateDayPlanRequest {
     CreateDayPlanRequest {
         crew_id: request.crew_id.trim().to_string(),
         service_date: request.service_date.trim().to_string(),
@@ -396,7 +394,7 @@ fn is_valid_service_date(service_date: &str) -> bool {
 }
 
 fn is_leap_year(year: u32) -> bool {
-    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+    (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
 }
 
 pub fn validate_amendment_review(request: &ReviewDayPlanAmendmentRequest) -> Result<(), String> {

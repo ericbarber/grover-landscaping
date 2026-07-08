@@ -92,13 +92,18 @@ before_photos
 after_photos
 issue_photos
 share_token
+submitted_at
+reviewed_by_user_id
+reviewed_at
+delivered_by_user_id
+delivered_at
 last_generated_at
 sent_at
 created_at
 updated_at
 ```
 
-The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. The first persistence pass assigns a stable `share_token`, which backs `GET /reports/{share_token}`. Future work should add immutable customer-delivery snapshots before email/SMS sending.
+The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. Once a report enters manager review, later refreshes preserve the review snapshot fields and lifecycle status. Delivery assigns or reuses a stable `share_token`, sets delivery metadata, backs `GET /reports/{share_token}` only after delivery, and returns `/report-view/{share_token}` as the customer-facing browser link. Future work should add immutable customer-delivery snapshot child tables before email/SMS sending.
 
 ## project_bids
 

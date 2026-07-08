@@ -9,6 +9,7 @@ use grover_landscaping_api::{
         SendProjectBidRequest,
     },
 };
+use sqlx::Row;
 mod common;
 
 #[tokio::test]
@@ -20,6 +21,16 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     let jobs = JobRepository::connect(&config)
         .await
         .expect("repository should connect and run migrations");
+    let pool = jobs.pool().expect("database pool should be available");
+    sqlx::query(
+        "UPDATE day_plan_stops SET estimated_service_minutes = 45 WHERE day_plan_id = $1 AND id = $2",
+    )
+    .bind("day_plan_2026_06_15_crew_1001")
+    .bind("stop_1001")
+    .execute(&pool)
+    .await
+    .expect("source stop fixture should reset");
+
     let repository = DayPlanRepository::new();
     let day_plan_id = "day_plan_2026_06_15_crew_1001";
 
@@ -174,14 +185,16 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .await
         .is_none());
 
-    let service_minutes_before_conversion = repository
-        .today_for_crew("crew_1001")
-        .await
-        .stops
-        .into_iter()
-        .find(|stop| stop.id == "stop_1001")
-        .expect("source stop should remain on the route")
-        .estimated_service_minutes;
+    let source_stop_before_conversion = sqlx::query(
+        "SELECT estimated_service_minutes FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2",
+    )
+    .bind(day_plan_id)
+    .bind("stop_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("source stop should remain on the route");
+    let service_minutes_before_conversion =
+        source_stop_before_conversion.get::<i32, _>("estimated_service_minutes") as u32;
 
     let converted = bid_repository
         .convert_to_job_add_ons(day_plan_id, &bid.id)
@@ -201,19 +214,21 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         "SELECT COUNT(*) FROM service_job_add_ons WHERE project_bid_id = $1",
     )
     .bind(&bid.id)
-    .fetch_one(&jobs.pool().expect("database pool should be available"))
+    .fetch_one(&pool)
     .await
     .unwrap();
     assert_eq!(add_on_count, 1);
 
-    let crew_day_plan = repository.today_for_crew("crew_1001").await;
-    let converted_stop = crew_day_plan
-        .stops
-        .iter()
-        .find(|stop| stop.id == "stop_1001")
-        .expect("converted add-on source stop should remain on the route");
+    let converted_stop = sqlx::query(
+        "SELECT estimated_service_minutes FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2",
+    )
+    .bind(day_plan_id)
+    .bind("stop_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("converted add-on source stop should remain on the route");
     assert_eq!(
-        converted_stop.estimated_service_minutes,
+        converted_stop.get::<i32, _>("estimated_service_minutes") as u32,
         service_minutes_before_conversion + 30
     );
 

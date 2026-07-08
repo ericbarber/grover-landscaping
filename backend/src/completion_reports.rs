@@ -4,7 +4,30 @@ use serde::Serialize;
 #[derive(Clone, Debug, Default)]
 pub struct CompletionReportPersistence {
     pub persisted: bool,
+    pub report_status: Option<String>,
+    pub ready_for_customer: Option<bool>,
+    pub checklist_progress: Option<u32>,
+    pub before_photos: Option<u32>,
+    pub after_photos: Option<u32>,
+    pub issue_photos: Option<u32>,
     pub share_token: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CompletionReportActionResponse {
+    pub report_id: String,
+    pub job_id: String,
+    pub report_status: String,
+    pub persisted: bool,
+    pub share_url: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CompletionReportActionResult {
+    Updated(CompletionReportActionResponse),
+    InvalidTransition,
+    NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -44,7 +67,10 @@ pub fn completion_report_manager_queue_label(status: &str) -> Option<&'static st
 }
 
 pub fn completion_report_is_active_manager_queue_status(status: &str) -> bool {
-    matches!(status, "draft" | "submitted" | "in_review" | "changes_requested")
+    matches!(
+        status,
+        "draft" | "submitted" | "in_review" | "changes_requested"
+    )
 }
 
 pub fn completion_report_manager_queue_priority(status: &str) -> Option<u8> {
@@ -75,11 +101,8 @@ pub fn completion_report_delivery_action_is_available(
     reviewed_at_present: bool,
     failed_quality_check_count: u32,
 ) -> bool {
-    completion_report_is_ready_for_delivery(
-        status,
-        reviewed_at_present,
-        failed_quality_check_count,
-    ) && completion_report_lifecycle_transition_is_allowed(Some(status), "delivered")
+    completion_report_is_ready_for_delivery(status, reviewed_at_present, failed_quality_check_count)
+        && completion_report_lifecycle_transition_is_allowed(Some(status), "delivered")
 }
 
 pub fn completion_report_is_visible_to_customer(status: &str, delivered_at_present: bool) -> bool {
@@ -135,7 +158,12 @@ pub fn build_completion_report(
     CompletionReportResponse {
         report_id: completion_report_id(&job.id),
         job_id: job.id.clone(),
-        report_status: if ready_for_customer { "submitted" } else { "draft" }.to_string(),
+        report_status: if ready_for_customer {
+            "submitted"
+        } else {
+            "draft"
+        }
+        .to_string(),
         persisted: false,
         ready_for_customer,
         checklist_progress,
@@ -158,7 +186,7 @@ pub fn completion_report_id(job_id: &str) -> String {
 }
 
 pub fn shared_report_url(share_token: &str) -> String {
-    format!("/reports/{share_token}")
+    format!("/report-view/{share_token}")
 }
 
 pub fn apply_completion_report_persistence(
@@ -166,6 +194,24 @@ pub fn apply_completion_report_persistence(
     persistence: CompletionReportPersistence,
 ) {
     report.persisted = persistence.persisted;
+    if let Some(report_status) = persistence.report_status {
+        report.report_status = report_status;
+    }
+    if let Some(ready_for_customer) = persistence.ready_for_customer {
+        report.ready_for_customer = ready_for_customer;
+    }
+    if let Some(checklist_progress) = persistence.checklist_progress {
+        report.checklist_progress = checklist_progress;
+    }
+    if let Some(before_photos) = persistence.before_photos {
+        report.before_photos = before_photos;
+    }
+    if let Some(after_photos) = persistence.after_photos {
+        report.after_photos = after_photos;
+    }
+    if let Some(issue_photos) = persistence.issue_photos {
+        report.issue_photos = issue_photos;
+    }
     report.share_url = persistence
         .share_token
         .as_deref()
@@ -194,11 +240,11 @@ mod tests {
         apply_completion_report_persistence, build_completion_report,
         completion_report_delivery_action_is_available,
         completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
-        completion_report_is_visible_to_customer, completion_report_lifecycle_transition_is_allowed,
-        completion_report_manager_queue_label, completion_report_manager_queue_priority,
+        completion_report_is_visible_to_customer,
+        completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
+        completion_report_manager_queue_priority,
         completion_report_request_changes_action_is_available,
-        completion_report_resubmit_action_is_available,
-        completion_report_share_link_is_available,
+        completion_report_resubmit_action_is_available, completion_report_share_link_is_available,
         completion_report_start_review_action_is_available,
         is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
     };
@@ -271,7 +317,9 @@ mod tests {
         assert!(is_valid_completion_report_lifecycle_status("draft"));
         assert!(is_valid_completion_report_lifecycle_status("submitted"));
         assert!(is_valid_completion_report_lifecycle_status("in_review"));
-        assert!(is_valid_completion_report_lifecycle_status("changes_requested"));
+        assert!(is_valid_completion_report_lifecycle_status(
+            "changes_requested"
+        ));
         assert!(is_valid_completion_report_lifecycle_status("delivered"));
     }
 
@@ -283,7 +331,10 @@ mod tests {
 
     #[test]
     fn maps_completion_report_statuses_to_manager_queue_labels() {
-        assert_eq!(completion_report_manager_queue_label("draft"), Some("Draft"));
+        assert_eq!(
+            completion_report_manager_queue_label("draft"),
+            Some("Draft")
+        );
         assert_eq!(
             completion_report_manager_queue_label("submitted"),
             Some("Ready for review")
@@ -306,93 +357,229 @@ mod tests {
     #[test]
     fn active_manager_queue_statuses_exclude_delivered_and_unknown_statuses() {
         assert!(completion_report_is_active_manager_queue_status("draft"));
-        assert!(completion_report_is_active_manager_queue_status("submitted"));
-        assert!(completion_report_is_active_manager_queue_status("in_review"));
-        assert!(completion_report_is_active_manager_queue_status("changes_requested"));
-        assert!(!completion_report_is_active_manager_queue_status("delivered"));
+        assert!(completion_report_is_active_manager_queue_status(
+            "submitted"
+        ));
+        assert!(completion_report_is_active_manager_queue_status(
+            "in_review"
+        ));
+        assert!(completion_report_is_active_manager_queue_status(
+            "changes_requested"
+        ));
+        assert!(!completion_report_is_active_manager_queue_status(
+            "delivered"
+        ));
         assert!(!completion_report_is_active_manager_queue_status("ready"));
     }
 
     #[test]
     fn manager_queue_priority_sorts_attention_items_before_history() {
-        assert_eq!(completion_report_manager_queue_priority("changes_requested"), Some(0));
-        assert_eq!(completion_report_manager_queue_priority("submitted"), Some(1));
-        assert_eq!(completion_report_manager_queue_priority("in_review"), Some(2));
+        assert_eq!(
+            completion_report_manager_queue_priority("changes_requested"),
+            Some(0)
+        );
+        assert_eq!(
+            completion_report_manager_queue_priority("submitted"),
+            Some(1)
+        );
+        assert_eq!(
+            completion_report_manager_queue_priority("in_review"),
+            Some(2)
+        );
         assert_eq!(completion_report_manager_queue_priority("draft"), Some(3));
-        assert_eq!(completion_report_manager_queue_priority("delivered"), Some(4));
+        assert_eq!(
+            completion_report_manager_queue_priority("delivered"),
+            Some(4)
+        );
         assert_eq!(completion_report_manager_queue_priority("ready"), None);
     }
 
     #[test]
     fn manager_actions_follow_completion_report_lifecycle_state() {
-        assert!(completion_report_start_review_action_is_available("submitted"));
+        assert!(completion_report_start_review_action_is_available(
+            "submitted"
+        ));
         assert!(!completion_report_start_review_action_is_available("draft"));
-        assert!(!completion_report_start_review_action_is_available("in_review"));
+        assert!(!completion_report_start_review_action_is_available(
+            "in_review"
+        ));
 
-        assert!(completion_report_request_changes_action_is_available("in_review"));
-        assert!(!completion_report_request_changes_action_is_available("submitted"));
-        assert!(!completion_report_request_changes_action_is_available("changes_requested"));
+        assert!(completion_report_request_changes_action_is_available(
+            "in_review"
+        ));
+        assert!(!completion_report_request_changes_action_is_available(
+            "submitted"
+        ));
+        assert!(!completion_report_request_changes_action_is_available(
+            "changes_requested"
+        ));
 
-        assert!(completion_report_resubmit_action_is_available("changes_requested"));
+        assert!(completion_report_resubmit_action_is_available(
+            "changes_requested"
+        ));
         assert!(!completion_report_resubmit_action_is_available("draft"));
         assert!(!completion_report_resubmit_action_is_available("delivered"));
     }
 
     #[test]
     fn delivery_action_requires_readiness_and_allowed_transition() {
-        assert!(completion_report_delivery_action_is_available("in_review", true, 0));
-        assert!(!completion_report_delivery_action_is_available("in_review", false, 0));
-        assert!(!completion_report_delivery_action_is_available("in_review", true, 1));
-        assert!(!completion_report_delivery_action_is_available("submitted", true, 0));
-        assert!(!completion_report_delivery_action_is_available("delivered", true, 0));
+        assert!(completion_report_delivery_action_is_available(
+            "in_review",
+            true,
+            0
+        ));
+        assert!(!completion_report_delivery_action_is_available(
+            "in_review",
+            false,
+            0
+        ));
+        assert!(!completion_report_delivery_action_is_available(
+            "in_review",
+            true,
+            1
+        ));
+        assert!(!completion_report_delivery_action_is_available(
+            "submitted",
+            true,
+            0
+        ));
+        assert!(!completion_report_delivery_action_is_available(
+            "delivered",
+            true,
+            0
+        ));
     }
 
     #[test]
     fn customer_visibility_requires_delivery_status_and_timestamp() {
         assert!(completion_report_is_visible_to_customer("delivered", true));
-        assert!(!completion_report_is_visible_to_customer("delivered", false));
+        assert!(!completion_report_is_visible_to_customer(
+            "delivered",
+            false
+        ));
         assert!(!completion_report_is_visible_to_customer("in_review", true));
         assert!(!completion_report_is_visible_to_customer("submitted", true));
     }
 
     #[test]
     fn share_link_requires_customer_visibility_and_token() {
-        assert!(completion_report_share_link_is_available("delivered", true, true));
-        assert!(!completion_report_share_link_is_available("delivered", true, false));
-        assert!(!completion_report_share_link_is_available("delivered", false, true));
-        assert!(!completion_report_share_link_is_available("in_review", true, true));
-        assert!(!completion_report_share_link_is_available("submitted", true, true));
+        assert!(completion_report_share_link_is_available(
+            "delivered",
+            true,
+            true
+        ));
+        assert!(!completion_report_share_link_is_available(
+            "delivered",
+            true,
+            false
+        ));
+        assert!(!completion_report_share_link_is_available(
+            "delivered",
+            false,
+            true
+        ));
+        assert!(!completion_report_share_link_is_available(
+            "in_review",
+            true,
+            true
+        ));
+        assert!(!completion_report_share_link_is_available(
+            "submitted",
+            true,
+            true
+        ));
     }
 
     #[test]
     fn delivery_readiness_requires_review_status_timestamp_and_passing_checks() {
-        assert!(completion_report_is_ready_for_delivery("in_review", true, 0));
-        assert!(!completion_report_is_ready_for_delivery("in_review", false, 0));
-        assert!(!completion_report_is_ready_for_delivery("in_review", true, 1));
-        assert!(!completion_report_is_ready_for_delivery("submitted", true, 0));
-        assert!(!completion_report_is_ready_for_delivery("delivered", true, 0));
+        assert!(completion_report_is_ready_for_delivery(
+            "in_review",
+            true,
+            0
+        ));
+        assert!(!completion_report_is_ready_for_delivery(
+            "in_review",
+            false,
+            0
+        ));
+        assert!(!completion_report_is_ready_for_delivery(
+            "in_review",
+            true,
+            1
+        ));
+        assert!(!completion_report_is_ready_for_delivery(
+            "submitted",
+            true,
+            0
+        ));
+        assert!(!completion_report_is_ready_for_delivery(
+            "delivered",
+            true,
+            0
+        ));
     }
 
     #[test]
     fn allows_expected_completion_report_lifecycle_transitions() {
-        assert!(completion_report_lifecycle_transition_is_allowed(None, "draft"));
-        assert!(completion_report_lifecycle_transition_is_allowed(None, "submitted"));
-        assert!(completion_report_lifecycle_transition_is_allowed(Some("draft"), "submitted"));
-        assert!(completion_report_lifecycle_transition_is_allowed(Some("submitted"), "in_review"));
-        assert!(completion_report_lifecycle_transition_is_allowed(Some("in_review"), "changes_requested"));
-        assert!(completion_report_lifecycle_transition_is_allowed(Some("in_review"), "delivered"));
-        assert!(completion_report_lifecycle_transition_is_allowed(Some("changes_requested"), "submitted"));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            None, "draft"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            None,
+            "submitted"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            Some("draft"),
+            "submitted"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            Some("submitted"),
+            "in_review"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            Some("in_review"),
+            "changes_requested"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            Some("in_review"),
+            "delivered"
+        ));
+        assert!(completion_report_lifecycle_transition_is_allowed(
+            Some("changes_requested"),
+            "submitted"
+        ));
     }
 
     #[test]
     fn rejects_unexpected_completion_report_lifecycle_transitions() {
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("draft"), "delivered"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("submitted"), "delivered"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("changes_requested"), "delivered"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("delivered"), "in_review"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("delivered"), "delivered"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(None, "delivered"));
-        assert!(!completion_report_lifecycle_transition_is_allowed(Some("ready"), "submitted"));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("draft"),
+            "delivered"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("submitted"),
+            "delivered"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("changes_requested"),
+            "delivered"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("delivered"),
+            "in_review"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("delivered"),
+            "delivered"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            None,
+            "delivered"
+        ));
+        assert!(!completion_report_lifecycle_transition_is_allowed(
+            Some("ready"),
+            "submitted"
+        ));
     }
 
     #[test]
@@ -438,7 +625,9 @@ mod tests {
             &mut report,
             CompletionReportPersistence {
                 persisted: true,
+                report_status: Some("submitted".to_string()),
                 share_token: Some("share_report_job_1001".to_string()),
+                ..CompletionReportPersistence::default()
             },
         );
 
@@ -456,15 +645,43 @@ mod tests {
             &mut report,
             CompletionReportPersistence {
                 persisted: true,
+                report_status: Some("delivered".to_string()),
                 share_token: Some("share_report_job_1001".to_string()),
+                ..CompletionReportPersistence::default()
             },
         );
 
         assert!(report.persisted);
         assert_eq!(
             report.share_url,
-            Some("/reports/share_report_job_1001".to_string())
+            Some("/report-view/share_report_job_1001".to_string())
         );
+    }
+
+    #[test]
+    fn persistence_result_overlays_persisted_snapshot_counts() {
+        let mut report = build_completion_report(job(0, 0, 0), account(), Vec::new(), Vec::new());
+
+        apply_completion_report_persistence(
+            &mut report,
+            CompletionReportPersistence {
+                persisted: true,
+                report_status: Some("delivered".to_string()),
+                ready_for_customer: Some(true),
+                checklist_progress: Some(100),
+                before_photos: Some(2),
+                after_photos: Some(3),
+                issue_photos: Some(1),
+                share_token: Some("share_report_job_1001".to_string()),
+            },
+        );
+
+        assert!(report.ready_for_customer);
+        assert_eq!(report.checklist_progress, 100);
+        assert_eq!(report.before_photos, 2);
+        assert_eq!(report.after_photos, 3);
+        assert_eq!(report.issue_photos, 1);
+        assert_eq!(report.report_status, "delivered");
     }
 
     #[test]

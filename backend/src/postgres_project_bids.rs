@@ -292,7 +292,7 @@ pub async fn convert_to_job_add_ons(
     .execute(&mut *transaction)
     .await?;
 
-    sqlx::query(
+    let conversion_result = sqlx::query(
         r#"
         INSERT INTO project_bid_conversions (project_bid_id, job_id)
         VALUES ($1, $2)
@@ -303,6 +303,29 @@ pub async fn convert_to_job_add_ons(
     .bind(&job_id)
     .execute(&mut *transaction)
     .await?;
+    let conversion_created = conversion_result.rows_affected() == 1;
+
+    if conversion_created {
+        sqlx::query(
+            r#"
+            UPDATE day_plan_stops stop
+            SET estimated_service_minutes =
+                    stop.estimated_service_minutes
+                    + COALESCE(amendment.default_duration_minutes, 0),
+                updated_at = now()
+            FROM project_bids bid
+            JOIN day_plan_amendment_requests amendment
+                ON amendment.id = bid.source_amendment_id
+            WHERE bid.id = $1
+              AND stop.day_plan_id = bid.day_plan_id
+              AND stop.id = amendment.stop_id
+              AND amendment.amendment_type = 'add_service'
+            "#,
+        )
+        .bind(bid_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
 
     sqlx::query("UPDATE project_bids SET status = 'converted', updated_at = now() WHERE id = $1")
         .bind(bid_id)

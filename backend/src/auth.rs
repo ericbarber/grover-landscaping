@@ -1,4 +1,7 @@
-use crate::access_control::{can_manage_schedule, can_view_crew_route, AccessRole};
+use crate::access_control::{
+    can_deliver_completion_report, can_manage_schedule, can_review_completion_report,
+    can_submit_completion_report, can_view_crew_route, AccessRole,
+};
 use axum::{
     extract::{Request, State},
     http::{header::AUTHORIZATION, HeaderMap, Method, StatusCode},
@@ -362,6 +365,7 @@ pub async fn require_api_auth(
 fn is_protected_api_path(path: &str) -> bool {
     path == "/jobs"
         || path.starts_with("/jobs/")
+        || path.starts_with("/completion-reports/")
         || path.starts_with("/crews/")
         || path == "/day-plans"
         || path.starts_with("/day-plans/")
@@ -384,6 +388,25 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     let can_view_route = principal.roles.iter().any(can_view_crew_route);
     let can_manage_routes = principal.roles.iter().any(can_manage_schedule);
+    let can_review_reports = principal.roles.iter().any(can_review_completion_report);
+    let can_deliver_reports = principal.roles.iter().any(can_deliver_completion_report);
+    let can_submit_reports = principal.roles.iter().any(can_submit_completion_report);
+
+    if path.starts_with("/completion-reports/") && path.ends_with("/review") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path.starts_with("/completion-reports/") && path.ends_with("/request-changes") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path.starts_with("/completion-reports/") && path.ends_with("/resubmit") {
+        return *method == Method::POST && can_submit_reports;
+    }
+
+    if path.starts_with("/completion-reports/") && path.ends_with("/deliver") {
+        return *method == Method::POST && can_deliver_reports;
+    }
 
     if path.starts_with("/day-plans/") && (path.ends_with("/bids") || path.ends_with("/bid")) {
         return can_manage_routes;
@@ -498,6 +521,95 @@ mod tests {
         assert!(!is_authorized(
             &principal(AccessRole::CrewMember),
             &Method::GET,
+            path
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_start_manager_review() {
+        let path = "/completion-reports/report-1/review";
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_request_changes() {
+        let path = "/completion-reports/report-1/request-changes";
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::POST,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewLead),
+            &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn completion_report_submitters_can_resubmit_changes() {
+        let path = "/completion-reports/report-1/resubmit";
+
+        assert!(is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::CrewLead),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_deliverers_can_deliver() {
+        let path = "/completion-reports/report-1/deliver";
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::POST,
             path
         ));
     }

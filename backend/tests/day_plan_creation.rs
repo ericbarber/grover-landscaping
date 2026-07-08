@@ -5,8 +5,26 @@ use grover_landscaping_api::{
     },
     db::JobRepository,
 };
-use sqlx::{postgres::PgPoolOptions, Row};
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 mod common;
+
+async fn reset_day_plan_fixture(pool: &PgPool, day_plan_id: &str) {
+    sqlx::query("DELETE FROM day_plan_amendment_requests WHERE day_plan_id = $1")
+        .bind(day_plan_id)
+        .execute(pool)
+        .await
+        .expect("test day plan amendments should reset");
+    sqlx::query("DELETE FROM day_plan_stops WHERE day_plan_id = $1")
+        .bind(day_plan_id)
+        .execute(pool)
+        .await
+        .expect("test day plan stops should reset");
+    sqlx::query("DELETE FROM day_plans WHERE id = $1")
+        .bind(day_plan_id)
+        .execute(pool)
+        .await
+        .expect("test day plan should reset");
+}
 
 #[tokio::test]
 async fn repository_creates_draft_day_plan() {
@@ -41,6 +59,13 @@ async fn repository_publishes_draft_day_plan() {
         .await
         .expect("repository should connect and run migrations");
 
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&config.database_url)
+        .await
+        .expect("test pool should connect");
+    reset_day_plan_fixture(&pool, "day_plan_2026_06_18_crew_1001").await;
+
     let day_plans = DayPlanRepository::new();
     let draft = day_plans
         .create_draft_day_plan(CreateDayPlanRequest {
@@ -48,6 +73,18 @@ async fn repository_publishes_draft_day_plan() {
             service_date: "2026-06-18".to_string(),
         })
         .await;
+    let assigned_stop = day_plans
+        .assign_stop(
+            &draft.id,
+            AssignDayPlanStopRequest {
+                job_id: "job_1001".to_string(),
+                estimated_drive_minutes: Some(10),
+                estimated_service_minutes: Some(45),
+            },
+        )
+        .await;
+
+    assert!(assigned_stop.persisted);
 
     let response = day_plans.publish_day_plan(&draft.id).await;
 
@@ -85,16 +122,7 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
         .execute(&pool)
         .await
         .expect("test crew should be present");
-    sqlx::query("DELETE FROM day_plan_stops WHERE day_plan_id = $1")
-        .bind(&day_plan_id)
-        .execute(&pool)
-        .await
-        .expect("test day plan stops should reset");
-    sqlx::query("DELETE FROM day_plans WHERE id = $1")
-        .bind(&day_plan_id)
-        .execute(&pool)
-        .await
-        .expect("test day plan should reset");
+    reset_day_plan_fixture(&pool, &day_plan_id).await;
 
     let day_plans = DayPlanRepository::new();
     let draft = day_plans
@@ -145,14 +173,7 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
         .connect(&config.database_url)
         .await
         .expect("test pool should connect");
-    sqlx::query("DELETE FROM day_plan_stops WHERE day_plan_id = 'day_plan_2026_06_20_crew_1001'")
-        .execute(&pool)
-        .await
-        .expect("test day plan stops should reset");
-    sqlx::query("DELETE FROM day_plans WHERE id = 'day_plan_2026_06_20_crew_1001'")
-        .execute(&pool)
-        .await
-        .expect("test day plan should reset");
+    reset_day_plan_fixture(&pool, "day_plan_2026_06_20_crew_1001").await;
 
     let day_plans = DayPlanRepository::new();
     let draft = day_plans

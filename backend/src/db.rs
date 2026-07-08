@@ -8,7 +8,9 @@ mod postgres_stop_progress;
 mod postgres_write;
 
 use crate::{
-    completion_reports::{CompletionReportPersistence, CompletionReportResponse},
+    completion_reports::{
+        CompletionReportActionResult, CompletionReportPersistence, CompletionReportResponse,
+    },
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
     PhotoUploadResponse,
 };
@@ -223,6 +225,72 @@ impl JobRepository {
         }
 
         None
+    }
+
+    pub async fn start_completion_report_review(
+        &self,
+        report_id: &str,
+        reviewer_user_id: &str,
+    ) -> CompletionReportActionResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportActionResult::Unavailable;
+        };
+
+        postgres_completion_reports::start_completion_report_review(
+            pool,
+            report_id,
+            reviewer_user_id,
+        )
+        .await
+        .unwrap_or(CompletionReportActionResult::Unavailable)
+    }
+
+    pub async fn request_completion_report_changes(
+        &self,
+        report_id: &str,
+        reviewer_user_id: &str,
+        reason: Option<&str>,
+    ) -> CompletionReportActionResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportActionResult::Unavailable;
+        };
+
+        postgres_completion_reports::request_completion_report_changes(
+            pool,
+            report_id,
+            reviewer_user_id,
+            reason,
+        )
+        .await
+        .unwrap_or(CompletionReportActionResult::Unavailable)
+    }
+
+    pub async fn resubmit_completion_report(
+        &self,
+        report_id: &str,
+        submitter_user_id: &str,
+    ) -> CompletionReportActionResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportActionResult::Unavailable;
+        };
+
+        postgres_completion_reports::resubmit_completion_report(pool, report_id, submitter_user_id)
+            .await
+            .unwrap_or(CompletionReportActionResult::Unavailable)
+    }
+
+    pub async fn deliver_completion_report(
+        &self,
+        report_id: &str,
+        delivery_user_id: &str,
+    ) -> CompletionReportActionResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportActionResult::Unavailable;
+        };
+
+        postgres_completion_reports::deliver_completion_report(pool, report_id, delivery_user_id)
+            .await
+            .unwrap_or(CompletionReportActionResult::Unavailable)
     }
 
     pub async fn create_photo_upload(

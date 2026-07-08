@@ -3,11 +3,15 @@ import {
   completeJob,
   completePhotoUpload,
   createPhotoUploadTicket,
+  deliverCompletionReport,
   fetchCompletionReport,
   fetchJobDetail,
   fetchJobAddOns,
   fetchJobs,
+  requestCompletionReportChanges,
+  resubmitCompletionReport,
   startJob,
+  startCompletionReportReview,
   updateJobAddOnStatus,
   type CompletionReportSnapshot,
   type JobDetail,
@@ -426,6 +430,11 @@ function JobDetailPanel({
   onComplete,
   onPhotoSelected,
   onAddOnStatusChange,
+  onStartReportReview,
+  onRequestReportChanges,
+  onResubmitReport,
+  onDeliverReport,
+  reportActionStatus,
 }: {
   job: JobDetail | null;
   isLoading: boolean;
@@ -436,6 +445,11 @@ function JobDetailPanel({
   onComplete: () => Promise<void>;
   onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
   onAddOnStatusChange: (addOnId: string, status: JobAddOn['status']) => Promise<void>;
+  onStartReportReview: (reportId: string) => Promise<void>;
+  onRequestReportChanges: (reportId: string, reason: string) => Promise<void>;
+  onResubmitReport: (reportId: string) => Promise<void>;
+  onDeliverReport: (reportId: string) => Promise<void>;
+  reportActionStatus: string | null;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
 
@@ -591,7 +605,16 @@ function JobDetailPanel({
         </div>
       </aside>
 
-      <CompletionReport job={job} uploadTickets={uploadTickets} reportSnapshot={reportSnapshot} />
+      <CompletionReport
+        job={job}
+        uploadTickets={uploadTickets}
+        reportSnapshot={reportSnapshot}
+        onStartReview={onStartReportReview}
+        onRequestChanges={onRequestReportChanges}
+        onResubmit={onResubmitReport}
+        onDeliver={onDeliverReport}
+        actionStatus={reportActionStatus}
+      />
     </div>
   );
 }
@@ -646,6 +669,7 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
+  const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
@@ -865,6 +889,95 @@ export function App() {
     }
   }
 
+  async function refreshCompletionReport(jobId: string) {
+    const report = await fetchCompletionReport(jobId);
+    setSelectedCompletionReport(report);
+    setUploadTickets((current) => mergePhotoEvidence(current, jobId, report.photoEvidence));
+    return report;
+  }
+
+  async function handleStartReportReview(reportId: string) {
+    setCompletionReportActionStatus('Starting manager review...');
+
+    try {
+      const action = await startCompletionReportReview(reportId);
+      await refreshCompletionReport(action.jobId);
+      setStatusMessage(`${action.reportId} is in manager review.`);
+      setCompletionReportActionStatus(null);
+      recordManagerActivity({
+        title: 'Completion report in review',
+        message: `${action.reportId} moved into manager review.`,
+        tone: 'success',
+        source: 'job',
+      });
+    } catch {
+      setCompletionReportActionStatus(null);
+      setStatusMessage('Could not start manager review. Confirm the report is submitted and persisted.');
+    }
+  }
+
+  async function handleRequestReportChanges(reportId: string, reason: string) {
+    setCompletionReportActionStatus('Requesting report changes...');
+
+    try {
+      const action = await requestCompletionReportChanges(reportId, reason);
+      await refreshCompletionReport(action.jobId);
+      setStatusMessage(`${action.reportId} has changes requested.`);
+      setCompletionReportActionStatus(null);
+      recordManagerActivity({
+        title: 'Completion report changes requested',
+        message: reason.trim() || `${action.reportId} needs crew follow-up before delivery.`,
+        tone: 'warning',
+        source: 'job',
+      });
+    } catch {
+      setCompletionReportActionStatus(null);
+      setStatusMessage('Could not request changes. Confirm the report is currently in review.');
+    }
+  }
+
+  async function handleResubmitReport(reportId: string) {
+    setCompletionReportActionStatus('Resubmitting completion report...');
+
+    try {
+      const action = await resubmitCompletionReport(reportId);
+      await refreshCompletionReport(action.jobId);
+      setStatusMessage(`${action.reportId} resubmitted for manager review.`);
+      setCompletionReportActionStatus(null);
+      recordManagerActivity({
+        title: 'Completion report resubmitted',
+        message: `${action.reportId} returned to the manager review queue.`,
+        tone: 'success',
+        source: 'job',
+      });
+    } catch {
+      setCompletionReportActionStatus(null);
+      setStatusMessage('Could not resubmit. Confirm the report is change-requested and delivery-ready.');
+    }
+  }
+
+  async function handleDeliverReport(reportId: string) {
+    setCompletionReportActionStatus('Delivering completion report...');
+
+    try {
+      const action = await deliverCompletionReport(reportId);
+      await refreshCompletionReport(action.jobId);
+      setStatusMessage(`${action.reportId} delivered to the customer portal.`);
+      setCompletionReportActionStatus(null);
+      recordManagerActivity({
+        title: 'Completion report delivered',
+        message: action.shareUrl
+          ? `${action.reportId} is delivered with a share link.`
+          : `${action.reportId} is delivered.`,
+        tone: 'success',
+        source: 'job',
+      });
+    } catch {
+      setCompletionReportActionStatus(null);
+      setStatusMessage('Could not deliver. Confirm the report passed review and delivery readiness checks.');
+    }
+  }
+
   async function handlePhotoSelected(file: File, photoType: PhotoType) {
     if (!selectedJobId) {
       return;
@@ -1009,6 +1122,11 @@ export function App() {
           onComplete={handleCompleteJob}
           onPhotoSelected={handlePhotoSelected}
           onAddOnStatusChange={handleAddOnStatusChange}
+          onStartReportReview={handleStartReportReview}
+          onRequestReportChanges={handleRequestReportChanges}
+          onResubmitReport={handleResubmitReport}
+          onDeliverReport={handleDeliverReport}
+          reportActionStatus={completionReportActionStatus}
         />
       </section>
     </main>

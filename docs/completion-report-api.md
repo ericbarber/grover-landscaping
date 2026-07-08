@@ -13,7 +13,19 @@ The backend now has persistence support for:
 - status history,
 - share tokens for customer-facing report links.
 
-## Planned endpoints
+## Endpoint status
+
+The manager lifecycle endpoints are implemented with manager-role authorization,
+atomic transitions, lifecycle metadata, and status-history persistence:
+
+- `POST /completion-reports/{report_id}/review`
+- `POST /completion-reports/{report_id}/request-changes`
+- `POST /completion-reports/{report_id}/resubmit`
+- `POST /completion-reports/{report_id}/deliver`
+- `GET /reports/{share_token}`
+- `GET /report-view/{share_token}`
+
+The remaining endpoints below are planned unless noted otherwise.
 
 ### POST `/jobs/{job_id}/completion-report`
 
@@ -30,6 +42,8 @@ Expected behavior:
 
 ### POST `/completion-reports/{report_id}/review`
 
+Implemented.
+
 Moves a submitted report into manager review.
 
 Expected behavior:
@@ -40,6 +54,8 @@ Expected behavior:
 
 ### POST `/completion-reports/{report_id}/request-changes`
 
+Implemented.
+
 Records a manager request for crew follow-up before customer delivery.
 
 Expected behavior:
@@ -49,7 +65,24 @@ Expected behavior:
 - retain report evidence snapshots for comparison,
 - write a status history event with the reason.
 
+### POST `/completion-reports/{report_id}/resubmit`
+
+Implemented.
+
+Returns a change-requested report to manager review intake after crew follow-up.
+
+Expected behavior:
+
+- require crew, manager, organization owner, or support admin access,
+- require current status `changes_requested`,
+- require delivery-ready snapshot fields,
+- move status back to `submitted`,
+- clear stale review metadata,
+- write a status history event.
+
 ### POST `/completion-reports/{report_id}/deliver`
+
+Implemented.
 
 Approves the report for customer portal delivery.
 
@@ -60,6 +93,25 @@ Expected behavior:
 - create or reuse a share token,
 - move status to `delivered`,
 - write a status history event.
+
+### GET `/reports/{share_token}`
+
+Implemented.
+
+Returns the delivered completion report JSON for a valid share token.
+
+Expected behavior:
+
+- allow public token reads,
+- require the report to be delivered with delivery metadata,
+- return the persisted delivered snapshot fields,
+- reject draft, submitted, in-review, and change-requested reports.
+
+### GET `/report-view/{share_token}`
+
+Implemented.
+
+Serves the customer-facing browser view for a delivered completion report. The browser view calls `GET /reports/{share_token}` for customer-safe report data.
 
 ### GET `/properties/{property_id}/completion-reports`
 

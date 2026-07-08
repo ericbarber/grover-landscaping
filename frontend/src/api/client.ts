@@ -5,7 +5,7 @@ import type {
   ServiceApprovalStatus,
 } from '../domain/accounts';
 import type { YardCareJob } from '../domain/jobs';
-import { API_BASE_URL } from './baseUrl';
+import { API_BASE_URL, toBrowserUrl } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
 
 interface ApiJobSummary {
@@ -97,10 +97,17 @@ export interface ApiPhotoEvidence {
   display_url: string;
 }
 
+export type CompletionReportStatus =
+  | 'draft'
+  | 'submitted'
+  | 'in_review'
+  | 'changes_requested'
+  | 'delivered';
+
 export interface ApiCompletionReport {
   report_id: string;
   job_id: string;
-  report_status: 'draft' | 'ready' | 'sent';
+  report_status: CompletionReportStatus;
   persisted: boolean;
   ready_for_customer: boolean;
   checklist_progress: number;
@@ -117,7 +124,7 @@ export interface ApiCompletionReport {
 export interface CompletionReportSnapshot {
   reportId: string;
   jobId: string;
-  reportStatus: 'draft' | 'ready' | 'sent';
+  reportStatus: CompletionReportStatus;
   persisted: boolean;
   readyForCustomer: boolean;
   checklistProgress: number;
@@ -129,6 +136,22 @@ export interface CompletionReportSnapshot {
   account: AccountStatus;
   photoEvidence: PhotoUploadTicket[];
   completedAddOns: JobAddOn[];
+}
+
+export interface ApiCompletionReportAction {
+  report_id: string;
+  job_id: string;
+  report_status: CompletionReportStatus;
+  persisted: boolean;
+  share_url: string | null;
+}
+
+export interface CompletionReportAction {
+  reportId: string;
+  jobId: string;
+  reportStatus: CompletionReportStatus;
+  persisted: boolean;
+  shareUrl: string | null;
 }
 
 function toJob(apiJob: ApiJobSummary): YardCareJob {
@@ -193,15 +216,6 @@ function toPhotoEvidence(photo: ApiPhotoEvidence): PhotoUploadTicket {
   };
 }
 
-function toApiUrl(pathOrUrl: string): string {
-  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
-    return pathOrUrl;
-  }
-
-  const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
-  return `${API_BASE_URL}${path}`;
-}
-
 export function toCompletionReport(apiReport: ApiCompletionReport): CompletionReportSnapshot {
   return {
     reportId: apiReport.report_id,
@@ -213,11 +227,21 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
     beforePhotos: apiReport.before_photos,
     afterPhotos: apiReport.after_photos,
     issuePhotos: apiReport.issue_photos,
-    shareUrl: apiReport.share_url ? toApiUrl(apiReport.share_url) : null,
+    shareUrl: apiReport.share_url ? toBrowserUrl(apiReport.share_url) : null,
     job: toJobDetail(apiReport.job),
     account: toAccountStatus(apiReport.account),
     photoEvidence: apiReport.photo_evidence.map(toPhotoEvidence),
     completedAddOns: apiReport.completed_add_ons.map(toJobAddOn),
+  };
+}
+
+export function toCompletionReportAction(apiAction: ApiCompletionReportAction): CompletionReportAction {
+  return {
+    reportId: apiAction.report_id,
+    jobId: apiAction.job_id,
+    reportStatus: apiAction.report_status,
+    persisted: apiAction.persisted,
+    shareUrl: apiAction.share_url ? toBrowserUrl(apiAction.share_url) : null,
   };
 }
 
@@ -272,6 +296,49 @@ export async function fetchAccountStatus(jobId: string): Promise<AccountStatus> 
 export async function fetchCompletionReport(jobId: string): Promise<CompletionReportSnapshot> {
   const report = await request<ApiCompletionReport>(`/jobs/${jobId}/report`);
   return toCompletionReport(report);
+}
+
+export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
+  const response = await fetch(`${API_BASE_URL}/reports/${encodeURIComponent(shareToken)}`);
+
+  if (!response.ok) {
+    throw new Error(`Shared completion report request failed with status ${response.status}`);
+  }
+
+  const report = await response.json() as ApiCompletionReport;
+  return toCompletionReport(report);
+}
+
+export async function startCompletionReportReview(reportId: string): Promise<CompletionReportAction> {
+  const action = await request<ApiCompletionReportAction>(`/completion-reports/${reportId}/review`, {
+    method: 'POST',
+  });
+  return toCompletionReportAction(action);
+}
+
+export async function requestCompletionReportChanges(
+  reportId: string,
+  reason: string,
+): Promise<CompletionReportAction> {
+  const action = await request<ApiCompletionReportAction>(`/completion-reports/${reportId}/request-changes`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+  return toCompletionReportAction(action);
+}
+
+export async function resubmitCompletionReport(reportId: string): Promise<CompletionReportAction> {
+  const action = await request<ApiCompletionReportAction>(`/completion-reports/${reportId}/resubmit`, {
+    method: 'POST',
+  });
+  return toCompletionReportAction(action);
+}
+
+export async function deliverCompletionReport(reportId: string): Promise<CompletionReportAction> {
+  const action = await request<ApiCompletionReportAction>(`/completion-reports/${reportId}/deliver`, {
+    method: 'POST',
+  });
+  return toCompletionReportAction(action);
 }
 
 export async function startJob(jobId: string): Promise<void> {

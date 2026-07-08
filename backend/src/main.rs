@@ -1,5 +1,7 @@
 mod accounts;
+#[allow(dead_code)]
 mod completion_reports;
+#[allow(dead_code)]
 mod day_plans;
 mod db;
 mod notifications;
@@ -8,7 +10,7 @@ mod stop_progress;
 
 use accounts::AccountRepository;
 use axum::{
-    extract::{Path, State},
+    extract::{Extension, Path, State},
     http::{
         header::{AUTHORIZATION, CONTENT_TYPE},
         HeaderName, HeaderValue, Method, StatusCode,
@@ -18,14 +20,16 @@ use axum::{
     routing::{delete, get, post, put},
     Json, Router,
 };
-use completion_reports::{apply_completion_report_persistence, build_completion_report};
+use completion_reports::{
+    apply_completion_report_persistence, build_completion_report, CompletionReportActionResult,
+};
 use day_plans::{
     validate_amendment_request, validate_amendment_review, AssignDayPlanStopRequest,
     CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
     ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
 };
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
-use grover_landscaping_api::auth::{require_api_auth, AuthService};
+use grover_landscaping_api::auth::{require_api_auth, AuthPrincipal, AuthService};
 use notifications::{
     start_notification_dispatcher, NotificationDispatcherConfig, NotificationOutboxRepository,
 };
@@ -126,6 +130,11 @@ struct ActionResponse {
 struct ErrorResponse {
     error: &'static str,
     message: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct CompletionReportChangeRequest {
+    reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -289,6 +298,7 @@ fn app_with_runtime(
     let public_auth_config = auth.public_config();
     let index_file = frontend_dist.join("index.html");
     let shared_bid_frontend = ServeFile::new(index_file.clone());
+    let shared_report_frontend = ServeFile::new(index_file.clone());
     let frontend_service =
         ServeDir::new(frontend_dist).not_found_service(ServeFile::new(index_file));
 
@@ -316,6 +326,22 @@ fn app_with_runtime(
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route("/jobs/{id}/report", get(get_completion_report))
+        .route(
+            "/completion-reports/{report_id}/review",
+            post(start_completion_report_review),
+        )
+        .route(
+            "/completion-reports/{report_id}/request-changes",
+            post(request_completion_report_changes),
+        )
+        .route(
+            "/completion-reports/{report_id}/resubmit",
+            post(resubmit_completion_report),
+        )
+        .route(
+            "/completion-reports/{report_id}/deliver",
+            post(deliver_completion_report),
+        )
         .route("/jobs/{id}/add-ons", get(list_job_add_ons))
         .route(
             "/jobs/{id}/add-ons/{add_on_id}/status",
@@ -368,6 +394,7 @@ fn app_with_runtime(
             post(update_stop_progress),
         )
         .route_service("/bid-review/{share_token}", shared_bid_frontend)
+        .route_service("/report-view/{share_token}", shared_report_frontend)
         .fallback_service(frontend_service)
         .with_state(state)
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -500,6 +527,194 @@ async fn get_completion_report(
     Path(id): Path<String>,
 ) -> impl IntoResponse {
     Json(build_and_persist_completion_report(&state, &id).await)
+}
+
+async fn start_completion_report_review(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(report_id): Path<String>,
+) -> Response {
+    match state
+        .jobs
+        .start_completion_report_review(&report_id, &principal.subject)
+        .await
+    {
+        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
+        CompletionReportActionResult::InvalidTransition => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_completion_report_transition",
+                message: "Only submitted completion reports can enter manager review.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "completion_report_not_found",
+                message: "The requested completion report was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "completion_report_persistence_unavailable",
+                message: "Starting manager review requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn request_completion_report_changes(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(report_id): Path<String>,
+    Json(request): Json<CompletionReportChangeRequest>,
+) -> Response {
+    let reason = match normalize_completion_report_change_reason(request.reason) {
+        Ok(reason) => reason,
+        Err(()) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_completion_report_change_reason",
+                    message: "Change request reason must be 1000 characters or fewer.".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+
+    match state
+        .jobs
+        .request_completion_report_changes(&report_id, &principal.subject, reason.as_deref())
+        .await
+    {
+        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
+        CompletionReportActionResult::InvalidTransition => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_completion_report_transition",
+                message: "Only in-review completion reports can have changes requested."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "completion_report_not_found",
+                message: "The requested completion report was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "completion_report_persistence_unavailable",
+                message: "Requesting changes requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn deliver_completion_report(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(report_id): Path<String>,
+) -> Response {
+    match state
+        .jobs
+        .deliver_completion_report(&report_id, &principal.subject)
+        .await
+    {
+        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
+        CompletionReportActionResult::InvalidTransition => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_completion_report_transition",
+                message: "Only ready in-review completion reports can be delivered.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "completion_report_not_found",
+                message: "The requested completion report was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "completion_report_persistence_unavailable",
+                message: "Delivering a completion report requires database persistence."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn resubmit_completion_report(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(report_id): Path<String>,
+) -> Response {
+    match state
+        .jobs
+        .resubmit_completion_report(&report_id, &principal.subject)
+        .await
+    {
+        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
+        CompletionReportActionResult::InvalidTransition => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_completion_report_transition",
+                message: "Only ready change-requested completion reports can be resubmitted."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "completion_report_not_found",
+                message: "The requested completion report was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportActionResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "completion_report_persistence_unavailable",
+                message: "Resubmitting a completion report requires database persistence."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+fn normalize_completion_report_change_reason(reason: Option<String>) -> Result<Option<String>, ()> {
+    let Some(reason) = reason else {
+        return Ok(None);
+    };
+    let trimmed = reason.trim();
+
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+
+    if trimmed.chars().count() > 1000 {
+        return Err(());
+    }
+
+    Ok(Some(trimmed.to_string()))
 }
 
 async fn list_job_add_ons(
@@ -1131,6 +1346,24 @@ mod tests {
             .to_bytes();
         assert!(String::from_utf8_lossy(&shared_bid_body).contains("Grover production"));
 
+        let shared_report_response = seed_app_with_frontend(frontend_dist.clone())
+            .oneshot(
+                Request::builder()
+                    .uri("/report-view/customer-token")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(shared_report_response.status(), StatusCode::OK);
+        let shared_report_body = shared_report_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        assert!(String::from_utf8_lossy(&shared_report_body).contains("Grover production"));
+
         std::fs::remove_dir_all(frontend_dist).unwrap();
     }
 
@@ -1253,6 +1486,114 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["error"], "shared_report_not_found");
+    }
+
+    #[tokio::test]
+    async fn completion_report_review_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/review")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "completion_report_persistence_unavailable");
+    }
+
+    #[tokio::test]
+    async fn completion_report_request_changes_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/request-changes")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"reason":"Need clearer after photo."}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "completion_report_persistence_unavailable");
+    }
+
+    #[tokio::test]
+    async fn completion_report_change_reason_rejects_large_payloads() {
+        let reason = "x".repeat(1001);
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/request-changes")
+                    .header("content-type", "application/json")
+                    .body(Body::from(format!(r#"{{"reason":"{reason}"}}"#)))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "invalid_completion_report_change_reason");
+    }
+
+    #[tokio::test]
+    async fn completion_report_resubmit_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/resubmit")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "completion_report_persistence_unavailable");
+    }
+
+    #[tokio::test]
+    async fn completion_report_delivery_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/deliver")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "completion_report_persistence_unavailable");
     }
 
     #[tokio::test]

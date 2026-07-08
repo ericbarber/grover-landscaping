@@ -1,19 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { toCompletionReport, toJobAddOn, type ApiCompletionReport } from './client';
+import {
+  toCompletionReport,
+  toCompletionReportAction,
+  toJobAddOn,
+  type ApiCompletionReport,
+  type ApiCompletionReportAction,
+} from './client';
 
 describe('core API client mapping', () => {
   it('maps completion report responses with attached photo evidence', () => {
     const apiReport: ApiCompletionReport = {
       report_id: 'report_job_1001',
       job_id: 'job_1001',
-      report_status: 'ready',
+      report_status: 'submitted',
       persisted: true,
       ready_for_customer: true,
       checklist_progress: 100,
       before_photos: 1,
       after_photos: 1,
       issue_photos: 0,
-      share_url: '/reports/share_report_job_1001',
+      share_url: '/report-view/share_report_job_1001',
       job: {
         id: 'job_1001',
         customer_name: 'Sample Customer',
@@ -73,13 +79,13 @@ describe('core API client mapping', () => {
     expect(toCompletionReport(apiReport)).toMatchObject({
       reportId: 'report_job_1001',
       jobId: 'job_1001',
-      reportStatus: 'ready',
+      reportStatus: 'submitted',
       persisted: true,
       readyForCustomer: true,
       checklistProgress: 100,
       beforePhotos: 1,
       afterPhotos: 1,
-      shareUrl: 'http://localhost:8080/reports/share_report_job_1001',
+      shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
       job: {
         customerName: 'Sample Customer',
       },
@@ -99,6 +105,24 @@ describe('core API client mapping', () => {
           status: 'completed',
         },
       ],
+    });
+  });
+
+  it('maps completion report lifecycle action responses', () => {
+    const action: ApiCompletionReportAction = {
+      report_id: 'report_job_1001',
+      job_id: 'job_1001',
+      report_status: 'delivered',
+      persisted: true,
+      share_url: '/report-view/share_report_job_1001',
+    };
+
+    expect(toCompletionReportAction(action)).toEqual({
+      reportId: 'report_job_1001',
+      jobId: 'job_1001',
+      reportStatus: 'delivered',
+      persisted: true,
+      shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
     });
   });
 
