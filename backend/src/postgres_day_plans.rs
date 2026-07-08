@@ -201,11 +201,18 @@ pub async fn reorder_stops(
 
     let mut tx = pool.begin().await?;
 
-    let existing_stop_count: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM day_plan_stops WHERE day_plan_id = $1")
-            .bind(day_plan_id)
-            .fetch_one(&mut *tx)
-            .await?;
+    let existing_stop_count: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)
+        FROM day_plan_stops dps
+        JOIN day_plans dp ON dp.id = dps.day_plan_id
+        WHERE dps.day_plan_id = $1
+          AND dp.status = 'draft'
+        "#,
+    )
+    .bind(day_plan_id)
+    .fetch_one(&mut *tx)
+    .await?;
 
     if existing_stop_count != stop_ids.len() as i64 {
         tx.commit().await?;
@@ -224,8 +231,10 @@ pub async fn reorder_stops(
         )
         UPDATE day_plan_stops dps
         SET stop_order = requested.next_order::int, updated_at = now()
-        FROM requested
+        FROM requested, day_plans dp
         WHERE dps.day_plan_id = $1
+          AND dp.id = dps.day_plan_id
+          AND dp.status = 'draft'
           AND dps.id = requested.stop_id
         "#,
     )
