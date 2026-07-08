@@ -110,6 +110,16 @@ export function validateAssignDayPlanStopRequest(request: AssignDayPlanStopReque
   }
 }
 
+export function normalizeDayPlanId(dayPlanId: string): string {
+  return dayPlanId.trim();
+}
+
+export function validateDayPlanId(dayPlanId: string): void {
+  if (dayPlanId.trim().length === 0) {
+    throw new Error('dayPlanId is required before editing day plan stops');
+  }
+}
+
 export function normalizeDayPlanStopId(stopId: string): string {
   return stopId.trim();
 }
@@ -212,10 +222,12 @@ export async function assignDayPlanStop(
   dayPlanId: string,
   request: AssignDayPlanStopRequest,
 ): Promise<DayPlanStopMutationResponse> {
+  const normalizedDayPlanId = normalizeDayPlanId(dayPlanId);
   const normalizedRequest = normalizeAssignDayPlanStopRequest(request);
+  validateDayPlanId(normalizedDayPlanId);
   validateAssignDayPlanStopRequest(normalizedRequest);
 
-  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${normalizedDayPlanId}/stops`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -236,11 +248,13 @@ export async function removeDayPlanStop(
   dayPlanId: string,
   stopId: string,
 ): Promise<DayPlanStopRemovalResponse> {
+  const normalizedDayPlanId = normalizeDayPlanId(dayPlanId);
   const normalizedStopId = normalizeDayPlanStopId(stopId);
+  validateDayPlanId(normalizedDayPlanId);
   validateDayPlanStopId(normalizedStopId);
 
   const response = await authenticatedFetch(
-    `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${normalizedStopId}`,
+    `${API_BASE_URL}/day-plans/${normalizedDayPlanId}/stops/${normalizedStopId}`,
     {
       method: 'DELETE',
     },
@@ -257,10 +271,12 @@ export async function reorderDayPlanStops(
   dayPlanId: string,
   stopIds: string[],
 ): Promise<DayPlanStopReorderResponse> {
+  const normalizedDayPlanId = normalizeDayPlanId(dayPlanId);
   const normalizedStopIds = normalizeDayPlanStopIds(stopIds);
+  validateDayPlanId(normalizedDayPlanId);
   validateDayPlanStopIds(normalizedStopIds);
 
-  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/order`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${normalizedDayPlanId}/stops/order`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ stop_ids: normalizedStopIds }),
