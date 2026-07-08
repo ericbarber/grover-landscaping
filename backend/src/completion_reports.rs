@@ -135,7 +135,7 @@ pub fn build_completion_report(
     CompletionReportResponse {
         report_id: completion_report_id(&job.id),
         job_id: job.id.clone(),
-        report_status: if ready_for_customer { "ready" } else { "draft" }.to_string(),
+        report_status: if ready_for_customer { "submitted" } else { "draft" }.to_string(),
         persisted: false,
         ready_for_customer,
         checklist_progress,
@@ -409,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn report_is_ready_when_checklist_and_required_photos_are_present() {
+    fn report_is_submitted_when_checklist_and_required_photos_are_present() {
         let report = build_completion_report(
             job(4, 0, 0),
             account(),
@@ -417,7 +417,7 @@ mod tests {
             Vec::new(),
         );
 
-        assert_eq!(report.report_status, "ready");
+        assert_eq!(report.report_status, "submitted");
         assert_eq!(report.report_id, "report_job_1001");
         assert!(!report.persisted);
         assert!(report.ready_for_customer);
