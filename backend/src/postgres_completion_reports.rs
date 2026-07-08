@@ -6,7 +6,11 @@ pub async fn persist_completion_report(
     pool: &PgPool,
     report: &CompletionReportResponse,
 ) -> Result<CompletionReportPersistence, sqlx::Error> {
-    let proposed_share_token = proposed_share_token(&report.report_id);
+    let proposed_share_token = if completion_report_share_token_should_be_proposed(&report.report_status) {
+        Some(proposed_share_token(&report.report_id))
+    } else {
+        None
+    };
 
     let row = sqlx::query(
         r#"
@@ -65,6 +69,10 @@ pub async fn job_id_for_share_token(
         .await
 }
 
+fn completion_report_share_token_should_be_proposed(status: &str) -> bool {
+    status == "delivered"
+}
+
 fn proposed_share_token(report_id: &str) -> String {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -72,4 +80,18 @@ fn proposed_share_token(report_id: &str) -> String {
         .unwrap_or(0);
 
     format!("share_{report_id}_{nonce}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::completion_report_share_token_should_be_proposed;
+
+    #[test]
+    fn share_token_is_proposed_only_for_delivered_reports() {
+        assert!(completion_report_share_token_should_be_proposed("delivered"));
+        assert!(!completion_report_share_token_should_be_proposed("submitted"));
+        assert!(!completion_report_share_token_should_be_proposed("in_review"));
+        assert!(!completion_report_share_token_should_be_proposed("changes_requested"));
+        assert!(!completion_report_share_token_should_be_proposed("draft"));
+    }
 }
