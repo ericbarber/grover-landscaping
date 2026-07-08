@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
-import { publishDayPlanWithFallback } from '../api/dayPlanPublishingClient';
+import { publishDayPlan } from '../api/dayPlanPublishingClient';
 
 type ManagerPublishDayPlanButtonProps = {
   draftPlan: DayPlanMutationResponse;
@@ -9,6 +9,7 @@ type ManagerPublishDayPlanButtonProps = {
 
 export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerPublishDayPlanButtonProps) {
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const isPublished = draftPlan.status === 'published';
   const canPublish = draftPlan.persisted && !isPublished;
 
@@ -18,9 +19,11 @@ export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerP
     }
 
     setIsPublishing(true);
+    setPublishError(null);
 
-    void publishDayPlanWithFallback(draftPlan)
+    void publishDayPlan(draftPlan.id)
       .then(onPublished)
+      .catch(() => setPublishError('Publish failed. Keep this draft open and try again before sending the route to crews.'))
       .finally(() => setIsPublishing(false));
   }
 
@@ -39,6 +42,7 @@ export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerP
           Backend draft required before publishing this route to crews.
         </p>
       ) : null}
+      {publishError ? <p className="text-xs font-medium text-red-700">{publishError}</p> : null}
     </div>
   );
 }
