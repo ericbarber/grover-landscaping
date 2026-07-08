@@ -22,7 +22,7 @@ function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutatio
   };
 }
 
-function assertPublishedDayPlan(response: DayPlanMutationResponse): DayPlanMutationResponse {
+export function assertPublishedDayPlan(response: DayPlanMutationResponse): DayPlanMutationResponse {
   if (response.status !== 'published' || !response.persisted) {
     throw new Error('Publish day plan request did not return a persisted published route');
   }
