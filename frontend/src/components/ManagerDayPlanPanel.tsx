@@ -24,6 +24,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
   const draftTarget = normalizeManagerDayPlanDraftTarget({ crewId, serviceDate });
   const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating;
+  const isDraftPlanPublished = draftPlan?.status === 'published';
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,11 +98,17 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       {draftPlan ? (
         <div className="mt-5 space-y-5">
           <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={handleDraftPlanUpdated} />
-          <ManagerLocalRoutePlanner
-            jobs={planningJobs}
-            dayPlanId={draftPlan.id}
-            canPersist={draftPlan.persisted}
-          />
+          {isDraftPlanPublished ? (
+            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
+              Published route is locked for crew dispatch. Create a new draft to change the crew route.
+            </p>
+          ) : (
+            <ManagerLocalRoutePlanner
+              jobs={planningJobs}
+              dayPlanId={draftPlan.id}
+              canPersist={draftPlan.persisted}
+            />
+          )}
         </div>
       ) : null}
 
