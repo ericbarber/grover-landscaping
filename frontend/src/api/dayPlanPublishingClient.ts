@@ -22,6 +22,16 @@ function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutatio
   };
 }
 
+export function normalizePublishDayPlanId(dayPlanId: string): string {
+  return dayPlanId.trim();
+}
+
+export function validatePublishDayPlanId(dayPlanId: string): void {
+  if (dayPlanId.trim().length === 0) {
+    throw new Error('dayPlanId is required before publishing a day plan');
+  }
+}
+
 export function assertPublishedDayPlan(response: DayPlanMutationResponse): DayPlanMutationResponse {
   if (response.status !== 'published' || !response.persisted) {
     throw new Error('Publish day plan request did not return a persisted published route');
@@ -31,7 +41,10 @@ export function assertPublishedDayPlan(response: DayPlanMutationResponse): DayPl
 }
 
 export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutationResponse> {
-  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/publish`, {
+  const normalizedDayPlanId = normalizePublishDayPlanId(dayPlanId);
+  validatePublishDayPlanId(normalizedDayPlanId);
+
+  const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${normalizedDayPlanId}/publish`, {
     method: 'POST',
   });
 
