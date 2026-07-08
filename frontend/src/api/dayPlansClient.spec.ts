@@ -2,15 +2,29 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeAssignDayPlanStopRequest,
   normalizeCreateDayPlanRequest,
+  normalizeCrewDayPlanId,
   normalizeDayPlanId,
   normalizeDayPlanStopId,
   normalizeDayPlanStopIds,
   validateAssignDayPlanStopRequest,
   validateCreateDayPlanRequest,
+  validateCrewDayPlanId,
   validateDayPlanId,
   validateDayPlanStopId,
   validateDayPlanStopIds,
 } from './dayPlansClient';
+
+describe('day plan client crew day plan requests', () => {
+  it('normalizes crew IDs before fetching a crew day plan', () => {
+    expect(normalizeCrewDayPlanId(' crew_1001 ')).toBe('crew_1001');
+  });
+
+  it('rejects blank crew IDs before fetching a crew day plan', () => {
+    expect(() => validateCrewDayPlanId('   ')).toThrow(
+      'crewId is required before fetching a crew day plan',
+    );
+  });
+});
 
 describe('day plan client draft creation requests', () => {
   it('normalizes crew and service date before creating a draft', () => {
