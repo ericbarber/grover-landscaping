@@ -95,6 +95,16 @@ export interface DayPlanStopReorderResponse {
   persisted: boolean;
 }
 
+export function normalizeCrewDayPlanId(crewId: string): string {
+  return crewId.trim();
+}
+
+export function validateCrewDayPlanId(crewId: string): void {
+  if (crewId.trim().length === 0) {
+    throw new Error('crewId is required before fetching a crew day plan');
+  }
+}
+
 export function normalizeCreateDayPlanRequest(
   request: CreateDayPlanRequest,
 ): CreateDayPlanRequest {
@@ -227,7 +237,10 @@ export function toDayPlanStopReorder(response: ApiDayPlanStopReorderResponse): D
 }
 
 export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
-  const response = await authenticatedFetch(`${API_BASE_URL}/crews/${crewId}/day-plan/today`);
+  const normalizedCrewId = normalizeCrewDayPlanId(crewId);
+  validateCrewDayPlanId(normalizedCrewId);
+
+  const response = await authenticatedFetch(`${API_BASE_URL}/crews/${normalizedCrewId}/day-plan/today`);
 
   if (!response.ok) {
     throw new Error(`Day plan request failed with status ${response.status}`);
