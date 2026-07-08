@@ -1,5 +1,4 @@
 import type { DayPlanMutationResponse } from './dayPlansClient';
-import { localPublishedDayPlanResponse } from '../domain/managerDayPlans';
 import { API_BASE_URL } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
 
@@ -33,14 +32,4 @@ export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutation
   }
 
   return toDayPlanMutation((await response.json()) as ApiDayPlanMutationResponse);
-}
-
-export async function publishDayPlanWithFallback(
-  draftPlan: DayPlanMutationResponse,
-): Promise<DayPlanMutationResponse> {
-  try {
-    return await publishDayPlan(draftPlan.id);
-  } catch {
-    return localPublishedDayPlanResponse(draftPlan);
-  }
 }
