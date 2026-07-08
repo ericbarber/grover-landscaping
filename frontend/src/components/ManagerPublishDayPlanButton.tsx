@@ -5,13 +5,20 @@ import { publishDayPlan } from '../api/dayPlanPublishingClient';
 type ManagerPublishDayPlanButtonProps = {
   draftPlan: DayPlanMutationResponse;
   onPublished: (dayPlan: DayPlanMutationResponse) => void;
+  canPublishRoute?: boolean;
+  disabledReason?: string | null;
 };
 
-export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerPublishDayPlanButtonProps) {
+export function ManagerPublishDayPlanButton({
+  draftPlan,
+  onPublished,
+  canPublishRoute = true,
+  disabledReason,
+}: ManagerPublishDayPlanButtonProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const isPublished = draftPlan.status === 'published';
-  const canPublish = draftPlan.persisted && !isPublished;
+  const canPublish = draftPlan.persisted && !isPublished && canPublishRoute;
 
   function publishDraft() {
     if (!canPublish || isPublishing) {
@@ -23,7 +30,7 @@ export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerP
 
     void publishDayPlan(draftPlan.id)
       .then(onPublished)
-      .catch(() => setPublishError('Publish failed. Keep this draft open and try again before sending the route to crews.'))
+      .catch(() => setPublishError('Publish failed. Confirm this draft has synced stops and try again before sending the route to crews.'))
       .finally(() => setIsPublishing(false));
   }
 
@@ -41,6 +48,9 @@ export function ManagerPublishDayPlanButton({ draftPlan, onPublished }: ManagerP
         <p className="text-xs font-medium text-amber-700">
           Backend draft required before publishing this route to crews.
         </p>
+      ) : null}
+      {draftPlan.persisted && !isPublished && !canPublishRoute && disabledReason ? (
+        <p className="text-xs font-medium text-amber-700">{disabledReason}</p>
       ) : null}
       {publishError ? <p className="text-xs font-medium text-red-700">{publishError}</p> : null}
     </div>
