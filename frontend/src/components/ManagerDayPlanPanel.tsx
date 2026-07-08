@@ -18,12 +18,19 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
+  const normalizedCrewId = crewId.trim();
+  const canCreateDraft = normalizedCrewId.length > 0 && serviceDate.length > 0 && !isCreating;
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canCreateDraft) {
+      return;
+    }
+
     setIsCreating(true);
 
-    void createDraftDayPlanWithFallback({ crewId, serviceDate })
+    void createDraftDayPlanWithFallback({ crewId: normalizedCrewId, serviceDate })
       .then(setDraftPlan)
       .finally(() => setIsCreating(false));
   }
@@ -60,6 +67,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
           <input
             className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
             disabled={isCreating}
+            required
             value={crewId}
             onChange={handleCrewIdChange}
           />
@@ -70,13 +78,14 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
           <input
             className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
             disabled={isCreating}
+            required
             type="date"
             value={serviceDate}
             onChange={handleServiceDateChange}
           />
         </label>
 
-        <button className="w-full rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={isCreating} type="submit">
+        <button className="w-full rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={!canCreateDraft} type="submit">
           {isCreating ? 'Creating draft...' : 'Create draft day plan'}
         </button>
       </form>
@@ -92,7 +101,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
         </div>
       ) : null}
 
-      <ManagerAmendmentReviewPanel crewId={crewId} />
+      <ManagerAmendmentReviewPanel crewId={normalizedCrewId || crewId} />
     </section>
   );
 }
