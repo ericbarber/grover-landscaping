@@ -23,14 +23,6 @@ export function localDraftDayPlanResponse(crewId: string, serviceDate: string): 
   };
 }
 
-export function localPublishedDayPlanResponse(draftPlan: DayPlanMutationResponse): DayPlanMutationResponse {
-  return {
-    ...draftPlan,
-    status: 'published',
-    persisted: false,
-  };
-}
-
 export function draftPlanPersistenceLabel(persisted: boolean): string {
   return persisted ? 'Saved to backend' : 'Saved locally until the backend create endpoint is available';
 }
