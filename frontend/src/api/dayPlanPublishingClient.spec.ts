@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { DayPlanMutationResponse } from './dayPlansClient';
-import { assertPublishedDayPlan } from './dayPlanPublishingClient';
+import {
+  assertPublishedDayPlan,
+  normalizePublishDayPlanId,
+  validatePublishDayPlanId,
+} from './dayPlanPublishingClient';
 
 const publishedPersistedDayPlan: DayPlanMutationResponse = {
   id: 'day_plan_2026_06_16_crew_1001',
@@ -12,6 +16,18 @@ const publishedPersistedDayPlan: DayPlanMutationResponse = {
 };
 
 describe('day plan publishing client', () => {
+  it('normalizes day plan IDs before publishing', () => {
+    expect(normalizePublishDayPlanId(' day_plan_2026_06_16_crew_1001 ')).toBe(
+      'day_plan_2026_06_16_crew_1001',
+    );
+  });
+
+  it('rejects blank day plan IDs before publishing', () => {
+    expect(() => validatePublishDayPlanId('   ')).toThrow(
+      'dayPlanId is required before publishing a day plan',
+    );
+  });
+
   it('accepts persisted published day plan responses', () => {
     expect(assertPublishedDayPlan(publishedPersistedDayPlan)).toBe(publishedPersistedDayPlan);
   });
