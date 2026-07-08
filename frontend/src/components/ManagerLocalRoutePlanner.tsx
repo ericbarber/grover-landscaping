@@ -8,7 +8,6 @@ import type { DayPlanStop } from '../domain/dayPlans';
 import type { YardCareJob } from '../domain/jobs';
 import { getManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import {
-  draftStopsRemoverForSelectedJob,
   moveDraftStopDown,
   moveDraftStopUp,
   nextDraftStopsForSelectedJob,
