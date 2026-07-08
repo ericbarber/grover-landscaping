@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   normalizeAssignDayPlanStopRequest,
+  normalizeDayPlanStopId,
   normalizeDayPlanStopIds,
   validateAssignDayPlanStopRequest,
+  validateDayPlanStopId,
   validateDayPlanStopIds,
 } from './dayPlansClient';
 
@@ -24,6 +26,18 @@ describe('day plan client stop assignment requests', () => {
   it('rejects blank job IDs before assigning a stop', () => {
     expect(() => validateAssignDayPlanStopRequest({ jobId: '   ' })).toThrow(
       'jobId is required before assigning a day plan stop',
+    );
+  });
+});
+
+describe('day plan client stop removal requests', () => {
+  it('normalizes stop IDs before removing a stop', () => {
+    expect(normalizeDayPlanStopId(' stop_1001 ')).toBe('stop_1001');
+  });
+
+  it('rejects blank stop IDs before removing a stop', () => {
+    expect(() => validateDayPlanStopId('   ')).toThrow(
+      'stopId is required before removing a day plan stop',
     );
   });
 });
