@@ -50,6 +50,11 @@ pub async fn publish_day_plan(
               FROM day_plan_stops
               WHERE day_plan_stops.day_plan_id = day_plans.id
           )
+          AND COALESCE((
+              SELECT SUM(estimated_drive_minutes + estimated_service_minutes)
+              FROM day_plan_stops
+              WHERE day_plan_stops.day_plan_id = day_plans.id
+          ), 0) > 0
         RETURNING id, crew_id, service_date::text AS service_date, status, route_status
         "#,
     )
