@@ -6,6 +6,7 @@ import {
   normalizeManagerDayPlanDraftTarget,
 } from '../domain/managerDayPlanDraftTarget';
 import { defaultManagerServiceDate } from '../domain/managerDayPlans';
+import type { ManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
 import { ManagerLocalRoutePlanner } from './ManagerLocalRoutePlanner';
@@ -16,11 +17,16 @@ type ManagerDayPlanPanelProps = {
   onDayPlanPublished?: (dayPlan: DayPlanMutationResponse) => void;
 };
 
+const emptyRoutePublishGuard: ManagerDraftRoutePublishGuard = {
+  canPublish: false,
+  disabledReason: 'Add at least one synced stop before publishing this route.',
+};
+
 export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlanPanelProps) {
   const [crewId, setCrewId] = useState('crew_1001');
   const [serviceDate, setServiceDate] = useState(() => defaultManagerServiceDate());
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
-  const [routeStopCount, setRouteStopCount] = useState(0);
+  const [routePublishGuard, setRoutePublishGuard] = useState<ManagerDraftRoutePublishGuard>(emptyRoutePublishGuard);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
   const draftTarget = normalizeManagerDayPlanDraftTarget({ crewId, serviceDate });
@@ -31,10 +37,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       && draftPlan.serviceDate === draftTarget.serviceDate,
   );
   const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating && !isPublishedDraftTarget;
-  const canPublishRoute = routeStopCount > 0;
-  const publishDisabledReason = canPublishRoute
-    ? null
-    : 'Add at least one synced stop before publishing this route.';
+  const publishDisabledReason = routePublishGuard.disabledReason ?? 'Review this route before publishing.';
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +51,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
     void createDraftDayPlanWithFallback(draftTarget)
       .then((dayPlan) => {
         setDraftPlan(dayPlan);
-        setRouteStopCount(0);
+        setRoutePublishGuard(emptyRoutePublishGuard);
       })
       .finally(() => setIsCreating(false));
   }
@@ -56,13 +59,13 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   function handleCrewIdChange(event: ChangeEvent<HTMLInputElement>) {
     setCrewId(event.target.value);
     setDraftPlan(null);
-    setRouteStopCount(0);
+    setRoutePublishGuard(emptyRoutePublishGuard);
   }
 
   function handleServiceDateChange(event: ChangeEvent<HTMLInputElement>) {
     setServiceDate(event.target.value);
     setDraftPlan(null);
-    setRouteStopCount(0);
+    setRoutePublishGuard(emptyRoutePublishGuard);
   }
 
   function handleDraftPlanUpdated(dayPlan: DayPlanMutationResponse) {
@@ -115,7 +118,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
           <ManagerDraftDayPlanActions
             draftPlan={draftPlan}
             onUpdated={handleDraftPlanUpdated}
-            canPublishRoute={canPublishRoute}
+            canPublishRoute={routePublishGuard.canPublish}
             publishDisabledReason={publishDisabledReason}
           />
           {isDraftPlanPublished ? (
@@ -127,7 +130,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
               jobs={planningJobs}
               dayPlanId={draftPlan.id}
               canPersist={draftPlan.persisted}
-              onStopsChanged={(stops) => setRouteStopCount(stops.length)}
+              onPublishGuardChanged={setRoutePublishGuard}
             />
           )}
         </div>
