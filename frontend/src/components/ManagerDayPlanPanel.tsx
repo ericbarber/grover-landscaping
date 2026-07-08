@@ -23,8 +23,13 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
   const draftTarget = normalizeManagerDayPlanDraftTarget({ crewId, serviceDate });
-  const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating;
   const isDraftPlanPublished = draftPlan?.status === 'published';
+  const isPublishedDraftTarget = Boolean(
+    isDraftPlanPublished
+      && draftPlan?.crewId === draftTarget.crewId
+      && draftPlan.serviceDate === draftTarget.serviceDate,
+  );
+  const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating && !isPublishedDraftTarget;
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -91,7 +96,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
         </label>
 
         <button className="w-full rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={!canCreateDraft} type="submit">
-          {isCreating ? 'Creating draft...' : 'Create draft day plan'}
+          {isCreating ? 'Creating draft...' : isPublishedDraftTarget ? 'Route already published' : 'Create draft day plan'}
         </button>
       </form>
 
@@ -100,7 +105,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
           <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={handleDraftPlanUpdated} />
           {isDraftPlanPublished ? (
             <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
-              Published route is locked for crew dispatch. Create a new draft to change the crew route.
+              Published route is locked for crew dispatch. Change the crew or service date to start a new draft.
             </p>
           ) : (
             <ManagerLocalRoutePlanner
