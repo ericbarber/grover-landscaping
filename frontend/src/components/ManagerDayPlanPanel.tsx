@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
 import type { YardCareJob } from '../domain/jobs';
 import { defaultManagerServiceDate } from '../domain/managerDayPlans';
@@ -28,6 +28,16 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       .finally(() => setIsCreating(false));
   }
 
+  function handleCrewIdChange(event: ChangeEvent<HTMLInputElement>) {
+    setCrewId(event.target.value);
+    setDraftPlan(null);
+  }
+
+  function handleServiceDateChange(event: ChangeEvent<HTMLInputElement>) {
+    setServiceDate(event.target.value);
+    setDraftPlan(null);
+  }
+
   function handleDraftPlanUpdated(dayPlan: DayPlanMutationResponse) {
     setDraftPlan(dayPlan);
 
@@ -47,12 +57,23 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       <form className="mt-5 space-y-4" onSubmit={createDraft}>
         <label className="block text-sm font-semibold text-slate-700">
           Crew ID
-          <input className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950" value={crewId} onChange={(event) => setCrewId(event.target.value)} />
+          <input
+            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            disabled={isCreating}
+            value={crewId}
+            onChange={handleCrewIdChange}
+          />
         </label>
 
         <label className="block text-sm font-semibold text-slate-700">
           Service date
-          <input className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950" type="date" value={serviceDate} onChange={(event) => setServiceDate(event.target.value)} />
+          <input
+            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            disabled={isCreating}
+            type="date"
+            value={serviceDate}
+            onChange={handleServiceDateChange}
+          />
         </label>
 
         <button className="w-full rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={isCreating} type="submit">
