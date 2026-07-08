@@ -144,12 +144,20 @@ pub async fn remove_stop(
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    let delete_result =
-        sqlx::query("DELETE FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2")
-            .bind(day_plan_id)
-            .bind(stop_id)
-            .execute(&mut *tx)
-            .await?;
+    let delete_result = sqlx::query(
+        r#"
+        DELETE FROM day_plan_stops dps
+        USING day_plans dp
+        WHERE dps.day_plan_id = $1
+          AND dps.id = $2
+          AND dp.id = dps.day_plan_id
+          AND dp.status = 'draft'
+        "#,
+    )
+    .bind(day_plan_id)
+    .bind(stop_id)
+    .execute(&mut *tx)
+    .await?;
 
     if delete_result.rows_affected() != 1 {
         tx.commit().await?;
