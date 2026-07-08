@@ -30,7 +30,18 @@ pub async fn publish_day_plan(
     id: &str,
 ) -> Result<Option<DayPlanMutationResponse>, sqlx::Error> {
     let Some(row) = sqlx::query(
-        "UPDATE day_plans SET status = 'published', updated_at = now() WHERE id = $1 RETURNING id, crew_id, service_date::text AS service_date, status, route_status",
+        r#"
+        UPDATE day_plans
+        SET status = 'published', updated_at = now()
+        WHERE id = $1
+          AND status = 'draft'
+          AND EXISTS (
+              SELECT 1
+              FROM day_plan_stops
+              WHERE day_plan_stops.day_plan_id = day_plans.id
+          )
+        RETURNING id, crew_id, service_date::text AS service_date, status, route_status
+        "#,
     )
     .bind(id)
     .fetch_optional(pool)
