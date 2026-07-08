@@ -24,5 +24,11 @@ export function localDraftDayPlanResponse(crewId: string, serviceDate: string): 
 }
 
 export function draftPlanPersistenceLabel(persisted: boolean): string {
-  return persisted ? 'Saved to backend' : 'Saved locally until the backend create endpoint is available';
+  return persisted ? 'Saved to backend' : 'Local planning only';
+}
+
+export function draftPlanPersistenceDetail(persisted: boolean): string {
+  return persisted
+    ? 'Route changes can sync to the backend and be published when ready.'
+    : 'Backend draft was not created, so this route cannot be published to crews until draft creation succeeds.';
 }
