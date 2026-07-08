@@ -1,14 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import {
   normalizeAssignDayPlanStopRequest,
+  normalizeCreateDayPlanRequest,
   normalizeDayPlanId,
   normalizeDayPlanStopId,
   normalizeDayPlanStopIds,
   validateAssignDayPlanStopRequest,
+  validateCreateDayPlanRequest,
   validateDayPlanId,
   validateDayPlanStopId,
   validateDayPlanStopIds,
 } from './dayPlansClient';
+
+describe('day plan client draft creation requests', () => {
+  it('normalizes crew and service date before creating a draft', () => {
+    expect(
+      normalizeCreateDayPlanRequest({
+        crewId: ' crew_1001 ',
+        serviceDate: ' 2026-06-16 ',
+      }),
+    ).toEqual({
+      crewId: 'crew_1001',
+      serviceDate: '2026-06-16',
+    });
+  });
+
+  it('rejects blank crew IDs before creating a draft', () => {
+    expect(() =>
+      validateCreateDayPlanRequest({ crewId: '   ', serviceDate: '2026-06-16' }),
+    ).toThrow('crewId is required before creating a draft day plan');
+  });
+
+  it('rejects blank service dates before creating a draft', () => {
+    expect(() =>
+      validateCreateDayPlanRequest({ crewId: 'crew_1001', serviceDate: '   ' }),
+    ).toThrow('serviceDate is required before creating a draft day plan');
+  });
+});
 
 describe('day plan client route edit identifiers', () => {
   it('normalizes day plan IDs before editing route stops', () => {
