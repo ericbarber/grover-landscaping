@@ -81,7 +81,13 @@ pub async fn assign_stop(
 
     let Some(row) = sqlx::query(
         r#"
-        WITH next_order AS (
+        WITH draft_plan AS (
+            SELECT id
+            FROM day_plans
+            WHERE id = $1
+              AND status = 'draft'
+        ),
+        next_order AS (
             SELECT COALESCE(MAX(stop_order), 0) + 1 AS stop_order
             FROM day_plan_stops
             WHERE day_plan_id = $1
@@ -95,15 +101,15 @@ pub async fn assign_stop(
             estimated_drive_minutes,
             estimated_service_minutes
         )
-        VALUES (
+        SELECT
             $2,
-            $1,
+            draft_plan.id,
             $3,
             (SELECT stop_order FROM next_order),
             'pending',
             $4,
             $5
-        )
+        FROM draft_plan
         ON CONFLICT (day_plan_id, job_id) DO UPDATE SET
             estimated_drive_minutes = EXCLUDED.estimated_drive_minutes,
             estimated_service_minutes = EXCLUDED.estimated_service_minutes,
