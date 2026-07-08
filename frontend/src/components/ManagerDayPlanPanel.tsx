@@ -20,6 +20,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   const [crewId, setCrewId] = useState('crew_1001');
   const [serviceDate, setServiceDate] = useState(() => defaultManagerServiceDate());
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
+  const [routeStopCount, setRouteStopCount] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
   const draftTarget = normalizeManagerDayPlanDraftTarget({ crewId, serviceDate });
@@ -30,6 +31,10 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       && draftPlan.serviceDate === draftTarget.serviceDate,
   );
   const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating && !isPublishedDraftTarget;
+  const canPublishRoute = routeStopCount > 0;
+  const publishDisabledReason = canPublishRoute
+    ? null
+    : 'Add at least one synced stop before publishing this route.';
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,18 +46,23 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
     setIsCreating(true);
 
     void createDraftDayPlanWithFallback(draftTarget)
-      .then(setDraftPlan)
+      .then((dayPlan) => {
+        setDraftPlan(dayPlan);
+        setRouteStopCount(0);
+      })
       .finally(() => setIsCreating(false));
   }
 
   function handleCrewIdChange(event: ChangeEvent<HTMLInputElement>) {
     setCrewId(event.target.value);
     setDraftPlan(null);
+    setRouteStopCount(0);
   }
 
   function handleServiceDateChange(event: ChangeEvent<HTMLInputElement>) {
     setServiceDate(event.target.value);
     setDraftPlan(null);
+    setRouteStopCount(0);
   }
 
   function handleDraftPlanUpdated(dayPlan: DayPlanMutationResponse) {
@@ -102,7 +112,12 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
 
       {draftPlan ? (
         <div className="mt-5 space-y-5">
-          <ManagerDraftDayPlanActions draftPlan={draftPlan} onUpdated={handleDraftPlanUpdated} />
+          <ManagerDraftDayPlanActions
+            draftPlan={draftPlan}
+            onUpdated={handleDraftPlanUpdated}
+            canPublishRoute={canPublishRoute}
+            publishDisabledReason={publishDisabledReason}
+          />
           {isDraftPlanPublished ? (
             <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
               Published route is locked for crew dispatch. Change the crew or service date to start a new draft.
@@ -112,6 +127,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
               jobs={planningJobs}
               dayPlanId={draftPlan.id}
               canPersist={draftPlan.persisted}
+              onStopsChanged={(stops) => setRouteStopCount(stops.length)}
             />
           )}
         </div>
