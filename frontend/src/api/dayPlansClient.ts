@@ -110,8 +110,18 @@ export function validateAssignDayPlanStopRequest(request: AssignDayPlanStopReque
   }
 }
 
+export function normalizeDayPlanStopId(stopId: string): string {
+  return stopId.trim();
+}
+
 export function normalizeDayPlanStopIds(stopIds: string[]): string[] {
-  return stopIds.map((stopId) => stopId.trim());
+  return stopIds.map(normalizeDayPlanStopId);
+}
+
+export function validateDayPlanStopId(stopId: string): void {
+  if (stopId.trim().length === 0) {
+    throw new Error('stopId is required before removing a day plan stop');
+  }
 }
 
 export function validateDayPlanStopIds(stopIds: string[]): void {
@@ -226,10 +236,13 @@ export async function removeDayPlanStop(
   dayPlanId: string,
   stopId: string,
 ): Promise<DayPlanStopRemovalResponse> {
+  const normalizedStopId = normalizeDayPlanStopId(stopId);
+  validateDayPlanStopId(normalizedStopId);
+
   const response = await authenticatedFetch(
-    `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}`,
+    `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${normalizedStopId}`,
     {
-    method: 'DELETE',
+      method: 'DELETE',
     },
   );
 
