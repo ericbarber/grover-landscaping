@@ -1,6 +1,10 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
 import type { YardCareJob } from '../domain/jobs';
+import {
+  canCreateManagerDayPlanDraft,
+  normalizeManagerDayPlanDraftTarget,
+} from '../domain/managerDayPlanDraftTarget';
 import { defaultManagerServiceDate } from '../domain/managerDayPlans';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
@@ -18,8 +22,8 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
-  const normalizedCrewId = crewId.trim();
-  const canCreateDraft = normalizedCrewId.length > 0 && serviceDate.length > 0 && !isCreating;
+  const draftTarget = normalizeManagerDayPlanDraftTarget({ crewId, serviceDate });
+  const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating;
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +34,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
 
     setIsCreating(true);
 
-    void createDraftDayPlanWithFallback({ crewId: normalizedCrewId, serviceDate })
+    void createDraftDayPlanWithFallback(draftTarget)
       .then(setDraftPlan)
       .finally(() => setIsCreating(false));
   }
@@ -101,7 +105,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
         </div>
       ) : null}
 
-      <ManagerAmendmentReviewPanel crewId={normalizedCrewId || crewId} />
+      <ManagerAmendmentReviewPanel crewId={draftTarget.crewId || crewId} />
     </section>
   );
 }
