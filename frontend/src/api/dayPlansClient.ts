@@ -95,6 +95,21 @@ export interface DayPlanStopReorderResponse {
   persisted: boolean;
 }
 
+export function normalizeAssignDayPlanStopRequest(
+  request: AssignDayPlanStopRequest,
+): AssignDayPlanStopRequest {
+  return {
+    ...request,
+    jobId: request.jobId.trim(),
+  };
+}
+
+export function validateAssignDayPlanStopRequest(request: AssignDayPlanStopRequest): void {
+  if (request.jobId.trim().length === 0) {
+    throw new Error('jobId is required before assigning a day plan stop');
+  }
+}
+
 export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   return {
     id: apiDayPlan.id,
@@ -169,13 +184,16 @@ export async function assignDayPlanStop(
   dayPlanId: string,
   request: AssignDayPlanStopRequest,
 ): Promise<DayPlanStopMutationResponse> {
+  const normalizedRequest = normalizeAssignDayPlanStopRequest(request);
+  validateAssignDayPlanStopRequest(normalizedRequest);
+
   const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      job_id: request.jobId,
-      estimated_drive_minutes: request.estimatedDriveMinutes,
-      estimated_service_minutes: request.estimatedServiceMinutes,
+      job_id: normalizedRequest.jobId,
+      estimated_drive_minutes: normalizedRequest.estimatedDriveMinutes,
+      estimated_service_minutes: normalizedRequest.estimatedServiceMinutes,
     }),
   });
 
