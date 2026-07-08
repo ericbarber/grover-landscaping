@@ -156,6 +156,7 @@ impl DayPlanRepository {
         &self,
         request: CreateDayPlanRequest,
     ) -> DayPlanMutationResponse {
+        let request = normalize_create_day_plan_request(request);
         let id = draft_day_plan_id(&request.crew_id, &request.service_date);
 
         if let Some(pool) = &self.pool {
@@ -323,6 +324,79 @@ impl DayPlanRepository {
             persisted: false,
         }
     }
+}
+
+pub fn normalize_create_day_plan_request(
+    request: CreateDayPlanRequest,
+) -> CreateDayPlanRequest {
+    CreateDayPlanRequest {
+        crew_id: request.crew_id.trim().to_string(),
+        service_date: request.service_date.trim().to_string(),
+    }
+}
+
+pub fn validate_create_day_plan_request(request: &CreateDayPlanRequest) -> Result<(), String> {
+    if request.crew_id.trim().is_empty() {
+        return Err("crew_id is required".to_string());
+    }
+
+    if request.service_date.trim().is_empty() {
+        return Err("service_date is required".to_string());
+    }
+
+    if !is_valid_service_date(&request.service_date) {
+        return Err("service_date must use YYYY-MM-DD".to_string());
+    }
+
+    Ok(())
+}
+
+fn is_valid_service_date(service_date: &str) -> bool {
+    let mut parts = service_date.split('-');
+    let (Some(year), Some(month), Some(day), None) =
+        (parts.next(), parts.next(), parts.next(), parts.next())
+    else {
+        return false;
+    };
+
+    if year.len() != 4 || month.len() != 2 || day.len() != 2 {
+        return false;
+    }
+
+    if !year.bytes().all(|byte| byte.is_ascii_digit())
+        || !month.bytes().all(|byte| byte.is_ascii_digit())
+        || !day.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return false;
+    }
+
+    let Ok(year) = year.parse::<u32>() else {
+        return false;
+    };
+    let Ok(month) = month.parse::<u32>() else {
+        return false;
+    };
+    let Ok(day) = day.parse::<u32>() else {
+        return false;
+    };
+
+    if year == 0 {
+        return false;
+    }
+
+    let max_day = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        _ => return false,
+    };
+
+    (1..=max_day).contains(&day)
+}
+
+fn is_leap_year(year: u32) -> bool {
+    (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
 pub fn validate_amendment_review(request: &ReviewDayPlanAmendmentRequest) -> Result<(), String> {
@@ -513,10 +587,11 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
 mod tests {
     use super::{
         draft_day_plan_id, draft_stop_id, local_draft_day_plan_response,
-        local_published_day_plan_response, seed_day_plan, validate_amendment_request,
-        validate_amendment_review, AmendmentService, AssignDayPlanStopRequest,
-        CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
-        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+        local_published_day_plan_response, normalize_create_day_plan_request, seed_day_plan,
+        validate_amendment_request, validate_amendment_review, validate_create_day_plan_request,
+        AmendmentService, AssignDayPlanStopRequest, CreateDayPlanAmendmentRequest,
+        CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
+        ReviewDayPlanAmendmentRequest,
     };
 
     #[test]
@@ -534,6 +609,56 @@ mod tests {
 
         assert_eq!(day_plan.stops[0].stop_status, "pending");
         assert_eq!(day_plan.stops[1].stop_status, "pending");
+    }
+
+    #[test]
+    fn create_day_plan_validation_normalizes_target_fields() {
+        let request = normalize_create_day_plan_request(CreateDayPlanRequest {
+            crew_id: " crew_1001 ".to_string(),
+            service_date: " 2026-06-16 ".to_string(),
+        });
+
+        assert_eq!(request.crew_id, "crew_1001");
+        assert_eq!(request.service_date, "2026-06-16");
+    }
+
+    #[test]
+    fn create_day_plan_validation_rejects_blank_targets() {
+        let request = CreateDayPlanRequest {
+            crew_id: "   ".to_string(),
+            service_date: "2026-06-16".to_string(),
+        };
+
+        assert!(validate_create_day_plan_request(&request).is_err());
+
+        let request = CreateDayPlanRequest {
+            crew_id: "crew_1001".to_string(),
+            service_date: "   ".to_string(),
+        };
+
+        assert!(validate_create_day_plan_request(&request).is_err());
+    }
+
+    #[test]
+    fn create_day_plan_validation_rejects_invalid_service_dates() {
+        for service_date in ["2026/06/16", "2026-13-16", "2026-02-30", "0000-06-16"] {
+            let request = CreateDayPlanRequest {
+                crew_id: "crew_1001".to_string(),
+                service_date: service_date.to_string(),
+            };
+
+            assert!(validate_create_day_plan_request(&request).is_err());
+        }
+    }
+
+    #[test]
+    fn create_day_plan_validation_accepts_leap_day() {
+        let request = CreateDayPlanRequest {
+            crew_id: "crew_1001".to_string(),
+            service_date: "2028-02-29".to_string(),
+        };
+
+        assert!(validate_create_day_plan_request(&request).is_ok());
     }
 
     #[test]
@@ -629,6 +754,21 @@ mod tests {
         assert_eq!(response.status, "published");
         assert_eq!(response.route_status, "manual");
         assert!(!response.persisted);
+    }
+
+    #[tokio::test]
+    async fn repository_normalizes_created_draft_targets_without_database_pool() {
+        let repository = DayPlanRepository::default();
+        let request = CreateDayPlanRequest {
+            crew_id: " crew_1001 ".to_string(),
+            service_date: " 2026-06-16 ".to_string(),
+        };
+
+        let response = repository.create_draft_day_plan(request).await;
+
+        assert_eq!(response.id, "day_plan_2026_06_16_crew_1001");
+        assert_eq!(response.crew_id, "crew_1001");
+        assert_eq!(response.service_date, "2026-06-16");
     }
 
     #[tokio::test]
