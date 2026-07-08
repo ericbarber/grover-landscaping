@@ -110,6 +110,24 @@ export function validateAssignDayPlanStopRequest(request: AssignDayPlanStopReque
   }
 }
 
+export function normalizeDayPlanStopIds(stopIds: string[]): string[] {
+  return stopIds.map((stopId) => stopId.trim());
+}
+
+export function validateDayPlanStopIds(stopIds: string[]): void {
+  if (stopIds.length === 0) {
+    throw new Error('At least one stop ID is required before reordering a day plan');
+  }
+
+  if (stopIds.some((stopId) => stopId.trim().length === 0)) {
+    throw new Error('Stop IDs cannot be blank before reordering a day plan');
+  }
+
+  if (new Set(stopIds.map((stopId) => stopId.trim())).size !== stopIds.length) {
+    throw new Error('Stop IDs must be unique before reordering a day plan');
+  }
+}
+
 export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
   return {
     id: apiDayPlan.id,
@@ -226,10 +244,13 @@ export async function reorderDayPlanStops(
   dayPlanId: string,
   stopIds: string[],
 ): Promise<DayPlanStopReorderResponse> {
+  const normalizedStopIds = normalizeDayPlanStopIds(stopIds);
+  validateDayPlanStopIds(normalizedStopIds);
+
   const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/stops/order`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ stop_ids: stopIds }),
+    body: JSON.stringify({ stop_ids: normalizedStopIds }),
   });
 
   if (!response.ok) {
