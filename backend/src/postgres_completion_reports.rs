@@ -110,7 +110,8 @@ pub async fn persist_completion_report(
             before_photos,
             after_photos,
             issue_photos,
-            share_token
+            share_token,
+            delivered_at IS NOT NULL AS delivered_at_present
         "#,
     )
     .bind(&report.report_id)
@@ -125,15 +126,26 @@ pub async fn persist_completion_report(
     .fetch_one(pool)
     .await?;
 
+    let persisted_report_status: String = row.get("report_status");
+    let delivered_at_present: bool = row.get("delivered_at_present");
+    let share_token = if completion_report_share_token_should_be_returned(
+        &persisted_report_status,
+        delivered_at_present,
+    ) {
+        row.get("share_token")
+    } else {
+        None
+    };
+
     Ok(CompletionReportPersistence {
         persisted: true,
-        report_status: Some(row.get("report_status")),
+        report_status: Some(persisted_report_status),
         ready_for_customer: Some(row.get("ready_for_customer")),
         checklist_progress: Some(row.get::<i32, _>("checklist_progress").max(0) as u32),
         before_photos: Some(row.get::<i32, _>("before_photos").max(0) as u32),
         after_photos: Some(row.get::<i32, _>("after_photos").max(0) as u32),
         issue_photos: Some(row.get::<i32, _>("issue_photos").max(0) as u32),
-        share_token: row.get("share_token"),
+        share_token,
     })
 }
 
@@ -462,6 +474,13 @@ fn completion_report_share_token_should_be_proposed(status: &str) -> bool {
     status == "delivered"
 }
 
+fn completion_report_share_token_should_be_returned(
+    status: &str,
+    delivered_at_present: bool,
+) -> bool {
+    status == "delivered" && delivered_at_present
+}
+
 fn proposed_share_token(report_id: &str) -> String {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -515,7 +534,10 @@ async fn insert_status_history(
 
 #[cfg(test)]
 mod tests {
-    use super::completion_report_share_token_should_be_proposed;
+    use super::{
+        completion_report_share_token_should_be_proposed,
+        completion_report_share_token_should_be_returned,
+    };
 
     #[test]
     fn share_token_is_proposed_only_for_delivered_reports() {
@@ -532,5 +554,25 @@ mod tests {
             "changes_requested"
         ));
         assert!(!completion_report_share_token_should_be_proposed("draft"));
+    }
+
+    #[test]
+    fn share_token_is_returned_only_after_delivery_timestamp_exists() {
+        assert!(completion_report_share_token_should_be_returned(
+            "delivered",
+            true,
+        ));
+        assert!(!completion_report_share_token_should_be_returned(
+            "delivered",
+            false,
+        ));
+        assert!(!completion_report_share_token_should_be_returned(
+            "submitted",
+            true,
+        ));
+        assert!(!completion_report_share_token_should_be_returned(
+            "in_review",
+            true,
+        ));
     }
 }
