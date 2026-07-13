@@ -36,6 +36,20 @@ created_at
 updated_at
 ```
 
+## crews and day_plans
+
+Implemented crew ownership fields:
+
+```text
+id
+organization_id
+name
+created_at
+updated_at
+```
+
+Crews belong to a service-company organization. Day plans inherit their tenant boundary through the assigned crew, and manager/crew route APIs resolve that organization before returning or mutating day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan outside the signed-in principal's active organization memberships are rejected before local fallback responses are used.
+
 ## job_photos
 
 Suggested fields:

@@ -152,6 +152,31 @@ impl DayPlanRepository {
         Self { pool: Some(pool) }
     }
 
+    pub async fn organization_id_for_crew(&self, crew_id: &str) -> Option<String> {
+        if let Some(pool) = &self.pool {
+            if let Ok(organization_id) =
+                postgres_day_plans::organization_id_for_crew(pool, crew_id).await
+            {
+                return organization_id;
+            }
+        }
+
+        seed_organization_id_for_crew(crew_id)
+    }
+
+    pub async fn organization_id_for_day_plan(&self, day_plan_id: &str) -> Option<String> {
+        if let Some(pool) = &self.pool {
+            if let Ok(organization_id) =
+                postgres_day_plans::organization_id_for_day_plan(pool, day_plan_id).await
+            {
+                return organization_id;
+            }
+        }
+
+        let (_, crew_id) = day_plan_parts_from_id(day_plan_id)?;
+        seed_organization_id_for_crew(&crew_id)
+    }
+
     pub async fn create_draft_day_plan(
         &self,
         request: CreateDayPlanRequest,
@@ -581,6 +606,14 @@ fn seed_day_plan(crew_id: &str) -> DayPlanSummary {
     }
 }
 
+fn seed_organization_id_for_crew(crew_id: &str) -> Option<String> {
+    if crew_id == "crew_1001" {
+        Some("org_demo_landscaping".to_string())
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -779,6 +812,26 @@ mod tests {
         assert_eq!(day_plan.status, "published");
         assert_eq!(day_plan.stops.len(), 2);
         assert_eq!(day_plan.stops[0].stop_status, "pending");
+    }
+
+    #[tokio::test]
+    async fn repository_resolves_seed_day_plan_organization_without_database_pool() {
+        let repository = DayPlanRepository::default();
+
+        assert_eq!(
+            repository.organization_id_for_crew("crew_1001").await,
+            Some("org_demo_landscaping".to_string())
+        );
+        assert_eq!(
+            repository
+                .organization_id_for_day_plan("day_plan_2026_06_15_crew_1001")
+                .await,
+            Some("org_demo_landscaping".to_string())
+        );
+        assert_eq!(
+            repository.organization_id_for_crew("crew_unknown").await,
+            None
+        );
     }
 
     #[tokio::test]

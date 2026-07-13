@@ -7,6 +7,39 @@ use std::collections::HashSet;
 
 use sqlx::{PgPool, Row};
 
+pub async fn organization_id_for_crew(
+    pool: &PgPool,
+    crew_id: &str,
+) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        r#"
+        SELECT organization_id
+        FROM crews
+        WHERE id = $1
+        "#,
+    )
+    .bind(crew_id)
+    .fetch_optional(pool)
+    .await
+}
+
+pub async fn organization_id_for_day_plan(
+    pool: &PgPool,
+    day_plan_id: &str,
+) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        r#"
+        SELECT c.organization_id
+        FROM day_plans dp
+        JOIN crews c ON c.id = dp.crew_id
+        WHERE dp.id = $1
+        "#,
+    )
+    .bind(day_plan_id)
+    .fetch_optional(pool)
+    .await
+}
+
 pub async fn create_draft_day_plan(
     pool: &PgPool,
     id: &str,

@@ -290,11 +290,12 @@ Current state:
 - Local development can explicitly use disabled authentication outside production
 - Development and production Cognito infrastructure is declared in Terraform
 - Delivered completion report approvals record organization-scoped `report_delivered` audit events
+- Crews carry organization ownership, and day-plan, amendment, stop, and manager bid APIs enforce active organization membership before using persisted or local fallback data
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
-- Persist organization membership and tenant-aware resource boundaries
+- Continue tenant-aware resource boundaries for properties, photos, shared customer reads, and remaining job detail routes
 - Add invite-based onboarding and role administration
 - Record audit events for login, role, access, bid, notification, and remaining approval changes
 
@@ -353,6 +354,7 @@ Current state:
 - Backend notification history and notification retry/resolve actions are scoped to active organization memberships
 - Manager notification history can retry failed and dead-letter delivery records by returning them to queued status
 - Manager notification history can mark failed and dead-letter delivery records manually resolved
+- Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
 
 ### Property ownership, portfolios, and crew assignments
 

@@ -34,6 +34,7 @@ use day_plans::{
 };
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::{
+    access_control::{can_manage_schedule, can_view_crew_route, AccessRole},
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::OrganizationRepository,
 };
@@ -1038,6 +1039,77 @@ async fn principal_active_organization_ids(
         .collect()
 }
 
+async fn require_crew_organization_access(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    crew_id: &str,
+    required_role: fn(&AccessRole) -> bool,
+) -> Result<(), Response> {
+    let Some(organization_id) = state.day_plans.organization_id_for_crew(crew_id).await else {
+        return Err(resource_not_found_response(
+            "crew_not_found",
+            "Crew was not found.",
+        ));
+    };
+
+    require_organization_membership(state, principal, &organization_id, required_role).await
+}
+
+async fn require_day_plan_organization_access(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    day_plan_id: &str,
+    required_role: fn(&AccessRole) -> bool,
+) -> Result<(), Response> {
+    let Some(organization_id) = state
+        .day_plans
+        .organization_id_for_day_plan(day_plan_id)
+        .await
+    else {
+        return Err(resource_not_found_response(
+            "day_plan_not_found",
+            "Day plan was not found.",
+        ));
+    };
+
+    require_organization_membership(state, principal, &organization_id, required_role).await
+}
+
+async fn require_organization_membership(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    organization_id: &str,
+    required_role: fn(&AccessRole) -> bool,
+) -> Result<(), Response> {
+    if state
+        .organizations
+        .user_has_active_membership(&principal.subject, organization_id, required_role)
+        .await
+    {
+        return Ok(());
+    }
+
+    Err((
+        StatusCode::FORBIDDEN,
+        Json(ErrorResponse {
+            error: "organization_access_denied",
+            message: "Active organization membership is required for this resource.".to_string(),
+        }),
+    )
+        .into_response())
+}
+
+fn resource_not_found_response(error: &'static str, message: &'static str) -> Response {
+    (
+        StatusCode::NOT_FOUND,
+        Json(ErrorResponse {
+            error,
+            message: message.to_string(),
+        }),
+    )
+        .into_response()
+}
+
 fn normalize_notification_resolution_reason(reason: Option<String>) -> Result<Option<String>, ()> {
     let Some(reason) = reason else {
         return Ok(None);
@@ -1411,30 +1483,59 @@ async fn build_and_persist_completion_report(
 
 async fn get_today_day_plan(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(crew_id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.day_plans.today_for_crew(&crew_id).await)
+) -> Response {
+    if let Err(response) =
+        require_crew_organization_access(&state, &principal, &crew_id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(state.day_plans.today_for_crew(&crew_id).await).into_response()
 }
 
 async fn create_draft_day_plan(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Json(request): Json<CreateDayPlanRequest>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) = require_crew_organization_access(
+        &state,
+        &principal,
+        request.crew_id.trim(),
+        can_manage_schedule,
+    )
+    .await
+    {
+        return response;
+    }
+
     (
         StatusCode::CREATED,
         Json(state.day_plans.create_draft_day_plan(request).await),
     )
+        .into_response()
 }
 
 async fn publish_day_plan(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.day_plans.publish_day_plan(&day_plan_id).await)
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
+    Json(state.day_plans.publish_day_plan(&day_plan_id).await).into_response()
 }
 
 async fn create_day_plan_amendment(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
     Json(request): Json<CreateDayPlanAmendmentRequest>,
 ) -> Response {
@@ -1447,6 +1548,13 @@ async fn create_day_plan_amendment(
             }),
         )
             .into_response();
+    }
+
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
+            .await
+    {
+        return response;
     }
 
     (
@@ -1463,13 +1571,22 @@ async fn create_day_plan_amendment(
 
 async fn list_day_plan_amendments(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.day_plans.list_amendments(&day_plan_id).await)
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
+            .await
+    {
+        return response;
+    }
+
+    Json(state.day_plans.list_amendments(&day_plan_id).await).into_response()
 }
 
 async fn review_day_plan_amendment(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, amendment_id)): Path<(String, String)>,
     Json(request): Json<ReviewDayPlanAmendmentRequest>,
 ) -> Response {
@@ -1484,6 +1601,13 @@ async fn review_day_plan_amendment(
             .into_response();
     }
 
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
     Json(
         state
             .day_plans
@@ -1495,6 +1619,7 @@ async fn review_day_plan_amendment(
 
 async fn save_project_bid_draft(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, amendment_id)): Path<(String, String)>,
     Json(request): Json<CreateProjectBidRequest>,
 ) -> Response {
@@ -1507,6 +1632,13 @@ async fn save_project_bid_draft(
             }),
         )
             .into_response();
+    }
+
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
     }
 
     (
@@ -1523,13 +1655,22 @@ async fn save_project_bid_draft(
 
 async fn list_project_bids(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.project_bids.list_for_day_plan(&day_plan_id).await)
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
+    Json(state.project_bids.list_for_day_plan(&day_plan_id).await).into_response()
 }
 
 async fn send_project_bid(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, bid_id)): Path<(String, String)>,
     Json(request): Json<SendProjectBidRequest>,
 ) -> Response {
@@ -1542,6 +1683,13 @@ async fn send_project_bid(
             }),
         )
             .into_response();
+    }
+
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
     }
 
     let Some(bid) = state
@@ -1564,8 +1712,16 @@ async fn send_project_bid(
 
 async fn revoke_project_bid(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, bid_id)): Path<(String, String)>,
 ) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
     let Some(bid) = state.project_bids.revoke(&day_plan_id, &bid_id).await else {
         return (
             StatusCode::CONFLICT,
@@ -1582,8 +1738,16 @@ async fn revoke_project_bid(
 
 async fn convert_project_bid(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, bid_id)): Path<(String, String)>,
 ) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
     let Some(bid) = state
         .project_bids
         .convert_to_job_add_ons(&day_plan_id, &bid_id)
@@ -1678,32 +1842,58 @@ async fn decide_shared_project_bid(
 
 async fn assign_day_plan_stop(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
     Json(request): Json<AssignDayPlanStopRequest>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
     (
         StatusCode::CREATED,
         Json(state.day_plans.assign_stop(&day_plan_id, request).await),
     )
+        .into_response()
 }
 
 async fn remove_day_plan_stop(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, stop_id)): Path<(String, String)>,
-) -> impl IntoResponse {
-    Json(state.day_plans.remove_stop(&day_plan_id, &stop_id).await)
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
+    Json(state.day_plans.remove_stop(&day_plan_id, &stop_id).await).into_response()
 }
 
 async fn reorder_day_plan_stops(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(day_plan_id): Path<String>,
     Json(request): Json<ReorderDayPlanStopsRequest>,
-) -> impl IntoResponse {
-    Json(state.day_plans.reorder_stops(&day_plan_id, request).await)
+) -> Response {
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
+    Json(state.day_plans.reorder_stops(&day_plan_id, request).await).into_response()
 }
 
 async fn update_stop_progress(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((day_plan_id, stop_id)): Path<(String, String)>,
     Json(request): Json<StopProgressRequest>,
 ) -> impl IntoResponse {
@@ -1716,6 +1906,13 @@ async fn update_stop_progress(
             }),
         )
             .into_response();
+    }
+
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
+            .await
+    {
+        return response;
     }
 
     let persisted = state
@@ -1840,6 +2037,67 @@ mod tests {
             frontend_dist,
             false,
         )
+    }
+
+    #[tokio::test]
+    async fn day_plan_organization_access_allows_seed_owner_membership() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        assert!(require_day_plan_organization_access(
+            &state,
+            &principal,
+            "day_plan_2026_06_15_crew_1001",
+            can_manage_schedule,
+        )
+        .await
+        .is_ok());
+    }
+
+    #[tokio::test]
+    async fn day_plan_organization_access_rejects_missing_membership() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "other-user".to_string(),
+            username: "Other User".to_string(),
+            roles: vec![AccessRole::Manager],
+        };
+
+        let response = require_day_plan_organization_access(
+            &state,
+            &principal,
+            "day_plan_2026_06_15_crew_1001",
+            can_manage_schedule,
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn crew_organization_access_returns_not_found_for_unknown_seed_crew() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        let response = require_crew_organization_access(
+            &state,
+            &principal,
+            "crew_unknown",
+            can_view_crew_route,
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]
