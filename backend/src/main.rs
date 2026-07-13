@@ -34,8 +34,9 @@ use day_plans::{
     ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
 };
 use db::{
-    DatabaseConfig, JobAddOnStatusUpdate, JobRepository, PhotoProcessingHistoryFilter,
-    PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+    CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
+    JobRepository, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
+    PhotoProcessingRetryResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -222,6 +223,11 @@ struct NotificationResolveRequest {
 #[derive(Debug, Default, Deserialize)]
 struct PhotoProcessingResolveRequest {
     reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CustomerPhotoErasureRequest {
+    reason: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -513,6 +519,14 @@ fn app_with_runtime(
         .route(
             "/accounts/{account_id}/bids",
             get(list_customer_project_bids),
+        )
+        .route(
+            "/accounts/{account_id}/privacy-export",
+            get(export_customer_privacy_data),
+        )
+        .route(
+            "/accounts/{account_id}/photo-erasure",
+            post(erase_customer_photo_evidence),
         )
         .route("/property-portfolios", post(create_property_portfolio))
         .route(
@@ -967,6 +981,87 @@ async fn list_customer_project_bids(
         .await;
 
     Json(bids).into_response()
+}
+
+async fn export_customer_privacy_data(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_review_completion_report,
+    )
+    .await;
+
+    match state
+        .jobs
+        .export_customer_privacy_data(&account_id, &organization_ids, &principal.subject)
+        .await
+    {
+        CustomerPrivacyExportResult::Exported(export) => Json(export).into_response(),
+        CustomerPrivacyExportResult::NotFound => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested customer account was not found.",
+        ),
+        CustomerPrivacyExportResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_privacy_export_unavailable",
+                message: "Customer privacy export requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn erase_customer_photo_evidence(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+    Json(request): Json<CustomerPhotoErasureRequest>,
+) -> Response {
+    let reason = match normalize_customer_photo_erasure_reason(request.reason) {
+        Ok(reason) => reason,
+        Err(()) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_customer_photo_erasure_reason",
+                    message: "reason is required and must be no more than 1000 characters."
+                        .to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_review_completion_report,
+    )
+    .await;
+
+    match state
+        .jobs
+        .erase_customer_photo_evidence(&account_id, &organization_ids, &principal.subject, &reason)
+        .await
+    {
+        CustomerPhotoErasureResult::Erased(summary) => Json(summary).into_response(),
+        CustomerPhotoErasureResult::NotFound => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested customer account was not found.",
+        ),
+        CustomerPhotoErasureResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_photo_erasure_unavailable",
+                message: "Customer photo erasure requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn list_property_completion_reports(
@@ -1989,6 +2084,14 @@ fn normalize_notification_resolution_reason(reason: Option<String>) -> Result<Op
         return Err(());
     }
     Ok(Some(trimmed.to_string()))
+}
+
+fn normalize_customer_photo_erasure_reason(reason: String) -> Result<String, ()> {
+    let trimmed = reason.trim();
+    if trimmed.is_empty() || trimmed.chars().count() > 1000 {
+        return Err(());
+    }
+    Ok(trimmed.to_string())
 }
 
 async fn start_completion_report_review(
@@ -4438,6 +4541,69 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "photo_processing_resolution_unavailable");
+    }
+
+    #[tokio::test]
+    async fn customer_privacy_export_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/accounts/acct_1001/privacy-export")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "customer_privacy_export_unavailable");
+    }
+
+    #[tokio::test]
+    async fn customer_photo_erasure_endpoint_validates_reason() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/accounts/acct_1001/photo-erasure")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"reason":"   "}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_customer_photo_erasure_reason");
+    }
+
+    #[tokio::test]
+    async fn customer_photo_erasure_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/accounts/acct_1001/photo-erasure")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"reason":"Customer requested removal of retained photo evidence."}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "customer_photo_erasure_unavailable");
     }
 
     #[tokio::test]

@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     db::{
-        JobRepository, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
-        PhotoProcessingRetryResult,
+        CustomerPhotoErasureResult, CustomerPrivacyExportResult, JobRepository,
+        PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
     },
     photo_processing::process_photo_processing_once,
     photo_storage::PhotoStorageConfig,
@@ -537,4 +537,128 @@ async fn repository_recovers_failed_photo_processing_jobs() {
     .await
     .unwrap();
     assert_eq!(audit_events, 2);
+}
+
+#[tokio::test]
+async fn repository_exports_and_erases_customer_photo_evidence() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+
+    let ticket = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "privacy-export.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "before".to_string(),
+            },
+        )
+        .await;
+
+    repository
+        .complete_photo_upload(
+            "job_1001",
+            &ticket.photo_id,
+            PhotoUploadMetadata {
+                file_size_bytes: Some(33_333),
+                image_width_px: Some(1200),
+                image_height_px: Some(800),
+                metadata_source: Some("client_reported".to_string()),
+            },
+        )
+        .await;
+
+    let organization_ids = vec!["org_demo_landscaping".to_string()];
+    let export = repository
+        .export_customer_privacy_data("acct_1001", &organization_ids, "manager_user_1")
+        .await;
+    let CustomerPrivacyExportResult::Exported(export) = export else {
+        panic!("customer privacy data should export for an account in scope");
+    };
+    assert_eq!(export.account.account_id, "acct_1001");
+    assert!(export.jobs.iter().any(|job| job.job_id == "job_1001"));
+    let exported_photo = export
+        .photo_evidence
+        .iter()
+        .find(|photo| photo.photo_id == ticket.photo_id)
+        .expect("export should include retained photo evidence");
+    assert_eq!(
+        exported_photo.object_key.as_deref(),
+        Some(ticket.object_key.as_str())
+    );
+    assert_eq!(exported_photo.file_size_bytes, Some(33_333));
+    assert_eq!(exported_photo.erased_at, None);
+
+    let erasure = repository
+        .erase_customer_photo_evidence(
+            "acct_1001",
+            &organization_ids,
+            "manager_user_1",
+            "Customer requested removal of retained photo evidence.",
+        )
+        .await;
+    let CustomerPhotoErasureResult::Erased(erasure) = erasure else {
+        panic!("customer photo evidence should be erased for an account in scope");
+    };
+    assert!(erasure.erased_photo_count >= 1);
+    assert!(erasure.affected_job_count >= 1);
+    assert!(
+        erasure
+            .object_keys_pending_deletion
+            .iter()
+            .any(|object_key| object_key == &ticket.object_key),
+        "erasure should return the original object key for object-store deletion"
+    );
+
+    let visible_photos = repository.list_photo_evidence("job_1001").await;
+    assert!(
+        visible_photos
+            .iter()
+            .all(|photo| photo.id != ticket.photo_id),
+        "erased photo evidence should be hidden from standard evidence reads"
+    );
+
+    let export_after_erasure = repository
+        .export_customer_privacy_data("acct_1001", &organization_ids, "manager_user_1")
+        .await;
+    let CustomerPrivacyExportResult::Exported(export_after_erasure) = export_after_erasure else {
+        panic!("customer privacy data should still export after erasure");
+    };
+    let erased_photo = export_after_erasure
+        .photo_evidence
+        .iter()
+        .find(|photo| photo.photo_id == ticket.photo_id)
+        .expect("export should keep an erasure proof row");
+    assert_eq!(erased_photo.status, "erased");
+    assert_eq!(erased_photo.object_key, None);
+    assert_eq!(erased_photo.file_name, None);
+    assert!(erased_photo.erased_at.is_some());
+    assert_eq!(
+        erased_photo.erasure_reason.as_deref(),
+        Some("Customer requested removal of retained photo evidence.")
+    );
+
+    let pool = repository
+        .pool()
+        .expect("photo privacy test should have a PostgreSQL pool");
+    let audit_events: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE target_id = 'acct_1001'
+          AND event_kind IN ('customer_privacy_exported', 'customer_photo_evidence_erased')
+        "#,
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert!(
+        audit_events >= 3,
+        "initial export, erasure, and post-erasure export should be audited"
+    );
 }

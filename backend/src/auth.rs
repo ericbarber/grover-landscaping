@@ -489,6 +489,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::GET && can_view_customer_portfolios;
     }
 
+    if path.starts_with("/accounts/") && path.ends_with("/privacy-export") {
+        return *method == Method::GET && can_review_reports;
+    }
+
+    if path.starts_with("/accounts/") && path.ends_with("/photo-erasure") {
+        return *method == Method::POST && can_review_reports;
+    }
+
     if path == "/property-portfolios" {
         return *method == Method::POST && can_manage_portfolios;
     }
@@ -794,6 +802,33 @@ mod tests {
                 path,
             ));
         }
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_export_or_erase_customer_photo_data() {
+        let export_path = "/accounts/acct_1001/privacy-export";
+        let erasure_path = "/accounts/acct_1001/photo-erasure";
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            export_path,
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            erasure_path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewLead),
+            &Method::GET,
+            export_path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::POST,
+            erasure_path,
+        ));
     }
 
     #[test]

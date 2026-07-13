@@ -161,6 +161,8 @@ Current backend endpoints include:
 | GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
 | GET | `/accounts/{account_id}/customer-property-portfolio` | Read customer-scoped portfolio groups, grouped properties, and ungrouped yards |
 | GET | `/accounts/{account_id}/bids` | List sent, answered, and converted project bids for a scoped customer account |
+| GET | `/accounts/{account_id}/privacy-export` | Export scoped customer account, job, report, and photo evidence metadata for manager privacy requests |
+| POST | `/accounts/{account_id}/photo-erasure` | Erase retained scoped customer photo evidence metadata, redact delivered report snapshots, and return object keys pending deletion |
 | POST | `/property-portfolios` | Create a property portfolio for a customer account |
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |

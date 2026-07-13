@@ -346,10 +346,11 @@ Current state:
 - Frontend manager dashboard surfaces photo processing recovery history and can retry or resolve failed/dead-letter thumbnail jobs
 - Production smoke script covers photo upload-ticket creation, upload completion metadata, evidence listing, and photo-processing recovery history
 - Optional Terraform S3 photo-storage module defines public-access blocks, encryption, versioning, CORS, incomplete upload cleanup, archive transition, current-object expiration, and noncurrent-version deletion
+- Manager privacy APIs export customer account/job/report/photo metadata and erase retained photo evidence with audit records, object-key deletion manifests, and delivered snapshot redaction
 
 Next implementation work:
 
-- Add customer data export and deletion workflows for retained photo evidence
+- Add an operator-facing UI for customer privacy export and photo erasure requests
 
 ### Completion reports
 

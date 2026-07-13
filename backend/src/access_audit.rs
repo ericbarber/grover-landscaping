@@ -17,6 +17,10 @@ pub enum AccessAuditEventKind {
     ReportChangesRequested,
     ReportResubmitted,
     ReportDelivered,
+    PhotoProcessingRetried,
+    PhotoProcessingResolved,
+    CustomerPrivacyExported,
+    CustomerPhotoEvidenceErased,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]

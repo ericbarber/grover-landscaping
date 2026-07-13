@@ -1,5 +1,7 @@
 #[path = "postgres_completion_reports.rs"]
 mod postgres_completion_reports;
+#[path = "postgres_privacy.rs"]
+mod postgres_privacy;
 #[path = "postgres_read.rs"]
 mod postgres_read;
 #[path = "postgres_stop_progress.rs"]
@@ -106,6 +108,105 @@ pub enum PhotoProcessingRetryResult {
 pub enum PhotoProcessingResolveResult {
     Resolved(Box<PhotoProcessingHistoryItem>),
     InvalidStatus,
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPrivacyExport {
+    pub account: CustomerPrivacyAccount,
+    pub jobs: Vec<CustomerPrivacyJob>,
+    pub photo_evidence: Vec<CustomerPrivacyPhotoEvidence>,
+    pub completion_reports: Vec<CustomerPrivacyCompletionReport>,
+    pub generated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPrivacyAccount {
+    pub account_id: String,
+    pub customer_name: String,
+    pub billing_model: String,
+    pub payment_status: String,
+    pub service_approval_status: String,
+    pub contracted_services_per_period: i32,
+    pub completed_services_this_period: i32,
+    pub period_start: Option<String>,
+    pub period_end: Option<String>,
+    pub billing_notes: Option<String>,
+    pub organization_ids: Vec<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPrivacyJob {
+    pub job_id: String,
+    pub organization_id: String,
+    pub customer_name: String,
+    pub property_address: String,
+    pub status: String,
+    pub scheduled_date: String,
+    pub before_photos: i32,
+    pub after_photos: i32,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPrivacyPhotoEvidence {
+    pub photo_id: String,
+    pub job_id: String,
+    pub organization_id: String,
+    pub photo_type: String,
+    pub file_name: Option<String>,
+    pub content_type: Option<String>,
+    pub object_key: Option<String>,
+    pub thumbnail_object_key: Option<String>,
+    pub status: String,
+    pub upload_mode: String,
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
+    pub uploaded_at: Option<String>,
+    pub erased_at: Option<String>,
+    pub erasure_reason: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPrivacyCompletionReport {
+    pub report_id: String,
+    pub job_id: String,
+    pub report_status: String,
+    pub ready_for_customer: bool,
+    pub sent_at: Option<String>,
+    pub delivered_at: Option<String>,
+    pub delivered_snapshot_at: Option<String>,
+    pub delivered_snapshot_photo_count: i64,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerPrivacyExportResult {
+    Exported(Box<CustomerPrivacyExport>),
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerPhotoErasureSummary {
+    pub account_id: String,
+    pub status: &'static str,
+    pub erased_photo_count: i64,
+    pub affected_job_count: i64,
+    pub redacted_completion_report_count: i64,
+    pub object_keys_pending_deletion: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerPhotoErasureResult {
+    Erased(CustomerPhotoErasureSummary),
     NotFound,
     Unavailable,
 }
@@ -742,6 +843,50 @@ impl JobRepository {
             reason,
         )
         .await
+    }
+
+    #[allow(dead_code)]
+    pub async fn export_customer_privacy_data(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+    ) -> CustomerPrivacyExportResult {
+        let Some(pool) = &self.pool else {
+            return CustomerPrivacyExportResult::Unavailable;
+        };
+
+        postgres_privacy::export_customer_privacy_data(
+            pool,
+            account_id,
+            organization_ids,
+            actor_user_id,
+        )
+        .await
+        .unwrap_or(CustomerPrivacyExportResult::Unavailable)
+    }
+
+    #[allow(dead_code)]
+    pub async fn erase_customer_photo_evidence(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+        reason: &str,
+    ) -> CustomerPhotoErasureResult {
+        let Some(pool) = &self.pool else {
+            return CustomerPhotoErasureResult::Unavailable;
+        };
+
+        postgres_privacy::erase_customer_photo_evidence(
+            pool,
+            account_id,
+            organization_ids,
+            actor_user_id,
+            reason,
+        )
+        .await
+        .unwrap_or(CustomerPhotoErasureResult::Unavailable)
     }
 
     #[allow(dead_code)]
