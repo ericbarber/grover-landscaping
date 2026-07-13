@@ -18,6 +18,7 @@ use crate::{
 };
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::{SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 pub struct DatabaseConfig {
@@ -110,6 +111,38 @@ impl JobRepository {
 
         let job_id = report_id.strip_prefix("report_")?;
         seed_organization_id_for_job(job_id)
+    }
+
+    pub async fn record_account_view(&self, job_id: &str, actor_user_id: &str) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+
+        let audit_id = format!("audit_account_viewed_{}", Uuid::new_v4().simple());
+        sqlx::query_scalar::<_, String>(
+            r#"
+            INSERT INTO access_audit_events (
+                id,
+                actor_user_id,
+                organization_id,
+                event_kind,
+                target_id,
+                occurred_at
+            )
+            SELECT $1, $2, organization_id, 'account_viewed', id, NOW()
+            FROM service_jobs
+            WHERE id = $3
+            RETURNING id
+            "#,
+        )
+        .bind(audit_id)
+        .bind(actor_user_id)
+        .bind(job_id)
+        .fetch_optional(pool)
+        .await
+        .ok()
+        .flatten()
+        .is_some()
     }
 
     pub async fn list_jobs(&self) -> Vec<JobSummary> {

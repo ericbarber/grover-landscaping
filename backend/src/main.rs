@@ -733,7 +733,13 @@ async fn get_account_for_job(
         return response;
     }
 
-    Json(state.accounts.get_account_for_job(&id).await).into_response()
+    let account = state.accounts.get_account_for_job(&id).await;
+    let _ = state
+        .jobs
+        .record_account_view(&id, &principal.subject)
+        .await;
+
+    Json(account).into_response()
 }
 
 async fn create_organization_invitation(
