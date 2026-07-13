@@ -160,6 +160,7 @@ struct CompletionReportDeliveryNotificationRequest {
 struct CompletionReportListQuery {
     status: Option<String>,
     readiness: Option<String>,
+    readiness_blocker: Option<String>,
     customer: Option<String>,
     property: Option<String>,
     scheduled_from: Option<String>,
@@ -684,6 +685,18 @@ fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> R
         }
     }
 
+    if let Some(readiness_blocker) = query.readiness_blocker.as_deref() {
+        if !matches!(
+            readiness_blocker,
+            "all" | "any" | "checklist" | "before_photos" | "after_photos"
+        ) {
+            return Err(
+                "readiness_blocker must be all, any, checklist, before_photos, or after_photos"
+                    .to_string(),
+            );
+        }
+    }
+
     validate_completion_report_text_filter(query.customer.as_deref(), "customer")?;
     validate_completion_report_text_filter(query.property.as_deref(), "property")?;
     validate_completion_report_date_filter(query.scheduled_from.as_deref(), "scheduled_from")?;
@@ -787,6 +800,10 @@ fn completion_report_matches_operational_filters(
         }
     }
 
+    if !completion_report_matches_readiness_blocker_filter(report, query) {
+        return false;
+    }
+
     if let Some(scheduled_from) = query.scheduled_from.as_deref() {
         if report.job.scheduled_date.as_str() < scheduled_from {
             return false;
@@ -800,6 +817,20 @@ fn completion_report_matches_operational_filters(
     }
 
     true
+}
+
+fn completion_report_matches_readiness_blocker_filter(
+    report: &CompletionReportResponse,
+    query: &CompletionReportListQuery,
+) -> bool {
+    match query.readiness_blocker.as_deref().unwrap_or("all") {
+        "all" => true,
+        "any" => !report.ready_for_customer,
+        "checklist" => report.checklist_progress < 100,
+        "before_photos" => report.before_photos == 0,
+        "after_photos" => report.after_photos == 0,
+        _ => true,
+    }
 }
 
 fn normalized_completion_report_text_filter(value: Option<&str>) -> Option<String> {
@@ -2140,6 +2171,29 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_readiness_blocker() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?readiness_blocker=before_photos")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        let reports = json.as_array().unwrap();
+
+        assert_eq!(reports.len(), 1);
+        assert_eq!(reports[0]["job_id"], "job_1001");
+        assert_eq!(reports[0]["before_photos"], 0);
+    }
+
+    #[tokio::test]
     async fn completion_report_list_endpoint_filters_by_customer_property_and_date() {
         let response = seed_app()
             .oneshot(
@@ -2170,6 +2224,25 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/completion-reports?scheduled_from=2026-06-16&scheduled_to=2026-06-15")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_completion_report_filter");
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_rejects_unknown_readiness_blocker() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?readiness_blocker=account")
                     .body(Body::empty())
                     .unwrap(),
             )

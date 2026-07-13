@@ -111,10 +111,17 @@ export type CompletionReportStatus =
 
 export type CompletionReportListStatusFilter = CompletionReportStatus | 'active' | 'all';
 export type CompletionReportListReadinessFilter = 'all' | 'ready' | 'blocked' | 'local_only';
+export type CompletionReportListReadinessBlockerFilter =
+  | 'all'
+  | 'any'
+  | 'checklist'
+  | 'before_photos'
+  | 'after_photos';
 
 export interface FetchCompletionReportsOptions {
   status?: CompletionReportListStatusFilter;
   readiness?: CompletionReportListReadinessFilter;
+  readinessBlocker?: CompletionReportListReadinessBlockerFilter;
   customer?: string;
   property?: string;
   scheduledFrom?: string;
@@ -431,6 +438,10 @@ export function completionReportsPath(options: FetchCompletionReportsOptions = {
 
   if (options.readiness && options.readiness !== 'all') {
     query.set('readiness', options.readiness);
+  }
+
+  if (options.readinessBlocker && options.readinessBlocker !== 'all') {
+    query.set('readiness_blocker', options.readinessBlocker);
   }
 
   if (options.customer) {

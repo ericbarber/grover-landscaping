@@ -147,7 +147,7 @@ Current backend endpoints include:
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
-| GET | `/completion-reports` | List organization-scoped completion report snapshots for manager review; accepts optional `status`, `readiness`, `customer`, `property`, `scheduled_from`, and `scheduled_to` filters |
+| GET | `/completion-reports` | List organization-scoped completion report snapshots for manager review; accepts optional `status`, `readiness`, `readiness_blocker`, `customer`, `property`, `scheduled_from`, and `scheduled_to` filters |
 | POST | `/completion-reports/{report_id}/review` | Move a submitted completion report into manager review |
 | POST | `/completion-reports/{report_id}/request-changes` | Record manager feedback and move an in-review report to changes requested |
 | POST | `/completion-reports/{report_id}/resubmit` | Return a change-requested report to submitted after crew follow-up |
