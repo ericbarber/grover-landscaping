@@ -175,3 +175,148 @@ async fn repository_persists_and_lists_photo_evidence() {
         "rejected photo evidence should stay quarantined from evidence reads"
     );
 }
+
+#[tokio::test]
+async fn repository_queues_and_retries_photo_processing_jobs() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+
+    let ticket = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "needs-thumbnail.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "after".to_string(),
+            },
+        )
+        .await;
+
+    assert!(
+        repository
+            .queue_photo_processing_retry(
+                "job_1001",
+                &ticket.photo_id,
+                "thumbnail_generation",
+                "thumbnail_generation_unavailable",
+            )
+            .await
+            .is_none(),
+        "photos without thumbnail object keys should not enqueue thumbnail work"
+    );
+
+    let pool = repository
+        .pool()
+        .expect("photo processing test should have a PostgreSQL pool");
+    sqlx::query(
+        r#"
+        UPDATE job_photos
+        SET upload_mode = 's3-presigned',
+            thumbnail_object_key = $2
+        WHERE id = $1
+        "#,
+    )
+    .bind(&ticket.photo_id)
+    .bind("jobs/job_1001/photos/thumbnails/needs-thumbnail.jpg")
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let queued = repository
+        .queue_photo_processing_retry(
+            "job_1001",
+            &ticket.photo_id,
+            "thumbnail_generation",
+            "thumbnail_generation_unavailable",
+        )
+        .await
+        .expect("thumbnail processing job should be queued");
+    let duplicate = repository
+        .queue_photo_processing_retry(
+            "job_1001",
+            &ticket.photo_id,
+            "thumbnail_generation",
+            "storage_inspection_unavailable",
+        )
+        .await
+        .expect("duplicate thumbnail processing queue should return existing row");
+
+    assert_eq!(duplicate.id, queued.id);
+    assert_eq!(queued.photo_id, ticket.photo_id);
+    assert_eq!(queued.job_id, "job_1001");
+    assert_eq!(queued.organization_id, "org_demo_landscaping");
+    assert_eq!(queued.task_type, "thumbnail_generation");
+    assert_eq!(queued.status, "queued");
+    assert_eq!(queued.attempt_count, 0);
+
+    let claimed = repository.claim_photo_processing_batch(10, 3).await;
+    assert_eq!(claimed.len(), 1);
+    let claim = &claimed[0];
+    assert_eq!(claim.id, queued.id);
+    assert_eq!(claim.photo_id, ticket.photo_id);
+    assert_eq!(claim.upload_mode, "s3-presigned");
+    assert_eq!(claim.object_key, ticket.object_key);
+    assert_eq!(
+        claim.thumbnail_object_key,
+        "jobs/job_1001/photos/thumbnails/needs-thumbnail.jpg"
+    );
+    assert_eq!(claim.attempt_count, 1);
+
+    assert!(
+        repository
+            .mark_photo_processing_failed(&claim.id, claim.attempt_count, 3, "temporary failure")
+            .await
+    );
+    assert!(
+        repository
+            .claim_photo_processing_batch(10, 3)
+            .await
+            .is_empty(),
+        "failed jobs should wait for retry availability before being claimed again"
+    );
+
+    sqlx::query("UPDATE photo_processing_jobs SET available_at = now() WHERE id = $1")
+        .bind(&claim.id)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    let retry_claimed = repository.claim_photo_processing_batch(10, 3).await;
+    assert_eq!(retry_claimed.len(), 1);
+    assert_eq!(retry_claimed[0].id, queued.id);
+    assert_eq!(retry_claimed[0].attempt_count, 2);
+
+    assert!(
+        repository
+            .mark_photo_processing_completed(&retry_claimed[0].id)
+            .await
+    );
+    assert!(
+        !repository
+            .mark_photo_processing_failed(
+                &retry_claimed[0].id,
+                retry_claimed[0].attempt_count,
+                3,
+                "late failure"
+            )
+            .await,
+        "completed processing jobs should not be failed afterward"
+    );
+
+    let status: String =
+        sqlx::query_scalar("SELECT status FROM photo_processing_jobs WHERE id = $1")
+            .bind(&queued.id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(status, "completed");
+    assert!(repository
+        .claim_photo_processing_batch(10, 3)
+        .await
+        .is_empty());
+}

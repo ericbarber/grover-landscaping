@@ -39,6 +39,31 @@ pub struct JobRepository {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PhotoProcessingJobRecord {
+    pub id: String,
+    pub photo_id: String,
+    pub job_id: String,
+    pub organization_id: String,
+    pub task_type: String,
+    pub status: String,
+    pub attempt_count: i32,
+    pub failure_reason: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PhotoProcessingClaim {
+    pub id: String,
+    pub photo_id: String,
+    pub job_id: String,
+    pub organization_id: String,
+    pub task_type: String,
+    pub upload_mode: String,
+    pub object_key: String,
+    pub thumbnail_object_key: String,
+    pub attempt_count: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum JobAddOnStatusUpdate {
     Updated(JobAddOn),
     InvalidStatus,
@@ -472,20 +497,31 @@ impl JobRepository {
             if let Ok(Some(location)) =
                 postgres_read::photo_storage_location(pool, job_id, photo_id).await
             {
-                match PhotoStorageConfig::from_env()
+                let photo_storage = PhotoStorageConfig::from_env();
+                match photo_storage
                     .uploaded_photo_inspection(&location.upload_mode, &location.object_key)
                     .await
                 {
                     UploadedPhotoInspection::Extracted(server_metadata) => {
                         if let Some(thumbnail_object_key) = location.thumbnail_object_key.as_deref()
                         {
-                            let _ = PhotoStorageConfig::from_env()
+                            let thumbnail_generated = photo_storage
                                 .generate_uploaded_thumbnail(
                                     &location.upload_mode,
                                     &location.object_key,
                                     thumbnail_object_key,
                                 )
                                 .await;
+                            if !thumbnail_generated {
+                                let _ = postgres_write::queue_photo_processing_job(
+                                    pool,
+                                    job_id,
+                                    photo_id,
+                                    "thumbnail_generation",
+                                    "thumbnail_generation_unavailable",
+                                )
+                                .await;
+                            }
                         }
                         upload_metadata = server_metadata;
                     }
@@ -494,7 +530,20 @@ impl JobRepository {
                             .await;
                         return format!("Photo {photo_id} for job {job_id} has been rejected.");
                     }
-                    UploadedPhotoInspection::Unavailable => {}
+                    UploadedPhotoInspection::Unavailable => {
+                        if location.upload_mode == "s3-presigned"
+                            && location.thumbnail_object_key.is_some()
+                        {
+                            let _ = postgres_write::queue_photo_processing_job(
+                                pool,
+                                job_id,
+                                photo_id,
+                                "thumbnail_generation",
+                                "storage_inspection_unavailable",
+                            )
+                            .await;
+                        }
+                    }
                 }
             }
 
@@ -519,6 +568,79 @@ impl JobRepository {
         postgres_write::reject_photo_upload(pool, job_id, photo_id, rejected_reason)
             .await
             .unwrap_or(false)
+    }
+
+    #[allow(dead_code)]
+    pub async fn queue_photo_processing_retry(
+        &self,
+        job_id: &str,
+        photo_id: &str,
+        task_type: &str,
+        failure_reason: &str,
+    ) -> Option<PhotoProcessingJobRecord> {
+        let Some(pool) = &self.pool else {
+            return None;
+        };
+
+        postgres_write::queue_photo_processing_job(
+            pool,
+            job_id,
+            photo_id,
+            task_type,
+            failure_reason,
+        )
+        .await
+        .ok()
+        .flatten()
+    }
+
+    #[allow(dead_code)]
+    pub async fn claim_photo_processing_batch(
+        &self,
+        limit: i64,
+        max_attempts: i32,
+    ) -> Vec<PhotoProcessingClaim> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+
+        postgres_write::claim_photo_processing_jobs(pool, limit, max_attempts)
+            .await
+            .unwrap_or_default()
+    }
+
+    #[allow(dead_code)]
+    pub async fn mark_photo_processing_completed(&self, processing_job_id: &str) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+
+        postgres_write::mark_photo_processing_completed(pool, processing_job_id)
+            .await
+            .unwrap_or(false)
+    }
+
+    #[allow(dead_code)]
+    pub async fn mark_photo_processing_failed(
+        &self,
+        processing_job_id: &str,
+        attempt_count: i32,
+        max_attempts: i32,
+        error: &str,
+    ) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+
+        postgres_write::mark_photo_processing_failed(
+            pool,
+            processing_job_id,
+            attempt_count,
+            max_attempts,
+            error,
+        )
+        .await
+        .unwrap_or(false)
     }
 
     #[allow(dead_code)]

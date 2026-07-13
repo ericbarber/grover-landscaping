@@ -66,10 +66,16 @@ POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded' or 'processed', uploaded_at = now()
   -> attempt S3 HEAD plus bounded ranged GET metadata extraction for file size and PNG, GIF, JPEG, or WebP dimensions
   -> attempt bounded server-side JPEG thumbnail generation for S3-backed originals with a stored thumbnail object key
+  -> enqueue durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
   -> quarantine successfully fetched but unparseable S3 objects as rejected with reason and timestamp metadata
   -> fall back to validated client-reported file size and image dimensions when server extraction is unavailable
   -> increment before_photos or after_photos counters when appropriate
   -> GET /jobs/{id}/photos returns uploaded or processed evidence only, with expiring original and thumbnail display URLs plus persisted metadata when object storage is configured
+
+photo_processing_jobs
+  -> stores retryable photo processing tasks keyed by photo and task type
+  -> supports queued, processing, completed, failed, and dead_letter states
+  -> claim helpers use row locks, retry availability, bounded attempts, and stale processing recovery
 ```
 
 ## Local Development Database

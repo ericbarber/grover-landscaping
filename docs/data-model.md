@@ -183,6 +183,29 @@ rejected
 
 Upload completion can persist file size and image dimensions. `metadata_source` records where those values came from; browser-provided fallback values use `client_reported`, while S3-backed server probes that verify object metadata and parse PNG, GIF, JPEG, or WebP headers use `server_extracted`. Server-side rejection records use `server_rejected` plus `rejected_reason` and `rejected_at`. Photo evidence reads expose `uploaded` and `processed` rows, keeping pending and rejected upload tickets out of reports and customer-visible evidence.
 
+## photo_processing_jobs
+
+Implemented fields:
+
+```text
+id
+photo_id
+job_id
+organization_id
+task_type
+status
+attempt_count
+available_at
+last_attempt_at
+completed_at
+last_error
+failure_reason
+created_at
+updated_at
+```
+
+Photo upload completion enqueues `thumbnail_generation` jobs when S3 inspection or thumbnail generation cannot finish synchronously. Worker-facing repository helpers can claim queued or retryable work with row locks, mark processing jobs completed, or schedule failed attempts with bounded retry delays before dead-lettering.
+
 ## job_completion_reports
 
 Implemented MVP fields:

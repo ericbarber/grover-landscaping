@@ -340,10 +340,11 @@ Current state:
 - Photo evidence reads hide pending upload tickets and mark server-extracted uploads as processed
 - Photo upload-ticket requests reject blank file names, unsupported photo categories, and non-image content types before storage rows are created
 - Rejected photo uploads persist rejection reason/timestamp metadata and remain quarantined from photo evidence reads
+- Upload completion enqueues durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
 
 Next implementation work:
 
-- Add background image-processing worker handoff for retries and long-running upload processing
+- Run a background image-processing worker that claims queued thumbnail jobs and records retry/dead-letter outcomes
 
 ### Completion reports
 
