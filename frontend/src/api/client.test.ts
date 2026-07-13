@@ -22,6 +22,14 @@ describe('core API client mapping', () => {
     expect(completionReportsPath({ status: 'all', readiness: 'ready' })).toBe(
       '/completion-reports?readiness=ready',
     );
+    expect(completionReportsPath({
+      customer: 'Demo Owner',
+      property: 'Maple',
+      scheduledFrom: '2026-06-15',
+      scheduledTo: '2026-06-16',
+    })).toBe(
+      '/completion-reports?customer=Demo+Owner&property=Maple&scheduled_from=2026-06-15&scheduled_to=2026-06-16',
+    );
   });
 
   it('builds notification history paths with optional filters', () => {

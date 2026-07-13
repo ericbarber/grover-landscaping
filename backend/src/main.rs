@@ -160,6 +160,10 @@ struct CompletionReportDeliveryNotificationRequest {
 struct CompletionReportListQuery {
     status: Option<String>,
     readiness: Option<String>,
+    customer: Option<String>,
+    property: Option<String>,
+    scheduled_from: Option<String>,
+    scheduled_to: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -680,6 +684,54 @@ fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> R
         }
     }
 
+    validate_completion_report_text_filter(query.customer.as_deref(), "customer")?;
+    validate_completion_report_text_filter(query.property.as_deref(), "property")?;
+    validate_completion_report_date_filter(query.scheduled_from.as_deref(), "scheduled_from")?;
+    validate_completion_report_date_filter(query.scheduled_to.as_deref(), "scheduled_to")?;
+
+    if let (Some(scheduled_from), Some(scheduled_to)) = (
+        query.scheduled_from.as_deref(),
+        query.scheduled_to.as_deref(),
+    ) {
+        if scheduled_from > scheduled_to {
+            return Err("scheduled_from cannot be after scheduled_to".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_completion_report_text_filter(value: Option<&str>, name: &str) -> Result<(), String> {
+    let Some(value) = value else {
+        return Ok(());
+    };
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return Err(format!("{name} cannot be blank when provided"));
+    }
+    if trimmed.chars().count() > 120 {
+        return Err(format!("{name} cannot exceed 120 characters"));
+    }
+    Ok(())
+}
+
+fn validate_completion_report_date_filter(value: Option<&str>, name: &str) -> Result<(), String> {
+    let Some(value) = value else {
+        return Ok(());
+    };
+    if value.len() != 10 {
+        return Err(format!("{name} must use YYYY-MM-DD format"));
+    }
+    let bytes = value.as_bytes();
+    let valid_shape = bytes[4] == b'-'
+        && bytes[7] == b'-'
+        && bytes
+            .iter()
+            .enumerate()
+            .all(|(index, byte)| index == 4 || index == 7 || byte.is_ascii_digit());
+    if !valid_shape {
+        return Err(format!("{name} must use YYYY-MM-DD format"));
+    }
     Ok(())
 }
 
@@ -698,13 +750,63 @@ fn completion_report_matches_list_query(
         _ => {}
     }
 
-    match query.readiness.as_deref().unwrap_or("all") {
+    let readiness_matches = match query.readiness.as_deref().unwrap_or("all") {
         "all" => true,
         "ready" => report.ready_for_customer,
         "blocked" => !report.ready_for_customer,
         "local_only" => !report.persisted,
         _ => true,
+    };
+
+    readiness_matches && completion_report_matches_operational_filters(report, query)
+}
+
+fn completion_report_matches_operational_filters(
+    report: &CompletionReportResponse,
+    query: &CompletionReportListQuery,
+) -> bool {
+    if let Some(customer) = normalized_completion_report_text_filter(query.customer.as_deref()) {
+        if !report
+            .job
+            .customer_name
+            .to_lowercase()
+            .contains(customer.as_str())
+        {
+            return false;
+        }
     }
+
+    if let Some(property) = normalized_completion_report_text_filter(query.property.as_deref()) {
+        if !report
+            .job
+            .property_address
+            .to_lowercase()
+            .contains(property.as_str())
+        {
+            return false;
+        }
+    }
+
+    if let Some(scheduled_from) = query.scheduled_from.as_deref() {
+        if report.job.scheduled_date.as_str() < scheduled_from {
+            return false;
+        }
+    }
+
+    if let Some(scheduled_to) = query.scheduled_to.as_deref() {
+        if report.job.scheduled_date.as_str() > scheduled_to {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn normalized_completion_report_text_filter(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_lowercase)
 }
 
 async fn list_notification_history(
@@ -2035,6 +2137,50 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_customer_property_and_date() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri(
+                        "/completion-reports?customer=demo&property=maple&scheduled_from=2026-06-15&scheduled_to=2026-06-15",
+                    )
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        let reports = json.as_array().unwrap();
+
+        assert_eq!(reports.len(), 1);
+        assert_eq!(reports[0]["job"]["customer_name"], "Demo Property Owner");
+        assert_eq!(reports[0]["job"]["property_address"], "456 Maple Avenue");
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_rejects_invalid_date_filters() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?scheduled_from=2026-06-16&scheduled_to=2026-06-15")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_completion_report_filter");
     }
 
     #[tokio::test]

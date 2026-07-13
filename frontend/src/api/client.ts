@@ -115,6 +115,10 @@ export type CompletionReportListReadinessFilter = 'all' | 'ready' | 'blocked' | 
 export interface FetchCompletionReportsOptions {
   status?: CompletionReportListStatusFilter;
   readiness?: CompletionReportListReadinessFilter;
+  customer?: string;
+  property?: string;
+  scheduledFrom?: string;
+  scheduledTo?: string;
 }
 
 export interface ApiCompletionReport {
@@ -427,6 +431,22 @@ export function completionReportsPath(options: FetchCompletionReportsOptions = {
 
   if (options.readiness && options.readiness !== 'all') {
     query.set('readiness', options.readiness);
+  }
+
+  if (options.customer) {
+    query.set('customer', options.customer);
+  }
+
+  if (options.property) {
+    query.set('property', options.property);
+  }
+
+  if (options.scheduledFrom) {
+    query.set('scheduled_from', options.scheduledFrom);
+  }
+
+  if (options.scheduledTo) {
+    query.set('scheduled_to', options.scheduledTo);
   }
 
   const queryString = query.toString();
