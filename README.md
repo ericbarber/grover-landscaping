@@ -146,6 +146,9 @@ Current backend endpoints include:
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
+| POST | `/organizations/{organization_id}/invitations` | Create a pending organization membership invitation |
+| POST | `/organization-invitations/{token}/accept` | Accept an invitation into an active organization membership |
+| PUT | `/organizations/{organization_id}/memberships/{membership_id}/role` | Update an organization membership role with audit history |
 | GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
 | GET | `/accounts/{account_id}/customer-property-portfolio` | Read customer-scoped portfolio groups, grouped properties, and ungrouped yards |
 | POST | `/property-portfolios` | Create a property portfolio for a customer account |
@@ -192,7 +195,7 @@ Current backend endpoints include:
 | GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
 | POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
-The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, customer property portfolio, property onboarding, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
+The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, organization invitation, role administration, portfolio, customer property portfolio, property onboarding, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 
 ## Data and Persistence
 
@@ -204,6 +207,7 @@ The project currently includes migrations for:
 - Job completion reports
 - Customer accounts
 - Account status and service tracking foundations
+- Organization invitations and role administration
 - Crews, day plans, and day-plan stops
 - Day-plan amendment requests and bid-review metadata
 - Project bids and ordered bid line items

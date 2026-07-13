@@ -1,7 +1,8 @@
 use crate::access_control::{
-    can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
-    can_manage_schedule, can_review_completion_report, can_submit_completion_report,
-    can_view_crew_route, can_view_customer_property_portfolios, AccessRole,
+    can_deliver_completion_report, can_manage_crew_assignments, can_manage_organization,
+    can_manage_property_portfolios, can_manage_schedule, can_review_completion_report,
+    can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
+    AccessRole,
 };
 use axum::{
     extract::{Request, State},
@@ -367,6 +368,8 @@ fn is_protected_api_path(path: &str) -> bool {
     path == "/me/access"
         || path == "/jobs"
         || path.starts_with("/jobs/")
+        || path.starts_with("/organizations/")
+        || path.starts_with("/organization-invitations/")
         || path.starts_with("/accounts/")
         || path == "/completion-reports"
         || path.starts_with("/completion-reports/")
@@ -391,10 +394,15 @@ fn is_public_path(path: &str, method: &Method) -> bool {
 }
 
 fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool {
+    if path.starts_with("/organization-invitations/") && path.ends_with("/accept") {
+        return *method == Method::POST;
+    }
+
     if principal.roles.is_empty() {
         return false;
     }
 
+    let can_admin_organization = principal.roles.iter().any(can_manage_organization);
     let can_view_route = principal.roles.iter().any(can_view_crew_route);
     let can_manage_routes = principal.roles.iter().any(can_manage_schedule);
     let can_review_reports = principal.roles.iter().any(can_review_completion_report);
@@ -409,6 +417,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     if path == "/me/access" {
         return *method == Method::GET;
+    }
+
+    if path.starts_with("/organizations/") && path.ends_with("/invitations") {
+        return *method == Method::POST && can_admin_organization;
+    }
+
+    if path.starts_with("/organizations/") && path.ends_with("/role") {
+        return *method == Method::PUT && can_admin_organization;
     }
 
     if path == "/completion-reports" {
@@ -837,6 +853,50 @@ mod tests {
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
             "/property-portfolios/portfolio_1001/properties"
+        ));
+    }
+
+    #[test]
+    fn organization_admins_manage_invitations_and_roles() {
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            "/organizations/org_demo_landscaping/invitations"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::PUT,
+            "/organizations/org_demo_landscaping/memberships/membership_1001/role"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            "/organizations/org_demo_landscaping/invitations"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::PUT,
+            "/organizations/org_demo_landscaping/memberships/membership_1001/role"
+        ));
+    }
+
+    #[test]
+    fn authenticated_users_can_accept_organization_invitations_without_existing_roles() {
+        let principal = AuthPrincipal {
+            subject: "new-user".to_string(),
+            username: "new-user@example.com".to_string(),
+            roles: Vec::new(),
+        };
+
+        assert!(is_authorized(
+            &principal,
+            &Method::POST,
+            "/organization-invitations/invite_token_1001/accept"
+        ));
+        assert!(!is_authorized(
+            &principal,
+            &Method::POST,
+            "/organizations/org_demo_landscaping/invitations"
         ));
     }
 

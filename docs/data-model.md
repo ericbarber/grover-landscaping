@@ -52,6 +52,30 @@ updated_at
 
 Crews belong to a service-company organization. Day plans inherit their tenant boundary through the assigned crew, and manager/crew route APIs resolve that organization before returning or mutating day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan outside the signed-in principal's active organization memberships are rejected before local fallback responses are used.
 
+## organization_invitations and organization_memberships
+
+Implemented organization invitation fields:
+
+```text
+id
+organization_id
+invitee_email
+role
+status
+scope_type
+scope_id
+token
+membership_id
+invited_by_user_id
+accepted_by_user_id
+expires_at
+accepted_at
+created_at
+updated_at
+```
+
+Invitations create a pending `organization_memberships` row with status `invited`. Accepting a pending, unexpired token activates that membership for the signed-in user and writes an `invite_accepted` audit event. Organization-owner and support-admin role changes update the membership role and write a `role_changed` audit event. Cognito groups remain coarse application roles; PostgreSQL memberships remain the tenant boundary.
+
 ## property_portfolios and portfolio_property_links
 
 Implemented property portfolio fields:
@@ -254,4 +278,4 @@ occurred_at
 created_at
 ```
 
-Current `event_kind` values include login and access events plus business-sensitive changes such as `bid_approved` and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID.
+Current `event_kind` values include login and access events plus business-sensitive changes such as `invite_accepted`, `role_changed`, `bid_approved`, and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID. Invitation acceptance and role administration also write audit rows in the same transaction as their membership changes.

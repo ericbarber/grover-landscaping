@@ -35,12 +35,16 @@ use day_plans::{
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::{
     access_control::{
-        can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
-        can_manage_schedule, can_review_completion_report, can_submit_completion_report,
-        can_view_crew_route, can_view_customer_property_portfolios, AccessRole,
+        can_deliver_completion_report, can_manage_crew_assignments, can_manage_organization,
+        can_manage_property_portfolios, can_manage_schedule, can_review_completion_report,
+        can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
+        AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
-    organizations::OrganizationRepository,
+    organizations::{
+        validate_create_invitation_request, CreateOrganizationInvitationRequest,
+        OrganizationRepository, UpdateOrganizationMembershipRoleRequest,
+    },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
         PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
@@ -439,6 +443,18 @@ fn app_with_runtime(
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route(
+            "/organizations/{organization_id}/invitations",
+            post(create_organization_invitation),
+        )
+        .route(
+            "/organization-invitations/{token}/accept",
+            post(accept_organization_invitation),
+        )
+        .route(
+            "/organizations/{organization_id}/memberships/{membership_id}/role",
+            put(update_organization_membership_role),
+        )
+        .route(
             "/accounts/{account_id}/property-portfolios",
             get(list_property_portfolios_for_account),
         )
@@ -718,6 +734,120 @@ async fn get_account_for_job(
     }
 
     Json(state.accounts.get_account_for_job(&id).await).into_response()
+}
+
+async fn create_organization_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+    Json(request): Json<CreateOrganizationInvitationRequest>,
+) -> Response {
+    if let Err(reason) = validate_create_invitation_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_invitation",
+                message: format!("Organization invitation payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(invitation) = state
+        .organizations
+        .create_invitation(&organization_id, &principal.subject, request)
+        .await
+    else {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "organization_invitation_not_created",
+                message: "The organization invitation could not be created.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    (StatusCode::CREATED, Json(invitation)).into_response()
+}
+
+async fn accept_organization_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(token): Path<String>,
+) -> Response {
+    let Some(accepted) = state
+        .organizations
+        .accept_invitation(&token, &principal.subject)
+        .await
+    else {
+        return resource_not_found_response(
+            "organization_invitation_not_found",
+            "The organization invitation was not found or is no longer pending.",
+        );
+    };
+
+    Json(accepted).into_response()
+}
+
+async fn update_organization_membership_role(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, membership_id)): Path<(String, String)>,
+    Json(request): Json<UpdateOrganizationMembershipRoleRequest>,
+) -> Response {
+    if grover_landscaping_api::organizations::access_role_from_storage(request.role.trim())
+        .is_none()
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_membership_role",
+                message: "Membership role must be a supported application role.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(membership) = state
+        .organizations
+        .update_membership_role(
+            &organization_id,
+            &membership_id,
+            &principal.subject,
+            request,
+        )
+        .await
+    else {
+        return resource_not_found_response(
+            "organization_membership_not_found",
+            "The organization membership was not found.",
+        );
+    };
+
+    Json(membership).into_response()
 }
 
 async fn list_property_portfolios_for_account(
@@ -2820,6 +2950,137 @@ mod tests {
             json["memberships"][0]["organization_type"],
             "yard_care_company"
         );
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_endpoint_returns_local_pending_invite() {
+        let request_body = serde_json::json!({
+            "invitee_email": "new.manager@example.com",
+            "role": "manager",
+            "scope_type": "organization",
+            "scope_id": "org_demo_landscaping"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/invitations")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["organization_id"], "org_demo_landscaping");
+        assert_eq!(json["invitee_email"], "new.manager@example.com");
+        assert_eq!(json["role"], "manager");
+        assert_eq!(json["status"], "pending");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_endpoint_rejects_invalid_payloads() {
+        let request_body = serde_json::json!({
+            "invitee_email": "not-an-email",
+            "role": "manager"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/invitations")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_endpoint_rejects_other_organizations() {
+        let request_body = serde_json::json!({
+            "invitee_email": "new.manager@example.com",
+            "role": "manager"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_other/invitations")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_accept_endpoint_returns_active_membership() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organization-invitations/invite_token_org_demo_landscaping_manager/accept")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["invitation"]["status"], "accepted");
+        assert_eq!(
+            json["membership"]["organization_id"],
+            "org_demo_landscaping"
+        );
+        assert_eq!(json["membership"]["status"], "active");
+    }
+
+    #[tokio::test]
+    async fn organization_membership_role_endpoint_returns_updated_role() {
+        let request_body = serde_json::json!({
+            "role": "manager"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/memberships/membership_local_owner_demo/role")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["id"], "membership_local_owner_demo");
+        assert_eq!(json["role"], "Manager");
+        assert_eq!(json["status"], "active");
     }
 
     #[tokio::test]

@@ -294,13 +294,14 @@ Current state:
 - Job list/detail, job account, job report, add-on, photo, and completion-report action routes enforce active organization membership before returning or mutating job-scoped data
 - Property portfolio create/list/link APIs are wired to PostgreSQL and enforce active organization membership before grouping customer yards
 - Property crew-assignment APIs are wired to PostgreSQL and enforce active organization membership plus crew organization ownership before changing service assignments
+- Organization invitation APIs create pending memberships, accept invite tokens into active memberships, and audit invite acceptance plus role changes
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
-- Add invite-based onboarding and role administration
-- Record audit events for login, role, access, bid, notification, and remaining approval changes
+- Connect invitation tokens to email/SMS delivery and first-user runbooks
+- Record audit events for login, access, bid, notification, and remaining approval changes
 
 ### Photo evidence flow
 
@@ -382,7 +383,7 @@ Current state:
 Next implementation work:
 
 - Add manager-facing property onboarding forms around the persisted profile APIs
-- Expand account onboarding and invite-based role administration
+- Expand account onboarding and first-user administration workflows
 
 ## Planned
 
