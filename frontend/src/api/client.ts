@@ -468,11 +468,26 @@ export function notificationRetryPath(notificationId: string): string {
   return `/notifications/${encodeURIComponent(notificationId)}/retry`;
 }
 
+export function notificationResolvePath(notificationId: string): string {
+  return `/notifications/${encodeURIComponent(notificationId)}/resolve`;
+}
+
 export async function retryNotificationDelivery(notificationId: string): Promise<NotificationHistoryItem> {
   const notification = await request<ApiNotificationHistoryItem>(
     notificationRetryPath(notificationId),
     {
       method: 'POST',
+    },
+  );
+  return toNotificationHistoryItem(notification);
+}
+
+export async function resolveNotificationDelivery(notificationId: string): Promise<NotificationHistoryItem> {
+  const notification = await request<ApiNotificationHistoryItem>(
+    notificationResolvePath(notificationId),
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason: 'Manually resolved from manager dashboard' }),
     },
   );
   return toNotificationHistoryItem(notification);

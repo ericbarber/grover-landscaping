@@ -39,7 +39,8 @@ use grover_landscaping_api::{
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
-    NotificationHistoryFilter, NotificationOutboxRepository, NotificationRetryResult,
+    NotificationHistoryFilter, NotificationOutboxRepository, NotificationResolveResult,
+    NotificationRetryResult,
 };
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
@@ -164,6 +165,11 @@ struct NotificationHistoryQuery {
     entity_type: Option<String>,
     status: Option<String>,
     limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct NotificationResolveRequest {
+    reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -372,6 +378,10 @@ fn app_with_runtime(
         .route(
             "/notifications/{id}/retry",
             post(retry_notification_delivery),
+        )
+        .route(
+            "/notifications/{id}/resolve",
+            post(resolve_notification_delivery),
         )
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
@@ -767,6 +777,73 @@ async fn retry_notification_delivery(
         )
             .into_response(),
     }
+}
+
+async fn resolve_notification_delivery(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+    Json(request): Json<NotificationResolveRequest>,
+) -> Response {
+    let reason = match normalize_notification_resolution_reason(request.reason) {
+        Ok(reason) => reason,
+        Err(()) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_notification_resolution_reason",
+                    message: "Resolution reason cannot exceed 1000 characters.".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+
+    match state
+        .notifications
+        .resolve_failed(&id, reason.as_deref())
+        .await
+    {
+        Ok(NotificationResolveResult::Resolved(item)) => Json(item).into_response(),
+        Ok(NotificationResolveResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "notification_not_resolvable",
+                message: "Only failed or dead-letter notifications can be manually resolved."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(NotificationResolveResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "notification_not_found",
+                message: "The requested notification was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(NotificationResolveResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "notification_resolution_unavailable",
+                message: "Notification resolution requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+fn normalize_notification_resolution_reason(reason: Option<String>) -> Result<Option<String>, ()> {
+    let Some(reason) = reason else {
+        return Ok(None);
+    };
+    let trimmed = reason.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    if trimmed.chars().count() > 1000 {
+        return Err(());
+    }
+    Ok(Some(trimmed.to_string()))
 }
 
 async fn start_completion_report_review(
@@ -1965,6 +2042,51 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "notification_retry_unavailable");
+    }
+
+    #[tokio::test]
+    async fn notification_resolve_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/notifications/notification_1001/resolve")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "notification_resolution_unavailable");
+    }
+
+    #[tokio::test]
+    async fn notification_resolve_endpoint_rejects_large_reason() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/notifications/notification_1001/resolve")
+                    .header("content-type", "application/json")
+                    .body(Body::from(format!(
+                        r#"{{"reason":"{}"}}"#,
+                        "x".repeat(1001)
+                    )))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_notification_resolution_reason");
     }
 
     #[tokio::test]

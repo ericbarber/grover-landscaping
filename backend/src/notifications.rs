@@ -53,6 +53,14 @@ pub enum NotificationRetryResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NotificationResolveResult {
+    Resolved(NotificationHistoryItem),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
+}
+
 pub fn validate_notification_recipient(channel: &str, recipient: &str) -> Result<(), String> {
     let recipient = recipient.trim();
     if recipient.is_empty() || recipient.chars().count() > 320 {
@@ -361,6 +369,69 @@ impl NotificationOutboxRepository {
         };
 
         Ok(NotificationRetryResult::Retried(item))
+    }
+
+    pub async fn resolve_failed(
+        &self,
+        id: &str,
+        reason: Option<&str>,
+    ) -> Result<NotificationResolveResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(NotificationResolveResult::Unavailable);
+        };
+
+        let mut transaction = pool.begin().await?;
+        let current =
+            sqlx::query("SELECT status FROM notification_outbox WHERE id = $1 FOR UPDATE")
+                .bind(id)
+                .fetch_optional(&mut *transaction)
+                .await?;
+
+        let Some(current) = current else {
+            transaction.rollback().await?;
+            return Ok(NotificationResolveResult::NotFound);
+        };
+
+        let status: String = current.get("status");
+        if !matches!(status.as_str(), "failed" | "dead_letter") {
+            transaction.rollback().await?;
+            return Ok(NotificationResolveResult::InvalidStatus);
+        }
+
+        let resolution_note = reason
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("Manually resolved by manager");
+
+        sqlx::query(
+            r#"
+            UPDATE notification_outbox
+            SET
+                status = 'skipped',
+                available_at = now(),
+                last_error = $2,
+                updated_at = now()
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .bind(resolution_note)
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+
+        let mut history = self
+            .list_history(NotificationHistoryFilter {
+                entity_type: None,
+                status: None,
+                limit: 100,
+            })
+            .await?;
+        let Some(item) = history.drain(..).find(|item| item.id == id) else {
+            return Ok(NotificationResolveResult::NotFound);
+        };
+
+        Ok(NotificationResolveResult::Resolved(item))
     }
 }
 

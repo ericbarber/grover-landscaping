@@ -10,6 +10,7 @@ type ManagerNotificationHistoryPanelProps = {
   isLoading: boolean;
   onRefresh: (filters: NotificationHistoryFilters) => void;
   onRetry: (notificationId: string, filters: NotificationHistoryFilters) => void;
+  onResolve: (notificationId: string, filters: NotificationHistoryFilters) => void;
 };
 
 export type NotificationHistoryEntityFilter = NotificationHistoryEntityType | 'all';
@@ -67,6 +68,7 @@ export function ManagerNotificationHistoryPanel({
   isLoading,
   onRefresh,
   onRetry,
+  onResolve,
 }: ManagerNotificationHistoryPanelProps) {
   const [entityType, setEntityType] = useState<NotificationHistoryEntityFilter>('all');
   const [status, setStatus] = useState<NotificationHistoryStatusFilter>('all');
@@ -179,14 +181,24 @@ export function ManagerNotificationHistoryPanel({
                 </p>
               ) : null}
               {notification.status === 'failed' || notification.status === 'dead_letter' ? (
-                <button
-                  className="mt-3 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
-                  disabled={isLoading}
-                  onClick={() => onRetry(notification.id, { entityType, status })}
-                  type="button"
-                >
-                  Retry delivery
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                    disabled={isLoading}
+                    onClick={() => onRetry(notification.id, { entityType, status })}
+                    type="button"
+                  >
+                    Retry delivery
+                  </button>
+                  <button
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                    disabled={isLoading}
+                    onClick={() => onResolve(notification.id, { entityType, status })}
+                    type="button"
+                  >
+                    Mark resolved
+                  </button>
+                </div>
               ) : null}
             </article>
           ))}

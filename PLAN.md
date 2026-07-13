@@ -348,12 +348,13 @@ Current state:
 - Manager notification history panel lists queued, sending, sent, failed, skipped, and dead-letter notification outbox records
 - Backend notification history endpoint supports entity, status, and limit filters
 - Manager notification history can retry failed and dead-letter delivery records by returning them to queued status
+- Manager notification history can mark failed and dead-letter delivery records manually resolved
 
 Next implementation work:
 
 - Add organization scoping, crew, customer, property, date, and readiness-blocker filters to the manager completion-report list endpoint
 - Expand immutable report snapshots with explicit evidence/version metadata for customer portal history
-- Add manager manual resolution controls for failed notification delivery attempts
+- Add organization-scoped notification history and recovery boundaries
 
 ### Property ownership, portfolios, and crew assignments
 

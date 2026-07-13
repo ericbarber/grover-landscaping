@@ -1,5 +1,6 @@
 use grover_landscaping_api::{
     db::JobRepository,
+    notifications::NotificationResolveResult,
     notifications::NotificationRetryResult,
     notifications::{NotificationHistoryFilter, NotificationOutboxRepository},
 };
@@ -169,5 +170,36 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     assert!(matches!(
         repository.retry_failed(&sent_id).await.unwrap(),
         NotificationRetryResult::InvalidStatus
+    ));
+
+    let resolve_id = unique_id("notification_resolve_test");
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id, entity_type, entity_id, channel, recipient, template_key, payload, status, attempt_count, last_error
+        )
+        VALUES ($1, 'test', $1, 'email', 'resolve@example.com', 'test_template', '{}', 'dead_letter', 5, 'operator reviewed')
+        "#,
+    )
+    .bind(&resolve_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let resolution = repository
+        .resolve_failed(&resolve_id, Some("Customer confirmed by phone"))
+        .await
+        .unwrap();
+    assert!(matches!(
+        resolution,
+        NotificationResolveResult::Resolved(ref item)
+            if item.id == resolve_id
+                && item.status == "skipped"
+                && item.last_error.as_deref() == Some("Customer confirmed by phone")
+    ));
+
+    assert!(matches!(
+        repository.resolve_failed(&sent_id, None).await.unwrap(),
+        NotificationResolveResult::InvalidStatus
     ));
 }

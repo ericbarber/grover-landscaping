@@ -12,6 +12,7 @@ import {
   fetchNotificationHistory,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
+  resolveNotificationDelivery,
   retryNotificationDelivery,
   resubmitCompletionReport,
   startJob,
@@ -1089,6 +1090,38 @@ export function App() {
     }
   }
 
+  async function handleResolveNotificationDelivery(
+    notificationId: string,
+    filters: NotificationHistoryFilters,
+  ) {
+    setIsLoadingNotificationHistory(true);
+    try {
+      const resolved = await resolveNotificationDelivery(notificationId);
+      setNotificationHistory(await fetchNotificationHistory({
+        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      }));
+      setStatusMessage(`${resolved.id} marked resolved.`);
+      recordManagerActivity({
+        title: 'Notification resolved',
+        message: `${resolved.channel} delivery for ${resolved.entityId} was marked resolved.`,
+        tone: 'success',
+        source: 'sync',
+      });
+    } catch {
+      setStatusMessage('Could not resolve the notification. Confirm it is failed or needs attention.');
+      recordManagerActivity({
+        title: 'Notification resolution failed',
+        message: 'A notification delivery item could not be marked resolved.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingNotificationHistory(false);
+    }
+  }
+
   async function handleStartReportReview(reportId: string) {
     setCompletionReportActionStatus('Starting manager review...');
 
@@ -1325,6 +1358,7 @@ export function App() {
               isLoading={isLoadingNotificationHistory}
               onRefresh={(filters) => void refreshNotificationHistory(filters)}
               onRetry={(notificationId, filters) => void handleRetryNotificationDelivery(notificationId, filters)}
+              onResolve={(notificationId, filters) => void handleResolveNotificationDelivery(notificationId, filters)}
             />
           </div>
           <div className="mt-6">

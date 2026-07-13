@@ -412,6 +412,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::POST && can_review_reports;
     }
 
+    if path.starts_with("/notifications/") && path.ends_with("/resolve") {
+        return *method == Method::POST && can_review_reports;
+    }
+
     if path.starts_with("/completion-reports/") && path.ends_with("/review") {
         return *method == Method::POST && can_review_reports;
     }
@@ -627,6 +631,33 @@ mod tests {
     #[test]
     fn only_completion_report_reviewers_can_retry_notifications() {
         let path = "/notifications/notification-1/retry";
+        let method = Method::POST;
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &method,
+            path,
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &method,
+            path,
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_resolve_notifications() {
+        let path = "/notifications/notification-1/resolve";
         let method = Method::POST;
 
         assert!(is_authorized(
