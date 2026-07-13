@@ -154,9 +154,10 @@ impl ProjectBidRepository {
         &self,
         day_plan_id: &str,
         bid_id: &str,
+        actor_user_id: &str,
     ) -> Option<ProjectBidResponse> {
         let pool = self.pool.as_ref()?;
-        postgres_project_bids::convert_to_job_add_ons(pool, day_plan_id, bid_id)
+        postgres_project_bids::convert_to_job_add_ons(pool, day_plan_id, bid_id, actor_user_id)
             .await
             .ok()
             .flatten()

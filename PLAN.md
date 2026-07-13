@@ -296,13 +296,14 @@ Current state:
 - Property crew-assignment APIs are wired to PostgreSQL and enforce active organization membership plus crew organization ownership before changing service assignments
 - Organization invitation APIs create pending memberships, queue invitation email delivery, accept invite tokens into active memberships, and audit invite acceptance plus role changes
 - Persisted portfolio grouping and crew assignment changes record organization-scoped audit events
+- Persisted customer bid approvals, customer bid rejections, and manager bid conversions record organization-scoped audit events
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
 - Add first-user runbooks and Cognito provisioning validation for hosted pilots
-- Record audit events for login, access, bid, notification, and remaining approval changes
+- Record audit events for login, access, notification, and remaining approval changes
 
 ### Photo evidence flow
 

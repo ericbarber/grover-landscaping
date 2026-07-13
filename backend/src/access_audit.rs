@@ -9,6 +9,8 @@ pub enum AccessAuditEventKind {
     PortfolioChanged,
     CrewAssignmentChanged,
     BidApproved,
+    BidRejected,
+    BidConverted,
     ReportDelivered,
 }
 

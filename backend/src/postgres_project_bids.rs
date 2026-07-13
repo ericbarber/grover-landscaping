@@ -233,6 +233,7 @@ pub async fn convert_to_job_add_ons(
     pool: &PgPool,
     day_plan_id: &str,
     bid_id: &str,
+    actor_user_id: &str,
 ) -> Result<Option<ProjectBidResponse>, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let job_id = sqlx::query_scalar::<_, String>(
@@ -342,6 +343,17 @@ pub async fn convert_to_job_add_ons(
     .bind(bid_id)
     .execute(&mut *transaction)
     .await?;
+
+    if conversion_created {
+        insert_project_bid_audit_event(
+            &mut transaction,
+            actor_user_id,
+            day_plan_id,
+            "bid_converted",
+            bid_id,
+        )
+        .await?;
+    }
 
     transaction.commit().await?;
     Ok(list_for_day_plan(pool, day_plan_id)
@@ -555,13 +567,14 @@ pub async fn decide_shared(
     share_token: &str,
     decision: &str,
 ) -> Result<Option<ProjectBidResponse>, sqlx::Error> {
-    let status = match decision {
-        "approve" => "approved",
-        "reject" => "rejected",
+    let (status, event_kind) = match decision {
+        "approve" => ("approved", "bid_approved"),
+        "reject" => ("rejected", "bid_rejected"),
         _ => return Ok(None),
     };
 
-    let updated = sqlx::query_scalar::<_, String>(
+    let mut transaction = pool.begin().await?;
+    let updated = sqlx::query_as::<_, (String, String)>(
         r#"
         UPDATE project_bids
         SET status = $2, responded_at = now(), updated_at = now()
@@ -569,19 +582,74 @@ pub async fn decide_shared(
           AND status = 'sent'
           AND share_expires_at > now()
           AND share_revoked_at IS NULL
-        RETURNING id
+        RETURNING id, day_plan_id
         "#,
     )
     .bind(share_token)
     .bind(status)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *transaction)
     .await?;
 
-    if updated.is_none() {
+    let Some((bid_id, day_plan_id)) = updated else {
+        transaction.rollback().await?;
         return Ok(None);
-    }
+    };
+
+    insert_project_bid_audit_event(
+        &mut transaction,
+        "customer_shared_bid_link",
+        &day_plan_id,
+        event_kind,
+        &bid_id,
+    )
+    .await?;
+
+    transaction.commit().await?;
 
     shared_for_token(pool, share_token).await
+}
+
+async fn insert_project_bid_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_user_id: &str,
+    day_plan_id: &str,
+    event_kind: &str,
+    target_id: &str,
+) -> Result<(), sqlx::Error> {
+    let organization_id = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT crew.organization_id
+        FROM day_plans plan
+        JOIN crews crew ON crew.id = plan.crew_id
+        WHERE plan.id = $1
+        "#,
+    )
+    .bind(day_plan_id)
+    .fetch_one(&mut **transaction)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(target_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 fn shared_bid_url(share_token: &str) -> String {

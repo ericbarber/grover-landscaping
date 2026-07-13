@@ -225,7 +225,7 @@ created_at
 updated_at
 ```
 
-`project_bid_line_items` stores the ordered service name, description, quantity, unit price, and manager note used to calculate the bid total. Customer ownership is derived from the amendment's route stop rather than accepted from the browser. Draft saves are idempotent by `source_amendment_id`. Sending a bid assigns a random seven-day share token and atomically queues a notification. A token can record one approved or rejected response, can be revoked by a manager, and can be securely reissued.
+`project_bid_line_items` stores the ordered service name, description, quantity, unit price, and manager note used to calculate the bid total. Customer ownership is derived from the amendment's route stop rather than accepted from the browser. Draft saves are idempotent by `source_amendment_id`. Sending a bid assigns a random seven-day share token and atomically queues a notification. A token can record one approved or rejected response, writes a `bid_approved` or `bid_rejected` audit event for that customer decision, can be revoked by a manager, and can be securely reissued.
 
 ## notification_outbox
 
@@ -260,7 +260,7 @@ Manager notification history reads use this table directly with optional entity-
 
 An approved amendment-sourced bid converts into its source route stop's service job. `project_bid_conversions` records the one-to-one bid/job conversion and conversion timestamp. Each bid line item creates one `service_job_add_ons` row containing the approved service, quantity, unit price, note, and execution status.
 
-Conversion locks the bid row and uses unique bid and line-item constraints, so retries return the existing conversion without duplicating scheduled work. The same transaction marks the bid `converted` and its source amendment `approved`.
+Conversion locks the bid row and uses unique bid and line-item constraints, so retries return the existing conversion without duplicating scheduled work. The same transaction marks the bid `converted`, marks its source amendment `approved`, and writes a `bid_converted` audit event when the conversion is first created.
 
 Route workload reads add the source amendment's service duration once after conversion. Bid line-item quantity does not multiply route time because line items may separately represent labor, materials, or pricing details for the same requested service.
 
@@ -278,4 +278,4 @@ occurred_at
 created_at
 ```
 
-Current `event_kind` values include login and access events plus business-sensitive changes such as `invite_accepted`, `role_changed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID. Invitation acceptance, role administration, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.
+Current `event_kind` values include login and access events plus business-sensitive changes such as `invite_accepted`, `role_changed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, `bid_rejected`, `bid_converted`, and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID. Shared customer bid approvals/rejections and manager bid conversions write audit rows in the same transactions as their persisted status changes. Invitation acceptance, role administration, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.

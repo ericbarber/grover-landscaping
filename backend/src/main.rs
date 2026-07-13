@@ -2415,7 +2415,7 @@ async fn convert_project_bid(
 
     let Some(bid) = state
         .project_bids
-        .convert_to_job_add_ons(&day_plan_id, &bid_id)
+        .convert_to_job_add_ons(&day_plan_id, &bid_id, &principal.subject)
         .await
     else {
         return (

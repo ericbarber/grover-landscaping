@@ -33,6 +33,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
 
     let repository = DayPlanRepository::new();
     let day_plan_id = "day_plan_2026_06_15_crew_1001";
+    let manager_actor_user_id = "user_project_bid_conversion_audit";
 
     let created = repository
         .create_amendment(
@@ -115,6 +116,11 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert!(bid.persisted);
     assert_eq!(bid.customer_account_id, "acct_1001");
     assert_eq!(bid.total_cents, 17_000);
+    sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
+        .bind(&bid.id)
+        .execute(&pool)
+        .await
+        .expect("test bid audit rows should reset");
 
     let bids = bid_repository.list_for_day_plan(day_plan_id).await;
     assert!(bids.iter().any(|item| item.id == bid.id));
@@ -197,7 +203,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         source_stop_before_conversion.get::<i32, _>("estimated_service_minutes") as u32;
 
     let converted = bid_repository
-        .convert_to_job_add_ons(day_plan_id, &bid.id)
+        .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
         .await
         .expect("approved bid should convert to job add-ons");
     assert_eq!(converted.status, "converted");
@@ -205,7 +211,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert!(converted.converted_at.is_some());
 
     let converted_again = bid_repository
-        .convert_to_job_add_ons(day_plan_id, &bid.id)
+        .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
         .await
         .expect("bid conversion should be idempotent");
     assert_eq!(converted_again.converted_at, converted.converted_at);
@@ -260,4 +266,32 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .update_job_add_on_status("job_1001", &converted_add_on.id, "scheduled")
         .await;
     assert_eq!(invalid_transition, JobAddOnStatusUpdate::InvalidTransition);
+
+    let audit_kinds = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT string_agg(event_kind, ',' ORDER BY event_kind)
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind IN ('bid_approved', 'bid_converted')
+        "#,
+    )
+    .bind(&bid.id)
+    .fetch_one(&pool)
+    .await
+    .expect("bid audit kinds should be available");
+    assert_eq!(audit_kinds, "bid_approved,bid_converted");
+
+    let conversion_actor = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT actor_user_id
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind = 'bid_converted'
+        "#,
+    )
+    .bind(&bid.id)
+    .fetch_one(&pool)
+    .await
+    .expect("conversion audit actor should be available");
+    assert_eq!(conversion_actor, manager_actor_user_id);
 }
