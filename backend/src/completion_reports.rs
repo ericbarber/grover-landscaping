@@ -35,6 +35,18 @@ pub struct CompletionReportDeliveryNotificationResponse {
     pub share_url: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct PropertyCompletionReportSummary {
+    pub report_id: String,
+    pub job_id: String,
+    pub property_id: String,
+    pub organization_id: String,
+    pub customer_name: String,
+    pub property_address: String,
+    pub delivered_at: String,
+    pub share_url: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CompletionReportActionResult {
     Updated(CompletionReportActionResponse),

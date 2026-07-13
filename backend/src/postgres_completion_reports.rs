@@ -1,7 +1,7 @@
 use crate::completion_reports::{
     shared_report_url, CompletionReportActionResponse, CompletionReportActionResult,
     CompletionReportDeliveryNotificationResponse, CompletionReportDeliveryNotificationResult,
-    CompletionReportPersistence, CompletionReportResponse,
+    CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
 };
 use sqlx::{PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -574,6 +574,80 @@ pub async fn delivered_snapshot_for_share_token(
     .await?;
 
     Ok(snapshot.and_then(|value| serde_json::from_str(&value).ok()))
+}
+
+pub async fn list_delivered_for_property(
+    pool: &PgPool,
+    property_id: &str,
+    organization_ids: &[String],
+) -> Result<Vec<PropertyCompletionReportSummary>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        WITH delivered_reports AS (
+            SELECT
+                report.id AS report_id,
+                report.job_id,
+                job.organization_id,
+                COALESCE(
+                    (
+                        SELECT legacy.property_id
+                        FROM completion_reports legacy
+                        WHERE legacy.job_id = report.job_id
+                          AND legacy.organization_id = job.organization_id
+                        ORDER BY legacy.updated_at DESC, legacy.id DESC
+                        LIMIT 1
+                    ),
+                    CASE
+                        WHEN report.job_id LIKE 'job_%' THEN 'property_' || SUBSTRING(report.job_id FROM 5)
+                        ELSE 'property_' || report.job_id
+                    END
+                ) AS property_id,
+                job.customer_name,
+                job.property_address,
+                report.delivered_at::text AS delivered_at,
+                report.share_token
+            FROM job_completion_reports report
+            JOIN service_jobs job ON job.id = report.job_id
+            WHERE report.report_status = 'delivered'
+              AND report.delivered_at IS NOT NULL
+              AND report.share_token IS NOT NULL
+              AND job.organization_id = ANY($2)
+        )
+        SELECT
+            report_id,
+            job_id,
+            property_id,
+            organization_id,
+            customer_name,
+            property_address,
+            delivered_at,
+            share_token
+        FROM delivered_reports
+        WHERE property_id = $1
+        ORDER BY delivered_at DESC, report_id DESC
+        "#,
+    )
+    .bind(property_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let share_token: String = row.get("share_token");
+            PropertyCompletionReportSummary {
+                report_id: row.get("report_id"),
+                job_id: row.get("job_id"),
+                property_id: row.get("property_id"),
+                organization_id: row.get("organization_id"),
+                customer_name: row.get("customer_name"),
+                property_address: row.get("property_address"),
+                delivered_at: row.get("delivered_at"),
+                share_url: shared_report_url(&share_token),
+            }
+        })
+        .collect())
 }
 
 pub async fn queue_delivery_notification(

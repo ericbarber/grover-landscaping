@@ -479,6 +479,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::POST && can_manage_portfolios;
     }
 
+    if path.starts_with("/properties/") && path.ends_with("/completion-reports") {
+        return *method == Method::GET && can_view_customer_portfolios;
+    }
+
     if path.starts_with("/properties/") && path.ends_with("/crew-assignments") {
         return (*method == Method::GET || *method == Method::POST) && can_manage_assignments;
     }
@@ -927,6 +931,32 @@ mod tests {
         assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn property_completion_report_reads_allow_customer_and_manager_roles() {
+        let path = "/properties/property_1001/completion-reports";
+
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::GET,
             path
         ));
     }

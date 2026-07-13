@@ -10,7 +10,7 @@ mod postgres_write;
 use crate::{
     completion_reports::{
         CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
-        CompletionReportPersistence, CompletionReportResponse,
+        CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
     },
     photo_storage::PhotoStorageConfig,
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
@@ -302,6 +302,30 @@ impl JobRepository {
         }
 
         None
+    }
+
+    pub async fn list_delivered_completion_reports_for_property(
+        &self,
+        property_id: &str,
+        organization_ids: &[String],
+    ) -> Vec<PropertyCompletionReportSummary> {
+        if organization_ids.is_empty() {
+            return Vec::new();
+        }
+
+        if let Some(pool) = &self.pool {
+            if let Ok(reports) = postgres_completion_reports::list_delivered_for_property(
+                pool,
+                property_id,
+                organization_ids,
+            )
+            .await
+            {
+                return reports;
+            }
+        }
+
+        Vec::new()
     }
 
     pub async fn store_delivered_completion_report_snapshot(

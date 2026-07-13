@@ -468,6 +468,10 @@ fn app_with_runtime(
             post(add_property_to_portfolio),
         )
         .route(
+            "/properties/{property_id}/completion-reports",
+            get(list_property_completion_reports),
+        )
+        .route(
             "/properties/{property_id}/crew-assignments",
             get(list_property_crew_assignments).post(assign_property_crew),
         )
@@ -892,6 +896,25 @@ async fn get_customer_property_portfolio(
         .await;
 
     Json(response).into_response()
+}
+
+async fn list_property_completion_reports(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_view_customer_property_portfolios,
+    )
+    .await;
+    let reports = state
+        .jobs
+        .list_delivered_completion_reports_for_property(&property_id, &organization_ids)
+        .await;
+
+    Json(reports).into_response()
 }
 
 async fn create_property_portfolio(
@@ -3179,6 +3202,26 @@ mod tests {
             json["ungrouped_properties"][0]["address"],
             "456 Maple Avenue"
         );
+    }
+
+    #[tokio::test]
+    async fn property_completion_reports_endpoint_returns_empty_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/properties/property_1001/completion-reports")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(json.as_array().unwrap().is_empty());
     }
 
     #[tokio::test]

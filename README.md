@@ -172,6 +172,7 @@ Current backend endpoints include:
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |
 | GET | `/report-view/{share_token}` | Open the customer-facing delivered report page |
+| GET | `/properties/{property_id}/completion-reports` | List delivered completion reports for a scoped property |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
 | GET | `/jobs/{id}/photos` | List persisted photo evidence metadata with display and thumbnail URLs |

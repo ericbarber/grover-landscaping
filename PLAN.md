@@ -303,6 +303,7 @@ Current state:
 - Hosted pilot runbook documents Cognito provisioning, first-owner creation, PostgreSQL membership binding, validation, and rollback notes
 - Cognito hosted-pilot validation script checks Terraform outputs and optional deployed `/auth/config` values
 - Customer property portfolio reads ignore wrong-account portfolio links so scoped customer yards remain visible as ungrouped properties
+- Property completion-report reads return delivered reports and share links within active customer/manager organization scopes
 
 Next implementation work:
 

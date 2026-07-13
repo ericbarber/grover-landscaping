@@ -130,6 +130,8 @@ Serves the customer-facing browser view for a delivered completion report. The b
 
 ### GET `/properties/{property_id}/completion-reports`
 
+Implemented.
+
 Returns delivered reports for a property when the requester has customer portal or manager access.
 
 Expected behavior:

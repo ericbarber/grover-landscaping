@@ -184,6 +184,27 @@ async fn repository_persists_completion_report_state() {
     assert!(delivered_persistence.share_token.is_some());
     let share_token = delivered_persistence.share_token.clone().unwrap();
 
+    let property_reports = repository
+        .list_delivered_completion_reports_for_property(
+            "property_1001",
+            &["org_demo_landscaping".to_string()],
+        )
+        .await;
+    assert_eq!(property_reports.len(), 1);
+    assert_eq!(property_reports[0].report_id, "report_job_1001");
+    assert_eq!(property_reports[0].job_id, "job_1001");
+    assert_eq!(property_reports[0].property_id, "property_1001");
+    assert_eq!(property_reports[0].organization_id, "org_demo_landscaping");
+    assert_eq!(
+        property_reports[0].share_url,
+        format!("/report-view/{share_token}")
+    );
+
+    let other_org_property_reports = repository
+        .list_delivered_completion_reports_for_property("property_1001", &["org_other".to_string()])
+        .await;
+    assert!(other_org_property_reports.is_empty());
+
     let mut delivered_snapshot = build_completion_report(
         repository.get_job("job_1001".to_string()).await,
         account.clone(),
