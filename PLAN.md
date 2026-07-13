@@ -336,6 +336,7 @@ Current state:
 - Upload completion records validated client-reported file size and image dimensions on persisted photo evidence
 - S3-backed upload completion attempts server-side file-size verification and PNG, GIF, or JPEG dimension extraction before falling back to client-reported metadata
 - Photo evidence reads hide pending upload tickets and mark server-extracted uploads as processed
+- Photo upload-ticket requests reject blank file names, unsupported photo categories, and non-image content types before storage rows are created
 
 Next implementation work:
 

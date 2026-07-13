@@ -56,6 +56,7 @@ POST /jobs/{id}/complete
   -> mark completion checklist rows complete
 
 POST /jobs/{id}/photos/presign
+  -> validate file name, supported photo type, and supported image content type
   -> INSERT job_photos row with pending status
   -> return local placeholder ticket by default
   -> return S3 presigned PUT URLs for original and browser-generated thumbnail when PHOTO_STORAGE_MODE=s3

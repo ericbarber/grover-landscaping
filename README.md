@@ -179,7 +179,7 @@ Current backend endpoints include:
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
 | GET | `/jobs/{id}/photos` | List persisted photo evidence metadata with display, thumbnail, file size, and image dimension details |
-| POST | `/jobs/{id}/photos/presign` | Create a local or S3 presigned photo upload ticket, including thumbnail upload details when configured |
+| POST | `/jobs/{id}/photos/presign` | Create a validated local or S3 presigned image upload ticket, including thumbnail upload details when configured |
 | POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete and accept optional validated upload metadata |
 | GET | `/crews/{crew_id}/day-plan/today` | Read the current crew day plan route |
 | POST | `/day-plans` | Create a manager draft day plan |

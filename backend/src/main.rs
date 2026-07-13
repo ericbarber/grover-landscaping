@@ -2732,6 +2732,17 @@ async fn create_local_photo_upload(
         return response;
     }
 
+    if let Err(message) = request.validate() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_photo_upload",
+                message,
+            }),
+        )
+            .into_response();
+    }
+
     let ticket = state.jobs.create_photo_upload(id, request).await;
 
     (StatusCode::CREATED, Json(ticket)).into_response()
@@ -2820,6 +2831,41 @@ impl PhotoCompleteRequest {
             || self.image_width_px.is_some()
             || self.image_height_px.is_some()
     }
+}
+
+impl PhotoUploadRequest {
+    fn validate(&self) -> Result<(), String> {
+        if self.file_name.trim().is_empty() {
+            return Err("file_name is required".to_string());
+        }
+        if !supported_photo_type(&self.photo_type) {
+            return Err("photo_type must be before, after, issue, or extra".to_string());
+        }
+        if !supported_photo_content_type(&self.content_type) {
+            return Err(
+                "content_type must be image/jpeg, image/png, image/gif, or image/webp".to_string(),
+            );
+        }
+
+        Ok(())
+    }
+}
+
+fn supported_photo_type(photo_type: &str) -> bool {
+    matches!(photo_type, "before" | "after" | "issue" | "extra")
+}
+
+fn supported_photo_content_type(content_type: &str) -> bool {
+    let normalized = content_type
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_lowercase();
+    matches!(
+        normalized.as_str(),
+        "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+    )
 }
 
 #[cfg(test)]
@@ -4923,6 +4969,41 @@ mod tests {
         assert_eq!(json["content_type"], "image/jpeg");
         assert_eq!(json["upload_mode"], "local-placeholder");
         assert!(json["upload_url"].as_str().unwrap().starts_with("local://"));
+    }
+
+    #[tokio::test]
+    async fn photo_presign_rejects_invalid_upload_requests() {
+        let unsupported_content_type = serde_json::json!({
+            "file_name": "front-yard.pdf",
+            "content_type": "application/pdf",
+            "photo_type": "before"
+        });
+        let unsupported_photo_type = serde_json::json!({
+            "file_name": "front-yard.jpg",
+            "content_type": "image/jpeg",
+            "photo_type": "receipt"
+        });
+
+        for request_body in [unsupported_content_type, unsupported_photo_type] {
+            let response = seed_app()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/jobs/job_1001/photos/presign")
+                        .header("content-type", "application/json")
+                        .body(Body::from(request_body.to_string()))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+            let body = response.into_body().collect().await.unwrap().to_bytes();
+            let json: Value = serde_json::from_slice(&body).unwrap();
+
+            assert_eq!(json["error"], "invalid_photo_upload");
+        }
     }
 
     #[tokio::test]
