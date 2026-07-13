@@ -333,6 +333,7 @@ Current state:
 - Expiring S3 display URLs for persisted photo evidence when object storage is configured
 - Browser-generated thumbnail preview uploads for S3-backed photo evidence
 - Persisted thumbnail display URLs for job photo evidence and customer-visible completion reports
+- Upload completion records validated client-reported file size and image dimensions on persisted photo evidence
 
 Next implementation work:
 

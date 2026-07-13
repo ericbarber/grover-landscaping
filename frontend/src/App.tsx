@@ -13,6 +13,7 @@ import {
   fetchPropertyCompletionReports,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
+  readPhotoUploadMetadata,
   resolveNotificationDelivery,
   retryNotificationDelivery,
   resubmitCompletionReport,
@@ -1419,8 +1420,16 @@ export function App() {
     try {
       ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
       await uploadPhotoToTicket(ticket, file);
-      await completePhotoUpload(selectedJobId, ticket.photoId);
-      ticket = { ...ticket, status: 'uploaded' };
+      const metadata = await readPhotoUploadMetadata(file);
+      await completePhotoUpload(selectedJobId, ticket.photoId, metadata);
+      ticket = {
+        ...ticket,
+        status: 'uploaded',
+        fileSizeBytes: metadata.fileSizeBytes,
+        imageWidthPx: metadata.imageWidthPx,
+        imageHeightPx: metadata.imageHeightPx,
+        metadataSource: 'client_reported',
+      };
       setStatusMessage(`Uploaded ${photoType} photo evidence for ${file.name}.`);
       recordManagerActivity({
         title: 'Photo evidence uploaded',

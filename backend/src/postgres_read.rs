@@ -119,7 +119,11 @@ pub async fn list_job_photos(
             object_key,
             COALESCE(upload_mode, 'local-placeholder') AS upload_mode,
             thumbnail_object_key,
-            status
+            status,
+            file_size_bytes,
+            image_width_px,
+            image_height_px,
+            metadata_source
         FROM job_photos
         WHERE job_id = $1
         ORDER BY created_at DESC, id DESC
@@ -149,6 +153,10 @@ pub async fn list_job_photos(
                 upload_mode: normalized_upload_mode,
                 thumbnail_url: photo_storage
                     .thumbnail_url(normalized_upload_mode, thumbnail_object_key.as_deref()),
+                file_size_bytes: row.get("file_size_bytes"),
+                image_width_px: row.get("image_width_px"),
+                image_height_px: row.get("image_height_px"),
+                metadata_source: row.get("metadata_source"),
             }
         })
         .collect())

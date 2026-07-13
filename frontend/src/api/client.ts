@@ -88,6 +88,10 @@ export interface PhotoUploadTicket {
   thumbnailUploadUrl?: string;
   thumbnailObjectKey?: string;
   thumbnailUrl?: string;
+  fileSizeBytes?: number;
+  imageWidthPx?: number;
+  imageHeightPx?: number;
+  metadataSource?: string;
 }
 
 export interface ApiPhotoEvidence {
@@ -101,6 +105,10 @@ export interface ApiPhotoEvidence {
   upload_mode: string;
   display_url: string;
   thumbnail_url?: string | null;
+  file_size_bytes?: number | null;
+  image_width_px?: number | null;
+  image_height_px?: number | null;
+  metadata_source?: string | null;
 }
 
 export type CompletionReportStatus =
@@ -364,6 +372,10 @@ function toPhotoEvidence(photo: ApiPhotoEvidence): PhotoUploadTicket {
     uploadUrl: photo.display_url,
     objectKey: photo.object_key,
     thumbnailUrl: photo.thumbnail_url ?? undefined,
+    fileSizeBytes: photo.file_size_bytes ?? undefined,
+    imageWidthPx: photo.image_width_px ?? undefined,
+    imageHeightPx: photo.image_height_px ?? undefined,
+    metadataSource: photo.metadata_source ?? undefined,
   };
 }
 
@@ -808,9 +820,49 @@ export async function fetchJobPhotoEvidence(jobId: string): Promise<PhotoUploadT
   return photos.map(toPhotoEvidence);
 }
 
-export async function completePhotoUpload(jobId: string, photoId: string): Promise<void> {
+export interface CompletePhotoUploadMetadata {
+  fileSizeBytes?: number;
+  imageWidthPx?: number;
+  imageHeightPx?: number;
+}
+
+export async function completePhotoUpload(
+  jobId: string,
+  photoId: string,
+  metadata: CompletePhotoUploadMetadata = {},
+): Promise<void> {
   await request(`/jobs/${jobId}/photos/complete`, {
     method: 'POST',
-    body: JSON.stringify({ photo_id: photoId }),
+    body: JSON.stringify({
+      photo_id: photoId,
+      file_size_bytes: metadata.fileSizeBytes,
+      image_width_px: metadata.imageWidthPx,
+      image_height_px: metadata.imageHeightPx,
+    }),
   });
+}
+
+export async function readPhotoUploadMetadata(file: File): Promise<CompletePhotoUploadMetadata> {
+  const metadata: CompletePhotoUploadMetadata = {
+    fileSizeBytes: file.size,
+  };
+
+  if (!file.type.startsWith('image/')) {
+    return metadata;
+  }
+
+  try {
+    const imageUrl = URL.createObjectURL(file);
+    try {
+      const image = await loadImage(imageUrl);
+      metadata.imageWidthPx = image.naturalWidth;
+      metadata.imageHeightPx = image.naturalHeight;
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  } catch {
+    return metadata;
+  }
+
+  return metadata;
 }

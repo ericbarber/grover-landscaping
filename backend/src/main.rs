@@ -241,11 +241,25 @@ pub struct PhotoEvidence {
     pub upload_mode: &'static str,
     pub display_url: String,
     pub thumbnail_url: Option<String>,
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PhotoUploadMetadata {
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
 }
 
 #[derive(Debug, Deserialize)]
 struct PhotoCompleteRequest {
     photo_id: String,
+    file_size_bytes: Option<i64>,
+    image_width_px: Option<i32>,
+    image_height_px: Option<i32>,
 }
 
 #[tokio::main]
@@ -2748,9 +2762,23 @@ async fn complete_photo_upload(
         return response;
     }
 
+    let metadata = match request.metadata() {
+        Ok(metadata) => metadata,
+        Err(message) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_photo_metadata",
+                    message,
+                }),
+            )
+                .into_response();
+        }
+    };
+
     let message = state
         .jobs
-        .complete_photo_upload(&id, &request.photo_id)
+        .complete_photo_upload(&id, &request.photo_id, metadata)
         .await;
 
     (
@@ -2761,6 +2789,29 @@ async fn complete_photo_upload(
         }),
     )
         .into_response()
+}
+
+impl PhotoCompleteRequest {
+    fn metadata(&self) -> Result<PhotoUploadMetadata, String> {
+        if self.photo_id.trim().is_empty() {
+            return Err("photo_id is required".to_string());
+        }
+        if self.file_size_bytes.is_some_and(|value| value <= 0) {
+            return Err("file_size_bytes must be greater than zero when provided".to_string());
+        }
+        if self.image_width_px.is_some_and(|value| value <= 0) {
+            return Err("image_width_px must be greater than zero when provided".to_string());
+        }
+        if self.image_height_px.is_some_and(|value| value <= 0) {
+            return Err("image_height_px must be greater than zero when provided".to_string());
+        }
+
+        Ok(PhotoUploadMetadata {
+            file_size_bytes: self.file_size_bytes,
+            image_width_px: self.image_width_px,
+            image_height_px: self.image_height_px,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -4864,6 +4915,35 @@ mod tests {
         assert_eq!(json["content_type"], "image/jpeg");
         assert_eq!(json["upload_mode"], "local-placeholder");
         assert!(json["upload_url"].as_str().unwrap().starts_with("local://"));
+    }
+
+    #[tokio::test]
+    async fn photo_complete_rejects_invalid_metadata() {
+        let request_body = serde_json::json!({
+            "photo_id": "photo_job_1001_before_1",
+            "file_size_bytes": 0,
+            "image_width_px": 1600,
+            "image_height_px": 900
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/jobs/job_1001/photos/complete")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "invalid_photo_metadata");
     }
 
     #[tokio::test]

@@ -101,4 +101,15 @@ pub struct PhotoEvidence {
     pub upload_mode: &'static str,
     pub display_url: String,
     pub thumbnail_url: Option<String>,
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PhotoUploadMetadata {
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
 }

@@ -13,7 +13,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Assigned job list and job detail view
 - Start-job and complete-job actions
 - Before / after / issue photo placeholder flow
-- Persisted photo evidence metadata display
+- Persisted photo evidence metadata display with file size and image dimensions
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence
 - PostgreSQL-backed completion report state
@@ -178,9 +178,9 @@ Current backend endpoints include:
 | GET | `/properties/{property_id}/completion-reports` | List delivered completion reports for a scoped property |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
-| GET | `/jobs/{id}/photos` | List persisted photo evidence metadata with display and thumbnail URLs |
+| GET | `/jobs/{id}/photos` | List persisted photo evidence metadata with display, thumbnail, file size, and image dimension details |
 | POST | `/jobs/{id}/photos/presign` | Create a local or S3 presigned photo upload ticket, including thumbnail upload details when configured |
-| POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete |
+| POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete and accept optional validated upload metadata |
 | GET | `/crews/{crew_id}/day-plan/today` | Read the current crew day plan route |
 | POST | `/day-plans` | Create a manager draft day plan |
 | POST | `/day-plans/{day_plan_id}/publish` | Publish a manager draft day plan |

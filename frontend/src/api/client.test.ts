@@ -109,6 +109,10 @@ describe('core API client mapping', () => {
           upload_mode: 'local-placeholder',
           display_url: 'local://local/jobs/job_1001/before/before.jpg',
           thumbnail_url: 'local://local/jobs/job_1001/before/thumb-before.jpg',
+          file_size_bytes: 24576,
+          image_width_px: 1600,
+          image_height_px: 900,
+          metadata_source: 'client_reported',
         },
       ],
       completed_add_ons: [
@@ -160,6 +164,10 @@ describe('core API client mapping', () => {
           photoType: 'before',
           fileName: 'before.jpg',
           thumbnailUrl: 'local://local/jobs/job_1001/before/thumb-before.jpg',
+          fileSizeBytes: 24576,
+          imageWidthPx: 1600,
+          imageHeightPx: 900,
+          metadataSource: 'client_reported',
         },
       ],
       completedAddOns: [

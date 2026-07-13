@@ -377,6 +377,10 @@ mod tests {
             upload_mode: "local-placeholder",
             display_url: format!("local://local/jobs/job_1001/{photo_type}/{id}.jpg"),
             thumbnail_url: None,
+            file_size_bytes: Some(1024),
+            image_width_px: Some(1280),
+            image_height_px: Some(720),
+            metadata_source: Some("client_reported".to_string()),
         }
     }
 

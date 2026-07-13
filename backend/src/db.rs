@@ -13,8 +13,8 @@ use crate::{
         CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
     },
     photo_storage::PhotoStorageConfig,
-    ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
-    PhotoUploadResponse,
+    ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadMetadata,
+    PhotoUploadRequest, PhotoUploadResponse,
 };
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -461,9 +461,14 @@ impl JobRepository {
         postgres_write::photo_upload_response(job_id, request, photo_id, storage_ticket)
     }
 
-    pub async fn complete_photo_upload(&self, job_id: &str, photo_id: &str) -> String {
+    pub async fn complete_photo_upload(
+        &self,
+        job_id: &str,
+        photo_id: &str,
+        metadata: PhotoUploadMetadata,
+    ) -> String {
         if let Some(pool) = &self.pool {
-            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id).await;
+            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id, &metadata).await;
         }
 
         format!("Photo {photo_id} for job {job_id} has been marked uploaded.")

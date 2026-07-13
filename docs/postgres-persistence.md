@@ -62,8 +62,9 @@ POST /jobs/{id}/photos/presign
 
 POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded', uploaded_at = now()
+  -> store validated client-reported file size and image dimensions when provided
   -> increment before_photos or after_photos counters when appropriate
-  -> GET /jobs/{id}/photos returns expiring original and thumbnail display URLs when object storage is configured
+  -> GET /jobs/{id}/photos returns expiring original and thumbnail display URLs plus persisted metadata when object storage is configured
 ```
 
 ## Local Development Database

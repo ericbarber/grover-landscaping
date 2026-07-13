@@ -147,6 +147,11 @@ s3_key_thumbnail
 photo_type
 captured_at
 uploaded_at
+file_size_bytes
+image_width_px
+image_height_px
+metadata_source
+metadata_captured_at
 latitude
 longitude
 device_id
@@ -173,6 +178,8 @@ uploaded
 processed
 rejected
 ```
+
+Upload completion can persist validated client-reported file size and image dimensions. `metadata_source` records where those values came from; current browser uploads use `client_reported`, while planned server-side image processing should write a server-controlled source after validating object storage content.
 
 ## job_completion_reports
 

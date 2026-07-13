@@ -1,4 +1,6 @@
-use crate::{photo_storage::PhotoStorageTicket, PhotoUploadRequest, PhotoUploadResponse};
+use crate::{
+    photo_storage::PhotoStorageTicket, PhotoUploadMetadata, PhotoUploadRequest, PhotoUploadResponse,
+};
 use sqlx::{PgPool, Row};
 
 pub async fn start_job(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
@@ -87,12 +89,42 @@ pub async fn complete_photo_upload(
     pool: &PgPool,
     job_id: &str,
     photo_id: &str,
+    metadata: &PhotoUploadMetadata,
 ) -> Result<(), sqlx::Error> {
-    let Some(row) = sqlx::query("UPDATE job_photos SET status = 'uploaded', uploaded_at = now() WHERE id = $1 AND job_id = $2 RETURNING photo_type")
-        .bind(photo_id)
-        .bind(job_id)
-        .fetch_optional(pool)
-        .await?
+    let metadata_source = if metadata.file_size_bytes.is_some()
+        || metadata.image_width_px.is_some()
+        || metadata.image_height_px.is_some()
+    {
+        Some("client_reported")
+    } else {
+        None
+    };
+    let Some(row) = sqlx::query(
+        r#"
+        UPDATE job_photos
+        SET
+            status = 'uploaded',
+            uploaded_at = now(),
+            file_size_bytes = COALESCE($3, file_size_bytes),
+            image_width_px = COALESCE($4, image_width_px),
+            image_height_px = COALESCE($5, image_height_px),
+            metadata_source = COALESCE($6, metadata_source),
+            metadata_captured_at = CASE
+                WHEN $6::text IS NULL THEN metadata_captured_at
+                ELSE now()
+            END
+        WHERE id = $1 AND job_id = $2
+        RETURNING photo_type
+        "#,
+    )
+    .bind(photo_id)
+    .bind(job_id)
+    .bind(metadata.file_size_bytes)
+    .bind(metadata.image_width_px)
+    .bind(metadata.image_height_px)
+    .bind(metadata_source)
+    .fetch_optional(pool)
+    .await?
     else {
         return Ok(());
     };
