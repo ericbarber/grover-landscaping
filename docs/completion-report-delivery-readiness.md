@@ -23,6 +23,8 @@ Delivery should happen only after manager approval. The delivery action should s
 
 Delivery attempts should be recorded separately so retry and failure review do not rewrite report evidence or summary history.
 
+After delivery, managers can queue an email or SMS notification for the delivered share link. Notification queueing requires a delivered report with delivery metadata and a share token, validates the recipient, and writes a `completion_report_delivery` row to `notification_outbox` for the dispatcher.
+
 ## Customer portal behavior
 
 Customer portal reads should return only delivered reports for properties the customer owns or manages. Share links should be exposed only after the report reaches `delivered`.

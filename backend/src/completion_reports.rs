@@ -22,11 +22,29 @@ pub struct CompletionReportActionResponse {
     pub share_url: Option<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CompletionReportDeliveryNotificationResponse {
+    pub report_id: String,
+    pub notification_id: String,
+    pub channel: String,
+    pub recipient: String,
+    pub delivery_status: String,
+    pub share_url: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CompletionReportActionResult {
     Updated(CompletionReportActionResponse),
     InvalidTransition,
     NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CompletionReportDeliveryNotificationResult {
+    Queued(CompletionReportDeliveryNotificationResponse),
+    NotFound,
+    NotDelivered,
     Unavailable,
 }
 

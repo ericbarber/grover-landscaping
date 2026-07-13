@@ -18,6 +18,30 @@ pub struct NotificationOutboxItem {
     pub attempt_count: i32,
 }
 
+pub fn validate_notification_recipient(channel: &str, recipient: &str) -> Result<(), String> {
+    let recipient = recipient.trim();
+    if recipient.is_empty() || recipient.chars().count() > 320 {
+        return Err("recipient is required and cannot exceed 320 characters".to_string());
+    }
+
+    match channel {
+        "email" if recipient.contains('@') && !recipient.contains(char::is_whitespace) => Ok(()),
+        "sms"
+            if recipient.starts_with('+')
+                && recipient.len() >= 8
+                && recipient.len() <= 16
+                && recipient[1..]
+                    .chars()
+                    .all(|character| character.is_ascii_digit()) =>
+        {
+            Ok(())
+        }
+        "email" => Err("email recipient must be a valid email address".to_string()),
+        "sms" => Err("sms recipient must use E.164 format, such as +16025550123".to_string()),
+        _ => Err(format!("unsupported notification channel: {channel}")),
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct NotificationOutboxRepository {
     pool: Option<PgPool>,

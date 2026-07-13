@@ -2,6 +2,7 @@
 mod postgres_project_bids;
 
 use crate::db::DatabaseConfig;
+use crate::notifications::validate_notification_recipient;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -203,30 +204,7 @@ pub fn customer_project_bid_response(bid: &ProjectBidResponse) -> CustomerProjec
 }
 
 pub fn validate_send_project_bid_request(request: &SendProjectBidRequest) -> Result<(), String> {
-    let recipient = request.recipient.trim();
-    if recipient.is_empty() || recipient.chars().count() > 320 {
-        return Err("recipient is required and cannot exceed 320 characters".to_string());
-    }
-
-    match request.channel.as_str() {
-        "email" if recipient.contains('@') && !recipient.contains(char::is_whitespace) => Ok(()),
-        "sms"
-            if recipient.starts_with('+')
-                && recipient.len() >= 8
-                && recipient.len() <= 16
-                && recipient[1..]
-                    .chars()
-                    .all(|character| character.is_ascii_digit()) =>
-        {
-            Ok(())
-        }
-        "email" => Err("email recipient must be a valid email address".to_string()),
-        "sms" => Err("sms recipient must use E.164 format, such as +16025550123".to_string()),
-        _ => Err(format!(
-            "unsupported notification channel: {}",
-            request.channel
-        )),
-    }
+    validate_notification_recipient(&request.channel, &request.recipient)
 }
 
 pub fn validate_project_bid_request(request: &CreateProjectBidRequest) -> Result<(), String> {

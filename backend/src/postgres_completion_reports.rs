@@ -1,9 +1,11 @@
 use crate::completion_reports::{
     shared_report_url, CompletionReportActionResponse, CompletionReportActionResult,
+    CompletionReportDeliveryNotificationResponse, CompletionReportDeliveryNotificationResult,
     CompletionReportPersistence, CompletionReportResponse,
 };
 use sqlx::{PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 pub async fn persist_completion_report(
     pool: &PgPool,
@@ -516,6 +518,78 @@ pub async fn delivered_snapshot_for_share_token(
     .await?;
 
     Ok(snapshot.and_then(|value| serde_json::from_str(&value).ok()))
+}
+
+pub async fn queue_delivery_notification(
+    pool: &PgPool,
+    report_id: &str,
+    channel: &str,
+    recipient: &str,
+) -> Result<CompletionReportDeliveryNotificationResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        r#"
+        SELECT report_status, delivered_at IS NOT NULL AS delivered_at_present, share_token
+        FROM job_completion_reports
+        WHERE id = $1
+        FOR UPDATE
+        "#,
+    )
+    .bind(report_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(CompletionReportDeliveryNotificationResult::NotFound);
+    };
+
+    let report_status: String = current.get("report_status");
+    let delivered_at_present: bool = current.get("delivered_at_present");
+    let share_token: Option<String> = current.get("share_token");
+    let Some(share_token) = share_token else {
+        transaction.rollback().await?;
+        return Ok(CompletionReportDeliveryNotificationResult::NotDelivered);
+    };
+
+    if report_status != "delivered" || !delivered_at_present {
+        transaction.rollback().await?;
+        return Ok(CompletionReportDeliveryNotificationResult::NotDelivered);
+    }
+
+    let notification_id = format!("notification_{}", Uuid::new_v4().simple());
+    let share_url = shared_report_url(&share_token);
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id, entity_type, entity_id, channel, recipient, template_key, payload
+        )
+        VALUES (
+            $1, 'completion_report', $2, $3, $4, 'completion_report_delivery',
+            jsonb_build_object('report_id', $2::text, 'share_url', $5::text)
+        )
+        "#,
+    )
+    .bind(&notification_id)
+    .bind(report_id)
+    .bind(channel)
+    .bind(recipient.trim())
+    .bind(&share_url)
+    .execute(&mut *transaction)
+    .await?;
+
+    transaction.commit().await?;
+
+    Ok(CompletionReportDeliveryNotificationResult::Queued(
+        CompletionReportDeliveryNotificationResponse {
+            report_id: report_id.to_string(),
+            notification_id,
+            channel: channel.to_string(),
+            recipient: recipient.trim().to_string(),
+            delivery_status: "queued".to_string(),
+            share_url,
+        },
+    ))
 }
 
 fn completion_report_share_token_should_be_proposed(status: &str) -> bool {

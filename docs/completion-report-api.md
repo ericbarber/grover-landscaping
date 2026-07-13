@@ -94,6 +94,20 @@ Expected behavior:
 - move status to `delivered`,
 - write a status history event.
 
+### POST `/completion-reports/{report_id}/delivery-notifications`
+
+Implemented.
+
+Queues an email or SMS notification for a delivered report share link.
+
+Expected behavior:
+
+- require manager, organization owner, or support admin access,
+- validate email or E.164 SMS recipients,
+- require delivered status, delivery metadata, and a share token,
+- insert a `completion_report_delivery` notification outbox row,
+- leave report evidence, snapshots, and lifecycle state unchanged.
+
 ### GET `/reports/{share_token}`
 
 Implemented.

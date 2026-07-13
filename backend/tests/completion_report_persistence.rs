@@ -2,6 +2,7 @@ use grover_landscaping_api::{
     accounts::CustomerAccountSummary,
     completion_reports::{
         apply_completion_report_persistence, build_completion_report, CompletionReportActionResult,
+        CompletionReportDeliveryNotificationResult,
     },
     db::JobRepository,
 };
@@ -25,6 +26,11 @@ async fn repository_persists_completion_report_state() {
         .execute(&pool)
         .await
         .expect("prior completion report history should be removable");
+    sqlx::query("DELETE FROM notification_outbox WHERE entity_type = 'completion_report' AND entity_id = $1")
+        .bind("report_job_1001")
+        .execute(&pool)
+        .await
+        .expect("prior completion report notifications should be removable");
     sqlx::query("DELETE FROM job_completion_reports WHERE job_id = $1")
         .bind("job_1001")
         .execute(&pool)
@@ -202,6 +208,43 @@ async fn repository_persists_completion_report_state() {
         .execute(&pool)
         .await
         .expect("seed job name should be restored after snapshot assertion");
+
+    let notification = repository
+        .queue_completion_report_delivery_notification(
+            "report_job_1001",
+            "email",
+            "customer@example.com",
+        )
+        .await;
+    assert!(matches!(
+        notification,
+        CompletionReportDeliveryNotificationResult::Queued(ref response)
+            if response.channel == "email"
+                && response.recipient == "customer@example.com"
+                && response.share_url == format!("/report-view/{share_token}")
+    ));
+
+    let notification_row = sqlx::query(
+        r#"
+        SELECT template_key, status, payload->>'share_url' AS share_url
+        FROM notification_outbox
+        WHERE entity_type = 'completion_report'
+          AND entity_id = $1
+        "#,
+    )
+    .bind("report_job_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("completion report delivery notification should be queued");
+    assert_eq!(
+        notification_row.get::<String, _>("template_key"),
+        "completion_report_delivery"
+    );
+    assert_eq!(notification_row.get::<String, _>("status"), "queued");
+    assert_eq!(
+        notification_row.get::<String, _>("share_url"),
+        format!("/report-view/{share_token}")
+    );
 
     let delivered_row = sqlx::query(
         "SELECT report_status, ready_for_customer, checklist_progress, before_photos, after_photos, delivered_by_user_id, delivered_at FROM job_completion_reports WHERE id = $1",

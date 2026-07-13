@@ -418,6 +418,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::POST && can_deliver_reports;
     }
 
+    if path.starts_with("/completion-reports/") && path.ends_with("/delivery-notifications") {
+        return *method == Method::POST && can_deliver_reports;
+    }
+
     if path.starts_with("/day-plans/") && (path.ends_with("/bids") || path.ends_with("/bid")) {
         return can_manage_routes;
     }
@@ -633,6 +637,27 @@ mod tests {
     #[test]
     fn only_completion_report_deliverers_can_deliver() {
         let path = "/completion-reports/report-1/deliver";
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_deliverers_can_queue_delivery_notifications() {
+        let path = "/completion-reports/report-1/delivery-notifications";
 
         assert!(is_authorized(
             &principal(AccessRole::Manager),

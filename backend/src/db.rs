@@ -9,7 +9,8 @@ mod postgres_write;
 
 use crate::{
     completion_reports::{
-        CompletionReportActionResult, CompletionReportPersistence, CompletionReportResponse,
+        CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
+        CompletionReportPersistence, CompletionReportResponse,
     },
     photo_storage::PhotoStorageConfig,
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
@@ -258,6 +259,23 @@ impl JobRepository {
         }
 
         false
+    }
+
+    pub async fn queue_completion_report_delivery_notification(
+        &self,
+        report_id: &str,
+        channel: &str,
+        recipient: &str,
+    ) -> CompletionReportDeliveryNotificationResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportDeliveryNotificationResult::Unavailable;
+        };
+
+        postgres_completion_reports::queue_delivery_notification(
+            pool, report_id, channel, recipient,
+        )
+        .await
+        .unwrap_or(CompletionReportDeliveryNotificationResult::Unavailable)
     }
 
     pub async fn start_completion_report_review(

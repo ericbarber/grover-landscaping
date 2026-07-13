@@ -24,7 +24,8 @@ use axum::{
 use completion_reports::{
     apply_completion_report_persistence, build_completion_report,
     completion_report_is_active_manager_queue_status, is_valid_completion_report_lifecycle_status,
-    CompletionReportActionResult, CompletionReportResponse,
+    CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
+    CompletionReportResponse,
 };
 use day_plans::{
     validate_amendment_request, validate_amendment_review, AssignDayPlanStopRequest,
@@ -37,7 +38,8 @@ use grover_landscaping_api::{
     organizations::OrganizationRepository,
 };
 use notifications::{
-    start_notification_dispatcher, NotificationDispatcherConfig, NotificationOutboxRepository,
+    start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
+    NotificationOutboxRepository,
 };
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
@@ -142,6 +144,12 @@ struct ErrorResponse {
 #[derive(Debug, Deserialize)]
 struct CompletionReportChangeRequest {
     reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CompletionReportDeliveryNotificationRequest {
+    channel: String,
+    recipient: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -370,6 +378,10 @@ fn app_with_runtime(
         .route(
             "/completion-reports/{report_id}/deliver",
             post(deliver_completion_report),
+        )
+        .route(
+            "/completion-reports/{report_id}/delivery-notifications",
+            post(queue_completion_report_delivery_notification),
         )
         .route("/jobs/{id}/add-ons", get(list_job_add_ons))
         .route(
@@ -787,6 +799,64 @@ async fn deliver_completion_report(
             Json(ErrorResponse {
                 error: "completion_report_persistence_unavailable",
                 message: "Delivering a completion report requires database persistence."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn queue_completion_report_delivery_notification(
+    State(state): State<Arc<AppState>>,
+    Path(report_id): Path<String>,
+    Json(request): Json<CompletionReportDeliveryNotificationRequest>,
+) -> Response {
+    if let Err(message) = validate_notification_recipient(&request.channel, &request.recipient) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_notification_recipient",
+                message,
+            }),
+        )
+            .into_response();
+    }
+
+    match state
+        .jobs
+        .queue_completion_report_delivery_notification(
+            &report_id,
+            &request.channel,
+            &request.recipient,
+        )
+        .await
+    {
+        CompletionReportDeliveryNotificationResult::Queued(notification) => {
+            Json(notification).into_response()
+        }
+        CompletionReportDeliveryNotificationResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "completion_report_not_found",
+                message: "The requested completion report was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportDeliveryNotificationResult::NotDelivered => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "completion_report_not_delivered",
+                message:
+                    "Completion report delivery notifications require a delivered report share link."
+                        .to_string(),
+            }),
+        )
+            .into_response(),
+        CompletionReportDeliveryNotificationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "completion_report_notification_unavailable",
+                message: "Completion report delivery notifications require database persistence."
                     .to_string(),
             }),
         )
@@ -1855,6 +1925,54 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["error"], "completion_report_persistence_unavailable");
+    }
+
+    #[tokio::test]
+    async fn completion_report_delivery_notification_validates_recipient() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/delivery-notifications")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"channel":"sms","recipient":"not-a-phone-number"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "invalid_notification_recipient");
+    }
+
+    #[tokio::test]
+    async fn completion_report_delivery_notification_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/completion-reports/report_job_1001/delivery-notifications")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"channel":"email","recipient":"customer@example.com"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["error"], "completion_report_notification_unavailable");
     }
 
     #[tokio::test]
