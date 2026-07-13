@@ -27,6 +27,12 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     let pool = jobs.pool().expect("database pool should be available");
     let repository = NotificationOutboxRepository::from_pool(pool.clone());
     let organization_ids = vec!["org_demo_landscaping".to_string()];
+    let manager_actor_user_id = "user_notification_recovery_audit";
+    sqlx::query("DELETE FROM access_audit_events WHERE actor_user_id = $1")
+        .bind(manager_actor_user_id)
+        .execute(&pool)
+        .await
+        .expect("notification recovery audit rows should reset");
 
     let failed_id = unique_id("notification_retry_test");
     sqlx::query(
@@ -150,7 +156,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     }));
 
     let retry = repository
-        .retry_failed(&failed_id, &organization_ids)
+        .retry_failed(&failed_id, &organization_ids, manager_actor_user_id)
         .await
         .unwrap();
     assert!(matches!(
@@ -175,7 +181,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
 
     assert!(matches!(
         repository
-            .retry_failed(&sent_id, &organization_ids)
+            .retry_failed(&sent_id, &organization_ids, manager_actor_user_id)
             .await
             .unwrap(),
         NotificationRetryResult::InvalidStatus
@@ -207,7 +213,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     assert!(!other_org_history.iter().any(|item| item.id == other_org_id));
     assert!(matches!(
         repository
-            .retry_failed(&other_org_id, &organization_ids)
+            .retry_failed(&other_org_id, &organization_ids, manager_actor_user_id)
             .await
             .unwrap(),
         NotificationRetryResult::NotFound
@@ -231,6 +237,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
         .resolve_failed(
             &resolve_id,
             &organization_ids,
+            manager_actor_user_id,
             Some("Customer confirmed by phone"),
         )
         .await
@@ -245,16 +252,46 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
 
     assert!(matches!(
         repository
-            .resolve_failed(&sent_id, &organization_ids, None)
+            .resolve_failed(&sent_id, &organization_ids, manager_actor_user_id, None)
             .await
             .unwrap(),
         NotificationResolveResult::InvalidStatus
     ));
     assert!(matches!(
         repository
-            .resolve_failed(&other_org_id, &organization_ids, None)
+            .resolve_failed(
+                &other_org_id,
+                &organization_ids,
+                manager_actor_user_id,
+                None
+            )
             .await
             .unwrap(),
         NotificationResolveResult::NotFound
     ));
+
+    let audit_rows = sqlx::query(
+        r#"
+        SELECT actor_user_id, event_kind, target_id
+        FROM access_audit_events
+        WHERE actor_user_id = $1
+          AND event_kind IN ('notification_retried', 'notification_resolved')
+        ORDER BY event_kind, target_id
+        "#,
+    )
+    .bind(manager_actor_user_id)
+    .fetch_all(&pool)
+    .await
+    .expect("notification recovery audit rows should be available");
+    assert!(audit_rows.iter().any(|row| {
+        row.get::<String, _>("event_kind") == "notification_retried"
+            && row.get::<String, _>("target_id") == failed_id
+    }));
+    assert!(audit_rows.iter().any(|row| {
+        row.get::<String, _>("event_kind") == "notification_resolved"
+            && row.get::<String, _>("target_id") == resolve_id
+    }));
+    assert!(audit_rows
+        .iter()
+        .all(|row| row.get::<String, _>("actor_user_id") == manager_actor_user_id));
 }

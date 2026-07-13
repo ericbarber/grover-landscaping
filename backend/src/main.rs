@@ -1483,7 +1483,7 @@ async fn retry_notification_delivery(
     let organization_ids = principal_active_organization_ids(&state, &principal).await;
     match state
         .notifications
-        .retry_failed(&id, &organization_ids)
+        .retry_failed(&id, &organization_ids, &principal.subject)
         .await
     {
         Ok(NotificationRetryResult::Retried(item)) => Json(item).into_response(),
@@ -1537,7 +1537,12 @@ async fn resolve_notification_delivery(
     let organization_ids = principal_active_organization_ids(&state, &principal).await;
     match state
         .notifications
-        .resolve_failed(&id, &organization_ids, reason.as_deref())
+        .resolve_failed(
+            &id,
+            &organization_ids,
+            &principal.subject,
+            reason.as_deref(),
+        )
         .await
     {
         Ok(NotificationResolveResult::Resolved(item)) => Json(item).into_response(),

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{PgPool, Row};
 use std::time::Duration;
+use uuid::Uuid;
 
 const DEFAULT_BATCH_SIZE: i64 = 10;
 const DEFAULT_MAX_ATTEMPTS: i32 = 5;
@@ -326,6 +327,7 @@ impl NotificationOutboxRepository {
         &self,
         id: &str,
         organization_ids: &[String],
+        actor_user_id: &str,
     ) -> Result<NotificationRetryResult, sqlx::Error> {
         let Some(pool) = &self.pool else {
             return Ok(NotificationRetryResult::Unavailable);
@@ -336,7 +338,7 @@ impl NotificationOutboxRepository {
 
         let mut transaction = pool.begin().await?;
         let current = sqlx::query(
-            "SELECT status FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+            "SELECT status, organization_id FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
         )
         .bind(id)
         .bind(organization_ids)
@@ -373,6 +375,16 @@ impl NotificationOutboxRepository {
         .bind(id)
         .execute(&mut *transaction)
         .await?;
+
+        insert_notification_audit_event(
+            &mut transaction,
+            actor_user_id,
+            current.get("organization_id"),
+            "notification_retried",
+            id,
+        )
+        .await?;
+
         transaction.commit().await?;
 
         let mut history = self
@@ -394,6 +406,7 @@ impl NotificationOutboxRepository {
         &self,
         id: &str,
         organization_ids: &[String],
+        actor_user_id: &str,
         reason: Option<&str>,
     ) -> Result<NotificationResolveResult, sqlx::Error> {
         let Some(pool) = &self.pool else {
@@ -405,7 +418,7 @@ impl NotificationOutboxRepository {
 
         let mut transaction = pool.begin().await?;
         let current = sqlx::query(
-            "SELECT status FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+            "SELECT status, organization_id FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
         )
         .bind(id)
         .bind(organization_ids)
@@ -443,6 +456,16 @@ impl NotificationOutboxRepository {
         .bind(resolution_note)
         .execute(&mut *transaction)
         .await?;
+
+        insert_notification_audit_event(
+            &mut transaction,
+            actor_user_id,
+            current.get("organization_id"),
+            "notification_resolved",
+            id,
+        )
+        .await?;
+
         transaction.commit().await?;
 
         let mut history = self
@@ -459,6 +482,37 @@ impl NotificationOutboxRepository {
 
         Ok(NotificationResolveResult::Resolved(Box::new(item)))
     }
+}
+
+async fn insert_notification_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_user_id: &str,
+    organization_id: &str,
+    event_kind: &str,
+    target_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(target_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 #[derive(Clone, Debug)]

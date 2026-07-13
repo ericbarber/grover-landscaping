@@ -297,13 +297,14 @@ Current state:
 - Organization invitation APIs create pending memberships, queue invitation email delivery, accept invite tokens into active memberships, and audit invite acceptance plus role changes
 - Persisted portfolio grouping and crew assignment changes record organization-scoped audit events
 - Persisted customer bid approvals, customer bid rejections, and manager bid conversions record organization-scoped audit events
+- Persisted notification retry and manual resolution actions record organization-scoped audit events
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
 - Add first-user runbooks and Cognito provisioning validation for hosted pilots
-- Record audit events for login, access, notification, and remaining approval changes
+- Record audit events for login, access, and remaining approval changes
 
 ### Photo evidence flow
 
