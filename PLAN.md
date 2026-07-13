@@ -335,10 +335,11 @@ Current state:
 - Persisted thumbnail display URLs for job photo evidence and customer-visible completion reports
 - Upload completion records validated client-reported file size and image dimensions on persisted photo evidence
 - S3-backed upload completion attempts server-side file-size verification and PNG, GIF, or JPEG dimension extraction before falling back to client-reported metadata
+- Photo evidence reads hide pending upload tickets and mark server-extracted uploads as processed
 
 Next implementation work:
 
-- Add server-side thumbnail normalization and rejected/processed states for uploaded photo evidence
+- Add server-side thumbnail normalization and rejected-state quarantine for uploaded photo evidence
 
 ### Completion reports
 

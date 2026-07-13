@@ -132,6 +132,7 @@ pub async fn list_job_photos(
             metadata_source
         FROM job_photos
         WHERE job_id = $1
+          AND status IN ('uploaded', 'processed')
         ORDER BY created_at DESC, id DESC
         "#,
     )

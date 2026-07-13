@@ -103,11 +103,16 @@ pub async fn complete_photo_upload(
         .metadata_source
         .as_deref()
         .or(fallback_metadata_source);
+    let photo_status = if metadata_source == Some("server_extracted") {
+        "processed"
+    } else {
+        "uploaded"
+    };
     let Some(row) = sqlx::query(
         r#"
         UPDATE job_photos
         SET
-            status = 'uploaded',
+            status = $7,
             uploaded_at = now(),
             file_size_bytes = COALESCE($3, file_size_bytes),
             image_width_px = COALESCE($4, image_width_px),
@@ -127,6 +132,7 @@ pub async fn complete_photo_upload(
     .bind(metadata.image_width_px)
     .bind(metadata.image_height_px)
     .bind(metadata_source)
+    .bind(photo_status)
     .fetch_optional(pool)
     .await?
     else {
