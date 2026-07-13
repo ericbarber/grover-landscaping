@@ -299,13 +299,14 @@ Current state:
 - Persisted customer bid approvals, customer bid rejections, and manager bid conversions record organization-scoped audit events
 - Persisted notification retry and manual resolution actions record organization-scoped audit events
 - Persisted job account-summary reads record organization-scoped `account_viewed` audit events
+- Authenticated current-user access summary reads record organization-scoped `login` audit events
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
 - Add first-user runbooks and Cognito provisioning validation for hosted pilots
-- Record audit events for login-sensitive and remaining approval changes
+- Record audit events for remaining approval changes
 
 ### Photo evidence flow
 

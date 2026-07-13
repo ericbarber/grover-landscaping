@@ -79,6 +79,7 @@ impl OrganizationRepository {
         claim_roles: Vec<AccessRole>,
     ) -> PrincipalAccessSummary {
         let memberships = self.list_active_memberships(user_id).await;
+        let _ = self.record_login_audit_events(user_id, &memberships).await;
 
         PrincipalAccessSummary {
             user_id: user_id.to_string(),
@@ -96,6 +97,36 @@ impl OrganizationRepository {
         }
 
         seed_memberships(user_id)
+    }
+
+    async fn record_login_audit_events(
+        &self,
+        user_id: &str,
+        memberships: &[OrganizationMembership],
+    ) -> Result<usize, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(0);
+        };
+        if memberships.is_empty() {
+            return Ok(0);
+        }
+
+        let mut transaction = pool.begin().await?;
+        let mut inserted = 0;
+        for membership in memberships {
+            insert_access_audit_event(
+                &mut transaction,
+                user_id,
+                &membership.organization_id,
+                "login",
+                user_id,
+            )
+            .await?;
+            inserted += 1;
+        }
+        transaction.commit().await?;
+
+        Ok(inserted)
     }
 
     pub async fn user_has_active_membership(
