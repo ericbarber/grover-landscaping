@@ -33,6 +33,14 @@ terraform -chdir=infra/terraform/environments/prod plan
 
 Do not apply production until the Render URL or custom domain is final. Production enables mandatory MFA and Cognito deletion protection.
 
+Validate the production outputs before wiring Render:
+
+```bash
+bash scripts/validate-cognito-hosted-pilot.sh
+```
+
+See `docs/hosted-pilot-runbook.md` for first-owner creation and membership binding.
+
 ## Recommended Starting Layout
 
 ```text

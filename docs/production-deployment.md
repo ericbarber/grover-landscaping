@@ -31,7 +31,7 @@ Before storing real customer or employee data or opening access broadly:
 
 1. Push the reviewed production changes to the repository's default branch.
 2. In the Render dashboard, create a new Blueprint and connect this repository.
-3. Provision the production Cognito Terraform environment using the final Render application URL.
+3. Provision the production Cognito Terraform environment using the final Render application URL and the hosted pilot runbook.
 4. Render reads `render.yaml` and requests the Cognito issuer URL, public app client ID, and login domain from the Terraform outputs.
 5. Wait for the database and web service to become healthy. The web service applies all embedded SQLx migrations before opening its listener.
 6. Record the generated `https://grover-landscaping.onrender.com` URL or attach a custom domain.
@@ -39,6 +39,12 @@ Before storing real customer or employee data or opening access broadly:
 The database has `ipAllowList: []`, so it is reachable only through Render's private network. Do not add public database access for routine administration.
 
 ## Verification
+
+Validate Cognito outputs before wiring Render:
+
+```bash
+bash scripts/validate-cognito-hosted-pilot.sh
+```
 
 Run the production smoke test after the first deploy and after material platform changes:
 
@@ -54,6 +60,8 @@ The smoke test verifies:
 - Rejection of unauthenticated API requests
 - Cognito-authenticated API access
 - Public frontend delivery for the managed-login entry point
+
+See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Cognito group assignment, PostgreSQL membership binding, and rollback notes.
 
 ## Operations
 

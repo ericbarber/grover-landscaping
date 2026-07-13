@@ -300,12 +300,13 @@ Current state:
 - Persisted notification retry and manual resolution actions record organization-scoped audit events
 - Persisted job account-summary reads record organization-scoped `account_viewed` audit events
 - Authenticated current-user access summary reads record organization-scoped `login` audit events
+- Hosted pilot runbook documents Cognito provisioning, first-owner creation, PostgreSQL membership binding, validation, and rollback notes
+- Cognito hosted-pilot validation script checks Terraform outputs and optional deployed `/auth/config` values
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
-- Add first-user runbooks and Cognito provisioning validation for hosted pilots
 
 ### Photo evidence flow
 
