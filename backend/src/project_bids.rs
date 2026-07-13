@@ -129,6 +129,26 @@ impl ProjectBidRepository {
         Vec::new()
     }
 
+    pub async fn list_for_account(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+    ) -> Vec<ProjectBidResponse> {
+        if organization_ids.is_empty() {
+            return Vec::new();
+        }
+
+        if let Some(pool) = &self.pool {
+            if let Ok(bids) =
+                postgres_project_bids::list_for_account(pool, account_id, organization_ids).await
+            {
+                return bids;
+            }
+        }
+
+        Vec::new()
+    }
+
     pub async fn send(
         &self,
         day_plan_id: &str,

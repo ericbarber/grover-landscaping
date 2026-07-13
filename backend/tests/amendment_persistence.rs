@@ -216,6 +216,26 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .expect("bid conversion should be idempotent");
     assert_eq!(converted_again.converted_at, converted.converted_at);
 
+    let account_bid_history = bid_repository
+        .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
+        .await;
+    let account_bid = account_bid_history
+        .iter()
+        .find(|item| item.id == bid.id)
+        .expect("customer account bid history should include converted bid");
+    assert_eq!(account_bid.status, "converted");
+    assert_eq!(account_bid.customer_account_id, "acct_1001");
+    assert_eq!(account_bid.converted_job_id.as_deref(), Some("job_1001"));
+
+    assert!(bid_repository
+        .list_for_account("acct_1001", &["org_other".to_string()])
+        .await
+        .is_empty());
+    assert!(bid_repository
+        .list_for_account("acct_other", &["org_demo_landscaping".to_string()])
+        .await
+        .is_empty());
+
     let add_on_count = sqlx::query_scalar::<_, i64>(
         "SELECT COUNT(*) FROM service_job_add_ons WHERE project_bid_id = $1",
     )

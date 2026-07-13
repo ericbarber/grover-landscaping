@@ -229,6 +229,120 @@ pub async fn list_for_day_plan(
     Ok(bids)
 }
 
+pub async fn list_for_account(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+) -> Result<Vec<ProjectBidResponse>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            bid.id AS bid_id,
+            bid.day_plan_id,
+            bid.customer_account_id,
+            bid.source_amendment_id,
+            bid.status,
+            bid.customer_message,
+            bid.share_token,
+            bid.sent_at::text AS sent_at,
+            bid.responded_at::text AS responded_at,
+            bid.share_expires_at::text AS share_expires_at,
+            bid.share_revoked_at::text AS share_revoked_at,
+            COALESCE((
+                bid.share_token IS NOT NULL
+                AND bid.share_expires_at > now()
+                AND bid.share_revoked_at IS NULL
+            ), FALSE) AS share_active,
+            delivery.status AS delivery_status,
+            delivery.channel AS delivery_channel,
+            delivery.recipient AS delivery_recipient,
+            conversion.job_id AS converted_job_id,
+            conversion.converted_at::text AS converted_at,
+            item.id AS item_id,
+            item.service_id,
+            item.service_name,
+            item.service_description,
+            item.quantity,
+            item.unit_price_cents,
+            item.note
+        FROM project_bids bid
+        JOIN day_plans plan ON plan.id = bid.day_plan_id
+        JOIN crews crew ON crew.id = plan.crew_id
+        JOIN project_bid_line_items item ON item.project_bid_id = bid.id
+        LEFT JOIN LATERAL (
+            SELECT status, channel, recipient
+            FROM notification_outbox
+            WHERE entity_type = 'project_bid' AND entity_id = bid.id
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        ) delivery ON true
+        LEFT JOIN project_bid_conversions conversion ON conversion.project_bid_id = bid.id
+        WHERE bid.customer_account_id = $1
+          AND crew.organization_id = ANY($2)
+          AND bid.status IN ('sent', 'approved', 'rejected', 'converted')
+        ORDER BY bid.updated_at DESC, bid.id, item.sort_order
+        "#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+
+    let mut bids = Vec::<ProjectBidResponse>::new();
+    let mut indexes = HashMap::<String, usize>::new();
+    for row in rows {
+        let bid_id: String = row.get("bid_id");
+        let index = if let Some(index) = indexes.get(&bid_id) {
+            *index
+        } else {
+            let index = bids.len();
+            indexes.insert(bid_id.clone(), index);
+            bids.push(ProjectBidResponse {
+                id: bid_id,
+                day_plan_id: row.get("day_plan_id"),
+                customer_account_id: row.get("customer_account_id"),
+                source_amendment_id: row.get("source_amendment_id"),
+                status: row.get("status"),
+                line_items: Vec::new(),
+                customer_message: row.get("customer_message"),
+                total_cents: 0,
+                share_url: if row.get("share_active") {
+                    row.get::<Option<String>, _>("share_token")
+                        .as_deref()
+                        .map(shared_bid_url)
+                } else {
+                    None
+                },
+                sent_at: row.get("sent_at"),
+                responded_at: row.get("responded_at"),
+                share_expires_at: row.get("share_expires_at"),
+                share_revoked_at: row.get("share_revoked_at"),
+                delivery_status: row.get("delivery_status"),
+                delivery_channel: row.get("delivery_channel"),
+                delivery_recipient: row.get("delivery_recipient"),
+                converted_job_id: row.get("converted_job_id"),
+                converted_at: row.get("converted_at"),
+                persisted: true,
+            });
+            index
+        };
+
+        let item = ProjectBidLineItemResponse {
+            id: row.get("item_id"),
+            service_id: row.get("service_id"),
+            service_name: row.get("service_name"),
+            service_description: row.get("service_description"),
+            quantity: row.get::<i32, _>("quantity") as u32,
+            unit_price_cents: row.get::<i32, _>("unit_price_cents") as u32,
+            note: row.get("note"),
+        };
+        bids[index].total_cents += u64::from(item.quantity) * u64::from(item.unit_price_cents);
+        bids[index].line_items.push(item);
+    }
+
+    Ok(bids)
+}
+
 pub async fn convert_to_job_add_ons(
     pool: &PgPool,
     day_plan_id: &str,

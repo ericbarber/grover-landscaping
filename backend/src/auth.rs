@@ -471,6 +471,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::GET && can_view_customer_portfolios;
     }
 
+    if path.starts_with("/accounts/") && path.ends_with("/bids") {
+        return *method == Method::GET && can_view_customer_portfolios;
+    }
+
     if path == "/property-portfolios" {
         return *method == Method::POST && can_manage_portfolios;
     }
@@ -931,6 +935,32 @@ mod tests {
         assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn customer_bid_history_reads_allow_customer_and_manager_roles() {
+        let path = "/accounts/acct_1001/bids";
+
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::GET,
             path
         ));
     }

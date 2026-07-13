@@ -225,7 +225,7 @@ created_at
 updated_at
 ```
 
-`project_bid_line_items` stores the ordered service name, description, quantity, unit price, and manager note used to calculate the bid total. Customer ownership is derived from the amendment's route stop rather than accepted from the browser. Draft saves are idempotent by `source_amendment_id`. Sending a bid assigns a random seven-day share token and atomically queues a notification. A token can record one approved or rejected response, writes a `bid_approved` or `bid_rejected` audit event for that customer decision, can be revoked by a manager, and can be securely reissued.
+`project_bid_line_items` stores the ordered service name, description, quantity, unit price, and manager note used to calculate the bid total. Customer ownership is derived from the amendment's route stop rather than accepted from the browser. Draft saves are idempotent by `source_amendment_id`. Sending a bid assigns a random seven-day share token and atomically queues a notification. A token can record one approved or rejected response, writes a `bid_approved` or `bid_rejected` audit event for that customer decision, can be revoked by a manager, and can be securely reissued. Authenticated customer account bid-history reads return sent, answered, and converted bids only when the bid's day plan belongs to one of the caller's active customer or manager organization memberships.
 
 ## notification_outbox
 

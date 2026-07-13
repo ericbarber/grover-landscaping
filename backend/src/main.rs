@@ -462,6 +462,10 @@ fn app_with_runtime(
             "/accounts/{account_id}/customer-property-portfolio",
             get(get_customer_property_portfolio),
         )
+        .route(
+            "/accounts/{account_id}/bids",
+            get(list_customer_project_bids),
+        )
         .route("/property-portfolios", post(create_property_portfolio))
         .route(
             "/property-portfolios/{portfolio_id}/properties",
@@ -896,6 +900,25 @@ async fn get_customer_property_portfolio(
         .await;
 
     Json(response).into_response()
+}
+
+async fn list_customer_project_bids(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_view_customer_property_portfolios,
+    )
+    .await;
+    let bids = state
+        .project_bids
+        .list_for_account(&account_id, &organization_ids)
+        .await;
+
+    Json(bids).into_response()
 }
 
 async fn list_property_completion_reports(
@@ -4537,6 +4560,24 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/day-plans/day_plan_2026_06_15_crew_1001/bids")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn customer_project_bids_endpoint_returns_empty_local_fallback() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/accounts/acct_1001/bids")
                     .body(Body::empty())
                     .unwrap(),
             )

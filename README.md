@@ -152,6 +152,7 @@ Current backend endpoints include:
 | PUT | `/organizations/{organization_id}/memberships/{membership_id}/role` | Update an organization membership role with audit history |
 | GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
 | GET | `/accounts/{account_id}/customer-property-portfolio` | Read customer-scoped portfolio groups, grouped properties, and ungrouped yards |
+| GET | `/accounts/{account_id}/bids` | List sent, answered, and converted project bids for a scoped customer account |
 | POST | `/property-portfolios` | Create a property portfolio for a customer account |
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |
