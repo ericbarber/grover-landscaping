@@ -307,6 +307,7 @@ Current state:
 - Customer portal preview loads delivered property report history from the authenticated property completion-report endpoint
 - Customer account bid history returns sent, answered, and converted bids within active customer/manager organization scopes
 - Customer portal preview loads authenticated customer account bid history with local bid-review fallback
+- Production smoke script validates Cognito auth config plus route, report, photo upload-ticket, customer portfolio, bid-history, and report-history reads
 
 Next implementation work:
 

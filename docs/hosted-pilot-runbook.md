@@ -126,10 +126,14 @@ Sign in as the first owner, complete the required temporary-password and MFA set
 ```bash
 BASE_URL=https://grover-landscaping.onrender.com \
 ACCESS_TOKEN='<current Cognito access token>' \
+SMOKE_JOB_ID=job_1001 \
+SMOKE_DAY_PLAN_ID=day_plan_2026_06_15_crew_1001 \
+SMOKE_ACCOUNT_ID=acct_1001 \
+SMOKE_PROPERTY_ID=property_1001 \
 bash scripts/smoke-production.sh
 ```
 
-The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, and the access summary writes a `login` audit event.
+The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
 
 ## Rollback Notes
 

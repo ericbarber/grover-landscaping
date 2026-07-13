@@ -51,15 +51,23 @@ Run the production smoke test after the first deploy and after material platform
 ```bash
 BASE_URL=https://grover-landscaping.onrender.com \
 ACCESS_TOKEN='current-cognito-access-token' \
+SMOKE_JOB_ID=job_1001 \
+SMOKE_DAY_PLAN_ID=day_plan_2026_06_15_crew_1001 \
+SMOKE_ACCOUNT_ID=acct_1001 \
+SMOKE_PROPERTY_ID=property_1001 \
 bash scripts/smoke-production.sh
 ```
 
 The smoke test verifies:
 
 - Database-backed readiness
+- Cognito runtime auth configuration
 - Rejection of unauthenticated API requests
-- Cognito-authenticated API access
+- Cognito-authenticated access summary and job list reads
+- Authenticated route, report, photo upload-ticket, customer portfolio, customer bid-history, and customer report-history access
 - Public frontend delivery for the managed-login entry point
+
+Override the `SMOKE_*` IDs when the pilot data set no longer uses the seeded demo job, day plan, account, or property identifiers.
 
 See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Cognito group assignment, PostgreSQL membership binding, and rollback notes.
 
