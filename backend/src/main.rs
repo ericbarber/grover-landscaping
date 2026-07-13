@@ -35,11 +35,17 @@ use day_plans::{
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::{
     access_control::{
-        can_deliver_completion_report, can_manage_schedule, can_review_completion_report,
-        can_submit_completion_report, can_view_crew_route, AccessRole,
+        can_deliver_completion_report, can_manage_property_portfolios, can_manage_schedule,
+        can_review_completion_report, can_submit_completion_report, can_view_crew_route,
+        AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::OrganizationRepository,
+    property_portfolio_requests::{
+        is_valid_add_property_to_portfolio_request, is_valid_create_property_portfolio_request,
+        AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
+    },
+    property_portfolios::PropertyPortfolioRepository,
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
@@ -75,6 +81,7 @@ struct AppState {
     project_bids: ProjectBidRepository,
     organizations: OrganizationRepository,
     notifications: NotificationOutboxRepository,
+    property_portfolios: PropertyPortfolioRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -260,42 +267,51 @@ async fn app_from_env() -> Result<Router, DynError> {
     let production = app_environment.eq_ignore_ascii_case("production");
     photo_storage::PhotoStorageConfig::try_from_env().map_err(configuration_error)?;
 
-    let (jobs, day_plans, project_bids, organizations, notifications, persistence) =
-        match DatabaseConfig::from_env() {
-            Some(config) => {
-                tracing::info!("connecting to PostgreSQL and applying migrations");
-                let jobs = JobRepository::connect(&config).await?;
-                let pool = jobs.pool().ok_or_else(|| {
-                    configuration_error("PostgreSQL connected without an available connection pool")
-                })?;
-                let day_plans = DayPlanRepository::from_pool(pool.clone());
-                let project_bids = ProjectBidRepository::from_pool(pool.clone());
-                let organizations = OrganizationRepository::from_pool(pool.clone());
-                let notifications = NotificationOutboxRepository::from_pool(pool);
-                (
-                    jobs,
-                    day_plans,
-                    project_bids,
-                    organizations,
-                    notifications,
-                    "postgres",
-                )
-            }
-            None if production => {
-                return Err(configuration_error(
-                    "DATABASE_URL is required when APP_ENV=production",
-                )
-                .into());
-            }
-            None => (
-                JobRepository::default(),
-                DayPlanRepository::default(),
-                ProjectBidRepository::default(),
-                OrganizationRepository::default(),
-                NotificationOutboxRepository::default(),
-                "seed-local",
-            ),
-        };
+    let (
+        jobs,
+        day_plans,
+        project_bids,
+        organizations,
+        notifications,
+        property_portfolios,
+        persistence,
+    ) = match DatabaseConfig::from_env() {
+        Some(config) => {
+            tracing::info!("connecting to PostgreSQL and applying migrations");
+            let jobs = JobRepository::connect(&config).await?;
+            let pool = jobs.pool().ok_or_else(|| {
+                configuration_error("PostgreSQL connected without an available connection pool")
+            })?;
+            let day_plans = DayPlanRepository::from_pool(pool.clone());
+            let project_bids = ProjectBidRepository::from_pool(pool.clone());
+            let organizations = OrganizationRepository::from_pool(pool.clone());
+            let notifications = NotificationOutboxRepository::from_pool(pool.clone());
+            let property_portfolios = PropertyPortfolioRepository::from_pool(pool);
+            (
+                jobs,
+                day_plans,
+                project_bids,
+                organizations,
+                notifications,
+                property_portfolios,
+                "postgres",
+            )
+        }
+        None if production => {
+            return Err(
+                configuration_error("DATABASE_URL is required when APP_ENV=production").into(),
+            );
+        }
+        None => (
+            JobRepository::default(),
+            DayPlanRepository::default(),
+            ProjectBidRepository::default(),
+            OrganizationRepository::default(),
+            NotificationOutboxRepository::default(),
+            PropertyPortfolioRepository::default(),
+            "seed-local",
+        ),
+    };
 
     let notification_config =
         NotificationDispatcherConfig::from_env(production).map_err(configuration_error)?;
@@ -325,6 +341,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             project_bids,
             organizations,
             notifications,
+            property_portfolios,
         }),
         persistence,
         persistence == "postgres",
@@ -400,6 +417,15 @@ fn app_with_runtime(
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
+        .route(
+            "/accounts/{account_id}/property-portfolios",
+            get(list_property_portfolios_for_account),
+        )
+        .route("/property-portfolios", post(create_property_portfolio))
+        .route(
+            "/property-portfolios/{portfolio_id}/properties",
+            post(add_property_to_portfolio),
+        )
         .route("/jobs/{id}/report", get(get_completion_report))
         .route(
             "/completion-reports/{report_id}/review",
@@ -655,6 +681,113 @@ async fn get_account_for_job(
     }
 
     Json(state.accounts.get_account_for_job(&id).await).into_response()
+}
+
+async fn list_property_portfolios_for_account(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    let portfolios = state
+        .property_portfolios
+        .list_for_account(&account_id, &organization_ids)
+        .await;
+
+    Json(portfolios).into_response()
+}
+
+async fn create_property_portfolio(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreatePropertyPortfolioRequest>,
+) -> Response {
+    if !is_valid_create_property_portfolio_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_property_portfolio",
+                message: "Portfolio account, organization, display name, and type are required."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_property_portfolios,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(portfolio) = state.property_portfolios.create_portfolio(request).await else {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "property_portfolio_not_created",
+                message: "The property portfolio could not be created.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    (StatusCode::CREATED, Json(portfolio)).into_response()
+}
+
+async fn add_property_to_portfolio(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(portfolio_id): Path<String>,
+    Json(request): Json<AddPropertyToPortfolioRequest>,
+) -> Response {
+    if !is_valid_add_property_to_portfolio_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_portfolio_property",
+                message: "Property and organization are required.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_property_portfolios,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(link) = state
+        .property_portfolios
+        .add_property(&portfolio_id, request)
+        .await
+    else {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "portfolio_property_not_linkable",
+                message: "The property could not be linked to that portfolio.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    (StatusCode::CREATED, Json(link)).into_response()
 }
 
 async fn get_completion_report(
@@ -1073,12 +1206,21 @@ async fn principal_active_organization_ids(
     state: &AppState,
     principal: &AuthPrincipal,
 ) -> Vec<String> {
+    principal_active_organization_ids_for_role(state, principal, |_| true).await
+}
+
+async fn principal_active_organization_ids_for_role(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    required_role: fn(&AccessRole) -> bool,
+) -> Vec<String> {
     let mut seen = HashSet::new();
     state
         .organizations
         .list_active_memberships(&principal.subject)
         .await
         .into_iter()
+        .filter(|membership| required_role(&membership.role))
         .filter_map(|membership| {
             if seen.insert(membership.organization_id.clone()) {
                 Some(membership.organization_id)
@@ -2214,6 +2356,7 @@ mod tests {
             project_bids: ProjectBidRepository::default(),
             organizations: OrganizationRepository::default(),
             notifications: NotificationOutboxRepository::default(),
+            property_portfolios: PropertyPortfolioRepository::default(),
         })
     }
 
@@ -2446,6 +2589,142 @@ mod tests {
             json["memberships"][0]["organization_type"],
             "yard_care_company"
         );
+    }
+
+    #[tokio::test]
+    async fn property_portfolio_list_endpoint_returns_seeded_local_portfolios() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/accounts/acct_1001/property-portfolios")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json.as_array().unwrap().len(), 1);
+        assert_eq!(json[0]["account_id"], "acct_1001");
+        assert_eq!(json[0]["organization_id"], "org_demo_landscaping");
+        assert_eq!(json[0]["property_count"], 1);
+        assert_eq!(json[0]["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn create_property_portfolio_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_demo_landscaping",
+            "display_name": "Sample Owner Homes",
+            "portfolio_type": "individual_owner"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/property-portfolios")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(
+            json["id"],
+            "portfolio_acct_1001_org_demo_landscaping_sample_owner_homes"
+        );
+        assert_eq!(json["property_count"], 0);
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn create_property_portfolio_endpoint_rejects_invalid_payloads() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_demo_landscaping",
+            "display_name": " ",
+            "portfolio_type": "individual_owner"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/property-portfolios")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn create_property_portfolio_endpoint_rejects_other_organizations() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_other",
+            "display_name": "Other organization homes",
+            "portfolio_type": "individual_owner"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/property-portfolios")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn add_property_to_portfolio_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({
+            "property_id": "property_1001",
+            "organization_id": "org_demo_landscaping"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/property-portfolios/portfolio_1001/properties")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["portfolio_id"], "portfolio_1001");
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["organization_id"], "org_demo_landscaping");
+        assert_eq!(json["persisted"], false);
     }
 
     #[tokio::test]

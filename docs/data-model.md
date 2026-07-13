@@ -52,6 +52,21 @@ updated_at
 
 Crews belong to a service-company organization. Day plans inherit their tenant boundary through the assigned crew, and manager/crew route APIs resolve that organization before returning or mutating day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan outside the signed-in principal's active organization memberships are rejected before local fallback responses are used.
 
+## property_portfolios and portfolio_property_links
+
+Implemented property portfolio fields:
+
+```text
+id
+account_id
+organization_id
+display_name
+portfolio_type
+created_at
+```
+
+Portfolio membership is stored separately in `portfolio_property_links` with `portfolio_id`, `property_id`, and `organization_id`. Portfolio create, list, and property-link APIs require active organization membership and do not change customer ownership, property ownership, or crew assignment history.
+
 ## job_photos
 
 Suggested fields:

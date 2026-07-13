@@ -292,6 +292,7 @@ Current state:
 - Delivered completion report approvals record organization-scoped `report_delivered` audit events
 - Crews carry organization ownership, and day-plan, amendment, stop, and manager bid APIs enforce active organization membership before using persisted or local fallback data
 - Job list/detail, job account, job report, add-on, photo, and completion-report action routes enforce active organization membership before returning or mutating job-scoped data
+- Property portfolio create/list/link APIs are wired to PostgreSQL and enforce active organization membership before grouping customer yards
 
 Next implementation work:
 
@@ -370,14 +371,15 @@ Current state:
 - PostgreSQL migrations exist for property portfolios, portfolio-property links, and property crew assignment history
 - Portfolio boundary indexes prevent duplicate portfolio names per account and restrict a property to one portfolio group per service organization
 - Backend API contracts are documented for property portfolio management and property crew assignment workflows
+- Backend property portfolio routes can create portfolios, link properties to portfolios, and list account portfolios within active organization memberships
 - Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
 - Portfolio coverage summary reports total, grouped, and ungrouped yard counts
 
 Next implementation work:
 
-- Add property portfolio/group models for individual owners, property management companies, HOAs, and commercial clients
-- Link yards/properties to portfolios so one person or management company can organize many yards
-- Wire portfolio and crew-assignment API routes after authentication and access boundaries are planned
+- Wire active crew-assignment API routes with the same organization boundaries
+- Add authenticated customer-scoped portfolio and property reads
+- Add property onboarding fields and validation for service address, access notes, billing, and notification details
 
 ## Planned
 

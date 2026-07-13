@@ -146,6 +146,9 @@ Current backend endpoints include:
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
+| GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
+| POST | `/property-portfolios` | Create a property portfolio for a customer account |
+| POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
 | GET | `/completion-reports` | List organization-scoped completion report snapshots for manager review; accepts optional `status`, `readiness`, `readiness_blocker`, `crew_id`, `customer`, `property`, `scheduled_from`, and `scheduled_to` filters |
 | POST | `/completion-reports/{report_id}/review` | Move a submitted completion report into manager review |
@@ -183,7 +186,7 @@ Current backend endpoints include:
 | GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
 | POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
-The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
+The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 
 ## Data and Persistence
 
@@ -199,6 +202,7 @@ The project currently includes migrations for:
 - Day-plan amendment requests and bid-review metadata
 - Project bids and ordered bid line items
 - Project-bid conversions and scheduled job add-ons
+- Property portfolios and portfolio-to-property membership
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Route-planning seed data
 

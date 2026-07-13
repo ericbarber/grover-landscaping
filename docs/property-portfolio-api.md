@@ -1,6 +1,6 @@
 # Property Portfolio API Contract
 
-This document defines the API contract for property portfolio management before route handlers are added.
+This document defines the implemented API contract for property portfolio management.
 
 ## Purpose
 
@@ -10,10 +10,10 @@ Property portfolios group yards for a customer account, property management comp
 
 - `property_portfolios` stores portfolio records.
 - `portfolio_property_links` stores membership between a portfolio and a yard/property.
-- `PropertyPortfolio` and `PortfolioPropertyLink` provide backend domain response shapes.
-- `CreatePropertyPortfolioRequest` validates future create-portfolio payloads.
+- `PropertyPortfolioResponse` and `PortfolioPropertyLinkResponse` provide backend response shapes with `persisted` status and property counts where relevant.
+- `CreatePropertyPortfolioRequest` and `AddPropertyToPortfolioRequest` validate write payloads.
 
-## Planned endpoints
+## Endpoints
 
 ### Create portfolio
 
@@ -28,6 +28,8 @@ Required fields:
 
 Validation rules:
 
+- The caller must be a manager, organization owner, support admin, or property manager.
+- The caller must have an active membership in the requested service organization.
 - `account_id` must not be blank.
 - `organization_id` must not be blank.
 - `display_name` must not be blank.
@@ -44,6 +46,8 @@ Required fields:
 
 Validation rules:
 
+- The caller must be a manager, organization owner, support admin, or property manager.
+- The caller must have an active membership in the requested service organization.
 - `property_id` must not be blank.
 - `organization_id` must not be blank.
 - The property and portfolio must belong to the same service organization.
@@ -56,9 +60,10 @@ Validation rules:
 
 Expected behavior:
 
+- The caller must be a manager, organization owner, support admin, or property manager.
 - Return only portfolios owned by the requested account.
-- Scope results to the current service organization.
-- Include yard/property counts when available.
+- Scope results to the signed-in principal's active organization memberships.
+- Include yard/property counts.
 
 ## Guardrails
 

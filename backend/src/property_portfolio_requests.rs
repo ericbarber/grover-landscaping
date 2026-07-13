@@ -10,6 +10,12 @@ pub struct CreatePropertyPortfolioRequest {
     pub portfolio_type: String,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct AddPropertyToPortfolioRequest {
+    pub property_id: String,
+    pub organization_id: String,
+}
+
 pub fn is_valid_create_property_portfolio_request(
     request: &CreatePropertyPortfolioRequest,
 ) -> bool {
@@ -19,9 +25,16 @@ pub fn is_valid_create_property_portfolio_request(
         && is_valid_portfolio_type(&request.portfolio_type)
 }
 
+pub fn is_valid_add_property_to_portfolio_request(request: &AddPropertyToPortfolioRequest) -> bool {
+    !request.property_id.trim().is_empty() && !request.organization_id.trim().is_empty()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{is_valid_create_property_portfolio_request, CreatePropertyPortfolioRequest};
+    use super::{
+        is_valid_add_property_to_portfolio_request, is_valid_create_property_portfolio_request,
+        AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
+    };
 
     fn valid_request() -> CreatePropertyPortfolioRequest {
         CreatePropertyPortfolioRequest {
@@ -51,5 +64,22 @@ mod tests {
         request.portfolio_type = "unsupported_type".to_string();
 
         assert!(!is_valid_create_property_portfolio_request(&request));
+    }
+
+    #[test]
+    fn validates_add_property_request_fields() {
+        assert!(is_valid_add_property_to_portfolio_request(
+            &AddPropertyToPortfolioRequest {
+                property_id: "property_1001".to_string(),
+                organization_id: "org_demo_landscaping".to_string(),
+            },
+        ));
+
+        assert!(!is_valid_add_property_to_portfolio_request(
+            &AddPropertyToPortfolioRequest {
+                property_id: " ".to_string(),
+                organization_id: "org_demo_landscaping".to_string(),
+            },
+        ));
     }
 }
