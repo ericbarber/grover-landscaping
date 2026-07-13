@@ -274,6 +274,7 @@ mod tests {
         JobDetail {
             id: "job_1001".to_string(),
             organization_id: "org_demo_landscaping".to_string(),
+            assigned_crew_id: Some("crew_1001".to_string()),
             customer_name: "Sample Customer".to_string(),
             property_address: "123 Oak Street".to_string(),
             status: "completed".to_string(),

@@ -45,4 +45,4 @@ Manager review should work from persisted report snapshots so late job edits do 
 
 The manager queue endpoint returns only reports for jobs owned by organizations where the signed-in principal has an active membership. Notification history and notification recovery actions use the same active-membership boundary.
 
-`GET /completion-reports` supports server-side queue narrowing by lifecycle status, readiness, readiness blocker, customer-name text, property-address text, and inclusive scheduled-date range. Current blocker values are `any`, `checklist`, `before_photos`, and `after_photos`.
+`GET /completion-reports` supports server-side queue narrowing by lifecycle status, readiness, readiness blocker, assigned crew ID, customer-name text, property-address text, and inclusive scheduled-date range. Current blocker values are `any`, `checklist`, `before_photos`, and `after_photos`.

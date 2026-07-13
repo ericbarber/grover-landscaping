@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 pub struct JobSummary {
     pub id: String,
     pub organization_id: String,
+    pub assigned_crew_id: Option<String>,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,
@@ -32,6 +33,7 @@ pub struct JobSummary {
 pub struct JobDetail {
     pub id: String,
     pub organization_id: String,
+    pub assigned_crew_id: Option<String>,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,

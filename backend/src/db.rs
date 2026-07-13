@@ -407,6 +407,7 @@ fn seed_job_summaries() -> Vec<JobSummary> {
         JobSummary {
             id: "job_1001".to_string(),
             organization_id: "org_demo_landscaping".to_string(),
+            assigned_crew_id: Some("crew_1001".to_string()),
             customer_name: "Sample Customer".to_string(),
             property_address: "123 Oak Street".to_string(),
             status: "scheduled".to_string(),
@@ -419,6 +420,7 @@ fn seed_job_summaries() -> Vec<JobSummary> {
         JobSummary {
             id: "job_1002".to_string(),
             organization_id: "org_demo_landscaping".to_string(),
+            assigned_crew_id: Some("crew_1001".to_string()),
             customer_name: "Demo Property Owner".to_string(),
             property_address: "456 Maple Avenue".to_string(),
             status: "in_progress".to_string(),
@@ -438,6 +440,7 @@ fn seed_job_detail(id: String) -> JobDetail {
         .unwrap_or(JobSummary {
             id,
             organization_id: "org_demo_landscaping".to_string(),
+            assigned_crew_id: Some("crew_1001".to_string()),
             customer_name: "Sample Customer".to_string(),
             property_address: "123 Oak Street".to_string(),
             status: "scheduled".to_string(),
@@ -454,6 +457,7 @@ fn seed_job_detail(id: String) -> JobDetail {
     JobDetail {
         id: summary.id,
         organization_id: summary.organization_id,
+        assigned_crew_id: summary.assigned_crew_id,
         customer_name: summary.customer_name,
         property_address: summary.property_address,
         status: summary.status,

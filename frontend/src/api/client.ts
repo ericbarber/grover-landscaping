@@ -11,6 +11,7 @@ import { authenticatedFetch } from './authenticatedFetch';
 interface ApiJobSummary {
   id: string;
   organization_id?: string;
+  assigned_crew_id?: string | null;
   customer_name: string;
   property_address: string;
   status: YardCareJob['status'];
@@ -122,6 +123,7 @@ export interface FetchCompletionReportsOptions {
   status?: CompletionReportListStatusFilter;
   readiness?: CompletionReportListReadinessFilter;
   readinessBlocker?: CompletionReportListReadinessBlockerFilter;
+  crewId?: string;
   customer?: string;
   property?: string;
   scheduledFrom?: string;
@@ -442,6 +444,10 @@ export function completionReportsPath(options: FetchCompletionReportsOptions = {
 
   if (options.readinessBlocker && options.readinessBlocker !== 'all') {
     query.set('readiness_blocker', options.readinessBlocker);
+  }
+
+  if (options.crewId) {
+    query.set('crew_id', options.crewId);
   }
 
   if (options.customer) {

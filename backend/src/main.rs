@@ -84,6 +84,7 @@ struct HealthResponse {
 pub struct JobSummary {
     pub id: String,
     pub organization_id: String,
+    pub assigned_crew_id: Option<String>,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,
@@ -98,6 +99,7 @@ pub struct JobSummary {
 pub struct JobDetail {
     pub id: String,
     pub organization_id: String,
+    pub assigned_crew_id: Option<String>,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,
@@ -161,6 +163,7 @@ struct CompletionReportListQuery {
     status: Option<String>,
     readiness: Option<String>,
     readiness_blocker: Option<String>,
+    crew_id: Option<String>,
     customer: Option<String>,
     property: Option<String>,
     scheduled_from: Option<String>,
@@ -697,6 +700,7 @@ fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> R
         }
     }
 
+    validate_completion_report_text_filter(query.crew_id.as_deref(), "crew_id")?;
     validate_completion_report_text_filter(query.customer.as_deref(), "customer")?;
     validate_completion_report_text_filter(query.property.as_deref(), "property")?;
     validate_completion_report_date_filter(query.scheduled_from.as_deref(), "scheduled_from")?;
@@ -800,6 +804,12 @@ fn completion_report_matches_operational_filters(
         }
     }
 
+    if let Some(crew_id) = normalized_completion_report_exact_filter(query.crew_id.as_deref()) {
+        if report.job.assigned_crew_id.as_deref() != Some(crew_id.as_str()) {
+            return false;
+        }
+    }
+
     if !completion_report_matches_readiness_blocker_filter(report, query) {
         return false;
     }
@@ -838,6 +848,13 @@ fn normalized_completion_report_text_filter(value: Option<&str>) -> Option<Strin
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(str::to_lowercase)
+}
+
+fn normalized_completion_report_exact_filter(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
 }
 
 async fn list_notification_history(
@@ -2194,6 +2211,51 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_crew_id() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?crew_id=crew_1001")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json.as_array().unwrap().len(), 2);
+        assert!(json
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|report| report["job"]["assigned_crew_id"] == "crew_1001"));
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_out_other_crews() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?crew_id=crew_other")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
     async fn completion_report_list_endpoint_filters_by_customer_property_and_date() {
         let response = seed_app()
             .oneshot(
@@ -2243,6 +2305,25 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/completion-reports?readiness_blocker=account")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_completion_report_filter");
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_rejects_blank_crew_filters() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?crew_id=%20%20")
                     .body(Body::empty())
                     .unwrap(),
             )

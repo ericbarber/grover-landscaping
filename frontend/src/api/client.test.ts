@@ -25,6 +25,9 @@ describe('core API client mapping', () => {
     expect(completionReportsPath({ readinessBlocker: 'before_photos' })).toBe(
       '/completion-reports?readiness_blocker=before_photos',
     );
+    expect(completionReportsPath({ crewId: 'crew_1001' })).toBe(
+      '/completion-reports?crew_id=crew_1001',
+    );
     expect(completionReportsPath({
       customer: 'Demo Owner',
       property: 'Maple',

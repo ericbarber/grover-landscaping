@@ -6,7 +6,7 @@ use sqlx::{PgPool, Row};
 
 pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
     let rows = sqlx::query(
-        "SELECT id, organization_id, customer_name, property_address, status, scheduled_date, before_photos, after_photos, checklist_items, completed_checklist_items FROM service_jobs ORDER BY scheduled_date ASC, id ASC",
+        "SELECT id, organization_id, assigned_crew_id, customer_name, property_address, status, scheduled_date, before_photos, after_photos, checklist_items, completed_checklist_items FROM service_jobs ORDER BY scheduled_date ASC, id ASC",
     )
     .fetch_all(pool)
     .await?;
@@ -16,6 +16,7 @@ pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
         .map(|row| JobSummary {
             id: row.get("id"),
             organization_id: row.get("organization_id"),
+            assigned_crew_id: row.get("assigned_crew_id"),
             customer_name: row.get("customer_name"),
             property_address: row.get("property_address"),
             status: row.get("status"),
@@ -30,7 +31,7 @@ pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
 
 pub async fn get_job(pool: &PgPool, id: &str) -> Result<Option<JobDetail>, sqlx::Error> {
     let Some(row) = sqlx::query(
-        "SELECT id, organization_id, customer_name, property_address, status, scheduled_date, before_photos, after_photos, checklist_items, completed_checklist_items FROM service_jobs WHERE id = $1",
+        "SELECT id, organization_id, assigned_crew_id, customer_name, property_address, status, scheduled_date, before_photos, after_photos, checklist_items, completed_checklist_items FROM service_jobs WHERE id = $1",
     )
     .bind(id)
     .fetch_optional(pool)
@@ -49,6 +50,7 @@ pub async fn get_job(pool: &PgPool, id: &str) -> Result<Option<JobDetail>, sqlx:
     Ok(Some(JobDetail {
         id: row.get("id"),
         organization_id: row.get("organization_id"),
+        assigned_crew_id: row.get("assigned_crew_id"),
         customer_name: row.get("customer_name"),
         property_address: row.get("property_address"),
         status: row.get("status"),
