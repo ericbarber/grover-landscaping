@@ -4,12 +4,16 @@ import {
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
+  photoProcessingHistoryPath,
+  photoProcessingResolvePath,
+  photoProcessingRetryPath,
   propertyCompletionReportsPath,
   toCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toJobAddOn,
   toNotificationHistoryItem,
+  toPhotoProcessingHistoryItem,
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
@@ -49,6 +53,21 @@ describe('core API client mapping', () => {
     })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
     expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
     expect(notificationResolvePath('notification/1001')).toBe('/notifications/notification%2F1001/resolve');
+  });
+
+  it('builds photo processing recovery paths with optional filters', () => {
+    expect(photoProcessingHistoryPath()).toBe('/photo-processing-jobs');
+    expect(photoProcessingHistoryPath({
+      taskType: 'thumbnail_generation',
+      status: 'dead_letter',
+      limit: 10,
+    })).toBe('/photo-processing-jobs?task_type=thumbnail_generation&status=dead_letter&limit=10');
+    expect(photoProcessingRetryPath('photo/processing/1001')).toBe(
+      '/photo-processing-jobs/photo%2Fprocessing%2F1001/retry',
+    );
+    expect(photoProcessingResolvePath('photo/processing/1001')).toBe(
+      '/photo-processing-jobs/photo%2Fprocessing%2F1001/resolve',
+    );
   });
 
   it('builds customer property completion report paths with encoded ids', () => {
@@ -275,6 +294,37 @@ describe('core API client mapping', () => {
       attemptCount: 2,
       lastError: 'provider unavailable',
       providerResponseCode: 503,
+    });
+  });
+
+  it('maps photo processing history responses', () => {
+    expect(toPhotoProcessingHistoryItem({
+      id: 'photo_processing_1001',
+      photo_id: 'photo_1001',
+      job_id: 'job_1001',
+      organization_id: 'org_demo_landscaping',
+      photo_type: 'after',
+      file_name: 'after.jpg',
+      task_type: 'thumbnail_generation',
+      status: 'dead_letter',
+      attempt_count: 5,
+      available_at: '2026-07-13 10:00:00+00',
+      last_attempt_at: '2026-07-13 09:00:00+00',
+      completed_at: null,
+      resolved_at: null,
+      last_error: 'thumbnail_generation_failed',
+      failure_reason: 'thumbnail_generation_unavailable',
+      resolution_note: null,
+      created_at: '2026-07-13 08:00:00+00',
+      updated_at: '2026-07-13 09:00:00+00',
+    })).toMatchObject({
+      id: 'photo_processing_1001',
+      photoId: 'photo_1001',
+      jobId: 'job_1001',
+      fileName: 'after.jpg',
+      status: 'dead_letter',
+      attemptCount: 5,
+      lastError: 'thumbnail_generation_failed',
     });
   });
 

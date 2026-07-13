@@ -10,12 +10,15 @@ import {
   fetchJobAddOns,
   fetchJobs,
   fetchNotificationHistory,
+  fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
   readPhotoUploadMetadata,
   resolveNotificationDelivery,
+  resolvePhotoProcessingJob,
   retryNotificationDelivery,
+  retryPhotoProcessingJob,
   resubmitCompletionReport,
   startJob,
   startCompletionReportReview,
@@ -25,6 +28,7 @@ import {
   type JobDetail,
   type JobAddOn,
   type NotificationHistoryItem,
+  type PhotoProcessingHistoryItem,
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
 } from './api/client';
@@ -39,6 +43,10 @@ import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
 } from './components/ManagerNotificationHistoryPanel';
+import {
+  ManagerPhotoProcessingRecoveryPanel,
+  type PhotoProcessingRecoveryFilters,
+} from './components/ManagerPhotoProcessingRecoveryPanel';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
@@ -781,6 +789,8 @@ export function App() {
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
+  const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
+  const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
@@ -864,6 +874,33 @@ export function App() {
       })
       .finally(() => {
         if (isMounted) setIsLoadingPropertyCompletionReports(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingPhotoProcessingHistory(true);
+
+    fetchPhotoProcessingHistory({ status: 'failed', limit: 25 })
+      .then((items) => {
+        if (isMounted) setPhotoProcessingHistory(items);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setPhotoProcessingHistory([]);
+        recordManagerActivity({
+          title: 'Photo processing history unavailable',
+          message: 'Photo processing recovery history could not be loaded from the API.',
+          tone: 'warning',
+          source: 'sync',
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingPhotoProcessingHistory(false);
       });
 
     return () => {
@@ -1295,6 +1332,93 @@ export function App() {
     }
   }
 
+  async function refreshPhotoProcessingHistory(filters: PhotoProcessingRecoveryFilters) {
+    setIsLoadingPhotoProcessingHistory(true);
+    try {
+      const items = await fetchPhotoProcessingHistory({
+        taskType: 'thumbnail_generation',
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      });
+      setPhotoProcessingHistory(items);
+      setStatusMessage('Photo processing recovery queue refreshed.');
+    } catch {
+      setStatusMessage('Could not refresh photo processing history. Check the API connection and try again.');
+      recordManagerActivity({
+        title: 'Photo processing refresh failed',
+        message: 'Manager photo processing recovery history could not refresh from the backend.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingPhotoProcessingHistory(false);
+    }
+  }
+
+  async function handleRetryPhotoProcessing(
+    processingJobId: string,
+    filters: PhotoProcessingRecoveryFilters,
+  ) {
+    setIsLoadingPhotoProcessingHistory(true);
+    try {
+      const retried = await retryPhotoProcessingJob(processingJobId);
+      setPhotoProcessingHistory(await fetchPhotoProcessingHistory({
+        taskType: 'thumbnail_generation',
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      }));
+      setStatusMessage(`${retried.id} queued for photo processing retry.`);
+      recordManagerActivity({
+        title: 'Photo processing retry queued',
+        message: `${retried.fileName} thumbnail work was returned to the queue.`,
+        tone: 'success',
+        source: 'photo',
+      });
+    } catch {
+      setStatusMessage('Could not retry photo processing. Confirm the job is failed or needs attention.');
+      recordManagerActivity({
+        title: 'Photo processing retry failed',
+        message: 'A thumbnail processing retry could not be queued.',
+        tone: 'warning',
+        source: 'photo',
+      });
+    } finally {
+      setIsLoadingPhotoProcessingHistory(false);
+    }
+  }
+
+  async function handleResolvePhotoProcessing(
+    processingJobId: string,
+    filters: PhotoProcessingRecoveryFilters,
+  ) {
+    setIsLoadingPhotoProcessingHistory(true);
+    try {
+      const resolved = await resolvePhotoProcessingJob(processingJobId);
+      setPhotoProcessingHistory(await fetchPhotoProcessingHistory({
+        taskType: 'thumbnail_generation',
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      }));
+      setStatusMessage(`${resolved.id} marked resolved.`);
+      recordManagerActivity({
+        title: 'Photo processing resolved',
+        message: `${resolved.fileName} thumbnail work was marked resolved.`,
+        tone: 'success',
+        source: 'photo',
+      });
+    } catch {
+      setStatusMessage('Could not resolve photo processing. Confirm the job is failed or needs attention.');
+      recordManagerActivity({
+        title: 'Photo processing resolution failed',
+        message: 'A thumbnail processing job could not be marked resolved.',
+        tone: 'warning',
+        source: 'photo',
+      });
+    } finally {
+      setIsLoadingPhotoProcessingHistory(false);
+    }
+  }
+
   async function handleStartReportReview(reportId: string) {
     setCompletionReportActionStatus('Starting manager review...');
 
@@ -1546,6 +1670,15 @@ export function App() {
               onRefresh={(filters) => void refreshNotificationHistory(filters)}
               onRetry={(notificationId, filters) => void handleRetryNotificationDelivery(notificationId, filters)}
               onResolve={(notificationId, filters) => void handleResolveNotificationDelivery(notificationId, filters)}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerPhotoProcessingRecoveryPanel
+              items={photoProcessingHistory}
+              isLoading={isLoadingPhotoProcessingHistory}
+              onRefresh={(filters) => void refreshPhotoProcessingHistory(filters)}
+              onRetry={(processingJobId, filters) => void handleRetryPhotoProcessing(processingJobId, filters)}
+              onResolve={(processingJobId, filters) => void handleResolvePhotoProcessing(processingJobId, filters)}
             />
           </div>
           <div className="mt-6">

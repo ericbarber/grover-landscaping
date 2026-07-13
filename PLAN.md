@@ -343,10 +343,11 @@ Current state:
 - Upload completion enqueues durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
 - Optional background photo-processing worker claims queued thumbnail jobs, retries failures, and dead-letters exhausted work
 - Manager APIs list organization-scoped photo processing history and retry or resolve failed/dead-letter thumbnail jobs with audit events
+- Frontend manager dashboard surfaces photo processing recovery history and can retry or resolve failed/dead-letter thumbnail jobs
 
 Next implementation work:
 
-- Add a frontend manager recovery panel for failed or dead-letter photo processing jobs
+- Add production smoke coverage for photo upload completion and photo processing recovery
 
 ### Completion reports
 

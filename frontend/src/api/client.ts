@@ -314,6 +314,63 @@ export interface FetchNotificationHistoryOptions {
   limit?: number;
 }
 
+export type PhotoProcessingTaskType = 'thumbnail_generation';
+export type PhotoProcessingStatus =
+  | 'queued'
+  | 'processing'
+  | 'completed'
+  | 'failed'
+  | 'dead_letter'
+  | 'resolved';
+
+export interface ApiPhotoProcessingHistoryItem {
+  id: string;
+  photo_id: string;
+  job_id: string;
+  organization_id: string;
+  photo_type: PhotoUploadTicket['photoType'];
+  file_name: string;
+  task_type: PhotoProcessingTaskType;
+  status: PhotoProcessingStatus;
+  attempt_count: number;
+  available_at: string;
+  last_attempt_at?: string | null;
+  completed_at?: string | null;
+  resolved_at?: string | null;
+  last_error?: string | null;
+  failure_reason?: string | null;
+  resolution_note?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PhotoProcessingHistoryItem {
+  id: string;
+  photoId: string;
+  jobId: string;
+  organizationId: string;
+  photoType: PhotoUploadTicket['photoType'];
+  fileName: string;
+  taskType: PhotoProcessingTaskType;
+  status: PhotoProcessingStatus;
+  attemptCount: number;
+  availableAt: string;
+  lastAttemptAt: string | null;
+  completedAt: string | null;
+  resolvedAt: string | null;
+  lastError: string | null;
+  failureReason: string | null;
+  resolutionNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FetchPhotoProcessingHistoryOptions {
+  taskType?: PhotoProcessingTaskType;
+  status?: PhotoProcessingStatus;
+  limit?: number;
+}
+
 function toJob(apiJob: ApiJobSummary): YardCareJob {
   return {
     id: apiJob.id,
@@ -469,6 +526,29 @@ export function toNotificationHistoryItem(apiItem: ApiNotificationHistoryItem): 
     lastError: apiItem.last_error ?? null,
     providerResponseCode: apiItem.provider_response_code ?? null,
     providerMessageId: apiItem.provider_message_id ?? null,
+    createdAt: apiItem.created_at,
+    updatedAt: apiItem.updated_at,
+  };
+}
+
+export function toPhotoProcessingHistoryItem(apiItem: ApiPhotoProcessingHistoryItem): PhotoProcessingHistoryItem {
+  return {
+    id: apiItem.id,
+    photoId: apiItem.photo_id,
+    jobId: apiItem.job_id,
+    organizationId: apiItem.organization_id,
+    photoType: apiItem.photo_type,
+    fileName: apiItem.file_name,
+    taskType: apiItem.task_type,
+    status: apiItem.status,
+    attemptCount: apiItem.attempt_count,
+    availableAt: apiItem.available_at,
+    lastAttemptAt: apiItem.last_attempt_at ?? null,
+    completedAt: apiItem.completed_at ?? null,
+    resolvedAt: apiItem.resolved_at ?? null,
+    lastError: apiItem.last_error ?? null,
+    failureReason: apiItem.failure_reason ?? null,
+    resolutionNote: apiItem.resolution_note ?? null,
     createdAt: apiItem.created_at,
     updatedAt: apiItem.updated_at,
   };
@@ -637,6 +717,61 @@ export async function resolveNotificationDelivery(notificationId: string): Promi
     },
   );
   return toNotificationHistoryItem(notification);
+}
+
+export function photoProcessingHistoryPath(options: FetchPhotoProcessingHistoryOptions = {}): string {
+  const query = new URLSearchParams();
+
+  if (options.taskType) {
+    query.set('task_type', options.taskType);
+  }
+
+  if (options.status) {
+    query.set('status', options.status);
+  }
+
+  if (options.limit) {
+    query.set('limit', String(options.limit));
+  }
+
+  const queryString = query.toString();
+  return queryString ? `/photo-processing-jobs?${queryString}` : '/photo-processing-jobs';
+}
+
+export async function fetchPhotoProcessingHistory(
+  options: FetchPhotoProcessingHistoryOptions = {},
+): Promise<PhotoProcessingHistoryItem[]> {
+  const jobs = await request<ApiPhotoProcessingHistoryItem[]>(photoProcessingHistoryPath(options));
+  return jobs.map(toPhotoProcessingHistoryItem);
+}
+
+export function photoProcessingRetryPath(photoProcessingJobId: string): string {
+  return `/photo-processing-jobs/${encodeURIComponent(photoProcessingJobId)}/retry`;
+}
+
+export function photoProcessingResolvePath(photoProcessingJobId: string): string {
+  return `/photo-processing-jobs/${encodeURIComponent(photoProcessingJobId)}/resolve`;
+}
+
+export async function retryPhotoProcessingJob(photoProcessingJobId: string): Promise<PhotoProcessingHistoryItem> {
+  const job = await request<ApiPhotoProcessingHistoryItem>(
+    photoProcessingRetryPath(photoProcessingJobId),
+    {
+      method: 'POST',
+    },
+  );
+  return toPhotoProcessingHistoryItem(job);
+}
+
+export async function resolvePhotoProcessingJob(photoProcessingJobId: string): Promise<PhotoProcessingHistoryItem> {
+  const job = await request<ApiPhotoProcessingHistoryItem>(
+    photoProcessingResolvePath(photoProcessingJobId),
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason: 'Manually resolved from manager dashboard' }),
+    },
+  );
+  return toPhotoProcessingHistoryItem(job);
 }
 
 export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
