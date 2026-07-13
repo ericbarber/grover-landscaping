@@ -29,6 +29,9 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     let ungrouped_property_id = "property_portfolio_ungrouped";
     let grouped_job_id = "job_portfolio_test";
     let ungrouped_job_id = "job_portfolio_ungrouped";
+    let other_account_id = "acct_other_portfolio_test";
+    let other_portfolio_id = "portfolio_other_account_cross_link_test";
+    let other_portfolio_link_id = "portfolio_link_other_account_cross_link_test";
     let display_name = "Portfolio Persistence Test";
     let actor_user_id = "user_property_portfolio_audit";
     let portfolio_id =
@@ -36,9 +39,11 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     let portfolio_link_id =
         "portfolio_link_portfolio_acct_portfolio_test_org_demo_landscaping_portfolio_persistence_test_property_portfolio_test";
 
-    sqlx::query("DELETE FROM portfolio_property_links WHERE property_id = $1 OR portfolio_id = $2")
-        .bind(property_id)
-        .bind(portfolio_id)
+    sqlx::query(
+        "DELETE FROM portfolio_property_links WHERE property_id = ANY($1) OR portfolio_id = ANY($2)",
+    )
+        .bind(vec![property_id, ungrouped_property_id])
+        .bind(vec![portfolio_id, other_portfolio_id])
         .execute(&pool)
         .await
         .expect("test portfolio links should reset");
@@ -47,8 +52,8 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         .execute(&pool)
         .await
         .expect("test audit rows should reset");
-    sqlx::query("DELETE FROM property_portfolios WHERE id = $1")
-        .bind(portfolio_id)
+    sqlx::query("DELETE FROM property_portfolios WHERE id = ANY($1)")
+        .bind(vec![portfolio_id, other_portfolio_id])
         .execute(&pool)
         .await
         .expect("test portfolio should reset");
@@ -57,8 +62,8 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         .execute(&pool)
         .await
         .expect("test jobs should reset");
-    sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
-        .bind(account_id)
+    sqlx::query("DELETE FROM customer_accounts WHERE id = ANY($1)")
+        .bind(vec![account_id, other_account_id])
         .execute(&pool)
         .await
         .expect("test account should reset");
@@ -79,6 +84,23 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     .execute(&pool)
     .await
     .expect("test account should be inserted");
+
+    sqlx::query(
+        r#"
+        INSERT INTO customer_accounts (
+            id,
+            customer_name,
+            billing_model,
+            payment_status,
+            service_approval_status
+        )
+        VALUES ($1, 'Other Portfolio Customer', 'per_job', 'pending', 'approved')
+        "#,
+    )
+    .bind(other_account_id)
+    .execute(&pool)
+    .await
+    .expect("other test account should be inserted");
 
     for (job_id, address) in [
         (grouped_job_id, "321 Grouped Oak Road"),
@@ -156,6 +178,44 @@ async fn repository_persists_lists_and_links_property_portfolios() {
 
     assert_eq!(listed.property_count, 1);
     assert!(listed.persisted);
+
+    sqlx::query(
+        r#"
+        INSERT INTO property_portfolios (
+            id,
+            account_id,
+            organization_id,
+            display_name,
+            portfolio_type
+        )
+        VALUES ($1, $2, $3, 'Other Account Portfolio', 'individual_owner')
+        "#,
+    )
+    .bind(other_portfolio_id)
+    .bind(other_account_id)
+    .bind(organization_id)
+    .execute(&pool)
+    .await
+    .expect("other account portfolio should be inserted");
+
+    sqlx::query(
+        r#"
+        INSERT INTO portfolio_property_links (
+            id,
+            portfolio_id,
+            property_id,
+            organization_id
+        )
+        VALUES ($1, $2, $3, $4)
+        "#,
+    )
+    .bind(other_portfolio_link_id)
+    .bind(other_portfolio_id)
+    .bind(ungrouped_property_id)
+    .bind(organization_id)
+    .execute(&pool)
+    .await
+    .expect("wrong-account property link should be inserted");
 
     let customer_read = repository
         .customer_portfolio_read(account_id, &[organization_id.to_string()])

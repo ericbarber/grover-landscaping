@@ -530,11 +530,15 @@ async fn customer_portfolio_read_for_account(
             property.organization_id,
             property.property_address,
             property.last_service_date,
-            link.portfolio_id
+            linked_portfolio.id AS portfolio_id
         FROM job_properties property
         LEFT JOIN portfolio_property_links link
           ON link.property_id = property.property_id
          AND link.organization_id = property.organization_id
+        LEFT JOIN property_portfolios linked_portfolio
+          ON linked_portfolio.id = link.portfolio_id
+         AND linked_portfolio.organization_id = property.organization_id
+         AND linked_portfolio.account_id = property.account_id
         ORDER BY property.property_address ASC, property.property_id ASC
         "#,
     )

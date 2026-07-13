@@ -78,6 +78,7 @@ Expected behavior:
 - Return portfolio groups for the requested account.
 - Return properties inside each portfolio group.
 - Return customer-owned properties without a portfolio link in `ungrouped_properties`.
+- Ignore portfolio links whose portfolio belongs to a different customer account so customer-owned properties remain visible as ungrouped.
 - Derive current property reads from persisted service jobs and completion-report property identifiers when a dedicated property record is not available yet.
 - Reading the endpoint must not change portfolio membership, customer ownership, crew assignment, route state, report status, or job state.
 
@@ -86,5 +87,6 @@ Expected behavior:
 - Crews service properties; they do not own portfolios.
 - Customers or property-management accounts own portfolios.
 - Properties stay attached to their customer account and service organization.
+- A link to a portfolio from another customer account must not remove a property from the owning customer's read model.
 - Crew assignment history should remain separate from portfolio membership history.
 - Persisted portfolio grouping changes are auditable by actor, organization, event kind, target id, and timestamp.

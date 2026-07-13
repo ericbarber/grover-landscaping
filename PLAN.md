@@ -302,11 +302,12 @@ Current state:
 - Authenticated current-user access summary reads record organization-scoped `login` audit events
 - Hosted pilot runbook documents Cognito provisioning, first-owner creation, PostgreSQL membership binding, validation, and rollback notes
 - Cognito hosted-pilot validation script checks Terraform outputs and optional deployed `/auth/config` values
+- Customer property portfolio reads ignore wrong-account portfolio links so scoped customer yards remain visible as ungrouped properties
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
-- Continue tenant-aware resource boundaries for properties and shared customer reads
+- Continue tenant-aware resource boundaries for remaining shared customer reads
 
 ### Photo evidence flow
 
