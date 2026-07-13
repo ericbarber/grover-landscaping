@@ -289,7 +289,7 @@ Current state:
 - Runtime authentication configuration is served from `GET /auth/config`
 - Local development can explicitly use disabled authentication outside production
 - Development and production Cognito infrastructure is declared in Terraform
-- Delivered completion report approvals record organization-scoped `report_delivered` audit events
+- Persisted completion report review, change request, resubmit, and delivery transitions record organization-scoped audit events
 - Crews carry organization ownership, and day-plan, amendment, stop, and manager bid APIs enforce active organization membership before using persisted or local fallback data
 - Job list/detail, job account, job report, add-on, photo, and completion-report action routes enforce active organization membership before returning or mutating job-scoped data
 - Property portfolio create/list/link APIs are wired to PostgreSQL and enforce active organization membership before grouping customer yards
@@ -306,7 +306,6 @@ Next implementation work:
 - Provision the Cognito environment and create the first organization-owner account
 - Continue tenant-aware resource boundaries for properties and shared customer reads
 - Add first-user runbooks and Cognito provisioning validation for hosted pilots
-- Record audit events for remaining approval changes
 
 ### Photo evidence flow
 

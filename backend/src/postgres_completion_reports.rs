@@ -158,7 +158,13 @@ pub async fn start_completion_report_review(
 ) -> Result<CompletionReportActionResult, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let current = sqlx::query(
-        "SELECT job_id, report_status FROM job_completion_reports WHERE id = $1 FOR UPDATE",
+        r#"
+        SELECT report.job_id, job.organization_id, report.report_status
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
+        FOR UPDATE
+        "#,
     )
     .bind(report_id)
     .fetch_optional(&mut *transaction)
@@ -168,6 +174,7 @@ pub async fn start_completion_report_review(
         return Ok(CompletionReportActionResult::NotFound);
     };
     let job_id: String = current.get("job_id");
+    let organization_id: String = current.get("organization_id");
     let current_status: String = current.get("report_status");
 
     if current_status != "submitted" {
@@ -207,6 +214,15 @@ pub async fn start_completion_report_review(
     .execute(&mut *transaction)
     .await?;
 
+    insert_report_audit_event(
+        &mut transaction,
+        report_id,
+        &organization_id,
+        reviewer_user_id,
+        "report_review_started",
+    )
+    .await?;
+
     transaction.commit().await?;
 
     Ok(CompletionReportActionResult::Updated(
@@ -228,7 +244,13 @@ pub async fn request_completion_report_changes(
 ) -> Result<CompletionReportActionResult, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let current = sqlx::query(
-        "SELECT job_id, report_status FROM job_completion_reports WHERE id = $1 FOR UPDATE",
+        r#"
+        SELECT report.job_id, job.organization_id, report.report_status
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
+        FOR UPDATE
+        "#,
     )
     .bind(report_id)
     .fetch_optional(&mut *transaction)
@@ -238,6 +260,7 @@ pub async fn request_completion_report_changes(
         return Ok(CompletionReportActionResult::NotFound);
     };
     let job_id: String = current.get("job_id");
+    let organization_id: String = current.get("organization_id");
     let current_status: String = current.get("report_status");
 
     if current_status != "in_review" {
@@ -266,6 +289,15 @@ pub async fn request_completion_report_changes(
     )
     .await?;
 
+    insert_report_audit_event(
+        &mut transaction,
+        report_id,
+        &organization_id,
+        reviewer_user_id,
+        "report_changes_requested",
+    )
+    .await?;
+
     transaction.commit().await?;
 
     Ok(CompletionReportActionResult::Updated(
@@ -288,14 +320,16 @@ pub async fn resubmit_completion_report(
     let current = sqlx::query(
         r#"
         SELECT
-            job_id,
-            report_status,
-            ready_for_customer,
-            checklist_progress,
-            before_photos,
-            after_photos
-        FROM job_completion_reports
-        WHERE id = $1
+            report.job_id,
+            job.organization_id,
+            report.report_status,
+            report.ready_for_customer,
+            report.checklist_progress,
+            report.before_photos,
+            report.after_photos
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
         FOR UPDATE
         "#,
     )
@@ -307,6 +341,7 @@ pub async fn resubmit_completion_report(
         return Ok(CompletionReportActionResult::NotFound);
     };
     let job_id: String = current.get("job_id");
+    let organization_id: String = current.get("organization_id");
     let current_status: String = current.get("report_status");
     let ready_for_customer: bool = current.get("ready_for_customer");
     let checklist_progress: i32 = current.get("checklist_progress");
@@ -344,6 +379,15 @@ pub async fn resubmit_completion_report(
         "submitted",
         submitter_user_id,
         None,
+    )
+    .await?;
+
+    insert_report_audit_event(
+        &mut transaction,
+        report_id,
+        &organization_id,
+        submitter_user_id,
+        "report_resubmitted",
     )
     .await?;
 
@@ -444,11 +488,12 @@ pub async fn deliver_completion_report(
     )
     .await?;
 
-    insert_report_delivery_audit_event(
+    insert_report_audit_event(
         &mut transaction,
         report_id,
         &organization_id,
         delivery_user_id,
+        "report_delivered",
     )
     .await?;
 
@@ -648,11 +693,12 @@ fn access_audit_id(target_id: &str, event_kind: &str) -> String {
     format!("audit_{event_kind}_{target_id}_{nonce}")
 }
 
-async fn insert_report_delivery_audit_event(
+async fn insert_report_audit_event(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     report_id: &str,
     organization_id: &str,
     actor_user_id: &str,
+    event_kind: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
@@ -664,12 +710,13 @@ async fn insert_report_delivery_audit_event(
             target_id,
             occurred_at
         )
-        VALUES ($1, $2, $3, 'report_delivered', $4, now())
+        VALUES ($1, $2, $3, $4, $5, now())
         "#,
     )
-    .bind(access_audit_id(report_id, "report_delivered"))
+    .bind(access_audit_id(report_id, event_kind))
     .bind(actor_user_id)
     .bind(organization_id)
+    .bind(event_kind)
     .bind(report_id)
     .execute(&mut **transaction)
     .await?;

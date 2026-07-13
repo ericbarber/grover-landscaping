@@ -311,6 +311,46 @@ async fn repository_persists_completion_report_state() {
     assert_eq!(audit_row.get::<String, _>("target_id"), "report_job_1001");
     assert!(audit_row.get::<String, _>("occurred_at").contains("20"));
 
+    let report_audit_counts = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT string_agg(event_kind || ':' || audit_count, ',' ORDER BY event_kind)
+        FROM (
+            SELECT event_kind, COUNT(*)::text AS audit_count
+            FROM access_audit_events
+            WHERE target_id = $1
+              AND event_kind IN (
+                'report_review_started',
+                'report_changes_requested',
+                'report_resubmitted',
+                'report_delivered'
+              )
+            GROUP BY event_kind
+        ) report_audits
+        "#,
+    )
+    .bind("report_job_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("report approval audit counts should be queryable");
+    assert_eq!(
+        report_audit_counts,
+        "report_changes_requested:1,report_delivered:1,report_resubmitted:1,report_review_started:2"
+    );
+
+    let report_resubmit_actor = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT actor_user_id
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind = 'report_resubmitted'
+        "#,
+    )
+    .bind("report_job_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("report resubmit audit actor should be queryable");
+    assert_eq!(report_resubmit_actor, "crew_1001");
+
     let history_count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM job_completion_report_status_history WHERE completion_report_id = $1 AND from_status = 'submitted' AND to_status = 'in_review'",
     )
