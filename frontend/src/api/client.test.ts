@@ -4,11 +4,13 @@ import {
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
+  propertyCompletionReportsPath,
   toCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toJobAddOn,
   toNotificationHistoryItem,
+  toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
 } from './client';
@@ -47,6 +49,11 @@ describe('core API client mapping', () => {
     })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
     expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
     expect(notificationResolvePath('notification/1001')).toBe('/notifications/notification%2F1001/resolve');
+  });
+
+  it('builds customer property completion report paths with encoded ids', () => {
+    expect(propertyCompletionReportsPath('property_1001')).toBe('/properties/property_1001/completion-reports');
+    expect(propertyCompletionReportsPath('property/1001')).toBe('/properties/property%2F1001/completion-reports');
   });
 
   it('maps completion report responses with attached photo evidence', () => {
@@ -209,6 +216,28 @@ describe('core API client mapping', () => {
       channel: 'email',
       recipient: 'customer@example.com',
       deliveryStatus: 'queued',
+      shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
+    });
+  });
+
+  it('maps customer property completion report summaries', () => {
+    expect(toPropertyCompletionReportSummary({
+      report_id: 'report_job_1001',
+      job_id: 'job_1001',
+      property_id: 'property_1001',
+      organization_id: 'org_demo_landscaping',
+      customer_name: 'Sample Customer',
+      property_address: '123 Oak Street',
+      delivered_at: '2026-07-13 10:00:00+00',
+      share_url: '/report-view/share_report_job_1001',
+    })).toEqual({
+      reportId: 'report_job_1001',
+      jobId: 'job_1001',
+      propertyId: 'property_1001',
+      organizationId: 'org_demo_landscaping',
+      customerName: 'Sample Customer',
+      propertyAddress: '123 Oak Street',
+      deliveredAt: '2026-07-13 10:00:00+00',
       shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
     });
   });

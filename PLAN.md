@@ -304,6 +304,7 @@ Current state:
 - Cognito hosted-pilot validation script checks Terraform outputs and optional deployed `/auth/config` values
 - Customer property portfolio reads ignore wrong-account portfolio links so scoped customer yards remain visible as ungrouped properties
 - Property completion-report reads return delivered reports and share links within active customer/manager organization scopes
+- Customer portal preview loads delivered property report history from the authenticated property completion-report endpoint
 
 Next implementation work:
 

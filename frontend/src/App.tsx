@@ -10,6 +10,7 @@ import {
   fetchJobAddOns,
   fetchJobs,
   fetchNotificationHistory,
+  fetchPropertyCompletionReports,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
   resolveNotificationDelivery,
@@ -24,6 +25,7 @@ import {
   type JobAddOn,
   type NotificationHistoryItem,
   type PhotoUploadTicket,
+  type PropertyCompletionReportSummary,
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -340,15 +342,26 @@ function CustomerPortalPreviewPanel({
   customer,
   properties,
   workSummaries,
+  completionReportsByProperty,
+  isLoadingReportHistory,
+  hasReportHistoryError,
 }: {
   customer: CustomerAccountProfile;
   properties: CustomerPropertyProfile[];
   workSummaries: CustomerPortalWorkSummary[];
+  completionReportsByProperty: Record<string, PropertyCompletionReportSummary[]>;
+  isLoadingReportHistory: boolean;
+  hasReportHistoryError: boolean;
 }) {
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
+  const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
+    (total, reports) => total + reports.length,
+    0,
+  );
+  const usesLocalReportSummary = hasReportHistoryError && deliveredReportCount === 0;
   const propertyCount = getCustomerPropertyCount(visibleProperties, customer.id);
-  const reportsReadyCount = countReadyCustomerReports(visibleWorkSummaries);
+  const reportsReadyCount = usesLocalReportSummary ? countReadyCustomerReports(visibleWorkSummaries) : deliveredReportCount;
   const bidsToReviewCount = countCustomerBidsToReview(visibleWorkSummaries);
   const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
 
@@ -377,8 +390,10 @@ function CustomerPortalPreviewPanel({
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Properties</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-2xl font-bold text-slate-950">{reportsReadyCount}</p>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Reports ready</p>
+          <p className="text-2xl font-bold text-slate-950">{isLoadingReportHistory ? '...' : reportsReadyCount}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {usesLocalReportSummary ? 'Reports ready' : 'Delivered reports'}
+          </p>
         </div>
         <div className="rounded-xl bg-slate-50 p-4">
           <p className="text-2xl font-bold text-slate-950">{bidsToReviewCount}</p>
@@ -389,6 +404,7 @@ function CustomerPortalPreviewPanel({
       <div className="mt-5 space-y-3">
         {visibleProperties.map((property) => {
           const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
+          const propertyReports = completionReportsByProperty[property.id] ?? [];
 
           return (
             <article key={property.id} className="rounded-xl border border-slate-200 p-4">
@@ -409,9 +425,26 @@ function CustomerPortalPreviewPanel({
                   <span className="font-semibold text-slate-800">Work:</span> {propertyWork.length}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-800">Evidence:</span> Photos and checklist
+                  <span className="font-semibold text-slate-800">Reports:</span>{' '}
+                  {isLoadingReportHistory ? 'Loading' : propertyReports.length}
                 </p>
               </div>
+              {propertyReports.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {propertyReports.map((report) => (
+                    <a
+                      key={report.reportId}
+                      className="block rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 hover:border-emerald-300"
+                      href={report.shareUrl}
+                    >
+                      <span className="font-semibold">{report.customerName}</span>
+                      <span className="ml-2 text-xs uppercase tracking-wide text-emerald-700">
+                        Delivered {report.deliveredAt}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
               {propertyWork.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {propertyWork.map((workSummary) => (
@@ -693,6 +726,11 @@ export function App() {
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
+  const [propertyCompletionReports, setPropertyCompletionReports] = useState<
+    Record<string, PropertyCompletionReportSummary[]>
+  >({});
+  const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
+  const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -727,6 +765,53 @@ export function App() {
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
   }, [managerActivity]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const visibleProperties = filterPropertiesForCustomerPortal(
+      customerPortalPreviewProperties,
+      customerPortalPreviewCustomer,
+    );
+    setIsLoadingPropertyCompletionReports(true);
+
+    Promise.allSettled(
+      visibleProperties.map(async (property) => ({
+        propertyId: property.id,
+        reports: await fetchPropertyCompletionReports(property.id),
+      })),
+    )
+      .then((results) => {
+        if (!isMounted) return;
+
+        const hasRejectedHistory = results.some((result) => result.status === 'rejected');
+        setPropertyCompletionReports(
+          results.reduce<Record<string, PropertyCompletionReportSummary[]>>((next, result) => {
+            if (result.status === 'fulfilled') {
+              next[result.value.propertyId] = result.value.reports;
+            }
+            return next;
+          }, {}),
+        );
+        setHasPropertyCompletionReportHistoryError(hasRejectedHistory);
+
+        if (hasRejectedHistory) {
+          recordManagerActivity({
+            title: 'Customer report history unavailable',
+            message: 'Delivered property report history could not be loaded for every customer portal property.',
+            tone: 'warning',
+            source: 'sync',
+          });
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingPropertyCompletionReports(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -1335,6 +1420,9 @@ export function App() {
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
               workSummaries={customerPortalPreviewWorkSummaries}
+              completionReportsByProperty={propertyCompletionReports}
+              isLoadingReportHistory={isLoadingPropertyCompletionReports}
+              hasReportHistoryError={hasPropertyCompletionReportHistoryError}
             />
           </div>
           <div className="mt-6">

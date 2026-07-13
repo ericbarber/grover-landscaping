@@ -228,6 +228,28 @@ export interface CompletionReportDeliveryNotification {
   shareUrl: string;
 }
 
+export interface ApiPropertyCompletionReportSummary {
+  report_id: string;
+  job_id: string;
+  property_id: string;
+  organization_id: string;
+  customer_name: string;
+  property_address: string;
+  delivered_at: string;
+  share_url: string;
+}
+
+export interface PropertyCompletionReportSummary {
+  reportId: string;
+  jobId: string;
+  propertyId: string;
+  organizationId: string;
+  customerName: string;
+  propertyAddress: string;
+  deliveredAt: string;
+  shareUrl: string;
+}
+
 export type NotificationHistoryEntityType = 'project_bid' | 'completion_report';
 export type NotificationHistoryStatus =
   | 'queued'
@@ -402,6 +424,21 @@ export function toCompletionReportDeliveryNotification(
   };
 }
 
+export function toPropertyCompletionReportSummary(
+  apiReport: ApiPropertyCompletionReportSummary,
+): PropertyCompletionReportSummary {
+  return {
+    reportId: apiReport.report_id,
+    jobId: apiReport.job_id,
+    propertyId: apiReport.property_id,
+    organizationId: apiReport.organization_id,
+    customerName: apiReport.customer_name,
+    propertyAddress: apiReport.property_address,
+    deliveredAt: apiReport.delivered_at,
+    shareUrl: toBrowserUrl(apiReport.share_url),
+  };
+}
+
 export function toNotificationHistoryItem(apiItem: ApiNotificationHistoryItem): NotificationHistoryItem {
   return {
     id: apiItem.id,
@@ -520,6 +557,17 @@ export async function fetchCompletionReports(
 ): Promise<CompletionReportSnapshot[]> {
   const reports = await request<ApiCompletionReport[]>(completionReportsPath(options));
   return reports.map(toCompletionReport);
+}
+
+export function propertyCompletionReportsPath(propertyId: string): string {
+  return `/properties/${encodeURIComponent(propertyId)}/completion-reports`;
+}
+
+export async function fetchPropertyCompletionReports(
+  propertyId: string,
+): Promise<PropertyCompletionReportSummary[]> {
+  const reports = await request<ApiPropertyCompletionReportSummary[]>(propertyCompletionReportsPath(propertyId));
+  return reports.map(toPropertyCompletionReportSummary);
 }
 
 export function notificationHistoryPath(options: FetchNotificationHistoryOptions = {}): string {
