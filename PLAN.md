@@ -289,13 +289,14 @@ Current state:
 - Runtime authentication configuration is served from `GET /auth/config`
 - Local development can explicitly use disabled authentication outside production
 - Development and production Cognito infrastructure is declared in Terraform
+- Delivered completion report approvals record organization-scoped `report_delivered` audit events
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
 - Persist organization membership and tenant-aware resource boundaries
 - Add invite-based onboarding and role administration
-- Record audit events for login, role, access, and approval changes
+- Record audit events for login, role, access, bid, notification, and remaining approval changes
 
 ### Photo evidence flow
 

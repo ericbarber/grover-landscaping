@@ -27,6 +27,11 @@ async fn repository_persists_completion_report_state() {
         .execute(&pool)
         .await
         .expect("prior completion report history should be removable");
+    sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
+        .bind("report_job_1001")
+        .execute(&pool)
+        .await
+        .expect("prior completion report audit events should be removable");
     sqlx::query("DELETE FROM notification_outbox WHERE entity_type = 'completion_report' AND entity_id = $1")
         .bind("report_job_1001")
         .execute(&pool)
@@ -284,6 +289,27 @@ async fn repository_persists_completion_report_state() {
         delivered_row.get::<String, _>("delivered_by_user_id"),
         "manager_1001"
     );
+
+    let audit_row = sqlx::query(
+        r#"
+        SELECT actor_user_id, organization_id, event_kind, target_id, occurred_at::text AS occurred_at
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind = 'report_delivered'
+        "#,
+    )
+    .bind("report_job_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("delivery audit event should be recorded");
+    assert_eq!(audit_row.get::<String, _>("actor_user_id"), "manager_1001");
+    assert_eq!(
+        audit_row.get::<String, _>("organization_id"),
+        "org_demo_landscaping"
+    );
+    assert_eq!(audit_row.get::<String, _>("event_kind"), "report_delivered");
+    assert_eq!(audit_row.get::<String, _>("target_id"), "report_job_1001");
+    assert!(audit_row.get::<String, _>("occurred_at").contains("20"));
 
     let history_count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM job_completion_report_status_history WHERE completion_report_id = $1 AND from_status = 'submitted' AND to_status = 'in_review'",

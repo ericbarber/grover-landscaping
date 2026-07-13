@@ -168,17 +168,18 @@ Conversion locks the bid row and uses unique bid and line-item constraints, so r
 
 Route workload reads add the source amendment's service duration once after conversion. Bid line-item quantity does not multiply route time because line items may separately represent labor, materials, or pricing details for the same requested service.
 
-## audit_events
+## access_audit_events
 
-Suggested fields:
+Implemented fields:
 
 ```text
 id
-company_id
 actor_user_id
-entity_type
-entity_id
-event_type
-event_payload
+organization_id
+event_kind
+target_id
+occurred_at
 created_at
 ```
+
+Current `event_kind` values include login and access events plus business-sensitive changes such as `bid_approved` and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID.

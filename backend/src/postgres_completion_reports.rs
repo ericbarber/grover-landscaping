@@ -369,16 +369,18 @@ pub async fn deliver_completion_report(
     let current = sqlx::query(
         r#"
         SELECT
-            job_id,
-            report_status,
-            ready_for_customer,
-            checklist_progress,
-            before_photos,
-            after_photos,
-            reviewed_at IS NOT NULL AS reviewed_at_present,
-            share_token
-        FROM job_completion_reports
-        WHERE id = $1
+            report.job_id,
+            job.organization_id,
+            report.report_status,
+            report.ready_for_customer,
+            report.checklist_progress,
+            report.before_photos,
+            report.after_photos,
+            report.reviewed_at IS NOT NULL AS reviewed_at_present,
+            report.share_token
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
         FOR UPDATE
         "#,
     )
@@ -390,6 +392,7 @@ pub async fn deliver_completion_report(
         return Ok(CompletionReportActionResult::NotFound);
     };
     let job_id: String = current.get("job_id");
+    let organization_id: String = current.get("organization_id");
     let current_status: String = current.get("report_status");
     let reviewed_at_present: bool = current.get("reviewed_at_present");
     let ready_for_customer: bool = current.get("ready_for_customer");
@@ -438,6 +441,14 @@ pub async fn deliver_completion_report(
         "delivered",
         delivery_user_id,
         None,
+    )
+    .await?;
+
+    insert_report_delivery_audit_event(
+        &mut transaction,
+        report_id,
+        &organization_id,
+        delivery_user_id,
     )
     .await?;
 
@@ -626,6 +637,44 @@ fn status_history_id(report_id: &str) -> String {
         .unwrap_or(0);
 
     format!("report_status_{report_id}_{nonce}")
+}
+
+fn access_audit_id(target_id: &str, event_kind: &str) -> String {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0);
+
+    format!("audit_{event_kind}_{target_id}_{nonce}")
+}
+
+async fn insert_report_delivery_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    report_id: &str,
+    organization_id: &str,
+    actor_user_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, 'report_delivered', $4, now())
+        "#,
+    )
+    .bind(access_audit_id(report_id, "report_delivered"))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(report_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 async fn insert_status_history(

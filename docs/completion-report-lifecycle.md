@@ -22,6 +22,6 @@ This document defines the intended policy for proof-of-completion reports before
 
 - Submission access does not grant review access.
 - Review access does not change customer ownership, property ownership, portfolio grouping, or crew service assignment.
-- Delivery should be audited because it exposes completion evidence to the customer portal.
+- Delivery writes a `report_delivered` audit event because it exposes completion evidence to the customer portal.
 - Customer report viewing should remain scoped to the customer's own properties.
 - Crew access should remain scoped to assigned route and work context.

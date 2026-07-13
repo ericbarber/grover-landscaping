@@ -1,3 +1,4 @@
+pub mod access_audit;
 pub mod access_control;
 pub mod accounts;
 pub mod auth;
