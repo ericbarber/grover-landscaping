@@ -347,10 +347,11 @@ Current state:
 - Production smoke script covers photo upload-ticket creation, upload completion metadata, evidence listing, and photo-processing recovery history
 - Optional Terraform S3 photo-storage module defines public-access blocks, encryption, versioning, CORS, incomplete upload cleanup, archive transition, current-object expiration, and noncurrent-version deletion
 - Manager privacy APIs export customer account/job/report/photo metadata and erase retained photo evidence with audit records, object-key deletion manifests, and delivered snapshot redaction
+- Frontend manager dashboard surfaces customer privacy export and retained photo erasure controls with object-key deletion manifests
 
 Next implementation work:
 
-- Add an operator-facing UI for customer privacy export and photo erasure requests
+- Add automated object-store deletion after retained photo evidence erasure
 
 ### Completion reports
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   completionReportsPath,
+  customerPhotoErasurePath,
+  customerPrivacyExportPath,
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
@@ -11,12 +13,15 @@ import {
   toCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
+  toCustomerPhotoErasureSummary,
+  toCustomerPrivacyExport,
   toJobAddOn,
   toNotificationHistoryItem,
   toPhotoProcessingHistoryItem,
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
+  type ApiCustomerPrivacyExport,
 } from './client';
 
 describe('core API client mapping', () => {
@@ -68,6 +73,12 @@ describe('core API client mapping', () => {
     expect(photoProcessingResolvePath('photo/processing/1001')).toBe(
       '/photo-processing-jobs/photo%2Fprocessing%2F1001/resolve',
     );
+  });
+
+  it('builds customer privacy paths with encoded account ids', () => {
+    expect(customerPrivacyExportPath('acct_1001')).toBe('/accounts/acct_1001/privacy-export');
+    expect(customerPrivacyExportPath('acct/1001')).toBe('/accounts/acct%2F1001/privacy-export');
+    expect(customerPhotoErasurePath('acct/1001')).toBe('/accounts/acct%2F1001/photo-erasure');
   });
 
   it('builds customer property completion report paths with encoded ids', () => {
@@ -325,6 +336,104 @@ describe('core API client mapping', () => {
       status: 'dead_letter',
       attemptCount: 5,
       lastError: 'thumbnail_generation_failed',
+    });
+  });
+
+  it('maps customer privacy export and erasure responses', () => {
+    const apiExport: ApiCustomerPrivacyExport = {
+      account: {
+        account_id: 'acct_1001',
+        customer_name: 'Sample Customer',
+        billing_model: 'per_job',
+        payment_status: 'paid',
+        service_approval_status: 'approved',
+        contracted_services_per_period: 1,
+        completed_services_this_period: 1,
+        period_start: '2026-07-01',
+        period_end: null,
+        billing_notes: null,
+        organization_ids: ['org_demo_landscaping'],
+        created_at: '2026-07-13 08:00:00+00',
+        updated_at: '2026-07-13 08:00:00+00',
+      },
+      jobs: [{
+        job_id: 'job_1001',
+        organization_id: 'org_demo_landscaping',
+        customer_name: 'Sample Customer',
+        property_address: '123 Oak Street',
+        status: 'completed',
+        scheduled_date: '2026-07-13',
+        before_photos: 1,
+        after_photos: 1,
+        created_at: '2026-07-13 08:00:00+00',
+        updated_at: '2026-07-13 09:00:00+00',
+      }],
+      photo_evidence: [{
+        photo_id: 'photo_1001',
+        job_id: 'job_1001',
+        organization_id: 'org_demo_landscaping',
+        photo_type: 'before',
+        file_name: null,
+        content_type: null,
+        object_key: null,
+        thumbnail_object_key: null,
+        status: 'erased',
+        upload_mode: 's3-presigned',
+        file_size_bytes: null,
+        image_width_px: null,
+        image_height_px: null,
+        metadata_source: 'erased',
+        uploaded_at: '2026-07-13 08:30:00+00',
+        erased_at: '2026-07-13 09:30:00+00',
+        erasure_reason: 'Customer request',
+      }],
+      completion_reports: [{
+        report_id: 'report_job_1001',
+        job_id: 'job_1001',
+        report_status: 'delivered',
+        ready_for_customer: true,
+        sent_at: null,
+        delivered_at: '2026-07-13 09:00:00+00',
+        delivered_snapshot_at: '2026-07-13 09:00:00+00',
+        delivered_snapshot_photo_count: 0,
+        created_at: '2026-07-13 08:00:00+00',
+        updated_at: '2026-07-13 09:30:00+00',
+      }],
+      generated_at: '2026-07-13 10:00:00+00',
+    };
+
+    expect(toCustomerPrivacyExport(apiExport)).toMatchObject({
+      account: {
+        accountId: 'acct_1001',
+        customerName: 'Sample Customer',
+      },
+      jobs: [{ jobId: 'job_1001' }],
+      photoEvidence: [{
+        photoId: 'photo_1001',
+        status: 'erased',
+        objectKey: null,
+        erasureReason: 'Customer request',
+      }],
+      completionReports: [{
+        reportId: 'report_job_1001',
+        deliveredSnapshotPhotoCount: 0,
+      }],
+    });
+
+    expect(toCustomerPhotoErasureSummary({
+      account_id: 'acct_1001',
+      status: 'erased',
+      erased_photo_count: 2,
+      affected_job_count: 1,
+      redacted_completion_report_count: 1,
+      object_keys_pending_deletion: ['photos/job_1001/before.jpg'],
+    })).toEqual({
+      accountId: 'acct_1001',
+      status: 'erased',
+      erasedPhotoCount: 2,
+      affectedJobCount: 1,
+      redactedCompletionReportCount: 1,
+      objectKeysPendingDeletion: ['photos/job_1001/before.jpg'],
     });
   });
 

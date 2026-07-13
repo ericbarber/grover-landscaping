@@ -4,8 +4,10 @@ import {
   completePhotoUpload,
   createPhotoUploadTicket,
   deliverCompletionReport,
+  eraseCustomerPhotoEvidence,
   fetchCompletionReport,
   fetchCompletionReports,
+  fetchCustomerPrivacyExport,
   fetchJobDetail,
   fetchJobAddOns,
   fetchJobs,
@@ -25,6 +27,8 @@ import {
   uploadPhotoToTicket,
   updateJobAddOnStatus,
   type CompletionReportSnapshot,
+  type CustomerPhotoErasureSummary,
+  type CustomerPrivacyExport,
   type JobDetail,
   type JobAddOn,
   type NotificationHistoryItem,
@@ -38,6 +42,7 @@ import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSum
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
+import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import {
   ManagerNotificationHistoryPanel,
@@ -791,6 +796,9 @@ export function App() {
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
+  const [customerPrivacyExport, setCustomerPrivacyExport] = useState<CustomerPrivacyExport | null>(null);
+  const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
+  const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
@@ -814,6 +822,12 @@ export function App() {
     () => Object.values(completionReportSnapshots),
     [completionReportSnapshots],
   );
+  const privacyAccountIds = useMemo(() => {
+    const reportAccountIds = managerReportQueueReports
+      .map((report) => report.account.accountId)
+      .filter((accountId): accountId is string => Boolean(accountId));
+    return Array.from(new Set([...reportAccountIds, 'acct_1001', 'acct_1002'])).sort();
+  }, [managerReportQueueReports]);
 
   function recordManagerActivity(item: NewManagerActivity) {
     setManagerActivity((current) =>
@@ -1419,6 +1433,59 @@ export function App() {
     }
   }
 
+  async function handleCustomerPrivacyExport(accountId: string) {
+    setIsLoadingCustomerPrivacy(true);
+    try {
+      const privacyExport = await fetchCustomerPrivacyExport(accountId);
+      setCustomerPrivacyExport(privacyExport);
+      setCustomerPhotoErasureSummary(null);
+      setStatusMessage(`Exported privacy data for ${privacyExport.account.customerName}.`);
+      recordManagerActivity({
+        title: 'Customer privacy export created',
+        message: `${privacyExport.account.customerName} export includes ${privacyExport.photoEvidence.length} photo evidence metadata item${privacyExport.photoEvidence.length === 1 ? '' : 's'}.`,
+        tone: 'success',
+        source: 'sync',
+      });
+    } catch {
+      setStatusMessage('Could not export customer privacy data. Confirm the account is in scope.');
+      recordManagerActivity({
+        title: 'Customer privacy export failed',
+        message: 'A customer account privacy export could not be loaded from the backend.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingCustomerPrivacy(false);
+    }
+  }
+
+  async function handleCustomerPhotoErasure(accountId: string, reason: string) {
+    setIsLoadingCustomerPrivacy(true);
+    try {
+      const erasure = await eraseCustomerPhotoEvidence(accountId, reason);
+      setCustomerPhotoErasureSummary(erasure);
+      const privacyExport = await fetchCustomerPrivacyExport(accountId);
+      setCustomerPrivacyExport(privacyExport);
+      setStatusMessage(`Erased retained photo evidence for ${accountId}.`);
+      recordManagerActivity({
+        title: 'Customer photo evidence erased',
+        message: `${erasure.erasedPhotoCount} photo evidence item${erasure.erasedPhotoCount === 1 ? '' : 's'} erased for ${accountId}.`,
+        tone: 'success',
+        source: 'photo',
+      });
+    } catch {
+      setStatusMessage('Could not erase customer photo evidence. Confirm the reason and account scope.');
+      recordManagerActivity({
+        title: 'Customer photo erasure failed',
+        message: 'A customer photo evidence erasure request could not be completed.',
+        tone: 'warning',
+        source: 'photo',
+      });
+    } finally {
+      setIsLoadingCustomerPrivacy(false);
+    }
+  }
+
   async function handleStartReportReview(reportId: string) {
     setCompletionReportActionStatus('Starting manager review...');
 
@@ -1679,6 +1746,16 @@ export function App() {
               onRefresh={(filters) => void refreshPhotoProcessingHistory(filters)}
               onRetry={(processingJobId, filters) => void handleRetryPhotoProcessing(processingJobId, filters)}
               onResolve={(processingJobId, filters) => void handleResolvePhotoProcessing(processingJobId, filters)}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerCustomerPrivacyPanel
+              accountIds={privacyAccountIds}
+              exportResult={customerPrivacyExport}
+              erasureResult={customerPhotoErasureSummary}
+              isLoading={isLoadingCustomerPrivacy}
+              onExport={(accountId) => void handleCustomerPrivacyExport(accountId)}
+              onErasePhotos={(accountId, reason) => void handleCustomerPhotoErasure(accountId, reason)}
             />
           </div>
           <div className="mt-6">

@@ -371,6 +371,156 @@ export interface FetchPhotoProcessingHistoryOptions {
   limit?: number;
 }
 
+export interface ApiCustomerPrivacyAccount {
+  account_id: string;
+  customer_name: string;
+  billing_model: BillingModel;
+  payment_status: PaymentStatus;
+  service_approval_status: ServiceApprovalStatus;
+  contracted_services_per_period: number;
+  completed_services_this_period: number;
+  period_start?: string | null;
+  period_end?: string | null;
+  billing_notes?: string | null;
+  organization_ids: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiCustomerPrivacyJob {
+  job_id: string;
+  organization_id: string;
+  customer_name: string;
+  property_address: string;
+  status: YardCareJob['status'];
+  scheduled_date: string;
+  before_photos: number;
+  after_photos: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiCustomerPrivacyPhotoEvidence {
+  photo_id: string;
+  job_id: string;
+  organization_id: string;
+  photo_type: PhotoUploadTicket['photoType'];
+  file_name?: string | null;
+  content_type?: string | null;
+  object_key?: string | null;
+  thumbnail_object_key?: string | null;
+  status: string;
+  upload_mode: string;
+  file_size_bytes?: number | null;
+  image_width_px?: number | null;
+  image_height_px?: number | null;
+  metadata_source?: string | null;
+  uploaded_at?: string | null;
+  erased_at?: string | null;
+  erasure_reason?: string | null;
+}
+
+export interface ApiCustomerPrivacyCompletionReport {
+  report_id: string;
+  job_id: string;
+  report_status: CompletionReportStatus;
+  ready_for_customer: boolean;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  delivered_snapshot_at?: string | null;
+  delivered_snapshot_photo_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApiCustomerPrivacyExport {
+  account: ApiCustomerPrivacyAccount;
+  jobs: ApiCustomerPrivacyJob[];
+  photo_evidence: ApiCustomerPrivacyPhotoEvidence[];
+  completion_reports: ApiCustomerPrivacyCompletionReport[];
+  generated_at: string;
+}
+
+export interface CustomerPrivacyExport {
+  account: {
+    accountId: string;
+    customerName: string;
+    billingModel: BillingModel;
+    paymentStatus: PaymentStatus;
+    serviceApprovalStatus: ServiceApprovalStatus;
+    contractedServicesPerPeriod: number;
+    completedServicesThisPeriod: number;
+    periodStart: string | null;
+    periodEnd: string | null;
+    billingNotes: string | null;
+    organizationIds: string[];
+    createdAt: string;
+    updatedAt: string;
+  };
+  jobs: Array<{
+    jobId: string;
+    organizationId: string;
+    customerName: string;
+    propertyAddress: string;
+    status: YardCareJob['status'];
+    scheduledDate: string;
+    beforePhotos: number;
+    afterPhotos: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  photoEvidence: Array<{
+    photoId: string;
+    jobId: string;
+    organizationId: string;
+    photoType: PhotoUploadTicket['photoType'];
+    fileName: string | null;
+    contentType: string | null;
+    objectKey: string | null;
+    thumbnailObjectKey: string | null;
+    status: string;
+    uploadMode: string;
+    fileSizeBytes: number | null;
+    imageWidthPx: number | null;
+    imageHeightPx: number | null;
+    metadataSource: string | null;
+    uploadedAt: string | null;
+    erasedAt: string | null;
+    erasureReason: string | null;
+  }>;
+  completionReports: Array<{
+    reportId: string;
+    jobId: string;
+    reportStatus: CompletionReportStatus;
+    readyForCustomer: boolean;
+    sentAt: string | null;
+    deliveredAt: string | null;
+    deliveredSnapshotAt: string | null;
+    deliveredSnapshotPhotoCount: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  generatedAt: string;
+}
+
+export interface ApiCustomerPhotoErasureSummary {
+  account_id: string;
+  status: 'erased';
+  erased_photo_count: number;
+  affected_job_count: number;
+  redacted_completion_report_count: number;
+  object_keys_pending_deletion: string[];
+}
+
+export interface CustomerPhotoErasureSummary {
+  accountId: string;
+  status: 'erased';
+  erasedPhotoCount: number;
+  affectedJobCount: number;
+  redactedCompletionReportCount: number;
+  objectKeysPendingDeletion: string[];
+}
+
 function toJob(apiJob: ApiJobSummary): YardCareJob {
   return {
     id: apiJob.id,
@@ -551,6 +701,83 @@ export function toPhotoProcessingHistoryItem(apiItem: ApiPhotoProcessingHistoryI
     resolutionNote: apiItem.resolution_note ?? null,
     createdAt: apiItem.created_at,
     updatedAt: apiItem.updated_at,
+  };
+}
+
+export function toCustomerPrivacyExport(apiExport: ApiCustomerPrivacyExport): CustomerPrivacyExport {
+  return {
+    account: {
+      accountId: apiExport.account.account_id,
+      customerName: apiExport.account.customer_name,
+      billingModel: apiExport.account.billing_model,
+      paymentStatus: apiExport.account.payment_status,
+      serviceApprovalStatus: apiExport.account.service_approval_status,
+      contractedServicesPerPeriod: apiExport.account.contracted_services_per_period,
+      completedServicesThisPeriod: apiExport.account.completed_services_this_period,
+      periodStart: apiExport.account.period_start ?? null,
+      periodEnd: apiExport.account.period_end ?? null,
+      billingNotes: apiExport.account.billing_notes ?? null,
+      organizationIds: apiExport.account.organization_ids,
+      createdAt: apiExport.account.created_at,
+      updatedAt: apiExport.account.updated_at,
+    },
+    jobs: apiExport.jobs.map((job) => ({
+      jobId: job.job_id,
+      organizationId: job.organization_id,
+      customerName: job.customer_name,
+      propertyAddress: job.property_address,
+      status: job.status,
+      scheduledDate: job.scheduled_date,
+      beforePhotos: job.before_photos,
+      afterPhotos: job.after_photos,
+      createdAt: job.created_at,
+      updatedAt: job.updated_at,
+    })),
+    photoEvidence: apiExport.photo_evidence.map((photo) => ({
+      photoId: photo.photo_id,
+      jobId: photo.job_id,
+      organizationId: photo.organization_id,
+      photoType: photo.photo_type,
+      fileName: photo.file_name ?? null,
+      contentType: photo.content_type ?? null,
+      objectKey: photo.object_key ?? null,
+      thumbnailObjectKey: photo.thumbnail_object_key ?? null,
+      status: photo.status,
+      uploadMode: photo.upload_mode,
+      fileSizeBytes: photo.file_size_bytes ?? null,
+      imageWidthPx: photo.image_width_px ?? null,
+      imageHeightPx: photo.image_height_px ?? null,
+      metadataSource: photo.metadata_source ?? null,
+      uploadedAt: photo.uploaded_at ?? null,
+      erasedAt: photo.erased_at ?? null,
+      erasureReason: photo.erasure_reason ?? null,
+    })),
+    completionReports: apiExport.completion_reports.map((report) => ({
+      reportId: report.report_id,
+      jobId: report.job_id,
+      reportStatus: report.report_status,
+      readyForCustomer: report.ready_for_customer,
+      sentAt: report.sent_at ?? null,
+      deliveredAt: report.delivered_at ?? null,
+      deliveredSnapshotAt: report.delivered_snapshot_at ?? null,
+      deliveredSnapshotPhotoCount: report.delivered_snapshot_photo_count,
+      createdAt: report.created_at,
+      updatedAt: report.updated_at,
+    })),
+    generatedAt: apiExport.generated_at,
+  };
+}
+
+export function toCustomerPhotoErasureSummary(
+  apiSummary: ApiCustomerPhotoErasureSummary,
+): CustomerPhotoErasureSummary {
+  return {
+    accountId: apiSummary.account_id,
+    status: apiSummary.status,
+    erasedPhotoCount: apiSummary.erased_photo_count,
+    affectedJobCount: apiSummary.affected_job_count,
+    redactedCompletionReportCount: apiSummary.redacted_completion_report_count,
+    objectKeysPendingDeletion: apiSummary.object_keys_pending_deletion,
   };
 }
 
@@ -772,6 +999,33 @@ export async function resolvePhotoProcessingJob(photoProcessingJobId: string): P
     },
   );
   return toPhotoProcessingHistoryItem(job);
+}
+
+export function customerPrivacyExportPath(accountId: string): string {
+  return `/accounts/${encodeURIComponent(accountId)}/privacy-export`;
+}
+
+export function customerPhotoErasurePath(accountId: string): string {
+  return `/accounts/${encodeURIComponent(accountId)}/photo-erasure`;
+}
+
+export async function fetchCustomerPrivacyExport(accountId: string): Promise<CustomerPrivacyExport> {
+  const privacyExport = await request<ApiCustomerPrivacyExport>(customerPrivacyExportPath(accountId));
+  return toCustomerPrivacyExport(privacyExport);
+}
+
+export async function eraseCustomerPhotoEvidence(
+  accountId: string,
+  reason: string,
+): Promise<CustomerPhotoErasureSummary> {
+  const summary = await request<ApiCustomerPhotoErasureSummary>(
+    customerPhotoErasurePath(accountId),
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    },
+  );
+  return toCustomerPhotoErasureSummary(summary);
 }
 
 export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
