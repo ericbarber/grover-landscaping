@@ -42,3 +42,5 @@ Managers should be able to:
 Manager queue actions must not change property ownership, portfolio grouping, or crew service history.
 
 Manager review should work from persisted report snapshots so late job edits do not silently alter a report already under review.
+
+The manager queue endpoint returns only reports for jobs owned by organizations where the signed-in principal has an active membership. Notification history and notification recovery actions use the same active-membership boundary.

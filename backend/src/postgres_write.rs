@@ -57,6 +57,7 @@ pub async fn update_job_add_on_status(
     Ok(result.rows_affected() == 1)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn create_photo_upload(
     pool: &PgPool,
     job_id: &str,

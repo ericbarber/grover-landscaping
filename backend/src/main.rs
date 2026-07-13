@@ -48,7 +48,7 @@ use project_bids::{
     ProjectBidRepository, SendProjectBidRequest,
 };
 use serde::{Deserialize, Serialize};
-use std::{io, net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
 use stop_progress::{
     is_valid_stop_progress_status, local_stop_progress_response, persisted_stop_progress_response,
     StopProgressRequest,
@@ -83,6 +83,7 @@ struct HealthResponse {
 #[derive(Clone, Debug, Serialize)]
 pub struct JobSummary {
     pub id: String,
+    pub organization_id: String,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,
@@ -96,6 +97,7 @@ pub struct JobSummary {
 #[derive(Clone, Debug, Serialize)]
 pub struct JobDetail {
     pub id: String,
+    pub organization_id: String,
     pub customer_name: String,
     pub property_address: String,
     pub status: String,
@@ -612,6 +614,7 @@ async fn get_completion_report(
 
 async fn list_completion_reports(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Query(query): Query<CompletionReportListQuery>,
 ) -> Response {
     if let Err(message) = validate_completion_report_list_query(&query) {
@@ -625,10 +628,23 @@ async fn list_completion_reports(
             .into_response();
     }
 
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let visible_organization_ids: HashSet<&str> =
+        organization_ids.iter().map(String::as_str).collect();
+    if visible_organization_ids.is_empty() {
+        return Json(Vec::<CompletionReportResponse>::new()).into_response();
+    }
+
     let jobs = state.jobs.list_jobs().await;
     let mut reports = Vec::with_capacity(jobs.len());
 
     for job in jobs {
+        if !completion_report_job_is_visible_to_membership(
+            &job.organization_id,
+            &visible_organization_ids,
+        ) {
+            continue;
+        }
         let report = build_and_persist_completion_report(&state, &job.id).await;
         if completion_report_matches_list_query(&report, &query) {
             reports.push(report);
@@ -636,6 +652,13 @@ async fn list_completion_reports(
     }
 
     Json(reports).into_response()
+}
+
+fn completion_report_job_is_visible_to_membership(
+    organization_id: &str,
+    visible_organization_ids: &HashSet<&str>,
+) -> bool {
+    visible_organization_ids.contains(organization_id)
 }
 
 fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> Result<(), String> {
@@ -686,21 +709,25 @@ fn completion_report_matches_list_query(
 
 async fn list_notification_history(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Query(query): Query<NotificationHistoryQuery>,
 ) -> Response {
     match notification_history_filter(query) {
-        Ok(filter) => match state.notifications.list_history(filter).await {
-            Ok(items) => Json(items).into_response(),
-            Err(_) => (
-                StatusCode::SERVICE_UNAVAILABLE,
-                Json(ErrorResponse {
-                    error: "notification_history_unavailable",
-                    message: "Notification history could not be loaded from persistence."
-                        .to_string(),
-                }),
-            )
-                .into_response(),
-        },
+        Ok(mut filter) => {
+            filter.organization_ids = principal_active_organization_ids(&state, &principal).await;
+            match state.notifications.list_history(filter).await {
+                Ok(items) => Json(items).into_response(),
+                Err(_) => (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    Json(ErrorResponse {
+                        error: "notification_history_unavailable",
+                        message: "Notification history could not be loaded from persistence."
+                            .to_string(),
+                    }),
+                )
+                    .into_response(),
+            }
+        }
         Err(message) => (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
@@ -740,6 +767,7 @@ fn notification_history_filter(
     }
 
     Ok(NotificationHistoryFilter {
+        organization_ids: Vec::new(),
         entity_type: query.entity_type,
         status: query.status,
         limit,
@@ -748,9 +776,15 @@ fn notification_history_filter(
 
 async fn retry_notification_delivery(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
 ) -> Response {
-    match state.notifications.retry_failed(&id).await {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    match state
+        .notifications
+        .retry_failed(&id, &organization_ids)
+        .await
+    {
         Ok(NotificationRetryResult::Retried(item)) => Json(item).into_response(),
         Ok(NotificationRetryResult::InvalidStatus) => (
             StatusCode::CONFLICT,
@@ -781,6 +815,7 @@ async fn retry_notification_delivery(
 
 async fn resolve_notification_delivery(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
     Json(request): Json<NotificationResolveRequest>,
 ) -> Response {
@@ -798,9 +833,10 @@ async fn resolve_notification_delivery(
         }
     };
 
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
     match state
         .notifications
-        .resolve_failed(&id, reason.as_deref())
+        .resolve_failed(&id, &organization_ids, reason.as_deref())
         .await
     {
         Ok(NotificationResolveResult::Resolved(item)) => Json(item).into_response(),
@@ -830,6 +866,26 @@ async fn resolve_notification_delivery(
         )
             .into_response(),
     }
+}
+
+async fn principal_active_organization_ids(
+    state: &AppState,
+    principal: &AuthPrincipal,
+) -> Vec<String> {
+    let mut seen = HashSet::new();
+    state
+        .organizations
+        .list_active_memberships(&principal.subject)
+        .await
+        .into_iter()
+        .filter_map(|membership| {
+            if seen.insert(membership.organization_id.clone()) {
+                Some(membership.organization_id)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn normalize_notification_resolution_reason(reason: Option<String>) -> Result<Option<String>, ()> {
@@ -1918,6 +1974,20 @@ mod tests {
         assert_eq!(reports[0]["report_id"], "report_job_1001");
         assert_eq!(reports[0]["job"]["customer_name"], "Sample Customer");
         assert_eq!(reports[1]["report_id"], "report_job_1002");
+    }
+
+    #[test]
+    fn completion_report_queue_visibility_uses_active_membership_organizations() {
+        let visible_organization_ids = HashSet::from(["org_demo_landscaping"]);
+
+        assert!(completion_report_job_is_visible_to_membership(
+            "org_demo_landscaping",
+            &visible_organization_ids
+        ));
+        assert!(!completion_report_job_is_visible_to_membership(
+            "org_other_landscaping",
+            &visible_organization_ids
+        ));
     }
 
     #[tokio::test]

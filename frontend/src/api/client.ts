@@ -10,6 +10,7 @@ import { authenticatedFetch } from './authenticatedFetch';
 
 interface ApiJobSummary {
   id: string;
+  organization_id?: string;
   customer_name: string;
   property_address: string;
   status: YardCareJob['status'];
@@ -195,6 +196,7 @@ export type NotificationHistoryStatus =
 
 export interface ApiNotificationHistoryItem {
   id: string;
+  organization_id?: string;
   entity_type: NotificationHistoryEntityType;
   entity_id: string;
   channel: 'email' | 'sms';

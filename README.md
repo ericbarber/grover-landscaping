@@ -19,6 +19,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - PostgreSQL-backed completion report state
 - Audited manager start-review transition for submitted completion reports
 - Stable shareable completion report links
+- Organization-scoped manager completion-report queue and notification recovery controls
 - Customer account status display
 - Manager draft day-plan creation and publishing
 - Manager route stop assignment, removal, and ordering
@@ -146,15 +147,15 @@ Current backend endpoints include:
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
-| GET | `/completion-reports` | List current completion report snapshots for manager review; accepts optional `status` and `readiness` filters |
+| GET | `/completion-reports` | List organization-scoped completion report snapshots for manager review; accepts optional `status` and `readiness` filters |
 | POST | `/completion-reports/{report_id}/review` | Move a submitted completion report into manager review |
 | POST | `/completion-reports/{report_id}/request-changes` | Record manager feedback and move an in-review report to changes requested |
 | POST | `/completion-reports/{report_id}/resubmit` | Return a change-requested report to submitted after crew follow-up |
 | POST | `/completion-reports/{report_id}/deliver` | Approve a ready in-review report for customer delivery and issue a share link |
 | POST | `/completion-reports/{report_id}/delivery-notifications` | Queue an email or SMS notification for a delivered completion report share link |
-| GET | `/notifications` | List recent notification outbox history with optional `entity_type`, `status`, and `limit` filters |
-| POST | `/notifications/{id}/retry` | Reset a failed or dead-letter notification back to queued delivery |
-| POST | `/notifications/{id}/resolve` | Mark a failed or dead-letter notification as manually resolved |
+| GET | `/notifications` | List recent organization-scoped notification outbox history with optional `entity_type`, `status`, and `limit` filters |
+| POST | `/notifications/{id}/retry` | Reset an in-organization failed or dead-letter notification back to queued delivery |
+| POST | `/notifications/{id}/resolve` | Mark an in-organization failed or dead-letter notification as manually resolved |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |
@@ -198,7 +199,7 @@ The project currently includes migrations for:
 - Day-plan amendment requests and bid-review metadata
 - Project bids and ordered bid line items
 - Project-bid conversions and scheduled job add-ons
-- Notification outbox records for queued project-bid delivery
+- Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.

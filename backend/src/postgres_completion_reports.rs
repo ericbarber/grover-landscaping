@@ -529,9 +529,14 @@ pub async fn queue_delivery_notification(
     let mut transaction = pool.begin().await?;
     let current = sqlx::query(
         r#"
-        SELECT report_status, delivered_at IS NOT NULL AS delivered_at_present, share_token
-        FROM job_completion_reports
-        WHERE id = $1
+        SELECT
+            report.report_status,
+            report.delivered_at IS NOT NULL AS delivered_at_present,
+            report.share_token,
+            job.organization_id
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
         FOR UPDATE
         "#,
     )
@@ -546,6 +551,7 @@ pub async fn queue_delivery_notification(
 
     let report_status: String = current.get("report_status");
     let delivered_at_present: bool = current.get("delivered_at_present");
+    let organization_id: String = current.get("organization_id");
     let share_token: Option<String> = current.get("share_token");
     let Some(share_token) = share_token else {
         transaction.rollback().await?;
@@ -562,15 +568,16 @@ pub async fn queue_delivery_notification(
     sqlx::query(
         r#"
         INSERT INTO notification_outbox (
-            id, entity_type, entity_id, channel, recipient, template_key, payload
+            id, organization_id, entity_type, entity_id, channel, recipient, template_key, payload
         )
         VALUES (
-            $1, 'completion_report', $2, $3, $4, 'completion_report_delivery',
-            jsonb_build_object('report_id', $2::text, 'share_url', $5::text)
+            $1, $2, 'completion_report', $3, $4, $5, 'completion_report_delivery',
+            jsonb_build_object('report_id', $3::text, 'share_url', $6::text)
         )
         "#,
     )
     .bind(&notification_id)
+    .bind(&organization_id)
     .bind(report_id)
     .bind(channel)
     .bind(recipient.trim())

@@ -21,6 +21,7 @@ pub struct NotificationOutboxItem {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct NotificationHistoryItem {
     pub id: String,
+    pub organization_id: String,
     pub entity_type: String,
     pub entity_id: String,
     pub channel: String,
@@ -40,6 +41,7 @@ pub struct NotificationHistoryItem {
 
 #[derive(Clone, Debug, Default)]
 pub struct NotificationHistoryFilter {
+    pub organization_ids: Vec<String>,
     pub entity_type: Option<String>,
     pub status: Option<String>,
     pub limit: i64,
@@ -47,7 +49,7 @@ pub struct NotificationHistoryFilter {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NotificationRetryResult {
-    Retried(NotificationHistoryItem),
+    Retried(Box<NotificationHistoryItem>),
     InvalidStatus,
     NotFound,
     Unavailable,
@@ -55,7 +57,7 @@ pub enum NotificationRetryResult {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NotificationResolveResult {
-    Resolved(NotificationHistoryItem),
+    Resolved(Box<NotificationHistoryItem>),
     InvalidStatus,
     NotFound,
     Unavailable,
@@ -256,12 +258,16 @@ impl NotificationOutboxRepository {
         let Some(pool) = &self.pool else {
             return Ok(Vec::new());
         };
+        if filter.organization_ids.is_empty() {
+            return Ok(Vec::new());
+        }
         let limit = filter.limit.clamp(1, 100);
 
         let rows = sqlx::query(
             r#"
             SELECT
                 id,
+                organization_id,
                 entity_type,
                 entity_id,
                 channel,
@@ -280,12 +286,14 @@ impl NotificationOutboxRepository {
             FROM notification_outbox
             WHERE ($1::text IS NULL OR entity_type = $1)
               AND ($2::text IS NULL OR status = $2)
+              AND organization_id = ANY($3)
             ORDER BY created_at DESC, id DESC
-            LIMIT $3
+            LIMIT $4
             "#,
         )
         .bind(filter.entity_type)
         .bind(filter.status)
+        .bind(filter.organization_ids)
         .bind(limit)
         .fetch_all(pool)
         .await?;
@@ -294,6 +302,7 @@ impl NotificationOutboxRepository {
             .into_iter()
             .map(|row| NotificationHistoryItem {
                 id: row.get("id"),
+                organization_id: row.get("organization_id"),
                 entity_type: row.get("entity_type"),
                 entity_id: row.get("entity_id"),
                 channel: row.get("channel"),
@@ -313,17 +322,26 @@ impl NotificationOutboxRepository {
             .collect())
     }
 
-    pub async fn retry_failed(&self, id: &str) -> Result<NotificationRetryResult, sqlx::Error> {
+    pub async fn retry_failed(
+        &self,
+        id: &str,
+        organization_ids: &[String],
+    ) -> Result<NotificationRetryResult, sqlx::Error> {
         let Some(pool) = &self.pool else {
             return Ok(NotificationRetryResult::Unavailable);
         };
+        if organization_ids.is_empty() {
+            return Ok(NotificationRetryResult::NotFound);
+        }
 
         let mut transaction = pool.begin().await?;
-        let current =
-            sqlx::query("SELECT status FROM notification_outbox WHERE id = $1 FOR UPDATE")
-                .bind(id)
-                .fetch_optional(&mut *transaction)
-                .await?;
+        let current = sqlx::query(
+            "SELECT status FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+        )
+        .bind(id)
+        .bind(organization_ids)
+        .fetch_optional(&mut *transaction)
+        .await?;
 
         let Some(current) = current else {
             transaction.rollback().await?;
@@ -359,6 +377,7 @@ impl NotificationOutboxRepository {
 
         let mut history = self
             .list_history(NotificationHistoryFilter {
+                organization_ids: organization_ids.to_vec(),
                 entity_type: None,
                 status: None,
                 limit: 100,
@@ -368,24 +387,30 @@ impl NotificationOutboxRepository {
             return Ok(NotificationRetryResult::NotFound);
         };
 
-        Ok(NotificationRetryResult::Retried(item))
+        Ok(NotificationRetryResult::Retried(Box::new(item)))
     }
 
     pub async fn resolve_failed(
         &self,
         id: &str,
+        organization_ids: &[String],
         reason: Option<&str>,
     ) -> Result<NotificationResolveResult, sqlx::Error> {
         let Some(pool) = &self.pool else {
             return Ok(NotificationResolveResult::Unavailable);
         };
+        if organization_ids.is_empty() {
+            return Ok(NotificationResolveResult::NotFound);
+        }
 
         let mut transaction = pool.begin().await?;
-        let current =
-            sqlx::query("SELECT status FROM notification_outbox WHERE id = $1 FOR UPDATE")
-                .bind(id)
-                .fetch_optional(&mut *transaction)
-                .await?;
+        let current = sqlx::query(
+            "SELECT status FROM notification_outbox WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+        )
+        .bind(id)
+        .bind(organization_ids)
+        .fetch_optional(&mut *transaction)
+        .await?;
 
         let Some(current) = current else {
             transaction.rollback().await?;
@@ -422,6 +447,7 @@ impl NotificationOutboxRepository {
 
         let mut history = self
             .list_history(NotificationHistoryFilter {
+                organization_ids: organization_ids.to_vec(),
                 entity_type: None,
                 status: None,
                 limit: 100,
@@ -431,7 +457,7 @@ impl NotificationOutboxRepository {
             return Ok(NotificationResolveResult::NotFound);
         };
 
-        Ok(NotificationResolveResult::Resolved(item))
+        Ok(NotificationResolveResult::Resolved(Box::new(item)))
     }
 }
 

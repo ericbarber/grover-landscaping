@@ -23,7 +23,7 @@ Suggested fields:
 
 ```text
 id
-company_id
+organization_id
 property_id
 assigned_crew_id
 scheduled_date
@@ -133,6 +133,7 @@ Implemented delivery-boundary fields:
 
 ```text
 id
+organization_id
 entity_type
 entity_id
 channel
@@ -151,9 +152,9 @@ created_at
 updated_at
 ```
 
-Project-bid sends create `queued` email or SMS records in the same transaction as token issuance. Revoking a review link marks pending delivery records `skipped` in the same transaction so a worker cannot later deliver a dead link. The in-process dispatcher claims work safely across service instances, retries with bounded backoff, recovers abandoned claims, moves exhausted work to `dead_letter`, and stores provider response codes and message IDs.
+Project-bid sends create `queued` email or SMS records in the same transaction as token issuance. Delivered completion reports can also queue customer share-link notifications, with the outbox row inheriting the service job's organization ownership. Revoking a review link marks pending delivery records `skipped` in the same transaction so a worker cannot later deliver a dead link. The in-process dispatcher claims work safely across service instances, retries with bounded backoff, recovers abandoned claims, moves exhausted work to `dead_letter`, and stores provider response codes and message IDs.
 
-Manager notification history reads use this table directly with optional entity-type and status filters. Failed and dead-letter rows can be explicitly retried, which resets attempt metadata and returns the row to `queued` for the dispatcher. They can also be manually resolved, which marks the row `skipped` with a resolution note so managers can clear work handled outside the provider retry flow.
+Manager notification history reads use this table directly with optional entity-type and status filters and are constrained to the principal's active organization memberships. Failed and dead-letter rows can be explicitly retried within those same organization boundaries, which resets attempt metadata and returns the row to `queued` for the dispatcher. They can also be manually resolved, which marks the row `skipped` with a resolution note so managers can clear work handled outside the provider retry flow.
 
 ## project_bid_conversions and service_job_add_ons
 

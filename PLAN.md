@@ -342,19 +342,20 @@ Current state:
 - Frontend manager report queue summarizes current report review work across loaded jobs
 - Backend exposes `GET /completion-reports` for manager report queue loading
 - Backend manager report queue loading supports `status` and `readiness` query filters
+- Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion reports can queue validated email/SMS notification outbox records for customer share links
 - Manager report detail actions can queue delivered completion report email/SMS notifications
 - Manager notification history panel lists queued, sending, sent, failed, skipped, and dead-letter notification outbox records
 - Backend notification history endpoint supports entity, status, and limit filters
+- Backend notification history and notification retry/resolve actions are scoped to active organization memberships
 - Manager notification history can retry failed and dead-letter delivery records by returning them to queued status
 - Manager notification history can mark failed and dead-letter delivery records manually resolved
 
 Next implementation work:
 
-- Add organization scoping, crew, customer, property, date, and readiness-blocker filters to the manager completion-report list endpoint
+- Add crew, customer, property, date, and readiness-blocker filters to the manager completion-report list endpoint
 - Expand immutable report snapshots with explicit evidence/version metadata for customer portal history
-- Add organization-scoped notification history and recovery boundaries
 
 ### Property ownership, portfolios, and crew assignments
 

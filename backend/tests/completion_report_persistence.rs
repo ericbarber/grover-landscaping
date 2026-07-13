@@ -226,7 +226,7 @@ async fn repository_persists_completion_report_state() {
 
     let notification_row = sqlx::query(
         r#"
-        SELECT template_key, status, payload->>'share_url' AS share_url
+        SELECT organization_id, template_key, status, payload->>'share_url' AS share_url
         FROM notification_outbox
         WHERE entity_type = 'completion_report'
           AND entity_id = $1
@@ -236,6 +236,10 @@ async fn repository_persists_completion_report_state() {
     .fetch_one(&pool)
     .await
     .expect("completion report delivery notification should be queued");
+    assert_eq!(
+        notification_row.get::<String, _>("organization_id"),
+        "org_demo_landscaping"
+    );
     assert_eq!(
         notification_row.get::<String, _>("template_key"),
         "completion_report_delivery"

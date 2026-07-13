@@ -26,6 +26,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
         .expect("repository should connect and run migrations");
     let pool = jobs.pool().expect("database pool should be available");
     let repository = NotificationOutboxRepository::from_pool(pool.clone());
+    let organization_ids = vec!["org_demo_landscaping".to_string()];
 
     let failed_id = unique_id("notification_retry_test");
     sqlx::query(
@@ -118,6 +119,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
 
     let sent_history = repository
         .list_history(NotificationHistoryFilter {
+            organization_ids: organization_ids.clone(),
             entity_type: Some("test".to_string()),
             status: Some("sent".to_string()),
             limit: 10,
@@ -133,6 +135,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
 
     let dead_letter_history = repository
         .list_history(NotificationHistoryFilter {
+            organization_ids: organization_ids.clone(),
             entity_type: Some("test".to_string()),
             status: Some("dead_letter".to_string()),
             limit: 10,
@@ -146,7 +149,10 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             && item.last_error.as_deref() == Some("provider still unavailable")
     }));
 
-    let retry = repository.retry_failed(&failed_id).await.unwrap();
+    let retry = repository
+        .retry_failed(&failed_id, &organization_ids)
+        .await
+        .unwrap();
     assert!(matches!(
         retry,
         NotificationRetryResult::Retried(ref item)
@@ -168,8 +174,43 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
         .is_none());
 
     assert!(matches!(
-        repository.retry_failed(&sent_id).await.unwrap(),
+        repository
+            .retry_failed(&sent_id, &organization_ids)
+            .await
+            .unwrap(),
         NotificationRetryResult::InvalidStatus
+    ));
+
+    let other_org_id = unique_id("notification_other_org_retry_test");
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id, organization_id, entity_type, entity_id, channel, recipient, template_key, payload, status, attempt_count, last_error
+        )
+        VALUES ($1, 'org_other_landscaping', 'test', $1, 'email', 'other@example.com', 'test_template', '{}', 'dead_letter', 5, 'operator reviewed')
+        "#,
+    )
+    .bind(&other_org_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let other_org_history = repository
+        .list_history(NotificationHistoryFilter {
+            organization_ids: organization_ids.clone(),
+            entity_type: Some("test".to_string()),
+            status: Some("dead_letter".to_string()),
+            limit: 100,
+        })
+        .await
+        .unwrap();
+    assert!(!other_org_history.iter().any(|item| item.id == other_org_id));
+    assert!(matches!(
+        repository
+            .retry_failed(&other_org_id, &organization_ids)
+            .await
+            .unwrap(),
+        NotificationRetryResult::NotFound
     ));
 
     let resolve_id = unique_id("notification_resolve_test");
@@ -187,7 +228,11 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     .unwrap();
 
     let resolution = repository
-        .resolve_failed(&resolve_id, Some("Customer confirmed by phone"))
+        .resolve_failed(
+            &resolve_id,
+            &organization_ids,
+            Some("Customer confirmed by phone"),
+        )
         .await
         .unwrap();
     assert!(matches!(
@@ -199,7 +244,17 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     ));
 
     assert!(matches!(
-        repository.resolve_failed(&sent_id, None).await.unwrap(),
+        repository
+            .resolve_failed(&sent_id, &organization_ids, None)
+            .await
+            .unwrap(),
         NotificationResolveResult::InvalidStatus
+    ));
+    assert!(matches!(
+        repository
+            .resolve_failed(&other_org_id, &organization_ids, None)
+            .await
+            .unwrap(),
+        NotificationResolveResult::NotFound
     ));
 }
