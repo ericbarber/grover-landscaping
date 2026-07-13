@@ -26,6 +26,9 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     let account_id = "acct_portfolio_test";
     let organization_id = "org_demo_landscaping";
     let property_id = "property_portfolio_test";
+    let ungrouped_property_id = "property_portfolio_ungrouped";
+    let grouped_job_id = "job_portfolio_test";
+    let ungrouped_job_id = "job_portfolio_ungrouped";
     let display_name = "Portfolio Persistence Test";
     let portfolio_id =
         "portfolio_acct_portfolio_test_org_demo_landscaping_portfolio_persistence_test";
@@ -41,6 +44,64 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         .execute(&pool)
         .await
         .expect("test portfolio should reset");
+    sqlx::query("DELETE FROM service_jobs WHERE id = ANY($1)")
+        .bind(vec![grouped_job_id, ungrouped_job_id])
+        .execute(&pool)
+        .await
+        .expect("test jobs should reset");
+    sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
+        .bind(account_id)
+        .execute(&pool)
+        .await
+        .expect("test account should reset");
+
+    sqlx::query(
+        r#"
+        INSERT INTO customer_accounts (
+            id,
+            customer_name,
+            billing_model,
+            payment_status,
+            service_approval_status
+        )
+        VALUES ($1, 'Portfolio Persistence Customer', 'per_job', 'pending', 'approved')
+        "#,
+    )
+    .bind(account_id)
+    .execute(&pool)
+    .await
+    .expect("test account should be inserted");
+
+    for (job_id, address) in [
+        (grouped_job_id, "321 Grouped Oak Road"),
+        (ungrouped_job_id, "654 Ungrouped Pine Road"),
+    ] {
+        sqlx::query(
+            r#"
+            INSERT INTO service_jobs (
+                id,
+                organization_id,
+                customer_account_id,
+                customer_name,
+                property_address,
+                status,
+                scheduled_date,
+                before_photos,
+                after_photos,
+                checklist_items,
+                completed_checklist_items
+            )
+            VALUES ($1, $2, $3, 'Portfolio Persistence Customer', $4, 'scheduled', '2026-07-01', 0, 0, 4, 0)
+            "#,
+        )
+        .bind(job_id)
+        .bind(organization_id)
+        .bind(account_id)
+        .bind(address)
+        .execute(&pool)
+        .await
+        .expect("test job should be inserted");
+    }
 
     let repository = PropertyPortfolioRepository::from_pool(pool.clone());
     let portfolio = repository
@@ -83,4 +144,23 @@ async fn repository_persists_lists_and_links_property_portfolios() {
 
     assert_eq!(listed.property_count, 1);
     assert!(listed.persisted);
+
+    let customer_read = repository
+        .customer_portfolio_read(account_id, &[organization_id.to_string()])
+        .await;
+
+    let detail = customer_read
+        .portfolios
+        .iter()
+        .find(|portfolio| portfolio.id == portfolio_id)
+        .expect("created portfolio detail should be returned");
+
+    assert!(customer_read.persisted);
+    assert_eq!(detail.properties.len(), 1);
+    assert_eq!(detail.properties[0].id, property_id);
+    assert_eq!(customer_read.ungrouped_properties.len(), 1);
+    assert_eq!(
+        customer_read.ungrouped_properties[0].id,
+        ungrouped_property_id
+    );
 }

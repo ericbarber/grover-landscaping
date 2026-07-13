@@ -1,7 +1,7 @@
 use crate::access_control::{
     can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
     can_manage_schedule, can_review_completion_report, can_submit_completion_report,
-    can_view_crew_route, AccessRole,
+    can_view_crew_route, can_view_customer_property_portfolios, AccessRole,
 };
 use axum::{
     extract::{Request, State},
@@ -402,6 +402,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     let can_submit_reports = principal.roles.iter().any(can_submit_completion_report);
     let can_manage_portfolios = principal.roles.iter().any(can_manage_property_portfolios);
     let can_manage_assignments = principal.roles.iter().any(can_manage_crew_assignments);
+    let can_view_customer_portfolios = principal
+        .roles
+        .iter()
+        .any(can_view_customer_property_portfolios);
 
     if path == "/me/access" {
         return *method == Method::GET;
@@ -445,6 +449,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     if path.starts_with("/accounts/") && path.ends_with("/property-portfolios") {
         return *method == Method::GET && can_manage_portfolios;
+    }
+
+    if path.starts_with("/accounts/") && path.ends_with("/customer-property-portfolio") {
+        return *method == Method::GET && can_view_customer_portfolios;
     }
 
     if path == "/property-portfolios" {
@@ -824,6 +832,37 @@ mod tests {
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
             "/property-portfolios/portfolio_1001/properties"
+        ));
+    }
+
+    #[test]
+    fn customer_portfolio_reads_allow_customer_and_manager_roles() {
+        let path = "/accounts/acct_1001/customer-property-portfolio";
+
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::GET,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::POST,
+            path
         ));
     }
 

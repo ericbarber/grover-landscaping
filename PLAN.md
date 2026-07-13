@@ -374,12 +374,12 @@ Current state:
 - Backend API contracts are documented for property portfolio management and property crew assignment workflows
 - Backend property portfolio routes can create portfolios, link properties to portfolios, and list account portfolios within active organization memberships
 - Backend property crew-assignment routes can assign crews, list property assignment history, and list active crew property workloads within active organization memberships
+- Backend customer property portfolio reads return grouped and ungrouped customer yards within active organization memberships
 - Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
 - Portfolio coverage summary reports total, grouped, and ungrouped yard counts
 
 Next implementation work:
 
-- Add authenticated customer-scoped portfolio and property reads
 - Add property onboarding fields and validation for service address, access notes, billing, and notification details
 
 ## Planned

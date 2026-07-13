@@ -147,6 +147,7 @@ Current backend endpoints include:
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
 | GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
+| GET | `/accounts/{account_id}/customer-property-portfolio` | Read customer-scoped portfolio groups, grouped properties, and ungrouped yards |
 | POST | `/property-portfolios` | Create a property portfolio for a customer account |
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |
@@ -189,7 +190,7 @@ Current backend endpoints include:
 | GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
 | POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
-The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
+The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, customer property portfolio, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 
 ## Data and Persistence
 
@@ -206,6 +207,7 @@ The project currently includes migrations for:
 - Project bids and ordered bid line items
 - Project-bid conversions and scheduled job add-ons
 - Property portfolios and portfolio-to-property membership
+- Customer-scoped portfolio/property read model with grouped and ungrouped yards
 - Property-to-crew service assignment history
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Route-planning seed data

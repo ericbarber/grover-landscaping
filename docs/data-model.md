@@ -67,6 +67,8 @@ created_at
 
 Portfolio membership is stored separately in `portfolio_property_links` with `portfolio_id`, `property_id`, and `organization_id`. Portfolio create, list, and property-link APIs require active organization membership and do not change customer ownership, property ownership, or crew assignment history.
 
+The customer property portfolio read model returns grouped portfolio properties plus `ungrouped_properties` for customer-owned yards that do not yet have a portfolio link. Until a dedicated property table exists, persisted customer property reads are materialized from service jobs, using completion-report property identifiers when available and stable job-derived property identifiers otherwise.
+
 ## property_crew_assignments
 
 Implemented property crew-assignment fields:

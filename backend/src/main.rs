@@ -37,7 +37,7 @@ use grover_landscaping_api::{
     access_control::{
         can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
         can_manage_schedule, can_review_completion_report, can_submit_completion_report,
-        can_view_crew_route, AccessRole,
+        can_view_crew_route, can_view_customer_property_portfolios, AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::OrganizationRepository,
@@ -431,6 +431,10 @@ fn app_with_runtime(
             "/accounts/{account_id}/property-portfolios",
             get(list_property_portfolios_for_account),
         )
+        .route(
+            "/accounts/{account_id}/customer-property-portfolio",
+            get(get_customer_property_portfolio),
+        )
         .route("/property-portfolios", post(create_property_portfolio))
         .route(
             "/property-portfolios/{portfolio_id}/properties",
@@ -718,6 +722,25 @@ async fn list_property_portfolios_for_account(
         .await;
 
     Json(portfolios).into_response()
+}
+
+async fn get_customer_property_portfolio(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_view_customer_property_portfolios,
+    )
+    .await;
+    let response = state
+        .property_portfolios
+        .customer_portfolio_read(&account_id, &organization_ids)
+        .await;
+
+    Json(response).into_response()
 }
 
 async fn create_property_portfolio(
@@ -2734,6 +2757,61 @@ mod tests {
         assert_eq!(json[0]["organization_id"], "org_demo_landscaping");
         assert_eq!(json[0]["property_count"], 1);
         assert_eq!(json[0]["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn customer_property_portfolio_endpoint_returns_grouped_seed_properties() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/accounts/acct_1001/customer-property-portfolio")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["account_id"], "acct_1001");
+        assert_eq!(json["portfolios"].as_array().unwrap().len(), 1);
+        assert_eq!(json["portfolios"][0]["property_count"], 1);
+        assert_eq!(
+            json["portfolios"][0]["properties"][0]["id"],
+            "property_1001"
+        );
+        assert!(json["ungrouped_properties"].as_array().unwrap().is_empty());
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn customer_property_portfolio_endpoint_returns_ungrouped_seed_properties() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/accounts/acct_1002/customer-property-portfolio")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["account_id"], "acct_1002");
+        assert!(json["portfolios"].as_array().unwrap().is_empty());
+        assert_eq!(json["ungrouped_properties"].as_array().unwrap().len(), 1);
+        assert_eq!(json["ungrouped_properties"][0]["id"], "property_1002");
+        assert_eq!(
+            json["ungrouped_properties"][0]["address"],
+            "456 Maple Avenue"
+        );
     }
 
     #[tokio::test]

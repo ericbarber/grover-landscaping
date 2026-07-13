@@ -42,6 +42,38 @@ pub struct PortfolioPropertyLinkResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyProfileResponse {
+    pub id: String,
+    pub account_id: String,
+    pub organization_id: String,
+    pub display_name: String,
+    pub address: String,
+    pub last_service_date: Option<String>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyPortfolioDetailResponse {
+    pub id: String,
+    pub account_id: String,
+    pub organization_id: String,
+    pub display_name: String,
+    pub portfolio_type: String,
+    pub property_count: u32,
+    pub properties: Vec<CustomerPropertyProfileResponse>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyPortfolioReadResponse {
+    pub account_id: String,
+    pub organization_ids: Vec<String>,
+    pub portfolios: Vec<CustomerPropertyPortfolioDetailResponse>,
+    pub ungrouped_properties: Vec<CustomerPropertyProfileResponse>,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct PropertyPortfolioRepository {
     pool: Option<PgPool>,
@@ -123,6 +155,32 @@ impl PropertyPortfolioRepository {
         }
 
         seed_portfolios_for_account(account_id, organization_ids)
+    }
+
+    pub async fn customer_portfolio_read(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+    ) -> CustomerPropertyPortfolioReadResponse {
+        if organization_ids.is_empty() {
+            return CustomerPropertyPortfolioReadResponse {
+                account_id: account_id.to_string(),
+                organization_ids: Vec::new(),
+                portfolios: Vec::new(),
+                ungrouped_properties: Vec::new(),
+                persisted: false,
+            };
+        }
+
+        if let Some(pool) = &self.pool {
+            if let Ok(response) =
+                customer_portfolio_read_for_account(pool, account_id, organization_ids).await
+            {
+                return response;
+            }
+        }
+
+        seed_customer_portfolio_read(account_id, organization_ids)
     }
 }
 
@@ -352,6 +410,141 @@ fn portfolio_property_link_response_from_row(
     }
 }
 
+async fn customer_portfolio_read_for_account(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+) -> Result<CustomerPropertyPortfolioReadResponse, sqlx::Error> {
+    let portfolio_rows = sqlx::query(
+        r#"
+        SELECT
+            portfolio.id,
+            portfolio.account_id,
+            portfolio.organization_id,
+            portfolio.display_name,
+            portfolio.portfolio_type
+        FROM property_portfolios portfolio
+        WHERE portfolio.account_id = $1
+          AND portfolio.organization_id = ANY($2)
+        ORDER BY portfolio.display_name ASC, portfolio.id ASC
+        "#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+
+    let property_rows = sqlx::query(
+        r#"
+        WITH job_properties AS (
+            SELECT
+                COALESCE(
+                    (
+                        SELECT report.property_id
+                        FROM completion_reports report
+                        WHERE report.job_id = job.id
+                          AND report.organization_id = job.organization_id
+                        ORDER BY report.updated_at DESC, report.id DESC
+                        LIMIT 1
+                    ),
+                    CASE
+                        WHEN job.id LIKE 'job_%' THEN 'property_' || SUBSTRING(job.id FROM 5)
+                        ELSE 'property_' || job.id
+                    END
+                ) AS property_id,
+                job.customer_account_id AS account_id,
+                job.organization_id,
+                job.property_address,
+                MAX(job.scheduled_date) AS last_service_date
+            FROM service_jobs job
+            WHERE job.customer_account_id = $1
+              AND job.organization_id = ANY($2)
+            GROUP BY property_id, job.customer_account_id, job.organization_id, job.property_address
+        )
+        SELECT
+            property.property_id,
+            property.account_id,
+            property.organization_id,
+            property.property_address,
+            property.last_service_date,
+            link.portfolio_id
+        FROM job_properties property
+        LEFT JOIN portfolio_property_links link
+          ON link.property_id = property.property_id
+         AND link.organization_id = property.organization_id
+        ORDER BY property.property_address ASC, property.property_id ASC
+        "#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+
+    let property_links: Vec<(CustomerPropertyProfileResponse, Option<String>)> = property_rows
+        .into_iter()
+        .map(|row| {
+            let property_id: String = row.get("property_id");
+            let property_address: String = row.get("property_address");
+            (
+                CustomerPropertyProfileResponse {
+                    id: property_id.clone(),
+                    account_id: row.get("account_id"),
+                    organization_id: row.get("organization_id"),
+                    display_name: property_address.clone(),
+                    address: property_address,
+                    last_service_date: row.get("last_service_date"),
+                    persisted: true,
+                },
+                row.get("portfolio_id"),
+            )
+        })
+        .collect();
+
+    let portfolios = portfolio_rows
+        .into_iter()
+        .map(|row| {
+            let portfolio_id: String = row.get("id");
+            let properties = property_links
+                .iter()
+                .filter(|(_, linked_portfolio_id)| {
+                    linked_portfolio_id.as_deref() == Some(portfolio_id.as_str())
+                })
+                .map(|(property, _)| property.clone())
+                .collect::<Vec<_>>();
+
+            CustomerPropertyPortfolioDetailResponse {
+                id: portfolio_id,
+                account_id: row.get("account_id"),
+                organization_id: row.get("organization_id"),
+                display_name: row.get("display_name"),
+                portfolio_type: row.get("portfolio_type"),
+                property_count: properties.len() as u32,
+                properties,
+                persisted: true,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let ungrouped_properties = property_links
+        .into_iter()
+        .filter_map(|(property, linked_portfolio_id)| {
+            if linked_portfolio_id.is_none() {
+                Some(property)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    Ok(CustomerPropertyPortfolioReadResponse {
+        account_id: account_id.to_string(),
+        organization_ids: organization_ids.to_vec(),
+        portfolios,
+        ungrouped_properties,
+        persisted: true,
+    })
+}
+
 fn seed_portfolios_for_account(
     account_id: &str,
     organization_ids: &[String],
@@ -375,11 +568,87 @@ fn seed_portfolios_for_account(
     }]
 }
 
+fn seed_customer_portfolio_read(
+    account_id: &str,
+    organization_ids: &[String],
+) -> CustomerPropertyPortfolioReadResponse {
+    let organization_ids = organization_ids.to_vec();
+
+    if !organization_ids
+        .iter()
+        .any(|organization_id| organization_id == "org_demo_landscaping")
+    {
+        return CustomerPropertyPortfolioReadResponse {
+            account_id: account_id.to_string(),
+            organization_ids,
+            portfolios: Vec::new(),
+            ungrouped_properties: Vec::new(),
+            persisted: false,
+        };
+    }
+
+    if account_id == "acct_1001" {
+        let property = CustomerPropertyProfileResponse {
+            id: "property_1001".to_string(),
+            account_id: account_id.to_string(),
+            organization_id: "org_demo_landscaping".to_string(),
+            display_name: "123 Oak Street".to_string(),
+            address: "123 Oak Street".to_string(),
+            last_service_date: Some("2026-06-15".to_string()),
+            persisted: false,
+        };
+
+        return CustomerPropertyPortfolioReadResponse {
+            account_id: account_id.to_string(),
+            organization_ids,
+            portfolios: vec![CustomerPropertyPortfolioDetailResponse {
+                id: "portfolio_acct_1001_demo".to_string(),
+                account_id: account_id.to_string(),
+                organization_id: "org_demo_landscaping".to_string(),
+                display_name: "Sample owner homes".to_string(),
+                portfolio_type: "individual_owner".to_string(),
+                property_count: 1,
+                properties: vec![property],
+                persisted: false,
+            }],
+            ungrouped_properties: Vec::new(),
+            persisted: false,
+        };
+    }
+
+    if account_id == "acct_1002" {
+        return CustomerPropertyPortfolioReadResponse {
+            account_id: account_id.to_string(),
+            organization_ids,
+            portfolios: Vec::new(),
+            ungrouped_properties: vec![CustomerPropertyProfileResponse {
+                id: "property_1002".to_string(),
+                account_id: account_id.to_string(),
+                organization_id: "org_demo_landscaping".to_string(),
+                display_name: "456 Maple Avenue".to_string(),
+                address: "456 Maple Avenue".to_string(),
+                last_service_date: Some("2026-06-15".to_string()),
+                persisted: false,
+            }],
+            persisted: false,
+        };
+    }
+
+    CustomerPropertyPortfolioReadResponse {
+        account_id: account_id.to_string(),
+        organization_ids,
+        portfolios: Vec::new(),
+        ungrouped_properties: Vec::new(),
+        persisted: false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         is_valid_portfolio_type, portfolio_id, portfolio_property_link_id,
-        seed_portfolios_for_account, storage_key, PropertyPortfolioRepository,
+        seed_customer_portfolio_read, seed_portfolios_for_account, storage_key,
+        PropertyPortfolioRepository,
     };
 
     use crate::property_portfolio_requests::{
@@ -462,5 +731,32 @@ mod tests {
             1
         );
         assert!(seed_portfolios_for_account("acct_1001", &["org_other".to_string()]).is_empty());
+    }
+
+    #[test]
+    fn seed_customer_read_includes_grouped_and_ungrouped_properties() {
+        let grouped =
+            seed_customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()]);
+        assert_eq!(grouped.portfolios.len(), 1);
+        assert_eq!(grouped.portfolios[0].properties[0].id, "property_1001");
+        assert!(grouped.ungrouped_properties.is_empty());
+
+        let ungrouped =
+            seed_customer_portfolio_read("acct_1002", &["org_demo_landscaping".to_string()]);
+        assert!(ungrouped.portfolios.is_empty());
+        assert_eq!(ungrouped.ungrouped_properties[0].id, "property_1002");
+    }
+
+    #[tokio::test]
+    async fn repository_returns_local_customer_read_when_database_is_unavailable() {
+        let repository = PropertyPortfolioRepository::default();
+
+        let response = repository
+            .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
+            .await;
+
+        assert_eq!(response.account_id, "acct_1001");
+        assert_eq!(response.portfolios[0].property_count, 1);
+        assert!(!response.persisted);
     }
 }

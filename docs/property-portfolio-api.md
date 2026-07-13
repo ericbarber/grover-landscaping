@@ -11,6 +11,7 @@ Property portfolios group yards for a customer account, property management comp
 - `property_portfolios` stores portfolio records.
 - `portfolio_property_links` stores membership between a portfolio and a yard/property.
 - `PropertyPortfolioResponse` and `PortfolioPropertyLinkResponse` provide backend response shapes with `persisted` status and property counts where relevant.
+- `CustomerPropertyPortfolioReadResponse` returns customer-scoped portfolio groups, grouped properties, and customer-owned ungrouped properties for portal reads.
 - `CreatePropertyPortfolioRequest` and `AddPropertyToPortfolioRequest` validate write payloads.
 
 ## Endpoints
@@ -64,6 +65,20 @@ Expected behavior:
 - Return only portfolios owned by the requested account.
 - Scope results to the signed-in principal's active organization memberships.
 - Include yard/property counts.
+
+### Read customer portfolio and properties
+
+`GET /accounts/{account_id}/customer-property-portfolio`
+
+Expected behavior:
+
+- The caller must be an organization owner, manager, support admin, property owner, or property manager.
+- Scope results to the signed-in principal's active organization memberships.
+- Return portfolio groups for the requested account.
+- Return properties inside each portfolio group.
+- Return customer-owned properties without a portfolio link in `ungrouped_properties`.
+- Derive current property reads from persisted service jobs and completion-report property identifiers when a dedicated property record is not available yet.
+- Reading the endpoint must not change portfolio membership, customer ownership, crew assignment, route state, report status, or job state.
 
 ## Guardrails
 

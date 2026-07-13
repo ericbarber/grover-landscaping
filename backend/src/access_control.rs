@@ -65,6 +65,17 @@ pub fn can_view_customer_portal(role: &AccessRole) -> bool {
     )
 }
 
+pub fn can_view_customer_property_portfolios(role: &AccessRole) -> bool {
+    matches!(
+        role,
+        AccessRole::OrganizationOwner
+            | AccessRole::Manager
+            | AccessRole::PropertyOwner
+            | AccessRole::PropertyManager
+            | AccessRole::SupportAdmin
+    )
+}
+
 pub fn can_manage_property_portfolios(role: &AccessRole) -> bool {
     matches!(
         role,
@@ -175,8 +186,8 @@ mod tests {
         can_manage_property_portfolios_for_organization, can_manage_schedule,
         can_manage_schedule_for_organization, can_review_completion_report_for_organization,
         can_submit_completion_report_for_organization, can_view_crew_route,
-        can_view_customer_portal, can_view_customer_portal_for_organization, AccessContext,
-        AccessRole,
+        can_view_customer_portal, can_view_customer_portal_for_organization,
+        can_view_customer_property_portfolios, AccessContext, AccessRole,
     };
 
     fn manager_context() -> AccessContext {
@@ -235,8 +246,25 @@ mod tests {
     #[test]
     fn property_owner_can_view_customer_portal_only() {
         assert!(can_view_customer_portal(&AccessRole::PropertyOwner));
+        assert!(can_view_customer_property_portfolios(
+            &AccessRole::PropertyOwner
+        ));
         assert!(!can_view_crew_route(&AccessRole::PropertyOwner));
         assert!(!can_manage_organization(&AccessRole::PropertyOwner));
+    }
+
+    #[test]
+    fn customer_property_portfolio_reads_allow_customer_and_manager_roles() {
+        assert!(can_view_customer_property_portfolios(
+            &AccessRole::PropertyOwner
+        ));
+        assert!(can_view_customer_property_portfolios(
+            &AccessRole::PropertyManager
+        ));
+        assert!(can_view_customer_property_portfolios(&AccessRole::Manager));
+        assert!(!can_view_customer_property_portfolios(
+            &AccessRole::CrewMember
+        ));
     }
 
     #[test]
