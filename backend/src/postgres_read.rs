@@ -4,6 +4,39 @@ use crate::{
 };
 use sqlx::{PgPool, Row};
 
+pub async fn organization_id_for_job(
+    pool: &PgPool,
+    job_id: &str,
+) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        r#"
+        SELECT organization_id
+        FROM service_jobs
+        WHERE id = $1
+        "#,
+    )
+    .bind(job_id)
+    .fetch_optional(pool)
+    .await
+}
+
+pub async fn organization_id_for_completion_report(
+    pool: &PgPool,
+    report_id: &str,
+) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        r#"
+        SELECT job.organization_id
+        FROM job_completion_reports report
+        JOIN service_jobs job ON job.id = report.job_id
+        WHERE report.id = $1
+        "#,
+    )
+    .bind(report_id)
+    .fetch_optional(pool)
+    .await
+}
+
 pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
     let rows = sqlx::query(
         "SELECT id, organization_id, assigned_crew_id, customer_name, property_address, status, scheduled_date, before_photos, after_photos, checklist_items, completed_checklist_items FROM service_jobs ORDER BY scheduled_date ASC, id ASC",

@@ -36,6 +36,8 @@ created_at
 updated_at
 ```
 
+Job-scoped API routes use `organization_id` as the tenant boundary. Job list/detail, account, report, add-on, photo, job lifecycle, and completion-report action endpoints resolve this organization before returning or mutating data.
+
 ## crews and day_plans
 
 Implemented crew ownership fields:

@@ -183,7 +183,7 @@ Current backend endpoints include:
 | GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
 | POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
-The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Crew and day-plan endpoints resolve the crew's service organization and require an active membership in that organization before returning route, amendment, stop, or manager bid data.
+The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 
 ## Data and Persistence
 

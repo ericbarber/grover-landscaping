@@ -291,11 +291,12 @@ Current state:
 - Development and production Cognito infrastructure is declared in Terraform
 - Delivered completion report approvals record organization-scoped `report_delivered` audit events
 - Crews carry organization ownership, and day-plan, amendment, stop, and manager bid APIs enforce active organization membership before using persisted or local fallback data
+- Job list/detail, job account, job report, add-on, photo, and completion-report action routes enforce active organization membership before returning or mutating job-scoped data
 
 Next implementation work:
 
 - Provision the Cognito environment and create the first organization-owner account
-- Continue tenant-aware resource boundaries for properties, photos, shared customer reads, and remaining job detail routes
+- Continue tenant-aware resource boundaries for properties and shared customer reads
 - Add invite-based onboarding and role administration
 - Record audit events for login, role, access, bid, notification, and remaining approval changes
 
@@ -355,6 +356,7 @@ Current state:
 - Manager notification history can retry failed and dead-letter delivery records by returning them to queued status
 - Manager notification history can mark failed and dead-letter delivery records manually resolved
 - Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
+- Job-scoped reads and mutations, photo endpoints, add-on status updates, and completion-report actions reject access outside the principal's active organization memberships
 
 ### Property ownership, portfolios, and crew assignments
 
@@ -409,7 +411,7 @@ Build scope:
 
 - Provision and validate Cognito for the first organization owner, manager, crew lead, and customer test users.
 - Persist organization membership, role assignments, and tenant-aware resource ownership for jobs, crews, day plans, properties, completion reports, bids, photos, and notifications.
-- Add organization/customer scoping to manager completion-report list, day-plan, amendment, bid, photo, and shared customer queries.
+- Add organization/customer scoping to manager completion-report list, day-plan, amendment, bid, job, photo, and shared customer queries.
 - Wire property portfolio and active crew assignment models into backend API routes after access boundaries are enforced.
 - Add audit events for login-sensitive and business-sensitive actions: role changes, schedule changes, report review, bid send/revoke/decision/convert, notification enqueueing, and customer-visible delivery.
 - Document hosted pilot setup, seed data expectations, first-user creation, and rollback notes.

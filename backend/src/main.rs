@@ -34,7 +34,10 @@ use day_plans::{
 };
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::{
-    access_control::{can_manage_schedule, can_view_crew_route, AccessRole},
+    access_control::{
+        can_deliver_completion_report, can_manage_schedule, can_review_completion_report,
+        can_submit_completion_report, can_view_crew_route, AccessRole,
+    },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::OrganizationRepository,
 };
@@ -599,26 +602,73 @@ async fn shutdown_signal() {
     tracing::info!("shutdown signal received");
 }
 
-async fn list_jobs(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    Json(state.jobs.list_jobs().await)
+async fn list_jobs(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let visible_organization_ids: HashSet<&str> =
+        organization_ids.iter().map(String::as_str).collect();
+    if visible_organization_ids.is_empty() {
+        return Json(Vec::<JobSummary>::new()).into_response();
+    }
+
+    let jobs: Vec<JobSummary> = state
+        .jobs
+        .list_jobs()
+        .await
+        .into_iter()
+        .filter(|job| {
+            completion_report_job_is_visible_to_membership(
+                &job.organization_id,
+                &visible_organization_ids,
+            )
+        })
+        .collect();
+
+    Json(jobs).into_response()
 }
 
-async fn get_job(State(state): State<Arc<AppState>>, Path(id): Path<String>) -> impl IntoResponse {
-    Json(state.jobs.get_job(id).await)
+async fn get_job(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(state.jobs.get_job(id).await).into_response()
 }
 
 async fn get_account_for_job(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.accounts.get_account_for_job(&id).await)
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(state.accounts.get_account_for_job(&id).await).into_response()
 }
 
 async fn get_completion_report(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
-    Json(build_and_persist_completion_report(&state, &id).await)
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(build_and_persist_completion_report(&state, &id).await).into_response()
 }
 
 async fn list_completion_reports(
@@ -1075,6 +1125,42 @@ async fn require_day_plan_organization_access(
     require_organization_membership(state, principal, &organization_id, required_role).await
 }
 
+async fn require_job_organization_access(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    job_id: &str,
+    required_role: fn(&AccessRole) -> bool,
+) -> Result<(), Response> {
+    let Some(organization_id) = state.jobs.organization_id_for_job(job_id).await else {
+        return Err(resource_not_found_response(
+            "job_not_found",
+            "Job was not found.",
+        ));
+    };
+
+    require_organization_membership(state, principal, &organization_id, required_role).await
+}
+
+async fn require_completion_report_organization_access(
+    state: &AppState,
+    principal: &AuthPrincipal,
+    report_id: &str,
+    required_role: fn(&AccessRole) -> bool,
+) -> Result<(), Response> {
+    let Some(organization_id) = state
+        .jobs
+        .organization_id_for_completion_report(report_id)
+        .await
+    else {
+        return Err(resource_not_found_response(
+            "completion_report_not_found",
+            "The requested completion report was not found.",
+        ));
+    };
+
+    require_organization_membership(state, principal, &organization_id, required_role).await
+}
+
 async fn require_organization_membership(
     state: &AppState,
     principal: &AuthPrincipal,
@@ -1129,6 +1215,17 @@ async fn start_completion_report_review(
     Extension(principal): Extension<AuthPrincipal>,
     Path(report_id): Path<String>,
 ) -> Response {
+    if let Err(response) = require_completion_report_organization_access(
+        &state,
+        &principal,
+        &report_id,
+        can_review_completion_report,
+    )
+    .await
+    {
+        return response;
+    }
+
     match state
         .jobs
         .start_completion_report_review(&report_id, &principal.subject)
@@ -1182,6 +1279,17 @@ async fn request_completion_report_changes(
         }
     };
 
+    if let Err(response) = require_completion_report_organization_access(
+        &state,
+        &principal,
+        &report_id,
+        can_review_completion_report,
+    )
+    .await
+    {
+        return response;
+    }
+
     match state
         .jobs
         .request_completion_report_changes(&report_id, &principal.subject, reason.as_deref())
@@ -1221,6 +1329,17 @@ async fn deliver_completion_report(
     Extension(principal): Extension<AuthPrincipal>,
     Path(report_id): Path<String>,
 ) -> Response {
+    if let Err(response) = require_completion_report_organization_access(
+        &state,
+        &principal,
+        &report_id,
+        can_deliver_completion_report,
+    )
+    .await
+    {
+        return response;
+    }
+
     match state
         .jobs
         .deliver_completion_report(&report_id, &principal.subject)
@@ -1273,6 +1392,7 @@ async fn deliver_completion_report(
 
 async fn queue_completion_report_delivery_notification(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(report_id): Path<String>,
     Json(request): Json<CompletionReportDeliveryNotificationRequest>,
 ) -> Response {
@@ -1285,6 +1405,17 @@ async fn queue_completion_report_delivery_notification(
             }),
         )
             .into_response();
+    }
+
+    if let Err(response) = require_completion_report_organization_access(
+        &state,
+        &principal,
+        &report_id,
+        can_deliver_completion_report,
+    )
+    .await
+    {
+        return response;
     }
 
     match state
@@ -1334,6 +1465,17 @@ async fn resubmit_completion_report(
     Extension(principal): Extension<AuthPrincipal>,
     Path(report_id): Path<String>,
 ) -> Response {
+    if let Err(response) = require_completion_report_organization_access(
+        &state,
+        &principal,
+        &report_id,
+        can_submit_completion_report,
+    )
+    .await
+    {
+        return response;
+    }
+
     match state
         .jobs
         .resubmit_completion_report(&report_id, &principal.subject)
@@ -1388,16 +1530,30 @@ fn normalize_completion_report_change_reason(reason: Option<String>) -> Result<O
 
 async fn list_job_add_ons(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.jobs.list_job_add_ons(&id).await)
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(state.jobs.list_job_add_ons(&id).await).into_response()
 }
 
 async fn update_job_add_on_status(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path((job_id, add_on_id)): Path<(String, String)>,
     Json(request): Json<JobAddOnStatusRequest>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &job_id, can_view_crew_route).await
+    {
+        return response;
+    }
+
     match state
         .jobs
         .update_job_add_on_status(&job_id, &add_on_id, &request.status)
@@ -1939,8 +2095,15 @@ async fn update_stop_progress(
 
 async fn start_job(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
     let message = state.jobs.start_job(&id).await;
 
     (
@@ -1950,12 +2113,20 @@ async fn start_job(
             message,
         }),
     )
+        .into_response()
 }
 
 async fn complete_job(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
     let message = state.jobs.complete_job(&id).await;
 
     (
@@ -1965,30 +2136,52 @@ async fn complete_job(
             message,
         }),
     )
+        .into_response()
 }
 
 async fn create_local_photo_upload(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
     Json(request): Json<PhotoUploadRequest>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
     let ticket = state.jobs.create_photo_upload(id, request).await;
 
-    (StatusCode::CREATED, Json(ticket))
+    (StatusCode::CREATED, Json(ticket)).into_response()
 }
 
 async fn list_job_photos(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
-) -> impl IntoResponse {
-    Json(state.jobs.list_photo_evidence(&id).await)
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
+    Json(state.jobs.list_photo_evidence(&id).await).into_response()
 }
 
 async fn complete_photo_upload(
     State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
     Json(request): Json<PhotoCompleteRequest>,
-) -> impl IntoResponse {
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+
     let message = state
         .jobs
         .complete_photo_upload(&id, &request.photo_id)
@@ -2001,6 +2194,7 @@ async fn complete_photo_upload(
             message,
         }),
     )
+        .into_response()
 }
 
 #[cfg(test)]
@@ -2098,6 +2292,59 @@ mod tests {
         .unwrap_err();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn job_organization_access_rejects_missing_membership() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "other-user".to_string(),
+            username: "Other User".to_string(),
+            roles: vec![AccessRole::CrewMember],
+        };
+
+        let response =
+            require_job_organization_access(&state, &principal, "job_1001", can_view_crew_route)
+                .await
+                .unwrap_err();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn job_organization_access_returns_not_found_for_unknown_seed_job() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        let response =
+            require_job_organization_access(&state, &principal, "job_unknown", can_view_crew_route)
+                .await
+                .unwrap_err();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn completion_report_organization_access_uses_seed_job_boundary() {
+        let state = seed_state();
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        assert!(require_completion_report_organization_access(
+            &state,
+            &principal,
+            "report_job_1001",
+            can_review_completion_report,
+        )
+        .await
+        .is_ok());
     }
 
     #[tokio::test]

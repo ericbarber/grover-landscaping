@@ -88,6 +88,30 @@ impl JobRepository {
             .is_ok()
     }
 
+    pub async fn organization_id_for_job(&self, job_id: &str) -> Option<String> {
+        if let Some(pool) = &self.pool {
+            if let Ok(organization_id) = postgres_read::organization_id_for_job(pool, job_id).await
+            {
+                return organization_id;
+            }
+        }
+
+        seed_organization_id_for_job(job_id)
+    }
+
+    pub async fn organization_id_for_completion_report(&self, report_id: &str) -> Option<String> {
+        if let Some(pool) = &self.pool {
+            if let Ok(organization_id) =
+                postgres_read::organization_id_for_completion_report(pool, report_id).await
+            {
+                return organization_id;
+            }
+        }
+
+        let job_id = report_id.strip_prefix("report_")?;
+        seed_organization_id_for_job(job_id)
+    }
+
     pub async fn list_jobs(&self) -> Vec<JobSummary> {
         if let Some(pool) = &self.pool {
             if let Ok(jobs) = postgres_read::list_jobs(pool).await {
@@ -431,6 +455,13 @@ fn seed_job_summaries() -> Vec<JobSummary> {
             completed_checklist_items: 2,
         },
     ]
+}
+
+fn seed_organization_id_for_job(job_id: &str) -> Option<String> {
+    seed_job_summaries()
+        .into_iter()
+        .find(|job| job.id == job_id)
+        .map(|job| job.organization_id)
 }
 
 fn seed_job_detail(id: String) -> JobDetail {
