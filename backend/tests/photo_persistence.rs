@@ -1,6 +1,11 @@
 use grover_landscaping_api::{
-    db::JobRepository, photo_processing::process_photo_processing_once,
-    photo_storage::PhotoStorageConfig, PhotoUploadMetadata, PhotoUploadRequest,
+    db::{
+        JobRepository, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
+        PhotoProcessingRetryResult,
+    },
+    photo_processing::process_photo_processing_once,
+    photo_storage::PhotoStorageConfig,
+    PhotoUploadMetadata, PhotoUploadRequest,
 };
 use sqlx::Row;
 mod common;
@@ -397,4 +402,139 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
         0
     );
+}
+
+#[tokio::test]
+async fn repository_recovers_failed_photo_processing_jobs() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+
+    let ticket = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "recover-thumbnail.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "after".to_string(),
+            },
+        )
+        .await;
+    let pool = repository
+        .pool()
+        .expect("photo recovery test should have a PostgreSQL pool");
+    sqlx::query(
+        r#"
+        UPDATE job_photos
+        SET upload_mode = 's3-presigned',
+            thumbnail_object_key = $2
+        WHERE id = $1
+        "#,
+    )
+    .bind(&ticket.photo_id)
+    .bind("jobs/job_1001/photos/thumbnails/recover-thumbnail.jpg")
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let queued = repository
+        .queue_photo_processing_retry(
+            "job_1001",
+            &ticket.photo_id,
+            "thumbnail_generation",
+            "thumbnail_generation_unavailable",
+        )
+        .await
+        .expect("thumbnail processing job should be queued");
+
+    assert_eq!(
+        process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
+        1
+    );
+
+    let dead_letters = repository
+        .list_photo_processing_history(PhotoProcessingHistoryFilter {
+            organization_ids: vec!["org_demo_landscaping".to_string()],
+            task_type: Some("thumbnail_generation".to_string()),
+            status: Some("dead_letter".to_string()),
+            limit: 10,
+        })
+        .await
+        .unwrap();
+    assert_eq!(dead_letters.len(), 1);
+    assert_eq!(dead_letters[0].id, queued.id);
+    assert_eq!(dead_letters[0].file_name, "recover-thumbnail.jpg");
+    assert_eq!(
+        dead_letters[0].last_error.as_deref(),
+        Some("thumbnail_generation_failed")
+    );
+
+    let retry = repository
+        .retry_photo_processing_job(
+            &queued.id,
+            &["org_demo_landscaping".to_string()],
+            "manager_user_1",
+        )
+        .await
+        .unwrap();
+    let PhotoProcessingRetryResult::Retried(retried) = retry else {
+        panic!("dead-letter photo processing job should be retryable");
+    };
+    assert_eq!(retried.status, "queued");
+    assert_eq!(retried.attempt_count, 0);
+    assert_eq!(retried.last_error, None);
+
+    assert_eq!(
+        repository
+            .retry_photo_processing_job(
+                &queued.id,
+                &["org_demo_landscaping".to_string()],
+                "manager_user_1",
+            )
+            .await
+            .unwrap(),
+        PhotoProcessingRetryResult::InvalidStatus
+    );
+
+    assert_eq!(
+        process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
+        1
+    );
+
+    let resolved = repository
+        .resolve_photo_processing_job(
+            &queued.id,
+            &["org_demo_landscaping".to_string()],
+            "manager_user_1",
+            Some("Thumbnail regenerated manually"),
+        )
+        .await
+        .unwrap();
+    let PhotoProcessingResolveResult::Resolved(resolved) = resolved else {
+        panic!("dead-letter photo processing job should be resolvable");
+    };
+    assert_eq!(resolved.status, "resolved");
+    assert!(resolved.resolved_at.is_some());
+    assert_eq!(
+        resolved.resolution_note.as_deref(),
+        Some("Thumbnail regenerated manually")
+    );
+
+    let audit_events: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind IN ('photo_processing_retried', 'photo_processing_resolved')
+        "#,
+    )
+    .bind(&queued.id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(audit_events, 2);
 }

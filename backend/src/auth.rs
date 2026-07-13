@@ -375,6 +375,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/completion-reports/")
         || path == "/notifications"
         || path.starts_with("/notifications/")
+        || path == "/photo-processing-jobs"
+        || path.starts_with("/photo-processing-jobs/")
         || path == "/property-portfolios"
         || path.starts_with("/property-portfolios/")
         || path.starts_with("/properties/")
@@ -440,6 +442,18 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path.starts_with("/notifications/") && path.ends_with("/resolve") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path == "/photo-processing-jobs" {
+        return *method == Method::GET && can_review_reports;
+    }
+
+    if path.starts_with("/photo-processing-jobs/") && path.ends_with("/retry") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path.starts_with("/photo-processing-jobs/") && path.ends_with("/resolve") {
         return *method == Method::POST && can_review_reports;
     }
 
@@ -744,6 +758,42 @@ mod tests {
             &method,
             path,
         ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_recover_photo_processing_jobs() {
+        let list_path = "/photo-processing-jobs";
+        let retry_path = "/photo-processing-jobs/photo-processing-1/retry";
+        let resolve_path = "/photo-processing-jobs/photo-processing-1/resolve";
+
+        for path in [list_path, retry_path, resolve_path] {
+            let method = if path == list_path {
+                Method::GET
+            } else {
+                Method::POST
+            };
+
+            assert!(is_authorized(
+                &principal(AccessRole::Manager),
+                &method,
+                path,
+            ));
+            assert!(is_authorized(
+                &principal(AccessRole::OrganizationOwner),
+                &method,
+                path,
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::CrewMember),
+                &method,
+                path,
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::PropertyOwner),
+                &method,
+                path,
+            ));
+        }
     }
 
     #[test]

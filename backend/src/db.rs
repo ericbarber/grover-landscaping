@@ -16,6 +16,7 @@ use crate::{
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadMetadata,
     PhotoUploadRequest, PhotoUploadResponse,
 };
+use serde::Serialize;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
@@ -61,6 +62,52 @@ pub struct PhotoProcessingClaim {
     pub object_key: String,
     pub thumbnail_object_key: String,
     pub attempt_count: i32,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PhotoProcessingHistoryFilter {
+    pub organization_ids: Vec<String>,
+    pub task_type: Option<String>,
+    pub status: Option<String>,
+    pub limit: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct PhotoProcessingHistoryItem {
+    pub id: String,
+    pub photo_id: String,
+    pub job_id: String,
+    pub organization_id: String,
+    pub photo_type: String,
+    pub file_name: String,
+    pub task_type: String,
+    pub status: String,
+    pub attempt_count: i32,
+    pub available_at: String,
+    pub last_attempt_at: Option<String>,
+    pub completed_at: Option<String>,
+    pub resolved_at: Option<String>,
+    pub last_error: Option<String>,
+    pub failure_reason: Option<String>,
+    pub resolution_note: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PhotoProcessingRetryResult {
+    Retried(Box<PhotoProcessingHistoryItem>),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PhotoProcessingResolveResult {
+    Resolved(Box<PhotoProcessingHistoryItem>),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -641,6 +688,60 @@ impl JobRepository {
         )
         .await
         .unwrap_or(false)
+    }
+
+    #[allow(dead_code)]
+    pub async fn list_photo_processing_history(
+        &self,
+        filter: PhotoProcessingHistoryFilter,
+    ) -> Result<Vec<PhotoProcessingHistoryItem>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(Vec::new());
+        };
+
+        postgres_write::list_photo_processing_history(pool, filter).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn retry_photo_processing_job(
+        &self,
+        processing_job_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+    ) -> Result<PhotoProcessingRetryResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(PhotoProcessingRetryResult::Unavailable);
+        };
+
+        postgres_write::retry_photo_processing_job(
+            pool,
+            processing_job_id,
+            organization_ids,
+            actor_user_id,
+        )
+        .await
+    }
+
+    #[allow(dead_code)]
+    pub async fn resolve_photo_processing_job(
+        &self,
+        processing_job_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+        reason: Option<&str>,
+    ) -> Result<PhotoProcessingResolveResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(PhotoProcessingResolveResult::Unavailable);
+        };
+
+        postgres_write::resolve_photo_processing_job(
+            pool,
+            processing_job_id,
+            organization_ids,
+            actor_user_id,
+            reason,
+        )
+        .await
     }
 
     #[allow(dead_code)]

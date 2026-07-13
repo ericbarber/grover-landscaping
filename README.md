@@ -18,6 +18,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Server-side thumbnail generation attempt for S3-backed uploaded photo evidence
 - Durable photo-processing retry queue for thumbnail work that cannot finish during upload completion
 - Configurable background photo-processing worker for queued thumbnail retries
+- Manager photo-processing recovery APIs for failed thumbnail jobs
 - Rejected photo evidence quarantine for invalid uploaded image objects
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence
@@ -176,6 +177,9 @@ Current backend endpoints include:
 | GET | `/notifications` | List recent organization-scoped notification outbox history with optional `entity_type`, `status`, and `limit` filters |
 | POST | `/notifications/{id}/retry` | Reset an in-organization failed or dead-letter notification back to queued delivery |
 | POST | `/notifications/{id}/resolve` | Mark an in-organization failed or dead-letter notification as manually resolved |
+| GET | `/photo-processing-jobs` | List organization-scoped photo processing history with optional `task_type`, `status`, and `limit` filters |
+| POST | `/photo-processing-jobs/{id}/retry` | Reset an in-organization failed or dead-letter photo processing job back to queued |
+| POST | `/photo-processing-jobs/{id}/resolve` | Mark an in-organization failed or dead-letter photo processing job as manually resolved |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |
@@ -225,7 +229,7 @@ The project currently includes migrations for:
 - Customer-scoped portfolio/property read model with grouped and ungrouped yards
 - Property-to-crew service assignment history
 - Property onboarding profiles for address, access, billing, and notification readiness
-- Access audit records for login access summaries, account views, report approval and delivery, bid decisions and conversions, notification recovery, role administration, invitations, portfolio grouping, and crew assignment changes
+- Access audit records for login access summaries, account views, report approval and delivery, bid decisions and conversions, notification recovery, photo processing recovery, role administration, invitations, portfolio grouping, and crew assignment changes
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Organization-scoped photo-processing job records for queued thumbnail retry work
 - Route-planning seed data

@@ -342,10 +342,11 @@ Current state:
 - Rejected photo uploads persist rejection reason/timestamp metadata and remain quarantined from photo evidence reads
 - Upload completion enqueues durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
 - Optional background photo-processing worker claims queued thumbnail jobs, retries failures, and dead-letters exhausted work
+- Manager APIs list organization-scoped photo processing history and retry or resolve failed/dead-letter thumbnail jobs with audit events
 
 Next implementation work:
 
-- Add manager visibility and recovery actions for failed or dead-letter photo processing jobs
+- Add a frontend manager recovery panel for failed or dead-letter photo processing jobs
 
 ### Completion reports
 

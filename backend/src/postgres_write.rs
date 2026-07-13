@@ -1,4 +1,7 @@
-use super::{PhotoProcessingClaim, PhotoProcessingJobRecord};
+use super::{
+    PhotoProcessingClaim, PhotoProcessingHistoryFilter, PhotoProcessingHistoryItem,
+    PhotoProcessingJobRecord, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+};
 use crate::{
     photo_storage::PhotoStorageTicket, PhotoUploadMetadata, PhotoUploadRequest, PhotoUploadResponse,
 };
@@ -402,6 +405,192 @@ pub async fn mark_photo_processing_failed(
     Ok(result.rows_affected() == 1)
 }
 
+pub async fn list_photo_processing_history(
+    pool: &PgPool,
+    filter: PhotoProcessingHistoryFilter,
+) -> Result<Vec<PhotoProcessingHistoryItem>, sqlx::Error> {
+    if filter.organization_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let limit = filter.limit.clamp(1, 100);
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            processing.id,
+            processing.photo_id,
+            processing.job_id,
+            processing.organization_id,
+            photo.photo_type,
+            photo.file_name,
+            processing.task_type,
+            processing.status,
+            processing.attempt_count,
+            processing.available_at::text AS available_at,
+            processing.last_attempt_at::text AS last_attempt_at,
+            processing.completed_at::text AS completed_at,
+            processing.resolved_at::text AS resolved_at,
+            processing.last_error,
+            processing.failure_reason,
+            processing.resolution_note,
+            processing.created_at::text AS created_at,
+            processing.updated_at::text AS updated_at
+        FROM photo_processing_jobs processing
+        JOIN job_photos photo ON photo.id = processing.photo_id
+        WHERE processing.organization_id = ANY($1)
+          AND ($2::text IS NULL OR processing.task_type = $2)
+          AND ($3::text IS NULL OR processing.status = $3)
+        ORDER BY processing.created_at DESC, processing.id DESC
+        LIMIT $4
+        "#,
+    )
+    .bind(filter.organization_ids)
+    .bind(filter.task_type)
+    .bind(filter.status)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(photo_processing_history_item)
+        .collect())
+}
+
+pub async fn retry_photo_processing_job(
+    pool: &PgPool,
+    processing_job_id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+) -> Result<PhotoProcessingRetryResult, sqlx::Error> {
+    if organization_ids.is_empty() {
+        return Ok(PhotoProcessingRetryResult::NotFound);
+    }
+
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, organization_id FROM photo_processing_jobs WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+    )
+    .bind(processing_job_id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await?;
+
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PhotoProcessingRetryResult::NotFound);
+    };
+
+    let status: String = current.get("status");
+    if !matches!(status.as_str(), "failed" | "dead_letter") {
+        transaction.rollback().await?;
+        return Ok(PhotoProcessingRetryResult::InvalidStatus);
+    }
+
+    sqlx::query(
+        r#"
+        UPDATE photo_processing_jobs
+        SET
+            status = 'queued',
+            attempt_count = 0,
+            available_at = now(),
+            last_attempt_at = NULL,
+            completed_at = NULL,
+            resolved_at = NULL,
+            last_error = NULL,
+            resolution_note = NULL,
+            updated_at = now()
+        WHERE id = $1
+        "#,
+    )
+    .bind(processing_job_id)
+    .execute(&mut *transaction)
+    .await?;
+
+    insert_photo_processing_audit_event(
+        &mut transaction,
+        actor_user_id,
+        current.get("organization_id"),
+        "photo_processing_retried",
+        processing_job_id,
+    )
+    .await?;
+
+    transaction.commit().await?;
+
+    let item = photo_processing_history_by_id(pool, processing_job_id, organization_ids).await?;
+    Ok(item
+        .map(|item| PhotoProcessingRetryResult::Retried(Box::new(item)))
+        .unwrap_or(PhotoProcessingRetryResult::NotFound))
+}
+
+pub async fn resolve_photo_processing_job(
+    pool: &PgPool,
+    processing_job_id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+    reason: Option<&str>,
+) -> Result<PhotoProcessingResolveResult, sqlx::Error> {
+    if organization_ids.is_empty() {
+        return Ok(PhotoProcessingResolveResult::NotFound);
+    }
+
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, organization_id FROM photo_processing_jobs WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+    )
+    .bind(processing_job_id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await?;
+
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PhotoProcessingResolveResult::NotFound);
+    };
+
+    let status: String = current.get("status");
+    if !matches!(status.as_str(), "failed" | "dead_letter") {
+        transaction.rollback().await?;
+        return Ok(PhotoProcessingResolveResult::InvalidStatus);
+    }
+
+    let resolution_note = reason
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("Manually resolved by manager");
+    sqlx::query(
+        r#"
+        UPDATE photo_processing_jobs
+        SET
+            status = 'resolved',
+            resolved_at = now(),
+            resolution_note = $2,
+            updated_at = now()
+        WHERE id = $1
+        "#,
+    )
+    .bind(processing_job_id)
+    .bind(truncate_photo_processing_error(resolution_note))
+    .execute(&mut *transaction)
+    .await?;
+
+    insert_photo_processing_audit_event(
+        &mut transaction,
+        actor_user_id,
+        current.get("organization_id"),
+        "photo_processing_resolved",
+        processing_job_id,
+    )
+    .await?;
+
+    transaction.commit().await?;
+
+    let item = photo_processing_history_by_id(pool, processing_job_id, organization_ids).await?;
+    Ok(item
+        .map(|item| PhotoProcessingResolveResult::Resolved(Box::new(item)))
+        .unwrap_or(PhotoProcessingResolveResult::NotFound))
+}
+
 pub fn photo_upload_response(
     job_id: String,
     request: PhotoUploadRequest,
@@ -436,6 +625,78 @@ fn photo_processing_job_record(row: sqlx::postgres::PgRow) -> PhotoProcessingJob
         attempt_count: row.get("attempt_count"),
         failure_reason: row.get("failure_reason"),
     }
+}
+
+fn photo_processing_history_item(row: sqlx::postgres::PgRow) -> PhotoProcessingHistoryItem {
+    PhotoProcessingHistoryItem {
+        id: row.get("id"),
+        photo_id: row.get("photo_id"),
+        job_id: row.get("job_id"),
+        organization_id: row.get("organization_id"),
+        photo_type: row.get("photo_type"),
+        file_name: row.get("file_name"),
+        task_type: row.get("task_type"),
+        status: row.get("status"),
+        attempt_count: row.get("attempt_count"),
+        available_at: row.get("available_at"),
+        last_attempt_at: row.get("last_attempt_at"),
+        completed_at: row.get("completed_at"),
+        resolved_at: row.get("resolved_at"),
+        last_error: row.get("last_error"),
+        failure_reason: row.get("failure_reason"),
+        resolution_note: row.get("resolution_note"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+    }
+}
+
+async fn photo_processing_history_by_id(
+    pool: &PgPool,
+    processing_job_id: &str,
+    organization_ids: &[String],
+) -> Result<Option<PhotoProcessingHistoryItem>, sqlx::Error> {
+    let items = list_photo_processing_history(
+        pool,
+        PhotoProcessingHistoryFilter {
+            organization_ids: organization_ids.to_vec(),
+            task_type: None,
+            status: None,
+            limit: 100,
+        },
+    )
+    .await?;
+    Ok(items.into_iter().find(|item| item.id == processing_job_id))
+}
+
+async fn insert_photo_processing_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_user_id: &str,
+    organization_id: &str,
+    event_kind: &str,
+    target_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(target_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 fn photo_processing_retry_delay_seconds(attempt_count: i32) -> i32 {

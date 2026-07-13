@@ -74,9 +74,12 @@ POST /jobs/{id}/photos/complete
 
 photo_processing_jobs
   -> stores retryable photo processing tasks keyed by photo and task type
-  -> supports queued, processing, completed, failed, and dead_letter states
+  -> supports queued, processing, completed, failed, dead_letter, and resolved states
   -> claim helpers use row locks, retry availability, bounded attempts, and stale processing recovery
   -> optional PHOTO_PROCESSING_WORKER_MODE=enabled worker consumes queued thumbnail jobs when DATABASE_URL and PHOTO_STORAGE_MODE=s3 are configured
+  -> GET /photo-processing-jobs returns organization-scoped processing history for managers
+  -> POST /photo-processing-jobs/{id}/retry resets failed/dead-letter work to queued and writes an audit event
+  -> POST /photo-processing-jobs/{id}/resolve marks failed/dead-letter work resolved with a note and writes an audit event
 ```
 
 ## Local Development Database

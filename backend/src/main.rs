@@ -33,7 +33,10 @@ use day_plans::{
     CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
     ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
 };
-use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
+use db::{
+    DatabaseConfig, JobAddOnStatusUpdate, JobRepository, PhotoProcessingHistoryFilter,
+    PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+};
 use grover_landscaping_api::{
     access_control::{
         can_deliver_completion_report, can_manage_crew_assignments, can_manage_organization,
@@ -205,7 +208,19 @@ struct NotificationHistoryQuery {
 }
 
 #[derive(Debug, Default, Deserialize)]
+struct PhotoProcessingHistoryQuery {
+    task_type: Option<String>,
+    status: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
 struct NotificationResolveRequest {
+    reason: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct PhotoProcessingResolveRequest {
     reason: Option<String>,
 }
 
@@ -455,6 +470,15 @@ fn app_with_runtime(
         )
         .route("/completion-reports", get(list_completion_reports))
         .route("/notifications", get(list_notification_history))
+        .route("/photo-processing-jobs", get(list_photo_processing_history))
+        .route(
+            "/photo-processing-jobs/{id}/retry",
+            post(retry_photo_processing_job),
+        )
+        .route(
+            "/photo-processing-jobs/{id}/resolve",
+            post(resolve_photo_processing_job),
+        )
         .route(
             "/notifications/{id}/retry",
             post(retry_notification_delivery),
@@ -1549,6 +1573,173 @@ fn notification_history_filter(
         status: query.status,
         limit,
     })
+}
+
+async fn list_photo_processing_history(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Query(query): Query<PhotoProcessingHistoryQuery>,
+) -> Response {
+    match photo_processing_history_filter(query) {
+        Ok(mut filter) => {
+            filter.organization_ids = principal_active_organization_ids(&state, &principal).await;
+            match state.jobs.list_photo_processing_history(filter).await {
+                Ok(items) => Json(items).into_response(),
+                Err(_) => (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    Json(ErrorResponse {
+                        error: "photo_processing_history_unavailable",
+                        message: "Photo processing history could not be loaded from persistence."
+                            .to_string(),
+                    }),
+                )
+                    .into_response(),
+            }
+        }
+        Err(message) => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_photo_processing_history_filter",
+                message,
+            }),
+        )
+            .into_response(),
+    }
+}
+
+fn photo_processing_history_filter(
+    query: PhotoProcessingHistoryQuery,
+) -> Result<PhotoProcessingHistoryFilter, String> {
+    if let Some(task_type) = query.task_type.as_deref() {
+        if task_type != "thumbnail_generation" {
+            return Err("task_type must be thumbnail_generation when provided".to_string());
+        }
+    }
+
+    if let Some(status) = query.status.as_deref() {
+        if !matches!(
+            status,
+            "queued" | "processing" | "completed" | "failed" | "dead_letter" | "resolved"
+        ) {
+            return Err(
+                "status must be queued, processing, completed, failed, dead_letter, or resolved"
+                    .to_string(),
+            );
+        }
+    }
+
+    let limit = query.limit.unwrap_or(25);
+    if !(1..=100).contains(&limit) {
+        return Err("limit must be between 1 and 100".to_string());
+    }
+
+    Ok(PhotoProcessingHistoryFilter {
+        organization_ids: Vec::new(),
+        task_type: query.task_type,
+        status: query.status,
+        limit,
+    })
+}
+
+async fn retry_photo_processing_job(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    match state
+        .jobs
+        .retry_photo_processing_job(&id, &organization_ids, &principal.subject)
+        .await
+    {
+        Ok(PhotoProcessingRetryResult::Retried(item)) => Json(item).into_response(),
+        Ok(PhotoProcessingRetryResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "photo_processing_not_retryable",
+                message: "Only failed or dead-letter photo processing jobs can be retried."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoProcessingRetryResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "photo_processing_job_not_found",
+                message: "The requested photo processing job was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoProcessingRetryResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "photo_processing_retry_unavailable",
+                message: "Photo processing retry requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn resolve_photo_processing_job(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+    Json(request): Json<PhotoProcessingResolveRequest>,
+) -> Response {
+    let reason = match normalize_notification_resolution_reason(request.reason) {
+        Ok(reason) => reason,
+        Err(()) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_photo_processing_resolution_reason",
+                    message: "Resolution reason cannot exceed 1000 characters.".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    match state
+        .jobs
+        .resolve_photo_processing_job(
+            &id,
+            &organization_ids,
+            &principal.subject,
+            reason.as_deref(),
+        )
+        .await
+    {
+        Ok(PhotoProcessingResolveResult::Resolved(item)) => Json(item).into_response(),
+        Ok(PhotoProcessingResolveResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "photo_processing_not_resolvable",
+                message:
+                    "Only failed or dead-letter photo processing jobs can be manually resolved."
+                        .to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoProcessingResolveResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "photo_processing_job_not_found",
+                message: "The requested photo processing job was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoProcessingResolveResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "photo_processing_resolution_unavailable",
+                message: "Photo processing resolution requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn retry_notification_delivery(
@@ -4168,6 +4359,85 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_notification_history_filter");
+    }
+
+    #[tokio::test]
+    async fn photo_processing_history_endpoint_returns_empty_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/photo-processing-jobs?task_type=thumbnail_generation&status=failed&limit=10")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn photo_processing_history_endpoint_rejects_unknown_filters() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/photo-processing-jobs?task_type=metadata&status=queued")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_photo_processing_history_filter");
+    }
+
+    #[tokio::test]
+    async fn photo_processing_retry_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/photo-processing-jobs/photo_processing_1001/retry")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "photo_processing_retry_unavailable");
+    }
+
+    #[tokio::test]
+    async fn photo_processing_resolve_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/photo-processing-jobs/photo_processing_1001/resolve")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "photo_processing_resolution_unavailable");
     }
 
     #[tokio::test]
