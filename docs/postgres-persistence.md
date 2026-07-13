@@ -57,12 +57,13 @@ POST /jobs/{id}/complete
 
 POST /jobs/{id}/photos/presign
   -> INSERT job_photos row with pending status
-  -> return local placeholder ticket now
-  -> return S3 presigned URL later
+  -> return local placeholder ticket by default
+  -> return S3 presigned PUT URLs for original and browser-generated thumbnail when PHOTO_STORAGE_MODE=s3
 
 POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded', uploaded_at = now()
   -> increment before_photos or after_photos counters when appropriate
+  -> GET /jobs/{id}/photos returns expiring original and thumbnail display URLs when object storage is configured
 ```
 
 ## Local Development Database

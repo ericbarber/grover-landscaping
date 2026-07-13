@@ -137,6 +137,14 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {report.photoEvidence.map((photo) => (
                   <article className="rounded-xl bg-slate-50 p-4" key={photo.photoId}>
+                    {photo.thumbnailUrl ? (
+                      <img
+                        alt=""
+                        className="mb-3 aspect-video w-full rounded-lg object-cover"
+                        loading="lazy"
+                        src={photo.thumbnailUrl}
+                      />
+                    ) : null}
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{photo.photoType}</p>
                     <p className="mt-1 break-all text-sm font-semibold text-slate-900">{photo.fileName}</p>
                   </article>

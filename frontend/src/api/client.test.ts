@@ -60,6 +60,7 @@ describe('core API client mapping', () => {
           status: 'uploaded',
           upload_mode: 'local-placeholder',
           display_url: 'local://local/jobs/job_1001/before/before.jpg',
+          thumbnail_url: 'local://local/jobs/job_1001/before/thumb-before.jpg',
         },
       ],
       completed_add_ons: [
@@ -97,6 +98,7 @@ describe('core API client mapping', () => {
           photoId: 'photo_1',
           photoType: 'before',
           fileName: 'before.jpg',
+          thumbnailUrl: 'local://local/jobs/job_1001/before/thumb-before.jpg',
         },
       ],
       completedAddOns: [

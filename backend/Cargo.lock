@@ -644,11 +644,13 @@ name = "grover-landscaping-api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "hmac",
  "http-body-util",
  "jsonwebtoken",
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "sqlx",
  "tokio",
  "tower",

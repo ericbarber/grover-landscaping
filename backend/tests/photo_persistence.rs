@@ -39,5 +39,6 @@ async fn repository_persists_and_lists_photo_evidence() {
     assert_eq!(photo.status, "uploaded");
     assert_eq!(photo.upload_mode, "local-placeholder");
     assert_eq!(photo.object_key, ticket.object_key);
+    assert_eq!(photo.thumbnail_url, None);
     assert!(photo.display_url.starts_with("local://"));
 }

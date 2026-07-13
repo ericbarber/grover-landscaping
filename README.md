@@ -141,6 +141,7 @@ Current backend endpoints include:
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/health` | API health check |
+| GET | `/me/access` | Read the signed-in user's claim roles and active organization memberships |
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
@@ -155,8 +156,8 @@ Current backend endpoints include:
 | GET | `/report-view/{share_token}` | Open the customer-facing delivered report page |
 | POST | `/jobs/{id}/start` | Mark a job started |
 | POST | `/jobs/{id}/complete` | Mark a job complete |
-| GET | `/jobs/{id}/photos` | List persisted photo evidence metadata |
-| POST | `/jobs/{id}/photos/presign` | Create a local photo upload ticket |
+| GET | `/jobs/{id}/photos` | List persisted photo evidence metadata with display and thumbnail URLs |
+| POST | `/jobs/{id}/photos/presign` | Create a local or S3 presigned photo upload ticket, including thumbnail upload details when configured |
 | POST | `/jobs/{id}/photos/complete` | Mark a photo upload ticket complete |
 | GET | `/crews/{crew_id}/day-plan/today` | Read the current crew day plan route |
 | POST | `/day-plans` | Create a manager draft day plan |

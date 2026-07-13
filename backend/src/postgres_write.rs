@@ -1,4 +1,4 @@
-use crate::{PhotoUploadRequest, PhotoUploadResponse};
+use crate::{photo_storage::PhotoStorageTicket, PhotoUploadRequest, PhotoUploadResponse};
 use sqlx::{PgPool, Row};
 
 pub async fn start_job(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
@@ -64,14 +64,18 @@ pub async fn create_photo_upload(
     photo_id: &str,
     object_key: &str,
     safe_file_name: &str,
+    upload_mode: &str,
+    thumbnail_object_key: Option<&str>,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO job_photos (id, job_id, photo_type, file_name, content_type, object_key, status) VALUES ($1, $2, $3, $4, $5, $6, 'pending') ON CONFLICT (id) DO UPDATE SET file_name = EXCLUDED.file_name, content_type = EXCLUDED.content_type, object_key = EXCLUDED.object_key")
+    sqlx::query("INSERT INTO job_photos (id, job_id, photo_type, file_name, content_type, object_key, upload_mode, thumbnail_object_key, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending') ON CONFLICT (id) DO UPDATE SET file_name = EXCLUDED.file_name, content_type = EXCLUDED.content_type, object_key = EXCLUDED.object_key, upload_mode = EXCLUDED.upload_mode, thumbnail_object_key = EXCLUDED.thumbnail_object_key")
         .bind(photo_id)
         .bind(job_id)
         .bind(&request.photo_type)
         .bind(safe_file_name)
         .bind(&request.content_type)
         .bind(object_key)
+        .bind(upload_mode)
+        .bind(thumbnail_object_key)
         .execute(pool)
         .await?;
 
@@ -108,14 +112,12 @@ pub async fn complete_photo_upload(
     Ok(())
 }
 
-pub fn local_photo_response(
+pub fn photo_upload_response(
     job_id: String,
     request: PhotoUploadRequest,
     photo_id: String,
-    object_key: String,
+    storage_ticket: PhotoStorageTicket,
 ) -> PhotoUploadResponse {
-    let upload_url = format!("local://{object_key}?content_type={}", request.content_type);
-
     PhotoUploadResponse {
         status: "created",
         job_id,
@@ -123,8 +125,10 @@ pub fn local_photo_response(
         photo_type: request.photo_type,
         file_name: request.file_name,
         content_type: request.content_type,
-        upload_mode: "local-placeholder",
-        upload_url,
-        object_key,
+        upload_mode: storage_ticket.upload_mode,
+        upload_url: storage_ticket.upload_url,
+        object_key: storage_ticket.object_key,
+        thumbnail_upload_url: storage_ticket.thumbnail_upload_url,
+        thumbnail_object_key: storage_ticket.thumbnail_object_key,
     }
 }

@@ -1,4 +1,7 @@
-use crate::{ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence};
+use crate::{
+    photo_storage::{normalized_upload_mode, PhotoStorageConfig},
+    ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence,
+};
 use sqlx::{PgPool, Row};
 
 pub async fn list_jobs(pool: &PgPool) -> Result<Vec<JobSummary>, sqlx::Error> {
@@ -66,6 +69,7 @@ pub async fn get_job(pool: &PgPool, id: &str) -> Result<Option<JobDetail>, sqlx:
 pub async fn list_job_photos(
     pool: &PgPool,
     job_id: &str,
+    photo_storage: &PhotoStorageConfig,
 ) -> Result<Vec<PhotoEvidence>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
@@ -76,6 +80,8 @@ pub async fn list_job_photos(
             file_name,
             content_type,
             object_key,
+            COALESCE(upload_mode, 'local-placeholder') AS upload_mode,
+            thumbnail_object_key,
             status
         FROM job_photos
         WHERE job_id = $1
@@ -90,6 +96,9 @@ pub async fn list_job_photos(
         .into_iter()
         .map(|row| {
             let object_key: String = row.get("object_key");
+            let upload_mode: String = row.get("upload_mode");
+            let normalized_upload_mode = normalized_upload_mode(&upload_mode);
+            let thumbnail_object_key: Option<String> = row.get("thumbnail_object_key");
 
             PhotoEvidence {
                 id: row.get("id"),
@@ -97,10 +106,12 @@ pub async fn list_job_photos(
                 photo_type: row.get("photo_type"),
                 file_name: row.get("file_name"),
                 content_type: row.get("content_type"),
-                display_url: format!("local://{object_key}"),
+                display_url: photo_storage.display_url(normalized_upload_mode, &object_key),
                 object_key,
                 status: row.get("status"),
-                upload_mode: "local-placeholder",
+                upload_mode: normalized_upload_mode,
+                thumbnail_url: photo_storage
+                    .thumbnail_url(normalized_upload_mode, thumbnail_object_key.as_deref()),
             }
         })
         .collect())

@@ -5,6 +5,8 @@ pub mod completion_reports;
 pub mod day_plans;
 pub mod db;
 pub mod notifications;
+pub mod organizations;
+pub mod photo_storage;
 pub mod project_bids;
 pub mod property_portfolio_requests;
 pub mod property_portfolios;
@@ -76,6 +78,8 @@ pub struct PhotoUploadResponse {
     pub upload_mode: &'static str,
     pub upload_url: String,
     pub object_key: String,
+    pub thumbnail_upload_url: Option<String>,
+    pub thumbnail_object_key: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -89,4 +93,5 @@ pub struct PhotoEvidence {
     pub status: String,
     pub upload_mode: &'static str,
     pub display_url: String,
+    pub thumbnail_url: Option<String>,
 }

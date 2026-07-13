@@ -363,8 +363,10 @@ pub async fn require_api_auth(
 }
 
 fn is_protected_api_path(path: &str) -> bool {
-    path == "/jobs"
+    path == "/me/access"
+        || path == "/jobs"
         || path.starts_with("/jobs/")
+        || path == "/completion-reports"
         || path.starts_with("/completion-reports/")
         || path.starts_with("/crews/")
         || path == "/day-plans"
@@ -391,6 +393,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     let can_review_reports = principal.roles.iter().any(can_review_completion_report);
     let can_deliver_reports = principal.roles.iter().any(can_deliver_completion_report);
     let can_submit_reports = principal.roles.iter().any(can_submit_completion_report);
+
+    if path == "/me/access" {
+        return *method == Method::GET;
+    }
+
+    if path == "/completion-reports" {
+        return *method == Method::GET && can_review_reports;
+    }
 
     if path.starts_with("/completion-reports/") && path.ends_with("/review") {
         return *method == Method::POST && can_review_reports;
@@ -543,6 +553,33 @@ mod tests {
             &principal(AccessRole::CrewMember),
             &Method::POST,
             path
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_list_manager_report_queue() {
+        let path = "/completion-reports";
+        let method = Method::GET;
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &method,
+            path,
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &method,
+            path,
         ));
     }
 

@@ -202,9 +202,19 @@ export function CompletionReport({
             {uploadTickets.map((ticket) => (
               <div key={ticket.photoId} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-slate-800">{ticket.fileName}</p>
-                    <p className="capitalize">{ticket.photoType} photo</p>
+                  <div className="flex min-w-0 gap-3">
+                    {ticket.thumbnailUrl ? (
+                      <img
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                        loading="lazy"
+                        src={ticket.thumbnailUrl}
+                      />
+                    ) : null}
+                    <div className="min-w-0">
+                      <p className="break-all font-semibold text-slate-800">{ticket.fileName}</p>
+                      <p className="capitalize">{ticket.photoType} photo</p>
+                    </div>
                   </div>
                   <span className="rounded-full bg-white px-2 py-1 font-semibold uppercase text-slate-500">
                     {ticket.status}

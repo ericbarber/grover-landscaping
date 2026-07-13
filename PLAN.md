@@ -51,6 +51,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Rust access-token verification against Cognito JWKS
 - Route-level role gates for manager, crew, and public report access
 - Public runtime authentication configuration endpoint
+- Database-backed organization and active membership foundation
+- Protected current-user access summary endpoint with claim roles and organization memberships
 - Development-only disabled authentication mode for local seed workflows
 - Recoverable authentication initialization when the local API starts after the frontend
 - Terraform definitions for development and production Cognito user pools
@@ -114,6 +116,12 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager activity history supports source filters, tone filters, filtered empty states, active filter summaries, and accessible filter controls
 - Manager activity filters persist in browser storage with storage-availability detection and reset behavior
 - Manager activity label helper tests
+- Manager completion report review queue derived from current job report snapshots
+- Manager report queue groups submitted, in-review, change-requested, draft, and delivered reports with counts
+- Manager report queue supports active, status-specific, readiness, blocked, local-only, and delivered-history filters
+- Manager report queue links queue items back to the job report detail panel
+- Backend manager completion-report list endpoint for current job report snapshots
+- Frontend report queue uses the list endpoint with per-job fallback
 
 ### Crew amendment and bid foundation
 
@@ -302,11 +310,14 @@ Current state:
 - Frontend loads persisted photo evidence for the selected job and merges it with browser-local evidence
 - Completion report counts photo evidence without double-counting persisted job photo totals
 - Completion report endpoint attaches persisted photo evidence
+- Configurable S3 presigned upload tickets for production photo evidence storage
+- Expiring S3 display URLs for persisted photo evidence when object storage is configured
+- Browser-generated thumbnail preview uploads for S3-backed photo evidence
+- Persisted thumbnail display URLs for job photo evidence and customer-visible completion reports
 
 Next implementation work:
 
-- Add S3 presigned upload support
-- Add S3 object display/thumbnail URLs
+- Add server-side image processing and metadata extraction for uploaded photo evidence
 
 ### Completion reports
 
@@ -325,10 +336,15 @@ Current state:
 - Persisted reports receive stable share tokens and return share URLs
 - Backend exposes `GET /reports/{share_token}` for shared report reads
 - Frontend renders the shareable report link when one is available
+- Backend supports submitted, in-review, changes-requested, and delivered lifecycle transitions
+- Frontend manager actions can start review, request changes, resubmit, and deliver persisted reports
+- Frontend manager report queue summarizes current report review work across loaded jobs
+- Backend exposes `GET /completion-reports` for manager report queue loading
 
 Next implementation work:
 
-- Add report status transitions beyond draft/ready, including sent
+- Add organization scoping and filters to the manager completion-report list endpoint
+- Add immutable report snapshots for customer delivery
 - Add customer delivery by email or SMS later
 
 ### Property ownership, portfolios, and crew assignments
@@ -353,6 +369,301 @@ Next implementation work:
 - Wire portfolio and crew-assignment API routes after authentication and access boundaries are planned
 
 ## Planned
+
+### Phased Development Roadmap
+
+The product is past the first proof-of-completion prototype. The next work should ship in vertical slices that reduce local-only assumptions, harden customer-visible workflows, and prepare the app for a small hosted pilot before broader operations features.
+
+#### Feature Reference and Audience Coverage
+
+The `features/` folder now defines four major user tracks. Treat these as product inputs for roadmap planning and acceptance criteria:
+
+| Feature file | Primary audience | Current plan coverage | Planning decision |
+| --- | --- | --- | --- |
+| `features/yard-crew.md` | Crew leads, crew members, dispatchers, account managers, billing admins, customers | Strong near-term coverage through crew route, proof-of-completion, amendments, bids, offline sync, quality review, labor/material, and billing-readiness phases | Keep as the first field workflow track because it matches the implemented MVP foundation |
+| `features/yard-care-company.md` | Multi-crew yard-care companies: operations managers, dispatchers, branch managers, fleet/equipment, account managers, finance users | Partial coverage through manager command center, route capacity, service catalog, contracts, billing readiness, analytics, and scale phases | Expand Phase 3 and Phase 5 around branch, territory, equipment, inventory, and cross-crew operations |
+| `features/self-service.md` | Homeowners maintaining their own yards | Limited coverage in the current customer portal plan | Add a separate homeowner self-service phase because adaptive yard planning is a different product mode from provider-managed service delivery |
+| `features/property-managment.md` | Property management organizations coordinating multiple independent yard-care vendors | Partial coverage through portfolios, vendor-safe links, evidence, bids, and invoices, but not enough vendor governance | Add a separate multi-vendor property management phase after core tenant, evidence, service catalog, billing, and portal foundations exist |
+
+Key coverage gaps from the feature review:
+
+- Homeowner self-service needs its own property setup, climate-aware scheduling, guided yard sessions, equipment/supplies, issue management, and educational task explanations.
+- Multi-crew service companies need branch/territory hierarchy, master schedule, cross-crew reassignment, fleet/equipment allocation, inventory, labor productivity, and billing-readiness validation.
+- Property management organizations need vendor onboarding, compliance tracking, service coverage, standardized work-order distribution, evidence validation, three-way invoice matching, vendor scorecards, and portfolio dashboards.
+- Crew users need stronger work-order, contract-scope, safety, equipment, materials, treatment record, labor, and offline synchronization support beyond the existing stop-progress workflow.
+
+#### Phase 1: Pilot Readiness and Data Boundaries
+
+Goal: make the current manager, crew, and customer-safe link workflows usable in a hosted pilot without relying on seed data or browser-only state.
+
+Build scope:
+
+- Provision and validate Cognito for the first organization owner, manager, crew lead, and customer test users.
+- Persist organization membership, role assignments, and tenant-aware resource ownership for jobs, crews, day plans, properties, completion reports, bids, photos, and notifications.
+- Add organization/customer scoping to manager completion-report list, day-plan, amendment, bid, photo, and shared customer queries.
+- Wire property portfolio and active crew assignment models into backend API routes after access boundaries are enforced.
+- Add audit events for login-sensitive and business-sensitive actions: role changes, schedule changes, report review, bid send/revoke/decision/convert, notification enqueueing, and customer-visible delivery.
+- Document hosted pilot setup, seed data expectations, first-user creation, and rollback notes.
+
+Validation and exit criteria:
+
+- API tests prove cross-organization access is rejected for manager, crew, customer, and public-token-adjacent routes.
+- A hosted smoke test can authenticate, read jobs, read today route, submit stop status, upload photo metadata, review a completion report, send a bid, and read customer-safe links.
+- Local fallback mode still works for frontend demos, but hosted pilot workflows do not depend on browser-only persistence for core state.
+
+#### Phase 2: Field Crew Mobile Reliability
+
+Goal: make the daily route and proof-capture workflow dependable from a mobile browser with weak connectivity.
+
+Build scope:
+
+- Add a PWA manifest, installable app metadata, and service worker strategy for shell assets.
+- Move queued field mutations into IndexedDB for stop progress, job lifecycle actions, photo completion, checklist updates, and amendment requests.
+- Add sync status and retry controls for each queued mutation type, using consistent pending, persisted, failed, and conflict states.
+- Add client-side photo quality checks for required before/after evidence, minimum previewability, duplicate file selection, and missing evidence before report submission.
+- Add server-side image processing and metadata extraction for uploaded photo evidence after object storage upload completes.
+- Include route, stop, add-on, and photo context in completion report readiness checks.
+
+Validation and exit criteria:
+
+- Browser tests cover offline queue persistence, retry behavior, and conflict messaging for route progress and photo evidence.
+- Backend tests cover image metadata persistence and report readiness rules.
+- A mobile viewport smoke script can complete a route slice with simulated API interruption and later sync recovery.
+
+#### Phase 3: Manager Command Center
+
+Goal: give managers one operational surface for schedule risk, quality review, communications, and recovery work.
+
+Build scope:
+
+- Finish persisted manager completion-report queue filters by status, organization, crew, customer, property, date, and readiness blocker.
+- Connect manager activity history to persisted route, report, bid, notification, photo, and audit events.
+- Add notification history endpoints and UI for queued, sent, failed, retried, skipped, dead-letter, and manually resolved states.
+- Add route capacity planning with crew capacity defaults, duration estimates, overage warnings, and publish blockers.
+- Add dispatch views for moving jobs between crews or service dates and reviewing day-level workload.
+- Add manager recovery actions for failed notification delivery, failed photo processing, and report readiness blockers.
+- Add branch, territory, and crew hierarchy support so multi-crew companies can separate company, region, branch, crew, route, work order, and task responsibilities.
+- Add cross-crew reassignment workflows with route impact, equipment conflicts, overtime risk, customer continuity impact, and audit records.
+- Add centralized exception management for route delays, staffing shortages, access failures, weather interruptions, equipment failures, safety concerns, and customer escalations.
+
+Validation and exit criteria:
+
+- Manager workflows can be completed from persisted data after a page refresh and across browser sessions.
+- Integration tests cover report queue filters, notification history reads, route capacity guards, branch/territory boundaries, and reassignment audit records.
+- The manager can identify and act on every failed customer communication or blocked report without inspecting logs.
+- A dispatcher can see at-risk work, compare reassignment options, move work between crews, and preserve a clear customer-notification and audit trail.
+
+#### Phase 4: Customer Portal and Portfolio Experience
+
+Goal: turn public one-off bid/report links into an authenticated customer portal for property owners, management companies, HOAs, and commercial clients.
+
+Build scope:
+
+- Add authenticated customer portal access scoped to customer accounts, properties, portfolios, reports, photos, bids, scheduled work, and service history.
+- Build portfolio/group views for individual owners, property management companies, HOAs, and commercial accounts.
+- Surface completed service timelines with immutable report snapshots and customer-safe photo evidence.
+- Add bid history, current approvals, rejected bids, expired bids, and converted-work status.
+- Add customer notification preferences for email/SMS opt-in, quiet hours, recipient validation, and template-specific preferences.
+- Add customer support or issue-capture entry points tied to a property, report, or scheduled service.
+
+Validation and exit criteria:
+
+- Customer portal tests prove a customer can only see their own scoped accounts, properties, reports, photos, bids, and notification preferences.
+- Delivered completion reports use immutable customer snapshots rather than live mutable job state.
+- Customer-visible pages cover empty, loading, error, expired-link, revoked-link, and no-portfolio states.
+
+#### Phase 5: Revenue Operations and Service Administration
+
+Goal: support recurring landscaping operations, service catalog management, account status, and revenue workflows beyond one-off project bids.
+
+Build scope:
+
+- Build a service catalog for standard recurring services and extra services with duration, unit, pricing defaults, approval rules, and active/inactive status.
+- Add recurring service contracts, contracted frequency, scheduled service generation, skipped-service tracking, and account service-period summaries.
+- Add estimates, change orders, deposits, invoices, payment status, tax/discount fields, account balances, and payment-link placeholders or provider integration.
+- Add customer/account onboarding checklists for address, access notes, service preferences, billing state, notification contacts, and required operational data.
+- Add organization settings for crews, service areas, default capacity, roles, invitation policies, and data retention settings.
+- Add work-order and task templates with contract scope categories: included, conditionally included, customer requested, requires approval, approved additional work, not included, and prohibited.
+- Add labor, material, equipment, treatment, and job-cost capture so completed work can be reviewed for billing readiness and profitability.
+- Add fleet, equipment, and inventory records for vehicles, trailers, tools, chemicals, supplies, reservations, inspections, failures, and material usage.
+
+Validation and exit criteria:
+
+- Managers can onboard a customer/property and schedule recurring service without editing seed data.
+- Service and billing state can explain whether work is schedulable, blocked, completed, billable, paid, or needing manager review.
+- Tests cover service catalog rules, contract scheduling boundaries, scope protection, equipment allocation, material usage, treatment record policy, billing readiness, and account/payment status transitions.
+
+#### Phase 6: Scale, Integrations, and Operational Hardening
+
+Goal: prepare the product for broader customer adoption after pilot usage proves the core workflows.
+
+Build scope:
+
+- Add staging and production release gates with migration checks, smoke tests, rollback notes, and environment-specific configuration.
+- Add structured logs, metrics, traces, alerting, backups, restore drills, and incident runbooks.
+- Add background workers and queues for notification delivery, image processing, report delivery, route optimization, and integration sync.
+- Add object lifecycle policies for photo evidence retention, archival, deletion, and customer data export.
+- Add rate limits, organization usage limits, feature flags, support impersonation with audit controls, and abuse monitoring.
+- Add integration surfaces only when needed: calendar export, map routing provider, accounting export, CSV import/export, webhook events, and public API boundaries.
+
+Validation and exit criteria:
+
+- Production releases require passing smoke checks for health, auth config, migration state, job list, route read, report read, upload ticket, notification queue, and customer portal access.
+- Operational dashboards show failed requests, job/route mutation errors, upload failures, notification failures, authentication failures, and worker queue health.
+- Backup restore and incident response procedures are documented and tested before expanding beyond early customers.
+
+#### Phase 7: Homeowner Self-Service Yard Assistant
+
+Goal: support individual homeowners who perform their own yard care and need an adaptive maintenance assistant instead of a contractor operations workflow.
+
+Build scope:
+
+- Add homeowner property onboarding for location, yard size, landscaped area, maintenance goals, availability, household constraints, climate profile, and preferred intensity.
+- Add yard zones, plant assets, irrigation zones, equipment assets, supplies, inventory, task templates, scheduled tasks, observations, photos, and task completion history.
+- Add a climate-aware scheduling engine that uses season, weather, recent completion, watering restrictions, homeowner availability, task dependencies, supplies, and equipment availability.
+- Add Today, guided yard session, calendar, property, task detail, issues, history, equipment, supplies, and settings screens.
+- Add educational task explanations covering why, when, how, tools, supplies, safety guidance, and postponement conditions.
+- Add homeowner notifications for today plans, weather postponements, suitable work windows, irrigation problems, equipment service, low supplies, safety tasks, and monthly summaries.
+
+Validation and exit criteria:
+
+- A homeowner can create a property and yard zone, enter availability, receive a personalized four-week schedule, and complete a guided yard session.
+- Weather-sensitive tasks can be postponed with an explanation and rescheduled into a suitable availability window.
+- Issues create follow-up tasks, blocked tasks connect to missing supplies or equipment, and zone history shows completed work, photos, notes, products, and time/cost totals.
+- This phase can share authentication, photo, notification, and property primitives with the B2B product, but it must not expose provider-only concepts like crews, contracts, invoices, or manager approvals in the homeowner-first experience.
+
+#### Phase 8: Multi-Vendor Property Management Platform
+
+Goal: support property management organizations that coordinate yard care across many properties, regions, owners, and independent vendors.
+
+Build scope:
+
+- Add portfolio hierarchy for property management organization, ownership group, portfolio, region, property, yard zone, vendor, vendor branch, service territory, and assigned properties.
+- Add vendor onboarding, compliance tracking, insurance/license/certification expirations, vendor statuses, territory coverage, capabilities, capacity, and assignment eligibility.
+- Add standardized service catalog, scope-of-work packages, scope versioning, vendor acknowledgment, service standards, evidence policies, and regional service variations.
+- Add property-to-vendor assignment, backup vendor coverage, coverage-gap reporting, work-order distribution, vendor acceptance/rejection, and vendor portal/API submission paths.
+- Add evidence packages, required photo standards, automated evidence checks, remote review, sampling rules, validation statuses, quality scorecards, and correction-request workflows.
+- Add additional-work governance with approval matrices, competitive estimates, owner/asset-manager escalation, and audit-ready decision records.
+- Add standardized invoice submission, normalized invoice lines, three-way invoice matching against contract or purchase order plus validated work order plus vendor invoice, tolerance rules, invoice exceptions, and accounts-payable approval.
+- Add portfolio dashboards for coverage, overdue services, evidence review, open issues, vendor compliance, budget variance, invoice validation, service levels, and vendor performance.
+
+Validation and exit criteria:
+
+- A property management organization can create portfolios, add properties in multiple regions, onboard multiple vendors, validate compliance, assign properties, and identify uncovered properties.
+- Vendors can accept work orders, submit evidence, report issues, submit estimates, correct rejected records, and see only assigned records.
+- Accounts payable can normalize vendor invoices, detect duplicates or mismatches, match valid lines to completed work, and route exceptions back to vendors.
+- Portfolio operations can compare vendor performance by on-time service, evidence completeness, quality, rework, complaints, response time, invoice accuracy, and cost.
+
+#### Phase Sequencing Rules
+
+- Tenant boundaries and auditability come before broad customer portal or marketing launch work.
+- Offline field reliability should ship before adding heavier manager dispatch workflows.
+- Customer-visible report snapshots must be immutable before report history becomes part of the authenticated portal.
+- Notification provider integration should be validated for bids first, then reused for reports, route changes, and customer preferences.
+- Payment and accounting integrations should wait until service catalog, contracts, and account status rules are stable.
+- Homeowner self-service should share core property, photo, notification, and task infrastructure, but it should remain a distinct experience from crew/provider workflows.
+- Multi-vendor property management should wait until tenant boundaries, evidence validation, service catalog, work orders, and billing-readiness foundations are stable.
+- Scaling infrastructure should follow measured pilot usage instead of speculative load assumptions.
+
+## User Story Map
+
+These stories convert the capability roadmap into deliverable role outcomes. Keep the first acceptance criteria small enough to ship locally, then broaden persistence, tenant boundaries, and provider integrations as those foundations mature.
+
+### Manager command center stories
+
+- As a manager, I need one queue of completion reports needing review so I can approve, request changes, or deliver customer-ready work without opening every job manually.
+  - Acceptance criteria: submitted, in-review, change-requested, and delivered reports are grouped with counts; each queue item links back to the job detail and shows checklist/photo readiness.
+  - Implementation path: first derive the queue from existing job report snapshots in the frontend, then add a persisted `GET /completion-reports` manager endpoint with organization scoping and filters.
+- As a manager, I need delivery failure and notification history visible beside report and bid work so I can retry or resolve customer communication problems.
+  - Acceptance criteria: queued, sent, failed, retried, skipped, and dead-letter states are visible with recipient, channel, last attempt, and next retry.
+  - Implementation path: reuse the notification outbox and receipts, add manager query endpoints, then connect the activity history panel to persisted notification events.
+- As a manager, I need route planning to show capacity risk before publish so I can avoid overloading crews.
+  - Acceptance criteria: each route has estimated duration, capacity remaining/overage, risk label, and blockers before publish.
+  - Implementation path: extend existing workload helpers, persist crew capacity defaults, then add calendar/day-level dispatch views.
+
+### Crew field workflow stories
+
+- As a crew lead, I need the daily route to work reliably on a mobile browser with weak connectivity so I can keep working from the field.
+  - Acceptance criteria: route, stop status, selected job detail, and photo evidence can be captured offline and synced with clear pending/failed states.
+  - Implementation path: add a PWA manifest and service worker, store queued mutations in IndexedDB, and reconcile with backend status endpoints.
+- As a crew member, I need photo capture quality checks before submitting a report so managers do not have to request avoidable fixes.
+  - Acceptance criteria: the app warns when before/after evidence is missing, duplicate, too small, or not previewable before completion report submission.
+  - Implementation path: use browser image metadata initially, then add server-side image processing and audit rows for quality checks.
+- As a crew member, I need to request extra work from the job screen and track whether it needs manager approval, pricing, or customer approval.
+  - Acceptance criteria: standard add-ons can be approved into work, priced add-ons become bids, and crew sees the current review state.
+  - Implementation path: continue from amendment and bid foundations, then add crew-visible amendment status updates and accepted-work sync.
+- As a crew lead, I need work orders to show contracted scope, property zones, hazards, access instructions, required evidence, materials, and equipment so the crew can complete the visit without guessing.
+  - Acceptance criteria: each work order distinguishes included, conditional, approved additional, requires approval, not included, and prohibited tasks; completion cannot be submitted without required evidence or an approved exception.
+  - Implementation path: introduce contract service items, work-order tasks, zone requirements, scope categories, and required evidence policies, then connect them to the existing route stop and completion report flow.
+- As a crew lead, I need pre-shift equipment, material, safety, and attendance checks so route risk is visible before the crew leaves the shop.
+  - Acceptance criteria: missing equipment, missing materials, unavailable crew members, certification gaps, and safety blockers are surfaced before dispatch.
+  - Implementation path: add crew check-in, equipment reservations, material loading, skill/certification checks, and route capacity warnings.
+
+### Yard-care company operations stories
+
+- As an operations manager, I need a company, region, branch, crew, route, work-order, and task hierarchy so responsibilities and reports match how a multi-crew company operates.
+  - Acceptance criteria: users can filter operational work by company, region, branch, crew, route, customer, contract, and service date with role-appropriate access.
+  - Implementation path: extend tenant membership with branch/region scope, add hierarchy tables, then backfill route and work-order reads through those boundaries.
+- As a dispatcher, I need service territories, crew capacity, route risk, and cross-crew reassignment tools so I can recover from delays, equipment failures, weather, and staffing gaps.
+  - Acceptance criteria: at-risk work can be reassigned with visible travel, overtime, equipment, customer-continuity, and audit impacts.
+  - Implementation path: build territory and capacity models first, then add reassignment proposals and persisted route mutations.
+- As a billing or finance user, I need completed work to become billing-ready only after required tasks, photos, labor, materials, approvals, and exceptions are complete.
+  - Acceptance criteria: billing batches can be grouped by customer, contract, property, branch, service period, billing cycle, and service type.
+  - Implementation path: extend completion reports into work-order validation records and add billing-readiness states before invoice generation.
+
+### Customer portal stories
+
+- As a property owner, I need a secure portal listing my properties, completed services, report evidence, bids, and next scheduled work so I can trust what was done without calling the office.
+  - Acceptance criteria: customer-visible pages show only the authenticated customer's accounts, properties, reports, photos, and bids.
+  - Implementation path: start with the delivered report and bid pages, then add authenticated customer account scoping after tenant membership is persisted.
+- As a property manager, I need grouped portfolios across many properties so I can review service status by owner, HOA, commercial site, or management group.
+  - Acceptance criteria: grouped and ungrouped properties are visible, each portfolio has service counts, and report/bid history can be filtered by portfolio.
+  - Implementation path: wire portfolio models to customer portal queries, then add manager-owned portfolio administration.
+- As a customer, I need notification preferences so service updates arrive through the channel I trust.
+  - Acceptance criteria: email/SMS opt-in, quiet hours, recipient validation, and template-specific preferences are persisted.
+  - Implementation path: add customer contact and preference tables, then gate notification enqueueing through those preferences.
+
+### Homeowner self-service stories
+
+- As a homeowner, I need the app to generate a property-specific yard care schedule so I do not have to decide every recurring task myself.
+  - Acceptance criteria: onboarding captures location, availability, yard zones, maintenance goals, equipment, supplies, and climate profile; the app produces a four-week plan with explanations.
+  - Implementation path: reuse property and photo primitives, then add homeowner-only yard zones, task templates, schedule rules, and availability preferences.
+- As a homeowner, I need a Today view and guided yard session so I can inspect, prepare, complete, clean up, and record work with minimal phone handling.
+  - Acceptance criteria: tasks are grouped into a session with tools, supplies, ordered steps, completion controls, notes, photos, elapsed time, and a completion summary.
+  - Implementation path: build a homeowner task/session model separate from provider work orders while sharing photo and history components where practical.
+- As a homeowner, I need weather, season, supply, equipment, and issue conditions to change the schedule with a clear reason.
+  - Acceptance criteria: unsuitable tasks can move to a better window, blocked tasks explain missing supplies or equipment, and observations can create follow-up tasks.
+  - Implementation path: add scheduling rules for weather holds, seasonal holds, supply holds, equipment holds, recurrence behavior, and issue-generated tasks.
+
+### Property management and vendor governance stories
+
+- As a portfolio operations manager, I need portfolio, region, property, vendor, territory, and coverage status views so I can see which properties are covered and which need intervention.
+  - Acceptance criteria: every property has a coverage status, assigned vendor or gap reason, service requirements, evidence policy, and escalation path.
+  - Implementation path: extend portfolio/property models with vendor assignments, vendor territories, service capabilities, coverage statuses, and backup vendor rules.
+- As a vendor manager, I need vendor onboarding, compliance, insurance, license, certification, service territory, and performance records so only qualified providers receive work.
+  - Acceptance criteria: expiring or missing compliance records prevent or warn on new assignments according to policy.
+  - Implementation path: add vendor profiles, compliance documents, expiration monitoring, vendor statuses, and assignment eligibility checks.
+- As an accounts payable user, I need invoices matched against contracts and validated work orders so duplicate, unsupported, or incorrect billing is caught before payment.
+  - Acceptance criteria: invoice lines produce matched, matched with tolerance, duplicate suspected, rate mismatch, quantity mismatch, missing work order, missing approval, missing evidence, or rejected outcomes.
+  - Implementation path: add normalized vendor invoice records, invoice lines, matching rules, tolerance policy, and invoice exception workflow.
+
+### Organization and onboarding stories
+
+- As an organization owner, I need to invite managers, crews, and customers by role so the product can be used by a real company instead of seed users.
+  - Acceptance criteria: invitations create pending memberships, accepted users receive role-scoped access, and role changes are audited.
+  - Implementation path: persist organization memberships, add invite tokens, then connect Cognito groups or app roles to tenant membership.
+- As an office manager, I need customer/property onboarding checklists so new service accounts are not scheduled without required address, access, service, billing, and notification details.
+  - Acceptance criteria: incomplete accounts are flagged, required fields are visible, and scheduling can block on missing operational data.
+  - Implementation path: add onboarding status fields and validation helpers, then build manager forms around the existing property/account models.
+
+### Operations and scale stories
+
+- As an operator, I need staging smoke tests and deployment checks so releases do not break crew work, report delivery, or authentication.
+  - Acceptance criteria: health, auth config, migration status, job list, route read, report read, upload ticket, and notification queue checks are documented and scriptable.
+  - Implementation path: extend the production smoke script, add staging environment variables, and require smoke results before production deploys.
+- As a support user, I need audit trails for schedule, price, report, access, and communication changes so customer disputes can be investigated.
+  - Acceptance criteria: each sensitive action records actor, organization, target, timestamp, old/new state summary, and source request metadata.
+  - Implementation path: extend access audit events into domain-specific audit helpers and surface them in manager/admin views.
 
 ### Customer portal
 

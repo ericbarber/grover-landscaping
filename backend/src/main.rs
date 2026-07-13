@@ -5,6 +5,7 @@ mod completion_reports;
 mod day_plans;
 mod db;
 mod notifications;
+mod photo_storage;
 mod project_bids;
 mod stop_progress;
 
@@ -29,7 +30,10 @@ use day_plans::{
     ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
 };
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
-use grover_landscaping_api::auth::{require_api_auth, AuthPrincipal, AuthService};
+use grover_landscaping_api::{
+    auth::{require_api_auth, AuthPrincipal, AuthService},
+    organizations::OrganizationRepository,
+};
 use notifications::{
     start_notification_dispatcher, NotificationDispatcherConfig, NotificationOutboxRepository,
 };
@@ -60,6 +64,7 @@ struct AppState {
     accounts: AccountRepository,
     day_plans: DayPlanRepository,
     project_bids: ProjectBidRepository,
+    organizations: OrganizationRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -155,6 +160,8 @@ pub struct PhotoUploadResponse {
     pub upload_mode: &'static str,
     pub upload_url: String,
     pub object_key: String,
+    pub thumbnail_upload_url: Option<String>,
+    pub thumbnail_object_key: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -168,6 +175,7 @@ pub struct PhotoEvidence {
     pub status: String,
     pub upload_mode: &'static str,
     pub display_url: String,
+    pub thumbnail_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -206,8 +214,9 @@ async fn main() -> Result<(), DynError> {
 async fn app_from_env() -> Result<Router, DynError> {
     let app_environment = std::env::var("APP_ENV").unwrap_or_else(|_| "local".to_string());
     let production = app_environment.eq_ignore_ascii_case("production");
+    photo_storage::PhotoStorageConfig::try_from_env().map_err(configuration_error)?;
 
-    let (jobs, day_plans, project_bids, notifications, persistence) =
+    let (jobs, day_plans, project_bids, organizations, notifications, persistence) =
         match DatabaseConfig::from_env() {
             Some(config) => {
                 tracing::info!("connecting to PostgreSQL and applying migrations");
@@ -217,8 +226,16 @@ async fn app_from_env() -> Result<Router, DynError> {
                 })?;
                 let day_plans = DayPlanRepository::from_pool(pool.clone());
                 let project_bids = ProjectBidRepository::from_pool(pool.clone());
+                let organizations = OrganizationRepository::from_pool(pool.clone());
                 let notifications = NotificationOutboxRepository::from_pool(pool);
-                (jobs, day_plans, project_bids, notifications, "postgres")
+                (
+                    jobs,
+                    day_plans,
+                    project_bids,
+                    organizations,
+                    notifications,
+                    "postgres",
+                )
             }
             None if production => {
                 return Err(configuration_error(
@@ -230,6 +247,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 JobRepository::default(),
                 DayPlanRepository::default(),
                 ProjectBidRepository::default(),
+                OrganizationRepository::default(),
                 NotificationOutboxRepository::default(),
                 "seed-local",
             ),
@@ -261,6 +279,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             accounts: AccountRepository::new(),
             day_plans,
             project_bids,
+            organizations,
         }),
         persistence,
         persistence == "postgres",
@@ -312,6 +331,7 @@ fn app_with_runtime(
                 async move { Json(config) }
             }),
         )
+        .route("/me/access", get(get_my_access))
         .route(
             "/health/ready",
             get(move || readiness(Arc::clone(&readiness_state), persistence, database_required)),
@@ -322,6 +342,7 @@ fn app_with_runtime(
             "/shared-bids/{share_token}/decision",
             post(decide_shared_project_bid),
         )
+        .route("/completion-reports", get(list_completion_reports))
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
@@ -460,6 +481,22 @@ async fn readiness(
     .into_response()
 }
 
+async fn get_my_access(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> impl IntoResponse {
+    Json(
+        state
+            .organizations
+            .principal_access_summary(
+                &principal.subject,
+                &principal.username,
+                principal.roles.clone(),
+            )
+            .await,
+    )
+}
+
 fn cors_layer(production: bool) -> Result<Option<CorsLayer>, DynError> {
     match std::env::var("CORS_ALLOWED_ORIGIN") {
         Ok(origin) if !origin.trim().is_empty() => {
@@ -527,6 +564,17 @@ async fn get_completion_report(
     Path(id): Path<String>,
 ) -> impl IntoResponse {
     Json(build_and_persist_completion_report(&state, &id).await)
+}
+
+async fn list_completion_reports(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let jobs = state.jobs.list_jobs().await;
+    let mut reports = Vec::with_capacity(jobs.len());
+
+    for job in jobs {
+        reports.push(build_and_persist_completion_report(&state, &job.id).await);
+    }
+
+    Json(reports)
 }
 
 async fn start_completion_report_review(
@@ -1216,6 +1264,7 @@ mod tests {
             accounts: AccountRepository::new(),
             day_plans: DayPlanRepository::default(),
             project_bids: ProjectBidRepository::default(),
+            organizations: OrganizationRepository::default(),
         })
     }
 
@@ -1306,6 +1355,34 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(health_response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn my_access_returns_local_development_membership() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/me/access")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["user_id"], "local-development-user");
+        assert_eq!(
+            json["memberships"][0]["organization_id"],
+            "org_demo_landscaping"
+        );
+        assert_eq!(
+            json["memberships"][0]["organization_type"],
+            "yard_care_company"
+        );
     }
 
     #[tokio::test]
@@ -1466,6 +1543,30 @@ mod tests {
         assert!(json["completed_add_ons"].as_array().unwrap().is_empty());
         assert_eq!(json["account"]["account_id"], "acct_1001");
         assert_eq!(json["photo_evidence"].as_array().unwrap().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_returns_current_job_reports() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        let reports = json.as_array().unwrap();
+
+        assert_eq!(reports.len(), 2);
+        assert_eq!(reports[0]["report_id"], "report_job_1001");
+        assert_eq!(reports[0]["job"]["customer_name"], "Sample Customer");
+        assert_eq!(reports[1]["report_id"], "report_job_1002");
     }
 
     #[tokio::test]

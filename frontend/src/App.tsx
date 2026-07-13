@@ -5,6 +5,7 @@ import {
   createPhotoUploadTicket,
   deliverCompletionReport,
   fetchCompletionReport,
+  fetchCompletionReports,
   fetchJobDetail,
   fetchJobAddOns,
   fetchJobs,
@@ -12,6 +13,7 @@ import {
   resubmitCompletionReport,
   startJob,
   startCompletionReportReview,
+  uploadPhotoToTicket,
   updateJobAddOnStatus,
   type CompletionReportSnapshot,
   type JobDetail,
@@ -22,6 +24,7 @@ import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
+import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import {
   companyNeedsOnboardingAttention,
@@ -549,9 +552,9 @@ function JobDetailPanel({
         </div>
 
         <div className="mt-6 rounded-2xl bg-slate-50 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Local photo placeholder</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
           <p className="mt-2 text-sm text-slate-600">
-            This calls the backend upload-ticket endpoint now. Later, the same flow will return an S3 presigned URL.
+            This flow uses the backend upload-ticket endpoint and uploads directly when object storage is configured.
           </p>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -642,6 +645,7 @@ function localPhotoTicket(jobId: string, file: File, photoType: PhotoType): Phot
     uploadMode: 'browser-local-placeholder',
     uploadUrl: `local://${file.name}`,
     objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
+    thumbnailUrl: URL.createObjectURL(file),
   };
 }
 
@@ -669,6 +673,8 @@ export function App() {
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
   const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
+  const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
+  const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -679,6 +685,10 @@ export function App() {
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
     [selectedJobId, uploadTickets],
+  );
+  const managerReportQueueReports = useMemo(
+    () => Object.values(completionReportSnapshots),
+    [completionReportSnapshots],
   );
 
   function recordManagerActivity(item: NewManagerActivity) {
@@ -805,6 +815,7 @@ export function App() {
       .then((report) => {
         if (isMounted) {
           setSelectedCompletionReport(report);
+          setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
           setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, report.photoEvidence));
         }
       })
@@ -823,6 +834,57 @@ export function App() {
       isMounted = false;
     };
   }, [selectedJobId]);
+
+  useEffect(() => {
+    if (jobs.length === 0) {
+      setCompletionReportSnapshots({});
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingReportQueue(true);
+    const applyReports = (reports: CompletionReportSnapshot[]) => {
+      setCompletionReportSnapshots((current) => {
+        const next = { ...current };
+        reports.forEach((report) => {
+          next[report.jobId] = report;
+        });
+        return next;
+      });
+    };
+
+    fetchCompletionReports()
+      .then((reports) => {
+        if (!isMounted) return;
+        applyReports(reports);
+      })
+      .catch(() =>
+        Promise.allSettled(jobs.map((job) => fetchCompletionReport(job.id))).then((results) => {
+          if (!isMounted) return;
+
+          const reports = results
+            .filter((result): result is PromiseFulfilledResult<CompletionReportSnapshot> => result.status === 'fulfilled')
+            .map((result) => result.value);
+          applyReports(reports);
+
+          if (results.some((result) => result.status === 'rejected')) {
+            recordManagerActivity({
+              title: 'Report queue partially loaded',
+              message: 'Some completion report snapshots could not be loaded for the manager review queue.',
+              tone: 'warning',
+              source: 'sync',
+            });
+          }
+        }),
+      )
+      .finally(() => {
+        if (isMounted) setIsLoadingReportQueue(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [jobs]);
 
   async function handleStartJob() {
     if (!selectedJobId) {
@@ -892,8 +954,40 @@ export function App() {
   async function refreshCompletionReport(jobId: string) {
     const report = await fetchCompletionReport(jobId);
     setSelectedCompletionReport(report);
+    setCompletionReportSnapshots((current) => ({ ...current, [report.jobId]: report }));
     setUploadTickets((current) => mergePhotoEvidence(current, jobId, report.photoEvidence));
     return report;
+  }
+
+  async function refreshManagerReportQueue() {
+    if (jobs.length === 0) return;
+
+    setIsLoadingReportQueue(true);
+    try {
+      let reports: CompletionReportSnapshot[];
+      try {
+        reports = await fetchCompletionReports();
+      } catch {
+        reports = await Promise.all(jobs.map((job) => fetchCompletionReport(job.id)));
+      }
+      setCompletionReportSnapshots(
+        reports.reduce<Record<string, CompletionReportSnapshot>>((next, report) => {
+          next[report.jobId] = report;
+          return next;
+        }, {}),
+      );
+      setStatusMessage('Completion report review queue refreshed.');
+    } catch {
+      setStatusMessage('Could not refresh every completion report. Check the API connection and try again.');
+      recordManagerActivity({
+        title: 'Report queue refresh failed',
+        message: 'The manager completion report queue could not refresh all job reports.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingReportQueue(false);
+    }
   }
 
   async function handleStartReportReview(reportId: string) {
@@ -987,12 +1081,13 @@ export function App() {
 
     try {
       ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
+      await uploadPhotoToTicket(ticket, file);
       await completePhotoUpload(selectedJobId, ticket.photoId);
       ticket = { ...ticket, status: 'uploaded' };
-      setStatusMessage(`Prepared ${photoType} photo placeholder for ${file.name}.`);
+      setStatusMessage(`Uploaded ${photoType} photo evidence for ${file.name}.`);
       recordManagerActivity({
-        title: 'Photo evidence prepared',
-        message: `${photoType} photo evidence was prepared for ${selectedJobId}.`,
+        title: 'Photo evidence uploaded',
+        message: `${photoType} photo evidence was uploaded for ${selectedJobId}.`,
         tone: 'success',
         source: 'photo',
       });
@@ -1090,6 +1185,14 @@ export function App() {
               items={managerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
               onResetHistory={resetManagerActivityHistory}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerCompletionReportQueuePanel
+              reports={managerReportQueueReports}
+              isLoading={isLoadingReportQueue}
+              onRefresh={() => void refreshManagerReportQueue()}
+              onSelectJob={setSelectedJobId}
             />
           </div>
 

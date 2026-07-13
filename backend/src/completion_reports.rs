@@ -296,6 +296,7 @@ mod tests {
             status: "uploaded".to_string(),
             upload_mode: "local-placeholder",
             display_url: format!("local://local/jobs/job_1001/{photo_type}/{id}.jpg"),
+            thumbnail_url: None,
         }
     }
 

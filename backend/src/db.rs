@@ -11,6 +11,7 @@ use crate::{
     completion_reports::{
         CompletionReportActionResult, CompletionReportPersistence, CompletionReportResponse,
     },
+    photo_storage::PhotoStorageConfig,
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadRequest,
     PhotoUploadResponse,
 };
@@ -192,7 +193,9 @@ impl JobRepository {
 
     pub async fn list_photo_evidence(&self, job_id: &str) -> Vec<PhotoEvidence> {
         if let Some(pool) = &self.pool {
-            if let Ok(photos) = postgres_read::list_job_photos(pool, job_id).await {
+            if let Ok(photos) =
+                postgres_read::list_job_photos(pool, job_id, &PhotoStorageConfig::from_env()).await
+            {
                 return photos;
             }
         }
@@ -304,9 +307,12 @@ impl JobRepository {
             .map(|duration| duration.as_nanos())
             .unwrap_or(0);
         let photo_id = format!("photo_{}_{}_{}", job_id, request.photo_type, upload_nonce);
-        let object_key = format!(
-            "local/jobs/{job_id}/{photo_type}/{upload_nonce}_{safe_file_name}",
-            photo_type = request.photo_type
+        let storage_ticket = PhotoStorageConfig::from_env().upload_ticket(
+            &job_id,
+            &request.photo_type,
+            upload_nonce,
+            &safe_file_name,
+            &request.content_type,
         );
 
         if let Some(pool) = &self.pool {
@@ -315,13 +321,15 @@ impl JobRepository {
                 &job_id,
                 &request,
                 &photo_id,
-                &object_key,
+                &storage_ticket.object_key,
                 &safe_file_name,
+                storage_ticket.upload_mode,
+                storage_ticket.thumbnail_object_key.as_deref(),
             )
             .await;
         }
 
-        postgres_write::local_photo_response(job_id, request, photo_id, object_key)
+        postgres_write::photo_upload_response(job_id, request, photo_id, storage_ticket)
     }
 
     pub async fn complete_photo_upload(&self, job_id: &str, photo_id: &str) -> String {

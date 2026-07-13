@@ -83,6 +83,9 @@ export interface PhotoUploadTicket {
   uploadMode: string;
   uploadUrl: string;
   objectKey: string;
+  thumbnailUploadUrl?: string;
+  thumbnailObjectKey?: string;
+  thumbnailUrl?: string;
 }
 
 export interface ApiPhotoEvidence {
@@ -95,6 +98,7 @@ export interface ApiPhotoEvidence {
   status: string;
   upload_mode: string;
   display_url: string;
+  thumbnail_url?: string | null;
 }
 
 export type CompletionReportStatus =
@@ -213,6 +217,7 @@ function toPhotoEvidence(photo: ApiPhotoEvidence): PhotoUploadTicket {
     uploadMode: photo.upload_mode,
     uploadUrl: photo.display_url,
     objectKey: photo.object_key,
+    thumbnailUrl: photo.thumbnail_url ?? undefined,
   };
 }
 
@@ -298,6 +303,11 @@ export async function fetchCompletionReport(jobId: string): Promise<CompletionRe
   return toCompletionReport(report);
 }
 
+export async function fetchCompletionReports(): Promise<CompletionReportSnapshot[]> {
+  const reports = await request<ApiCompletionReport[]>('/completion-reports');
+  return reports.map(toCompletionReport);
+}
+
 export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
   const response = await fetch(`${API_BASE_URL}/reports/${encodeURIComponent(shareToken)}`);
 
@@ -364,6 +374,8 @@ export async function createPhotoUploadTicket(
     upload_mode: string;
     upload_url: string;
     object_key: string;
+    thumbnail_upload_url?: string | null;
+    thumbnail_object_key?: string | null;
   }>(`/jobs/${jobId}/photos/presign`, {
     method: 'POST',
     body: JSON.stringify({
@@ -383,7 +395,79 @@ export async function createPhotoUploadTicket(
     uploadMode: ticket.upload_mode,
     uploadUrl: ticket.upload_url,
     objectKey: ticket.object_key,
+    thumbnailUploadUrl: ticket.thumbnail_upload_url ?? undefined,
+    thumbnailObjectKey: ticket.thumbnail_object_key ?? undefined,
   };
+}
+
+export async function uploadPhotoToTicket(ticket: PhotoUploadTicket, file: File): Promise<void> {
+  if (ticket.uploadMode === 'local-placeholder') {
+    return;
+  }
+
+  await putFileToUrl(ticket.uploadUrl, file, file.type || ticket.contentType);
+
+  if (ticket.thumbnailUploadUrl) {
+    const thumbnail = await createPhotoThumbnail(file);
+    await putFileToUrl(ticket.thumbnailUploadUrl, thumbnail, 'image/jpeg');
+  }
+}
+
+async function putFileToUrl(url: string, body: Blob, contentType: string): Promise<void> {
+  const response = await fetch(url, {
+    method: 'PUT',
+    body,
+    headers: {
+      'content-type': contentType,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Photo upload failed with status ${response.status}`);
+  }
+}
+
+async function createPhotoThumbnail(file: File): Promise<Blob> {
+  const imageUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImage(imageUrl);
+    const maxSize = 640;
+    const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('Could not prepare thumbnail canvas');
+    }
+
+    context.drawImage(image, 0, 0, width, height);
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Could not create thumbnail image'));
+        }
+      }, 'image/jpeg', 0.78);
+    });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Could not load selected photo'));
+    image.src = src;
+  });
 }
 
 export async function fetchJobPhotoEvidence(jobId: string): Promise<PhotoUploadTicket[]> {
