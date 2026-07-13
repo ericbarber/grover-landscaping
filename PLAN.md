@@ -121,6 +121,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager report queue supports active, status-specific, readiness, blocked, local-only, and delivered-history filters
 - Manager report queue links queue items back to the job report detail panel
 - Backend manager completion-report list endpoint for current job report snapshots
+- Backend manager completion-report list endpoint accepts status and readiness filters for server-side queue narrowing
 - Frontend report queue uses the list endpoint with per-job fallback
 
 ### Crew amendment and bid foundation
@@ -340,10 +341,11 @@ Current state:
 - Frontend manager actions can start review, request changes, resubmit, and deliver persisted reports
 - Frontend manager report queue summarizes current report review work across loaded jobs
 - Backend exposes `GET /completion-reports` for manager report queue loading
+- Backend manager report queue loading supports `status` and `readiness` query filters
 
 Next implementation work:
 
-- Add organization scoping and filters to the manager completion-report list endpoint
+- Add organization scoping, crew, customer, property, date, and readiness-blocker filters to the manager completion-report list endpoint
 - Add immutable report snapshots for customer delivery
 - Add customer delivery by email or SMS later
 

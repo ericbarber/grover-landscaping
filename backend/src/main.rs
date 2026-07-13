@@ -11,7 +11,7 @@ mod stop_progress;
 
 use accounts::AccountRepository;
 use axum::{
-    extract::{Extension, Path, State},
+    extract::{Extension, Path, Query, State},
     http::{
         header::{AUTHORIZATION, CONTENT_TYPE},
         HeaderName, HeaderValue, Method, StatusCode,
@@ -22,7 +22,9 @@ use axum::{
     Json, Router,
 };
 use completion_reports::{
-    apply_completion_report_persistence, build_completion_report, CompletionReportActionResult,
+    apply_completion_report_persistence, build_completion_report,
+    completion_report_is_active_manager_queue_status, is_valid_completion_report_lifecycle_status,
+    CompletionReportActionResult, CompletionReportResponse,
 };
 use day_plans::{
     validate_amendment_request, validate_amendment_review, AssignDayPlanStopRequest,
@@ -140,6 +142,12 @@ struct ErrorResponse {
 #[derive(Debug, Deserialize)]
 struct CompletionReportChangeRequest {
     reason: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct CompletionReportListQuery {
+    status: Option<String>,
+    readiness: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -566,15 +574,78 @@ async fn get_completion_report(
     Json(build_and_persist_completion_report(&state, &id).await)
 }
 
-async fn list_completion_reports(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+async fn list_completion_reports(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<CompletionReportListQuery>,
+) -> Response {
+    if let Err(message) = validate_completion_report_list_query(&query) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_completion_report_filter",
+                message,
+            }),
+        )
+            .into_response();
+    }
+
     let jobs = state.jobs.list_jobs().await;
     let mut reports = Vec::with_capacity(jobs.len());
 
     for job in jobs {
-        reports.push(build_and_persist_completion_report(&state, &job.id).await);
+        let report = build_and_persist_completion_report(&state, &job.id).await;
+        if completion_report_matches_list_query(&report, &query) {
+            reports.push(report);
+        }
     }
 
-    Json(reports)
+    Json(reports).into_response()
+}
+
+fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> Result<(), String> {
+    if let Some(status) = query.status.as_deref() {
+        if status != "all"
+            && status != "active"
+            && !is_valid_completion_report_lifecycle_status(status)
+        {
+            return Err(
+                "status must be all, active, draft, submitted, in_review, changes_requested, or delivered"
+                    .to_string(),
+            );
+        }
+    }
+
+    if let Some(readiness) = query.readiness.as_deref() {
+        if !matches!(readiness, "all" | "ready" | "blocked" | "local_only") {
+            return Err("readiness must be all, ready, blocked, or local_only".to_string());
+        }
+    }
+
+    Ok(())
+}
+
+fn completion_report_matches_list_query(
+    report: &CompletionReportResponse,
+    query: &CompletionReportListQuery,
+) -> bool {
+    match query.status.as_deref().unwrap_or("all") {
+        "all" => {}
+        "active" => {
+            if !completion_report_is_active_manager_queue_status(&report.report_status) {
+                return false;
+            }
+        }
+        status if report.report_status != status => return false,
+        _ => {}
+    }
+
+    match query.readiness.as_deref().unwrap_or("all") {
+        "all" => true,
+        "ready" => report.ready_for_customer,
+        "blocked" => !report.ready_for_customer,
+        "local_only" => !report.persisted,
+        _ => true,
+    }
 }
 
 async fn start_completion_report_review(
@@ -1567,6 +1638,72 @@ mod tests {
         assert_eq!(reports[0]["report_id"], "report_job_1001");
         assert_eq!(reports[0]["job"]["customer_name"], "Sample Customer");
         assert_eq!(reports[1]["report_id"], "report_job_1002");
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_status_and_readiness() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?status=draft&readiness=blocked")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        let reports = json.as_array().unwrap();
+
+        assert_eq!(reports.len(), 2);
+        assert!(reports
+            .iter()
+            .all(|report| report["report_status"] == "draft"));
+        assert!(reports
+            .iter()
+            .all(|report| report["ready_for_customer"] == false));
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_ready_reports() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?readiness=ready")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_rejects_unknown_filters() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?status=archived")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_completion_report_filter");
     }
 
     #[tokio::test]

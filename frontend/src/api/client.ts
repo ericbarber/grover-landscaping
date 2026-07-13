@@ -108,6 +108,14 @@ export type CompletionReportStatus =
   | 'changes_requested'
   | 'delivered';
 
+export type CompletionReportListStatusFilter = CompletionReportStatus | 'active' | 'all';
+export type CompletionReportListReadinessFilter = 'all' | 'ready' | 'blocked' | 'local_only';
+
+export interface FetchCompletionReportsOptions {
+  status?: CompletionReportListStatusFilter;
+  readiness?: CompletionReportListReadinessFilter;
+}
+
 export interface ApiCompletionReport {
   report_id: string;
   job_id: string;
@@ -303,8 +311,25 @@ export async function fetchCompletionReport(jobId: string): Promise<CompletionRe
   return toCompletionReport(report);
 }
 
-export async function fetchCompletionReports(): Promise<CompletionReportSnapshot[]> {
-  const reports = await request<ApiCompletionReport[]>('/completion-reports');
+export function completionReportsPath(options: FetchCompletionReportsOptions = {}): string {
+  const query = new URLSearchParams();
+
+  if (options.status && options.status !== 'all') {
+    query.set('status', options.status);
+  }
+
+  if (options.readiness && options.readiness !== 'all') {
+    query.set('readiness', options.readiness);
+  }
+
+  const queryString = query.toString();
+  return queryString ? `/completion-reports?${queryString}` : '/completion-reports';
+}
+
+export async function fetchCompletionReports(
+  options: FetchCompletionReportsOptions = {},
+): Promise<CompletionReportSnapshot[]> {
+  const reports = await request<ApiCompletionReport[]>(completionReportsPath(options));
   return reports.map(toCompletionReport);
 }
 

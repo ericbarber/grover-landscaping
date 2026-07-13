@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  completionReportsPath,
   toCompletionReport,
   toCompletionReportAction,
   toJobAddOn,
@@ -8,6 +9,16 @@ import {
 } from './client';
 
 describe('core API client mapping', () => {
+  it('builds completion report list paths with optional filters', () => {
+    expect(completionReportsPath()).toBe('/completion-reports');
+    expect(completionReportsPath({ status: 'active', readiness: 'blocked' })).toBe(
+      '/completion-reports?status=active&readiness=blocked',
+    );
+    expect(completionReportsPath({ status: 'all', readiness: 'ready' })).toBe(
+      '/completion-reports?readiness=ready',
+    );
+  });
+
   it('maps completion report responses with attached photo evidence', () => {
     const apiReport: ApiCompletionReport = {
       report_id: 'report_job_1001',
