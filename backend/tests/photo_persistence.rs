@@ -1,4 +1,5 @@
 use grover_landscaping_api::{db::JobRepository, PhotoUploadMetadata, PhotoUploadRequest};
+use sqlx::Row;
 mod common;
 
 #[tokio::test]
@@ -97,5 +98,80 @@ async fn repository_persists_and_lists_photo_evidence() {
     assert_eq!(
         processed_photo.metadata_source.as_deref(),
         Some("server_extracted")
+    );
+
+    let rejected_ticket = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "invalid-image.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "before".to_string(),
+            },
+        )
+        .await;
+    let pool = repository
+        .pool()
+        .expect("photo persistence test should have a PostgreSQL pool");
+    let before_count: i32 =
+        sqlx::query_scalar("SELECT before_photos FROM service_jobs WHERE id = 'job_1001'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+    assert!(
+        repository
+            .reject_photo_upload(
+                "job_1001",
+                &rejected_ticket.photo_id,
+                "unsupported_or_invalid_image_header",
+            )
+            .await
+    );
+    assert!(
+        !repository
+            .reject_photo_upload(
+                "job_1001",
+                "photo_missing_for_rejection",
+                "unsupported_or_invalid_image_header",
+            )
+            .await,
+        "rejecting an unknown photo id should report that nothing changed"
+    );
+
+    let rejected_row = sqlx::query(
+        r#"
+        SELECT status, metadata_source, rejected_reason, rejected_at IS NOT NULL AS has_rejected_at
+        FROM job_photos
+        WHERE id = $1
+        "#,
+    )
+    .bind(&rejected_ticket.photo_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let after_count: i32 =
+        sqlx::query_scalar("SELECT before_photos FROM service_jobs WHERE id = 'job_1001'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let visible_photos = repository.list_photo_evidence("job_1001").await;
+
+    assert_eq!(rejected_row.get::<String, _>("status"), "rejected");
+    assert_eq!(
+        rejected_row.get::<String, _>("metadata_source"),
+        "server_rejected"
+    );
+    assert_eq!(
+        rejected_row.get::<String, _>("rejected_reason"),
+        "unsupported_or_invalid_image_header"
+    );
+    assert!(rejected_row.get::<bool, _>("has_rejected_at"));
+    assert_eq!(after_count, before_count);
+    assert!(
+        visible_photos
+            .iter()
+            .all(|photo| photo.id != rejected_ticket.photo_id),
+        "rejected photo evidence should stay quarantined from evidence reads"
     );
 }

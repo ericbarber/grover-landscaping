@@ -155,6 +155,34 @@ pub async fn complete_photo_upload(
     Ok(())
 }
 
+pub async fn reject_photo_upload(
+    pool: &PgPool,
+    job_id: &str,
+    photo_id: &str,
+    rejected_reason: &str,
+) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query(
+        r#"
+        UPDATE job_photos
+        SET
+            status = 'rejected',
+            uploaded_at = now(),
+            metadata_source = 'server_rejected',
+            metadata_captured_at = now(),
+            rejected_reason = $3,
+            rejected_at = now()
+        WHERE id = $1 AND job_id = $2
+        "#,
+    )
+    .bind(photo_id)
+    .bind(job_id)
+    .bind(rejected_reason)
+    .execute(pool)
+    .await?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 pub fn photo_upload_response(
     job_id: String,
     request: PhotoUploadRequest,

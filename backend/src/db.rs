@@ -12,7 +12,7 @@ use crate::{
         CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
         CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
     },
-    photo_storage::PhotoStorageConfig,
+    photo_storage::{PhotoStorageConfig, UploadedPhotoInspection},
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadMetadata,
     PhotoUploadRequest, PhotoUploadResponse,
 };
@@ -472,11 +472,19 @@ impl JobRepository {
             if let Ok(Some(location)) =
                 postgres_read::photo_storage_location(pool, job_id, photo_id).await
             {
-                if let Some(server_metadata) = PhotoStorageConfig::from_env()
-                    .uploaded_photo_metadata(&location.upload_mode, &location.object_key)
+                match PhotoStorageConfig::from_env()
+                    .uploaded_photo_inspection(&location.upload_mode, &location.object_key)
                     .await
                 {
-                    upload_metadata = server_metadata;
+                    UploadedPhotoInspection::Extracted(server_metadata) => {
+                        upload_metadata = server_metadata;
+                    }
+                    UploadedPhotoInspection::Rejected(reason) => {
+                        let _ = postgres_write::reject_photo_upload(pool, job_id, photo_id, reason)
+                            .await;
+                        return format!("Photo {photo_id} for job {job_id} has been rejected.");
+                    }
+                    UploadedPhotoInspection::Unavailable => {}
                 }
             }
 
@@ -485,6 +493,22 @@ impl JobRepository {
         }
 
         format!("Photo {photo_id} for job {job_id} has been marked uploaded.")
+    }
+
+    #[allow(dead_code)]
+    pub async fn reject_photo_upload(
+        &self,
+        job_id: &str,
+        photo_id: &str,
+        rejected_reason: &str,
+    ) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+
+        postgres_write::reject_photo_upload(pool, job_id, photo_id, rejected_reason)
+            .await
+            .unwrap_or(false)
     }
 
     #[allow(dead_code)]

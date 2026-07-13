@@ -337,10 +337,11 @@ Current state:
 - S3-backed upload completion attempts server-side file-size verification and PNG, GIF, JPEG, or WebP dimension extraction before falling back to client-reported metadata
 - Photo evidence reads hide pending upload tickets and mark server-extracted uploads as processed
 - Photo upload-ticket requests reject blank file names, unsupported photo categories, and non-image content types before storage rows are created
+- Rejected photo uploads persist rejection reason/timestamp metadata and remain quarantined from photo evidence reads
 
 Next implementation work:
 
-- Add server-side thumbnail normalization and rejected-state quarantine for uploaded photo evidence
+- Add server-side thumbnail normalization for uploaded photo evidence
 
 ### Completion reports
 

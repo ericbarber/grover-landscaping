@@ -152,6 +152,8 @@ image_width_px
 image_height_px
 metadata_source
 metadata_captured_at
+rejected_reason
+rejected_at
 latitude
 longitude
 device_id
@@ -179,7 +181,7 @@ processed
 rejected
 ```
 
-Upload completion can persist file size and image dimensions. `metadata_source` records where those values came from; browser-provided fallback values use `client_reported`, while S3-backed server probes that verify object metadata and parse PNG, GIF, JPEG, or WebP headers use `server_extracted`. Photo evidence reads expose `uploaded` and `processed` rows, keeping pending upload tickets out of reports and customer-visible evidence.
+Upload completion can persist file size and image dimensions. `metadata_source` records where those values came from; browser-provided fallback values use `client_reported`, while S3-backed server probes that verify object metadata and parse PNG, GIF, JPEG, or WebP headers use `server_extracted`. Server-side rejection records use `server_rejected` plus `rejected_reason` and `rejected_at`. Photo evidence reads expose `uploaded` and `processed` rows, keeping pending and rejected upload tickets out of reports and customer-visible evidence.
 
 ## job_completion_reports
 

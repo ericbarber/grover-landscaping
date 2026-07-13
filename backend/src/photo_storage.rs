@@ -34,6 +34,13 @@ pub struct PhotoStorageTicket {
     pub thumbnail_object_key: Option<String>,
 }
 
+#[derive(Clone, Debug)]
+pub enum UploadedPhotoInspection {
+    Extracted(PhotoUploadMetadata),
+    Rejected(&'static str),
+    Unavailable,
+}
+
 impl PhotoStorageConfig {
     pub fn from_env() -> Self {
         Self::try_from_env().unwrap_or(Self::Local)
@@ -150,24 +157,23 @@ impl PhotoStorageConfig {
         Some(format!("local://{thumbnail_object_key}"))
     }
 
-    pub async fn uploaded_photo_metadata(
+    pub async fn uploaded_photo_inspection(
         &self,
         upload_mode: &str,
         object_key: &str,
-    ) -> Option<PhotoUploadMetadata> {
+    ) -> UploadedPhotoInspection {
         if normalized_upload_mode(upload_mode) != "s3-presigned" {
-            return None;
+            return UploadedPhotoInspection::Unavailable;
         }
 
         let Self::S3(config) = self else {
-            return None;
+            return UploadedPhotoInspection::Unavailable;
         };
 
         config
-            .uploaded_photo_metadata(object_key)
+            .uploaded_photo_inspection(object_key)
             .await
-            .ok()
-            .flatten()
+            .unwrap_or(UploadedPhotoInspection::Unavailable)
     }
 }
 
@@ -213,10 +219,10 @@ impl S3PhotoStorageConfig {
         self.presigned_url_at(method, object_key, expires_seconds, now)
     }
 
-    async fn uploaded_photo_metadata(
+    async fn uploaded_photo_inspection(
         &self,
         object_key: &str,
-    ) -> Result<Option<PhotoUploadMetadata>, reqwest::Error> {
+    ) -> Result<UploadedPhotoInspection, reqwest::Error> {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
             .build()?;
@@ -226,7 +232,7 @@ impl S3PhotoStorageConfig {
             .await?;
 
         if !head_response.status().is_success() {
-            return Ok(None);
+            return Ok(UploadedPhotoInspection::Unavailable);
         }
 
         let file_size_bytes = head_response.content_length().and_then(|content_length| {
@@ -244,15 +250,17 @@ impl S3PhotoStorageConfig {
         if !get_response.status().is_success()
             && get_response.status() != StatusCode::PARTIAL_CONTENT
         {
-            return Ok(None);
+            return Ok(UploadedPhotoInspection::Unavailable);
         }
 
         let bytes = get_response.bytes().await?;
         let Some((image_width_px, image_height_px)) = image_dimensions(&bytes) else {
-            return Ok(None);
+            return Ok(UploadedPhotoInspection::Rejected(
+                "unsupported_or_invalid_image_header",
+            ));
         };
 
-        Ok(Some(PhotoUploadMetadata {
+        Ok(UploadedPhotoInspection::Extracted(PhotoUploadMetadata {
             file_size_bytes: file_size_bytes.or_else(|| i64::try_from(bytes.len()).ok()),
             image_width_px: Some(image_width_px),
             image_height_px: Some(image_height_px),
