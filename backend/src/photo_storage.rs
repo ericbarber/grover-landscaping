@@ -1,13 +1,17 @@
 use crate::PhotoUploadMetadata;
 use hmac::{Hmac, Mac};
+use image::codecs::jpeg::JpegEncoder;
+use image::imageops::FilterType;
 use reqwest::{header::RANGE, StatusCode};
 use sha2::{Digest, Sha256};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 const PHOTO_METADATA_RANGE_BYTES: u64 = 512 * 1024;
+const PHOTO_THUMBNAIL_SOURCE_MAX_BYTES: u64 = 20 * 1024 * 1024;
 pub const PHOTO_THUMBNAIL_CONTENT_TYPE: &str = "image/jpeg";
 pub const PHOTO_THUMBNAIL_MAX_DIMENSION_PX: u32 = 640;
+const PHOTO_THUMBNAIL_JPEG_QUALITY: u8 = 78;
 
 #[derive(Clone, Debug)]
 pub enum PhotoStorageConfig {
@@ -183,6 +187,26 @@ impl PhotoStorageConfig {
             .await
             .unwrap_or(UploadedPhotoInspection::Unavailable)
     }
+
+    pub async fn generate_uploaded_thumbnail(
+        &self,
+        upload_mode: &str,
+        object_key: &str,
+        thumbnail_object_key: &str,
+    ) -> bool {
+        if normalized_upload_mode(upload_mode) != "s3-presigned" {
+            return false;
+        }
+
+        let Self::S3(config) = self else {
+            return false;
+        };
+
+        config
+            .generate_uploaded_thumbnail(object_key, thumbnail_object_key)
+            .await
+            .unwrap_or(false)
+    }
 }
 
 impl S3PhotoStorageConfig {
@@ -274,6 +298,53 @@ impl S3PhotoStorageConfig {
             image_height_px: Some(image_height_px),
             metadata_source: Some("server_extracted".to_string()),
         }))
+    }
+
+    async fn generate_uploaded_thumbnail(
+        &self,
+        object_key: &str,
+        thumbnail_object_key: &str,
+    ) -> Result<bool, reqwest::Error> {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(15))
+            .build()?;
+        let head_response = client
+            .head(self.presigned_url("HEAD", object_key, self.display_expires_seconds))
+            .send()
+            .await?;
+
+        let Some(content_length) = head_response.content_length() else {
+            return Ok(false);
+        };
+        if !head_response.status().is_success() || content_length > PHOTO_THUMBNAIL_SOURCE_MAX_BYTES
+        {
+            return Ok(false);
+        }
+
+        let get_response = client
+            .get(self.presigned_url("GET", object_key, self.display_expires_seconds))
+            .send()
+            .await?;
+
+        if !get_response.status().is_success() {
+            return Ok(false);
+        }
+
+        let original = get_response.bytes().await?;
+        if original.len() as u64 > PHOTO_THUMBNAIL_SOURCE_MAX_BYTES {
+            return Ok(false);
+        }
+        let Some(thumbnail) = thumbnail_jpeg(&original, PHOTO_THUMBNAIL_MAX_DIMENSION_PX) else {
+            return Ok(false);
+        };
+        let put_response = client
+            .put(self.presigned_url("PUT", thumbnail_object_key, self.upload_expires_seconds))
+            .header("content-type", PHOTO_THUMBNAIL_CONTENT_TYPE)
+            .body(thumbnail)
+            .send()
+            .await?;
+
+        Ok(put_response.status().is_success())
     }
 
     fn presigned_url_at(
@@ -394,6 +465,21 @@ fn thumbnail_file_name(safe_file_name: &str) -> String {
         .filter(|stem| !stem.is_empty())
         .unwrap_or(safe_file_name);
     format!("{stem}.jpg")
+}
+
+fn thumbnail_jpeg(bytes: &[u8], max_dimension_px: u32) -> Option<Vec<u8>> {
+    if max_dimension_px == 0 {
+        return None;
+    }
+
+    let image = image::load_from_memory(bytes).ok()?;
+    let resized = image.resize(max_dimension_px, max_dimension_px, FilterType::Triangle);
+    let mut thumbnail = Vec::new();
+    JpegEncoder::new_with_quality(&mut thumbnail, PHOTO_THUMBNAIL_JPEG_QUALITY)
+        .encode_image(&resized)
+        .ok()?;
+
+    Some(thumbnail)
 }
 
 fn uri_encode(value: &str) -> String {
@@ -607,9 +693,11 @@ fn read_be_u32(bytes: &[u8], index: usize) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::{
-        aws_date_time, canonical_query_string, image_dimensions, uri_encode, PhotoStorageConfig,
-        S3PhotoStorageConfig,
+        aws_date_time, canonical_query_string, image_dimensions, thumbnail_jpeg, uri_encode,
+        PhotoStorageConfig, S3PhotoStorageConfig,
     };
+    use image::{DynamicImage, ImageFormat, RgbImage};
+    use std::io::Cursor;
 
     #[test]
     fn local_storage_ticket_matches_existing_placeholder_shape() {
@@ -772,5 +860,22 @@ mod tests {
     fn image_dimensions_rejects_incomplete_headers() {
         assert_eq!(image_dimensions(b"not an image"), None);
         assert_eq!(image_dimensions(&[0xff, 0xd8, 0xff, 0xc0, 0x00]), None);
+    }
+
+    #[test]
+    fn thumbnail_jpeg_resizes_to_policy_bounds() {
+        let source_image = DynamicImage::ImageRgb8(
+            RgbImage::from_raw(1600, 900, vec![180; 1600 * 900 * 3]).unwrap(),
+        );
+        let mut source = Cursor::new(Vec::new());
+        source_image
+            .write_to(&mut source, ImageFormat::Png)
+            .expect("test source image should encode");
+
+        let thumbnail = thumbnail_jpeg(source.get_ref(), 640).expect("thumbnail should encode");
+        let thumbnail_image = image::load_from_memory(&thumbnail).expect("thumbnail should decode");
+
+        assert_eq!(thumbnail_image.width(), 640);
+        assert_eq!(thumbnail_image.height(), 360);
     }
 }

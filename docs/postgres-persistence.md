@@ -65,6 +65,7 @@ POST /jobs/{id}/photos/presign
 POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded' or 'processed', uploaded_at = now()
   -> attempt S3 HEAD plus bounded ranged GET metadata extraction for file size and PNG, GIF, JPEG, or WebP dimensions
+  -> attempt bounded server-side JPEG thumbnail generation for S3-backed originals with a stored thumbnail object key
   -> quarantine successfully fetched but unparseable S3 objects as rejected with reason and timestamp metadata
   -> fall back to validated client-reported file size and image dimensions when server extraction is unavailable
   -> increment before_photos or after_photos counters when appropriate

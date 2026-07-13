@@ -15,6 +15,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Before / after / issue photo placeholder flow
 - Persisted photo evidence metadata display with server-extracted file size and image dimensions when object storage is available
 - Server-defined thumbnail normalization policy for S3-backed photo uploads
+- Server-side thumbnail generation attempt for S3-backed uploaded photo evidence
 - Rejected photo evidence quarantine for invalid uploaded image objects
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence

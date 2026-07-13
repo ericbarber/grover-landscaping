@@ -477,6 +477,16 @@ impl JobRepository {
                     .await
                 {
                     UploadedPhotoInspection::Extracted(server_metadata) => {
+                        if let Some(thumbnail_object_key) = location.thumbnail_object_key.as_deref()
+                        {
+                            let _ = PhotoStorageConfig::from_env()
+                                .generate_uploaded_thumbnail(
+                                    &location.upload_mode,
+                                    &location.object_key,
+                                    thumbnail_object_key,
+                                )
+                                .await;
+                        }
                         upload_metadata = server_metadata;
                     }
                     UploadedPhotoInspection::Rejected(reason) => {

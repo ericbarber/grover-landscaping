@@ -8,6 +8,7 @@ use sqlx::{PgPool, Row};
 pub struct PhotoStorageLocation {
     pub upload_mode: String,
     pub object_key: String,
+    pub thumbnail_object_key: Option<String>,
 }
 
 pub async fn organization_id_for_job(
@@ -178,7 +179,8 @@ pub async fn photo_storage_location(
         r#"
         SELECT
             COALESCE(upload_mode, 'local-placeholder') AS upload_mode,
-            object_key
+            object_key,
+            thumbnail_object_key
         FROM job_photos
         WHERE job_id = $1 AND id = $2
         "#,
@@ -194,6 +196,7 @@ pub async fn photo_storage_location(
     Ok(Some(PhotoStorageLocation {
         upload_mode: row.get("upload_mode"),
         object_key: row.get("object_key"),
+        thumbnail_object_key: row.get("thumbnail_object_key"),
     }))
 }
 

@@ -333,6 +333,7 @@ Current state:
 - Expiring S3 display URLs for persisted photo evidence when object storage is configured
 - Browser-generated thumbnail preview uploads for S3-backed photo evidence
 - S3 upload tickets define thumbnail normalization policy with JPEG content type and max pixel dimension
+- S3-backed upload completion attempts server-side JPEG thumbnail generation using the normalized thumbnail policy
 - Persisted thumbnail display URLs for job photo evidence and customer-visible completion reports
 - Upload completion records validated client-reported file size and image dimensions on persisted photo evidence
 - S3-backed upload completion attempts server-side file-size verification and PNG, GIF, JPEG, or WebP dimension extraction before falling back to client-reported metadata
@@ -342,7 +343,7 @@ Current state:
 
 Next implementation work:
 
-- Add server-side thumbnail generation for uploaded photo evidence
+- Add background image-processing worker handoff for retries and long-running upload processing
 
 ### Completion reports
 
