@@ -30,8 +30,11 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     let grouped_job_id = "job_portfolio_test";
     let ungrouped_job_id = "job_portfolio_ungrouped";
     let display_name = "Portfolio Persistence Test";
+    let actor_user_id = "user_property_portfolio_audit";
     let portfolio_id =
         "portfolio_acct_portfolio_test_org_demo_landscaping_portfolio_persistence_test";
+    let portfolio_link_id =
+        "portfolio_link_portfolio_acct_portfolio_test_org_demo_landscaping_portfolio_persistence_test_property_portfolio_test";
 
     sqlx::query("DELETE FROM portfolio_property_links WHERE property_id = $1 OR portfolio_id = $2")
         .bind(property_id)
@@ -39,6 +42,11 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         .execute(&pool)
         .await
         .expect("test portfolio links should reset");
+    sqlx::query("DELETE FROM access_audit_events WHERE actor_user_id = $1")
+        .bind(actor_user_id)
+        .execute(&pool)
+        .await
+        .expect("test audit rows should reset");
     sqlx::query("DELETE FROM property_portfolios WHERE id = $1")
         .bind(portfolio_id)
         .execute(&pool)
@@ -105,12 +113,15 @@ async fn repository_persists_lists_and_links_property_portfolios() {
 
     let repository = PropertyPortfolioRepository::from_pool(pool.clone());
     let portfolio = repository
-        .create_portfolio(CreatePropertyPortfolioRequest {
-            account_id: account_id.to_string(),
-            organization_id: organization_id.to_string(),
-            display_name: display_name.to_string(),
-            portfolio_type: "individual_owner".to_string(),
-        })
+        .create_portfolio(
+            CreatePropertyPortfolioRequest {
+                account_id: account_id.to_string(),
+                organization_id: organization_id.to_string(),
+                display_name: display_name.to_string(),
+                portfolio_type: "individual_owner".to_string(),
+            },
+            actor_user_id,
+        )
         .await
         .expect("portfolio should be created");
 
@@ -125,6 +136,7 @@ async fn repository_persists_lists_and_links_property_portfolios() {
                 property_id: property_id.to_string(),
                 organization_id: organization_id.to_string(),
             },
+            actor_user_id,
         )
         .await
         .expect("property should be linked");
@@ -163,4 +175,22 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         customer_read.ungrouped_properties[0].id,
         ungrouped_property_id
     );
+
+    let audit_count = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE actor_user_id = $1
+          AND organization_id = $2
+          AND event_kind = 'portfolio_changed'
+          AND target_id = ANY($3)
+        "#,
+    )
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(vec![portfolio_id, portfolio_link_id])
+    .fetch_one(&pool)
+    .await
+    .expect("portfolio audit count should be available");
+    assert_eq!(audit_count, 2);
 }

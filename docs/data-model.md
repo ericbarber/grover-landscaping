@@ -89,7 +89,7 @@ portfolio_type
 created_at
 ```
 
-Portfolio membership is stored separately in `portfolio_property_links` with `portfolio_id`, `property_id`, and `organization_id`. Portfolio create, list, and property-link APIs require active organization membership and do not change customer ownership, property ownership, or crew assignment history.
+Portfolio membership is stored separately in `portfolio_property_links` with `portfolio_id`, `property_id`, and `organization_id`. Portfolio create, list, and property-link APIs require active organization membership and do not change customer ownership, property ownership, or crew assignment history. Persisted portfolio create and property-link changes write `portfolio_changed` audit events.
 
 The customer property portfolio read model returns grouped portfolio properties plus `ungrouped_properties` for customer-owned yards that do not yet have a portfolio link. Until a dedicated property table exists, persisted customer property reads are materialized from service jobs, using completion-report property identifiers when available and stable job-derived property identifiers otherwise.
 
@@ -108,7 +108,7 @@ ended_at
 created_at
 ```
 
-Assigning a crew to a property ends the current active assignment for that property and service organization, then creates a new active assignment. Assignment APIs require active organization membership, verify that the crew belongs to the requested service organization, and do not change customer ownership, property ownership, portfolio grouping, or job completion history.
+Assigning a crew to a property ends the current active assignment for that property and service organization, then creates a new active assignment. Assignment APIs require active organization membership, verify that the crew belongs to the requested service organization, and do not change customer ownership, property ownership, portfolio grouping, or job completion history. Persisted assignment changes write `crew_assignment_changed` audit events.
 
 ## property_onboarding_profiles
 
@@ -278,4 +278,4 @@ occurred_at
 created_at
 ```
 
-Current `event_kind` values include login and access events plus business-sensitive changes such as `invite_accepted`, `role_changed`, `bid_approved`, and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID. Invitation acceptance and role administration also write audit rows in the same transaction as their membership changes.
+Current `event_kind` values include login and access events plus business-sensitive changes such as `invite_accepted`, `role_changed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, and `report_delivered`. Completion report delivery writes a `report_delivered` audit row in the same transaction as the lifecycle transition so customer-visible report exposure is traceable by actor, organization, and report ID. Invitation acceptance, role administration, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.

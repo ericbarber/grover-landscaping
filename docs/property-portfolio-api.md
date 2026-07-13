@@ -54,6 +54,7 @@ Validation rules:
 - The property and portfolio must belong to the same service organization.
 - Adding a property to a portfolio must not change customer ownership.
 - Adding a property to a portfolio must not change crew assignment.
+- Persisted portfolio creation and property-link changes write `portfolio_changed` audit events.
 
 ### List portfolios for account
 
@@ -86,3 +87,4 @@ Expected behavior:
 - Customers or property-management accounts own portfolios.
 - Properties stay attached to their customer account and service organization.
 - Crew assignment history should remain separate from portfolio membership history.
+- Persisted portfolio grouping changes are auditable by actor, organization, event kind, target id, and timestamp.

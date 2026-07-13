@@ -295,6 +295,7 @@ Current state:
 - Property portfolio create/list/link APIs are wired to PostgreSQL and enforce active organization membership before grouping customer yards
 - Property crew-assignment APIs are wired to PostgreSQL and enforce active organization membership plus crew organization ownership before changing service assignments
 - Organization invitation APIs create pending memberships, queue invitation email delivery, accept invite tokens into active memberships, and audit invite acceptance plus role changes
+- Persisted portfolio grouping and crew assignment changes record organization-scoped audit events
 
 Next implementation work:
 

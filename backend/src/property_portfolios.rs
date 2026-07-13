@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
+use uuid::Uuid;
 
 use crate::property_portfolio_requests::{
     AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
@@ -87,6 +88,7 @@ impl PropertyPortfolioRepository {
     pub async fn create_portfolio(
         &self,
         request: CreatePropertyPortfolioRequest,
+        actor_user_id: &str,
     ) -> Option<PropertyPortfolioResponse> {
         let request = normalize_create_portfolio_request(request);
         let id = portfolio_id(
@@ -96,7 +98,9 @@ impl PropertyPortfolioRepository {
         );
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(portfolio)) = insert_property_portfolio(pool, &id, &request).await {
+            if let Ok(Some(portfolio)) =
+                insert_property_portfolio(pool, &id, &request, actor_user_id).await
+            {
                 return Some(portfolio);
             }
         }
@@ -116,13 +120,15 @@ impl PropertyPortfolioRepository {
         &self,
         portfolio_id: &str,
         request: AddPropertyToPortfolioRequest,
+        actor_user_id: &str,
     ) -> Option<PortfolioPropertyLinkResponse> {
         let request = normalize_add_property_request(request);
         let id = portfolio_property_link_id(portfolio_id, &request.property_id);
 
         if let Some(pool) = &self.pool {
             if let Ok(link) =
-                insert_portfolio_property_link(pool, &id, portfolio_id, &request).await
+                insert_portfolio_property_link(pool, &id, portfolio_id, &request, actor_user_id)
+                    .await
             {
                 return link;
             }
@@ -252,7 +258,9 @@ async fn insert_property_portfolio(
     pool: &PgPool,
     id: &str,
     request: &CreatePropertyPortfolioRequest,
+    actor_user_id: &str,
 ) -> Result<Option<PropertyPortfolioResponse>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
     let row = sqlx::query(
         r#"
         INSERT INTO property_portfolios (
@@ -284,9 +292,21 @@ async fn insert_property_portfolio(
     .bind(&request.organization_id)
     .bind(&request.display_name)
     .bind(&request.portfolio_type)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
 
+    if row.is_some() {
+        insert_portfolio_audit_event(
+            &mut tx,
+            actor_user_id,
+            &request.organization_id,
+            "portfolio_changed",
+            id,
+        )
+        .await?;
+    }
+
+    tx.commit().await?;
     Ok(row.map(portfolio_response_from_row))
 }
 
@@ -295,7 +315,9 @@ async fn insert_portfolio_property_link(
     id: &str,
     portfolio_id: &str,
     request: &AddPropertyToPortfolioRequest,
+    actor_user_id: &str,
 ) -> Result<Option<PortfolioPropertyLinkResponse>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
     let inserted = sqlx::query(
         r#"
         WITH target_portfolio AS (
@@ -324,10 +346,19 @@ async fn insert_portfolio_property_link(
     .bind(portfolio_id)
     .bind(&request.property_id)
     .bind(&request.organization_id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
 
     if let Some(row) = inserted {
+        insert_portfolio_audit_event(
+            &mut tx,
+            actor_user_id,
+            &request.organization_id,
+            "portfolio_changed",
+            id,
+        )
+        .await?;
+        tx.commit().await?;
         return Ok(Some(portfolio_property_link_response_from_row(row)));
     }
 
@@ -343,10 +374,42 @@ async fn insert_portfolio_property_link(
     .bind(portfolio_id)
     .bind(&request.property_id)
     .bind(&request.organization_id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
 
+    tx.commit().await?;
     Ok(existing.map(portfolio_property_link_response_from_row))
+}
+
+async fn insert_portfolio_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_user_id: &str,
+    organization_id: &str,
+    event_kind: &str,
+    target_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(target_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 async fn list_property_portfolios_for_account(
@@ -687,12 +750,15 @@ mod tests {
         let repository = PropertyPortfolioRepository::default();
 
         let response = repository
-            .create_portfolio(CreatePropertyPortfolioRequest {
-                account_id: " acct_1001 ".to_string(),
-                organization_id: " org_demo_landscaping ".to_string(),
-                display_name: " Sample Owner Homes ".to_string(),
-                portfolio_type: "individual_owner".to_string(),
-            })
+            .create_portfolio(
+                CreatePropertyPortfolioRequest {
+                    account_id: " acct_1001 ".to_string(),
+                    organization_id: " org_demo_landscaping ".to_string(),
+                    display_name: " Sample Owner Homes ".to_string(),
+                    portfolio_type: "individual_owner".to_string(),
+                },
+                "actor_1001",
+            )
             .await
             .expect("local portfolio response should be returned");
 
@@ -715,6 +781,7 @@ mod tests {
                     property_id: " property_1001 ".to_string(),
                     organization_id: " org_demo_landscaping ".to_string(),
                 },
+                "actor_1001",
             )
             .await
             .expect("local link response should be returned");

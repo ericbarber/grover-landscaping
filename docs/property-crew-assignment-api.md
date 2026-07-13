@@ -34,6 +34,7 @@ Expected behavior:
 - Create a new active assignment for the requested crew.
 - Keep the property attached to the same customer account.
 - Keep portfolio membership unchanged.
+- Write a `crew_assignment_changed` audit event when the assignment is persisted.
 
 ### List assignment history for property
 
@@ -64,3 +65,4 @@ Expected behavior:
 - Portfolio grouping does not imply crew assignment.
 - Crew assignment history remains separate from job completion history.
 - A property should have at most one active crew assignment per service organization.
+- Persisted crew assignment changes are auditable by actor, organization, event kind, target id, and timestamp.

@@ -216,6 +216,7 @@ The project currently includes migrations for:
 - Customer-scoped portfolio/property read model with grouped and ungrouped yards
 - Property-to-crew service assignment history
 - Property onboarding profiles for address, access, billing, and notification readiness
+- Access audit records for report delivery, role administration, invitations, portfolio grouping, and crew assignment changes
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Route-planning seed data
 

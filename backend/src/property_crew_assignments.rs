@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct AssignPropertyCrewRequest {
@@ -35,6 +36,7 @@ impl PropertyCrewAssignmentRepository {
         &self,
         property_id: &str,
         request: AssignPropertyCrewRequest,
+        actor_user_id: &str,
     ) -> Option<PropertyCrewAssignmentResponse> {
         let request = normalize_assign_property_crew_request(request);
         let assigned_at = request
@@ -44,9 +46,15 @@ impl PropertyCrewAssignmentRepository {
         let id = assignment_id(property_id, &request.crew_id);
 
         if let Some(pool) = &self.pool {
-            if let Ok(assignment) =
-                insert_property_crew_assignment(pool, &id, property_id, &assigned_at, &request)
-                    .await
+            if let Ok(assignment) = insert_property_crew_assignment(
+                pool,
+                &id,
+                property_id,
+                &assigned_at,
+                &request,
+                actor_user_id,
+            )
+            .await
             {
                 return assignment;
             }
@@ -171,6 +179,7 @@ async fn insert_property_crew_assignment(
     property_id: &str,
     assigned_at: &str,
     request: &AssignPropertyCrewRequest,
+    actor_user_id: &str,
 ) -> Result<Option<PropertyCrewAssignmentResponse>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
@@ -239,8 +248,48 @@ async fn insert_property_crew_assignment(
     .fetch_one(&mut *tx)
     .await?;
 
+    insert_crew_assignment_audit_event(
+        &mut tx,
+        actor_user_id,
+        &request.organization_id,
+        "crew_assignment_changed",
+        id,
+    )
+    .await?;
+
     tx.commit().await?;
     Ok(Some(assignment_response_from_row(row)))
+}
+
+async fn insert_crew_assignment_audit_event(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    actor_user_id: &str,
+    organization_id: &str,
+    event_kind: &str,
+    target_id: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(target_id)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(())
 }
 
 async fn list_property_crew_assignments(
@@ -399,6 +448,7 @@ mod tests {
                     organization_id: " org_demo_landscaping ".to_string(),
                     assigned_at: Some("2026-06-15T08:00:00Z".to_string()),
                 },
+                "actor_1001",
             )
             .await
             .expect("local assignment response should be returned");

@@ -916,7 +916,11 @@ async fn create_property_portfolio(
         return response;
     }
 
-    let Some(portfolio) = state.property_portfolios.create_portfolio(request).await else {
+    let Some(portfolio) = state
+        .property_portfolios
+        .create_portfolio(request, &principal.subject)
+        .await
+    else {
         return (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
@@ -960,7 +964,7 @@ async fn add_property_to_portfolio(
 
     let Some(link) = state
         .property_portfolios
-        .add_property(&portfolio_id, request)
+        .add_property(&portfolio_id, request, &principal.subject)
         .await
     else {
         return (
@@ -1006,7 +1010,7 @@ async fn assign_property_crew(
 
     let Some(assignment) = state
         .property_crew_assignments
-        .assign_crew(&property_id, request)
+        .assign_crew(&property_id, request, &principal.subject)
         .await
     else {
         return (
