@@ -87,6 +87,8 @@ export interface PhotoUploadTicket {
   objectKey: string;
   thumbnailUploadUrl?: string;
   thumbnailObjectKey?: string;
+  thumbnailContentType?: string;
+  thumbnailMaxDimensionPx?: number;
   thumbnailUrl?: string;
   fileSizeBytes?: number;
   imageWidthPx?: number;
@@ -720,6 +722,8 @@ export async function createPhotoUploadTicket(
     object_key: string;
     thumbnail_upload_url?: string | null;
     thumbnail_object_key?: string | null;
+    thumbnail_content_type?: string | null;
+    thumbnail_max_dimension_px?: number | null;
   }>(`/jobs/${jobId}/photos/presign`, {
     method: 'POST',
     body: JSON.stringify({
@@ -741,6 +745,8 @@ export async function createPhotoUploadTicket(
     objectKey: ticket.object_key,
     thumbnailUploadUrl: ticket.thumbnail_upload_url ?? undefined,
     thumbnailObjectKey: ticket.thumbnail_object_key ?? undefined,
+    thumbnailContentType: ticket.thumbnail_content_type ?? undefined,
+    thumbnailMaxDimensionPx: ticket.thumbnail_max_dimension_px ?? undefined,
   };
 }
 
@@ -752,8 +758,13 @@ export async function uploadPhotoToTicket(ticket: PhotoUploadTicket, file: File)
   await putFileToUrl(ticket.uploadUrl, file, file.type || ticket.contentType);
 
   if (ticket.thumbnailUploadUrl) {
-    const thumbnail = await createPhotoThumbnail(file);
-    await putFileToUrl(ticket.thumbnailUploadUrl, thumbnail, 'image/jpeg');
+    const thumbnailContentType = ticket.thumbnailContentType ?? 'image/jpeg';
+    const thumbnail = await createPhotoThumbnail(
+      file,
+      ticket.thumbnailMaxDimensionPx ?? 640,
+      thumbnailContentType,
+    );
+    await putFileToUrl(ticket.thumbnailUploadUrl, thumbnail, thumbnailContentType);
   }
 }
 
@@ -771,12 +782,15 @@ async function putFileToUrl(url: string, body: Blob, contentType: string): Promi
   }
 }
 
-async function createPhotoThumbnail(file: File): Promise<Blob> {
+async function createPhotoThumbnail(
+  file: File,
+  maxSize: number,
+  contentType: string,
+): Promise<Blob> {
   const imageUrl = URL.createObjectURL(file);
 
   try {
     const image = await loadImage(imageUrl);
-    const maxSize = 640;
     const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
     const width = Math.max(1, Math.round(image.naturalWidth * scale));
     const height = Math.max(1, Math.round(image.naturalHeight * scale));
@@ -798,7 +812,7 @@ async function createPhotoThumbnail(file: File): Promise<Blob> {
         } else {
           reject(new Error('Could not create thumbnail image'));
         }
-      }, 'image/jpeg', 0.78);
+      }, contentType, 0.78);
     });
   } finally {
     URL.revokeObjectURL(imageUrl);

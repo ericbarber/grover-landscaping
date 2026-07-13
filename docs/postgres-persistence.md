@@ -60,6 +60,7 @@ POST /jobs/{id}/photos/presign
   -> INSERT job_photos row with pending status
   -> return local placeholder ticket by default
   -> return S3 presigned PUT URLs for original and browser-generated thumbnail when PHOTO_STORAGE_MODE=s3
+  -> define thumbnail normalization policy as JPEG with a bounded max pixel dimension for S3 tickets
 
 POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded' or 'processed', uploaded_at = now()

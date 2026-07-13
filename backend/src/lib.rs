@@ -87,6 +87,8 @@ pub struct PhotoUploadResponse {
     pub object_key: String,
     pub thumbnail_upload_url: Option<String>,
     pub thumbnail_object_key: Option<String>,
+    pub thumbnail_content_type: Option<&'static str>,
+    pub thumbnail_max_dimension_px: Option<u32>,
 }
 
 #[derive(Clone, Debug, Serialize)]

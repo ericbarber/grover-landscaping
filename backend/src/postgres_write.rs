@@ -201,5 +201,7 @@ pub fn photo_upload_response(
         object_key: storage_ticket.object_key,
         thumbnail_upload_url: storage_ticket.thumbnail_upload_url,
         thumbnail_object_key: storage_ticket.thumbnail_object_key,
+        thumbnail_content_type: storage_ticket.thumbnail_content_type,
+        thumbnail_max_dimension_px: storage_ticket.thumbnail_max_dimension_px,
     }
 }

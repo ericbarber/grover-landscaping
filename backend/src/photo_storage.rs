@@ -6,6 +6,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
 const PHOTO_METADATA_RANGE_BYTES: u64 = 512 * 1024;
+pub const PHOTO_THUMBNAIL_CONTENT_TYPE: &str = "image/jpeg";
+pub const PHOTO_THUMBNAIL_MAX_DIMENSION_PX: u32 = 640;
 
 #[derive(Clone, Debug)]
 pub enum PhotoStorageConfig {
@@ -32,6 +34,8 @@ pub struct PhotoStorageTicket {
     pub object_key: String,
     pub thumbnail_upload_url: Option<String>,
     pub thumbnail_object_key: Option<String>,
+    pub thumbnail_content_type: Option<&'static str>,
+    pub thumbnail_max_dimension_px: Option<u32>,
 }
 
 #[derive(Clone, Debug)]
@@ -103,6 +107,8 @@ impl PhotoStorageConfig {
                     object_key,
                     thumbnail_upload_url: None,
                     thumbnail_object_key: None,
+                    thumbnail_content_type: None,
+                    thumbnail_max_dimension_px: None,
                 }
             }
             Self::S3(config) => {
@@ -123,6 +129,8 @@ impl PhotoStorageConfig {
                     object_key,
                     thumbnail_upload_url: Some(thumbnail_upload_url),
                     thumbnail_object_key: Some(thumbnail_object_key),
+                    thumbnail_content_type: Some(PHOTO_THUMBNAIL_CONTENT_TYPE),
+                    thumbnail_max_dimension_px: Some(PHOTO_THUMBNAIL_MAX_DIMENSION_PX),
                 }
             }
         }
@@ -624,6 +632,8 @@ mod tests {
         );
         assert_eq!(ticket.thumbnail_upload_url, None);
         assert_eq!(ticket.thumbnail_object_key, None);
+        assert_eq!(ticket.thumbnail_content_type, None);
+        assert_eq!(ticket.thumbnail_max_dimension_px, None);
     }
 
     #[test]
@@ -650,6 +660,8 @@ mod tests {
             ticket.thumbnail_object_key.as_deref(),
             Some("evidence/thumbnails/jobs/job_1001/after/99_after.jpg")
         );
+        assert_eq!(ticket.thumbnail_content_type, Some("image/jpeg"));
+        assert_eq!(ticket.thumbnail_max_dimension_px, Some(640));
         assert!(ticket.upload_url.starts_with(
             "https://grover-dev-photos.s3.us-west-2.amazonaws.com/evidence/jobs/job_1001/after/99_after.jpg?"
         ));
