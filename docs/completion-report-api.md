@@ -91,6 +91,7 @@ Expected behavior:
 - require manager, organization owner, or support admin access,
 - set delivery actor and timestamp,
 - create or reuse a share token,
+- store an immutable delivered snapshot with version and evidence metadata,
 - move status to `delivered`,
 - write a status history event.
 
@@ -118,7 +119,7 @@ Expected behavior:
 
 - allow public token reads,
 - require the report to be delivered with delivery metadata,
-- return the persisted delivered snapshot fields,
+- return the persisted delivered snapshot fields, including `snapshot_metadata`,
 - reject draft, submitted, in-review, and change-requested reports.
 
 ### GET `/report-view/{share_token}`

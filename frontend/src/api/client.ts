@@ -145,6 +145,21 @@ export interface ApiCompletionReport {
   account: ApiAccountStatus;
   photo_evidence: ApiPhotoEvidence[];
   completed_add_ons: ApiJobAddOn[];
+  snapshot_metadata?: ApiCompletionReportSnapshotMetadata;
+}
+
+export interface ApiCompletionReportSnapshotMetadata {
+  snapshot_version: number;
+  report_id: string;
+  job_id: string;
+  captured_at_epoch_seconds: number;
+  evidence: {
+    before_photos: number;
+    after_photos: number;
+    issue_photos: number;
+    total_photo_evidence: number;
+    completed_add_ons: number;
+  };
 }
 
 export interface CompletionReportSnapshot {
@@ -162,6 +177,21 @@ export interface CompletionReportSnapshot {
   account: AccountStatus;
   photoEvidence: PhotoUploadTicket[];
   completedAddOns: JobAddOn[];
+  snapshotMetadata?: CompletionReportSnapshotMetadata;
+}
+
+export interface CompletionReportSnapshotMetadata {
+  snapshotVersion: number;
+  reportId: string;
+  jobId: string;
+  capturedAtEpochSeconds: number;
+  evidence: {
+    beforePhotos: number;
+    afterPhotos: number;
+    issuePhotos: number;
+    totalPhotoEvidence: number;
+    completedAddOns: number;
+  };
 }
 
 export interface ApiCompletionReportAction {
@@ -331,6 +361,21 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
     account: toAccountStatus(apiReport.account),
     photoEvidence: apiReport.photo_evidence.map(toPhotoEvidence),
     completedAddOns: apiReport.completed_add_ons.map(toJobAddOn),
+    snapshotMetadata: apiReport.snapshot_metadata
+      ? {
+          snapshotVersion: apiReport.snapshot_metadata.snapshot_version,
+          reportId: apiReport.snapshot_metadata.report_id,
+          jobId: apiReport.snapshot_metadata.job_id,
+          capturedAtEpochSeconds: apiReport.snapshot_metadata.captured_at_epoch_seconds,
+          evidence: {
+            beforePhotos: apiReport.snapshot_metadata.evidence.before_photos,
+            afterPhotos: apiReport.snapshot_metadata.evidence.after_photos,
+            issuePhotos: apiReport.snapshot_metadata.evidence.issue_photos,
+            totalPhotoEvidence: apiReport.snapshot_metadata.evidence.total_photo_evidence,
+            completedAddOns: apiReport.snapshot_metadata.evidence.completed_add_ons,
+          },
+        }
+      : undefined,
   };
 }
 

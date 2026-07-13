@@ -1,5 +1,8 @@
 use crate::{accounts::CustomerAccountSummary, JobAddOn, JobDetail, PhotoEvidence};
 use serde::Serialize;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+pub const COMPLETION_REPORT_SNAPSHOT_VERSION: u32 = 1;
 
 #[derive(Clone, Debug, Default)]
 pub struct CompletionReportPersistence {
@@ -64,6 +67,26 @@ pub struct CompletionReportResponse {
     pub account: CustomerAccountSummary,
     pub photo_evidence: Vec<PhotoEvidence>,
     pub completed_add_ons: Vec<JobAddOn>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snapshot_metadata: Option<CompletionReportSnapshotMetadata>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CompletionReportSnapshotMetadata {
+    pub snapshot_version: u32,
+    pub report_id: String,
+    pub job_id: String,
+    pub captured_at_epoch_seconds: u64,
+    pub evidence: CompletionReportSnapshotEvidenceMetadata,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CompletionReportSnapshotEvidenceMetadata {
+    pub before_photos: u32,
+    pub after_photos: u32,
+    pub issue_photos: u32,
+    pub total_photo_evidence: u32,
+    pub completed_add_ons: u32,
 }
 
 pub fn is_valid_completion_report_lifecycle_status(status: &str) -> bool {
@@ -196,7 +219,31 @@ pub fn build_completion_report(
             .into_iter()
             .filter(|add_on| add_on.status == "completed")
             .collect(),
+        snapshot_metadata: None,
     }
+}
+
+pub fn attach_delivered_snapshot_metadata(
+    report: &CompletionReportResponse,
+) -> CompletionReportResponse {
+    let mut snapshot = report.clone();
+    snapshot.snapshot_metadata = Some(CompletionReportSnapshotMetadata {
+        snapshot_version: COMPLETION_REPORT_SNAPSHOT_VERSION,
+        report_id: snapshot.report_id.clone(),
+        job_id: snapshot.job_id.clone(),
+        captured_at_epoch_seconds: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_secs())
+            .unwrap_or(0),
+        evidence: CompletionReportSnapshotEvidenceMetadata {
+            before_photos: snapshot.before_photos,
+            after_photos: snapshot.after_photos,
+            issue_photos: snapshot.issue_photos,
+            total_photo_evidence: snapshot.photo_evidence.len() as u32,
+            completed_add_ons: snapshot.completed_add_ons.len() as u32,
+        },
+    });
+    snapshot
 }
 
 pub fn completion_report_id(job_id: &str) -> String {
@@ -255,8 +302,8 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_completion_report_persistence, build_completion_report,
-        completion_report_delivery_action_is_available,
+        apply_completion_report_persistence, attach_delivered_snapshot_metadata,
+        build_completion_report, completion_report_delivery_action_is_available,
         completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
         completion_report_is_visible_to_customer,
         completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
@@ -265,6 +312,7 @@ mod tests {
         completion_report_resubmit_action_is_available, completion_report_share_link_is_available,
         completion_report_start_review_action_is_available,
         is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
+        COMPLETION_REPORT_SNAPSHOT_VERSION,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -318,6 +366,41 @@ mod tests {
             display_url: format!("local://local/jobs/job_1001/{photo_type}/{id}.jpg"),
             thumbnail_url: None,
         }
+    }
+
+    #[test]
+    fn delivered_snapshot_metadata_records_version_and_evidence_counts() {
+        let report = build_completion_report(
+            job(4, 1, 1),
+            account(),
+            vec![
+                photo("photo_before_1001", "before"),
+                photo("photo_after_1001", "after"),
+                photo("photo_issue_1001", "issue"),
+            ],
+            vec![
+                add_on("add_on_1001", "completed"),
+                add_on("add_on_1002", "scheduled"),
+            ],
+        );
+
+        let snapshot = attach_delivered_snapshot_metadata(&report);
+        let metadata = snapshot
+            .snapshot_metadata
+            .expect("delivered snapshot metadata should be attached");
+
+        assert_eq!(
+            metadata.snapshot_version,
+            COMPLETION_REPORT_SNAPSHOT_VERSION
+        );
+        assert_eq!(metadata.report_id, "report_job_1001");
+        assert_eq!(metadata.job_id, "job_1001");
+        assert_eq!(metadata.evidence.before_photos, 1);
+        assert_eq!(metadata.evidence.after_photos, 1);
+        assert_eq!(metadata.evidence.issue_photos, 1);
+        assert_eq!(metadata.evidence.total_photo_evidence, 3);
+        assert_eq!(metadata.evidence.completed_add_ons, 1);
+        assert!(metadata.captured_at_epoch_seconds > 0);
     }
 
     fn add_on(id: &str, status: &str) -> JobAddOn {

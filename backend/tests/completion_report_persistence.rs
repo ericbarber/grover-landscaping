@@ -1,8 +1,9 @@
 use grover_landscaping_api::{
     accounts::CustomerAccountSummary,
     completion_reports::{
-        apply_completion_report_persistence, build_completion_report, CompletionReportActionResult,
-        CompletionReportDeliveryNotificationResult,
+        apply_completion_report_persistence, attach_delivered_snapshot_metadata,
+        build_completion_report, CompletionReportActionResult,
+        CompletionReportDeliveryNotificationResult, COMPLETION_REPORT_SNAPSHOT_VERSION,
     },
     db::JobRepository,
 };
@@ -185,6 +186,7 @@ async fn repository_persists_completion_report_state() {
         Vec::new(),
     );
     apply_completion_report_persistence(&mut delivered_snapshot, delivered_persistence.clone());
+    let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
     assert!(
         repository
             .store_delivered_completion_report_snapshot("report_job_1001", &delivered_snapshot)
@@ -203,6 +205,22 @@ async fn repository_persists_completion_report_state() {
     assert_eq!(
         stored_snapshot["job"]["customer_name"], "Sample Customer",
         "delivered snapshot should not reflect later live job edits"
+    );
+    assert_eq!(
+        stored_snapshot["snapshot_metadata"]["snapshot_version"],
+        COMPLETION_REPORT_SNAPSHOT_VERSION
+    );
+    assert_eq!(
+        stored_snapshot["snapshot_metadata"]["report_id"],
+        "report_job_1001"
+    );
+    assert_eq!(
+        stored_snapshot["snapshot_metadata"]["evidence"]["before_photos"],
+        1
+    );
+    assert_eq!(
+        stored_snapshot["snapshot_metadata"]["evidence"]["after_photos"],
+        1
     );
     sqlx::query("UPDATE service_jobs SET customer_name = 'Sample Customer' WHERE id = 'job_1001'")
         .execute(&pool)

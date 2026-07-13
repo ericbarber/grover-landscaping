@@ -116,6 +116,19 @@ describe('core API client mapping', () => {
           status: 'completed',
         },
       ],
+      snapshot_metadata: {
+        snapshot_version: 1,
+        report_id: 'report_job_1001',
+        job_id: 'job_1001',
+        captured_at_epoch_seconds: 1_783_920_000,
+        evidence: {
+          before_photos: 1,
+          after_photos: 1,
+          issue_photos: 0,
+          total_photo_evidence: 1,
+          completed_add_ons: 1,
+        },
+      },
     };
 
     expect(toCompletionReport(apiReport)).toMatchObject({
@@ -148,6 +161,19 @@ describe('core API client mapping', () => {
           status: 'completed',
         },
       ],
+      snapshotMetadata: {
+        snapshotVersion: 1,
+        reportId: 'report_job_1001',
+        jobId: 'job_1001',
+        capturedAtEpochSeconds: 1_783_920_000,
+        evidence: {
+          beforePhotos: 1,
+          afterPhotos: 1,
+          issuePhotos: 0,
+          totalPhotoEvidence: 1,
+          completedAddOns: 1,
+        },
+      },
     });
   });
 

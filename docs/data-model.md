@@ -99,11 +99,15 @@ delivered_by_user_id
 delivered_at
 last_generated_at
 sent_at
+delivered_snapshot
+delivered_snapshot_at
 created_at
 updated_at
 ```
 
-The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. Once a report enters manager review, later refreshes preserve the review snapshot fields and lifecycle status. Delivery assigns or reuses a stable `share_token`, sets delivery metadata, backs `GET /reports/{share_token}` only after delivery, and returns `/report-view/{share_token}` as the customer-facing browser link. Future work should add immutable customer-delivery snapshot child tables before email/SMS sending.
+The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. Once a report enters manager review, later refreshes preserve the review snapshot fields and lifecycle status. Delivery assigns or reuses a stable `share_token`, sets delivery metadata, stores an immutable `delivered_snapshot` JSON document, backs `GET /reports/{share_token}` only after delivery, and returns `/report-view/{share_token}` as the customer-facing browser link.
+
+Delivered snapshots include a `snapshot_metadata` object with a schema version, report ID, job ID, capture timestamp, and evidence counts for before photos, after photos, issue photos, total photo evidence, and completed add-ons.
 
 ## project_bids
 

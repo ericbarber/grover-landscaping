@@ -22,10 +22,10 @@ use axum::{
     Json, Router,
 };
 use completion_reports::{
-    apply_completion_report_persistence, build_completion_report,
-    completion_report_is_active_manager_queue_status, is_valid_completion_report_lifecycle_status,
-    CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
-    CompletionReportResponse,
+    apply_completion_report_persistence, attach_delivered_snapshot_metadata,
+    build_completion_report, completion_report_is_active_manager_queue_status,
+    is_valid_completion_report_lifecycle_status, CompletionReportActionResult,
+    CompletionReportDeliveryNotificationResult, CompletionReportResponse,
 };
 use day_plans::{
     validate_amendment_request, validate_amendment_review, AssignDayPlanStopRequest,
@@ -1157,6 +1157,7 @@ async fn deliver_completion_report(
         CompletionReportActionResult::Updated(report) => {
             let delivered_snapshot =
                 build_and_persist_completion_report(&state, &report.job_id).await;
+            let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
             if !state
                 .jobs
                 .store_delivered_completion_report_snapshot(&report.report_id, &delivered_snapshot)
