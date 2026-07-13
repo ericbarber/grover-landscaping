@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   completionReportsPath,
+  notificationHistoryPath,
   toCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toJobAddOn,
+  toNotificationHistoryItem,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
 } from './client';
@@ -18,6 +20,15 @@ describe('core API client mapping', () => {
     expect(completionReportsPath({ status: 'all', readiness: 'ready' })).toBe(
       '/completion-reports?readiness=ready',
     );
+  });
+
+  it('builds notification history paths with optional filters', () => {
+    expect(notificationHistoryPath()).toBe('/notifications');
+    expect(notificationHistoryPath({
+      entityType: 'completion_report',
+      status: 'failed',
+      limit: 10,
+    })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
   });
 
   it('maps completion report responses with attached photo evidence', () => {
@@ -155,6 +166,34 @@ describe('core API client mapping', () => {
       recipient: 'customer@example.com',
       deliveryStatus: 'queued',
       shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
+    });
+  });
+
+  it('maps notification history responses', () => {
+    expect(toNotificationHistoryItem({
+      id: 'notification_1001',
+      entity_type: 'completion_report',
+      entity_id: 'report_job_1001',
+      channel: 'email',
+      recipient: 'customer@example.com',
+      template_key: 'completion_report_delivery',
+      status: 'failed',
+      attempt_count: 2,
+      available_at: '2026-07-13 10:00:00+00',
+      last_attempt_at: '2026-07-13 09:00:00+00',
+      sent_at: null,
+      last_error: 'provider unavailable',
+      provider_response_code: 503,
+      provider_message_id: null,
+      created_at: '2026-07-13 08:00:00+00',
+      updated_at: '2026-07-13 09:00:00+00',
+    })).toMatchObject({
+      id: 'notification_1001',
+      entityType: 'completion_report',
+      status: 'failed',
+      attemptCount: 2,
+      lastError: 'provider unavailable',
+      providerResponseCode: 503,
     });
   });
 

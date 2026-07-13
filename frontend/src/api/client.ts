@@ -184,6 +184,59 @@ export interface CompletionReportDeliveryNotification {
   shareUrl: string;
 }
 
+export type NotificationHistoryEntityType = 'project_bid' | 'completion_report';
+export type NotificationHistoryStatus =
+  | 'queued'
+  | 'sending'
+  | 'sent'
+  | 'failed'
+  | 'skipped'
+  | 'dead_letter';
+
+export interface ApiNotificationHistoryItem {
+  id: string;
+  entity_type: NotificationHistoryEntityType;
+  entity_id: string;
+  channel: 'email' | 'sms';
+  recipient: string;
+  template_key: string;
+  status: NotificationHistoryStatus;
+  attempt_count: number;
+  available_at: string;
+  last_attempt_at?: string | null;
+  sent_at?: string | null;
+  last_error?: string | null;
+  provider_response_code?: number | null;
+  provider_message_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationHistoryItem {
+  id: string;
+  entityType: NotificationHistoryEntityType;
+  entityId: string;
+  channel: 'email' | 'sms';
+  recipient: string;
+  templateKey: string;
+  status: NotificationHistoryStatus;
+  attemptCount: number;
+  availableAt: string;
+  lastAttemptAt: string | null;
+  sentAt: string | null;
+  lastError: string | null;
+  providerResponseCode: number | null;
+  providerMessageId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FetchNotificationHistoryOptions {
+  entityType?: NotificationHistoryEntityType;
+  status?: NotificationHistoryStatus;
+  limit?: number;
+}
+
 function toJob(apiJob: ApiJobSummary): YardCareJob {
   return {
     id: apiJob.id,
@@ -289,6 +342,27 @@ export function toCompletionReportDeliveryNotification(
   };
 }
 
+export function toNotificationHistoryItem(apiItem: ApiNotificationHistoryItem): NotificationHistoryItem {
+  return {
+    id: apiItem.id,
+    entityType: apiItem.entity_type,
+    entityId: apiItem.entity_id,
+    channel: apiItem.channel,
+    recipient: apiItem.recipient,
+    templateKey: apiItem.template_key,
+    status: apiItem.status,
+    attemptCount: apiItem.attempt_count,
+    availableAt: apiItem.available_at,
+    lastAttemptAt: apiItem.last_attempt_at ?? null,
+    sentAt: apiItem.sent_at ?? null,
+    lastError: apiItem.last_error ?? null,
+    providerResponseCode: apiItem.provider_response_code ?? null,
+    providerMessageId: apiItem.provider_message_id ?? null,
+    createdAt: apiItem.created_at,
+    updatedAt: apiItem.updated_at,
+  };
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await authenticatedFetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -362,6 +436,32 @@ export async function fetchCompletionReports(
 ): Promise<CompletionReportSnapshot[]> {
   const reports = await request<ApiCompletionReport[]>(completionReportsPath(options));
   return reports.map(toCompletionReport);
+}
+
+export function notificationHistoryPath(options: FetchNotificationHistoryOptions = {}): string {
+  const query = new URLSearchParams();
+
+  if (options.entityType) {
+    query.set('entity_type', options.entityType);
+  }
+
+  if (options.status) {
+    query.set('status', options.status);
+  }
+
+  if (options.limit) {
+    query.set('limit', String(options.limit));
+  }
+
+  const queryString = query.toString();
+  return queryString ? `/notifications?${queryString}` : '/notifications';
+}
+
+export async function fetchNotificationHistory(
+  options: FetchNotificationHistoryOptions = {},
+): Promise<NotificationHistoryItem[]> {
+  const notifications = await request<ApiNotificationHistoryItem[]>(notificationHistoryPath(options));
+  return notifications.map(toNotificationHistoryItem);
 }
 
 export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {

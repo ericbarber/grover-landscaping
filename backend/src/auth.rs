@@ -368,6 +368,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/jobs/")
         || path == "/completion-reports"
         || path.starts_with("/completion-reports/")
+        || path == "/notifications"
         || path.starts_with("/crews/")
         || path == "/day-plans"
         || path.starts_with("/day-plans/")
@@ -399,6 +400,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path == "/completion-reports" {
+        return *method == Method::GET && can_review_reports;
+    }
+
+    if path == "/notifications" {
         return *method == Method::GET && can_review_reports;
     }
 
@@ -563,6 +568,33 @@ mod tests {
     #[test]
     fn only_completion_report_reviewers_can_list_manager_report_queue() {
         let path = "/completion-reports";
+        let method = Method::GET;
+
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &method,
+            path,
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &method,
+            path,
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &method,
+            path,
+        ));
+    }
+
+    #[test]
+    fn only_completion_report_reviewers_can_list_notification_history() {
+        let path = "/notifications";
         let method = Method::GET;
 
         assert!(is_authorized(

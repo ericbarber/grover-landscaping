@@ -152,6 +152,7 @@ Current backend endpoints include:
 | POST | `/completion-reports/{report_id}/resubmit` | Return a change-requested report to submitted after crew follow-up |
 | POST | `/completion-reports/{report_id}/deliver` | Approve a ready in-review report for customer delivery and issue a share link |
 | POST | `/completion-reports/{report_id}/delivery-notifications` | Queue an email or SMS notification for a delivered completion report share link |
+| GET | `/notifications` | List recent notification outbox history with optional `entity_type`, `status`, and `limit` filters |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
 | GET | `/reports/{share_token}` | Read a shared completion report by token |

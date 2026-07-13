@@ -39,7 +39,7 @@ use grover_landscaping_api::{
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
-    NotificationOutboxRepository,
+    NotificationHistoryFilter, NotificationOutboxRepository,
 };
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
@@ -69,6 +69,7 @@ struct AppState {
     day_plans: DayPlanRepository,
     project_bids: ProjectBidRepository,
     organizations: OrganizationRepository,
+    notifications: NotificationOutboxRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -156,6 +157,13 @@ struct CompletionReportDeliveryNotificationRequest {
 struct CompletionReportListQuery {
     status: Option<String>,
     readiness: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct NotificationHistoryQuery {
+    entity_type: Option<String>,
+    status: Option<String>,
+    limit: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -271,7 +279,7 @@ async fn app_from_env() -> Result<Router, DynError> {
 
     let notification_config =
         NotificationDispatcherConfig::from_env(production).map_err(configuration_error)?;
-    start_notification_dispatcher(notifications, notification_config)
+    start_notification_dispatcher(notifications.clone(), notification_config)
         .map_err(configuration_error)?;
 
     let auth = AuthService::from_env(production).await?;
@@ -296,6 +304,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             day_plans,
             project_bids,
             organizations,
+            notifications,
         }),
         persistence,
         persistence == "postgres",
@@ -359,6 +368,7 @@ fn app_with_runtime(
             post(decide_shared_project_bid),
         )
         .route("/completion-reports", get(list_completion_reports))
+        .route("/notifications", get(list_notification_history))
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
@@ -658,6 +668,68 @@ fn completion_report_matches_list_query(
         "local_only" => !report.persisted,
         _ => true,
     }
+}
+
+async fn list_notification_history(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<NotificationHistoryQuery>,
+) -> Response {
+    match notification_history_filter(query) {
+        Ok(filter) => match state.notifications.list_history(filter).await {
+            Ok(items) => Json(items).into_response(),
+            Err(_) => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(ErrorResponse {
+                    error: "notification_history_unavailable",
+                    message: "Notification history could not be loaded from persistence."
+                        .to_string(),
+                }),
+            )
+                .into_response(),
+        },
+        Err(message) => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_notification_history_filter",
+                message,
+            }),
+        )
+            .into_response(),
+    }
+}
+
+fn notification_history_filter(
+    query: NotificationHistoryQuery,
+) -> Result<NotificationHistoryFilter, String> {
+    if let Some(entity_type) = query.entity_type.as_deref() {
+        if !matches!(entity_type, "project_bid" | "completion_report") {
+            return Err(
+                "entity_type must be project_bid or completion_report when provided".to_string(),
+            );
+        }
+    }
+
+    if let Some(status) = query.status.as_deref() {
+        if !matches!(
+            status,
+            "queued" | "sending" | "sent" | "failed" | "skipped" | "dead_letter"
+        ) {
+            return Err(
+                "status must be queued, sending, sent, failed, skipped, or dead_letter".to_string(),
+            );
+        }
+    }
+
+    let limit = query.limit.unwrap_or(25);
+    if !(1..=100).contains(&limit) {
+        return Err("limit must be between 1 and 100".to_string());
+    }
+
+    Ok(NotificationHistoryFilter {
+        entity_type: query.entity_type,
+        status: query.status,
+        limit,
+    })
 }
 
 async fn start_completion_report_review(
@@ -1429,6 +1501,7 @@ mod tests {
             day_plans: DayPlanRepository::default(),
             project_bids: ProjectBidRepository::default(),
             organizations: OrganizationRepository::default(),
+            notifications: NotificationOutboxRepository::default(),
         })
     }
 
@@ -1797,6 +1870,44 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_completion_report_filter");
+    }
+
+    #[tokio::test]
+    async fn notification_history_endpoint_returns_empty_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/notifications?entity_type=completion_report&status=queued&limit=10")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn notification_history_endpoint_rejects_unknown_filters() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/notifications?entity_type=job&status=queued")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_notification_history_filter");
     }
 
     #[tokio::test]

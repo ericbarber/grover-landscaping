@@ -18,6 +18,33 @@ pub struct NotificationOutboxItem {
     pub attempt_count: i32,
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub struct NotificationHistoryItem {
+    pub id: String,
+    pub entity_type: String,
+    pub entity_id: String,
+    pub channel: String,
+    pub recipient: String,
+    pub template_key: String,
+    pub status: String,
+    pub attempt_count: i32,
+    pub available_at: String,
+    pub last_attempt_at: Option<String>,
+    pub sent_at: Option<String>,
+    pub last_error: Option<String>,
+    pub provider_response_code: Option<i32>,
+    pub provider_message_id: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct NotificationHistoryFilter {
+    pub entity_type: Option<String>,
+    pub status: Option<String>,
+    pub limit: i64,
+}
+
 pub fn validate_notification_recipient(channel: &str, recipient: &str) -> Result<(), String> {
     let recipient = recipient.trim();
     if recipient.is_empty() || recipient.chars().count() > 320 {
@@ -204,6 +231,70 @@ impl NotificationOutboxRepository {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn list_history(
+        &self,
+        filter: NotificationHistoryFilter,
+    ) -> Result<Vec<NotificationHistoryItem>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(Vec::new());
+        };
+        let limit = filter.limit.clamp(1, 100);
+
+        let rows = sqlx::query(
+            r#"
+            SELECT
+                id,
+                entity_type,
+                entity_id,
+                channel,
+                recipient,
+                template_key,
+                status,
+                attempt_count,
+                available_at::text AS available_at,
+                last_attempt_at::text AS last_attempt_at,
+                sent_at::text AS sent_at,
+                last_error,
+                provider_response_code,
+                provider_message_id,
+                created_at::text AS created_at,
+                updated_at::text AS updated_at
+            FROM notification_outbox
+            WHERE ($1::text IS NULL OR entity_type = $1)
+              AND ($2::text IS NULL OR status = $2)
+            ORDER BY created_at DESC, id DESC
+            LIMIT $3
+            "#,
+        )
+        .bind(filter.entity_type)
+        .bind(filter.status)
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| NotificationHistoryItem {
+                id: row.get("id"),
+                entity_type: row.get("entity_type"),
+                entity_id: row.get("entity_id"),
+                channel: row.get("channel"),
+                recipient: row.get("recipient"),
+                template_key: row.get("template_key"),
+                status: row.get("status"),
+                attempt_count: row.get("attempt_count"),
+                available_at: row.get("available_at"),
+                last_attempt_at: row.get("last_attempt_at"),
+                sent_at: row.get("sent_at"),
+                last_error: row.get("last_error"),
+                provider_response_code: row.get("provider_response_code"),
+                provider_message_id: row.get("provider_message_id"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+            })
+            .collect())
     }
 }
 

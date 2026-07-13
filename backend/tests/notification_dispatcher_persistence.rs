@@ -1,4 +1,7 @@
-use grover_landscaping_api::{db::JobRepository, notifications::NotificationOutboxRepository};
+use grover_landscaping_api::{
+    db::JobRepository,
+    notifications::{NotificationHistoryFilter, NotificationOutboxRepository},
+};
 use sqlx::Row;
 use std::time::{SystemTime, UNIX_EPOCH};
 mod common;
@@ -110,4 +113,34 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             .as_deref(),
         Some("provider-message-1001")
     );
+
+    let sent_history = repository
+        .list_history(NotificationHistoryFilter {
+            entity_type: Some("test".to_string()),
+            status: Some("sent".to_string()),
+            limit: 10,
+        })
+        .await
+        .unwrap();
+    assert!(sent_history.iter().any(|item| {
+        item.id == sent_id
+            && item.status == "sent"
+            && item.provider_response_code == Some(202)
+            && item.provider_message_id.as_deref() == Some("provider-message-1001")
+    }));
+
+    let dead_letter_history = repository
+        .list_history(NotificationHistoryFilter {
+            entity_type: Some("test".to_string()),
+            status: Some("dead_letter".to_string()),
+            limit: 10,
+        })
+        .await
+        .unwrap();
+    assert!(dead_letter_history.iter().any(|item| {
+        item.id == failed_id
+            && item.status == "dead_letter"
+            && item.attempt_count == 2
+            && item.last_error.as_deref() == Some("provider still unavailable")
+    }));
 }

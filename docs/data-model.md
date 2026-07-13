@@ -153,6 +153,8 @@ updated_at
 
 Project-bid sends create `queued` email or SMS records in the same transaction as token issuance. Revoking a review link marks pending delivery records `skipped` in the same transaction so a worker cannot later deliver a dead link. The in-process dispatcher claims work safely across service instances, retries with bounded backoff, recovers abandoned claims, moves exhausted work to `dead_letter`, and stores provider response codes and message IDs.
 
+Manager notification history reads use this table directly with optional entity-type and status filters. The history surface is read-only; retry or manual resolution actions should update outbox state through explicit recovery endpoints rather than mutating history reads.
+
 ## project_bid_conversions and service_job_add_ons
 
 An approved amendment-sourced bid converts into its source route stop's service job. `project_bid_conversions` records the one-to-one bid/job conversion and conversion timestamp. Each bid line item creates one `service_job_add_ons` row containing the approved service, quantity, unit price, note, and execution status.

@@ -9,6 +9,7 @@ import {
   fetchJobDetail,
   fetchJobAddOns,
   fetchJobs,
+  fetchNotificationHistory,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
   resubmitCompletionReport,
@@ -19,6 +20,7 @@ import {
   type CompletionReportSnapshot,
   type JobDetail,
   type JobAddOn,
+  type NotificationHistoryItem,
   type PhotoUploadTicket,
 } from './api/client';
 import { CompletionReport } from './components/CompletionReport';
@@ -27,6 +29,10 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
+import {
+  ManagerNotificationHistoryPanel,
+  type NotificationHistoryFilters,
+} from './components/ManagerNotificationHistoryPanel';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
@@ -683,6 +689,8 @@ export function App() {
   const [selectedCompletionReport, setSelectedCompletionReport] = useState<CompletionReportSnapshot | null>(null);
   const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
+  const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
+  const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -894,6 +902,33 @@ export function App() {
     };
   }, [jobs]);
 
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingNotificationHistory(true);
+
+    fetchNotificationHistory({ limit: 25 })
+      .then((items) => {
+        if (isMounted) setNotificationHistory(items);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setNotificationHistory([]);
+        recordManagerActivity({
+          title: 'Notification history unavailable',
+          message: 'Delivery notification history could not be loaded from the API.',
+          tone: 'warning',
+          source: 'sync',
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingNotificationHistory(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   async function handleStartJob() {
     if (!selectedJobId) {
       return;
@@ -998,6 +1033,29 @@ export function App() {
     }
   }
 
+  async function refreshNotificationHistory(filters: NotificationHistoryFilters) {
+    setIsLoadingNotificationHistory(true);
+    try {
+      const items = await fetchNotificationHistory({
+        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      });
+      setNotificationHistory(items);
+      setStatusMessage('Notification delivery history refreshed.');
+    } catch {
+      setStatusMessage('Could not refresh notification delivery history. Check the API connection and try again.');
+      recordManagerActivity({
+        title: 'Notification history refresh failed',
+        message: 'Manager notification history could not refresh from the backend.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingNotificationHistory(false);
+    }
+  }
+
   async function handleStartReportReview(reportId: string) {
     setCompletionReportActionStatus('Starting manager review...');
 
@@ -1089,6 +1147,16 @@ export function App() {
 
     try {
       const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
+      try {
+        setNotificationHistory(await fetchNotificationHistory({ limit: 25 }));
+      } catch {
+        recordManagerActivity({
+          title: 'Notification history refresh failed',
+          message: 'The customer notification was queued, but the history panel did not refresh.',
+          tone: 'warning',
+          source: 'sync',
+        });
+      }
       setStatusMessage(`${notification.reportId} notification queued for ${notification.recipient}.`);
       setCompletionReportActionStatus(null);
       recordManagerActivity({
@@ -1216,6 +1284,13 @@ export function App() {
               items={managerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
               onResetHistory={resetManagerActivityHistory}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerNotificationHistoryPanel
+              notifications={notificationHistory}
+              isLoading={isLoadingNotificationHistory}
+              onRefresh={(filters) => void refreshNotificationHistory(filters)}
             />
           </div>
           <div className="mt-6">
