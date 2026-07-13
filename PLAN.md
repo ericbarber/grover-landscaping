@@ -334,7 +334,7 @@ Current state:
 - Browser-generated thumbnail preview uploads for S3-backed photo evidence
 - Persisted thumbnail display URLs for job photo evidence and customer-visible completion reports
 - Upload completion records validated client-reported file size and image dimensions on persisted photo evidence
-- S3-backed upload completion attempts server-side file-size verification and PNG, GIF, or JPEG dimension extraction before falling back to client-reported metadata
+- S3-backed upload completion attempts server-side file-size verification and PNG, GIF, JPEG, or WebP dimension extraction before falling back to client-reported metadata
 - Photo evidence reads hide pending upload tickets and mark server-extracted uploads as processed
 - Photo upload-ticket requests reject blank file names, unsupported photo categories, and non-image content types before storage rows are created
 

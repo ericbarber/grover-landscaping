@@ -430,6 +430,7 @@ fn image_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
     png_dimensions(bytes)
         .or_else(|| gif_dimensions(bytes))
         .or_else(|| jpeg_dimensions(bytes))
+        .or_else(|| webp_dimensions(bytes))
 }
 
 fn png_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
@@ -506,11 +507,69 @@ fn is_jpeg_start_of_frame(marker: u8) -> bool {
     )
 }
 
+fn webp_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if bytes.len() < 16 || bytes.get(0..4) != Some(b"RIFF") || bytes.get(8..12) != Some(b"WEBP") {
+        return None;
+    }
+
+    match bytes.get(12..16)? {
+        b"VP8X" => webp_extended_dimensions(bytes),
+        b"VP8L" => webp_lossless_dimensions(bytes),
+        b"VP8 " => webp_lossy_dimensions(bytes),
+        _ => None,
+    }
+}
+
+fn webp_extended_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    dimensions_from_u32(1 + read_le_u24(bytes, 24)?, 1 + read_le_u24(bytes, 27)?)
+}
+
+fn webp_lossless_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if *bytes.get(20)? != 0x2f {
+        return None;
+    }
+
+    let byte_0 = *bytes.get(21)? as u32;
+    let byte_1 = *bytes.get(22)? as u32;
+    let byte_2 = *bytes.get(23)? as u32;
+    let byte_3 = *bytes.get(24)? as u32;
+    let width = 1 + byte_0 + ((byte_1 & 0x3f) << 8);
+    let height = 1 + (byte_1 >> 6) + (byte_2 << 2) + ((byte_3 & 0x0f) << 10);
+
+    dimensions_from_u32(width, height)
+}
+
+fn webp_lossy_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if bytes.get(23..26) != Some([0x9d, 0x01, 0x2a].as_slice()) {
+        return None;
+    }
+
+    dimensions_from_u32(
+        (read_le_u16(bytes, 26)? & 0x3fff) as u32,
+        (read_le_u16(bytes, 28)? & 0x3fff) as u32,
+    )
+}
+
 fn dimensions_from_u32(width: u32, height: u32) -> Option<(i32, i32)> {
     Some((
         i32::try_from(width).ok().filter(|value| *value > 0)?,
         i32::try_from(height).ok().filter(|value| *value > 0)?,
     ))
+}
+
+fn read_le_u16(bytes: &[u8], index: usize) -> Option<u16> {
+    Some(u16::from_le_bytes([
+        *bytes.get(index)?,
+        *bytes.get(index + 1)?,
+    ]))
+}
+
+fn read_le_u24(bytes: &[u8], index: usize) -> Option<u32> {
+    Some(
+        *bytes.get(index)? as u32
+            | ((*bytes.get(index + 1)? as u32) << 8)
+            | ((*bytes.get(index + 2)? as u32) << 16),
+    )
 }
 
 fn read_be_u16(bytes: &[u8], index: usize) -> Option<u16> {
@@ -659,7 +718,7 @@ mod tests {
     }
 
     #[test]
-    fn image_dimensions_reads_png_gif_and_jpeg_headers() {
+    fn image_dimensions_reads_png_gif_jpeg_and_webp_headers() {
         let mut png = vec![0x89, b'P', b'N', b'G', b'\r', b'\n', 0x1a, b'\n'];
         png.extend_from_slice(&[0, 0, 0, 13]);
         png.extend_from_slice(b"IHDR");
@@ -673,10 +732,20 @@ mod tests {
         let jpeg = vec![
             0xff, 0xd8, 0xff, 0xc0, 0x00, 0x07, 0x08, 0x03, 0x84, 0x06, 0x40,
         ];
+        let mut webp_extended = b"RIFF\x1e\0\0\0WEBPVP8X\x0a\0\0\0\0\0\0\0".to_vec();
+        webp_extended.extend_from_slice(&[0x3f, 0x06, 0x00, 0x83, 0x03, 0x00]);
+        let mut webp_lossless = b"RIFF\x19\0\0\0WEBPVP8L\x0d\0\0\0\x2f".to_vec();
+        webp_lossless.extend_from_slice(&[0x3f, 0xc6, 0xe0, 0x00]);
+        let mut webp_lossy = b"RIFF\x1e\0\0\0WEBPVP8 \x0a\0\0\0\0\0\0\x9d\x01\x2a".to_vec();
+        webp_lossy.extend_from_slice(&1600_u16.to_le_bytes());
+        webp_lossy.extend_from_slice(&900_u16.to_le_bytes());
 
         assert_eq!(image_dimensions(&png), Some((1600, 900)));
         assert_eq!(image_dimensions(&gif), Some((1600, 900)));
         assert_eq!(image_dimensions(&jpeg), Some((1600, 900)));
+        assert_eq!(image_dimensions(&webp_extended), Some((1600, 900)));
+        assert_eq!(image_dimensions(&webp_lossless), Some((1600, 900)));
+        assert_eq!(image_dimensions(&webp_lossy), Some((1600, 900)));
     }
 
     #[test]

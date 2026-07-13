@@ -63,7 +63,7 @@ POST /jobs/{id}/photos/presign
 
 POST /jobs/{id}/photos/complete
   -> UPDATE job_photos SET status = 'uploaded' or 'processed', uploaded_at = now()
-  -> attempt S3 HEAD plus bounded ranged GET metadata extraction for file size and PNG, GIF, or JPEG dimensions
+  -> attempt S3 HEAD plus bounded ranged GET metadata extraction for file size and PNG, GIF, JPEG, or WebP dimensions
   -> fall back to validated client-reported file size and image dimensions when server extraction is unavailable
   -> increment before_photos or after_photos counters when appropriate
   -> GET /jobs/{id}/photos returns uploaded or processed evidence only, with expiring original and thumbnail display URLs plus persisted metadata when object storage is configured
