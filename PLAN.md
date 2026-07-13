@@ -306,6 +306,7 @@ Current state:
 - Property completion-report reads return delivered reports and share links within active customer/manager organization scopes
 - Customer portal preview loads delivered property report history from the authenticated property completion-report endpoint
 - Customer account bid history returns sent, answered, and converted bids within active customer/manager organization scopes
+- Customer portal preview loads authenticated customer account bid history with local bid-review fallback
 
 Next implementation work:
 

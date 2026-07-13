@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountProjectBidsPath,
   toCustomerProjectBid,
   toProjectBid,
   type ApiProjectBid,
 } from './projectBidsClient';
 
 describe('project bid API mapping', () => {
+  it('builds customer account bid history paths with encoded ids', () => {
+    expect(accountProjectBidsPath('acct_1001')).toBe('/accounts/acct_1001/bids');
+    expect(accountProjectBidsPath('acct/1001')).toBe('/accounts/acct%2F1001/bids');
+  });
+
   it('maps persisted draft bids and line items', () => {
     const bid: ApiProjectBid = {
       id: 'bid_1001',

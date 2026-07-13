@@ -27,6 +27,7 @@ import {
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
 } from './api/client';
+import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -69,6 +70,7 @@ import {
   writeStoredManagerActivityItems,
 } from './domain/managerActivityLocalStore';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
+import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
 type PhotoType = 'before' | 'after' | 'issue' | 'extra';
 
@@ -265,6 +267,19 @@ function workStatusLabel(status: CustomerPortalWorkSummary['status']): string {
   return status.replace('_', ' ');
 }
 
+function currencyLabel(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function projectBidStatusLabel(status: ProjectBid['status']): string {
+  if (status === 'sent') return 'Awaiting response';
+  if (status === 'approved') return 'Approved';
+  if (status === 'rejected') return 'Rejected';
+  if (status === 'converted') return 'Converted to work';
+  if (status === 'expired') return 'Expired';
+  return 'Draft';
+}
+
 function ManagementCompanyPreviewPanel({
   company,
   crews,
@@ -345,6 +360,9 @@ function CustomerPortalPreviewPanel({
   completionReportsByProperty,
   isLoadingReportHistory,
   hasReportHistoryError,
+  projectBids,
+  isLoadingProjectBids,
+  hasProjectBidHistoryError,
 }: {
   customer: CustomerAccountProfile;
   properties: CustomerPropertyProfile[];
@@ -352,6 +370,9 @@ function CustomerPortalPreviewPanel({
   completionReportsByProperty: Record<string, PropertyCompletionReportSummary[]>;
   isLoadingReportHistory: boolean;
   hasReportHistoryError: boolean;
+  projectBids: ProjectBid[];
+  isLoadingProjectBids: boolean;
+  hasProjectBidHistoryError: boolean;
 }) {
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
@@ -360,9 +381,10 @@ function CustomerPortalPreviewPanel({
     0,
   );
   const usesLocalReportSummary = hasReportHistoryError && deliveredReportCount === 0;
+  const usesLocalBidSummary = hasProjectBidHistoryError && projectBids.length === 0;
   const propertyCount = getCustomerPropertyCount(visibleProperties, customer.id);
   const reportsReadyCount = usesLocalReportSummary ? countReadyCustomerReports(visibleWorkSummaries) : deliveredReportCount;
-  const bidsToReviewCount = countCustomerBidsToReview(visibleWorkSummaries);
+  const bidsToReviewCount = usesLocalBidSummary ? countCustomerBidsToReview(visibleWorkSummaries) : projectBids.length;
   const needsOnboardingAttention = customerNeedsOnboardingAttention(customer);
 
   return (
@@ -396,8 +418,10 @@ function CustomerPortalPreviewPanel({
           </p>
         </div>
         <div className="rounded-xl bg-slate-50 p-4">
-          <p className="text-2xl font-bold text-slate-950">{bidsToReviewCount}</p>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Bid to review</p>
+          <p className="text-2xl font-bold text-slate-950">{isLoadingProjectBids ? '...' : bidsToReviewCount}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            {usesLocalBidSummary ? 'Bids to review' : 'Bid history'}
+          </p>
         </div>
       </div>
 
@@ -461,6 +485,36 @@ function CustomerPortalPreviewPanel({
           );
         })}
       </div>
+      {projectBids.length > 0 && (
+        <div className="mt-5 space-y-2">
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bid history</p>
+          {projectBids.map((bid) => {
+            const bidTotal = currencyLabel(projectBidTotalCents(bid));
+            const content = (
+              <>
+                <span className="font-semibold">{projectBidStatusLabel(bid.status)}</span>
+                <span className="ml-2 text-xs uppercase tracking-wide text-slate-500">
+                  {bidTotal} - {bid.lineItems.length} line {bid.lineItems.length === 1 ? 'item' : 'items'}
+                </span>
+              </>
+            );
+
+            return bid.shareUrl ? (
+              <a
+                key={bid.id}
+                className="block rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:border-amber-300"
+                href={bid.shareUrl}
+              >
+                {content}
+              </a>
+            ) : (
+              <div key={bid.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                {content}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -731,6 +785,9 @@ export function App() {
   >({});
   const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
   const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
+  const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
+  const [isLoadingCustomerProjectBids, setIsLoadingCustomerProjectBids] = useState(false);
+  const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -806,6 +863,36 @@ export function App() {
       })
       .finally(() => {
         if (isMounted) setIsLoadingPropertyCompletionReports(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingCustomerProjectBids(true);
+
+    fetchAccountProjectBids(customerPortalPreviewCustomer.id)
+      .then((bids) => {
+        if (!isMounted) return;
+        setCustomerProjectBids(bids);
+        setHasCustomerProjectBidHistoryError(false);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setCustomerProjectBids([]);
+        setHasCustomerProjectBidHistoryError(true);
+        recordManagerActivity({
+          title: 'Customer bid history unavailable',
+          message: 'Customer account bid history could not be loaded for the portal preview.',
+          tone: 'warning',
+          source: 'sync',
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingCustomerProjectBids(false);
       });
 
     return () => {
@@ -1423,6 +1510,9 @@ export function App() {
               completionReportsByProperty={propertyCompletionReports}
               isLoadingReportHistory={isLoadingPropertyCompletionReports}
               hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+              projectBids={customerProjectBids}
+              isLoadingProjectBids={isLoadingCustomerProjectBids}
+              hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
             />
           </div>
           <div className="mt-6">

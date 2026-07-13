@@ -21,6 +21,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Stable shareable completion report links
 - Organization-scoped manager completion-report queue and notification recovery controls
 - Customer portal preview with scoped delivered report history
+- Customer portal preview with authenticated bid history
 - Customer account status display
 - Manager draft day-plan creation and publishing
 - Manager route stop assignment, removal, and ordering

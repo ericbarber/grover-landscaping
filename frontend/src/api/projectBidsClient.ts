@@ -124,6 +124,19 @@ export async function fetchProjectBids(dayPlanId: string): Promise<ProjectBid[]>
   return ((await response.json()) as ApiProjectBid[]).map(toProjectBid);
 }
 
+export function accountProjectBidsPath(accountId: string): string {
+  return `/accounts/${encodeURIComponent(accountId)}/bids`;
+}
+
+export async function fetchAccountProjectBids(accountId: string): Promise<ProjectBid[]> {
+  const response = await authenticatedFetch(`${API_BASE_URL}${accountProjectBidsPath(accountId)}`);
+  if (!response.ok) {
+    throw new Error(`Account project bids request failed with status ${response.status}`);
+  }
+
+  return ((await response.json()) as ApiProjectBid[]).map(toProjectBid);
+}
+
 export async function saveProjectBidDraft(
   dayPlanId: string,
   amendmentId: string,
