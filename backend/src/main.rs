@@ -750,7 +750,22 @@ async fn deliver_completion_report(
         .deliver_completion_report(&report_id, &principal.subject)
         .await
     {
-        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
+        CompletionReportActionResult::Updated(report) => {
+            let delivered_snapshot =
+                build_and_persist_completion_report(&state, &report.job_id).await;
+            if !state
+                .jobs
+                .store_delivered_completion_report_snapshot(&report.report_id, &delivered_snapshot)
+                .await
+            {
+                tracing::warn!(
+                    report_id = report.report_id,
+                    "delivered completion report snapshot was not stored"
+                );
+            }
+
+            Json(report).into_response()
+        }
         CompletionReportActionResult::InvalidTransition => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
@@ -894,6 +909,14 @@ async fn get_shared_completion_report(
     State(state): State<Arc<AppState>>,
     Path(share_token): Path<String>,
 ) -> impl IntoResponse {
+    if let Some(snapshot) = state
+        .jobs
+        .delivered_snapshot_for_report_share_token(&share_token)
+        .await
+    {
+        return Json(snapshot).into_response();
+    }
+
     let Some(job_id) = state.jobs.job_id_for_report_share_token(&share_token).await else {
         return (
             StatusCode::NOT_FOUND,

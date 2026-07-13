@@ -230,6 +230,36 @@ impl JobRepository {
         None
     }
 
+    pub async fn delivered_snapshot_for_report_share_token(
+        &self,
+        share_token: &str,
+    ) -> Option<serde_json::Value> {
+        if let Some(pool) = &self.pool {
+            if let Ok(snapshot) =
+                postgres_completion_reports::delivered_snapshot_for_share_token(pool, share_token)
+                    .await
+            {
+                return snapshot;
+            }
+        }
+
+        None
+    }
+
+    pub async fn store_delivered_completion_report_snapshot(
+        &self,
+        report_id: &str,
+        report: &CompletionReportResponse,
+    ) -> bool {
+        if let Some(pool) = &self.pool {
+            return postgres_completion_reports::store_delivered_snapshot(pool, report_id, report)
+                .await
+                .is_ok();
+        }
+
+        false
+    }
+
     pub async fn start_completion_report_review(
         &self,
         report_id: &str,

@@ -342,11 +342,12 @@ Current state:
 - Frontend manager report queue summarizes current report review work across loaded jobs
 - Backend exposes `GET /completion-reports` for manager report queue loading
 - Backend manager report queue loading supports `status` and `readiness` query filters
+- Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 
 Next implementation work:
 
 - Add organization scoping, crew, customer, property, date, and readiness-blocker filters to the manager completion-report list endpoint
-- Add immutable report snapshots for customer delivery
+- Expand immutable report snapshots with explicit evidence/version metadata for customer portal history
 - Add customer delivery by email or SMS later
 
 ### Property ownership, portfolios, and crew assignments

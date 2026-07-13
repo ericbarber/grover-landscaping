@@ -470,6 +470,54 @@ pub async fn job_id_for_share_token(
     .await
 }
 
+pub async fn store_delivered_snapshot(
+    pool: &PgPool,
+    report_id: &str,
+    report: &CompletionReportResponse,
+) -> Result<(), sqlx::Error> {
+    let snapshot =
+        serde_json::to_string(report).map_err(|error| sqlx::Error::Encode(Box::new(error)))?;
+
+    sqlx::query(
+        r#"
+        UPDATE job_completion_reports
+        SET delivered_snapshot = $2::jsonb,
+            delivered_snapshot_at = now(),
+            updated_at = now()
+        WHERE id = $1
+          AND report_status = 'delivered'
+          AND delivered_at IS NOT NULL
+        "#,
+    )
+    .bind(report_id)
+    .bind(snapshot)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn delivered_snapshot_for_share_token(
+    pool: &PgPool,
+    share_token: &str,
+) -> Result<Option<serde_json::Value>, sqlx::Error> {
+    let snapshot: Option<String> = sqlx::query_scalar(
+        r#"
+        SELECT delivered_snapshot::text
+        FROM job_completion_reports
+        WHERE share_token = $1
+          AND report_status = 'delivered'
+          AND delivered_at IS NOT NULL
+          AND delivered_snapshot IS NOT NULL
+        "#,
+    )
+    .bind(share_token)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(snapshot.and_then(|value| serde_json::from_str(&value).ok()))
+}
+
 fn completion_report_share_token_should_be_proposed(status: &str) -> bool {
     status == "delivered"
 }

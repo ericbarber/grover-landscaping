@@ -8,6 +8,8 @@ Customer summaries should explain the completed yard work in clear customer-frie
 
 Delivered report views should use persisted summary versions rather than rebuilding text from live job state.
 
+Delivered report links now prefer the JSON snapshot stored when a manager approves the report for delivery. If an older delivered link has no stored snapshot, the API can still fall back to rebuilding the report from the delivered share token.
+
 ## Summary source
 
 Customer-facing views should read the latest approved summary version for the delivered report.

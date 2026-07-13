@@ -1,6 +1,8 @@
 use grover_landscaping_api::{
     accounts::CustomerAccountSummary,
-    completion_reports::{build_completion_report, CompletionReportActionResult},
+    completion_reports::{
+        apply_completion_report_persistence, build_completion_report, CompletionReportActionResult,
+    },
     db::JobRepository,
 };
 use sqlx::Row;
@@ -40,7 +42,7 @@ async fn repository_persists_completion_report_state() {
         completed_services_this_period: 0,
         billing_notes: "Payment can be marked complete after service.".to_string(),
     };
-    let report = build_completion_report(job, account, Vec::new(), Vec::new());
+    let report = build_completion_report(job, account.clone(), Vec::new(), Vec::new());
 
     let persistence = repository.persist_completion_report(&report).await;
     assert!(persistence.persisted);
@@ -168,6 +170,38 @@ async fn repository_persists_completion_report_state() {
         Some("delivered")
     );
     assert!(delivered_persistence.share_token.is_some());
+    let share_token = delivered_persistence.share_token.clone().unwrap();
+
+    let mut delivered_snapshot = build_completion_report(
+        repository.get_job("job_1001".to_string()).await,
+        account.clone(),
+        Vec::new(),
+        Vec::new(),
+    );
+    apply_completion_report_persistence(&mut delivered_snapshot, delivered_persistence.clone());
+    assert!(
+        repository
+            .store_delivered_completion_report_snapshot("report_job_1001", &delivered_snapshot)
+            .await
+    );
+
+    sqlx::query("UPDATE service_jobs SET customer_name = 'Changed Customer' WHERE id = 'job_1001'")
+        .execute(&pool)
+        .await
+        .expect("live job should be mutable after delivery");
+
+    let stored_snapshot = repository
+        .delivered_snapshot_for_report_share_token(&share_token)
+        .await
+        .expect("delivered snapshot should be readable by share token");
+    assert_eq!(
+        stored_snapshot["job"]["customer_name"], "Sample Customer",
+        "delivered snapshot should not reflect later live job edits"
+    );
+    sqlx::query("UPDATE service_jobs SET customer_name = 'Sample Customer' WHERE id = 'job_1001'")
+        .execute(&pool)
+        .await
+        .expect("seed job name should be restored after snapshot assertion");
 
     let delivered_row = sqlx::query(
         "SELECT report_status, ready_for_customer, checklist_progress, before_photos, after_photos, delivered_by_user_id, delivered_at FROM job_completion_reports WHERE id = $1",
