@@ -39,7 +39,7 @@ use grover_landscaping_api::{
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
-    NotificationHistoryFilter, NotificationOutboxRepository,
+    NotificationHistoryFilter, NotificationOutboxRepository, NotificationRetryResult,
 };
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
@@ -369,6 +369,10 @@ fn app_with_runtime(
         )
         .route("/completion-reports", get(list_completion_reports))
         .route("/notifications", get(list_notification_history))
+        .route(
+            "/notifications/{id}/retry",
+            post(retry_notification_delivery),
+        )
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
         .route("/jobs/{id}/account", get(get_account_for_job))
@@ -730,6 +734,39 @@ fn notification_history_filter(
         status: query.status,
         limit,
     })
+}
+
+async fn retry_notification_delivery(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Response {
+    match state.notifications.retry_failed(&id).await {
+        Ok(NotificationRetryResult::Retried(item)) => Json(item).into_response(),
+        Ok(NotificationRetryResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "notification_not_retryable",
+                message: "Only failed or dead-letter notifications can be retried.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(NotificationRetryResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "notification_not_found",
+                message: "The requested notification was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(NotificationRetryResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "notification_retry_unavailable",
+                message: "Notification retry requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn start_completion_report_review(
@@ -1908,6 +1945,26 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_notification_history_filter");
+    }
+
+    #[tokio::test]
+    async fn notification_retry_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/notifications/notification_1001/retry")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "notification_retry_unavailable");
     }
 
     #[tokio::test]

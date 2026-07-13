@@ -18,7 +18,7 @@ pub struct NotificationOutboxItem {
     pub attempt_count: i32,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct NotificationHistoryItem {
     pub id: String,
     pub entity_type: String,
@@ -43,6 +43,14 @@ pub struct NotificationHistoryFilter {
     pub entity_type: Option<String>,
     pub status: Option<String>,
     pub limit: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NotificationRetryResult {
+    Retried(NotificationHistoryItem),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
 }
 
 pub fn validate_notification_recipient(channel: &str, recipient: &str) -> Result<(), String> {
@@ -295,6 +303,64 @@ impl NotificationOutboxRepository {
                 updated_at: row.get("updated_at"),
             })
             .collect())
+    }
+
+    pub async fn retry_failed(&self, id: &str) -> Result<NotificationRetryResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(NotificationRetryResult::Unavailable);
+        };
+
+        let mut transaction = pool.begin().await?;
+        let current =
+            sqlx::query("SELECT status FROM notification_outbox WHERE id = $1 FOR UPDATE")
+                .bind(id)
+                .fetch_optional(&mut *transaction)
+                .await?;
+
+        let Some(current) = current else {
+            transaction.rollback().await?;
+            return Ok(NotificationRetryResult::NotFound);
+        };
+
+        let status: String = current.get("status");
+        if !matches!(status.as_str(), "failed" | "dead_letter") {
+            transaction.rollback().await?;
+            return Ok(NotificationRetryResult::InvalidStatus);
+        }
+
+        sqlx::query(
+            r#"
+            UPDATE notification_outbox
+            SET
+                status = 'queued',
+                attempt_count = 0,
+                available_at = now(),
+                last_attempt_at = NULL,
+                sent_at = NULL,
+                last_error = NULL,
+                provider_response_code = NULL,
+                provider_message_id = NULL,
+                updated_at = now()
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+
+        let mut history = self
+            .list_history(NotificationHistoryFilter {
+                entity_type: None,
+                status: None,
+                limit: 100,
+            })
+            .await?;
+        let Some(item) = history.drain(..).find(|item| item.id == id) else {
+            return Ok(NotificationRetryResult::NotFound);
+        };
+
+        Ok(NotificationRetryResult::Retried(item))
     }
 }
 

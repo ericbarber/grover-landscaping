@@ -12,6 +12,7 @@ import {
   fetchNotificationHistory,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
+  retryNotificationDelivery,
   resubmitCompletionReport,
   startJob,
   startCompletionReportReview,
@@ -1056,6 +1057,38 @@ export function App() {
     }
   }
 
+  async function handleRetryNotificationDelivery(
+    notificationId: string,
+    filters: NotificationHistoryFilters,
+  ) {
+    setIsLoadingNotificationHistory(true);
+    try {
+      const retried = await retryNotificationDelivery(notificationId);
+      setNotificationHistory(await fetchNotificationHistory({
+        entityType: filters.entityType === 'all' ? undefined : filters.entityType,
+        status: filters.status === 'all' ? undefined : filters.status,
+        limit: 25,
+      }));
+      setStatusMessage(`${retried.id} queued for retry.`);
+      recordManagerActivity({
+        title: 'Notification retry queued',
+        message: `${retried.channel} delivery for ${retried.entityId} was returned to the queue.`,
+        tone: 'success',
+        source: 'sync',
+      });
+    } catch {
+      setStatusMessage('Could not retry the notification. Confirm it is failed or needs attention.');
+      recordManagerActivity({
+        title: 'Notification retry failed',
+        message: 'A notification delivery retry could not be queued.',
+        tone: 'warning',
+        source: 'sync',
+      });
+    } finally {
+      setIsLoadingNotificationHistory(false);
+    }
+  }
+
   async function handleStartReportReview(reportId: string) {
     setCompletionReportActionStatus('Starting manager review...');
 
@@ -1291,6 +1324,7 @@ export function App() {
               notifications={notificationHistory}
               isLoading={isLoadingNotificationHistory}
               onRefresh={(filters) => void refreshNotificationHistory(filters)}
+              onRetry={(notificationId, filters) => void handleRetryNotificationDelivery(notificationId, filters)}
             />
           </div>
           <div className="mt-6">

@@ -464,6 +464,20 @@ export async function fetchNotificationHistory(
   return notifications.map(toNotificationHistoryItem);
 }
 
+export function notificationRetryPath(notificationId: string): string {
+  return `/notifications/${encodeURIComponent(notificationId)}/retry`;
+}
+
+export async function retryNotificationDelivery(notificationId: string): Promise<NotificationHistoryItem> {
+  const notification = await request<ApiNotificationHistoryItem>(
+    notificationRetryPath(notificationId),
+    {
+      method: 'POST',
+    },
+  );
+  return toNotificationHistoryItem(notification);
+}
+
 export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
   const response = await fetch(`${API_BASE_URL}/reports/${encodeURIComponent(shareToken)}`);
 

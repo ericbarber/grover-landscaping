@@ -1,5 +1,6 @@
 use grover_landscaping_api::{
     db::JobRepository,
+    notifications::NotificationRetryResult,
     notifications::{NotificationHistoryFilter, NotificationOutboxRepository},
 };
 use sqlx::Row;
@@ -143,4 +144,30 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             && item.attempt_count == 2
             && item.last_error.as_deref() == Some("provider still unavailable")
     }));
+
+    let retry = repository.retry_failed(&failed_id).await.unwrap();
+    assert!(matches!(
+        retry,
+        NotificationRetryResult::Retried(ref item)
+            if item.id == failed_id && item.status == "queued" && item.attempt_count == 0
+    ));
+
+    let retried = sqlx::query(
+        "SELECT status, attempt_count, last_error, provider_response_code FROM notification_outbox WHERE id = $1",
+    )
+    .bind(&failed_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(retried.get::<String, _>("status"), "queued");
+    assert_eq!(retried.get::<i32, _>("attempt_count"), 0);
+    assert!(retried.get::<Option<String>, _>("last_error").is_none());
+    assert!(retried
+        .get::<Option<i32>, _>("provider_response_code")
+        .is_none());
+
+    assert!(matches!(
+        repository.retry_failed(&sent_id).await.unwrap(),
+        NotificationRetryResult::InvalidStatus
+    ));
 }

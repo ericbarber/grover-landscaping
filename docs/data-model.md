@@ -153,7 +153,7 @@ updated_at
 
 Project-bid sends create `queued` email or SMS records in the same transaction as token issuance. Revoking a review link marks pending delivery records `skipped` in the same transaction so a worker cannot later deliver a dead link. The in-process dispatcher claims work safely across service instances, retries with bounded backoff, recovers abandoned claims, moves exhausted work to `dead_letter`, and stores provider response codes and message IDs.
 
-Manager notification history reads use this table directly with optional entity-type and status filters. The history surface is read-only; retry or manual resolution actions should update outbox state through explicit recovery endpoints rather than mutating history reads.
+Manager notification history reads use this table directly with optional entity-type and status filters. Failed and dead-letter rows can be explicitly retried, which resets attempt metadata and returns the row to `queued` for the dispatcher. Manual resolution actions should update outbox state through explicit recovery endpoints rather than mutating history reads.
 
 ## project_bid_conversions and service_job_add_ons
 

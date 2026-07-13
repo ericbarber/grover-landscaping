@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   completionReportsPath,
   notificationHistoryPath,
+  notificationRetryPath,
   toCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
@@ -29,6 +30,7 @@ describe('core API client mapping', () => {
       status: 'failed',
       limit: 10,
     })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
+    expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
   });
 
   it('maps completion report responses with attached photo evidence', () => {

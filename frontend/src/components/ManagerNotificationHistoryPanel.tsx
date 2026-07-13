@@ -9,6 +9,7 @@ type ManagerNotificationHistoryPanelProps = {
   notifications: NotificationHistoryItem[];
   isLoading: boolean;
   onRefresh: (filters: NotificationHistoryFilters) => void;
+  onRetry: (notificationId: string, filters: NotificationHistoryFilters) => void;
 };
 
 export type NotificationHistoryEntityFilter = NotificationHistoryEntityType | 'all';
@@ -65,6 +66,7 @@ export function ManagerNotificationHistoryPanel({
   notifications,
   isLoading,
   onRefresh,
+  onRetry,
 }: ManagerNotificationHistoryPanelProps) {
   const [entityType, setEntityType] = useState<NotificationHistoryEntityFilter>('all');
   const [status, setStatus] = useState<NotificationHistoryStatusFilter>('all');
@@ -175,6 +177,16 @@ export function ManagerNotificationHistoryPanel({
                 <p className="mt-2 break-all text-xs text-slate-500">
                   Provider message: {notification.providerMessageId}
                 </p>
+              ) : null}
+              {notification.status === 'failed' || notification.status === 'dead_letter' ? (
+                <button
+                  className="mt-3 rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                  disabled={isLoading}
+                  onClick={() => onRetry(notification.id, { entityType, status })}
+                  type="button"
+                >
+                  Retry delivery
+                </button>
               ) : null}
             </article>
           ))}
