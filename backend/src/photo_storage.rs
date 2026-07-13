@@ -1,8 +1,11 @@
+use crate::PhotoUploadMetadata;
 use hmac::{Hmac, Mac};
+use reqwest::{header::RANGE, StatusCode};
 use sha2::{Digest, Sha256};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 type HmacSha256 = Hmac<Sha256>;
+const PHOTO_METADATA_RANGE_BYTES: u64 = 512 * 1024;
 
 #[derive(Clone, Debug)]
 pub enum PhotoStorageConfig {
@@ -146,6 +149,26 @@ impl PhotoStorageConfig {
 
         Some(format!("local://{thumbnail_object_key}"))
     }
+
+    pub async fn uploaded_photo_metadata(
+        &self,
+        upload_mode: &str,
+        object_key: &str,
+    ) -> Option<PhotoUploadMetadata> {
+        if normalized_upload_mode(upload_mode) != "s3-presigned" {
+            return None;
+        }
+
+        let Self::S3(config) = self else {
+            return None;
+        };
+
+        config
+            .uploaded_photo_metadata(object_key)
+            .await
+            .ok()
+            .flatten()
+    }
 }
 
 impl S3PhotoStorageConfig {
@@ -188,6 +211,53 @@ impl S3PhotoStorageConfig {
             .map(|duration| duration.as_secs())
             .unwrap_or(0);
         self.presigned_url_at(method, object_key, expires_seconds, now)
+    }
+
+    async fn uploaded_photo_metadata(
+        &self,
+        object_key: &str,
+    ) -> Result<Option<PhotoUploadMetadata>, reqwest::Error> {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()?;
+        let head_response = client
+            .head(self.presigned_url("HEAD", object_key, self.display_expires_seconds))
+            .send()
+            .await?;
+
+        if !head_response.status().is_success() {
+            return Ok(None);
+        }
+
+        let file_size_bytes = head_response.content_length().and_then(|content_length| {
+            i64::try_from(content_length)
+                .ok()
+                .filter(|value| *value > 0)
+        });
+        let range_header = format!("bytes=0-{}", PHOTO_METADATA_RANGE_BYTES - 1);
+        let get_response = client
+            .get(self.presigned_url("GET", object_key, self.display_expires_seconds))
+            .header(RANGE, range_header)
+            .send()
+            .await?;
+
+        if !get_response.status().is_success()
+            && get_response.status() != StatusCode::PARTIAL_CONTENT
+        {
+            return Ok(None);
+        }
+
+        let bytes = get_response.bytes().await?;
+        let Some((image_width_px, image_height_px)) = image_dimensions(&bytes) else {
+            return Ok(None);
+        };
+
+        Ok(Some(PhotoUploadMetadata {
+            file_size_bytes: file_size_bytes.or_else(|| i64::try_from(bytes.len()).ok()),
+            image_width_px: Some(image_width_px),
+            image_height_px: Some(image_height_px),
+            metadata_source: Some("server_extracted".to_string()),
+        }))
     }
 
     fn presigned_url_at(
@@ -356,10 +426,114 @@ pub fn normalized_upload_mode(upload_mode: &str) -> &'static str {
     }
 }
 
+fn image_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    png_dimensions(bytes)
+        .or_else(|| gif_dimensions(bytes))
+        .or_else(|| jpeg_dimensions(bytes))
+}
+
+fn png_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if bytes.len() < 24 || &bytes[..8] != b"\x89PNG\r\n\x1a\n" || bytes.get(12..16) != Some(b"IHDR")
+    {
+        return None;
+    }
+
+    dimensions_from_u32(read_be_u32(bytes, 16)?, read_be_u32(bytes, 20)?)
+}
+
+fn gif_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if bytes.len() < 10 || !(bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a")) {
+        return None;
+    }
+
+    dimensions_from_u32(
+        u16::from_le_bytes([bytes[6], bytes[7]]) as u32,
+        u16::from_le_bytes([bytes[8], bytes[9]]) as u32,
+    )
+}
+
+fn jpeg_dimensions(bytes: &[u8]) -> Option<(i32, i32)> {
+    if bytes.len() < 4 || bytes[0] != 0xff || bytes[1] != 0xd8 {
+        return None;
+    }
+
+    let mut index = 2;
+    while index + 3 < bytes.len() {
+        while index < bytes.len() && bytes[index] != 0xff {
+            index += 1;
+        }
+        while index < bytes.len() && bytes[index] == 0xff {
+            index += 1;
+        }
+        if index >= bytes.len() {
+            return None;
+        }
+
+        let marker = bytes[index];
+        index += 1;
+
+        if marker == 0xd9 || marker == 0xda {
+            return None;
+        }
+        if marker == 0xd8 || (0xd0..=0xd7).contains(&marker) {
+            continue;
+        }
+        if index + 2 > bytes.len() {
+            return None;
+        }
+
+        let segment_length = read_be_u16(bytes, index)? as usize;
+        if segment_length < 2 || index + segment_length > bytes.len() {
+            return None;
+        }
+
+        if is_jpeg_start_of_frame(marker) && segment_length >= 7 {
+            let height = read_be_u16(bytes, index + 3)? as u32;
+            let width = read_be_u16(bytes, index + 5)? as u32;
+            return dimensions_from_u32(width, height);
+        }
+
+        index += segment_length;
+    }
+
+    None
+}
+
+fn is_jpeg_start_of_frame(marker: u8) -> bool {
+    matches!(
+        marker,
+        0xc0 | 0xc1 | 0xc2 | 0xc3 | 0xc5 | 0xc6 | 0xc7 | 0xc9 | 0xca | 0xcb | 0xcd | 0xce | 0xcf
+    )
+}
+
+fn dimensions_from_u32(width: u32, height: u32) -> Option<(i32, i32)> {
+    Some((
+        i32::try_from(width).ok().filter(|value| *value > 0)?,
+        i32::try_from(height).ok().filter(|value| *value > 0)?,
+    ))
+}
+
+fn read_be_u16(bytes: &[u8], index: usize) -> Option<u16> {
+    Some(u16::from_be_bytes([
+        *bytes.get(index)?,
+        *bytes.get(index + 1)?,
+    ]))
+}
+
+fn read_be_u32(bytes: &[u8], index: usize) -> Option<u32> {
+    Some(u32::from_be_bytes([
+        *bytes.get(index)?,
+        *bytes.get(index + 1)?,
+        *bytes.get(index + 2)?,
+        *bytes.get(index + 3)?,
+    ]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        aws_date_time, canonical_query_string, uri_encode, PhotoStorageConfig, S3PhotoStorageConfig,
+        aws_date_time, canonical_query_string, image_dimensions, uri_encode, PhotoStorageConfig,
+        S3PhotoStorageConfig,
     };
 
     #[test]
@@ -482,5 +656,32 @@ mod tests {
             uri_encode("jobs/before photo.jpg"),
             "jobs%2Fbefore%20photo.jpg"
         );
+    }
+
+    #[test]
+    fn image_dimensions_reads_png_gif_and_jpeg_headers() {
+        let mut png = vec![0x89, b'P', b'N', b'G', b'\r', b'\n', 0x1a, b'\n'];
+        png.extend_from_slice(&[0, 0, 0, 13]);
+        png.extend_from_slice(b"IHDR");
+        png.extend_from_slice(&1600_u32.to_be_bytes());
+        png.extend_from_slice(&900_u32.to_be_bytes());
+
+        let mut gif = b"GIF89a".to_vec();
+        gif.extend_from_slice(&1600_u16.to_le_bytes());
+        gif.extend_from_slice(&900_u16.to_le_bytes());
+
+        let jpeg = vec![
+            0xff, 0xd8, 0xff, 0xc0, 0x00, 0x07, 0x08, 0x03, 0x84, 0x06, 0x40,
+        ];
+
+        assert_eq!(image_dimensions(&png), Some((1600, 900)));
+        assert_eq!(image_dimensions(&gif), Some((1600, 900)));
+        assert_eq!(image_dimensions(&jpeg), Some((1600, 900)));
+    }
+
+    #[test]
+    fn image_dimensions_rejects_incomplete_headers() {
+        assert_eq!(image_dimensions(b"not an image"), None);
+        assert_eq!(image_dimensions(&[0xff, 0xd8, 0xff, 0xc0, 0x00]), None);
     }
 }

@@ -91,7 +91,7 @@ pub async fn complete_photo_upload(
     photo_id: &str,
     metadata: &PhotoUploadMetadata,
 ) -> Result<(), sqlx::Error> {
-    let metadata_source = if metadata.file_size_bytes.is_some()
+    let fallback_metadata_source = if metadata.file_size_bytes.is_some()
         || metadata.image_width_px.is_some()
         || metadata.image_height_px.is_some()
     {
@@ -99,6 +99,10 @@ pub async fn complete_photo_upload(
     } else {
         None
     };
+    let metadata_source = metadata
+        .metadata_source
+        .as_deref()
+        .or(fallback_metadata_source);
     let Some(row) = sqlx::query(
         r#"
         UPDATE job_photos

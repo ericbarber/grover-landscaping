@@ -468,7 +468,20 @@ impl JobRepository {
         metadata: PhotoUploadMetadata,
     ) -> String {
         if let Some(pool) = &self.pool {
-            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id, &metadata).await;
+            let mut upload_metadata = metadata;
+            if let Ok(Some(location)) =
+                postgres_read::photo_storage_location(pool, job_id, photo_id).await
+            {
+                if let Some(server_metadata) = PhotoStorageConfig::from_env()
+                    .uploaded_photo_metadata(&location.upload_mode, &location.object_key)
+                    .await
+                {
+                    upload_metadata = server_metadata;
+                }
+            }
+
+            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id, &upload_metadata)
+                .await;
         }
 
         format!("Photo {photo_id} for job {job_id} has been marked uploaded.")

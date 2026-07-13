@@ -112,4 +112,5 @@ pub struct PhotoUploadMetadata {
     pub file_size_bytes: Option<i64>,
     pub image_width_px: Option<i32>,
     pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
 }

@@ -13,7 +13,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Assigned job list and job detail view
 - Start-job and complete-job actions
 - Before / after / issue photo placeholder flow
-- Persisted photo evidence metadata display with file size and image dimensions
+- Persisted photo evidence metadata display with server-extracted file size and image dimensions when object storage is available
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence
 - PostgreSQL-backed completion report state

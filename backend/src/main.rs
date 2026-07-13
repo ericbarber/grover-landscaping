@@ -252,6 +252,7 @@ pub struct PhotoUploadMetadata {
     pub file_size_bytes: Option<i64>,
     pub image_width_px: Option<i32>,
     pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -2810,7 +2811,14 @@ impl PhotoCompleteRequest {
             file_size_bytes: self.file_size_bytes,
             image_width_px: self.image_width_px,
             image_height_px: self.image_height_px,
+            metadata_source: self.has_metadata().then(|| "client_reported".to_string()),
         })
+    }
+
+    fn has_metadata(&self) -> bool {
+        self.file_size_bytes.is_some()
+            || self.image_width_px.is_some()
+            || self.image_height_px.is_some()
     }
 }
 

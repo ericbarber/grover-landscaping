@@ -179,7 +179,7 @@ processed
 rejected
 ```
 
-Upload completion can persist validated client-reported file size and image dimensions. `metadata_source` records where those values came from; current browser uploads use `client_reported`, while planned server-side image processing should write a server-controlled source after validating object storage content.
+Upload completion can persist file size and image dimensions. `metadata_source` records where those values came from; browser-provided fallback values use `client_reported`, while S3-backed server probes that verify object metadata and parse PNG, GIF, or JPEG headers use `server_extracted`.
 
 ## job_completion_reports
 

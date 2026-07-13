@@ -30,6 +30,7 @@ async fn repository_persists_and_lists_photo_evidence() {
                 file_size_bytes: Some(24_576),
                 image_width_px: Some(1600),
                 image_height_px: Some(900),
+                metadata_source: Some("client_reported".to_string()),
             },
         )
         .await;

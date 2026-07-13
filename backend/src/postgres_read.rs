@@ -4,6 +4,12 @@ use crate::{
 };
 use sqlx::{PgPool, Row};
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PhotoStorageLocation {
+    pub upload_mode: String,
+    pub object_key: String,
+}
+
 pub async fn organization_id_for_job(
     pool: &PgPool,
     job_id: &str,
@@ -160,6 +166,34 @@ pub async fn list_job_photos(
             }
         })
         .collect())
+}
+
+pub async fn photo_storage_location(
+    pool: &PgPool,
+    job_id: &str,
+    photo_id: &str,
+) -> Result<Option<PhotoStorageLocation>, sqlx::Error> {
+    let Some(row) = sqlx::query(
+        r#"
+        SELECT
+            COALESCE(upload_mode, 'local-placeholder') AS upload_mode,
+            object_key
+        FROM job_photos
+        WHERE job_id = $1 AND id = $2
+        "#,
+    )
+    .bind(job_id)
+    .bind(photo_id)
+    .fetch_optional(pool)
+    .await?
+    else {
+        return Ok(None);
+    };
+
+    Ok(Some(PhotoStorageLocation {
+        upload_mode: row.get("upload_mode"),
+        object_key: row.get("object_key"),
+    }))
 }
 
 pub async fn list_job_add_ons(pool: &PgPool, job_id: &str) -> Result<Vec<JobAddOn>, sqlx::Error> {
