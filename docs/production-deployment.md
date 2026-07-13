@@ -31,8 +31,8 @@ Before storing real customer or employee data or opening access broadly:
 
 1. Push the reviewed production changes to the repository's default branch.
 2. In the Render dashboard, create a new Blueprint and connect this repository.
-3. Provision the production Cognito Terraform environment using the final Render application URL and the hosted pilot runbook.
-4. Render reads `render.yaml` and requests the Cognito issuer URL, public app client ID, and login domain from the Terraform outputs.
+3. Provision the production Cognito Terraform environment using the final Render application URL and the hosted pilot runbook. Enable the optional S3 photo bucket in Terraform only when the pilot is ready for S3-backed photo evidence.
+4. Render reads `render.yaml` and requests the Cognito issuer URL, public app client ID, login domain, and optional photo bucket outputs from Terraform.
 5. Wait for the database and web service to become healthy. The web service applies all embedded SQLx migrations before opening its listener.
 6. Record the generated `https://grover-landscaping.onrender.com` URL or attach a custom domain.
 
@@ -93,6 +93,7 @@ See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Co
 - Health: use `/health/live` for process liveness and `/health/ready` for database readiness.
 - Notifications: disabled by default. Webhook mode requires `PUBLIC_APP_URL`, `NOTIFICATION_WEBHOOK_URL`, and optionally `NOTIFICATION_WEBHOOK_BEARER_TOKEN`. Production URLs must use HTTPS. Failed delivery uses exponential backoff and moves to `dead_letter` after the configured attempt limit.
 - Photo processing: disabled by default. Set `PHOTO_PROCESSING_WORKER_MODE=enabled` only when `DATABASE_URL` and `PHOTO_STORAGE_MODE=s3` are configured; queued thumbnail work retries with bounded backoff and moves to `dead_letter` after the configured attempt limit.
+- Photo storage lifecycle: the optional Terraform S3 module blocks public access, enables encryption and versioning, aborts incomplete uploads after one day, archives current photo evidence after 365 days by default, deletes current objects after 2555 days by default, and deletes old object versions after 30 days by default.
 
 Provider references:
 

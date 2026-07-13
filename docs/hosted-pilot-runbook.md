@@ -21,6 +21,8 @@ $EDITOR infra/terraform/environments/prod/terraform.tfvars
 
 Set `application_url` to the final HTTPS Render URL or custom domain.
 
+When the pilot is ready for S3 photo evidence, also set `enable_photo_storage = true`. Use the resulting `photo_bucket_name`, `photo_bucket_region`, and `photo_key_prefix` outputs for Render's `S3_PHOTO_BUCKET`, `S3_PHOTO_REGION`, and `S3_PHOTO_KEY_PREFIX` values.
+
 2. Plan and apply Cognito:
 
 ```bash
@@ -43,6 +45,11 @@ COGNITO_ISSUER_URL=<issuer_url>
 COGNITO_CLIENT_ID=<app_client_id>
 COGNITO_LOGIN_DOMAIN=<login_domain>
 PUBLIC_APP_URL=<production HTTPS application URL>
+# Set after enable_photo_storage=true:
+# PHOTO_STORAGE_MODE=s3
+# S3_PHOTO_BUCKET=<photo_bucket_name>
+# S3_PHOTO_REGION=<photo_bucket_region>
+# S3_PHOTO_KEY_PREFIX=<photo_key_prefix>
 ```
 
 `AUTH_MODE=disabled` must not be used in production.

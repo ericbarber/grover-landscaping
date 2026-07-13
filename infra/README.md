@@ -4,14 +4,15 @@ The first protected production pilot is defined by the repository-root `render.y
 
 AWS remains the target for a later stage that needs managed user identity, private S3 photo storage, asynchronous workflows, or tighter network isolation.
 
-## Cognito
+## Cognito and Photo Storage
 
-Terraform now manages separate Cognito environments:
+Terraform now manages separate Cognito environments and includes an optional S3 photo-storage module:
 
 ```text
 infra/terraform/environments/dev
 infra/terraform/environments/prod
 infra/terraform/modules/cognito
+infra/terraform/modules/s3-photos
 ```
 
 Development:
@@ -32,6 +33,8 @@ terraform -chdir=infra/terraform/environments/prod plan
 ```
 
 Do not apply production until the Render URL or custom domain is final. Production enables mandatory MFA and Cognito deletion protection.
+
+Production photo storage is disabled by default. Set `enable_photo_storage = true` in `infra/terraform/environments/prod/terraform.tfvars` when the pilot is ready for S3-backed photo evidence. The module blocks public access, enables bucket-owner-enforced ownership, server-side encryption, versioning, browser CORS for the application origin, incomplete upload cleanup after one day, archive transition after `photo_archive_after_days`, current-object deletion after `photo_delete_after_days`, and noncurrent-version deletion after `photo_noncurrent_delete_after_days`.
 
 Validate the production outputs before wiring Render:
 

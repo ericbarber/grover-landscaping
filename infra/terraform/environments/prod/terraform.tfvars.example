@@ -1,1 +1,10 @@
 application_url = "https://grover-landscaping.onrender.com"
+
+# Enable after S3-backed photo evidence storage is ready for the pilot.
+enable_photo_storage = false
+# photo_bucket_name = "grover-landscaping-prod-photos"
+photo_key_prefix = "photos"
+photo_archive_after_days = 365
+photo_archive_storage_class = "GLACIER_IR"
+photo_delete_after_days = 2555
+photo_noncurrent_delete_after_days = 30
