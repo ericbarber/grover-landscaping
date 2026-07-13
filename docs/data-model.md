@@ -67,6 +67,23 @@ created_at
 
 Portfolio membership is stored separately in `portfolio_property_links` with `portfolio_id`, `property_id`, and `organization_id`. Portfolio create, list, and property-link APIs require active organization membership and do not change customer ownership, property ownership, or crew assignment history.
 
+## property_crew_assignments
+
+Implemented property crew-assignment fields:
+
+```text
+id
+property_id
+crew_id
+organization_id
+active
+assigned_at
+ended_at
+created_at
+```
+
+Assigning a crew to a property ends the current active assignment for that property and service organization, then creates a new active assignment. Assignment APIs require active organization membership, verify that the crew belongs to the requested service organization, and do not change customer ownership, property ownership, portfolio grouping, or job completion history.
+
 ## job_photos
 
 Suggested fields:

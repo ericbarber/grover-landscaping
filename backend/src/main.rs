@@ -35,12 +35,16 @@ use day_plans::{
 use db::{DatabaseConfig, JobAddOnStatusUpdate, JobRepository};
 use grover_landscaping_api::{
     access_control::{
-        can_deliver_completion_report, can_manage_property_portfolios, can_manage_schedule,
-        can_review_completion_report, can_submit_completion_report, can_view_crew_route,
-        AccessRole,
+        can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
+        can_manage_schedule, can_review_completion_report, can_submit_completion_report,
+        can_view_crew_route, AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::OrganizationRepository,
+    property_crew_assignments::{
+        is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
+        PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
+    },
     property_portfolio_requests::{
         is_valid_add_property_to_portfolio_request, is_valid_create_property_portfolio_request,
         AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
@@ -82,6 +86,7 @@ struct AppState {
     organizations: OrganizationRepository,
     notifications: NotificationOutboxRepository,
     property_portfolios: PropertyPortfolioRepository,
+    property_crew_assignments: PropertyCrewAssignmentRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -274,6 +279,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         organizations,
         notifications,
         property_portfolios,
+        property_crew_assignments,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -286,7 +292,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let project_bids = ProjectBidRepository::from_pool(pool.clone());
             let organizations = OrganizationRepository::from_pool(pool.clone());
             let notifications = NotificationOutboxRepository::from_pool(pool.clone());
-            let property_portfolios = PropertyPortfolioRepository::from_pool(pool);
+            let property_portfolios = PropertyPortfolioRepository::from_pool(pool.clone());
+            let property_crew_assignments = PropertyCrewAssignmentRepository::from_pool(pool);
             (
                 jobs,
                 day_plans,
@@ -294,6 +301,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 organizations,
                 notifications,
                 property_portfolios,
+                property_crew_assignments,
                 "postgres",
             )
         }
@@ -309,6 +317,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             OrganizationRepository::default(),
             NotificationOutboxRepository::default(),
             PropertyPortfolioRepository::default(),
+            PropertyCrewAssignmentRepository::default(),
             "seed-local",
         ),
     };
@@ -342,6 +351,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             organizations,
             notifications,
             property_portfolios,
+            property_crew_assignments,
         }),
         persistence,
         persistence == "postgres",
@@ -425,6 +435,14 @@ fn app_with_runtime(
         .route(
             "/property-portfolios/{portfolio_id}/properties",
             post(add_property_to_portfolio),
+        )
+        .route(
+            "/properties/{property_id}/crew-assignments",
+            get(list_property_crew_assignments).post(assign_property_crew),
+        )
+        .route(
+            "/crews/{crew_id}/property-assignments/active",
+            get(list_active_crew_property_assignments),
         )
         .route("/jobs/{id}/report", get(get_completion_report))
         .route(
@@ -788,6 +806,108 @@ async fn add_property_to_portfolio(
     };
 
     (StatusCode::CREATED, Json(link)).into_response()
+}
+
+async fn assign_property_crew(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+    Json(request): Json<AssignPropertyCrewRequest>,
+) -> Response {
+    if !is_valid_assign_property_crew_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_property_crew_assignment",
+                message: "Crew and organization are required for property assignment.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_crew_assignments,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(assignment) = state
+        .property_crew_assignments
+        .assign_crew(&property_id, request)
+        .await
+    else {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "property_crew_not_assignable",
+                message: "The crew could not be assigned to that property.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    (StatusCode::CREATED, Json(assignment)).into_response()
+}
+
+async fn list_property_crew_assignments(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    let organization_ids =
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
+            .await;
+    let assignments = state
+        .property_crew_assignments
+        .list_for_property(&property_id, &organization_ids)
+        .await;
+
+    Json(assignments).into_response()
+}
+
+async fn list_active_crew_property_assignments(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(crew_id): Path<String>,
+) -> Response {
+    let organization_ids =
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
+            .await;
+    if organization_ids.is_empty() {
+        return Json(Vec::<PropertyCrewAssignmentResponse>::new()).into_response();
+    }
+
+    let Some(crew_organization_id) = state.day_plans.organization_id_for_crew(&crew_id).await
+    else {
+        return resource_not_found_response("crew_not_found", "Crew was not found.");
+    };
+
+    if !organization_ids
+        .iter()
+        .any(|organization_id| organization_id == &crew_organization_id)
+    {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "organization_access_denied",
+                message: "Active organization membership is required for this resource."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let assignments = state
+        .property_crew_assignments
+        .list_active_for_crew(&crew_id, &organization_ids)
+        .await;
+
+    Json(assignments).into_response()
 }
 
 async fn get_completion_report(
@@ -2357,6 +2477,7 @@ mod tests {
             organizations: OrganizationRepository::default(),
             notifications: NotificationOutboxRepository::default(),
             property_portfolios: PropertyPortfolioRepository::default(),
+            property_crew_assignments: PropertyCrewAssignmentRepository::default(),
         })
     }
 
@@ -2725,6 +2846,127 @@ mod tests {
         assert_eq!(json["property_id"], "property_1001");
         assert_eq!(json["organization_id"], "org_demo_landscaping");
         assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn assign_property_crew_endpoint_returns_local_response() {
+        let request_body = serde_json::json!({
+            "crew_id": "crew_1001",
+            "organization_id": "org_demo_landscaping",
+            "assigned_at": "2026-06-15T08:00:00Z"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/properties/property_1001/crew-assignments")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["crew_id"], "crew_1001");
+        assert_eq!(json["organization_id"], "org_demo_landscaping");
+        assert_eq!(json["active"], true);
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn assign_property_crew_endpoint_rejects_invalid_payloads() {
+        let request_body = serde_json::json!({
+            "crew_id": " ",
+            "organization_id": "org_demo_landscaping"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/properties/property_1001/crew-assignments")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn assign_property_crew_endpoint_rejects_other_organizations() {
+        let request_body = serde_json::json!({
+            "crew_id": "crew_1001",
+            "organization_id": "org_other"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/properties/property_1001/crew-assignments")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn property_crew_assignment_history_endpoint_returns_seeded_local_assignments() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/properties/property_1001/crew-assignments")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json.as_array().unwrap().len(), 1);
+        assert_eq!(json[0]["property_id"], "property_1001");
+        assert_eq!(json[0]["crew_id"], "crew_1001");
+        assert_eq!(json[0]["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn active_crew_property_assignments_endpoint_returns_seeded_local_assignments() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/crews/crew_1001/property-assignments/active")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json.as_array().unwrap().len(), 1);
+        assert_eq!(json[0]["property_id"], "property_1001");
+        assert_eq!(json[0]["active"], true);
     }
 
     #[tokio::test]

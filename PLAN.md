@@ -293,6 +293,7 @@ Current state:
 - Crews carry organization ownership, and day-plan, amendment, stop, and manager bid APIs enforce active organization membership before using persisted or local fallback data
 - Job list/detail, job account, job report, add-on, photo, and completion-report action routes enforce active organization membership before returning or mutating job-scoped data
 - Property portfolio create/list/link APIs are wired to PostgreSQL and enforce active organization membership before grouping customer yards
+- Property crew-assignment APIs are wired to PostgreSQL and enforce active organization membership plus crew organization ownership before changing service assignments
 
 Next implementation work:
 
@@ -372,12 +373,12 @@ Current state:
 - Portfolio boundary indexes prevent duplicate portfolio names per account and restrict a property to one portfolio group per service organization
 - Backend API contracts are documented for property portfolio management and property crew assignment workflows
 - Backend property portfolio routes can create portfolios, link properties to portfolios, and list account portfolios within active organization memberships
+- Backend property crew-assignment routes can assign crews, list property assignment history, and list active crew property workloads within active organization memberships
 - Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
 - Portfolio coverage summary reports total, grouped, and ungrouped yard counts
 
 Next implementation work:
 
-- Wire active crew-assignment API routes with the same organization boundaries
 - Add authenticated customer-scoped portfolio and property reads
 - Add property onboarding fields and validation for service address, access notes, billing, and notification details
 

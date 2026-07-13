@@ -9,6 +9,7 @@ pub mod notifications;
 pub mod organizations;
 pub mod photo_storage;
 pub mod project_bids;
+pub mod property_crew_assignments;
 pub mod property_portfolio_requests;
 pub mod property_portfolios;
 pub mod stop_progress;

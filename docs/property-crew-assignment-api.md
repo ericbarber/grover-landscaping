@@ -1,6 +1,6 @@
 # Property Crew Assignment API Contract
 
-This document defines the backend API contract for assigning service crews to properties.
+This document defines the implemented backend API contract for assigning service crews to properties.
 
 ## Purpose
 
@@ -13,7 +13,7 @@ Crew assignment controls which crew services a property. It does not transfer cu
 - The database allows only one active crew assignment per property and service organization.
 - Portfolio membership remains stored separately in `portfolio_property_links`.
 
-## Planned endpoints
+## Endpoints
 
 ### Assign crew to property
 
@@ -27,6 +27,9 @@ Required fields:
 
 Expected behavior:
 
+- Require manager, organization owner, or support admin authorization.
+- Require active membership in the requested service organization.
+- The requested crew must belong to the requested service organization.
 - End the current active assignment for the property, if one exists.
 - Create a new active assignment for the requested crew.
 - Keep the property attached to the same customer account.
@@ -38,8 +41,9 @@ Expected behavior:
 
 Expected behavior:
 
+- Require manager, organization owner, or support admin authorization.
 - Return assignment history for the requested property.
-- Scope results to the current service organization.
+- Scope results to the signed-in principal's active organization memberships.
 - Sort newest assignments first.
 
 ### List active crew workload
@@ -48,8 +52,9 @@ Expected behavior:
 
 Expected behavior:
 
+- Require manager, organization owner, or support admin authorization.
 - Return active property assignments for the requested crew.
-- Scope results to the current service organization.
+- Scope results to the signed-in principal's active organization memberships.
 - Exclude ended or inactive assignments.
 
 ## Guardrails

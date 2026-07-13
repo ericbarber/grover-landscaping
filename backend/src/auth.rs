@@ -1,6 +1,7 @@
 use crate::access_control::{
-    can_deliver_completion_report, can_manage_property_portfolios, can_manage_schedule,
-    can_review_completion_report, can_submit_completion_report, can_view_crew_route, AccessRole,
+    can_deliver_completion_report, can_manage_crew_assignments, can_manage_property_portfolios,
+    can_manage_schedule, can_review_completion_report, can_submit_completion_report,
+    can_view_crew_route, AccessRole,
 };
 use axum::{
     extract::{Request, State},
@@ -373,6 +374,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/notifications/")
         || path == "/property-portfolios"
         || path.starts_with("/property-portfolios/")
+        || path.starts_with("/properties/")
         || path.starts_with("/crews/")
         || path == "/day-plans"
         || path.starts_with("/day-plans/")
@@ -399,6 +401,7 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     let can_deliver_reports = principal.roles.iter().any(can_deliver_completion_report);
     let can_submit_reports = principal.roles.iter().any(can_submit_completion_report);
     let can_manage_portfolios = principal.roles.iter().any(can_manage_property_portfolios);
+    let can_manage_assignments = principal.roles.iter().any(can_manage_crew_assignments);
 
     if path == "/me/access" {
         return *method == Method::GET;
@@ -450,6 +453,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     if path.starts_with("/property-portfolios/") && path.ends_with("/properties") {
         return *method == Method::POST && can_manage_portfolios;
+    }
+
+    if path.starts_with("/properties/") && path.ends_with("/crew-assignments") {
+        return (*method == Method::GET || *method == Method::POST) && can_manage_assignments;
+    }
+
+    if path.starts_with("/crews/") && path.ends_with("/property-assignments/active") {
+        return *method == Method::GET && can_manage_assignments;
     }
 
     if path.starts_with("/day-plans/") && (path.ends_with("/bids") || path.ends_with("/bid")) {
@@ -813,6 +824,35 @@ mod tests {
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
             "/property-portfolios/portfolio_1001/properties"
+        ));
+    }
+
+    #[test]
+    fn crew_assignment_managers_can_access_property_assignment_routes() {
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            "/properties/property_1001/crew-assignments"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::GET,
+            "/properties/property_1001/crew-assignments"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::GET,
+            "/crews/crew_1001/property-assignments/active"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::POST,
+            "/properties/property_1001/crew-assignments"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::GET,
+            "/crews/crew_1001/property-assignments/active"
         ));
     }
 
