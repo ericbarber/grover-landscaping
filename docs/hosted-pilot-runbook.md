@@ -135,6 +135,18 @@ bash scripts/smoke-production.sh
 
 The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
 
+Before enabling provider-backed delivery, validate the webhook gateway configuration:
+
+```bash
+NOTIFICATION_DISPATCH_MODE=webhook \
+PUBLIC_APP_URL=https://grover-landscaping.onrender.com \
+NOTIFICATION_WEBHOOK_URL='<provider delivery URL>' \
+NOTIFICATION_WEBHOOK_BEARER_TOKEN='<provider gateway token>' \
+bash scripts/validate-notification-webhook.sh
+```
+
+Only add `VALIDATE_NOTIFICATION_WEBHOOK_DELIVERY=1` with `NOTIFICATION_WEBHOOK_SMOKE_CHANNEL` and `NOTIFICATION_WEBHOOK_SMOKE_RECIPIENT` when an internal recipient is ready to receive a real provider test message.
+
 ## Rollback Notes
 
 - If Cognito values are wrong in Render, fix the environment variables and redeploy; do not switch production to disabled auth.

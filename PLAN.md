@@ -308,6 +308,7 @@ Current state:
 - Customer account bid history returns sent, answered, and converted bids within active customer/manager organization scopes
 - Customer portal preview loads authenticated customer account bid history with local bid-review fallback
 - Production smoke script validates Cognito auth config plus route, report, photo upload-ticket, customer portfolio, bid-history, and report-history reads
+- Notification webhook validation script checks production delivery configuration and supports opt-in provider test requests
 
 Next implementation work:
 

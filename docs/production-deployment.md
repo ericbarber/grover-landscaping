@@ -69,6 +69,18 @@ The smoke test verifies:
 
 Override the `SMOKE_*` IDs when the pilot data set no longer uses the seeded demo job, day plan, account, or property identifiers.
 
+Validate the notification webhook gateway before setting `NOTIFICATION_DISPATCH_MODE=webhook` in Render:
+
+```bash
+NOTIFICATION_DISPATCH_MODE=webhook \
+PUBLIC_APP_URL=https://grover-landscaping.onrender.com \
+NOTIFICATION_WEBHOOK_URL=https://notifications.example.com/deliver \
+NOTIFICATION_WEBHOOK_BEARER_TOKEN='provider-gateway-token' \
+bash scripts/validate-notification-webhook.sh
+```
+
+To send an intentional provider test request, add `VALIDATE_NOTIFICATION_WEBHOOK_DELIVERY=1`, `NOTIFICATION_WEBHOOK_SMOKE_CHANNEL`, and `NOTIFICATION_WEBHOOK_SMOKE_RECIPIENT`. Use a controlled internal recipient because the gateway may deliver a real email or SMS.
+
 See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Cognito group assignment, PostgreSQL membership binding, and rollback notes.
 
 ## Operations
