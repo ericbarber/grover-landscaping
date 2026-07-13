@@ -3,6 +3,7 @@ import {
   completionReportsPath,
   toCompletionReport,
   toCompletionReportAction,
+  toCompletionReportDeliveryNotification,
   toJobAddOn,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
@@ -135,6 +136,24 @@ describe('core API client mapping', () => {
       jobId: 'job_1001',
       reportStatus: 'delivered',
       persisted: true,
+      shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
+    });
+  });
+
+  it('maps completion report delivery notification responses', () => {
+    expect(toCompletionReportDeliveryNotification({
+      report_id: 'report_job_1001',
+      notification_id: 'notification_1001',
+      channel: 'email',
+      recipient: 'customer@example.com',
+      delivery_status: 'queued',
+      share_url: '/report-view/share_report_job_1001',
+    })).toEqual({
+      reportId: 'report_job_1001',
+      notificationId: 'notification_1001',
+      channel: 'email',
+      recipient: 'customer@example.com',
+      deliveryStatus: 'queued',
       shareUrl: 'http://localhost:5173/report-view/share_report_job_1001',
     });
   });

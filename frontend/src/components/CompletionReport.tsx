@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { getCompletionProgress } from '../domain/jobs';
+import {
+  bidDeliveryRecipientIsValid,
+  type BidDeliveryChannel,
+} from '../domain/bidDelivery';
 import { AccountStatusCard } from './AccountStatusCard';
 import type { CompletionReportSnapshot, JobDetail, PhotoUploadTicket } from '../api/client';
 
@@ -11,6 +15,11 @@ type CompletionReportProps = {
   onRequestChanges?: (reportId: string, reason: string) => Promise<void>;
   onResubmit?: (reportId: string) => Promise<void>;
   onDeliver?: (reportId: string) => Promise<void>;
+  onQueueDeliveryNotification?: (
+    reportId: string,
+    channel: BidDeliveryChannel,
+    recipient: string,
+  ) => Promise<void>;
   actionStatus?: string | null;
 };
 
@@ -26,9 +35,12 @@ export function CompletionReport({
   onRequestChanges,
   onResubmit,
   onDeliver,
+  onQueueDeliveryNotification,
   actionStatus,
 }: CompletionReportProps) {
   const [changeReason, setChangeReason] = useState('');
+  const [deliveryChannel, setDeliveryChannel] = useState<BidDeliveryChannel>('email');
+  const [deliveryRecipient, setDeliveryRecipient] = useState('');
   const progress = getCompletionProgress(job);
   const beforeEvidenceCount = uploadTickets.filter((ticket) => ticket.photoType === 'before').length;
   const afterEvidenceCount = uploadTickets.filter((ticket) => ticket.photoType === 'after').length;
@@ -173,9 +185,48 @@ export function CompletionReport({
           ) : null}
 
           {reportSnapshot.reportStatus === 'delivered' ? (
-            <p className="mt-3 text-xs text-emerald-700">
-              Delivered reports are locked for customer review.
-            </p>
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-emerald-700">
+                Delivered reports are locked for customer review.
+              </p>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Customer notification</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-[120px_1fr_auto]">
+                  <select
+                    className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs text-emerald-950"
+                    onChange={(event) => setDeliveryChannel(event.target.value as BidDeliveryChannel)}
+                    value={deliveryChannel}
+                  >
+                    <option value="email">Email</option>
+                    <option value="sms">SMS</option>
+                  </select>
+                  <input
+                    className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs text-emerald-950"
+                    onChange={(event) => setDeliveryRecipient(event.target.value)}
+                    placeholder={deliveryChannel === 'email' ? 'customer@example.com' : '+16025550123'}
+                    value={deliveryRecipient}
+                  />
+                  <button
+                    className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+                    disabled={
+                      Boolean(actionStatus)
+                      || !onQueueDeliveryNotification
+                      || !bidDeliveryRecipientIsValid(deliveryChannel, deliveryRecipient)
+                    }
+                    onClick={() =>
+                      void onQueueDeliveryNotification?.(
+                        reportSnapshot.reportId,
+                        deliveryChannel,
+                        deliveryRecipient,
+                      )
+                    }
+                    type="button"
+                  >
+                    Queue delivery
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : null}
         </div>
       ) : null}

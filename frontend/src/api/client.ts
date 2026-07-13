@@ -158,12 +158,30 @@ export interface ApiCompletionReportAction {
   share_url: string | null;
 }
 
+export interface ApiCompletionReportDeliveryNotification {
+  report_id: string;
+  notification_id: string;
+  channel: 'email' | 'sms';
+  recipient: string;
+  delivery_status: string;
+  share_url: string;
+}
+
 export interface CompletionReportAction {
   reportId: string;
   jobId: string;
   reportStatus: CompletionReportStatus;
   persisted: boolean;
   shareUrl: string | null;
+}
+
+export interface CompletionReportDeliveryNotification {
+  reportId: string;
+  notificationId: string;
+  channel: 'email' | 'sms';
+  recipient: string;
+  deliveryStatus: string;
+  shareUrl: string;
 }
 
 function toJob(apiJob: ApiJobSummary): YardCareJob {
@@ -255,6 +273,19 @@ export function toCompletionReportAction(apiAction: ApiCompletionReportAction): 
     reportStatus: apiAction.report_status,
     persisted: apiAction.persisted,
     shareUrl: apiAction.share_url ? toBrowserUrl(apiAction.share_url) : null,
+  };
+}
+
+export function toCompletionReportDeliveryNotification(
+  apiNotification: ApiCompletionReportDeliveryNotification,
+): CompletionReportDeliveryNotification {
+  return {
+    reportId: apiNotification.report_id,
+    notificationId: apiNotification.notification_id,
+    channel: apiNotification.channel,
+    recipient: apiNotification.recipient,
+    deliveryStatus: apiNotification.delivery_status,
+    shareUrl: toBrowserUrl(apiNotification.share_url),
   };
 }
 
@@ -374,6 +405,21 @@ export async function deliverCompletionReport(reportId: string): Promise<Complet
     method: 'POST',
   });
   return toCompletionReportAction(action);
+}
+
+export async function queueCompletionReportDeliveryNotification(
+  reportId: string,
+  channel: 'email' | 'sms',
+  recipient: string,
+): Promise<CompletionReportDeliveryNotification> {
+  const notification = await request<ApiCompletionReportDeliveryNotification>(
+    `/completion-reports/${reportId}/delivery-notifications`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ channel, recipient }),
+    },
+  );
+  return toCompletionReportDeliveryNotification(notification);
 }
 
 export async function startJob(jobId: string): Promise<void> {

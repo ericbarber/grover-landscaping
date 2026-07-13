@@ -10,6 +10,7 @@ import {
   fetchJobAddOns,
   fetchJobs,
   requestCompletionReportChanges,
+  queueCompletionReportDeliveryNotification,
   resubmitCompletionReport,
   startJob,
   startCompletionReportReview,
@@ -437,6 +438,7 @@ function JobDetailPanel({
   onRequestReportChanges,
   onResubmitReport,
   onDeliverReport,
+  onQueueReportDeliveryNotification,
   reportActionStatus,
 }: {
   job: JobDetail | null;
@@ -452,6 +454,11 @@ function JobDetailPanel({
   onRequestReportChanges: (reportId: string, reason: string) => Promise<void>;
   onResubmitReport: (reportId: string) => Promise<void>;
   onDeliverReport: (reportId: string) => Promise<void>;
+  onQueueReportDeliveryNotification: (
+    reportId: string,
+    channel: 'email' | 'sms',
+    recipient: string,
+  ) => Promise<void>;
   reportActionStatus: string | null;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
@@ -616,6 +623,7 @@ function JobDetailPanel({
         onRequestChanges={onRequestReportChanges}
         onResubmit={onResubmitReport}
         onDeliver={onDeliverReport}
+        onQueueDeliveryNotification={onQueueReportDeliveryNotification}
         actionStatus={reportActionStatus}
       />
     </div>
@@ -1072,6 +1080,29 @@ export function App() {
     }
   }
 
+  async function handleQueueReportDeliveryNotification(
+    reportId: string,
+    channel: 'email' | 'sms',
+    recipient: string,
+  ) {
+    setCompletionReportActionStatus('Queueing customer notification...');
+
+    try {
+      const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
+      setStatusMessage(`${notification.reportId} notification queued for ${notification.recipient}.`);
+      setCompletionReportActionStatus(null);
+      recordManagerActivity({
+        title: 'Completion report notification queued',
+        message: `${notification.channel} delivery queued for ${notification.reportId}.`,
+        tone: 'success',
+        source: 'sync',
+      });
+    } catch {
+      setCompletionReportActionStatus(null);
+      setStatusMessage('Could not queue the customer notification. Confirm the report is delivered and the recipient is valid.');
+    }
+  }
+
   async function handlePhotoSelected(file: File, photoType: PhotoType) {
     if (!selectedJobId) {
       return;
@@ -1229,6 +1260,7 @@ export function App() {
           onRequestReportChanges={handleRequestReportChanges}
           onResubmitReport={handleResubmitReport}
           onDeliverReport={handleDeliverReport}
+          onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
           reportActionStatus={completionReportActionStatus}
         />
       </section>
