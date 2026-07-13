@@ -42,6 +42,12 @@ pub struct PhotoStorageTicket {
     pub thumbnail_max_dimension_px: Option<u32>,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PhotoObjectDeletionResult {
+    pub deleted_object_key_count: i64,
+    pub failed_object_keys: Vec<String>,
+}
+
 #[derive(Clone, Debug)]
 pub enum UploadedPhotoInspection {
     Extracted(PhotoUploadMetadata),
@@ -207,6 +213,26 @@ impl PhotoStorageConfig {
             .await
             .unwrap_or(false)
     }
+
+    pub async fn delete_objects(&self, object_keys: &[String]) -> PhotoObjectDeletionResult {
+        if object_keys.is_empty() {
+            return PhotoObjectDeletionResult::default();
+        }
+
+        match self {
+            Self::Local => PhotoObjectDeletionResult {
+                deleted_object_key_count: object_keys.len() as i64,
+                failed_object_keys: Vec::new(),
+            },
+            Self::S3(config) => config
+                .delete_objects(object_keys)
+                .await
+                .unwrap_or_else(|_| PhotoObjectDeletionResult {
+                    deleted_object_key_count: 0,
+                    failed_object_keys: object_keys.to_vec(),
+                }),
+        }
+    }
 }
 
 impl S3PhotoStorageConfig {
@@ -345,6 +371,34 @@ impl S3PhotoStorageConfig {
             .await?;
 
         Ok(put_response.status().is_success())
+    }
+
+    async fn delete_objects(
+        &self,
+        object_keys: &[String],
+    ) -> Result<PhotoObjectDeletionResult, reqwest::Error> {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()?;
+        let mut deleted_object_key_count = 0;
+        let mut failed_object_keys = Vec::new();
+
+        for object_key in object_keys {
+            let response = client
+                .delete(self.presigned_url("DELETE", object_key, self.upload_expires_seconds))
+                .send()
+                .await?;
+            if response.status().is_success() || response.status() == StatusCode::NOT_FOUND {
+                deleted_object_key_count += 1;
+            } else {
+                failed_object_keys.push(object_key.clone());
+            }
+        }
+
+        Ok(PhotoObjectDeletionResult {
+            deleted_object_key_count,
+            failed_object_keys,
+        })
     }
 
     fn presigned_url_at(
@@ -800,6 +854,43 @@ mod tests {
             .starts_with(
                 "https://grover-dev-photos.s3.amazonaws.com/photos/thumbnails/jobs/job_1001/before/a.jpg?"
             ));
+    }
+
+    #[tokio::test]
+    async fn local_object_deletion_treats_placeholders_as_deleted() {
+        let object_keys = vec![
+            "local/jobs/job_1001/before/a.jpg".to_string(),
+            "local/jobs/job_1001/after/b.jpg".to_string(),
+        ];
+
+        let result = PhotoStorageConfig::Local.delete_objects(&object_keys).await;
+
+        assert_eq!(result.deleted_object_key_count, 2);
+        assert!(result.failed_object_keys.is_empty());
+    }
+
+    #[test]
+    fn s3_delete_url_is_presigned_with_delete_method() {
+        let config = S3PhotoStorageConfig {
+            bucket: "grover-dev-photos".to_string(),
+            region: "us-west-2".to_string(),
+            access_key_id: "AKIDEXAMPLE".to_string(),
+            secret_access_key: "secret".to_string(),
+            session_token: None,
+            key_prefix: "photos".to_string(),
+            upload_expires_seconds: 600,
+            display_expires_seconds: 120,
+        };
+
+        let delete_url =
+            config.presigned_url_at("DELETE", "photos/jobs/job_1001/before/a.jpg", 600, 0);
+        let get_url = config.presigned_url_at("GET", "photos/jobs/job_1001/before/a.jpg", 600, 0);
+
+        assert!(delete_url.starts_with(
+            "https://grover-dev-photos.s3.us-west-2.amazonaws.com/photos/jobs/job_1001/before/a.jpg?"
+        ));
+        assert!(delete_url.contains("X-Amz-Expires=600"));
+        assert_ne!(delete_url, get_url);
     }
 
     #[test]

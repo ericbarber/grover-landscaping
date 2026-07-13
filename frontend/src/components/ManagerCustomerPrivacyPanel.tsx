@@ -170,6 +170,9 @@ export function ManagerCustomerPrivacyPanel({
           <p className="mt-1 text-xs">
             Redacted {erasureResult.redactedCompletionReportCount} delivered report snapshot{erasureResult.redactedCompletionReportCount === 1 ? '' : 's'}.
           </p>
+          <p className="mt-1 text-xs">
+            Deleted {erasureResult.deletedObjectKeyCount} object key{erasureResult.deletedObjectKeyCount === 1 ? '' : 's'}; {erasureResult.failedObjectKeyCount} remain pending.
+          </p>
           {erasureResult.objectKeysPendingDeletion.length > 0 ? (
             <div className="mt-3 max-h-32 overflow-auto rounded-lg bg-white p-2">
               {erasureResult.objectKeysPendingDeletion.map((objectKey) => (

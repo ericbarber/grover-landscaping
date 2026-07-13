@@ -220,6 +220,8 @@ pub async fn erase_customer_photo_evidence(
             erased_photo_count: erased_rows.len() as i64,
             affected_job_count: affected_jobs.len() as i64,
             redacted_completion_report_count: report_rows.len() as i64,
+            deleted_object_key_count: 0,
+            failed_object_key_count: object_keys.len() as i64,
             object_keys_pending_deletion: object_keys,
         },
     ))

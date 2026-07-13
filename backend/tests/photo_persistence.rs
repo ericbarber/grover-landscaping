@@ -608,12 +608,11 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     assert!(erasure.erased_photo_count >= 1);
     assert!(erasure.affected_job_count >= 1);
     assert!(
-        erasure
-            .object_keys_pending_deletion
-            .iter()
-            .any(|object_key| object_key == &ticket.object_key),
-        "erasure should return the original object key for object-store deletion"
+        erasure.deleted_object_key_count >= 1,
+        "local placeholder object keys should be treated as deleted"
     );
+    assert_eq!(erasure.failed_object_key_count, 0);
+    assert!(erasure.object_keys_pending_deletion.is_empty());
 
     let visible_photos = repository.list_photo_evidence("job_1001").await;
     assert!(

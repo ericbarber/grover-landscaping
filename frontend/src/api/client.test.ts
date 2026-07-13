@@ -426,14 +426,18 @@ describe('core API client mapping', () => {
       erased_photo_count: 2,
       affected_job_count: 1,
       redacted_completion_report_count: 1,
-      object_keys_pending_deletion: ['photos/job_1001/before.jpg'],
+      deleted_object_key_count: 1,
+      failed_object_key_count: 1,
+      object_keys_pending_deletion: ['photos/job_1001/after.jpg'],
     })).toEqual({
       accountId: 'acct_1001',
       status: 'erased',
       erasedPhotoCount: 2,
       affectedJobCount: 1,
       redactedCompletionReportCount: 1,
-      objectKeysPendingDeletion: ['photos/job_1001/before.jpg'],
+      deletedObjectKeyCount: 1,
+      failedObjectKeyCount: 1,
+      objectKeysPendingDeletion: ['photos/job_1001/after.jpg'],
     });
   });
 

@@ -94,7 +94,7 @@ See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Co
 - Notifications: disabled by default. Webhook mode requires `PUBLIC_APP_URL`, `NOTIFICATION_WEBHOOK_URL`, and optionally `NOTIFICATION_WEBHOOK_BEARER_TOKEN`. Production URLs must use HTTPS. Failed delivery uses exponential backoff and moves to `dead_letter` after the configured attempt limit.
 - Photo processing: disabled by default. Set `PHOTO_PROCESSING_WORKER_MODE=enabled` only when `DATABASE_URL` and `PHOTO_STORAGE_MODE=s3` are configured; queued thumbnail work retries with bounded backoff and moves to `dead_letter` after the configured attempt limit.
 - Photo storage lifecycle: the optional Terraform S3 module blocks public access, enables encryption and versioning, aborts incomplete uploads after one day, archives current photo evidence after 365 days by default, deletes current objects after 2555 days by default, and deletes old object versions after 30 days by default.
-- Privacy actions: managers can use `GET /accounts/{account_id}/privacy-export` to export scoped customer account, job, report, and photo metadata. `POST /accounts/{account_id}/photo-erasure` requires a reason, hides retained photo evidence, redacts delivered report snapshots, audits the action, and returns object keys that must be deleted from object storage.
+- Privacy actions: managers can use `GET /accounts/{account_id}/privacy-export` to export scoped customer account, job, report, and photo metadata. `POST /accounts/{account_id}/photo-erasure` requires a reason, hides retained photo evidence, redacts delivered report snapshots, audits the action, attempts object-store deletion, and returns any object keys that still need follow-up deletion.
 
 Provider references:
 

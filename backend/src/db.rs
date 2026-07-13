@@ -201,6 +201,8 @@ pub struct CustomerPhotoErasureSummary {
     pub erased_photo_count: i64,
     pub affected_job_count: i64,
     pub redacted_completion_report_count: i64,
+    pub deleted_object_key_count: i64,
+    pub failed_object_key_count: i64,
     pub object_keys_pending_deletion: Vec<String>,
 }
 
@@ -878,7 +880,7 @@ impl JobRepository {
             return CustomerPhotoErasureResult::Unavailable;
         };
 
-        postgres_privacy::erase_customer_photo_evidence(
+        let result = postgres_privacy::erase_customer_photo_evidence(
             pool,
             account_id,
             organization_ids,
@@ -886,7 +888,19 @@ impl JobRepository {
             reason,
         )
         .await
-        .unwrap_or(CustomerPhotoErasureResult::Unavailable)
+        .unwrap_or(CustomerPhotoErasureResult::Unavailable);
+
+        let CustomerPhotoErasureResult::Erased(mut summary) = result else {
+            return result;
+        };
+        let deletion = PhotoStorageConfig::from_env()
+            .delete_objects(&summary.object_keys_pending_deletion)
+            .await;
+        summary.deleted_object_key_count = deletion.deleted_object_key_count;
+        summary.failed_object_key_count = deletion.failed_object_keys.len() as i64;
+        summary.object_keys_pending_deletion = deletion.failed_object_keys;
+
+        CustomerPhotoErasureResult::Erased(summary)
     }
 
     #[allow(dead_code)]

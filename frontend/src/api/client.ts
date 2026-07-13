@@ -509,6 +509,8 @@ export interface ApiCustomerPhotoErasureSummary {
   erased_photo_count: number;
   affected_job_count: number;
   redacted_completion_report_count: number;
+  deleted_object_key_count: number;
+  failed_object_key_count: number;
   object_keys_pending_deletion: string[];
 }
 
@@ -518,6 +520,8 @@ export interface CustomerPhotoErasureSummary {
   erasedPhotoCount: number;
   affectedJobCount: number;
   redactedCompletionReportCount: number;
+  deletedObjectKeyCount: number;
+  failedObjectKeyCount: number;
   objectKeysPendingDeletion: string[];
 }
 
@@ -777,6 +781,8 @@ export function toCustomerPhotoErasureSummary(
     erasedPhotoCount: apiSummary.erased_photo_count,
     affectedJobCount: apiSummary.affected_job_count,
     redactedCompletionReportCount: apiSummary.redacted_completion_report_count,
+    deletedObjectKeyCount: apiSummary.deleted_object_key_count,
+    failedObjectKeyCount: apiSummary.failed_object_key_count,
     objectKeysPendingDeletion: apiSummary.object_keys_pending_deletion,
   };
 }

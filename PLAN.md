@@ -348,10 +348,11 @@ Current state:
 - Optional Terraform S3 photo-storage module defines public-access blocks, encryption, versioning, CORS, incomplete upload cleanup, archive transition, current-object expiration, and noncurrent-version deletion
 - Manager privacy APIs export customer account/job/report/photo metadata and erase retained photo evidence with audit records, object-key deletion manifests, and delivered snapshot redaction
 - Frontend manager dashboard surfaces customer privacy export and retained photo erasure controls with object-key deletion manifests
+- Photo erasure attempts object-store deletion immediately and returns only failed object keys for follow-up
 
 Next implementation work:
 
-- Add automated object-store deletion after retained photo evidence erasure
+- Add retry tracking for failed object-store deletions after retained photo evidence erasure
 
 ### Completion reports
 
