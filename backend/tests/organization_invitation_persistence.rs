@@ -44,6 +44,13 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .execute(&pool)
     .await
     .expect("test audit rows should reset");
+    sqlx::query(
+        "DELETE FROM notification_outbox WHERE entity_type = 'organization_invitation' AND recipient = $1",
+    )
+    .bind(invitee_email)
+    .execute(&pool)
+    .await
+    .expect("test invitation notifications should reset");
     sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
         .bind(invitee_email)
         .execute(&pool)
@@ -74,6 +81,24 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
 
     assert!(invitation.persisted);
     assert_eq!(invitation.status, "pending");
+
+    let notification_template = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT template_key
+        FROM notification_outbox
+        WHERE entity_type = 'organization_invitation'
+          AND entity_id = $1
+          AND recipient = $2
+          AND organization_id = $3
+        "#,
+    )
+    .bind(&invitation.id)
+    .bind(invitee_email)
+    .bind(organization_id)
+    .fetch_one(&pool)
+    .await
+    .expect("invitation notification should be queued");
+    assert_eq!(notification_template, "organization_invitation");
 
     let pending_status = sqlx::query_scalar::<_, String>(
         "SELECT status FROM organization_memberships WHERE id = $1",

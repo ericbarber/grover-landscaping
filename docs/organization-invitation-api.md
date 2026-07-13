@@ -57,7 +57,8 @@ Expected behavior:
 
 - Create a pending `organization_memberships` row using the invitee email as the placeholder user id.
 - Create a pending invitation token linked to that membership.
-- Return the invitation token for delivery by a future email/SMS onboarding flow.
+- Queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available.
+- Return the invitation token so local fallback and manual pilot workflows can still proceed if delivery is not configured.
 
 ### Accept invitation
 
@@ -91,5 +92,5 @@ Expected behavior:
 
 - Invite acceptance must not grant access outside the invited organization and scope.
 - Role updates must not create new memberships.
-- Invitations do not send email or SMS yet; they only create auditable onboarding records and return a token.
+- Invitations queue email delivery work, but the configured notification dispatcher/provider is still responsible for sending it.
 - Cognito groups remain coarse application roles. PostgreSQL memberships are the tenant boundary.

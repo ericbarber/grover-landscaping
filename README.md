@@ -146,7 +146,7 @@ Current backend endpoints include:
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
-| POST | `/organizations/{organization_id}/invitations` | Create a pending organization membership invitation |
+| POST | `/organizations/{organization_id}/invitations` | Create a pending organization membership invitation and queue email delivery |
 | POST | `/organization-invitations/{token}/accept` | Accept an invitation into an active organization membership |
 | PUT | `/organizations/{organization_id}/memberships/{membership_id}/role` | Update an organization membership role with audit history |
 | GET | `/accounts/{account_id}/property-portfolios` | List organization-scoped property portfolios for a customer account |
@@ -207,7 +207,7 @@ The project currently includes migrations for:
 - Job completion reports
 - Customer accounts
 - Account status and service tracking foundations
-- Organization invitations and role administration
+- Organization invitations, queued invite delivery, and role administration
 - Crews, day plans, and day-plan stops
 - Day-plan amendment requests and bid-review metadata
 - Project bids and ordered bid line items

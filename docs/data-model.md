@@ -74,7 +74,7 @@ created_at
 updated_at
 ```
 
-Invitations create a pending `organization_memberships` row with status `invited`. Accepting a pending, unexpired token activates that membership for the signed-in user and writes an `invite_accepted` audit event. Organization-owner and support-admin role changes update the membership role and write a `role_changed` audit event. Cognito groups remain coarse application roles; PostgreSQL memberships remain the tenant boundary.
+Invitations create a pending `organization_memberships` row with status `invited` and queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available. Accepting a pending, unexpired token activates that membership for the signed-in user and writes an `invite_accepted` audit event. Organization-owner and support-admin role changes update the membership role and write a `role_changed` audit event. Cognito groups remain coarse application roles; PostgreSQL memberships remain the tenant boundary.
 
 ## property_portfolios and portfolio_property_links
 
@@ -254,7 +254,7 @@ updated_at
 
 Project-bid sends create `queued` email or SMS records in the same transaction as token issuance. Delivered completion reports can also queue customer share-link notifications, with the outbox row inheriting the service job's organization ownership. Revoking a review link marks pending delivery records `skipped` in the same transaction so a worker cannot later deliver a dead link. The in-process dispatcher claims work safely across service instances, retries with bounded backoff, recovers abandoned claims, moves exhausted work to `dead_letter`, and stores provider response codes and message IDs.
 
-Manager notification history reads use this table directly with optional entity-type and status filters and are constrained to the principal's active organization memberships. Failed and dead-letter rows can be explicitly retried within those same organization boundaries, which resets attempt metadata and returns the row to `queued` for the dispatcher. They can also be manually resolved, which marks the row `skipped` with a resolution note so managers can clear work handled outside the provider retry flow.
+Manager notification history reads use this table directly with optional entity-type and status filters and are constrained to the principal's active organization memberships. Supported history entity filters include `project_bid`, `completion_report`, and `organization_invitation`. Failed and dead-letter rows can be explicitly retried within those same organization boundaries, which resets attempt metadata and returns the row to `queued` for the dispatcher. They can also be manually resolved, which marks the row `skipped` with a resolution note so managers can clear work handled outside the provider retry flow.
 
 ## project_bid_conversions and service_job_add_ons
 

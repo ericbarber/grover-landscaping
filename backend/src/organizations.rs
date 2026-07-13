@@ -1,5 +1,6 @@
 use crate::access_control::AccessRole;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
@@ -312,6 +313,36 @@ async fn create_invitation(
     .bind(actor_user_id)
     .bind(&request.expires_at)
     .fetch_optional(&mut *transaction)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id,
+            organization_id,
+            entity_type,
+            entity_id,
+            channel,
+            recipient,
+            template_key,
+            payload
+        )
+        VALUES ($1, $2, 'organization_invitation', $3, 'email', $4, 'organization_invitation', $5)
+        "#,
+    )
+    .bind(format!("notification_{}", Uuid::new_v4().simple()))
+    .bind(organization_id)
+    .bind(&invitation_id)
+    .bind(&request.invitee_email)
+    .bind(json!({
+        "organization_id": organization_id,
+        "invitation_id": invitation_id,
+        "invitee_email": request.invitee_email,
+        "role": role,
+        "token": token,
+        "expires_at": request.expires_at,
+    }))
+    .execute(&mut *transaction)
     .await?;
 
     transaction.commit().await?;

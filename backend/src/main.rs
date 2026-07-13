@@ -1436,9 +1436,13 @@ fn notification_history_filter(
     query: NotificationHistoryQuery,
 ) -> Result<NotificationHistoryFilter, String> {
     if let Some(entity_type) = query.entity_type.as_deref() {
-        if !matches!(entity_type, "project_bid" | "completion_report") {
+        if !matches!(
+            entity_type,
+            "project_bid" | "completion_report" | "organization_invitation"
+        ) {
             return Err(
-                "entity_type must be project_bid or completion_report when provided".to_string(),
+                "entity_type must be project_bid, completion_report, or organization_invitation when provided"
+                    .to_string(),
             );
         }
     }
@@ -3936,7 +3940,9 @@ mod tests {
         let response = seed_app()
             .oneshot(
                 Request::builder()
-                    .uri("/notifications?entity_type=completion_report&status=queued&limit=10")
+                    .uri(
+                        "/notifications?entity_type=organization_invitation&status=queued&limit=10",
+                    )
                     .body(Body::empty())
                     .unwrap(),
             )
