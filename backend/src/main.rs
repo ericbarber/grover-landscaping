@@ -45,6 +45,10 @@ use grover_landscaping_api::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
         PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
     },
+    property_onboarding::{
+        validate_property_onboarding_request, PropertyOnboardingRepository,
+        UpsertPropertyOnboardingRequest,
+    },
     property_portfolio_requests::{
         is_valid_add_property_to_portfolio_request, is_valid_create_property_portfolio_request,
         AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
@@ -87,6 +91,7 @@ struct AppState {
     notifications: NotificationOutboxRepository,
     property_portfolios: PropertyPortfolioRepository,
     property_crew_assignments: PropertyCrewAssignmentRepository,
+    property_onboarding: PropertyOnboardingRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -280,6 +285,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         notifications,
         property_portfolios,
         property_crew_assignments,
+        property_onboarding,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -293,7 +299,9 @@ async fn app_from_env() -> Result<Router, DynError> {
             let organizations = OrganizationRepository::from_pool(pool.clone());
             let notifications = NotificationOutboxRepository::from_pool(pool.clone());
             let property_portfolios = PropertyPortfolioRepository::from_pool(pool.clone());
-            let property_crew_assignments = PropertyCrewAssignmentRepository::from_pool(pool);
+            let property_crew_assignments =
+                PropertyCrewAssignmentRepository::from_pool(pool.clone());
+            let property_onboarding = PropertyOnboardingRepository::from_pool(pool);
             (
                 jobs,
                 day_plans,
@@ -302,6 +310,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 notifications,
                 property_portfolios,
                 property_crew_assignments,
+                property_onboarding,
                 "postgres",
             )
         }
@@ -318,6 +327,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             NotificationOutboxRepository::default(),
             PropertyPortfolioRepository::default(),
             PropertyCrewAssignmentRepository::default(),
+            PropertyOnboardingRepository::default(),
             "seed-local",
         ),
     };
@@ -352,6 +362,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             notifications,
             property_portfolios,
             property_crew_assignments,
+            property_onboarding,
         }),
         persistence,
         persistence == "postgres",
@@ -443,6 +454,10 @@ fn app_with_runtime(
         .route(
             "/properties/{property_id}/crew-assignments",
             get(list_property_crew_assignments).post(assign_property_crew),
+        )
+        .route(
+            "/properties/{property_id}/onboarding",
+            get(get_property_onboarding).put(upsert_property_onboarding),
         )
         .route(
             "/crews/{crew_id}/property-assignments/active",
@@ -931,6 +946,77 @@ async fn list_active_crew_property_assignments(
         .await;
 
     Json(assignments).into_response()
+}
+
+async fn get_property_onboarding(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_view_customer_property_portfolios,
+    )
+    .await;
+    let Some(profile) = state
+        .property_onboarding
+        .get(&property_id, &organization_ids)
+        .await
+    else {
+        return resource_not_found_response(
+            "property_onboarding_not_found",
+            "The requested property onboarding profile was not found.",
+        );
+    };
+
+    Json(profile).into_response()
+}
+
+async fn upsert_property_onboarding(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+    Json(request): Json<UpsertPropertyOnboardingRequest>,
+) -> Response {
+    if let Err(reason) = validate_property_onboarding_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_property_onboarding",
+                message: format!("Property onboarding payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_property_portfolios,
+    )
+    .await
+    {
+        return response;
+    }
+
+    let Some(profile) = state
+        .property_onboarding
+        .upsert(&property_id, request)
+        .await
+    else {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "property_onboarding_not_saved",
+                message: "The property onboarding profile could not be saved.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    (StatusCode::CREATED, Json(profile)).into_response()
 }
 
 async fn get_completion_report(
@@ -2501,6 +2587,7 @@ mod tests {
             notifications: NotificationOutboxRepository::default(),
             property_portfolios: PropertyPortfolioRepository::default(),
             property_crew_assignments: PropertyCrewAssignmentRepository::default(),
+            property_onboarding: PropertyOnboardingRepository::default(),
         })
     }
 
@@ -3045,6 +3132,128 @@ mod tests {
         assert_eq!(json.as_array().unwrap().len(), 1);
         assert_eq!(json[0]["property_id"], "property_1001");
         assert_eq!(json[0]["active"], true);
+    }
+
+    #[tokio::test]
+    async fn property_onboarding_endpoint_returns_seed_profile() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/properties/property_1001/onboarding")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["account_id"], "acct_1001");
+        assert_eq!(json["service_address"], "123 Oak Street");
+        assert_eq!(json["onboarding_status"], "active");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn property_onboarding_endpoint_returns_local_saved_profile() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_demo_landscaping",
+            "service_address": "123 Oak Street",
+            "access_notes": "Use side gate.",
+            "billing_contact_name": "Sample Customer",
+            "billing_contact_email": "billing@example.com",
+            "notification_contact_name": "Sample Customer",
+            "notification_email": "notify@example.com",
+            "notification_phone": "+16025550123",
+            "onboarding_status": "active"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/properties/property_1001/onboarding")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["billing_contact_email"], "billing@example.com");
+        assert_eq!(json["notification_phone"], "+16025550123");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn property_onboarding_endpoint_rejects_invalid_payloads() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_demo_landscaping",
+            "service_address": " ",
+            "access_notes": "Use side gate.",
+            "billing_contact_name": "Sample Customer",
+            "billing_contact_email": "billing@example.com",
+            "notification_contact_name": "Sample Customer",
+            "notification_email": "notify@example.com",
+            "notification_phone": "+16025550123",
+            "onboarding_status": "active"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/properties/property_1001/onboarding")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn property_onboarding_endpoint_rejects_other_organizations() {
+        let request_body = serde_json::json!({
+            "account_id": "acct_1001",
+            "organization_id": "org_other",
+            "service_address": "123 Oak Street",
+            "access_notes": "Use side gate.",
+            "billing_contact_name": "Sample Customer",
+            "billing_contact_email": "billing@example.com",
+            "notification_contact_name": "Sample Customer",
+            "notification_email": "notify@example.com",
+            "notification_phone": "+16025550123",
+            "onboarding_status": "active"
+        });
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/properties/property_1001/onboarding")
+                    .header("content-type", "application/json")
+                    .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::FORBIDDEN);
     }
 
     #[tokio::test]

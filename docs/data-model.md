@@ -86,6 +86,28 @@ created_at
 
 Assigning a crew to a property ends the current active assignment for that property and service organization, then creates a new active assignment. Assignment APIs require active organization membership, verify that the crew belongs to the requested service organization, and do not change customer ownership, property ownership, portfolio grouping, or job completion history.
 
+## property_onboarding_profiles
+
+Implemented property onboarding fields:
+
+```text
+property_id
+account_id
+organization_id
+service_address
+access_notes
+billing_contact_name
+billing_contact_email
+notification_contact_name
+notification_email
+notification_phone
+onboarding_status
+created_at
+updated_at
+```
+
+Property onboarding profiles are keyed by `property_id` and `organization_id`. Save operations validate service address, access note length, billing contact email, at least one customer notification destination, E.164 SMS formatting when a phone is provided, and supported onboarding statuses. These profiles capture scheduling readiness details without changing customer ownership, portfolio grouping, crew assignment history, or job state.
+
 ## job_photos
 
 Suggested fields:

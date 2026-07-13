@@ -152,6 +152,8 @@ Current backend endpoints include:
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |
 | POST | `/properties/{property_id}/crew-assignments` | Assign a crew to service a property without changing ownership or portfolio grouping |
+| GET | `/properties/{property_id}/onboarding` | Read property onboarding details for service address, access, billing, and notification readiness |
+| PUT | `/properties/{property_id}/onboarding` | Save validated property onboarding details without changing portfolio grouping or crew assignment |
 | GET | `/crews/{crew_id}/property-assignments/active` | List active property assignments for a crew |
 | GET | `/jobs/{id}/report` | Read completion report readiness, account state, and photo evidence |
 | GET | `/completion-reports` | List organization-scoped completion report snapshots for manager review; accepts optional `status`, `readiness`, `readiness_blocker`, `crew_id`, `customer`, `property`, `scheduled_from`, and `scheduled_to` filters |
@@ -190,7 +192,7 @@ Current backend endpoints include:
 | GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
 | POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
 
-The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, customer property portfolio, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
+The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, portfolio, customer property portfolio, property onboarding, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 
 ## Data and Persistence
 
@@ -209,6 +211,7 @@ The project currently includes migrations for:
 - Property portfolios and portfolio-to-property membership
 - Customer-scoped portfolio/property read model with grouped and ungrouped yards
 - Property-to-crew service assignment history
+- Property onboarding profiles for address, access, billing, and notification readiness
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Route-planning seed data
 

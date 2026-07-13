@@ -467,6 +467,11 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return (*method == Method::GET || *method == Method::POST) && can_manage_assignments;
     }
 
+    if path.starts_with("/properties/") && path.ends_with("/onboarding") {
+        return (*method == Method::GET && can_view_customer_portfolios)
+            || (*method == Method::PUT && can_manage_portfolios);
+    }
+
     if path.starts_with("/crews/") && path.ends_with("/property-assignments/active") {
         return *method == Method::GET && can_manage_assignments;
     }
@@ -862,6 +867,37 @@ mod tests {
         assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::POST,
+            path
+        ));
+    }
+
+    #[test]
+    fn property_onboarding_reads_and_writes_are_role_scoped() {
+        let path = "/properties/property_1001/onboarding";
+
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::GET,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyManager),
+            &Method::PUT,
+            path
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::PUT,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::PUT,
+            path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::GET,
             path
         ));
     }
