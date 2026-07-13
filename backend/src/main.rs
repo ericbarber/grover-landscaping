@@ -5,6 +5,7 @@ mod completion_reports;
 mod day_plans;
 mod db;
 mod notifications;
+mod photo_processing;
 mod photo_storage;
 mod project_bids;
 mod stop_progress;
@@ -64,6 +65,7 @@ use notifications::{
     NotificationHistoryFilter, NotificationOutboxRepository, NotificationResolveResult,
     NotificationRetryResult,
 };
+use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig};
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
@@ -296,7 +298,8 @@ async fn main() -> Result<(), DynError> {
 async fn app_from_env() -> Result<Router, DynError> {
     let app_environment = std::env::var("APP_ENV").unwrap_or_else(|_| "local".to_string());
     let production = app_environment.eq_ignore_ascii_case("production");
-    photo_storage::PhotoStorageConfig::try_from_env().map_err(configuration_error)?;
+    let photo_storage_config =
+        photo_storage::PhotoStorageConfig::try_from_env().map_err(configuration_error)?;
 
     let (
         jobs,
@@ -356,6 +359,10 @@ async fn app_from_env() -> Result<Router, DynError> {
     let notification_config =
         NotificationDispatcherConfig::from_env(production).map_err(configuration_error)?;
     start_notification_dispatcher(notifications.clone(), notification_config)
+        .map_err(configuration_error)?;
+    let photo_processing_config =
+        PhotoProcessingWorkerConfig::from_env().map_err(configuration_error)?;
+    start_photo_processing_worker(jobs.clone(), photo_storage_config, photo_processing_config)
         .map_err(configuration_error)?;
 
     let auth = AuthService::from_env(production).await?;

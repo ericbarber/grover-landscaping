@@ -7,6 +7,7 @@ pub mod day_plans;
 pub mod db;
 pub mod notifications;
 pub mod organizations;
+pub mod photo_processing;
 pub mod photo_storage;
 pub mod project_bids;
 pub mod property_crew_assignments;

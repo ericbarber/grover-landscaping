@@ -92,6 +92,7 @@ See [Hosted Pilot Runbook](hosted-pilot-runbook.md) for first-owner creation, Co
 - Identity configuration: manage user pools and app clients through Terraform; Cognito client IDs and issuer URLs are identifiers, not secrets.
 - Health: use `/health/live` for process liveness and `/health/ready` for database readiness.
 - Notifications: disabled by default. Webhook mode requires `PUBLIC_APP_URL`, `NOTIFICATION_WEBHOOK_URL`, and optionally `NOTIFICATION_WEBHOOK_BEARER_TOKEN`. Production URLs must use HTTPS. Failed delivery uses exponential backoff and moves to `dead_letter` after the configured attempt limit.
+- Photo processing: disabled by default. Set `PHOTO_PROCESSING_WORKER_MODE=enabled` only when `DATABASE_URL` and `PHOTO_STORAGE_MODE=s3` are configured; queued thumbnail work retries with bounded backoff and moves to `dead_letter` after the configured attempt limit.
 
 Provider references:
 

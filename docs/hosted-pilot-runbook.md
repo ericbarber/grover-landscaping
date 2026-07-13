@@ -147,6 +147,16 @@ bash scripts/validate-notification-webhook.sh
 
 Only add `VALIDATE_NOTIFICATION_WEBHOOK_DELIVERY=1` with `NOTIFICATION_WEBHOOK_SMOKE_CHANNEL` and `NOTIFICATION_WEBHOOK_SMOKE_RECIPIENT` when an internal recipient is ready to receive a real provider test message.
 
+Enable queued photo thumbnail retries only after S3 photo storage is configured for the API:
+
+```bash
+PHOTO_STORAGE_MODE=s3 \
+PHOTO_PROCESSING_WORKER_MODE=enabled \
+PHOTO_PROCESSING_POLL_SECONDS=10 \
+PHOTO_PROCESSING_BATCH_SIZE=5 \
+PHOTO_PROCESSING_MAX_ATTEMPTS=5
+```
+
 ## Rollback Notes
 
 - If Cognito values are wrong in Render, fix the environment variables and redeploy; do not switch production to disabled auth.

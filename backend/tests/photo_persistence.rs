@@ -1,4 +1,7 @@
-use grover_landscaping_api::{db::JobRepository, PhotoUploadMetadata, PhotoUploadRequest};
+use grover_landscaping_api::{
+    db::JobRepository, photo_processing::process_photo_processing_once,
+    photo_storage::PhotoStorageConfig, PhotoUploadMetadata, PhotoUploadRequest,
+};
 use sqlx::Row;
 mod common;
 
@@ -319,4 +322,79 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
         .claim_photo_processing_batch(10, 3)
         .await
         .is_empty());
+}
+
+#[tokio::test]
+async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+
+    let ticket = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "worker-thumbnail.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "after".to_string(),
+            },
+        )
+        .await;
+    let pool = repository
+        .pool()
+        .expect("photo worker test should have a PostgreSQL pool");
+    sqlx::query(
+        r#"
+        UPDATE job_photos
+        SET upload_mode = 's3-presigned',
+            thumbnail_object_key = $2
+        WHERE id = $1
+        "#,
+    )
+    .bind(&ticket.photo_id)
+    .bind("jobs/job_1001/photos/thumbnails/worker-thumbnail.jpg")
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let queued = repository
+        .queue_photo_processing_retry(
+            "job_1001",
+            &ticket.photo_id,
+            "thumbnail_generation",
+            "thumbnail_generation_unavailable",
+        )
+        .await
+        .expect("thumbnail processing job should be queued");
+
+    let processed =
+        process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await;
+    assert_eq!(processed, 1);
+
+    let row = sqlx::query(
+        r#"
+        SELECT status, attempt_count, last_error
+        FROM photo_processing_jobs
+        WHERE id = $1
+        "#,
+    )
+    .bind(&queued.id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert_eq!(row.get::<String, _>("status"), "dead_letter");
+    assert_eq!(row.get::<i32, _>("attempt_count"), 1);
+    assert_eq!(
+        row.get::<String, _>("last_error"),
+        "thumbnail_generation_failed"
+    );
+    assert_eq!(
+        process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
+        0
+    );
 }

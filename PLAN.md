@@ -341,10 +341,11 @@ Current state:
 - Photo upload-ticket requests reject blank file names, unsupported photo categories, and non-image content types before storage rows are created
 - Rejected photo uploads persist rejection reason/timestamp metadata and remain quarantined from photo evidence reads
 - Upload completion enqueues durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
+- Optional background photo-processing worker claims queued thumbnail jobs, retries failures, and dead-letters exhausted work
 
 Next implementation work:
 
-- Run a background image-processing worker that claims queued thumbnail jobs and records retry/dead-letter outcomes
+- Add manager visibility and recovery actions for failed or dead-letter photo processing jobs
 
 ### Completion reports
 

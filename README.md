@@ -17,6 +17,7 @@ The project is built as a Rust + React application with local-first and remote-f
 - Server-defined thumbnail normalization policy for S3-backed photo uploads
 - Server-side thumbnail generation attempt for S3-backed uploaded photo evidence
 - Durable photo-processing retry queue for thumbnail work that cannot finish during upload completion
+- Configurable background photo-processing worker for queued thumbnail retries
 - Rejected photo evidence quarantine for invalid uploaded image objects
 - Completion checklist and completion report panel
 - Backend completion report endpoint with account and photo evidence
@@ -226,6 +227,7 @@ The project currently includes migrations for:
 - Property onboarding profiles for address, access, billing, and notification readiness
 - Access audit records for login access summaries, account views, report approval and delivery, bid decisions and conversions, notification recovery, role administration, invitations, portfolio grouping, and crew assignment changes
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
+- Organization-scoped photo-processing job records for queued thumbnail retry work
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
