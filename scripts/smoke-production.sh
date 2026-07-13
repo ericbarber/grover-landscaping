@@ -94,6 +94,32 @@ case "${photo_ticket}" in
     exit 1
     ;;
 esac
+photo_id=$(printf '%s' "${photo_ticket}" | sed -n 's/.*"photo_id":"\([^"]*\)".*/\1/p')
+if [[ -z "${photo_id}" ]]; then
+  echo "Could not read photo_id from photo upload ticket response: ${photo_ticket}" >&2
+  exit 1
+fi
+
+photo_complete=$(authenticated_json_post \
+  "/jobs/${job_id}/photos/complete" \
+  "{\"photo_id\":\"${photo_id}\",\"file_size_bytes\":4096,\"image_width_px\":1600,\"image_height_px\":900}")
+case "${photo_complete}" in
+  *'"status":"accepted"'*) ;;
+  *)
+    echo "Unexpected photo completion response: ${photo_complete}" >&2
+    exit 1
+    ;;
+esac
+
+authenticated_get "/jobs/${job_id}/photos" >/dev/null
+photo_processing_history=$(authenticated_get "/photo-processing-jobs?task_type=thumbnail_generation&limit=10")
+case "${photo_processing_history}" in
+  \[*\]) ;;
+  *)
+    echo "Unexpected photo processing history response: ${photo_processing_history}" >&2
+    exit 1
+    ;;
+esac
 
 curl \
   --fail \

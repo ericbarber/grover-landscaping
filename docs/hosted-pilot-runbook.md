@@ -133,7 +133,7 @@ SMOKE_PROPERTY_ID=property_1001 \
 bash scripts/smoke-production.sh
 ```
 
-The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
+The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/photo-processing/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
 
 Before enabling provider-backed delivery, validate the webhook gateway configuration:
 

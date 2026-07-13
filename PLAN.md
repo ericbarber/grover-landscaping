@@ -344,10 +344,11 @@ Current state:
 - Optional background photo-processing worker claims queued thumbnail jobs, retries failures, and dead-letters exhausted work
 - Manager APIs list organization-scoped photo processing history and retry or resolve failed/dead-letter thumbnail jobs with audit events
 - Frontend manager dashboard surfaces photo processing recovery history and can retry or resolve failed/dead-letter thumbnail jobs
+- Production smoke script covers photo upload-ticket creation, upload completion metadata, evidence listing, and photo-processing recovery history
 
 Next implementation work:
 
-- Add production smoke coverage for photo upload completion and photo processing recovery
+- Add object lifecycle policies for photo evidence retention, archival, and deletion rules
 
 ### Completion reports
 

@@ -64,7 +64,7 @@ The smoke test verifies:
 - Cognito runtime auth configuration
 - Rejection of unauthenticated API requests
 - Cognito-authenticated access summary and job list reads
-- Authenticated route, report, photo upload-ticket, customer portfolio, customer bid-history, and customer report-history access
+- Authenticated route, report, photo upload-ticket/completion, photo-processing recovery, customer portfolio, customer bid-history, and customer report-history access
 - Public frontend delivery for the managed-login entry point
 
 Override the `SMOKE_*` IDs when the pilot data set no longer uses the seeded demo job, day plan, account, or property identifiers.
