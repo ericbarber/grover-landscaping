@@ -48,6 +48,7 @@ import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPane
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
+import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnboardingPanel';
 import {
@@ -816,6 +817,7 @@ export function App() {
   const [customerPrivacyExport, setCustomerPrivacyExport] = useState<CustomerPrivacyExport | null>(null);
   const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
   const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
+  const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
@@ -1749,7 +1751,8 @@ export function App() {
       <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
         <div>
           <FirstOwnerOnboardingPanel
-            onOrganizationReady={(organizationName) => {
+            onOrganizationReady={(organizationName, organizationId) => {
+              setActiveManagerOrganizationId(organizationId);
               setStatusMessage(`${organizationName} owner setup completed.`);
               recordManagerActivity({
                 title: 'Organization owner setup completed',
@@ -1795,6 +1798,9 @@ export function App() {
                 });
               }}
             />
+          </div>
+          <div className="mt-6">
+            <ManagerCustomerAccountOnboardingPanel organizationId={activeManagerOrganizationId} />
           </div>
           <div className="mt-6">
             <CustomerPortalPreviewPanel

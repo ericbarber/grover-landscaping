@@ -371,6 +371,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/organizations/")
         || path.starts_with("/organization-invitations/")
         || path.starts_with("/accounts/")
+        || path == "/customer-accounts"
         || path == "/completion-reports"
         || path.starts_with("/completion-reports/")
         || path == "/notifications"
@@ -497,6 +498,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     if path.starts_with("/accounts/") && path.ends_with("/property-portfolios") {
         return *method == Method::GET && can_manage_portfolios;
+    }
+
+    if path == "/customer-accounts" {
+        return (*method == Method::GET || *method == Method::POST) && can_manage_portfolios;
     }
 
     if path.starts_with("/accounts/") && path.ends_with("/customer-property-portfolio") {

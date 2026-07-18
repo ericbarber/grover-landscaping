@@ -10,7 +10,9 @@ mod photo_storage;
 mod project_bids;
 mod stop_progress;
 
-use accounts::AccountRepository;
+use accounts::{
+    validate_create_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
+};
 use axum::{
     extract::{Extension, Path, Query, State},
     http::{
@@ -340,6 +342,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         property_portfolios,
         property_crew_assignments,
         property_onboarding,
+        accounts,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -356,6 +359,10 @@ async fn app_from_env() -> Result<Router, DynError> {
             let property_crew_assignments =
                 PropertyCrewAssignmentRepository::from_pool(pool.clone());
             let property_onboarding = PropertyOnboardingRepository::from_pool(pool);
+            let accounts = AccountRepository::from_pool(
+                jobs.pool()
+                    .expect("connected jobs repository should expose a pool"),
+            );
             (
                 jobs,
                 day_plans,
@@ -365,6 +372,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 property_portfolios,
                 property_crew_assignments,
                 property_onboarding,
+                accounts,
                 "postgres",
             )
         }
@@ -382,6 +390,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             PropertyPortfolioRepository::default(),
             PropertyCrewAssignmentRepository::default(),
             PropertyOnboardingRepository::default(),
+            AccountRepository::new(),
             "seed-local",
         ),
     };
@@ -413,7 +422,7 @@ async fn app_from_env() -> Result<Router, DynError> {
     Ok(app_with_runtime(
         Arc::new(AppState {
             jobs,
-            accounts: AccountRepository::new(),
+            accounts,
             day_plans,
             project_bids,
             organizations,
@@ -473,6 +482,10 @@ fn app_with_runtime(
             }),
         )
         .route("/me/access", get(get_my_access))
+        .route(
+            "/customer-accounts",
+            get(list_customer_accounts).post(create_customer_account),
+        )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
             "/health/ready",
@@ -887,6 +900,57 @@ async fn bootstrap_organization(
             Json(ErrorResponse {
                 error: "organization_bootstrap_unavailable",
                 message: "Organization bootstrap requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn list_customer_accounts(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    Json(state.accounts.list(&organization_ids).await).into_response()
+}
+
+async fn create_customer_account(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateCustomerAccountRequest>,
+) -> Response {
+    if let Err(reason) = validate_create_customer_account_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_customer_account",
+                message: format!("Customer account payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_property_portfolios,
+    )
+    .await
+    {
+        return response;
+    }
+    match state.accounts.create(request).await {
+        Some(account) => (StatusCode::CREATED, Json(account)).into_response(),
+        None => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_account_not_created",
+                message: "The customer account could not be created.".to_string(),
             }),
         )
             .into_response(),

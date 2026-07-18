@@ -6,7 +6,7 @@ import {
 } from '../api/client';
 
 type Props = {
-  onOrganizationReady?: (organizationName: string) => void;
+  onOrganizationReady?: (organizationName: string, organizationId: string) => void;
 };
 
 export function firstOwnerSetupSteps(access: PrincipalAccessSummary): string[] {
@@ -55,7 +55,7 @@ export function FirstOwnerOnboardingPanel({ onOrganizationReady }: Props) {
     try {
       const result = await bootstrapOrganization(displayName, organizationType);
       setMessage(`${result.displayName} is ready. You are the organization owner.`);
-      onOrganizationReady?.(result.displayName);
+      onOrganizationReady?.(result.displayName, result.organizationId);
       setAccess(await fetchPrincipalAccessSummary());
     } catch {
       setMessage('The organization could not be created. Confirm owner access and database availability.');

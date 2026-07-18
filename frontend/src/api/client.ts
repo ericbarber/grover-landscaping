@@ -469,6 +469,19 @@ export interface BootstrapOrganizationResponse {
   persisted: boolean;
 }
 
+export interface CustomerAccountRecord {
+  accountId: string;
+  organizationId: string;
+  customerName: string;
+  billingModel: 'per_job' | 'monthly_plan' | 'prepaid_package' | 'manual_account';
+  paymentStatus: 'not_required' | 'pending' | 'paid' | 'past_due' | 'waived' | 'manager_review';
+  serviceApprovalStatus: 'approved' | 'blocked' | 'manager_review';
+  contractedServicesPerPeriod: number;
+  completedServicesThisPeriod: number;
+  billingNotes: string;
+  persisted: boolean;
+}
+
 export interface ApiPropertyOnboardingProfile {
   property_id: string;
   account_id: string;
@@ -1301,6 +1314,51 @@ export async function bootstrapOrganization(
     membership: toOrganizationMembership(response.membership),
     persisted: response.persisted,
   };
+}
+
+function toCustomerAccountRecord(item: {
+  account_id: string; organization_id: string; customer_name: string;
+  billing_model: CustomerAccountRecord['billingModel'];
+  payment_status: CustomerAccountRecord['paymentStatus'];
+  service_approval_status: CustomerAccountRecord['serviceApprovalStatus'];
+  contracted_services_per_period: number; completed_services_this_period: number;
+  billing_notes: string; persisted: boolean;
+}): CustomerAccountRecord {
+  return {
+    accountId: item.account_id,
+    organizationId: item.organization_id,
+    customerName: item.customer_name,
+    billingModel: item.billing_model,
+    paymentStatus: item.payment_status,
+    serviceApprovalStatus: item.service_approval_status,
+    contractedServicesPerPeriod: item.contracted_services_per_period,
+    completedServicesThisPeriod: item.completed_services_this_period,
+    billingNotes: item.billing_notes,
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchCustomerAccounts(): Promise<CustomerAccountRecord[]> {
+  const items = await request<Parameters<typeof toCustomerAccountRecord>[0][]>('/customer-accounts');
+  return items.map(toCustomerAccountRecord);
+}
+
+export async function createCustomerAccount(
+  input: Omit<CustomerAccountRecord, 'accountId' | 'completedServicesThisPeriod' | 'persisted'>,
+): Promise<CustomerAccountRecord> {
+  const item = await request<Parameters<typeof toCustomerAccountRecord>[0]>('/customer-accounts', {
+    method: 'POST',
+    body: JSON.stringify({
+      organization_id: input.organizationId,
+      customer_name: input.customerName,
+      billing_model: input.billingModel,
+      payment_status: input.paymentStatus,
+      service_approval_status: input.serviceApprovalStatus,
+      contracted_services_per_period: input.contractedServicesPerPeriod,
+      billing_notes: input.billingNotes || null,
+    }),
+  });
+  return toCustomerAccountRecord(item);
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

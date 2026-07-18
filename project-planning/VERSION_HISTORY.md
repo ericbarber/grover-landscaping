@@ -20,6 +20,8 @@ Current continuation work:
   through the persisted API with explicit local-fallback feedback.
 - First-owner onboarding can bootstrap a persisted organization and owner membership
   from the signed-in Cognito subject, then presents the first-route setup sequence.
+- Customer-account onboarding can create and list organization-scoped accounts,
+  with explicit organization relationships and manager-visible billing state.
 
 ## 2026-07-17 — Photo Erasure Recovery
 
