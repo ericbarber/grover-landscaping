@@ -151,6 +151,17 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             .await,
         Err(CustomerPropertyStatusError::NotReady)
     );
+    let initial_readiness = accounts
+        .property_activation_readiness(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+        )
+        .await
+        .expect("tenant member should read activation readiness");
+    assert!(!initial_readiness.profile_ready);
+    assert!(!initial_readiness.crew_ready);
+    assert!(!initial_readiness.ready);
     sqlx::query(
         r#"INSERT INTO property_onboarding_profiles (
             property_id, account_id, organization_id, service_address,
@@ -181,6 +192,17 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("active property should accept a crew assignment");
     assert!(assignment.active);
+    let ready = accounts
+        .property_activation_readiness(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+        )
+        .await
+        .expect("tenant member should read completed activation readiness");
+    assert!(ready.profile_ready);
+    assert!(ready.crew_ready);
+    assert!(ready.ready);
 
     let activated = accounts
         .update_property_status(

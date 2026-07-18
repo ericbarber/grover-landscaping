@@ -44,6 +44,13 @@ operational onboarding profile and an active crew assignment. A failed readiness
 check returns `409 customer_property_not_ready`. Successful first activation
 records a `property_activated` audit event.
 
+### `GET /customer-accounts/{account_id}/properties/{property_id}/activation-readiness`
+
+Returns tenant-scoped `profile_ready`, `crew_ready`, and combined `ready`
+booleans without exposing onboarding contact details or crew-assignment history.
+This allows property managers to review activation prerequisites even when their
+role cannot manage crews.
+
 ### `PUT /customer-accounts/{account_id}/properties/{property_id}/identity`
 
 Updates the display name and service address within the caller's active

@@ -193,6 +193,7 @@ Current backend endpoints include:
 | POST | `/customer-accounts/{account_id}/properties` | Create an onboarding property for a tenant-scoped customer account |
 | PUT | `/customer-accounts/{account_id}/properties/{property_id}` | Archive or reactivate a tenant-scoped customer property |
 | PUT | `/customer-accounts/{account_id}/properties/{property_id}/identity` | Update a tenant-scoped property name and service address |
+| GET | `/customer-accounts/{account_id}/properties/{property_id}/activation-readiness` | Check operational-profile and crew prerequisites for property activation |
 | POST | `/property-portfolios` | Create a property portfolio for a customer account |
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |

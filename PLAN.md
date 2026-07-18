@@ -208,6 +208,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Database uniqueness prevents duplicate property identities while permitting distinct service areas at one address
 - First activation requires an active operational profile and crew assignment
 - Mobile lifecycle guidance distinguishes activation, archival, and reactivation
+- Tenant-scoped activation readiness exposes safe profile and crew prerequisite booleans
+- Mobile property setup shows activation prerequisites before enabling activation
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -450,7 +452,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Surface property activation readiness as a checklist before the manager attempts activation
+- Add account-level onboarding progress across customer details, properties, and service readiness
 
 ## Planned
 

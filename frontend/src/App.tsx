@@ -849,6 +849,7 @@ export function App() {
   const [hasCustomerProjectBidHistoryError, setHasCustomerProjectBidHistoryError] = useState(false);
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
+  const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
   );
@@ -1879,6 +1880,7 @@ export function App() {
             <ManagerPropertyOnboardingPanel
               properties={managerPropertyOnboardingOptions}
               onSaved={(profile) => {
+                setPropertyOnboardingRefreshSignal((current) => current + 1);
                 setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
                 recordManagerActivity({
                   title: 'Property onboarding saved',
@@ -1892,6 +1894,7 @@ export function App() {
           <div className="mt-6">
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
+              onboardingRefreshSignal={propertyOnboardingRefreshSignal}
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
           </div>

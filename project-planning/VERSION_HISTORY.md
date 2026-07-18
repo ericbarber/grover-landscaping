@@ -58,6 +58,8 @@ Current continuation work:
   case-insensitive duplicate identity constraint.
 - Guarded first property activation on an active operational profile plus crew
   assignment, with distinct activation and reactivation audit events.
+- Added a role-safe activation readiness endpoint and mobile checklist for
+  operational-profile and crew prerequisites.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

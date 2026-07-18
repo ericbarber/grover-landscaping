@@ -94,6 +94,15 @@ pub struct CustomerPropertyRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyActivationReadiness {
+    pub property_id: String,
+    pub profile_ready: bool,
+    pub crew_ready: bool,
+    pub ready: bool,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct AccountRepository {
     pool: Option<PgPool>,
@@ -226,6 +235,21 @@ impl AccountRepository {
             actor_user_id,
         )
         .await
+    }
+
+    pub async fn property_activation_readiness(
+        &self,
+        account_id: &str,
+        property_id: &str,
+        organization_ids: &[String],
+    ) -> Option<CustomerPropertyActivationReadiness> {
+        let Some(pool) = &self.pool else {
+            return local_property_activation_readiness(account_id, property_id, organization_ids);
+        };
+        property_activation_readiness(pool, account_id, property_id, organization_ids)
+            .await
+            .ok()
+            .flatten()
     }
 
     pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummary {
@@ -661,6 +685,54 @@ async fn update_property_identity(
     Ok(Some(record))
 }
 
+async fn property_activation_readiness(
+    pool: &PgPool,
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+) -> Result<Option<CustomerPropertyActivationReadiness>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"SELECT
+            property.id AS property_id,
+            EXISTS (
+                SELECT 1 FROM property_onboarding_profiles profile
+                WHERE profile.property_id = property.id
+                  AND profile.organization_id = property.organization_id
+                  AND profile.onboarding_status = 'active'
+            ) AS profile_ready,
+            EXISTS (
+                SELECT 1 FROM property_crew_assignments assignment
+                WHERE assignment.property_id = property.id
+                  AND assignment.organization_id = property.organization_id
+                  AND assignment.active
+            ) AS crew_ready
+        FROM customer_properties property
+        JOIN organization_customer_accounts relation
+          ON relation.organization_id = property.organization_id
+         AND relation.account_id = property.account_id
+         AND relation.status = 'active'
+        WHERE property.id = $2
+          AND property.account_id = $1
+          AND property.organization_id = ANY($3)"#,
+    )
+    .bind(account_id)
+    .bind(property_id)
+    .bind(organization_ids)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|row| {
+        let profile_ready: bool = row.get("profile_ready");
+        let crew_ready: bool = row.get("crew_ready");
+        CustomerPropertyActivationReadiness {
+            property_id: row.get("property_id"),
+            profile_ready,
+            crew_ready,
+            ready: profile_ready && crew_ready,
+            persisted: true,
+        }
+    }))
+}
+
 fn map_property_sql_error(error: sqlx::Error) -> CustomerPropertyMutationError {
     match &error {
         sqlx::Error::Database(database_error)
@@ -821,6 +893,23 @@ fn local_property_identity_record(
     property.display_name = request.display_name.clone();
     property.service_address = request.service_address.clone();
     Some(property)
+}
+
+fn local_property_activation_readiness(
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+) -> Option<CustomerPropertyActivationReadiness> {
+    seed_properties(account_id, organization_ids)
+        .into_iter()
+        .find(|property| property.property_id == property_id)
+        .map(|property| CustomerPropertyActivationReadiness {
+            property_id: property.property_id,
+            profile_ready: true,
+            crew_ready: true,
+            ready: true,
+            persisted: false,
+        })
 }
 
 fn local_property_record(

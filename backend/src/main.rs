@@ -506,6 +506,10 @@ fn app_with_runtime(
             "/customer-accounts/{account_id}/properties/{property_id}/identity",
             put(update_customer_property_identity),
         )
+        .route(
+            "/customer-accounts/{account_id}/properties/{property_id}/activation-readiness",
+            get(get_customer_property_activation_readiness),
+        )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
             "/health/ready",
@@ -1210,6 +1214,30 @@ async fn update_customer_property_status(
             }),
         )
             .into_response(),
+    }
+}
+
+async fn get_customer_property_activation_readiness(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((account_id, property_id)): Path<(String, String)>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .property_activation_readiness(&account_id, &property_id, &organization_ids)
+        .await
+    {
+        Some(readiness) => Json(readiness).into_response(),
+        None => resource_not_found_response(
+            "customer_property_not_found",
+            "The requested customer property was not found.",
+        ),
     }
 }
 
@@ -4253,6 +4281,30 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn customer_property_activation_readiness_endpoint_returns_seed_checks() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri(
+                        "/customer-accounts/acct_1001/properties/property_1001/activation-readiness",
+                    )
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["profile_ready"], true);
+        assert_eq!(json["crew_ready"], true);
+        assert_eq!(json["ready"], true);
+        assert_eq!(json["persisted"], false);
     }
 
     #[tokio::test]

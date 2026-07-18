@@ -4,27 +4,38 @@ import {
   assignPropertyCrew,
   createPropertyPortfolio,
   fetchCrews,
+  fetchCustomerPropertyActivationReadiness,
   fetchCustomerPropertyPortfolio,
   fetchPropertyCrewAssignments,
   updateCustomerPropertyIdentity,
   updateCustomerPropertyStatus,
   type CrewRecord,
+  type CustomerPropertyActivationReadiness,
   type CustomerPropertyRecord,
   type PropertyCrewAssignmentRecord,
   type PropertyPortfolioRecord,
 } from '../api/client';
+import { getPropertyActivationReadiness } from '../domain/propertyActivation';
 
 type Props = {
   properties: CustomerPropertyRecord[];
   onPropertyUpdated?: (property: CustomerPropertyRecord) => void;
+  onboardingRefreshSignal?: number;
 };
 
-export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Props) {
+export function ManagerPropertySetupPanel({
+  properties,
+  onPropertyUpdated,
+  onboardingRefreshSignal = 0,
+}: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [portfolios, setPortfolios] = useState<Record<string, PropertyPortfolioRecord[]>>({});
   const [portfolioMemberships, setPortfolioMemberships] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<Record<string, PropertyCrewAssignmentRecord[]>>({});
+  const [activationReadinessByProperty, setActivationReadinessByProperty] = useState<
+    Record<string, CustomerPropertyActivationReadiness>
+  >({});
   const [portfolioName, setPortfolioName] = useState('');
   const [portfolioType, setPortfolioType] = useState<PropertyPortfolioRecord['portfolioType']>('individual_owner');
   const [selectedPortfolioId, setSelectedPortfolioId] = useState('');
@@ -43,6 +54,11 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
     [crews, selectedProperty?.organizationId],
   );
   const activeAssignment = (assignments[propertyId] ?? []).find((assignment) => assignment.active);
+  const serverReadiness = activationReadinessByProperty[propertyId];
+  const activationReadiness = getPropertyActivationReadiness(
+    serverReadiness?.profileReady ?? false,
+    serverReadiness?.crewReady ?? Boolean(activeAssignment),
+  );
   const currentPortfolio = accountPortfolios.find(
     (portfolio) => portfolio.id === portfolioMemberships[propertyId],
   );
@@ -69,8 +85,15 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
           (accountId) => fetchCustomerPropertyPortfolio(accountId),
         ),
       ),
+      Promise.all(properties.map(async (property) => [
+        property.propertyId,
+        await fetchCustomerPropertyActivationReadiness(
+          property.accountId,
+          property.propertyId,
+        ),
+      ] as const)),
     ])
-      .then(([crewResult, portfolioResult]) => {
+      .then(([crewResult, portfolioResult, readinessResult]) => {
         if (!active) return;
         const crewAvailable = crewResult.status === 'fulfilled';
         const portfolioAvailable = portfolioResult.status === 'fulfilled';
@@ -90,6 +113,9 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
             )),
           ));
         }
+        if (readinessResult.status === 'fulfilled') {
+          setActivationReadinessByProperty(Object.fromEntries(readinessResult.value));
+        }
         setMessage(
           crewAvailable && portfolioAvailable
             ? 'Loaded persisted portfolio and crew setup.'
@@ -100,7 +126,7 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
         if (active) setIsLoading(false);
       });
     return () => { active = false; };
-  }, [properties]);
+  }, [properties, onboardingRefreshSignal]);
 
   useEffect(() => {
     setSelectedPortfolioId(accountPortfolios[0]?.id ?? '');
@@ -265,6 +291,16 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
           ...(current[selectedProperty.propertyId] ?? []).map((item) => ({ ...item, active: false })),
         ],
       }));
+      setActivationReadinessByProperty((current) => ({
+        ...current,
+        [selectedProperty.propertyId]: {
+          propertyId: selectedProperty.propertyId,
+          profileReady: current[selectedProperty.propertyId]?.profileReady ?? false,
+          crewReady: true,
+          ready: current[selectedProperty.propertyId]?.profileReady ?? false,
+          persisted: assignment.persisted,
+        },
+      }));
       setMessage(`${selectedProperty.displayName} assigned to ${eligibleCrews.find((crew) => crew.id === selectedCrewId)?.name ?? selectedCrewId}.`);
     } catch {
       setMessage('The crew could not be assigned to that property.');
@@ -297,10 +333,23 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
                 <p className="mt-1 text-xs text-slate-500">
                   Status: <span className="font-semibold capitalize">{selectedProperty.status}</span>
                 </p>
+                {selectedProperty.status !== 'active' && selectedProperty.status !== 'archived' ? (
+                  <ul className="mt-2 grid gap-1 text-xs text-slate-600">
+                    <li>
+                      {activationReadiness.profileReady ? '✓' : '○'} Active operational profile
+                    </li>
+                    <li>
+                      {activationReadiness.crewReady ? '✓' : '○'} Active crew assignment
+                    </li>
+                  </ul>
+                ) : null}
               </div>
               <button
                 className="min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-60"
-                disabled={isLoading}
+                disabled={isLoading
+                  || (selectedProperty.status !== 'active'
+                    && selectedProperty.status !== 'archived'
+                    && !activationReadiness.ready)}
                 onClick={() => void changePropertyStatus(
                   selectedProperty.status === 'active'
                     ? 'archived'

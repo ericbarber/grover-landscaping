@@ -492,6 +492,14 @@ export interface CustomerPropertyRecord {
   persisted: boolean;
 }
 
+export interface CustomerPropertyActivationReadiness {
+  propertyId: string;
+  profileReady: boolean;
+  crewReady: boolean;
+  ready: boolean;
+  persisted: boolean;
+}
+
 export interface CrewRecord {
   id: string;
   name: string;
@@ -1519,6 +1527,28 @@ export async function updateCustomerPropertyIdentity(
     },
   );
   return toCustomerPropertyRecord(item);
+}
+
+export async function fetchCustomerPropertyActivationReadiness(
+  accountId: string,
+  propertyId: string,
+): Promise<CustomerPropertyActivationReadiness> {
+  const item = await request<{
+    property_id: string;
+    profile_ready: boolean;
+    crew_ready: boolean;
+    ready: boolean;
+    persisted: boolean;
+  }>(
+    `${customerAccountPropertiesPath(accountId)}/${encodeURIComponent(propertyId)}/activation-readiness`,
+  );
+  return {
+    propertyId: item.property_id,
+    profileReady: item.profile_ready,
+    crewReady: item.crew_ready,
+    ready: item.ready,
+    persisted: item.persisted,
+  };
 }
 
 export async function fetchCrews(): Promise<CrewRecord[]> {
