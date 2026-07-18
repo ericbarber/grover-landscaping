@@ -247,11 +247,11 @@ function JobCard({
 
   return (
     <article
-      className={`rounded-2xl border bg-white p-5 shadow-sm ${
+      className={`rounded-2xl border bg-white p-4 shadow-sm sm:p-5 ${
         isSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200'
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-medium text-slate-500">{job.scheduledDate}</p>
           <h3 className="mt-1 text-lg font-semibold text-slate-950">{job.customerName}</h3>
@@ -590,7 +590,7 @@ function JobDetailPanel({
 
   if (isLoading) {
     return (
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <p className="text-sm font-semibold text-slate-500">Loading job details...</p>
       </aside>
     );
@@ -598,7 +598,7 @@ function JobDetailPanel({
 
   if (!job) {
     return (
-      <aside className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-slate-600">
+      <aside className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 text-slate-600 sm:p-5">
         Select a job to view checklist, workflow actions, and local photo upload placeholders.
       </aside>
     );
@@ -606,8 +606,8 @@ function JobDetailPanel({
 
   return (
     <div className="space-y-6">
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
           <div>
             <p className="text-sm font-medium text-slate-500">Job detail</p>
             <h2 className="mt-1 text-2xl font-bold text-slate-950">{job.customerName}</h2>
@@ -668,7 +668,7 @@ function JobDetailPanel({
           </div>
         ) : null}
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid gap-3 min-[380px]:grid-cols-2">
           <button
             className="rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
             onClick={() => void onStart()}
@@ -1729,27 +1729,52 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100">
-      <section className="bg-slate-950 px-6 py-8 text-white">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100">
+      <section className="bg-slate-950 px-4 py-6 text-white sm:px-6 sm:py-8">
         <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">Grover Landscaping</p>
-          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300 sm:text-sm sm:tracking-[0.3em]">Grover Landscaping</p>
+          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold md:text-5xl">Crew completion dashboard</h1>
-              <p className="mt-3 max-w-2xl text-slate-300">
-                Track assigned yard-care jobs, capture before and after photos, and prepare completion reports for review.
+              <h1 className="text-2xl font-bold leading-tight sm:text-3xl md:text-5xl">Today&apos;s field work</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:mt-3 sm:text-base">
+                Follow the route, open a job, and capture completion evidence.
               </p>
             </div>
-            <div className="rounded-2xl bg-white/10 p-4 text-sm text-slate-200">
-              <p className="font-semibold text-white">Today</p>
+            <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200 md:block md:rounded-2xl md:p-4">
+              <p className="font-semibold text-white">Route status</p>
               <p>{isLoadingJobs ? 'Loading...' : `${jobs.length} assigned jobs`}</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
-        <div>
+      <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="min-w-0">
+          <div>
+          <DayPlanPanel onSelectJob={setSelectedJobId} refreshSignal={dayPlanRefreshSignal} />
+          </div>
+          <div className="mb-4 mt-6">
+            <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
+            <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {jobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                isSelected={job.id === selectedJobId}
+                onSelect={setSelectedJobId}
+              />
+            ))}
+          </div>
+
+          <details className="mt-6 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:open:bg-transparent">
+            <summary className="cursor-pointer list-none rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
+              Manager and office tools
+              <span className="ml-2 text-xs font-normal text-slate-300">Scheduling, customers, and recovery</span>
+            </summary>
+            <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
@@ -1762,10 +1787,7 @@ export function App() {
               });
             }}
           />
-          <div className="mt-6">
-          <DayPlanPanel onSelectJob={setSelectedJobId} refreshSignal={dayPlanRefreshSignal} />
-          </div>
-          <div className="mt-6">
+          <div>
             <ManagerDayPlanPanel
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
@@ -1875,27 +1897,12 @@ export function App() {
               onSelectJob={setSelectedJobId}
             />
           </div>
-
-          <div className="mt-6 mb-5 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-950">Assigned jobs</h2>
-              <p className="text-sm text-slate-600">{statusMessage}</p>
             </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                isSelected={job.id === selectedJobId}
-                onSelect={setSelectedJobId}
-              />
-            ))}
-          </div>
+          </details>
         </div>
 
-        <JobDetailPanel
+        <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+          <JobDetailPanel
           job={selectedJob}
           isLoading={isLoadingDetail}
           addOns={selectedJobAddOns}
@@ -1911,7 +1918,8 @@ export function App() {
           onDeliverReport={handleDeliverReport}
           onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
           reportActionStatus={completionReportActionStatus}
-        />
+          />
+        </div>
       </section>
     </main>
   );

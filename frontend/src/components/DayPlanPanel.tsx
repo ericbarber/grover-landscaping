@@ -234,8 +234,8 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
   }, [dayPlan.id]);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Crew day plan</p>
           <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
@@ -248,7 +248,7 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center sm:gap-3">
         <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-2xl font-bold text-slate-950">{dayPlan.stops.length}</p>
           <p className="text-xs text-slate-500">Stops</p>

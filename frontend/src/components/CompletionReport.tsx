@@ -51,8 +51,8 @@ export function CompletionReport({
   const reportStatus = reportSnapshot?.reportStatus ?? (readyForCustomer ? 'submitted' : 'draft');
 
   return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Completion report</p>
           <h3 className="mt-1 text-xl font-bold text-slate-950">{job.customerName}</h3>

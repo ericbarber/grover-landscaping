@@ -26,6 +26,8 @@ Current continuation work:
   approval, service-frequency, and notes fields.
 - Local mobile review can start the seeded API and Vite frontend on a detected
   Tailscale address without requiring Docker or PostgreSQL.
+- The dashboard now prioritizes route, assigned jobs, and job actions on phones,
+  with manager tools collapsed into a separate workspace and touch-safe controls.
 
 ## 2026-07-17 — Photo Erasure Recovery
 
