@@ -192,6 +192,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Tenant-scoped customer property list and create APIs
 - Manager account cards list and create customer properties inline
 - Newly created properties become available to operational onboarding without reload
+- Persisted customer properties repopulate operational onboarding after refresh
 
 ### Local development and project setup
 

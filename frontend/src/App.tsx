@@ -30,6 +30,7 @@ import {
   uploadPhotoToTicket,
   updateJobAddOnStatus,
   type CompletionReportSnapshot,
+  type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
   type CustomerPrivacyExport,
   type JobDetail,
@@ -842,6 +843,22 @@ export function App() {
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
   const jobDetailRef = useRef<HTMLDivElement>(null);
+
+  function registerManagerProperties(properties: CustomerPropertyRecord[]) {
+    setManagerPropertyOnboardingOptions((current) => {
+      const next = new Map(current.map((property) => [property.propertyId, property]));
+      properties.forEach((property) => {
+        next.set(property.propertyId, {
+          propertyId: property.propertyId,
+          accountId: property.accountId,
+          organizationId: property.organizationId,
+          displayName: property.displayName,
+          serviceAddress: property.serviceAddress,
+        });
+      });
+      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
+    });
+  }
 
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
@@ -1855,17 +1872,9 @@ export function App() {
           <div className="mt-6">
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
+              onPropertiesLoaded={registerManagerProperties}
               onPropertyCreated={(property) => {
-                setManagerPropertyOnboardingOptions((current) => [
-                  ...current.filter((item) => item.propertyId !== property.propertyId),
-                  {
-                    propertyId: property.propertyId,
-                    accountId: property.accountId,
-                    organizationId: property.organizationId,
-                    displayName: property.displayName,
-                    serviceAddress: property.serviceAddress,
-                  },
-                ].sort((a, b) => a.displayName.localeCompare(b.displayName)));
+                registerManagerProperties([property]);
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />

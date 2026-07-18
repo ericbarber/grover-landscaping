@@ -40,6 +40,8 @@ Current continuation work:
   tenant-scoped list and create APIs, independently of jobs and crew assignment.
 - Manager account onboarding can list and create properties inline, then pass new
   properties directly into the operational onboarding workflow.
+- Reloaded persisted properties also repopulate the operational onboarding
+  selector, preserving the account-to-property workflow across sessions.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

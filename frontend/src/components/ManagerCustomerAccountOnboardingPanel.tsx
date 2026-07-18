@@ -12,11 +12,16 @@ import {
 type Props = {
   organizationId: string;
   onPropertyCreated?: (property: CustomerPropertyRecord) => void;
+  onPropertiesLoaded?: (properties: CustomerPropertyRecord[]) => void;
 };
 
 type PropertyDraft = { displayName: string; serviceAddress: string };
 
-export function ManagerCustomerAccountOnboardingPanel({ organizationId, onPropertyCreated }: Props) {
+export function ManagerCustomerAccountOnboardingPanel({
+  organizationId,
+  onPropertyCreated,
+  onPropertiesLoaded,
+}: Props) {
   const [accounts, setAccounts] = useState<CustomerAccountRecord[]>([]);
   const [properties, setProperties] = useState<Record<string, CustomerPropertyRecord[]>>({});
   const [propertyDrafts, setPropertyDrafts] = useState<Record<string, PropertyDraft>>({});
@@ -37,6 +42,7 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId, onProper
         ] as const),
       );
       setProperties(Object.fromEntries(loadedProperties));
+      onPropertiesLoaded?.(loadedProperties.flatMap(([, accountProperties]) => accountProperties));
     } catch {
       setMessage('Customer accounts could not be loaded.');
     } finally {
