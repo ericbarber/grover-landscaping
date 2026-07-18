@@ -9,15 +9,17 @@ version and release date.
 
 Current continuation work:
 
-- Provision and validate production Cognito users and the first organization owner.
+- Provision and validate the first production Cognito owner identity.
 - Finish tenant-aware boundaries for remaining shared customer reads.
 - Configure and validate the production email/SMS provider.
 - Connect manager activity history to persisted events.
-- Expand account onboarding and first-user administration.
+- Expand customer account onboarding and first-user administration.
 - Continue replacing seeded or browser-only route behavior with persisted state.
 - Complete authenticated customer-scoped bid history.
 - Manager property onboarding now loads, validates, and saves operational profiles
   through the persisted API with explicit local-fallback feedback.
+- First-owner onboarding can bootstrap a persisted organization and owner membership
+  from the signed-in Cognito subject, then presents the first-route setup sequence.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

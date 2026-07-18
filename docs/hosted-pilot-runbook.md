@@ -75,49 +75,13 @@ aws cognito-idp admin-add-user-to-group \
   --group-name OrganizationOwner
 ```
 
-Read the Cognito subject. This value must become the PostgreSQL membership `user_id`:
+Sign in with the new identity and use the application's First-user setup panel to
+create the service organization. `POST /organizations/bootstrap` atomically creates
+the organization and binds an `organization_owner` membership to the authenticated
+Cognito `sub`; it rejects users that already have an active membership.
 
-```bash
-OWNER_SUB=$(aws cognito-idp admin-get-user \
-  --user-pool-id "${USER_POOL_ID}" \
-  --username "${OWNER_EMAIL}" \
-  --query "UserAttributes[?Name=='sub'].Value | [0]" \
-  --output text)
-```
-
-Create or update the first active organization membership. Run this against the Render PostgreSQL database connection string:
-
-```bash
-psql "${DATABASE_URL}" -v OWNER_SUB="${OWNER_SUB}" <<'SQL'
-INSERT INTO organization_memberships (
-    id,
-    organization_id,
-    user_id,
-    role,
-    status,
-    scope_type,
-    scope_id
-)
-VALUES (
-    'membership_first_owner',
-    'org_demo_landscaping',
-    :'OWNER_SUB',
-    'organization_owner',
-    'active',
-    'organization',
-    'org_demo_landscaping'
-)
-ON CONFLICT (id) DO UPDATE
-SET user_id = EXCLUDED.user_id,
-    role = EXCLUDED.role,
-    status = EXCLUDED.status,
-    scope_type = EXCLUDED.scope_type,
-    scope_id = EXCLUDED.scope_id,
-    updated_at = NOW();
-SQL
-```
-
-Do not use the Cognito email as `organization_memberships.user_id`; the API authorizes memberships by token `sub`.
+Do not insert the Cognito email into `organization_memberships.user_id`; the API
+authorizes memberships by token `sub`.
 
 ## Hosted Validation
 
@@ -167,5 +131,7 @@ PHOTO_PROCESSING_MAX_ATTEMPTS=5
 ## Rollback Notes
 
 - If Cognito values are wrong in Render, fix the environment variables and redeploy; do not switch production to disabled auth.
-- If the first owner cannot see data, compare the Cognito `sub` with `organization_memberships.user_id`.
+- If the first owner cannot bootstrap, confirm the token contains the
+  `OrganizationOwner` group and that the Cognito `sub` has no existing active
+  membership.
 - If Terraform must be rolled back, keep the user pool until Render is moved to replacement Cognito outputs.

@@ -31,6 +31,28 @@ pub struct PrincipalAccessSummary {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct BootstrapOrganizationRequest {
+    pub display_name: String,
+    pub organization_type: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct BootstrapOrganizationResponse {
+    pub organization_id: String,
+    pub display_name: String,
+    pub organization_type: String,
+    pub membership: OrganizationMembership,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum BootstrapOrganizationResult {
+    Created(Box<BootstrapOrganizationResponse>),
+    AlreadyMember,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateOrganizationInvitationRequest {
     pub invitee_email: String,
     pub role: String,
@@ -143,6 +165,21 @@ impl OrganizationRepository {
             })
     }
 
+    pub async fn bootstrap_organization(
+        &self,
+        user_id: &str,
+        request: BootstrapOrganizationRequest,
+    ) -> Result<BootstrapOrganizationResult, sqlx::Error> {
+        let request = normalize_bootstrap_organization_request(request);
+        if !self.list_active_memberships(user_id).await.is_empty() {
+            return Ok(BootstrapOrganizationResult::AlreadyMember);
+        }
+        let Some(pool) = &self.pool else {
+            return Ok(BootstrapOrganizationResult::Unavailable);
+        };
+        bootstrap_organization(pool, user_id, &request).await
+    }
+
     pub async fn create_invitation(
         &self,
         organization_id: &str,
@@ -218,6 +255,109 @@ impl OrganizationRepository {
             access_role,
         )
     }
+}
+
+pub fn validate_bootstrap_organization_request(
+    request: &BootstrapOrganizationRequest,
+) -> Result<(), &'static str> {
+    let display_name = request.display_name.trim();
+    if display_name.len() < 2 || display_name.len() > 120 {
+        return Err("display_name_invalid");
+    }
+    if !matches!(
+        request.organization_type.trim(),
+        "yard_care_company" | "property_management_company"
+    ) {
+        return Err("organization_type_invalid");
+    }
+    Ok(())
+}
+
+fn normalize_bootstrap_organization_request(
+    request: BootstrapOrganizationRequest,
+) -> BootstrapOrganizationRequest {
+    BootstrapOrganizationRequest {
+        display_name: request.display_name.trim().to_string(),
+        organization_type: request.organization_type.trim().to_string(),
+    }
+}
+
+async fn bootstrap_organization(
+    pool: &PgPool,
+    user_id: &str,
+    request: &BootstrapOrganizationRequest,
+) -> Result<BootstrapOrganizationResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await?;
+    let existing_membership: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM organization_memberships WHERE user_id = $1 AND status = 'active')",
+    )
+    .bind(user_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if existing_membership {
+        transaction.rollback().await?;
+        return Ok(BootstrapOrganizationResult::AlreadyMember);
+    }
+
+    let organization_id = format!("org_{}", Uuid::new_v4().simple());
+    let membership_id = format!("membership_{}", Uuid::new_v4().simple());
+    sqlx::query(
+        r#"
+        INSERT INTO organizations (id, display_name, organization_type, status)
+        VALUES ($1, $2, $3, 'active')
+        "#,
+    )
+    .bind(&organization_id)
+    .bind(&request.display_name)
+    .bind(&request.organization_type)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        r#"
+        INSERT INTO organization_memberships (
+            id, organization_id, user_id, role, status, scope_type, scope_id
+        )
+        VALUES ($1, $2, $3, 'organization_owner', 'active', 'organization', $2)
+        "#,
+    )
+    .bind(&membership_id)
+    .bind(&organization_id)
+    .bind(user_id)
+    .execute(&mut *transaction)
+    .await?;
+    insert_access_audit_event(
+        &mut transaction,
+        user_id,
+        &organization_id,
+        "organization_bootstrapped",
+        &organization_id,
+    )
+    .await?;
+    transaction.commit().await?;
+
+    Ok(BootstrapOrganizationResult::Created(Box::new(
+        BootstrapOrganizationResponse {
+            organization_id: organization_id.clone(),
+            display_name: request.display_name.clone(),
+            organization_type: request.organization_type.clone(),
+            membership: OrganizationMembership {
+                id: membership_id,
+                organization_id: organization_id.clone(),
+                organization_name: request.display_name.clone(),
+                organization_type: request.organization_type.clone(),
+                user_id: user_id.to_string(),
+                role: AccessRole::OrganizationOwner,
+                status: "active".to_string(),
+                scope_type: "organization".to_string(),
+                scope_id: Some(organization_id),
+            },
+            persisted: true,
+        },
+    )))
 }
 
 async fn list_active_memberships(
@@ -828,7 +968,8 @@ fn accepting_or_actor(actor_user_id: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::{
-        access_role_from_storage, access_role_to_storage, validate_create_invitation_request,
+        access_role_from_storage, access_role_to_storage, validate_bootstrap_organization_request,
+        validate_create_invitation_request, BootstrapOrganizationRequest,
         CreateOrganizationInvitationRequest, OrganizationRepository,
         UpdateOrganizationMembershipRoleRequest,
     };
@@ -875,6 +1016,31 @@ mod tests {
         assert_eq!(
             validate_create_invitation_request(&bad_role),
             Err("role_invalid")
+        );
+    }
+
+    #[test]
+    fn validates_first_owner_organization_bootstrap() {
+        assert_eq!(
+            validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
+                display_name: "Grover Landscaping".to_string(),
+                organization_type: "yard_care_company".to_string(),
+            }),
+            Ok(())
+        );
+        assert_eq!(
+            validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
+                display_name: " ".to_string(),
+                organization_type: "yard_care_company".to_string(),
+            }),
+            Err("display_name_invalid")
+        );
+        assert_eq!(
+            validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
+                display_name: "Grover Landscaping".to_string(),
+                organization_type: "platform".to_string(),
+            }),
+            Err("organization_type_invalid")
         );
     }
 

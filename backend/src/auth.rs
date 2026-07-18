@@ -427,6 +427,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::POST && can_admin_organization;
     }
 
+    if path == "/organizations/bootstrap" {
+        return *method == Method::POST && can_admin_organization;
+    }
+
     if path.starts_with("/organizations/") && path.ends_with("/role") {
         return *method == Method::PUT && can_admin_organization;
     }

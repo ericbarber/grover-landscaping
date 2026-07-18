@@ -22,6 +22,7 @@ import {
   toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
   toPropertyOnboardingProfile,
+  toPrincipalAccessSummary,
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
@@ -143,6 +144,33 @@ describe('core API client mapping', () => {
       notificationPhone: '',
       onboardingStatus: 'active',
       persisted: true,
+    });
+  });
+
+  it('maps current-user organization access', () => {
+    expect(toPrincipalAccessSummary({
+      user_id: 'cognito-sub-1',
+      username: 'owner@example.com',
+      claim_roles: ['OrganizationOwner'],
+      memberships: [{
+        id: 'membership_1',
+        organization_id: 'org_1',
+        organization_name: 'Grover Landscaping',
+        organization_type: 'yard_care_company',
+        user_id: 'cognito-sub-1',
+        role: 'OrganizationOwner',
+        status: 'active',
+        scope_type: 'organization',
+        scope_id: 'org_1',
+      }],
+    })).toMatchObject({
+      userId: 'cognito-sub-1',
+      claimRoles: ['OrganizationOwner'],
+      memberships: [{
+        organizationId: 'org_1',
+        organizationName: 'Grover Landscaping',
+        role: 'OrganizationOwner',
+      }],
     });
   });
 

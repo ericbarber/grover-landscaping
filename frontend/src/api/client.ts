@@ -406,6 +406,68 @@ export interface PhotoErasureDeletionHistoryItem {
 }
 
 export type PropertyOnboardingStatus = 'incomplete' | 'active' | 'blocked' | 'archived';
+export type AccessRole =
+  | 'OrganizationOwner'
+  | 'Manager'
+  | 'CrewLead'
+  | 'CrewMember'
+  | 'PropertyOwner'
+  | 'PropertyManager'
+  | 'SupportAdmin';
+
+export interface OrganizationMembership {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  organizationType: string;
+  userId: string;
+  role: AccessRole;
+  status: string;
+  scopeType: string;
+  scopeId: string | null;
+}
+
+interface ApiOrganizationMembership {
+  id: string;
+  organization_id: string;
+  organization_name: string;
+  organization_type: string;
+  user_id: string;
+  role: AccessRole;
+  status: string;
+  scope_type: string;
+  scope_id?: string | null;
+}
+
+interface ApiPrincipalAccessSummary {
+  user_id: string;
+  username: string;
+  claim_roles: AccessRole[];
+  memberships: ApiOrganizationMembership[];
+}
+
+export interface PrincipalAccessSummary {
+  userId: string;
+  username: string;
+  claimRoles: AccessRole[];
+  memberships: OrganizationMembership[];
+}
+
+interface ApiBootstrapOrganizationResponse {
+  organization_id: string;
+  display_name: string;
+  organization_type: string;
+  membership: ApiOrganizationMembership;
+  persisted: boolean;
+}
+
+export interface BootstrapOrganizationResponse {
+  organizationId: string;
+  displayName: string;
+  organizationType: string;
+  membership: OrganizationMembership;
+  persisted: boolean;
+}
 
 export interface ApiPropertyOnboardingProfile {
   property_id: string;
@@ -819,6 +881,33 @@ export function toPropertyOnboardingProfile(
   };
 }
 
+function toOrganizationMembership(
+  membership: ApiOrganizationMembership,
+): OrganizationMembership {
+  return {
+    id: membership.id,
+    organizationId: membership.organization_id,
+    organizationName: membership.organization_name,
+    organizationType: membership.organization_type,
+    userId: membership.user_id,
+    role: membership.role,
+    status: membership.status,
+    scopeType: membership.scope_type,
+    scopeId: membership.scope_id ?? null,
+  };
+}
+
+export function toPrincipalAccessSummary(
+  summary: ApiPrincipalAccessSummary,
+): PrincipalAccessSummary {
+  return {
+    userId: summary.user_id,
+    username: summary.username,
+    claimRoles: summary.claim_roles,
+    memberships: summary.memberships.map(toOrganizationMembership),
+  };
+}
+
 export function toCustomerPrivacyExport(apiExport: ApiCustomerPrivacyExport): CustomerPrivacyExport {
   return {
     account: {
@@ -1188,6 +1277,30 @@ export async function savePropertyOnboarding(
     },
   );
   return toPropertyOnboardingProfile(profile);
+}
+
+export async function fetchPrincipalAccessSummary(): Promise<PrincipalAccessSummary> {
+  return toPrincipalAccessSummary(await request<ApiPrincipalAccessSummary>('/me/access'));
+}
+
+export async function bootstrapOrganization(
+  displayName: string,
+  organizationType: 'yard_care_company' | 'property_management_company',
+): Promise<BootstrapOrganizationResponse> {
+  const response = await request<ApiBootstrapOrganizationResponse>('/organizations/bootstrap', {
+    method: 'POST',
+    body: JSON.stringify({
+      display_name: displayName,
+      organization_type: organizationType,
+    }),
+  });
+  return {
+    organizationId: response.organization_id,
+    displayName: response.display_name,
+    organizationType: response.organization_type,
+    membership: toOrganizationMembership(response.membership),
+    persisted: response.persisted,
+  };
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

@@ -6,7 +6,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 ## Immediate Continuation Work
 
 1. **Production identity and tenant security**
-   - Provision Cognito and create the first organization-owner account.
+   - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.
    - Expand account onboarding and first-user administration.
 2. **Notifications and persisted activity**
@@ -14,8 +14,8 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
    - Process provider delivery receipts and manual resolutions.
    - Connect manager activity history to persisted notification and audit events.
    - Add templates, preferences, quiet hours, and customer contact rules.
-3. **Account and first-user onboarding**
-   - Complete customer, organization, and first-user setup workflows.
+3. **Customer account onboarding**
+   - Complete customer-account setup and administration workflows.
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.

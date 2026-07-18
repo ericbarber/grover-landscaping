@@ -48,8 +48,10 @@ use grover_landscaping_api::{
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::{
-        validate_create_invitation_request, CreateOrganizationInvitationRequest,
-        OrganizationRepository, UpdateOrganizationMembershipRoleRequest,
+        validate_bootstrap_organization_request, validate_create_invitation_request,
+        BootstrapOrganizationRequest, BootstrapOrganizationResult,
+        CreateOrganizationInvitationRequest, OrganizationRepository,
+        UpdateOrganizationMembershipRoleRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -471,6 +473,7 @@ fn app_with_runtime(
             }),
         )
         .route("/me/access", get(get_my_access))
+        .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
             "/health/ready",
             get(move || readiness(Arc::clone(&readiness_state), persistence, database_required)),
@@ -829,6 +832,65 @@ async fn get_account_for_job(
         .await;
 
     Json(account).into_response()
+}
+
+async fn bootstrap_organization(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<BootstrapOrganizationRequest>,
+) -> Response {
+    if let Err(reason) = validate_bootstrap_organization_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_bootstrap",
+                message: format!("Organization bootstrap payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if !principal.roles.iter().any(|role| {
+        matches!(
+            role,
+            AccessRole::OrganizationOwner | AccessRole::SupportAdmin
+        )
+    }) {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "organization_bootstrap_access_denied",
+                message: "Organization-owner access is required to bootstrap an organization."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .organizations
+        .bootstrap_organization(&principal.subject, request)
+        .await
+    {
+        Ok(BootstrapOrganizationResult::Created(result)) => {
+            (StatusCode::CREATED, Json(result)).into_response()
+        }
+        Ok(BootstrapOrganizationResult::AlreadyMember) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "organization_bootstrap_not_available",
+                message: "The signed-in user already has an active organization membership."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(BootstrapOrganizationResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "organization_bootstrap_unavailable",
+                message: "Organization bootstrap requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn create_organization_invitation(
@@ -3590,6 +3652,28 @@ mod tests {
             json["memberships"][0]["organization_type"],
             "yard_care_company"
         );
+    }
+
+    #[tokio::test]
+    async fn organization_bootstrap_rejects_an_existing_owner_membership() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/bootstrap")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"display_name":"Grover Landscaping","organization_type":"yard_care_company"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "organization_bootstrap_not_available");
     }
 
     #[tokio::test]

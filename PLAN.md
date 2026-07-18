@@ -300,6 +300,8 @@ Current state:
 - Persisted notification retry and manual resolution actions record organization-scoped audit events
 - Persisted job account-summary reads record organization-scoped `account_viewed` audit events
 - Authenticated current-user access summary reads record organization-scoped `login` audit events
+- First-user bootstrap API atomically creates a service organization, assigns the signed-in Cognito subject as organization owner, and records an audit event only when the user has no active membership
+- Frontend first-owner setup detects missing membership, creates the organization through the persisted bootstrap API, and shows the first-route readiness checklist
 - Hosted pilot runbook documents Cognito provisioning, first-owner creation, PostgreSQL membership binding, validation, and rollback notes
 - Cognito hosted-pilot validation script checks Terraform outputs and optional deployed `/auth/config` values
 - Customer property portfolio reads ignore wrong-account portfolio links so scoped customer yards remain visible as ungrouped properties
@@ -312,7 +314,7 @@ Current state:
 
 Next implementation work:
 
-- Provision the Cognito environment and create the first organization-owner account
+- Provision the Cognito environment and create the first organization-owner identity
 - Continue tenant-aware resource boundaries for remaining shared customer reads
 
 ### Photo evidence flow

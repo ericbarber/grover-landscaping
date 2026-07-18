@@ -1,7 +1,9 @@
 use grover_landscaping_api::{
     access_control::{can_manage_schedule, AccessRole},
     db::JobRepository,
-    organizations::OrganizationRepository,
+    organizations::{
+        BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
+    },
 };
 use sqlx::Row;
 mod common;
@@ -82,4 +84,57 @@ async fn repository_reads_seeded_local_owner_membership_from_postgres() {
     );
     assert_eq!(login_audit.get::<String, _>("event_kind"), "login");
     assert_eq!(login_audit.get::<String, _>("target_id"), login_audit_actor);
+}
+
+#[tokio::test]
+async fn repository_bootstraps_first_owner_once() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = jobs
+        .pool()
+        .expect("connected repository should expose its PostgreSQL pool");
+    let organizations = OrganizationRepository::from_pool(pool.clone());
+    let user_id = format!("first-owner-{}", uuid::Uuid::new_v4().simple());
+
+    let created = organizations
+        .bootstrap_organization(
+            &user_id,
+            BootstrapOrganizationRequest {
+                display_name: "First Owner Landscaping".to_string(),
+                organization_type: "yard_care_company".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+    let BootstrapOrganizationResult::Created(created) = created else {
+        panic!("first owner should create an organization");
+    };
+    assert!(created.persisted);
+    assert_eq!(created.membership.user_id, user_id);
+    assert_eq!(created.membership.role, AccessRole::OrganizationOwner);
+
+    let duplicate = organizations
+        .bootstrap_organization(
+            &user_id,
+            BootstrapOrganizationRequest {
+                display_name: "Second Organization".to_string(),
+                organization_type: "yard_care_company".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+    assert_eq!(duplicate, BootstrapOrganizationResult::AlreadyMember);
+
+    let audit_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM access_audit_events WHERE actor_user_id = $1 AND event_kind = 'organization_bootstrapped'",
+    )
+    .bind(&user_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(audit_count, 1);
 }

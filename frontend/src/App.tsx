@@ -44,6 +44,7 @@ import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
+import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
@@ -1747,7 +1748,20 @@ export function App() {
 
       <section className="mx-auto grid max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[1fr_420px]">
         <div>
+          <FirstOwnerOnboardingPanel
+            onOrganizationReady={(organizationName) => {
+              setStatusMessage(`${organizationName} owner setup completed.`);
+              recordManagerActivity({
+                title: 'Organization owner setup completed',
+                message: `${organizationName} was created with the signed-in user as owner.`,
+                tone: 'success',
+                source: 'sync',
+              });
+            }}
+          />
+          <div className="mt-6">
           <DayPlanPanel onSelectJob={setSelectedJobId} refreshSignal={dayPlanRefreshSignal} />
+          </div>
           <div className="mt-6">
             <ManagerDayPlanPanel
               jobs={jobs}
