@@ -210,6 +210,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile lifecycle guidance distinguishes activation, archival, and reactivation
 - Tenant-scoped activation readiness exposes safe profile and crew prerequisite booleans
 - Mobile property setup shows activation prerequisites before enabling activation
+- Account onboarding progress combines customer details, property coverage, service readiness, and activation
+- Mobile customer account cards refresh progress after profile, crew, and lifecycle changes
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -452,7 +454,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add account-level onboarding progress across customer details, properties, and service readiness
+- Add manager filtering for incomplete customer accounts and properties needing attention
 
 ## Planned
 

@@ -162,6 +162,15 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert!(!initial_readiness.profile_ready);
     assert!(!initial_readiness.crew_ready);
     assert!(!initial_readiness.ready);
+    let initial_progress = accounts
+        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+        .await
+        .expect("tenant member should read account onboarding progress");
+    assert!(initial_progress.customer_details_ready);
+    assert_eq!(initial_progress.property_count, 1);
+    assert_eq!(initial_progress.service_ready_property_count, 0);
+    assert_eq!(initial_progress.active_property_count, 0);
+    assert!(!initial_progress.complete);
     sqlx::query(
         r#"INSERT INTO property_onboarding_profiles (
             property_id, account_id, organization_id, service_address,
@@ -203,6 +212,13 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert!(ready.profile_ready);
     assert!(ready.crew_ready);
     assert!(ready.ready);
+    let service_ready_progress = accounts
+        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+        .await
+        .expect("tenant member should read service-ready account progress");
+    assert_eq!(service_ready_progress.service_ready_property_count, 1);
+    assert_eq!(service_ready_progress.active_property_count, 0);
+    assert!(!service_ready_progress.complete);
 
     let activated = accounts
         .update_property_status(
@@ -217,6 +233,12 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("ready onboarding property should activate");
     assert_eq!(activated.status, "active");
+    let complete_progress = accounts
+        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+        .await
+        .expect("tenant member should read completed account progress");
+    assert_eq!(complete_progress.active_property_count, 1);
+    assert!(complete_progress.complete);
 
     let archived = accounts
         .update_property_status(

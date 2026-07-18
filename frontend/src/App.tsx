@@ -850,6 +850,7 @@ export function App() {
   const [completionReportActionStatus, setCompletionReportActionStatus] = useState<string | null>(null);
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
+  const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
   );
@@ -1881,6 +1882,7 @@ export function App() {
               properties={managerPropertyOnboardingOptions}
               onSaved={(profile) => {
                 setPropertyOnboardingRefreshSignal((current) => current + 1);
+                setCustomerAccountRefreshSignal((current) => current + 1);
                 setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
                 recordManagerActivity({
                   title: 'Property onboarding saved',
@@ -1895,12 +1897,14 @@ export function App() {
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
               onboardingRefreshSignal={propertyOnboardingRefreshSignal}
+              onSetupChanged={() => setCustomerAccountRefreshSignal((current) => current + 1)}
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
           </div>
           <div className="mt-6">
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
+              refreshSignal={customerAccountRefreshSignal}
               onPropertiesLoaded={registerManagerProperties}
               onPropertyCreated={(property) => {
                 registerManagerProperties([property]);

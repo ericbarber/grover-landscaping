@@ -16,6 +16,7 @@ import {
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toCustomerPhotoErasureSummary,
+  toCustomerAccountOnboardingProgress,
   toCustomerPropertyPortfolioRecord,
   toCustomerPrivacyExport,
   toJobAddOn,
@@ -549,6 +550,26 @@ describe('core API client mapping', () => {
       unitPriceCents: 8500,
       note: 'Approved by customer',
       status: 'scheduled',
+    });
+  });
+
+  it('maps account onboarding progress counts', () => {
+    expect(toCustomerAccountOnboardingProgress({
+      account_id: 'acct_1001',
+      customer_details_ready: true,
+      property_count: 2,
+      service_ready_property_count: 1,
+      active_property_count: 1,
+      complete: false,
+      persisted: true,
+    })).toEqual({
+      accountId: 'acct_1001',
+      customerDetailsReady: true,
+      propertyCount: 2,
+      serviceReadyPropertyCount: 1,
+      activePropertyCount: 1,
+      complete: false,
+      persisted: true,
     });
   });
 

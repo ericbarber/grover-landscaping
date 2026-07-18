@@ -190,6 +190,7 @@ Current backend endpoints include:
 | GET | `/accounts/{account_id}/privacy-export` | Export scoped customer account, job, report, and photo evidence metadata for manager privacy requests |
 | POST | `/accounts/{account_id}/photo-erasure` | Erase retained scoped customer photo evidence metadata, redact delivered report snapshots, and return object keys pending deletion |
 | GET | `/customer-accounts/{account_id}/properties` | List persisted properties owned by a tenant-scoped customer account |
+| GET | `/customer-accounts/{account_id}/onboarding-progress` | Summarize customer details, property setup, service readiness, and activation progress |
 | POST | `/customer-accounts/{account_id}/properties` | Create an onboarding property for a tenant-scoped customer account |
 | PUT | `/customer-accounts/{account_id}/properties/{property_id}` | Archive or reactivate a tenant-scoped customer property |
 | PUT | `/customer-accounts/{account_id}/properties/{property_id}/identity` | Update a tenant-scoped property name and service address |

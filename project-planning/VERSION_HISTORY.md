@@ -60,6 +60,8 @@ Current continuation work:
   assignment, with distinct activation and reactivation audit events.
 - Added a role-safe activation readiness endpoint and mobile checklist for
   operational-profile and crew prerequisites.
+- Added account-level onboarding progress across service details, current
+  properties, service readiness, and activation, with live mobile card refresh.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

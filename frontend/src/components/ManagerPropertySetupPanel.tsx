@@ -21,12 +21,14 @@ type Props = {
   properties: CustomerPropertyRecord[];
   onPropertyUpdated?: (property: CustomerPropertyRecord) => void;
   onboardingRefreshSignal?: number;
+  onSetupChanged?: () => void;
 };
 
 export function ManagerPropertySetupPanel({
   properties,
   onPropertyUpdated,
   onboardingRefreshSignal = 0,
+  onSetupChanged,
 }: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -156,6 +158,7 @@ export function ManagerPropertySetupPanel({
         },
       );
       onPropertyUpdated?.(property);
+      onSetupChanged?.();
       setMessage(`${property.displayName} identity updated.`);
     } catch {
       setMessage('The property could not be updated. Check for a duplicate name and address.');
@@ -301,6 +304,7 @@ export function ManagerPropertySetupPanel({
           persisted: assignment.persisted,
         },
       }));
+      onSetupChanged?.();
       setMessage(`${selectedProperty.displayName} assigned to ${eligibleCrews.find((crew) => crew.id === selectedCrewId)?.name ?? selectedCrewId}.`);
     } catch {
       setMessage('The crew could not be assigned to that property.');

@@ -11,6 +11,13 @@ customer account inside one service organization.
 Lists properties for the account within the caller's active manager-capable
 organization memberships. Cross-organization properties are omitted.
 
+### `GET /customer-accounts/{account_id}/onboarding-progress`
+
+Summarizes account-wide onboarding with customer-detail readiness, non-archived
+property count, service-ready property count, active property count, and a
+combined completion flag. Account completion requires approved service details,
+at least one current property, and every current property to be active.
+
 ### `POST /customer-accounts/{account_id}/properties`
 
 Creates an onboarding property for an existing active organization/account

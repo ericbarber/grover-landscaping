@@ -103,6 +103,17 @@ pub struct CustomerPropertyActivationReadiness {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerAccountOnboardingProgress {
+    pub account_id: String,
+    pub customer_details_ready: bool,
+    pub property_count: u32,
+    pub service_ready_property_count: u32,
+    pub active_property_count: u32,
+    pub complete: bool,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct AccountRepository {
     pool: Option<PgPool>,
@@ -247,6 +258,20 @@ impl AccountRepository {
             return local_property_activation_readiness(account_id, property_id, organization_ids);
         };
         property_activation_readiness(pool, account_id, property_id, organization_ids)
+            .await
+            .ok()
+            .flatten()
+    }
+
+    pub async fn account_onboarding_progress(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+    ) -> Option<CustomerAccountOnboardingProgress> {
+        let Some(pool) = &self.pool else {
+            return local_account_onboarding_progress(account_id, organization_ids);
+        };
+        account_onboarding_progress(pool, account_id, organization_ids)
             .await
             .ok()
             .flatten()
@@ -733,6 +758,78 @@ async fn property_activation_readiness(
     }))
 }
 
+async fn account_onboarding_progress(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+) -> Result<Option<CustomerAccountOnboardingProgress>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"SELECT
+            account.id AS account_id,
+            (
+                account.service_approval_status = 'approved'
+                AND account.contracted_services_per_period > 0
+            ) AS customer_details_ready,
+            COUNT(property.id) FILTER (
+                WHERE property.status <> 'archived'
+            )::BIGINT AS property_count,
+            COUNT(property.id) FILTER (
+                WHERE property.status <> 'archived'
+                  AND (
+                    property.status = 'active'
+                    OR (
+                        EXISTS (
+                            SELECT 1 FROM property_onboarding_profiles profile
+                            WHERE profile.property_id = property.id
+                              AND profile.organization_id = property.organization_id
+                              AND profile.onboarding_status = 'active'
+                        )
+                        AND EXISTS (
+                            SELECT 1 FROM property_crew_assignments assignment
+                            WHERE assignment.property_id = property.id
+                              AND assignment.organization_id = property.organization_id
+                              AND assignment.active
+                        )
+                    )
+                  )
+            )::BIGINT AS service_ready_property_count,
+            COUNT(property.id) FILTER (
+                WHERE property.status = 'active'
+            )::BIGINT AS active_property_count
+        FROM customer_accounts account
+        JOIN organization_customer_accounts relation
+          ON relation.account_id = account.id
+         AND relation.organization_id = ANY($2)
+         AND relation.status = 'active'
+        LEFT JOIN customer_properties property
+          ON property.account_id = account.id
+         AND property.organization_id = relation.organization_id
+        WHERE account.id = $1
+        GROUP BY account.id"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|row| {
+        let customer_details_ready: bool = row.get("customer_details_ready");
+        let property_count = row.get::<i64, _>("property_count") as u32;
+        let service_ready_property_count = row.get::<i64, _>("service_ready_property_count") as u32;
+        let active_property_count = row.get::<i64, _>("active_property_count") as u32;
+        CustomerAccountOnboardingProgress {
+            account_id: row.get("account_id"),
+            customer_details_ready,
+            property_count,
+            service_ready_property_count,
+            active_property_count,
+            complete: customer_details_ready
+                && property_count > 0
+                && active_property_count == property_count,
+            persisted: true,
+        }
+    }))
+}
+
 fn map_property_sql_error(error: sqlx::Error) -> CustomerPropertyMutationError {
     match &error {
         sqlx::Error::Database(database_error)
@@ -910,6 +1007,37 @@ fn local_property_activation_readiness(
             ready: true,
             persisted: false,
         })
+}
+
+fn local_account_onboarding_progress(
+    account_id: &str,
+    organization_ids: &[String],
+) -> Option<CustomerAccountOnboardingProgress> {
+    let account = seed_accounts(organization_ids)
+        .into_iter()
+        .find(|account| account.account_id == account_id)?;
+    let properties = seed_properties(account_id, organization_ids);
+    let property_count = properties
+        .iter()
+        .filter(|property| property.status != "archived")
+        .count() as u32;
+    let active_property_count = properties
+        .iter()
+        .filter(|property| property.status == "active")
+        .count() as u32;
+    let customer_details_ready =
+        account.service_approval_status == "approved" && account.contracted_services_per_period > 0;
+    Some(CustomerAccountOnboardingProgress {
+        account_id: account.account_id,
+        customer_details_ready,
+        property_count,
+        service_ready_property_count: active_property_count,
+        active_property_count,
+        complete: customer_details_ready
+            && property_count > 0
+            && active_property_count == property_count,
+        persisted: false,
+    })
 }
 
 fn local_property_record(

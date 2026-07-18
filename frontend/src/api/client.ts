@@ -482,6 +482,16 @@ export interface CustomerAccountRecord {
   persisted: boolean;
 }
 
+export interface CustomerAccountOnboardingProgress {
+  accountId: string;
+  customerDetailsReady: boolean;
+  propertyCount: number;
+  serviceReadyPropertyCount: number;
+  activePropertyCount: number;
+  complete: boolean;
+  persisted: boolean;
+}
+
 export interface CustomerPropertyRecord {
   propertyId: string;
   accountId: string;
@@ -1405,6 +1415,35 @@ function toCustomerAccountRecord(item: {
 export async function fetchCustomerAccounts(): Promise<CustomerAccountRecord[]> {
   const items = await request<Parameters<typeof toCustomerAccountRecord>[0][]>('/customer-accounts');
   return items.map(toCustomerAccountRecord);
+}
+
+export function toCustomerAccountOnboardingProgress(item: {
+  account_id: string;
+  customer_details_ready: boolean;
+  property_count: number;
+  service_ready_property_count: number;
+  active_property_count: number;
+  complete: boolean;
+  persisted: boolean;
+}): CustomerAccountOnboardingProgress {
+  return {
+    accountId: item.account_id,
+    customerDetailsReady: item.customer_details_ready,
+    propertyCount: item.property_count,
+    serviceReadyPropertyCount: item.service_ready_property_count,
+    activePropertyCount: item.active_property_count,
+    complete: item.complete,
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchCustomerAccountOnboardingProgress(
+  accountId: string,
+): Promise<CustomerAccountOnboardingProgress> {
+  const item = await request<Parameters<typeof toCustomerAccountOnboardingProgress>[0]>(
+    `${customerAccountPath(accountId)}/onboarding-progress`,
+  );
+  return toCustomerAccountOnboardingProgress(item);
 }
 
 export async function createCustomerAccount(

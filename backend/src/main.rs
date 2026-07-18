@@ -495,6 +495,10 @@ fn app_with_runtime(
             put(update_customer_account),
         )
         .route(
+            "/customer-accounts/{account_id}/onboarding-progress",
+            get(get_customer_account_onboarding_progress),
+        )
+        .route(
             "/customer-accounts/{account_id}/properties",
             get(list_customer_properties).post(create_customer_property),
         )
@@ -1039,6 +1043,30 @@ async fn list_customer_properties(
             .await,
     )
     .into_response()
+}
+
+async fn get_customer_account_onboarding_progress(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .account_onboarding_progress(&account_id, &organization_ids)
+        .await
+    {
+        Some(progress) => Json(progress).into_response(),
+        None => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested customer account was not found.",
+        ),
+    }
 }
 
 async fn create_customer_property(
@@ -4304,6 +4332,30 @@ mod tests {
         assert_eq!(json["profile_ready"], true);
         assert_eq!(json["crew_ready"], true);
         assert_eq!(json["ready"], true);
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn customer_account_onboarding_progress_endpoint_returns_seed_progress() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-accounts/acct_1001/onboarding-progress")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["account_id"], "acct_1001");
+        assert_eq!(json["customer_details_ready"], true);
+        assert_eq!(json["property_count"], 1);
+        assert_eq!(json["service_ready_property_count"], 1);
+        assert_eq!(json["active_property_count"], 1);
+        assert_eq!(json["complete"], true);
         assert_eq!(json["persisted"], false);
     }
 
