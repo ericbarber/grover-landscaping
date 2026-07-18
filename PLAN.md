@@ -215,6 +215,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager account onboarding filters separate incomplete work from completed accounts
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
+- Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -457,7 +458,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Link onboarding attention actions directly to the relevant property setup workspace
+- Surface customer-detail readiness actions from incomplete account progress
 
 ## Planned
 

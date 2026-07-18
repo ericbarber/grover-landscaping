@@ -22,6 +22,7 @@ type Props = {
   onPropertyUpdated?: (property: CustomerPropertyRecord) => void;
   onboardingRefreshSignal?: number;
   onSetupChanged?: () => void;
+  requestedPropertyId?: string;
 };
 
 export function ManagerPropertySetupPanel({
@@ -29,6 +30,7 @@ export function ManagerPropertySetupPanel({
   onPropertyUpdated,
   onboardingRefreshSignal = 0,
   onSetupChanged,
+  requestedPropertyId,
 }: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -70,6 +72,15 @@ export function ManagerPropertySetupPanel({
       setPropertyId(properties[0]?.propertyId ?? '');
     }
   }, [properties, propertyId]);
+
+  useEffect(() => {
+    if (
+      requestedPropertyId
+      && properties.some((property) => property.propertyId === requestedPropertyId)
+    ) {
+      setPropertyId(requestedPropertyId);
+    }
+  }, [properties, requestedPropertyId]);
 
   useEffect(() => {
     let active = true;

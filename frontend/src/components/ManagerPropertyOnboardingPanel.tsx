@@ -18,6 +18,7 @@ export type PropertyOnboardingOption = {
 type Props = {
   properties: PropertyOnboardingOption[];
   onSaved?: (profile: PropertyOnboardingProfile) => void;
+  requestedPropertyId?: string;
 };
 
 const statuses: PropertyOnboardingStatus[] = ['incomplete', 'active', 'blocked', 'archived'];
@@ -67,7 +68,11 @@ function profileToForm(profile: PropertyOnboardingProfile): SavePropertyOnboardi
   return form;
 }
 
-export function ManagerPropertyOnboardingPanel({ properties, onSaved }: Props) {
+export function ManagerPropertyOnboardingPanel({
+  properties,
+  onSaved,
+  requestedPropertyId,
+}: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const selectedProperty = properties.find((property) => property.propertyId === propertyId);
   const [form, setForm] = useState<SavePropertyOnboardingRequest | null>(
@@ -76,6 +81,15 @@ export function ManagerPropertyOnboardingPanel({ properties, onSaved }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('Select a property to load its onboarding profile.');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (
+      requestedPropertyId
+      && properties.some((property) => property.propertyId === requestedPropertyId)
+    ) {
+      setPropertyId(requestedPropertyId);
+    }
+  }, [properties, requestedPropertyId]);
 
   useEffect(() => {
     const property = properties.find((item) => item.propertyId === propertyId);

@@ -14,11 +14,16 @@ import {
   deriveAccountOnboardingProgress,
   filterAccountsByOnboardingProgress,
   propertyAttentionReasonLabel,
+  propertyAttentionWorkspace,
   type AccountOnboardingFilter,
 } from '../domain/accountOnboardingProgress';
 
 type Props = {
   organizationId: string;
+  onOpenPropertyWorkspace?: (
+    propertyId: string,
+    workspace: 'operational-profile' | 'service-setup',
+  ) => void;
   onPropertyCreated?: (property: CustomerPropertyRecord) => void;
   onPropertiesLoaded?: (properties: CustomerPropertyRecord[]) => void;
   refreshSignal?: number;
@@ -28,6 +33,7 @@ type PropertyDraft = { displayName: string; serviceAddress: string };
 
 export function ManagerCustomerAccountOnboardingPanel({
   organizationId,
+  onOpenPropertyWorkspace,
   onPropertyCreated,
   onPropertiesLoaded,
   refreshSignal = 0,
@@ -223,11 +229,18 @@ export function ManagerCustomerAccountOnboardingPanel({
                         {attention ? (
                           <ul className="mt-2 flex flex-wrap gap-1">
                             {attention.reasons.map((reason) => (
-                              <li
-                                className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900"
-                                key={reason}
-                              >
-                                {propertyAttentionReasonLabel(reason)}
+                              <li key={reason}>
+                                <button
+                                  className="min-h-9 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+                                  onClick={() => onOpenPropertyWorkspace?.(
+                                    property.propertyId,
+                                    propertyAttentionWorkspace(reason),
+                                  )}
+                                  type="button"
+                                >
+                                  {propertyAttentionReasonLabel(reason)}
+                                  <span aria-hidden="true"> →</span>
+                                </button>
                               </li>
                             ))}
                           </ul>

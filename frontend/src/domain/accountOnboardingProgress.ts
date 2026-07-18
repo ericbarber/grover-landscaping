@@ -57,6 +57,14 @@ export function propertyAttentionReasonLabel(
   }
 }
 
+export function propertyAttentionWorkspace(
+  reason: CustomerPropertyAttentionReason,
+): 'operational-profile' | 'service-setup' {
+  return reason === 'operational_profile_incomplete'
+    ? 'operational-profile'
+    : 'service-setup';
+}
+
 export type AccountOnboardingFilter = 'all' | 'incomplete' | 'complete';
 
 export function filterAccountsByOnboardingProgress(

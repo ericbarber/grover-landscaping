@@ -4,6 +4,7 @@ import {
   deriveAccountOnboardingProgress,
   filterAccountsByOnboardingProgress,
   propertyAttentionReasonLabel,
+  propertyAttentionWorkspace,
 } from './accountOnboardingProgress';
 
 const account: CustomerAccountRecord = {
@@ -75,5 +76,12 @@ describe('account onboarding progress', () => {
     expect(propertyAttentionReasonLabel('crew_unassigned')).toBe('Assign service crew');
     expect(propertyAttentionReasonLabel('property_blocked')).toBe('Resolve blocked status');
     expect(propertyAttentionReasonLabel('activation_pending')).toBe('Activate property');
+  });
+
+  it('routes property attention to the relevant setup workspace', () => {
+    expect(propertyAttentionWorkspace('operational_profile_incomplete')).toBe('operational-profile');
+    expect(propertyAttentionWorkspace('crew_unassigned')).toBe('service-setup');
+    expect(propertyAttentionWorkspace('property_blocked')).toBe('service-setup');
+    expect(propertyAttentionWorkspace('activation_pending')).toBe('service-setup');
   });
 });

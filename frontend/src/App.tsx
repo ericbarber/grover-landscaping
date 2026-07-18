@@ -851,6 +851,8 @@ export function App() {
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
+  const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
+  const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
     readStoredManagerActivityItems(seedManagerActivityItems),
   );
@@ -889,6 +891,25 @@ export function App() {
         jobDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 0);
     }
+  }
+
+  function openPropertyWorkspace(
+    propertyId: string,
+    workspace: 'operational-profile' | 'service-setup',
+  ) {
+    const managerTools = document.getElementById('manager-tools') as HTMLDetailsElement | null;
+    if (managerTools) managerTools.open = true;
+    if (workspace === 'operational-profile') {
+      setRequestedOperationalProfilePropertyId(propertyId);
+    } else {
+      setRequestedServiceSetupPropertyId(propertyId);
+    }
+    window.setTimeout(() => {
+      document.getElementById(`property-${workspace}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 0);
   }
 
   const selectedJobTickets = useMemo(
@@ -1877,9 +1898,10 @@ export function App() {
               crews={managementCompanyPreviewCrews}
             />
           </div>
-          <div className="mt-6">
+          <div className="mt-6 scroll-mt-20" id="property-operational-profile">
             <ManagerPropertyOnboardingPanel
               properties={managerPropertyOnboardingOptions}
+              requestedPropertyId={requestedOperationalProfilePropertyId}
               onSaved={(profile) => {
                 setPropertyOnboardingRefreshSignal((current) => current + 1);
                 setCustomerAccountRefreshSignal((current) => current + 1);
@@ -1893,10 +1915,11 @@ export function App() {
               }}
             />
           </div>
-          <div className="mt-6">
+          <div className="mt-6 scroll-mt-20" id="property-service-setup">
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
               onboardingRefreshSignal={propertyOnboardingRefreshSignal}
+              requestedPropertyId={requestedServiceSetupPropertyId}
               onSetupChanged={() => setCustomerAccountRefreshSignal((current) => current + 1)}
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
@@ -1904,6 +1927,7 @@ export function App() {
           <div className="mt-6">
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
+              onOpenPropertyWorkspace={openPropertyWorkspace}
               refreshSignal={customerAccountRefreshSignal}
               onPropertiesLoaded={registerManagerProperties}
               onPropertyCreated={(property) => {
