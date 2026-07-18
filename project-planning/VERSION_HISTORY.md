@@ -94,6 +94,8 @@ Current continuation work:
   revocation guards after expiration.
 - Added guarded mobile reissue for expired and revoked invitations with a fresh
   token, queued delivery, restored invited membership, and tenant-scoped audit.
+- Prevented concurrent, case-variant duplicate pending invitations per tenant and
+  recipient, and added mobile guidance to existing history and reissue controls.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

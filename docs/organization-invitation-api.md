@@ -59,10 +59,14 @@ Expected behavior:
 
 - Create a pending `organization_memberships` row using the invitee email as the placeholder user id.
 - Create a pending invitation token linked to that membership.
+- Serialize creation per organization and normalized recipient email, and reject
+  a second live pending invitation for that recipient even when its role differs.
 - Queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available.
 - Return the invitation token so local fallback and manual pilot workflows can still proceed if delivery is not configured.
 - The mobile team workflow always supplies a finite 7-, 14-, or 30-day
   expiration; seven days is the default.
+- A duplicate conflict directs the owner to refresh invitation history and use
+  the existing pending entry or reissue closed access.
 
 ### List invitations
 

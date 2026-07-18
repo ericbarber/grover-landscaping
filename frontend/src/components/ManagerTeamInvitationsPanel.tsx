@@ -31,6 +31,12 @@ export function validateTeamInvitation(email: string): string | null {
   return null;
 }
 
+export function invitationCreationFailureMessage(error: unknown): string {
+  return error instanceof Error && error.message.includes('status 409')
+    ? 'This recipient may already have pending access. Refresh history, or reissue expired or revoked access.'
+    : 'The invitation could not be created. Confirm owner access and try again.';
+}
+
 export function ManagerTeamInvitationsPanel({
   organizationId,
   onTeamChanged,
@@ -94,8 +100,8 @@ export function ManagerTeamInvitationsPanel({
           ? `Invitation queued for ${created.inviteeEmail}.`
           : `Local invitation created for ${created.inviteeEmail}.`,
       );
-    } catch {
-      setMessage('The invitation could not be created. Confirm owner access and try again.');
+    } catch (error) {
+      setMessage(invitationCreationFailureMessage(error));
     } finally {
       setIsSending(false);
     }

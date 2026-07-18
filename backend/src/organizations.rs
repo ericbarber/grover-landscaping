@@ -268,11 +268,10 @@ impl OrganizationRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(invitation)) =
-                create_invitation(pool, organization_id, actor_user_id, &request).await
-            {
-                return Some(invitation);
-            }
+            return create_invitation(pool, organization_id, actor_user_id, &request)
+                .await
+                .ok()
+                .flatten();
         }
 
         Some(local_invitation_response(
@@ -665,6 +664,35 @@ async fn create_invitation(
     request: &CreateOrganizationInvitationRequest,
 ) -> Result<Option<OrganizationInvitationResponse>, sqlx::Error> {
     let mut transaction = pool.begin().await?;
+    let duplicate_lock_key = format!(
+        "organization-invitation:{organization_id}:{}",
+        request.invitee_email
+    );
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(&duplicate_lock_key)
+        .execute(&mut *transaction)
+        .await?;
+    let pending_exists: bool = sqlx::query_scalar(
+        r#"
+        SELECT EXISTS (
+            SELECT 1
+            FROM organization_invitations
+            WHERE organization_id = $1
+              AND LOWER(BTRIM(invitee_email)) = LOWER(BTRIM($2))
+              AND status = 'pending'
+              AND (expires_at IS NULL OR expires_at > NOW())
+        )
+        "#,
+    )
+    .bind(organization_id)
+    .bind(&request.invitee_email)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if pending_exists {
+        transaction.rollback().await?;
+        return Ok(None);
+    }
+
     let invitation_id = format!("invitation_{}", Uuid::new_v4().simple());
     let membership_id = format!("membership_{}", Uuid::new_v4().simple());
     let token = format!("invite_{}", Uuid::new_v4().simple());

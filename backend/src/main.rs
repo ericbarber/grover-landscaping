@@ -1329,7 +1329,7 @@ async fn create_organization_invitation(
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "organization_invitation_not_created",
-                message: "The organization invitation could not be created.".to_string(),
+                message: "The invitation could not be created. This recipient may already have pending access; refresh invitation history before trying again.".to_string(),
             }),
         )
             .into_response();

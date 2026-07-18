@@ -91,6 +91,39 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_eq!(pending_summary.invitee_email, invitee_email);
     assert_eq!(pending_summary.status, "pending");
 
+    let duplicate = repository
+        .create_invitation(
+            organization_id,
+            actor_user_id,
+            CreateOrganizationInvitationRequest {
+                invitee_email: invitee_email.to_ascii_uppercase(),
+                role: "manager".to_string(),
+                scope_type: Some("organization".to_string()),
+                scope_id: Some(organization_id.to_string()),
+                expires_at: Some("2099-07-25T12:00:00.000Z".to_string()),
+            },
+        )
+        .await;
+    assert!(
+        duplicate.is_none(),
+        "recipient should have only one live pending invitation"
+    );
+    let pending_recipient_count = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM organization_invitations
+        WHERE organization_id = $1
+          AND LOWER(invitee_email) = LOWER($2)
+          AND status = 'pending'
+        "#,
+    )
+    .bind(organization_id)
+    .bind(invitee_email)
+    .fetch_one(&pool)
+    .await
+    .expect("pending recipient count should be available");
+    assert_eq!(pending_recipient_count, 1);
+
     let notification = sqlx::query_as::<_, (String, serde_json::Value)>(
         r#"
         SELECT template_key, payload
