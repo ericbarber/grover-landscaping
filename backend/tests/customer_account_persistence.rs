@@ -1,7 +1,8 @@
 use grover_landscaping_api::{
     accounts::{
-        AccountRepository, CreateCustomerAccountRequest, UpdateCustomerAccountRequest,
-        UpdateCustomerPropertyStatusRequest,
+        AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
+        CustomerPropertyMutationError, UpdateCustomerAccountRequest,
+        UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
     property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
@@ -91,6 +92,50 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .list_properties(&created.account_id, &["org_outside_tenant".to_string()])
         .await
         .is_empty());
+
+    let updated_property = accounts
+        .update_property_identity(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+            UpdateCustomerPropertyIdentityRequest {
+                display_name: "  Courtyard Service Area  ".to_string(),
+                service_address: "  789 Property Test Avenue  ".to_string(),
+            },
+            "property-identity-test",
+        )
+        .await
+        .expect("tenant member should update property identity");
+    assert_eq!(updated_property.display_name, "Courtyard Service Area");
+    assert_eq!(updated_property.service_address, "789 Property Test Avenue");
+    assert_eq!(
+        accounts
+            .create_property(
+                &created.account_id,
+                CreateCustomerPropertyRequest {
+                    organization_id: "org_demo_landscaping".to_string(),
+                    display_name: "courtyard service area".to_string(),
+                    service_address: "789 property test avenue".to_string(),
+                },
+            )
+            .await,
+        Err(CustomerPropertyMutationError::Duplicate)
+    );
+    assert_eq!(
+        accounts
+            .update_property_identity(
+                &created.account_id,
+                &property.property_id,
+                &["org_outside_tenant".to_string()],
+                UpdateCustomerPropertyIdentityRequest {
+                    display_name: "Outside edit".to_string(),
+                    service_address: "999 Outside Avenue".to_string(),
+                },
+                "outside-tenant",
+            )
+            .await,
+        Err(CustomerPropertyMutationError::NotFound)
+    );
 
     let assignments = PropertyCrewAssignmentRepository::from_pool(pool.clone());
     let assignment = assignments

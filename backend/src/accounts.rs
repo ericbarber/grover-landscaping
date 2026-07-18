@@ -63,6 +63,19 @@ pub struct UpdateCustomerPropertyStatusRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateCustomerPropertyIdentityRequest {
+    pub display_name: String,
+    pub service_address: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CustomerPropertyMutationError {
+    NotFound,
+    Duplicate,
+    Persistence,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerPropertyRecord {
     pub property_id: String,
     pub account_id: String,
@@ -140,15 +153,47 @@ impl AccountRepository {
         &self,
         account_id: &str,
         request: CreateCustomerPropertyRequest,
-    ) -> Option<CustomerPropertyRecord> {
+    ) -> Result<CustomerPropertyRecord, CustomerPropertyMutationError> {
         let request = normalize_create_property_request(request);
         let Some(pool) = &self.pool else {
-            return local_property_record(account_id, &request);
+            return local_property_record(account_id, &request)
+                .ok_or(CustomerPropertyMutationError::NotFound);
         };
         create_property(pool, account_id, &request)
             .await
-            .ok()
-            .flatten()
+            .map_err(map_property_sql_error)?
+            .ok_or(CustomerPropertyMutationError::NotFound)
+    }
+
+    pub async fn update_property_identity(
+        &self,
+        account_id: &str,
+        property_id: &str,
+        organization_ids: &[String],
+        request: UpdateCustomerPropertyIdentityRequest,
+        actor_user_id: &str,
+    ) -> Result<CustomerPropertyRecord, CustomerPropertyMutationError> {
+        let request = normalize_update_property_identity_request(request);
+        let Some(pool) = &self.pool else {
+            return local_property_identity_record(
+                account_id,
+                property_id,
+                organization_ids,
+                &request,
+            )
+            .ok_or(CustomerPropertyMutationError::NotFound);
+        };
+        update_property_identity(
+            pool,
+            account_id,
+            property_id,
+            organization_ids,
+            &request,
+            actor_user_id,
+        )
+        .await
+        .map_err(map_property_sql_error)?
+        .ok_or(CustomerPropertyMutationError::NotFound)
     }
 
     pub async fn update_property_status(
@@ -259,6 +304,16 @@ pub fn validate_update_customer_property_status_request(
     }
 }
 
+pub fn validate_update_customer_property_identity_request(
+    request: &UpdateCustomerPropertyIdentityRequest,
+) -> Result<(), &'static str> {
+    validate_create_customer_property_request(&CreateCustomerPropertyRequest {
+        organization_id: "validation".to_string(),
+        display_name: request.display_name.clone(),
+        service_address: request.service_address.clone(),
+    })
+}
+
 fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustomerAccountRequest {
     request.organization_id = request.organization_id.trim().to_string();
     request.customer_name = request.customer_name.trim().to_string();
@@ -290,6 +345,14 @@ fn normalize_create_property_request(
     mut request: CreateCustomerPropertyRequest,
 ) -> CreateCustomerPropertyRequest {
     request.organization_id = request.organization_id.trim().to_string();
+    request.display_name = request.display_name.trim().to_string();
+    request.service_address = request.service_address.trim().to_string();
+    request
+}
+
+fn normalize_update_property_identity_request(
+    mut request: UpdateCustomerPropertyIdentityRequest,
+) -> UpdateCustomerPropertyIdentityRequest {
     request.display_name = request.display_name.trim().to_string();
     request.service_address = request.service_address.trim().to_string();
     request
@@ -464,6 +527,69 @@ async fn update_property_status(
     Ok(Some(record))
 }
 
+async fn update_property_identity(
+    pool: &PgPool,
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+    request: &UpdateCustomerPropertyIdentityRequest,
+    actor_user_id: &str,
+) -> Result<Option<CustomerPropertyRecord>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        r#"UPDATE customer_properties property
+        SET display_name = $4, service_address = $5, updated_at = NOW()
+        FROM organization_customer_accounts relation
+        WHERE property.id = $2
+          AND property.account_id = $1
+          AND property.organization_id = ANY($3)
+          AND relation.organization_id = property.organization_id
+          AND relation.account_id = property.account_id
+          AND relation.status = 'active'
+        RETURNING property.id, property.account_id, property.organization_id,
+            property.display_name, property.service_address, property.status"#,
+    )
+    .bind(account_id)
+    .bind(property_id)
+    .bind(organization_ids)
+    .bind(&request.display_name)
+    .bind(&request.service_address)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let record = property_record_from_row(row, true);
+    sqlx::query(
+        r#"INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        ) VALUES ($1, $2, $3, 'property_identity_updated', $4, NOW())"#,
+    )
+    .bind(format!(
+        "audit_property_identity_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(actor_user_id)
+    .bind(&record.organization_id)
+    .bind(property_id)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(Some(record))
+}
+
+fn map_property_sql_error(error: sqlx::Error) -> CustomerPropertyMutationError {
+    match &error {
+        sqlx::Error::Database(database_error)
+            if database_error.code().as_deref() == Some("23505") =>
+        {
+            CustomerPropertyMutationError::Duplicate
+        }
+        _ => CustomerPropertyMutationError::Persistence,
+    }
+}
+
 async fn list_properties(
     pool: &PgPool,
     account_id: &str,
@@ -598,6 +724,20 @@ fn local_property_status_record(
         .into_iter()
         .find(|property| property.property_id == property_id)?;
     property.status = status.to_string();
+    Some(property)
+}
+
+fn local_property_identity_record(
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+    request: &UpdateCustomerPropertyIdentityRequest,
+) -> Option<CustomerPropertyRecord> {
+    let mut property = seed_properties(account_id, organization_ids)
+        .into_iter()
+        .find(|property| property.property_id == property_id)?;
+    property.display_name = request.display_name.clone();
+    property.service_address = request.service_address.clone();
     Some(property)
 }
 
@@ -751,6 +891,28 @@ mod tests {
                 },
             ),
             Err("status_invalid")
+        );
+    }
+
+    #[test]
+    fn property_identity_validation_reuses_creation_rules() {
+        assert_eq!(
+            validate_update_customer_property_identity_request(
+                &UpdateCustomerPropertyIdentityRequest {
+                    display_name: "Front courtyard".to_string(),
+                    service_address: "789 Property Test Avenue".to_string(),
+                },
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            validate_update_customer_property_identity_request(
+                &UpdateCustomerPropertyIdentityRequest {
+                    display_name: " ".to_string(),
+                    service_address: "789 Property Test Avenue".to_string(),
+                },
+            ),
+            Err("display_name_invalid")
         );
     }
 

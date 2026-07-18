@@ -37,6 +37,16 @@ Archiving atomically ends the property's active crew assignment and records a
 the manager must explicitly assign one again. Reactivation records a
 `property_reactivated` audit event.
 
+### `PUT /customer-accounts/{account_id}/properties/{property_id}/identity`
+
+Updates the display name and service address within the caller's active
+manager-capable organization memberships. The operation records a
+`property_identity_updated` audit event.
+
+The database rejects case-insensitive duplicates of the combined property name
+and service address within one customer account and service organization.
+Different named service areas may intentionally share one street address.
+
 Portfolio reads consume these explicit records rather than inferring property
 ownership from service jobs. Matching service jobs may contribute the most recent
 service date.

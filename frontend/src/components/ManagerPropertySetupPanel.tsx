@@ -6,6 +6,7 @@ import {
   fetchCrews,
   fetchCustomerPropertyPortfolio,
   fetchPropertyCrewAssignments,
+  updateCustomerPropertyIdentity,
   updateCustomerPropertyStatus,
   type CrewRecord,
   type CustomerPropertyRecord,
@@ -33,6 +34,8 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
   const [crewSetupAvailable, setCrewSetupAvailable] = useState(true);
   const [message, setMessage] = useState('Choose a property to finish service setup.');
   const [pendingLifecycleStatus, setPendingLifecycleStatus] = useState<'active' | 'archived' | null>(null);
+  const [identityName, setIdentityName] = useState('');
+  const [identityAddress, setIdentityAddress] = useState('');
   const selectedProperty = properties.find((property) => property.propertyId === propertyId);
   const accountPortfolios = selectedProperty ? portfolios[selectedProperty.accountId] ?? [] : [];
   const eligibleCrews = useMemo(
@@ -104,6 +107,36 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
     setSelectedCrewId(eligibleCrews[0]?.id ?? '');
     setPendingLifecycleStatus(null);
   }, [propertyId, accountPortfolios[0]?.id, eligibleCrews[0]?.id]);
+
+  useEffect(() => {
+    setIdentityName(selectedProperty?.displayName ?? '');
+    setIdentityAddress(selectedProperty?.serviceAddress ?? '');
+  }, [selectedProperty?.propertyId, selectedProperty?.displayName, selectedProperty?.serviceAddress]);
+
+  async function savePropertyIdentity() {
+    if (!selectedProperty) return;
+    if (identityName.trim().length < 2 || identityAddress.trim().length < 5) {
+      setMessage('Enter a property name and complete service address.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const property = await updateCustomerPropertyIdentity(
+        selectedProperty.accountId,
+        selectedProperty.propertyId,
+        {
+          displayName: identityName.trim(),
+          serviceAddress: identityAddress.trim(),
+        },
+      );
+      onPropertyUpdated?.(property);
+      setMessage(`${property.displayName} identity updated.`);
+    } catch {
+      setMessage('The property could not be updated. Check for a duplicate name and address.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function changePropertyStatus(status: 'active' | 'archived') {
     if (!selectedProperty) return;
@@ -271,6 +304,44 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
               </button>
             </div>
           </div>
+          <details className="mt-4 rounded-xl border border-slate-200 px-3">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-sky-700 [&::-webkit-details-marker]:hidden">
+              Edit property name or address
+            </summary>
+            <div className="grid gap-3 border-t border-slate-100 py-3">
+              <label className="text-sm font-semibold text-slate-700">
+                Property name
+                <input
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                  maxLength={160}
+                  value={identityName}
+                  onChange={(event) => setIdentityName(event.target.value)}
+                />
+              </label>
+              <label className="text-sm font-semibold text-slate-700">
+                Service address
+                <input
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+                  maxLength={240}
+                  value={identityAddress}
+                  onChange={(event) => setIdentityAddress(event.target.value)}
+                />
+              </label>
+              <p className="text-xs text-slate-500">
+                The same address may have multiple named service areas. An exact name-and-address duplicate is blocked.
+              </p>
+              <button
+                className="min-h-11 rounded-lg border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 disabled:opacity-60"
+                disabled={isLoading
+                  || (identityName.trim() === selectedProperty.displayName
+                    && identityAddress.trim() === selectedProperty.serviceAddress)}
+                onClick={() => void savePropertyIdentity()}
+                type="button"
+              >
+                Save property details
+              </button>
+            </div>
+          </details>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Portfolio grouping</p>

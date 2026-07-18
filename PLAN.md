@@ -204,6 +204,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager property setup shows persisted portfolio membership and updates membership counts after regrouping
 - Tenant-scoped property archive/reactivation ends active crew service and records lifecycle audit events
 - Mobile property setup uses two-step lifecycle controls and excludes archived properties from operational onboarding
+- Managers can edit property names and service addresses from mobile setup
+- Database uniqueness prevents duplicate property identities while permitting distinct service areas at one address
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -446,7 +448,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add property identity and service-address editing with duplicate-address safeguards
+- Add explicit onboarding-to-active property activation after operational setup is complete
 
 ## Planned
 

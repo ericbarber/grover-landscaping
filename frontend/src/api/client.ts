@@ -1503,6 +1503,24 @@ export async function updateCustomerPropertyStatus(
   return toCustomerPropertyRecord(item);
 }
 
+export async function updateCustomerPropertyIdentity(
+  accountId: string,
+  propertyId: string,
+  input: Pick<CustomerPropertyRecord, 'displayName' | 'serviceAddress'>,
+): Promise<CustomerPropertyRecord> {
+  const item = await request<Parameters<typeof toCustomerPropertyRecord>[0]>(
+    `${customerAccountPropertiesPath(accountId)}/${encodeURIComponent(propertyId)}/identity`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        display_name: input.displayName,
+        service_address: input.serviceAddress,
+      }),
+    },
+  );
+  return toCustomerPropertyRecord(item);
+}
+
 export async function fetchCrews(): Promise<CrewRecord[]> {
   const items = await request<Array<{
     id: string; name: string; organization_id: string; persisted: boolean;

@@ -13,8 +13,8 @@ mod stop_progress;
 use accounts::{
     validate_create_customer_account_request, validate_create_customer_property_request,
     validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
-    CreateCustomerPropertyRequest, UpdateCustomerAccountRequest,
-    UpdateCustomerPropertyStatusRequest,
+    CreateCustomerPropertyRequest, CustomerPropertyMutationError, UpdateCustomerAccountRequest,
+    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -500,6 +500,10 @@ fn app_with_runtime(
         .route(
             "/customer-accounts/{account_id}/properties/{property_id}",
             put(update_customer_property_status),
+        )
+        .route(
+            "/customer-accounts/{account_id}/properties/{property_id}/identity",
+            put(update_customer_property_identity),
         )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
@@ -1059,11 +1063,86 @@ async fn create_customer_property(
         return response;
     }
     match state.accounts.create_property(&account_id, request).await {
-        Some(property) => (StatusCode::CREATED, Json(property)).into_response(),
-        None => resource_not_found_response(
+        Ok(property) => (StatusCode::CREATED, Json(property)).into_response(),
+        Err(CustomerPropertyMutationError::NotFound) => resource_not_found_response(
             "customer_account_not_found",
             "The requested customer account was not found.",
         ),
+        Err(CustomerPropertyMutationError::Duplicate) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "duplicate_customer_property",
+                message: "A property with this name and service address already exists."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerPropertyMutationError::Persistence) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_property_persistence_unavailable",
+                message: "The customer property could not be persisted.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn update_customer_property_identity(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((account_id, property_id)): Path<(String, String)>,
+    Json(request): Json<UpdateCustomerPropertyIdentityRequest>,
+) -> Response {
+    if let Err(reason) = accounts::validate_update_customer_property_identity_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_customer_property_identity",
+                message: format!("Customer property identity is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .update_property_identity(
+            &account_id,
+            &property_id,
+            &organization_ids,
+            request,
+            &principal.subject,
+        )
+        .await
+    {
+        Ok(property) => Json(property).into_response(),
+        Err(CustomerPropertyMutationError::NotFound) => resource_not_found_response(
+            "customer_property_not_found",
+            "The requested customer property was not found.",
+        ),
+        Err(CustomerPropertyMutationError::Duplicate) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "duplicate_customer_property",
+                message: "A property with this name and service address already exists."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerPropertyMutationError::Persistence) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_property_persistence_unavailable",
+                message: "The customer property could not be updated.".to_string(),
+            }),
+        )
+            .into_response(),
     }
 }
 
@@ -4142,6 +4221,49 @@ mod tests {
                     .uri("/customer-accounts/acct_1001/properties/property_1001")
                     .header("content-type", "application/json")
                     .body(Body::from(r#"{"status":"blocked"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn customer_property_identity_endpoint_updates_local_property() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/customer-accounts/acct_1001/properties/property_1001/identity")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"display_name":"Front Yard","service_address":"123 Oak Street"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["display_name"], "Front Yard");
+        assert_eq!(json["service_address"], "123 Oak Street");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn customer_property_identity_endpoint_rejects_invalid_fields() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/customer-accounts/acct_1001/properties/property_1001/identity")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"display_name":" ","service_address":"123 Oak Street"}"#,
+                    ))
                     .unwrap(),
             )
             .await
