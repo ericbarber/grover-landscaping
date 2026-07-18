@@ -14,6 +14,7 @@ use accounts::{
     validate_create_customer_account_request, validate_create_customer_property_request,
     validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
     CreateCustomerPropertyRequest, UpdateCustomerAccountRequest,
+    UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -495,6 +496,10 @@ fn app_with_runtime(
         .route(
             "/customer-accounts/{account_id}/properties",
             get(list_customer_properties).post(create_customer_property),
+        )
+        .route(
+            "/customer-accounts/{account_id}/properties/{property_id}",
+            put(update_customer_property_status),
         )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
@@ -1058,6 +1063,47 @@ async fn create_customer_property(
         None => resource_not_found_response(
             "customer_account_not_found",
             "The requested customer account was not found.",
+        ),
+    }
+}
+
+async fn update_customer_property_status(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((account_id, property_id)): Path<(String, String)>,
+    Json(request): Json<UpdateCustomerPropertyStatusRequest>,
+) -> Response {
+    if let Err(reason) = accounts::validate_update_customer_property_status_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_customer_property_status",
+                message: format!("Customer property status is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .update_property_status(
+            &account_id,
+            &property_id,
+            &organization_ids,
+            request,
+            &principal.subject,
+        )
+        .await
+    {
+        Some(property) => Json(property).into_response(),
+        None => resource_not_found_response(
+            "customer_property_not_found",
+            "The requested customer property was not found.",
         ),
     }
 }
@@ -4063,6 +4109,45 @@ mod tests {
             json["ungrouped_properties"][0]["address"],
             "456 Maple Avenue"
         );
+    }
+
+    #[tokio::test]
+    async fn customer_property_status_endpoint_archives_local_property() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/customer-accounts/acct_1001/properties/property_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"status":"archived"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["property_id"], "property_1001");
+        assert_eq!(json["status"], "archived");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn customer_property_status_endpoint_rejects_internal_statuses() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/customer-accounts/acct_1001/properties/property_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"status":"blocked"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

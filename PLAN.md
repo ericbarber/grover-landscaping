@@ -202,6 +202,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager property setup panel creates portfolios, groups properties, and assigns crews independently
 - Property setup loads portfolio and crew capabilities independently so limited roles retain their authorized tools
 - Manager property setup shows persisted portfolio membership and updates membership counts after regrouping
+- Tenant-scoped property archive/reactivation ends active crew service and records lifecycle audit events
+- Mobile property setup uses two-step lifecycle controls and excludes archived properties from operational onboarding
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -444,7 +446,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add property archive and reactivation controls with assignment safeguards
+- Add property identity and service-address editing with duplicate-address safeguards
 
 ## Planned
 

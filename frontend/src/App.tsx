@@ -864,6 +864,10 @@ export function App() {
     setManagerPropertyOnboardingOptions((current) => {
       const next = new Map(current.map((property) => [property.propertyId, property]));
       properties.forEach((property) => {
+        if (property.status === 'archived') {
+          next.delete(property.propertyId);
+          return;
+        }
         next.set(property.propertyId, {
           propertyId: property.propertyId,
           accountId: property.accountId,
@@ -1886,7 +1890,10 @@ export function App() {
             />
           </div>
           <div className="mt-6">
-            <ManagerPropertySetupPanel properties={managerCustomerProperties} />
+            <ManagerPropertySetupPanel
+              properties={managerCustomerProperties}
+              onPropertyUpdated={(property) => registerManagerProperties([property])}
+            />
           </div>
           <div className="mt-6">
             <ManagerCustomerAccountOnboardingPanel

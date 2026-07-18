@@ -52,6 +52,8 @@ Current continuation work:
   not allow crew assignment.
 - Manager property setup now shows each yard's current persisted portfolio and
   updates portfolio membership counts immediately after regrouping.
+- Added audited property archive/reactivation controls; archiving atomically ends
+  active crew service and removes the yard from operational onboarding choices.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

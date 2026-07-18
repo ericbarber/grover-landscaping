@@ -1488,6 +1488,21 @@ export async function createCustomerProperty(
   return toCustomerPropertyRecord(item);
 }
 
+export async function updateCustomerPropertyStatus(
+  accountId: string,
+  propertyId: string,
+  status: 'active' | 'archived',
+): Promise<CustomerPropertyRecord> {
+  const item = await request<Parameters<typeof toCustomerPropertyRecord>[0]>(
+    `${customerAccountPropertiesPath(accountId)}/${encodeURIComponent(propertyId)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    },
+  );
+  return toCustomerPropertyRecord(item);
+}
+
 export async function fetchCrews(): Promise<CrewRecord[]> {
   const items = await request<Array<{
     id: string; name: string; organization_id: string; persisted: boolean;

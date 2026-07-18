@@ -27,6 +27,16 @@ property manager in the requested organization. The account relationship must be
 active. Creation does not assign a crew, create a portfolio membership, schedule
 work, or send a notification.
 
+### `PUT /customer-accounts/{account_id}/properties/{property_id}`
+
+Archives or reactivates a property inside the caller's active manager-capable
+organization memberships. The request accepts `active` or `archived`.
+
+Archiving atomically ends the property's active crew assignment and records a
+`property_archived` audit event. Reactivation does not restore the previous crew;
+the manager must explicitly assign one again. Reactivation records a
+`property_reactivated` audit event.
+
 Portfolio reads consume these explicit records rather than inferring property
 ownership from service jobs. Matching service jobs may contribute the most recent
 service date.

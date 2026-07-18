@@ -1,6 +1,10 @@
 use grover_landscaping_api::{
-    accounts::{AccountRepository, CreateCustomerAccountRequest, UpdateCustomerAccountRequest},
+    accounts::{
+        AccountRepository, CreateCustomerAccountRequest, UpdateCustomerAccountRequest,
+        UpdateCustomerPropertyStatusRequest,
+    },
     db::JobRepository,
+    property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
 };
 mod common;
 
@@ -88,6 +92,77 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .is_empty());
 
+    let assignments = PropertyCrewAssignmentRepository::from_pool(pool.clone());
+    let assignment = assignments
+        .assign_crew(
+            &property.property_id,
+            AssignPropertyCrewRequest {
+                crew_id: "crew_1001".to_string(),
+                organization_id: "org_demo_landscaping".to_string(),
+                assigned_at: None,
+            },
+            "property-lifecycle-test",
+        )
+        .await
+        .expect("active property should accept a crew assignment");
+    assert!(assignment.active);
+
+    let archived = accounts
+        .update_property_status(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+            UpdateCustomerPropertyStatusRequest {
+                status: "archived".to_string(),
+            },
+            "property-lifecycle-test",
+        )
+        .await
+        .expect("tenant member should archive the property");
+    assert_eq!(archived.status, "archived");
+    let history = assignments
+        .list_for_property(&property.property_id, &["org_demo_landscaping".to_string()])
+        .await;
+    assert_eq!(history.len(), 1);
+    assert!(!history[0].active);
+    assert!(history[0].ended_at.is_some());
+
+    let reactivated = accounts
+        .update_property_status(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+            UpdateCustomerPropertyStatusRequest {
+                status: "active".to_string(),
+            },
+            "property-lifecycle-test",
+        )
+        .await
+        .expect("tenant member should reactivate the property");
+    assert_eq!(reactivated.status, "active");
+    assert!(accounts
+        .update_property_status(
+            &created.account_id,
+            &property.property_id,
+            &["org_outside_tenant".to_string()],
+            UpdateCustomerPropertyStatusRequest {
+                status: "archived".to_string(),
+            },
+            "outside-tenant",
+        )
+        .await
+        .is_none());
+
+    sqlx::query("DELETE FROM property_crew_assignments WHERE property_id = $1")
+        .bind(&property.property_id)
+        .execute(&pool)
+        .await
+        .expect("test property crew assignments should be cleaned up");
+    sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
+        .bind(&property.property_id)
+        .execute(&pool)
+        .await
+        .expect("test property audit events should be cleaned up");
     sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
         .bind(&created.account_id)
         .execute(&pool)

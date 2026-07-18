@@ -58,6 +58,11 @@ pub struct CreateCustomerPropertyRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateCustomerPropertyStatusRequest {
+    pub status: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerPropertyRecord {
     pub property_id: String,
     pub account_id: String,
@@ -146,6 +151,31 @@ impl AccountRepository {
             .flatten()
     }
 
+    pub async fn update_property_status(
+        &self,
+        account_id: &str,
+        property_id: &str,
+        organization_ids: &[String],
+        request: UpdateCustomerPropertyStatusRequest,
+        actor_user_id: &str,
+    ) -> Option<CustomerPropertyRecord> {
+        let status = request.status.trim();
+        let Some(pool) = &self.pool else {
+            return local_property_status_record(account_id, property_id, organization_ids, status);
+        };
+        update_property_status(
+            pool,
+            account_id,
+            property_id,
+            organization_ids,
+            status,
+            actor_user_id,
+        )
+        .await
+        .ok()
+        .flatten()
+    }
+
     pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummary {
         seed_summary(job_id)
     }
@@ -217,6 +247,16 @@ pub fn validate_create_customer_property_request(
         return Err("service_address_invalid");
     }
     Ok(())
+}
+
+pub fn validate_update_customer_property_status_request(
+    request: &UpdateCustomerPropertyStatusRequest,
+) -> Result<(), &'static str> {
+    if matches!(request.status.trim(), "active" | "archived") {
+        Ok(())
+    } else {
+        Err("status_invalid")
+    }
 }
 
 fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustomerAccountRequest {
@@ -360,6 +400,70 @@ async fn create_property(
     Ok(row.map(|row| property_record_from_row(row, true)))
 }
 
+async fn update_property_status(
+    pool: &PgPool,
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+    status: &str,
+    actor_user_id: &str,
+) -> Result<Option<CustomerPropertyRecord>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        r#"UPDATE customer_properties property
+        SET status = $4, updated_at = NOW()
+        FROM organization_customer_accounts relation
+        WHERE property.id = $2
+          AND property.account_id = $1
+          AND property.organization_id = ANY($3)
+          AND relation.organization_id = property.organization_id
+          AND relation.account_id = property.account_id
+          AND relation.status = 'active'
+        RETURNING property.id, property.account_id, property.organization_id,
+            property.display_name, property.service_address, property.status"#,
+    )
+    .bind(account_id)
+    .bind(property_id)
+    .bind(organization_ids)
+    .bind(status)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let record = property_record_from_row(row, true);
+    if status == "archived" {
+        sqlx::query(
+            r#"UPDATE property_crew_assignments
+            SET active = FALSE, ended_at = COALESCE(ended_at, NOW())
+            WHERE property_id = $1 AND organization_id = $2 AND active"#,
+        )
+        .bind(property_id)
+        .bind(&record.organization_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        r#"INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        ) VALUES ($1, $2, $3, $4, $5, NOW())"#,
+    )
+    .bind(format!("audit_property_status_{}", Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(&record.organization_id)
+    .bind(if status == "archived" {
+        "property_archived"
+    } else {
+        "property_reactivated"
+    })
+    .bind(property_id)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(Some(record))
+}
+
 async fn list_properties(
     pool: &PgPool,
     account_id: &str,
@@ -482,6 +586,19 @@ fn local_update_record(
         billing_notes: request.billing_notes.clone().unwrap_or_default(),
         persisted: false,
     })
+}
+
+fn local_property_status_record(
+    account_id: &str,
+    property_id: &str,
+    organization_ids: &[String],
+    status: &str,
+) -> Option<CustomerPropertyRecord> {
+    let mut property = seed_properties(account_id, organization_ids)
+        .into_iter()
+        .find(|property| property.property_id == property_id)?;
+    property.status = status.to_string();
+    Some(property)
 }
 
 fn local_property_record(
@@ -612,6 +729,28 @@ mod tests {
                 ..valid
             }),
             Err("service_address_invalid")
+        );
+    }
+
+    #[test]
+    fn property_status_validation_allows_only_lifecycle_actions() {
+        for status in ["active", "archived"] {
+            assert_eq!(
+                validate_update_customer_property_status_request(
+                    &UpdateCustomerPropertyStatusRequest {
+                        status: status.to_string(),
+                    },
+                ),
+                Ok(())
+            );
+        }
+        assert_eq!(
+            validate_update_customer_property_status_request(
+                &UpdateCustomerPropertyStatusRequest {
+                    status: "blocked".to_string(),
+                },
+            ),
+            Err("status_invalid")
         );
     }
 

@@ -6,6 +6,7 @@ import {
   fetchCrews,
   fetchCustomerPropertyPortfolio,
   fetchPropertyCrewAssignments,
+  updateCustomerPropertyStatus,
   type CrewRecord,
   type CustomerPropertyRecord,
   type PropertyCrewAssignmentRecord,
@@ -14,9 +15,10 @@ import {
 
 type Props = {
   properties: CustomerPropertyRecord[];
+  onPropertyUpdated?: (property: CustomerPropertyRecord) => void;
 };
 
-export function ManagerPropertySetupPanel({ properties }: Props) {
+export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [portfolios, setPortfolios] = useState<Record<string, PropertyPortfolioRecord[]>>({});
@@ -30,6 +32,7 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
   const [portfolioSetupAvailable, setPortfolioSetupAvailable] = useState(true);
   const [crewSetupAvailable, setCrewSetupAvailable] = useState(true);
   const [message, setMessage] = useState('Choose a property to finish service setup.');
+  const [pendingLifecycleStatus, setPendingLifecycleStatus] = useState<'active' | 'archived' | null>(null);
   const selectedProperty = properties.find((property) => property.propertyId === propertyId);
   const accountPortfolios = selectedProperty ? portfolios[selectedProperty.accountId] ?? [] : [];
   const eligibleCrews = useMemo(
@@ -99,7 +102,48 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
   useEffect(() => {
     setSelectedPortfolioId(accountPortfolios[0]?.id ?? '');
     setSelectedCrewId(eligibleCrews[0]?.id ?? '');
+    setPendingLifecycleStatus(null);
   }, [propertyId, accountPortfolios[0]?.id, eligibleCrews[0]?.id]);
+
+  async function changePropertyStatus(status: 'active' | 'archived') {
+    if (!selectedProperty) return;
+    if (pendingLifecycleStatus !== status) {
+      setPendingLifecycleStatus(status);
+      setMessage(
+        status === 'archived'
+          ? 'Confirm archive. This will end the active crew assignment.'
+          : 'Confirm reactivation to make this property available for setup.',
+      );
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const property = await updateCustomerPropertyStatus(
+        selectedProperty.accountId,
+        selectedProperty.propertyId,
+        status,
+      );
+      onPropertyUpdated?.(property);
+      if (status === 'archived') {
+        setAssignments((current) => ({
+          ...current,
+          [property.propertyId]: (current[property.propertyId] ?? []).map(
+            (assignment) => ({ ...assignment, active: false }),
+          ),
+        }));
+      }
+      setMessage(
+        status === 'archived'
+          ? `${property.displayName} archived and removed from active crew service.`
+          : `${property.displayName} reactivated for service setup.`,
+      );
+      setPendingLifecycleStatus(null);
+    } catch {
+      setMessage('The property status could not be updated.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function addPortfolio() {
     if (!selectedProperty || portfolioName.trim().length < 2) {
@@ -204,7 +248,30 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
       <p className="mt-2 text-xs text-slate-500" role="status">{isLoading ? 'Working…' : message}</p>
 
       {selectedProperty ? (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <>
+          <div className="mt-4 rounded-xl border border-slate-200 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Property lifecycle</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Status: <span className="font-semibold capitalize">{selectedProperty.status}</span>
+                </p>
+              </div>
+              <button
+                className="min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-60"
+                disabled={isLoading}
+                onClick={() => void changePropertyStatus(
+                  selectedProperty.status === 'archived' ? 'active' : 'archived',
+                )}
+                type="button"
+              >
+                {pendingLifecycleStatus
+                  ? `Confirm ${pendingLifecycleStatus === 'archived' ? 'archive' : 'reactivation'}`
+                  : selectedProperty.status === 'archived' ? 'Reactivate property' : 'Archive property'}
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Portfolio grouping</p>
             <p className="mt-1 text-xs text-slate-500">
@@ -221,7 +288,7 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
               <option value="">No portfolio selected</option>
               {accountPortfolios.map((portfolio) => <option key={portfolio.id} value={portfolio.id}>{portfolio.displayName}</option>)}
             </select>
-            <button className="mt-2 w-full rounded-lg bg-sky-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!portfolioSetupAvailable || !selectedPortfolioId || isLoading} onClick={() => void groupProperty()} type="button">Group property</button>
+            <button className="mt-2 w-full rounded-lg bg-sky-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={selectedProperty.status === 'archived' || !portfolioSetupAvailable || !selectedPortfolioId || isLoading} onClick={() => void groupProperty()} type="button">Group property</button>
             <details className="mt-3 rounded-lg border border-slate-200 px-3">
               <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-sky-700 [&::-webkit-details-marker]:hidden">Create portfolio</summary>
               <div className="grid gap-2 border-t border-slate-100 py-3">
@@ -232,7 +299,7 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
                   <option value="hoa">HOA</option>
                   <option value="commercial_client">Commercial client</option>
                 </select>
-                <button className="rounded-lg border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 disabled:opacity-60" disabled={!portfolioSetupAvailable || isLoading} onClick={() => void addPortfolio()} type="button">Create portfolio</button>
+                <button className="rounded-lg border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 disabled:opacity-60" disabled={selectedProperty.status === 'archived' || !portfolioSetupAvailable || isLoading} onClick={() => void addPortfolio()} type="button">Create portfolio</button>
               </div>
             </details>
           </div>
@@ -251,9 +318,10 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
               <option value="">No crew selected</option>
               {eligibleCrews.map((crew) => <option key={crew.id} value={crew.id}>{crew.name}</option>)}
             </select>
-            <button className="mt-2 w-full rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!crewSetupAvailable || !selectedCrewId || isLoading} onClick={() => void assignCrew()} type="button">Assign crew</button>
+            <button className="mt-2 w-full rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={selectedProperty.status === 'archived' || !crewSetupAvailable || !selectedCrewId || isLoading} onClick={() => void assignCrew()} type="button">Assign crew</button>
           </div>
         </div>
+        </>
       ) : <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Create a customer property before portfolio or crew setup.</p>}
     </section>
   );
