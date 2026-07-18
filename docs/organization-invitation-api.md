@@ -94,3 +94,12 @@ Expected behavior:
 - Role updates must not create new memberships.
 - Invitations queue email delivery work, but the configured notification dispatcher/provider is still responsible for sending it.
 - Cognito groups remain coarse application roles. PostgreSQL memberships are the tenant boundary.
+
+## Manager browser workflow
+
+The mobile manager tools expose an organization-scoped invitation form for
+organization owners and support administrators. It submits an email destination,
+supported role, and organization scope to the create endpoint. Persisted
+invitations report that delivery was queued; local fallback invitations expose
+their manual pilot token so local acceptance can be tested without a configured
+email provider. The browser does not treat invitation creation as accepted access.

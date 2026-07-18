@@ -6,6 +6,7 @@ import {
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
+  organizationInvitationsPath,
   photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
@@ -21,6 +22,7 @@ import {
   toCustomerPrivacyExport,
   toJobAddOn,
   toNotificationHistoryItem,
+  toOrganizationInvitation,
   toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
   toPropertyOnboardingProfile,
@@ -65,6 +67,39 @@ describe('core API client mapping', () => {
     })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
     expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
     expect(notificationResolvePath('notification/1001')).toBe('/notifications/notification%2F1001/resolve');
+  });
+
+  it('builds and maps organization invitations', () => {
+    expect(organizationInvitationsPath('org/demo')).toBe(
+      '/organizations/org%2Fdemo/invitations',
+    );
+    expect(toOrganizationInvitation({
+      id: 'invitation_1',
+      organization_id: 'org_1',
+      invitee_email: 'crew@example.com',
+      role: 'crew_member',
+      status: 'pending',
+      scope_type: 'organization',
+      scope_id: 'org_1',
+      token: 'invite_token',
+      membership_id: 'membership_1',
+      invited_by_user_id: 'owner_1',
+      accepted_by_user_id: null,
+      expires_at: null,
+      persisted: true,
+    })).toEqual({
+      id: 'invitation_1',
+      organizationId: 'org_1',
+      inviteeEmail: 'crew@example.com',
+      role: 'crew_member',
+      status: 'pending',
+      scopeType: 'organization',
+      scopeId: 'org_1',
+      token: 'invite_token',
+      membershipId: 'membership_1',
+      expiresAt: null,
+      persisted: true,
+    });
   });
 
   it('builds photo processing recovery paths with optional filters', () => {

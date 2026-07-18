@@ -469,6 +469,44 @@ export interface BootstrapOrganizationResponse {
   persisted: boolean;
 }
 
+export type OrganizationInvitationRole =
+  | 'organization_owner'
+  | 'manager'
+  | 'crew_lead'
+  | 'crew_member'
+  | 'property_owner'
+  | 'property_manager';
+
+interface ApiOrganizationInvitation {
+  id: string;
+  organization_id: string;
+  invitee_email: string;
+  role: OrganizationInvitationRole;
+  status: 'pending' | 'accepted' | 'revoked' | 'expired';
+  scope_type: string;
+  scope_id?: string | null;
+  token: string;
+  membership_id: string;
+  invited_by_user_id: string;
+  accepted_by_user_id?: string | null;
+  expires_at?: string | null;
+  persisted: boolean;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  organizationId: string;
+  inviteeEmail: string;
+  role: OrganizationInvitationRole;
+  status: ApiOrganizationInvitation['status'];
+  scopeType: string;
+  scopeId: string | null;
+  token: string;
+  membershipId: string;
+  expiresAt: string | null;
+  persisted: boolean;
+}
+
 export interface CustomerAccountRecord {
   accountId: string;
   organizationId: string;
@@ -1402,6 +1440,49 @@ export async function bootstrapOrganization(
     membership: toOrganizationMembership(response.membership),
     persisted: response.persisted,
   };
+}
+
+export function organizationInvitationsPath(organizationId: string): string {
+  return `/organizations/${encodeURIComponent(organizationId)}/invitations`;
+}
+
+export function toOrganizationInvitation(
+  invitation: ApiOrganizationInvitation,
+): OrganizationInvitation {
+  return {
+    id: invitation.id,
+    organizationId: invitation.organization_id,
+    inviteeEmail: invitation.invitee_email,
+    role: invitation.role,
+    status: invitation.status,
+    scopeType: invitation.scope_type,
+    scopeId: invitation.scope_id ?? null,
+    token: invitation.token,
+    membershipId: invitation.membership_id,
+    expiresAt: invitation.expires_at ?? null,
+    persisted: invitation.persisted,
+  };
+}
+
+export async function createOrganizationInvitation(
+  organizationId: string,
+  inviteeEmail: string,
+  role: OrganizationInvitationRole,
+): Promise<OrganizationInvitation> {
+  const invitation = await request<ApiOrganizationInvitation>(
+    organizationInvitationsPath(organizationId),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        invitee_email: inviteeEmail,
+        role,
+        scope_type: 'organization',
+        scope_id: organizationId,
+        expires_at: null,
+      }),
+    },
+  );
+  return toOrganizationInvitation(invitation);
 }
 
 function toCustomerAccountRecord(item: {

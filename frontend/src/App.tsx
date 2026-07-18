@@ -53,6 +53,7 @@ import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCusto
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnboardingPanel';
 import { ManagerPropertySetupPanel } from './components/ManagerPropertySetupPanel';
+import { ManagerTeamInvitationsPanel } from './components/ManagerTeamInvitationsPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -906,6 +907,22 @@ export function App() {
     }
     window.setTimeout(() => {
       document.getElementById(`property-${workspace}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 0);
+  }
+
+  function openFirstOwnerSetupStep(
+    target: 'operational-profile' | 'service-setup' | 'day-plan' | 'team-invitations',
+  ) {
+    const managerTools = document.getElementById('manager-tools') as HTMLDetailsElement | null;
+    if (managerTools) managerTools.open = true;
+    const targetId = target === 'operational-profile' || target === 'service-setup'
+      ? `property-${target}`
+      : `first-owner-${target}`;
+    window.setTimeout(() => {
+      document.getElementById(targetId)?.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
       });
@@ -1867,6 +1884,7 @@ export function App() {
             </summary>
             <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
+            onOpenSetupStep={openFirstOwnerSetupStep}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
               setStatusMessage(`${organizationName} owner setup completed.`);
@@ -1878,7 +1896,7 @@ export function App() {
               });
             }}
           />
-          <div>
+          <div className="scroll-mt-20" id="first-owner-day-plan">
             <ManagerDayPlanPanel
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
@@ -1935,6 +1953,9 @@ export function App() {
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />
+          </div>
+          <div className="mt-6 scroll-mt-20" id="first-owner-team-invitations">
+            <ManagerTeamInvitationsPanel organizationId={activeManagerOrganizationId} />
           </div>
           <div className="mt-6">
             <CustomerPortalPreviewPanel

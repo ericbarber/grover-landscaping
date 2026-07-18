@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PrincipalAccessSummary } from '../api/client';
-import { firstOwnerSetupSteps } from './FirstOwnerOnboardingPanel';
+import { firstOwnerSetupSteps, firstOwnerSetupTarget } from './FirstOwnerOnboardingPanel';
 
 describe('first owner onboarding steps', () => {
   it('starts with organization creation when no membership exists', () => {
@@ -31,5 +31,13 @@ describe('first owner onboarding steps', () => {
     };
     expect(firstOwnerSetupSteps(access)).toContain('Publish the first day plan');
     expect(firstOwnerSetupSteps(access)).toContain('Invite additional team members');
+  });
+
+  it('routes actionable setup steps to the matching manager workspace', () => {
+    expect(firstOwnerSetupTarget('Confirm organization and owner access')).toBeNull();
+    expect(firstOwnerSetupTarget('Complete the first property profile')).toBe('operational-profile');
+    expect(firstOwnerSetupTarget('Configure the first crew')).toBe('service-setup');
+    expect(firstOwnerSetupTarget('Publish the first day plan')).toBe('day-plan');
+    expect(firstOwnerSetupTarget('Invite additional team members')).toBe('team-invitations');
   });
 });

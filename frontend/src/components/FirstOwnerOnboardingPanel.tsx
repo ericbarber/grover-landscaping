@@ -7,7 +7,14 @@ import {
 
 type Props = {
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
+  onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
 };
+
+export type FirstOwnerSetupTarget =
+  | 'operational-profile'
+  | 'service-setup'
+  | 'day-plan'
+  | 'team-invitations';
 
 export function firstOwnerSetupSteps(access: PrincipalAccessSummary): string[] {
   if (access.memberships.length === 0) return ['Create your organization'];
@@ -20,7 +27,25 @@ export function firstOwnerSetupSteps(access: PrincipalAccessSummary): string[] {
   ];
 }
 
-export function FirstOwnerOnboardingPanel({ onOrganizationReady }: Props) {
+export function firstOwnerSetupTarget(step: string): FirstOwnerSetupTarget | null {
+  switch (step) {
+    case 'Complete the first property profile':
+      return 'operational-profile';
+    case 'Configure the first crew':
+      return 'service-setup';
+    case 'Publish the first day plan':
+      return 'day-plan';
+    case 'Invite additional team members':
+      return 'team-invitations';
+    default:
+      return null;
+  }
+}
+
+export function FirstOwnerOnboardingPanel({
+  onOrganizationReady,
+  onOpenSetupStep,
+}: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [organizationName, setOrganizationName] = useState('');
   const [organizationType, setOrganizationType] = useState<
@@ -148,12 +173,27 @@ export function FirstOwnerOnboardingPanel({ onOrganizationReady }: Props) {
             </p>
           </div>
           <ol className="mt-4 space-y-2">
-            {firstOwnerSetupSteps(access).map((step, index) => (
-              <li className="flex gap-3 rounded-lg border border-slate-200 p-3 text-sm text-slate-700" key={step}>
+            {firstOwnerSetupSteps(access).map((step, index) => {
+              const target = firstOwnerSetupTarget(step);
+              return (
+              <li className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 text-sm text-slate-700" key={step}>
                 <span className="font-bold text-slate-950">{index + 1}</span>
-                {step}
+                <span className="flex-1">{step}</span>
+                {target ? (
+                  <button
+                    aria-label={`Open ${step.toLowerCase()}`}
+                    className="min-h-11 rounded-lg px-3 font-semibold text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => onOpenSetupStep?.(target)}
+                    type="button"
+                  >
+                    Open <span aria-hidden="true">→</span>
+                  </button>
+                ) : (
+                  <span className="font-semibold text-emerald-700">Ready</span>
+                )}
               </li>
-            ))}
+              );
+            })}
           </ol>
         </>
       ) : null}

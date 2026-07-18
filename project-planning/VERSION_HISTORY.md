@@ -71,6 +71,10 @@ Current continuation work:
   affected account editor.
 - Added a missing-property progress action that opens the affected account's
   property form and closes it after successful creation.
+- Added a mobile team-invitation workflow with organization-scoped roles, queued
+  delivery feedback, and local pilot-token visibility.
+- Linked the first-owner readiness checklist to property, crew, route-planning,
+  and team-administration workspaces.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

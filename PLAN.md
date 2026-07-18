@@ -218,6 +218,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
 - Incomplete customer-detail progress opens the account editor with a mobile-sized action
 - Missing-property progress opens the affected account's property form and closes it after creation
+- Mobile team administration creates organization-scoped role invitations and distinguishes queued delivery from local fallback
+- First-owner setup actions open property, crew, route-planning, and team-invitation workspaces
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -460,7 +462,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add focused first-user administration guidance after organization bootstrap
+- Add owner-facing invitation history and pending-access visibility
 
 ## Planned
 
