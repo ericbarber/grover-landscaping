@@ -5,6 +5,10 @@ These instructions apply to the entire Grover Landscaping repository.
 ## Development Workflow
 
 - Continue work in coherent, reviewable feature slices.
+- After completing and committing one planned slice or phase, immediately begin
+  the next safe in-scope roadmap item instead of stopping only to report status.
+- Pause between phases only when user input, new authority, unavailable external
+  infrastructure, or a materially different product decision is required.
 - Preserve unrelated or pre-existing uncommitted changes.
 - Update `PLAN.md` when delivery status or next implementation work changes.
 - Update `project-planning/ROADMAP.md`, `FEATURE_CATALOG.md`, or

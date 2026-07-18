@@ -21,6 +21,16 @@ status should remain with that feature commit.
 Commits remain local. Pushing, opening pull requests, rewriting history, or
 publishing releases requires a separate explicit request.
 
+## Continuous Roadmap Progress
+
+After a planned feature slice or phase is completed, validated, and committed,
+development should continue with the next safe in-scope roadmap item. A status
+handoff alone is not a reason to stop.
+
+Pause before the next phase only when it requires user-specific information, new
+external authority, unavailable hosted infrastructure, or a product decision
+whose alternatives would materially change the result.
+
 ## Validation Expectations
 
 Use the checks relevant to the affected area:
