@@ -54,6 +54,7 @@ import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnboardingPanel';
 import { ManagerPropertySetupPanel } from './components/ManagerPropertySetupPanel';
 import { ManagerTeamInvitationsPanel } from './components/ManagerTeamInvitationsPanel';
+import { ManagerTeamMembershipsPanel } from './components/ManagerTeamMembershipsPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -1954,7 +1955,8 @@ export function App() {
               }}
             />
           </div>
-          <div className="mt-6 scroll-mt-20" id="first-owner-team-invitations">
+          <div className="mt-6 scroll-mt-20 space-y-6" id="first-owner-team-invitations">
+            <ManagerTeamMembershipsPanel organizationId={activeManagerOrganizationId} />
             <ManagerTeamInvitationsPanel organizationId={activeManagerOrganizationId} />
           </div>
           <div className="mt-6">

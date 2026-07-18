@@ -56,7 +56,7 @@ use grover_landscaping_api::{
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
-        CreateOrganizationInvitationRequest, OrganizationRepository,
+        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, OrganizationRepository,
         UpdateOrganizationMembershipRoleRequest,
     },
     property_crew_assignments::{
@@ -574,6 +574,10 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/memberships/{membership_id}/role",
             put(update_organization_membership_role),
+        )
+        .route(
+            "/organizations/{organization_id}/memberships",
+            get(list_organization_memberships),
         )
         .route(
             "/accounts/{account_id}/property-portfolios",
@@ -1416,7 +1420,7 @@ async fn update_organization_membership_role(
         return response;
     }
 
-    let Some(membership) = state
+    match state
         .organizations
         .update_membership_role(
             &organization_id,
@@ -1425,14 +1429,46 @@ async fn update_organization_membership_role(
             request,
         )
         .await
-    else {
-        return resource_not_found_response(
+    {
+        MembershipRoleUpdateResult::Updated(membership) => Json(membership).into_response(),
+        MembershipRoleUpdateResult::LastActiveOwner => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "last_organization_owner",
+                message: "Assign another active organization owner before changing this role."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        MembershipRoleUpdateResult::NotFound => resource_not_found_response(
             "organization_membership_not_found",
             "The organization membership was not found.",
-        );
-    };
+        ),
+    }
+}
 
-    Json(membership).into_response()
+async fn list_organization_memberships(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    Json(
+        state
+            .organizations
+            .list_organization_memberships(&organization_id)
+            .await,
+    )
+    .into_response()
 }
 
 async fn list_property_portfolios_for_account(
@@ -4253,7 +4289,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_membership_role_endpoint_returns_updated_role() {
+    async fn organization_membership_role_endpoint_guards_last_owner() {
         let request_body = serde_json::json!({
             "role": "manager"
         });
@@ -4270,14 +4306,32 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::CONFLICT);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["id"], "membership_local_owner_demo");
-        assert_eq!(json["role"], "Manager");
-        assert_eq!(json["status"], "active");
+        assert_eq!(json["error"], "last_organization_owner");
+    }
+
+    #[tokio::test]
+    async fn organization_membership_list_endpoint_returns_local_owner() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/memberships")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json[0]["id"], "membership_local_owner_demo");
+        assert_eq!(json[0]["role"], "OrganizationOwner");
     }
 
     #[tokio::test]

@@ -442,6 +442,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::PUT && can_admin_organization;
     }
 
+    if path.starts_with("/organizations/") && path.ends_with("/memberships") {
+        return *method == Method::GET && can_admin_organization;
+    }
+
     if path == "/completion-reports" {
         return *method == Method::GET && can_review_reports;
     }
@@ -1022,6 +1026,11 @@ mod tests {
             &Method::PUT,
             "/organizations/org_demo_landscaping/memberships/membership_1001/role"
         ));
+        assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::GET,
+            "/organizations/org_demo_landscaping/memberships"
+        ));
         assert!(!is_authorized(
             &principal(AccessRole::Manager),
             &Method::POST,
@@ -1041,6 +1050,11 @@ mod tests {
             &principal(AccessRole::PropertyManager),
             &Method::PUT,
             "/organizations/org_demo_landscaping/memberships/membership_1001/role"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            "/organizations/org_demo_landscaping/memberships"
         ));
     }
 

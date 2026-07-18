@@ -1,5 +1,5 @@
 use grover_landscaping_api::organizations::{
-    CreateOrganizationInvitationRequest, OrganizationRepository,
+    CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, OrganizationRepository,
     UpdateOrganizationMembershipRoleRequest,
 };
 use sqlx::postgres::PgPoolOptions;
@@ -144,10 +144,26 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
                 role: "crew_lead".to_string(),
             },
         )
-        .await
-        .expect("membership role should update");
+        .await;
 
-    assert_eq!(updated.id, invitation.membership_id);
+    assert!(matches!(
+        updated,
+        MembershipRoleUpdateResult::Updated(ref membership)
+            if membership.id == invitation.membership_id
+    ));
+    assert_eq!(
+        repository
+            .update_membership_role(
+                organization_id,
+                "membership_local_owner_demo",
+                actor_user_id,
+                UpdateOrganizationMembershipRoleRequest {
+                    role: "manager".to_string(),
+                },
+            )
+            .await,
+        MembershipRoleUpdateResult::LastActiveOwner
+    );
 
     let audit_count = sqlx::query_scalar::<_, i64>(
         r#"

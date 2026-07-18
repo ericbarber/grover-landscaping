@@ -1437,6 +1437,52 @@ export async function fetchPrincipalAccessSummary(): Promise<PrincipalAccessSumm
   return toPrincipalAccessSummary(await request<ApiPrincipalAccessSummary>('/me/access'));
 }
 
+export function organizationMembershipsPath(organizationId: string): string {
+  return `/organizations/${encodeURIComponent(organizationId)}/memberships`;
+}
+
+export function organizationMembershipRolePath(
+  organizationId: string,
+  membershipId: string,
+): string {
+  return `${organizationMembershipsPath(organizationId)}/${encodeURIComponent(membershipId)}/role`;
+}
+
+export async function fetchOrganizationMemberships(
+  organizationId: string,
+): Promise<OrganizationMembership[]> {
+  const memberships = await request<ApiOrganizationMembership[]>(
+    organizationMembershipsPath(organizationId),
+  );
+  return memberships.map(toOrganizationMembership);
+}
+
+const membershipRoleStorage: Record<AccessRole, string> = {
+  OrganizationOwner: 'organization_owner',
+  Manager: 'manager',
+  CrewLead: 'crew_lead',
+  CrewMember: 'crew_member',
+  PropertyOwner: 'property_owner',
+  PropertyManager: 'property_manager',
+  SupportAdmin: 'support_admin',
+};
+
+export async function updateOrganizationMembershipRole(
+  organizationId: string,
+  membershipId: string,
+  role: AccessRole,
+): Promise<OrganizationMembership> {
+  return toOrganizationMembership(
+    await request<ApiOrganizationMembership>(
+      organizationMembershipRolePath(organizationId, membershipId),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ role: membershipRoleStorage[role] }),
+      },
+    ),
+  );
+}
+
 export async function bootstrapOrganization(
   displayName: string,
   organizationType: 'yard_care_company' | 'property_management_company',

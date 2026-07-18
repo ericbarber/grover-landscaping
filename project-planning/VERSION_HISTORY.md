@@ -79,6 +79,8 @@ Current continuation work:
   that omits invitation tokens and stays scoped to the active organization.
 - Added guarded pending-invitation revocation with mobile confirmation, atomic
   membership archival, and a tenant-scoped audit event.
+- Added active and suspended membership visibility plus two-step mobile role
+  administration with a repository-enforced last-owner invariant.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

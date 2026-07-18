@@ -111,6 +111,17 @@ Expected behavior:
 - The caller must have an active membership in the requested organization.
 - The membership role is changed inside the requested organization.
 - A `role_changed` audit event is recorded.
+- The last active organization owner cannot be changed to another role.
+
+### List organization memberships
+
+`GET /organizations/{organization_id}/memberships`
+
+- The caller must be an organization owner or support admin with active access
+  to the requested organization.
+- The response includes active and suspended memberships, with organization,
+  role, status, and scope details.
+- Invited memberships stay represented by invitation history until accepted.
 
 ## Guardrails
 
@@ -129,4 +140,6 @@ their manual pilot token so local acceptance can be tested without a configured
 email provider. The browser does not treat invitation creation as accepted access.
 Owners can also refresh a token-free invitation history and see pending access
 separately from accepted memberships. Pending rows use a two-step mobile
-confirmation before revocation.
+confirmation before revocation. Active membership role changes also use a
+two-step confirmation, and both the browser and repository guard the final
+active organization owner.

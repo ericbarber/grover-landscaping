@@ -8,6 +8,8 @@ import {
   notificationRetryPath,
   organizationInvitationsPath,
   organizationInvitationPath,
+  organizationMembershipRolePath,
+  organizationMembershipsPath,
   photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
@@ -128,6 +130,15 @@ describe('core API client mapping', () => {
       expiresAt: null,
       persisted: true,
     });
+  });
+
+  it('builds organization membership administration paths', () => {
+    expect(organizationMembershipsPath('org/demo')).toBe(
+      '/organizations/org%2Fdemo/memberships',
+    );
+    expect(organizationMembershipRolePath('org/demo', 'member/1')).toBe(
+      '/organizations/org%2Fdemo/memberships/member%2F1/role',
+    );
   });
 
   it('builds photo processing recovery paths with optional filters', () => {
