@@ -59,6 +59,14 @@ pub enum MembershipRoleUpdateResult {
     NotFound,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MembershipStatusUpdateResult {
+    Updated(OrganizationMembership),
+    LastActiveOwner,
+    NotManageable,
+    NotFound,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateOrganizationInvitationRequest {
     pub invitee_email: String,
@@ -71,6 +79,11 @@ pub struct CreateOrganizationInvitationRequest {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct UpdateOrganizationMembershipRoleRequest {
     pub role: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateOrganizationMembershipStatusRequest {
+    pub status: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -326,6 +339,48 @@ impl OrganizationRepository {
         } else {
             MembershipRoleUpdateResult::Updated(membership)
         }
+    }
+
+    pub async fn update_membership_status(
+        &self,
+        organization_id: &str,
+        membership_id: &str,
+        actor_user_id: &str,
+        request: UpdateOrganizationMembershipStatusRequest,
+    ) -> MembershipStatusUpdateResult {
+        let status = request.status.trim();
+        if !matches!(status, "active" | "suspended") {
+            return MembershipStatusUpdateResult::NotManageable;
+        }
+        if let Some(pool) = &self.pool {
+            if let Ok(updated) = update_membership_status(
+                pool,
+                organization_id,
+                membership_id,
+                actor_user_id,
+                status,
+            )
+            .await
+            {
+                return updated;
+            }
+        }
+        let Some(membership) =
+            seed_memberships("local-development-user")
+                .into_iter()
+                .find(|membership| {
+                    membership.organization_id == organization_id && membership.id == membership_id
+                })
+        else {
+            return MembershipStatusUpdateResult::NotFound;
+        };
+        if membership.role == AccessRole::OrganizationOwner && status == "suspended" {
+            return MembershipStatusUpdateResult::LastActiveOwner;
+        }
+        MembershipStatusUpdateResult::Updated(OrganizationMembership {
+            status: status.to_string(),
+            ..membership
+        })
     }
 }
 
@@ -938,6 +993,106 @@ async fn update_membership_role(
     )
 }
 
+async fn update_membership_status(
+    pool: &PgPool,
+    organization_id: &str,
+    membership_id: &str,
+    actor_user_id: &str,
+    status: &str,
+) -> Result<MembershipStatusUpdateResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        r#"
+        SELECT role, status
+        FROM organization_memberships
+        WHERE id = $1
+          AND organization_id = $2
+        FOR UPDATE
+        "#,
+    )
+    .bind(membership_id)
+    .bind(organization_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(MembershipStatusUpdateResult::NotFound);
+    };
+    let current_role: String = current.get("role");
+    let current_status: String = current.get("status");
+    if !matches!(current_status.as_str(), "active" | "suspended") {
+        transaction.rollback().await?;
+        return Ok(MembershipStatusUpdateResult::NotManageable);
+    }
+    if current_role == "organization_owner" && current_status == "active" && status == "suspended" {
+        let active_owner_ids = sqlx::query_scalar::<_, String>(
+            r#"
+            SELECT id
+            FROM organization_memberships
+            WHERE organization_id = $1
+              AND role = 'organization_owner'
+              AND status = 'active'
+            FOR UPDATE
+            "#,
+        )
+        .bind(organization_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        if active_owner_ids.len() <= 1 {
+            transaction.rollback().await?;
+            return Ok(MembershipStatusUpdateResult::LastActiveOwner);
+        }
+    }
+    let row = sqlx::query(
+        r#"
+        UPDATE organization_memberships membership
+        SET status = $3,
+            updated_at = NOW()
+        FROM organizations organization
+        WHERE membership.id = $1
+          AND membership.organization_id = $2
+          AND organization.id = membership.organization_id
+        RETURNING
+            membership.id,
+            membership.organization_id,
+            organization.display_name AS organization_name,
+            organization.organization_type,
+            membership.user_id,
+            membership.role,
+            membership.status,
+            membership.scope_type,
+            membership.scope_id
+        "#,
+    )
+    .bind(membership_id)
+    .bind(organization_id)
+    .bind(status)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if current_status != status && row.is_some() {
+        insert_access_audit_event(
+            &mut transaction,
+            actor_user_id,
+            organization_id,
+            if status == "active" {
+                "membership_reactivated"
+            } else {
+                "membership_suspended"
+            },
+            membership_id,
+        )
+        .await?;
+    }
+    transaction.commit().await?;
+    let role: String = row.as_ref().map(|row| row.get("role")).unwrap_or_default();
+    Ok(
+        match row.and_then(|row| organization_membership_from_row(row, role)) {
+            Some(membership) => MembershipStatusUpdateResult::Updated(membership),
+            None => MembershipStatusUpdateResult::NotFound,
+        },
+    )
+}
+
 async fn insert_access_audit_event(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     actor_user_id: &str,
@@ -1238,8 +1393,9 @@ mod tests {
     use super::{
         access_role_from_storage, access_role_to_storage, validate_bootstrap_organization_request,
         validate_create_invitation_request, BootstrapOrganizationRequest,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, OrganizationRepository,
-        UpdateOrganizationMembershipRoleRequest,
+        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
+        MembershipStatusUpdateResult, OrganizationRepository,
+        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
     };
     use crate::access_control::{can_manage_schedule, AccessRole};
 
@@ -1406,5 +1562,23 @@ mod tests {
             .await;
 
         assert_eq!(result, MembershipRoleUpdateResult::LastActiveOwner);
+    }
+
+    #[tokio::test]
+    async fn repository_guards_local_last_owner_suspension() {
+        let repository = OrganizationRepository::default();
+        assert_eq!(
+            repository
+                .update_membership_status(
+                    "org_demo_landscaping",
+                    "membership_local_owner_demo",
+                    "local-development-user",
+                    UpdateOrganizationMembershipStatusRequest {
+                        status: "suspended".to_string(),
+                    },
+                )
+                .await,
+            MembershipStatusUpdateResult::LastActiveOwner
+        );
     }
 }

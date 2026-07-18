@@ -9,6 +9,7 @@ import {
   organizationInvitationsPath,
   organizationInvitationPath,
   organizationMembershipRolePath,
+  organizationMembershipStatusPath,
   organizationMembershipsPath,
   photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
@@ -138,6 +139,9 @@ describe('core API client mapping', () => {
     );
     expect(organizationMembershipRolePath('org/demo', 'member/1')).toBe(
       '/organizations/org%2Fdemo/memberships/member%2F1/role',
+    );
+    expect(organizationMembershipStatusPath('org/demo', 'member/1')).toBe(
+      '/organizations/org%2Fdemo/memberships/member%2F1/status',
     );
   });
 

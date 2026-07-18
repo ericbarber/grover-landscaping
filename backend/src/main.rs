@@ -56,8 +56,9 @@ use grover_landscaping_api::{
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, OrganizationRepository,
-        UpdateOrganizationMembershipRoleRequest,
+        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
+        MembershipStatusUpdateResult, OrganizationRepository,
+        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -574,6 +575,10 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/memberships/{membership_id}/role",
             put(update_organization_membership_role),
+        )
+        .route(
+            "/organizations/{organization_id}/memberships/{membership_id}/status",
+            put(update_organization_membership_status),
         )
         .route(
             "/organizations/{organization_id}/memberships",
@@ -1469,6 +1474,69 @@ async fn list_organization_memberships(
             .await,
     )
     .into_response()
+}
+
+async fn update_organization_membership_status(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, membership_id)): Path<(String, String)>,
+    Json(request): Json<UpdateOrganizationMembershipStatusRequest>,
+) -> Response {
+    if !matches!(request.status.trim(), "active" | "suspended") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_membership_status",
+                message: "Membership status must be active or suspended.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .organizations
+        .update_membership_status(
+            &organization_id,
+            &membership_id,
+            &principal.subject,
+            request,
+        )
+        .await
+    {
+        MembershipStatusUpdateResult::Updated(membership) => Json(membership).into_response(),
+        MembershipStatusUpdateResult::LastActiveOwner => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "last_organization_owner",
+                message:
+                    "Assign another active organization owner before suspending this membership."
+                        .to_string(),
+            }),
+        )
+            .into_response(),
+        MembershipStatusUpdateResult::NotManageable => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "membership_status_not_manageable",
+                message: "Only active or suspended memberships can use this lifecycle action."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        MembershipStatusUpdateResult::NotFound => resource_not_found_response(
+            "organization_membership_not_found",
+            "The organization membership was not found.",
+        ),
+    }
 }
 
 async fn list_property_portfolios_for_account(
@@ -4332,6 +4400,26 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json[0]["id"], "membership_local_owner_demo");
         assert_eq!(json[0]["role"], "OrganizationOwner");
+    }
+
+    #[tokio::test]
+    async fn organization_membership_status_endpoint_guards_last_owner() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/memberships/membership_local_owner_demo/status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"status":"suspended"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "last_organization_owner");
     }
 
     #[tokio::test]

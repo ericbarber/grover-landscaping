@@ -1448,6 +1448,13 @@ export function organizationMembershipRolePath(
   return `${organizationMembershipsPath(organizationId)}/${encodeURIComponent(membershipId)}/role`;
 }
 
+export function organizationMembershipStatusPath(
+  organizationId: string,
+  membershipId: string,
+): string {
+  return `${organizationMembershipsPath(organizationId)}/${encodeURIComponent(membershipId)}/status`;
+}
+
 export async function fetchOrganizationMemberships(
   organizationId: string,
 ): Promise<OrganizationMembership[]> {
@@ -1478,6 +1485,22 @@ export async function updateOrganizationMembershipRole(
       {
         method: 'PUT',
         body: JSON.stringify({ role: membershipRoleStorage[role] }),
+      },
+    ),
+  );
+}
+
+export async function updateOrganizationMembershipStatus(
+  organizationId: string,
+  membershipId: string,
+  status: 'active' | 'suspended',
+): Promise<OrganizationMembership> {
+  return toOrganizationMembership(
+    await request<ApiOrganizationMembership>(
+      organizationMembershipStatusPath(organizationId, membershipId),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
       },
     ),
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   fetchOrganizationMemberships,
   updateOrganizationMembershipRole,
+  updateOrganizationMembershipStatus,
   type AccessRole,
   type OrganizationMembership,
 } from '../api/client';
@@ -23,6 +24,14 @@ export function canChangeMembershipRole(
     && (membership.role !== 'OrganizationOwner' || activeOwnerCount > 1);
 }
 
+export function canSuspendMembership(
+  membership: OrganizationMembership,
+  activeOwnerCount: number,
+): boolean {
+  return membership.status === 'active'
+    && (membership.role !== 'OrganizationOwner' || activeOwnerCount > 1);
+}
+
 export function ManagerTeamMembershipsPanel({
   organizationId,
 }: {
@@ -31,6 +40,7 @@ export function ManagerTeamMembershipsPanel({
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [draftRoles, setDraftRoles] = useState<Record<string, AccessRole>>({});
   const [confirmingMembershipId, setConfirmingMembershipId] = useState('');
+  const [confirmingLifecycleId, setConfirmingLifecycleId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const activeOwnerCount = memberships.filter(
@@ -78,6 +88,29 @@ export function ManagerTeamMembershipsPanel({
     }
   }
 
+  async function changeStatus(
+    membership: OrganizationMembership,
+    status: 'active' | 'suspended',
+  ) {
+    setIsLoading(true);
+    try {
+      const updated = await updateOrganizationMembershipStatus(
+        organizationId,
+        membership.id,
+        status,
+      );
+      setMemberships((current) => current.map((item) => (
+        item.id === updated.id ? updated : item
+      )));
+      setConfirmingLifecycleId('');
+      setMessage(`${updated.userId} membership ${status === 'active' ? 'reactivated' : 'suspended'}.`);
+    } catch {
+      setMessage('The membership status could not be changed. Keep at least one active owner.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -100,6 +133,7 @@ export function ManagerTeamMembershipsPanel({
       <ul className="mt-4 space-y-3">
         {memberships.map((membership) => {
           const canChange = canChangeMembershipRole(membership, activeOwnerCount);
+          const canSuspend = canSuspendMembership(membership, activeOwnerCount);
           const draftRole = draftRoles[membership.id] ?? membership.role;
           const changed = draftRole !== membership.role;
           return (
@@ -121,6 +155,7 @@ export function ManagerTeamMembershipsPanel({
                       [membership.id]: event.target.value as AccessRole,
                     }));
                     setConfirmingMembershipId('');
+                    setConfirmingLifecycleId('');
                   }}
                   value={draftRole}
                 >
@@ -167,6 +202,68 @@ export function ManagerTeamMembershipsPanel({
                     type="button"
                   >
                     Review role change
+                  </button>
+                )
+              ) : null}
+              {membership.status === 'active' && !changed ? (
+                canSuspend ? (
+                  confirmingLifecycleId === membership.id ? (
+                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                      <button
+                        className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
+                        disabled={isLoading}
+                        onClick={() => setConfirmingLifecycleId('')}
+                        type="button"
+                      >
+                        Keep active
+                      </button>
+                      <button
+                        className="min-h-11 rounded-lg bg-red-700 text-xs font-bold text-white disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => void changeStatus(membership, 'suspended')}
+                        type="button"
+                      >
+                        Confirm suspend
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="mt-3 min-h-11 w-full rounded-lg border border-red-200 text-xs font-semibold text-red-700"
+                      onClick={() => setConfirmingLifecycleId(membership.id)}
+                      type="button"
+                    >
+                      Suspend membership
+                    </button>
+                  )
+                ) : null
+              ) : null}
+              {membership.status === 'suspended' ? (
+                confirmingLifecycleId === membership.id ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
+                      disabled={isLoading}
+                      onClick={() => setConfirmingLifecycleId('')}
+                      type="button"
+                    >
+                      Keep suspended
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg bg-emerald-700 text-xs font-bold text-white disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => void changeStatus(membership, 'active')}
+                      type="button"
+                    >
+                      Confirm reactivate
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="mt-3 min-h-11 w-full rounded-lg bg-emerald-700 text-xs font-bold text-white"
+                    onClick={() => setConfirmingLifecycleId(membership.id)}
+                    type="button"
+                  >
+                    Reactivate membership
                   </button>
                 )
               ) : null}

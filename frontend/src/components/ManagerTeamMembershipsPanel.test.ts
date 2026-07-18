@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { OrganizationMembership } from '../api/client';
-import { canChangeMembershipRole } from './ManagerTeamMembershipsPanel';
+import {
+  canChangeMembershipRole,
+  canSuspendMembership,
+} from './ManagerTeamMembershipsPanel';
 
 const membership = (
   role: OrganizationMembership['role'],
@@ -26,5 +29,12 @@ describe('team membership role controls', () => {
   it('allows active non-owner roles and excludes suspended memberships', () => {
     expect(canChangeMembershipRole(membership('Manager'), 1)).toBe(true);
     expect(canChangeMembershipRole(membership('Manager', 'suspended'), 1)).toBe(false);
+  });
+
+  it('guards last-owner suspension and allows reactivation separately', () => {
+    expect(canSuspendMembership(membership('OrganizationOwner'), 1)).toBe(false);
+    expect(canSuspendMembership(membership('OrganizationOwner'), 2)).toBe(true);
+    expect(canSuspendMembership(membership('Manager'), 1)).toBe(true);
+    expect(canSuspendMembership(membership('Manager', 'suspended'), 1)).toBe(false);
   });
 });

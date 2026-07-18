@@ -123,6 +123,19 @@ Expected behavior:
   role, status, and scope details.
 - Invited memberships stay represented by invitation history until accepted.
 
+### Suspend or reactivate membership
+
+`PUT /organizations/{organization_id}/memberships/{membership_id}/status`
+
+Required field:
+
+- `status`: `active` or `suspended`
+
+Only active and suspended memberships can use this operation. Suspending the
+last active organization owner is rejected. Successful transitions record
+`membership_suspended` or `membership_reactivated`; repeating the current status
+is idempotent and does not add another audit event.
+
 ## Guardrails
 
 - Invite acceptance must not grant access outside the invited organization and scope.
@@ -142,4 +155,5 @@ Owners can also refresh a token-free invitation history and see pending access
 separately from accepted memberships. Pending rows use a two-step mobile
 confirmation before revocation. Active membership role changes also use a
 two-step confirmation, and both the browser and repository guard the final
-active organization owner.
+active organization owner. Suspension and reactivation use the same confirmation
+and last-owner safeguards.

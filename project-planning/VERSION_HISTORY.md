@@ -81,6 +81,8 @@ Current continuation work:
   membership archival, and a tenant-scoped audit event.
 - Added active and suspended membership visibility plus two-step mobile role
   administration with a repository-enforced last-owner invariant.
+- Added audited membership suspension and reactivation with two-step mobile
+  confirmation and the same repository-enforced last-owner invariant.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

@@ -1,6 +1,7 @@
 use grover_landscaping_api::organizations::{
-    CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, OrganizationRepository,
-    UpdateOrganizationMembershipRoleRequest,
+    CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
+    OrganizationRepository, UpdateOrganizationMembershipRoleRequest,
+    UpdateOrganizationMembershipStatusRequest,
 };
 use sqlx::postgres::PgPoolOptions;
 
@@ -180,6 +181,52 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("audit count should be available");
     assert_eq!(audit_count, 2);
+
+    let suspended = repository
+        .update_membership_status(
+            organization_id,
+            &invitation.membership_id,
+            actor_user_id,
+            UpdateOrganizationMembershipStatusRequest {
+                status: "suspended".to_string(),
+            },
+        )
+        .await;
+    assert!(matches!(
+        suspended,
+        MembershipStatusUpdateResult::Updated(ref membership)
+            if membership.status == "suspended"
+    ));
+    let reactivated = repository
+        .update_membership_status(
+            organization_id,
+            &invitation.membership_id,
+            actor_user_id,
+            UpdateOrganizationMembershipStatusRequest {
+                status: "active".to_string(),
+            },
+        )
+        .await;
+    assert!(matches!(
+        reactivated,
+        MembershipStatusUpdateResult::Updated(ref membership)
+            if membership.status == "active"
+    ));
+    let lifecycle_audit_count = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE organization_id = $1
+          AND target_id = $2
+          AND event_kind IN ('membership_suspended', 'membership_reactivated')
+        "#,
+    )
+    .bind(organization_id)
+    .bind(&invitation.membership_id)
+    .fetch_one(&pool)
+    .await
+    .expect("membership lifecycle audits should be available");
+    assert_eq!(lifecycle_audit_count, 2);
 
     let revocable_email = "invite-revocation@example.com";
     sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
