@@ -82,6 +82,14 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert!(invitation.persisted);
     assert_eq!(invitation.status, "pending");
 
+    let pending_invitations = repository.list_invitations(organization_id).await;
+    let pending_summary = pending_invitations
+        .iter()
+        .find(|item| item.id == invitation.id)
+        .expect("created invitation should be listed");
+    assert_eq!(pending_summary.invitee_email, invitee_email);
+    assert_eq!(pending_summary.status, "pending");
+
     let notification_template = sqlx::query_scalar::<_, String>(
         r#"
         SELECT template_key
@@ -117,6 +125,15 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_eq!(accepted.invitation.status, "accepted");
     assert_eq!(accepted.membership.user_id, accepted_user_id);
     assert_eq!(accepted.membership.status, "active");
+
+    let accepted_invitations = repository.list_invitations(organization_id).await;
+    assert_eq!(
+        accepted_invitations
+            .iter()
+            .find(|item| item.id == invitation.id)
+            .map(|item| item.status.as_str()),
+        Some("accepted")
+    );
 
     let updated = repository
         .update_membership_role(

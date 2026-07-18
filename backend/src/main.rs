@@ -561,7 +561,7 @@ fn app_with_runtime(
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route(
             "/organizations/{organization_id}/invitations",
-            post(create_organization_invitation),
+            get(list_organization_invitations).post(create_organization_invitation),
         )
         .route(
             "/organization-invitations/{token}/accept",
@@ -1313,6 +1313,25 @@ async fn create_organization_invitation(
     };
 
     (StatusCode::CREATED, Json(invitation)).into_response()
+}
+
+async fn list_organization_invitations(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+
+    Json(state.organizations.list_invitations(&organization_id).await).into_response()
 }
 
 async fn accept_organization_invitation(
@@ -4093,6 +4112,25 @@ mod tests {
         assert_eq!(json["role"], "manager");
         assert_eq!(json["status"], "pending");
         assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_list_endpoint_returns_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/invitations")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json, serde_json::json!([]));
     }
 
     #[tokio::test]

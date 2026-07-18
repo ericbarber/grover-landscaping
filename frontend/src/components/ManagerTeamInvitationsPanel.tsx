@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   createOrganizationInvitation,
+  fetchOrganizationInvitations,
   type OrganizationInvitation,
   type OrganizationInvitationRole,
+  type OrganizationInvitationSummary,
 } from '../api/client';
 
 const roles: Array<{ value: OrganizationInvitationRole; label: string }> = [
@@ -31,8 +33,26 @@ export function ManagerTeamInvitationsPanel({
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<OrganizationInvitationRole>('crew_member');
   const [invitation, setInvitation] = useState<OrganizationInvitation | null>(null);
+  const [history, setHistory] = useState<OrganizationInvitationSummary[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  async function refreshHistory() {
+    if (!organizationId) return;
+    setIsLoadingHistory(true);
+    try {
+      setHistory(await fetchOrganizationInvitations(organizationId));
+    } catch {
+      setMessage('Invitation history requires organization-owner access.');
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }
+
+  useEffect(() => {
+    void refreshHistory();
+  }, [organizationId]);
 
   async function sendInvitation() {
     const validationMessage = validateTeamInvitation(email);
@@ -45,6 +65,11 @@ export function ManagerTeamInvitationsPanel({
     try {
       const created = await createOrganizationInvitation(organizationId, email.trim(), role);
       setInvitation(created);
+      const { token: _token, ...summary } = created;
+      setHistory((current) => [
+        summary,
+        ...current.filter((item) => item.id !== created.id),
+      ]);
       setEmail('');
       setMessage(
         created.persisted
@@ -119,6 +144,52 @@ export function ManagerTeamInvitationsPanel({
           ) : null}
         </div>
       ) : null}
+      <div className="mt-5 border-t border-slate-200 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-bold text-slate-950">Invitation history</h3>
+            <p className="text-xs text-slate-500">
+              {history.filter((item) => item.status === 'pending').length} pending
+            </p>
+          </div>
+          <button
+            className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700 disabled:opacity-60"
+            disabled={isLoadingHistory}
+            onClick={() => void refreshHistory()}
+            type="button"
+          >
+            {isLoadingHistory ? 'Loading…' : 'Refresh'}
+          </button>
+        </div>
+        <ul className="mt-3 space-y-2">
+          {history.map((item) => (
+            <li className="rounded-lg bg-slate-50 p-3 text-sm" key={item.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-900">{item.inviteeEmail}</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {item.role.replace(/_/g, ' ')}
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${
+                  item.status === 'accepted'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : item.status === 'pending'
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {item.status}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {!isLoadingHistory && history.length === 0 ? (
+          <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            No persisted invitations yet.
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }

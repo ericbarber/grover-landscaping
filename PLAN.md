@@ -220,6 +220,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Missing-property progress opens the affected account's property form and closes it after creation
 - Mobile team administration creates organization-scoped role invitations and distinguishes queued delivery from local fallback
 - First-owner setup actions open property, crew, route-planning, and team-invitation workspaces
+- Owners can review tenant-scoped invitation history and distinguish pending, accepted, revoked, and expired access without exposing invite tokens
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -462,7 +463,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add owner-facing invitation history and pending-access visibility
+- Add guarded invitation revocation for pending access
 
 ## Planned
 

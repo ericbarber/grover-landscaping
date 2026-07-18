@@ -60,6 +60,18 @@ Expected behavior:
 - Queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available.
 - Return the invitation token so local fallback and manual pilot workflows can still proceed if delivery is not configured.
 
+### List invitations
+
+`GET /organizations/{organization_id}/invitations`
+
+- The caller must be an organization owner or support admin with an active
+  membership in the requested organization.
+- Results are ordered newest first and include pending, accepted, revoked, and
+  expired invitations.
+- Invitation tokens and actor identifiers are omitted from list responses.
+- Local fallback returns an empty history because local invitations are not
+  persisted between requests.
+
 ### Accept invitation
 
 `POST /organization-invitations/{token}/accept`
@@ -103,3 +115,5 @@ supported role, and organization scope to the create endpoint. Persisted
 invitations report that delivery was queued; local fallback invitations expose
 their manual pilot token so local acceptance can be tested without a configured
 email provider. The browser does not treat invitation creation as accepted access.
+Owners can also refresh a token-free invitation history and see pending access
+separately from accepted memberships.

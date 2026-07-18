@@ -75,6 +75,8 @@ Current continuation work:
   delivery feedback, and local pilot-token visibility.
 - Linked the first-owner readiness checklist to property, crew, route-planning,
   and team-administration workspaces.
+- Added an owner-only invitation history endpoint and mobile pending-access list
+  that omits invitation tokens and stays scoped to the active organization.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

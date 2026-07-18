@@ -507,6 +507,21 @@ export interface OrganizationInvitation {
   persisted: boolean;
 }
 
+interface ApiOrganizationInvitationSummary {
+  id: string;
+  organization_id: string;
+  invitee_email: string;
+  role: OrganizationInvitationRole;
+  status: ApiOrganizationInvitation['status'];
+  scope_type: string;
+  scope_id?: string | null;
+  membership_id: string;
+  expires_at?: string | null;
+  persisted: boolean;
+}
+
+export type OrganizationInvitationSummary = Omit<OrganizationInvitation, 'token'>;
+
 export interface CustomerAccountRecord {
   accountId: string;
   organizationId: string;
@@ -1483,6 +1498,32 @@ export async function createOrganizationInvitation(
     },
   );
   return toOrganizationInvitation(invitation);
+}
+
+export function toOrganizationInvitationSummary(
+  invitation: ApiOrganizationInvitationSummary,
+): OrganizationInvitationSummary {
+  return {
+    id: invitation.id,
+    organizationId: invitation.organization_id,
+    inviteeEmail: invitation.invitee_email,
+    role: invitation.role,
+    status: invitation.status,
+    scopeType: invitation.scope_type,
+    scopeId: invitation.scope_id ?? null,
+    membershipId: invitation.membership_id,
+    expiresAt: invitation.expires_at ?? null,
+    persisted: invitation.persisted,
+  };
+}
+
+export async function fetchOrganizationInvitations(
+  organizationId: string,
+): Promise<OrganizationInvitationSummary[]> {
+  const invitations = await request<ApiOrganizationInvitationSummary[]>(
+    organizationInvitationsPath(organizationId),
+  );
+  return invitations.map(toOrganizationInvitationSummary);
 }
 
 function toCustomerAccountRecord(item: {

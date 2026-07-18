@@ -84,6 +84,20 @@ pub struct OrganizationInvitationResponse {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OrganizationInvitationSummary {
+    pub id: String,
+    pub organization_id: String,
+    pub invitee_email: String,
+    pub role: String,
+    pub status: String,
+    pub scope_type: String,
+    pub scope_id: Option<String>,
+    pub membership_id: String,
+    pub expires_at: Option<String>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationInvitationAcceptanceResponse {
     pub invitation: OrganizationInvitationResponse,
     pub membership: OrganizationMembership,
@@ -204,6 +218,18 @@ impl OrganizationRepository {
             actor_user_id,
             request,
         ))
+    }
+
+    pub async fn list_invitations(
+        &self,
+        organization_id: &str,
+    ) -> Vec<OrganizationInvitationSummary> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        list_invitations(pool, organization_id)
+            .await
+            .unwrap_or_default()
     }
 
     pub async fn accept_invitation(
@@ -519,6 +545,37 @@ async fn create_invitation(
     transaction.commit().await?;
 
     Ok(row.map(organization_invitation_response_from_row))
+}
+
+async fn list_invitations(
+    pool: &PgPool,
+    organization_id: &str,
+) -> Result<Vec<OrganizationInvitationSummary>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            id,
+            organization_id,
+            invitee_email,
+            role,
+            status,
+            scope_type,
+            scope_id,
+            membership_id,
+            expires_at::text AS expires_at
+        FROM organization_invitations
+        WHERE organization_id = $1
+        ORDER BY created_at DESC, id DESC
+        "#,
+    )
+    .bind(organization_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(organization_invitation_summary_from_row)
+        .collect())
 }
 
 async fn accept_invitation(
@@ -860,6 +917,23 @@ fn organization_invitation_response_from_row(
         membership_id: row.get("membership_id"),
         invited_by_user_id: row.get("invited_by_user_id"),
         accepted_by_user_id: row.get("accepted_by_user_id"),
+        expires_at: row.get("expires_at"),
+        persisted: true,
+    }
+}
+
+fn organization_invitation_summary_from_row(
+    row: sqlx::postgres::PgRow,
+) -> OrganizationInvitationSummary {
+    OrganizationInvitationSummary {
+        id: row.get("id"),
+        organization_id: row.get("organization_id"),
+        invitee_email: row.get("invitee_email"),
+        role: row.get("role"),
+        status: row.get("status"),
+        scope_type: row.get("scope_type"),
+        scope_id: row.get("scope_id"),
+        membership_id: row.get("membership_id"),
         expires_at: row.get("expires_at"),
         persisted: true,
     }
