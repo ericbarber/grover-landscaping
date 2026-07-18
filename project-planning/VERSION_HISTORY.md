@@ -34,6 +34,8 @@ Current continuation work:
   portrait orientation, safe-area viewports, and Grover Field branding.
 - Mobile route cards now keep stop progress prominent while route changes,
   request history, and extra-service controls remain available on demand.
+- Mobile job detail now presents lifecycle actions first and condenses the
+  read-only checklist into an expandable completion summary.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

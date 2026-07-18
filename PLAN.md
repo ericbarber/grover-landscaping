@@ -201,6 +201,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile application manifest, standalone display metadata, field icon, and safe-area viewport support
 - Compact mobile route cards with primary progress actions kept visible
 - Progressive disclosure for route changes, submitted requests, and per-stop amendments
+- Mobile job detail prioritizes start and complete actions above secondary content
+- Expandable job checklist with compact completion-count summary
 - PostgreSQL migrations
 - Day-plan, crew, and stop table migration
 - Local migration script

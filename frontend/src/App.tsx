@@ -616,11 +616,31 @@ function JobDetailPanel({
           <StatusBadge status={job.status} />
         </div>
 
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Checklist</h3>
+        <div className="mt-5 grid gap-3 min-[380px]:grid-cols-2">
+          <button
+            className="rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+            onClick={() => void onStart()}
+          >
+            Start Job
+          </button>
+          <button
+            className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
+            onClick={() => void onComplete()}
+          >
+            Complete Job
+          </button>
+        </div>
+
+        <details className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600 [&::-webkit-details-marker]:hidden">
+            Checklist
+            <span className="rounded-full bg-white px-2 py-1 text-xs tracking-normal text-slate-600">
+              {job.checklist.filter((item) => item.completed).length}/{job.checklist.length} complete
+            </span>
+          </summary>
           <div className="mt-3 space-y-2">
             {job.checklist.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-white p-3">
                 <span
                   className={`h-3 w-3 rounded-full ${item.completed ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   aria-hidden="true"
@@ -629,7 +649,8 @@ function JobDetailPanel({
               </div>
             ))}
           </div>
-        </div>
+          <div className="h-3" />
+        </details>
 
         {addOns.length > 0 ? (
           <div className="mt-6">
@@ -667,21 +688,6 @@ function JobDetailPanel({
             </div>
           </div>
         ) : null}
-
-        <div className="mt-6 grid gap-3 min-[380px]:grid-cols-2">
-          <button
-            className="rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
-            onClick={() => void onStart()}
-          >
-            Start Job
-          </button>
-          <button
-            className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
-            onClick={() => void onComplete()}
-          >
-            Complete Job
-          </button>
-        </div>
 
         <div className="mt-6 rounded-2xl bg-slate-50 p-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
