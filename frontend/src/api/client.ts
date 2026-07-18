@@ -1491,7 +1491,7 @@ export async function createCustomerProperty(
 export async function updateCustomerPropertyStatus(
   accountId: string,
   propertyId: string,
-  status: 'active' | 'archived',
+  status: 'onboarding' | 'active' | 'archived',
 ): Promise<CustomerPropertyRecord> {
   const item = await request<Parameters<typeof toCustomerPropertyRecord>[0]>(
     `${customerAccountPropertiesPath(accountId)}/${encodeURIComponent(propertyId)}`,

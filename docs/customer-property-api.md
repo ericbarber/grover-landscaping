@@ -30,12 +30,19 @@ work, or send a notification.
 ### `PUT /customer-accounts/{account_id}/properties/{property_id}`
 
 Archives or reactivates a property inside the caller's active manager-capable
-organization memberships. The request accepts `active` or `archived`.
+organization memberships. The request accepts `onboarding`, `active`, or
+`archived`; `onboarding` is reserved for reactivating an archived property.
 
 Archiving atomically ends the property's active crew assignment and records a
-`property_archived` audit event. Reactivation does not restore the previous crew;
-the manager must explicitly assign one again. Reactivation records a
-`property_reactivated` audit event.
+`property_archived` audit event. Reactivation moves the property back to
+`onboarding`; it does not restore the previous crew, so the manager must
+explicitly assign one again. Reactivation records a `property_reactivated` audit
+event.
+
+Moving an onboarding or blocked property to `active` requires both an active
+operational onboarding profile and an active crew assignment. A failed readiness
+check returns `409 customer_property_not_ready`. Successful first activation
+records a `property_activated` audit event.
 
 ### `PUT /customer-accounts/{account_id}/properties/{property_id}/identity`
 

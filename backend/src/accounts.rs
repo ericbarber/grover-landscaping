@@ -75,6 +75,14 @@ pub enum CustomerPropertyMutationError {
     Persistence,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CustomerPropertyStatusError {
+    NotFound,
+    NotReady,
+    InvalidTransition,
+    Persistence,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerPropertyRecord {
     pub property_id: String,
@@ -203,10 +211,11 @@ impl AccountRepository {
         organization_ids: &[String],
         request: UpdateCustomerPropertyStatusRequest,
         actor_user_id: &str,
-    ) -> Option<CustomerPropertyRecord> {
+    ) -> Result<CustomerPropertyRecord, CustomerPropertyStatusError> {
         let status = request.status.trim();
         let Some(pool) = &self.pool else {
-            return local_property_status_record(account_id, property_id, organization_ids, status);
+            return local_property_status_record(account_id, property_id, organization_ids, status)
+                .ok_or(CustomerPropertyStatusError::NotFound);
         };
         update_property_status(
             pool,
@@ -217,8 +226,6 @@ impl AccountRepository {
             actor_user_id,
         )
         .await
-        .ok()
-        .flatten()
     }
 
     pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummary {
@@ -297,7 +304,7 @@ pub fn validate_create_customer_property_request(
 pub fn validate_update_customer_property_status_request(
     request: &UpdateCustomerPropertyStatusRequest,
 ) -> Result<(), &'static str> {
-    if matches!(request.status.trim(), "active" | "archived") {
+    if matches!(request.status.trim(), "active" | "archived" | "onboarding") {
         Ok(())
     } else {
         Err("status_invalid")
@@ -470,8 +477,73 @@ async fn update_property_status(
     organization_ids: &[String],
     status: &str,
     actor_user_id: &str,
-) -> Result<Option<CustomerPropertyRecord>, sqlx::Error> {
-    let mut transaction = pool.begin().await?;
+) -> Result<CustomerPropertyRecord, CustomerPropertyStatusError> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+    let current = sqlx::query(
+        r#"SELECT property.status, property.organization_id
+        FROM customer_properties property
+        JOIN organization_customer_accounts relation
+          ON relation.organization_id = property.organization_id
+         AND relation.account_id = property.account_id
+         AND relation.status = 'active'
+        WHERE property.id = $2
+          AND property.account_id = $1
+          AND property.organization_id = ANY($3)"#,
+    )
+    .bind(account_id)
+    .bind(property_id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+    let Some(current) = current else {
+        transaction
+            .rollback()
+            .await
+            .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+        return Err(CustomerPropertyStatusError::NotFound);
+    };
+    let current_status: String = current.get("status");
+    let organization_id: String = current.get("organization_id");
+    if status == "onboarding" && current_status != "archived" {
+        transaction
+            .rollback()
+            .await
+            .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+        return Err(CustomerPropertyStatusError::InvalidTransition);
+    }
+    if status == "active" && current_status != "active" {
+        let ready: bool = sqlx::query_scalar(
+            r#"SELECT
+                EXISTS (
+                    SELECT 1 FROM property_onboarding_profiles profile
+                    WHERE profile.property_id = $1
+                      AND profile.organization_id = $2
+                      AND profile.onboarding_status = 'active'
+                )
+                AND EXISTS (
+                    SELECT 1 FROM property_crew_assignments assignment
+                    WHERE assignment.property_id = $1
+                      AND assignment.organization_id = $2
+                      AND assignment.active
+                )"#,
+        )
+        .bind(property_id)
+        .bind(&organization_id)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+        if !ready {
+            transaction
+                .rollback()
+                .await
+                .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+            return Err(CustomerPropertyStatusError::NotReady);
+        }
+    }
     let row = sqlx::query(
         r#"UPDATE customer_properties property
         SET status = $4, updated_at = NOW()
@@ -490,10 +562,14 @@ async fn update_property_status(
     .bind(organization_ids)
     .bind(status)
     .fetch_optional(&mut *transaction)
-    .await?;
+    .await
+    .map_err(|_| CustomerPropertyStatusError::Persistence)?;
     let Some(row) = row else {
-        transaction.rollback().await?;
-        return Ok(None);
+        transaction
+            .rollback()
+            .await
+            .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+        return Err(CustomerPropertyStatusError::NotFound);
     };
     let record = property_record_from_row(row, true);
     if status == "archived" {
@@ -505,7 +581,8 @@ async fn update_property_status(
         .bind(property_id)
         .bind(&record.organization_id)
         .execute(&mut *transaction)
-        .await?;
+        .await
+        .map_err(|_| CustomerPropertyStatusError::Persistence)?;
     }
     sqlx::query(
         r#"INSERT INTO access_audit_events (
@@ -515,16 +592,21 @@ async fn update_property_status(
     .bind(format!("audit_property_status_{}", Uuid::new_v4().simple()))
     .bind(actor_user_id)
     .bind(&record.organization_id)
-    .bind(if status == "archived" {
-        "property_archived"
-    } else {
-        "property_reactivated"
+    .bind(match (status, current_status.as_str()) {
+        ("archived", _) => "property_archived",
+        ("onboarding", "archived") => "property_reactivated",
+        ("active", _) => "property_activated",
+        _ => "property_status_updated",
     })
     .bind(property_id)
     .execute(&mut *transaction)
-    .await?;
-    transaction.commit().await?;
-    Ok(Some(record))
+    .await
+    .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| CustomerPropertyStatusError::Persistence)?;
+    Ok(record)
 }
 
 async fn update_property_identity(
@@ -874,7 +956,7 @@ mod tests {
 
     #[test]
     fn property_status_validation_allows_only_lifecycle_actions() {
-        for status in ["active", "archived"] {
+        for status in ["onboarding", "active", "archived"] {
             assert_eq!(
                 validate_update_customer_property_status_request(
                     &UpdateCustomerPropertyStatusRequest {

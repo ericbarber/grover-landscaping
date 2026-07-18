@@ -56,6 +56,8 @@ Current continuation work:
   active crew service and removes the yard from operational onboarding choices.
 - Added mobile property name/address editing with audited tenant boundaries and a
   case-insensitive duplicate identity constraint.
+- Guarded first property activation on an active operational profile plus crew
+  assignment, with distinct activation and reactivation audit events.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

@@ -33,7 +33,7 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
   const [portfolioSetupAvailable, setPortfolioSetupAvailable] = useState(true);
   const [crewSetupAvailable, setCrewSetupAvailable] = useState(true);
   const [message, setMessage] = useState('Choose a property to finish service setup.');
-  const [pendingLifecycleStatus, setPendingLifecycleStatus] = useState<'active' | 'archived' | null>(null);
+  const [pendingLifecycleStatus, setPendingLifecycleStatus] = useState<'onboarding' | 'active' | 'archived' | null>(null);
   const [identityName, setIdentityName] = useState('');
   const [identityAddress, setIdentityAddress] = useState('');
   const selectedProperty = properties.find((property) => property.propertyId === propertyId);
@@ -138,14 +138,16 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
     }
   }
 
-  async function changePropertyStatus(status: 'active' | 'archived') {
+  async function changePropertyStatus(status: 'onboarding' | 'active' | 'archived') {
     if (!selectedProperty) return;
     if (pendingLifecycleStatus !== status) {
       setPendingLifecycleStatus(status);
       setMessage(
         status === 'archived'
           ? 'Confirm archive. This will end the active crew assignment.'
-          : 'Confirm reactivation to make this property available for setup.',
+          : status === 'onboarding'
+            ? 'Confirm reactivation. A new crew assignment will still be required.'
+            : 'Confirm activation after the operational profile and crew assignment are ready.',
       );
       return;
     }
@@ -168,11 +170,17 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
       setMessage(
         status === 'archived'
           ? `${property.displayName} archived and removed from active crew service.`
-          : `${property.displayName} reactivated for service setup.`,
+          : status === 'onboarding'
+            ? `${property.displayName} returned to onboarding for service setup.`
+            : `${property.displayName} activated for service.`,
       );
       setPendingLifecycleStatus(null);
     } catch {
-      setMessage('The property status could not be updated.');
+      setMessage(
+        status === 'active'
+          ? 'Finish the active operational profile and assign a crew before activation.'
+          : 'The property status could not be updated.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -294,13 +302,21 @@ export function ManagerPropertySetupPanel({ properties, onPropertyUpdated }: Pro
                 className="min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-60"
                 disabled={isLoading}
                 onClick={() => void changePropertyStatus(
-                  selectedProperty.status === 'archived' ? 'active' : 'archived',
+                  selectedProperty.status === 'active'
+                    ? 'archived'
+                    : selectedProperty.status === 'archived' ? 'onboarding' : 'active',
                 )}
                 type="button"
               >
                 {pendingLifecycleStatus
-                  ? `Confirm ${pendingLifecycleStatus === 'archived' ? 'archive' : 'reactivation'}`
-                  : selectedProperty.status === 'archived' ? 'Reactivate property' : 'Archive property'}
+                  ? `Confirm ${pendingLifecycleStatus === 'archived'
+                    ? 'archive'
+                    : pendingLifecycleStatus === 'onboarding' ? 'reactivation' : 'activation'}`
+                  : selectedProperty.status === 'active'
+                    ? 'Archive property'
+                    : selectedProperty.status === 'archived'
+                      ? 'Reactivate property'
+                      : 'Activate property'}
               </button>
             </div>
           </div>

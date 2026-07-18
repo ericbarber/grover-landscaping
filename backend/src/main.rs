@@ -13,8 +13,9 @@ mod stop_progress;
 use accounts::{
     validate_create_customer_account_request, validate_create_customer_property_request,
     validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
-    CreateCustomerPropertyRequest, CustomerPropertyMutationError, UpdateCustomerAccountRequest,
-    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
+    CreateCustomerPropertyRequest, CustomerPropertyMutationError, CustomerPropertyStatusError,
+    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+    UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -1179,11 +1180,36 @@ async fn update_customer_property_status(
         )
         .await
     {
-        Some(property) => Json(property).into_response(),
-        None => resource_not_found_response(
+        Ok(property) => Json(property).into_response(),
+        Err(CustomerPropertyStatusError::NotFound) => resource_not_found_response(
             "customer_property_not_found",
             "The requested customer property was not found.",
         ),
+        Err(CustomerPropertyStatusError::NotReady) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_property_not_ready",
+                message: "Activate the operational onboarding profile and assign a crew before activating this property.".to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerPropertyStatusError::InvalidTransition) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_customer_property_transition",
+                message: "Archived properties must return to onboarding before activation."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerPropertyStatusError::Persistence) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_property_persistence_unavailable",
+                message: "The customer property status could not be updated.".to_string(),
+            }),
+        )
+            .into_response(),
     }
 }
 

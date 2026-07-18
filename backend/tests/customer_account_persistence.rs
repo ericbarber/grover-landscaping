@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-        CustomerPropertyMutationError, UpdateCustomerAccountRequest,
+        CustomerPropertyMutationError, CustomerPropertyStatusError, UpdateCustomerAccountRequest,
         UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
@@ -137,6 +137,36 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         Err(CustomerPropertyMutationError::NotFound)
     );
 
+    assert_eq!(
+        accounts
+            .update_property_status(
+                &created.account_id,
+                &property.property_id,
+                &["org_demo_landscaping".to_string()],
+                UpdateCustomerPropertyStatusRequest {
+                    status: "active".to_string(),
+                },
+                "property-activation-test",
+            )
+            .await,
+        Err(CustomerPropertyStatusError::NotReady)
+    );
+    sqlx::query(
+        r#"INSERT INTO property_onboarding_profiles (
+            property_id, account_id, organization_id, service_address,
+            billing_contact_name, billing_contact_email,
+            notification_contact_name, notification_email, onboarding_status
+        ) VALUES ($1, $2, 'org_demo_landscaping', $3, 'Billing Contact',
+            'billing@example.com', 'Notification Contact',
+            'notify@example.com', 'active')"#,
+    )
+    .bind(&property.property_id)
+    .bind(&created.account_id)
+    .bind(&updated_property.service_address)
+    .execute(&pool)
+    .await
+    .expect("test onboarding profile should be created");
+
     let assignments = PropertyCrewAssignmentRepository::from_pool(pool.clone());
     let assignment = assignments
         .assign_crew(
@@ -151,6 +181,20 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("active property should accept a crew assignment");
     assert!(assignment.active);
+
+    let activated = accounts
+        .update_property_status(
+            &created.account_id,
+            &property.property_id,
+            &["org_demo_landscaping".to_string()],
+            UpdateCustomerPropertyStatusRequest {
+                status: "active".to_string(),
+            },
+            "property-activation-test",
+        )
+        .await
+        .expect("ready onboarding property should activate");
+    assert_eq!(activated.status, "active");
 
     let archived = accounts
         .update_property_status(
@@ -178,26 +222,33 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             &property.property_id,
             &["org_demo_landscaping".to_string()],
             UpdateCustomerPropertyStatusRequest {
-                status: "active".to_string(),
+                status: "onboarding".to_string(),
             },
             "property-lifecycle-test",
         )
         .await
         .expect("tenant member should reactivate the property");
-    assert_eq!(reactivated.status, "active");
-    assert!(accounts
-        .update_property_status(
-            &created.account_id,
-            &property.property_id,
-            &["org_outside_tenant".to_string()],
-            UpdateCustomerPropertyStatusRequest {
-                status: "archived".to_string(),
-            },
-            "outside-tenant",
-        )
-        .await
-        .is_none());
+    assert_eq!(reactivated.status, "onboarding");
+    assert_eq!(
+        accounts
+            .update_property_status(
+                &created.account_id,
+                &property.property_id,
+                &["org_outside_tenant".to_string()],
+                UpdateCustomerPropertyStatusRequest {
+                    status: "archived".to_string(),
+                },
+                "outside-tenant",
+            )
+            .await,
+        Err(CustomerPropertyStatusError::NotFound)
+    );
 
+    sqlx::query("DELETE FROM property_onboarding_profiles WHERE property_id = $1")
+        .bind(&property.property_id)
+        .execute(&pool)
+        .await
+        .expect("test property onboarding profile should be cleaned up");
     sqlx::query("DELETE FROM property_crew_assignments WHERE property_id = $1")
         .bind(&property.property_id)
         .execute(&pool)

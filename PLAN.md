@@ -206,6 +206,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile property setup uses two-step lifecycle controls and excludes archived properties from operational onboarding
 - Managers can edit property names and service addresses from mobile setup
 - Database uniqueness prevents duplicate property identities while permitting distinct service areas at one address
+- First activation requires an active operational profile and crew assignment
+- Mobile lifecycle guidance distinguishes activation, archival, and reactivation
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -448,7 +450,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add explicit onboarding-to-active property activation after operational setup is complete
+- Surface property activation readiness as a checklist before the manager attempts activation
 
 ## Planned
 
