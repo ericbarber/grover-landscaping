@@ -158,8 +158,19 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .expect("pending membership should exist");
     assert_eq!(pending_status, "invited");
 
+    assert!(
+        repository
+            .accept_invitation(
+                &invitation.token,
+                "user_wrong_invitation_recipient",
+                Some("someone.else@example.com"),
+            )
+            .await
+            .is_none(),
+        "a different verified email should not activate access"
+    );
     let accepted = repository
-        .accept_invitation(&invitation.token, accepted_user_id)
+        .accept_invitation(&invitation.token, accepted_user_id, Some(invitee_email))
         .await
         .expect("invitation should be accepted");
 
@@ -391,7 +402,11 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     );
     assert!(
         repository
-            .accept_invitation(&expiring.token, "user_expired_invitation")
+            .accept_invitation(
+                &expiring.token,
+                "user_expired_invitation",
+                Some(expiring_email),
+            )
             .await
             .is_none(),
         "expired invitation should not activate access"
@@ -427,13 +442,21 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_ne!(reissued.token, expiring.token);
     assert!(
         repository
-            .accept_invitation(&expiring.token, "user_old_expired_token")
+            .accept_invitation(
+                &expiring.token,
+                "user_old_expired_token",
+                Some(expiring_email),
+            )
             .await
             .is_none(),
         "reissue should invalidate the previous token"
     );
     let accepted_reissue = repository
-        .accept_invitation(&reissued.token, "user_reissued_invitation")
+        .accept_invitation(
+            &reissued.token,
+            "user_reissued_invitation",
+            Some(expiring_email),
+        )
         .await
         .expect("new reissue token should activate access");
     assert_eq!(accepted_reissue.membership.status, "active");

@@ -337,18 +337,25 @@ impl OrganizationRepository {
         &self,
         token: &str,
         accepting_user_id: &str,
+        accepting_email: Option<&str>,
     ) -> Option<OrganizationInvitationAcceptanceResponse> {
         if token.trim().is_empty() {
             return None;
         }
+        let accepting_email = accepting_email?.trim().to_ascii_lowercase();
+        if !valid_invitee_email(&accepting_email) {
+            return None;
+        }
 
         if let Some(pool) = &self.pool {
-            if let Ok(accepted) = accept_invitation(pool, token.trim(), accepting_user_id).await {
+            if let Ok(accepted) =
+                accept_invitation(pool, token.trim(), accepting_user_id, &accepting_email).await
+            {
                 return accepted;
             }
         }
 
-        local_invitation_acceptance(token, accepting_user_id)
+        local_invitation_acceptance(token, accepting_user_id, &accepting_email)
     }
 
     pub async fn update_membership_role(
@@ -1060,6 +1067,7 @@ async fn accept_invitation(
     pool: &PgPool,
     token: &str,
     accepting_user_id: &str,
+    accepting_email: &str,
 ) -> Result<Option<OrganizationInvitationAcceptanceResponse>, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let invitation_row = sqlx::query(
@@ -1079,12 +1087,14 @@ async fn accept_invitation(
             expires_at::text AS expires_at
         FROM organization_invitations
         WHERE token = $1
+          AND LOWER(BTRIM(invitee_email)) = LOWER(BTRIM($2))
           AND status = 'pending'
           AND (expires_at IS NULL OR expires_at > NOW())
         FOR UPDATE
         "#,
     )
     .bind(token)
+    .bind(accepting_email)
     .fetch_optional(&mut *transaction)
     .await?;
 
@@ -1658,8 +1668,9 @@ fn local_invitation_response(
 fn local_invitation_acceptance(
     token: &str,
     accepting_user_id: &str,
+    accepting_email: &str,
 ) -> Option<OrganizationInvitationAcceptanceResponse> {
-    if !token.starts_with("invite_token_") {
+    if !token.starts_with("invite_token_") || accepting_email != "invited@example.com" {
         return None;
     }
 
@@ -1903,7 +1914,11 @@ mod tests {
         let repository = OrganizationRepository::default();
 
         let accepted = repository
-            .accept_invitation("invite_token_org_demo_landscaping_manager", "accepted-user")
+            .accept_invitation(
+                "invite_token_org_demo_landscaping_manager",
+                "accepted-user",
+                Some("invited@example.com"),
+            )
             .await
             .expect("local invite token should be accepted");
 

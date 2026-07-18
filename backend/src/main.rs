@@ -1439,12 +1439,16 @@ async fn accept_organization_invitation(
 ) -> Response {
     let Some(accepted) = state
         .organizations
-        .accept_invitation(&token, &principal.subject)
+        .accept_invitation(
+            &token,
+            &principal.subject,
+            principal.verified_email.as_deref(),
+        )
         .await
     else {
         return resource_not_found_response(
             "organization_invitation_not_found",
-            "The organization invitation was not found or is no longer pending.",
+            "The organization invitation was not found, is no longer pending, or is addressed to a different verified email.",
         );
     };
 
@@ -4067,6 +4071,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
             claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
@@ -4087,6 +4092,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "other-user".to_string(),
             username: "Other User".to_string(),
+            verified_email: None,
             claim_roles: vec![AccessRole::Manager],
             roles: vec![AccessRole::Manager],
         };
@@ -4109,6 +4115,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
             claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
@@ -4131,6 +4138,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "other-user".to_string(),
             username: "Other User".to_string(),
+            verified_email: None,
             claim_roles: vec![AccessRole::CrewMember],
             roles: vec![AccessRole::CrewMember],
         };
@@ -4149,6 +4157,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
             claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
@@ -4167,6 +4176,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
             claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };

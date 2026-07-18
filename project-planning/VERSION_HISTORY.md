@@ -100,6 +100,8 @@ Current continuation work:
   history, with concise mobile failed-delivery retry guidance.
 - Added a two-step owner retry action that safely returns failed or dead-letter
   invitation email to the existing audited notification queue.
+- Bound invitation acceptance to the authenticated token's normalized verified
+  email, with non-disclosing mismatch responses and recipient sign-in guidance.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

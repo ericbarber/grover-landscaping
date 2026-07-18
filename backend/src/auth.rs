@@ -40,6 +40,7 @@ pub struct PublicAuthConfig {
 pub struct AuthPrincipal {
     pub subject: String,
     pub username: String,
+    pub verified_email: Option<String>,
     pub claim_roles: Vec<AccessRole>,
     pub roles: Vec<AccessRole>,
 }
@@ -72,6 +73,10 @@ struct CognitoAccessTokenClaims {
     sub: String,
     #[serde(default)]
     username: Option<String>,
+    #[serde(default)]
+    email: Option<String>,
+    #[serde(default)]
+    email_verified: bool,
     client_id: String,
     token_use: String,
     #[serde(rename = "cognito:groups", default)]
@@ -202,6 +207,7 @@ impl AuthService {
             AuthBackend::Disabled => Ok(AuthPrincipal {
                 subject: "local-development-user".to_string(),
                 username: "Local Developer".to_string(),
+                verified_email: Some("invited@example.com".to_string()),
                 claim_roles: vec![AccessRole::OrganizationOwner],
                 roles: vec![AccessRole::OrganizationOwner],
             }),
@@ -300,9 +306,12 @@ impl CognitoJwtVerifier {
             .filter_map(|group| AccessRole::from_cognito_group(group))
             .collect();
 
+        let verified_email =
+            normalized_verified_email(claims.email.as_deref(), claims.email_verified);
         Ok(AuthPrincipal {
             username: claims.username.unwrap_or_else(|| claims.sub.clone()),
             subject: claims.sub,
+            verified_email,
             claim_roles: roles.clone(),
             roles,
         })
@@ -319,6 +328,15 @@ impl CognitoJwtVerifier {
 
         key.ok_or(AuthError::MissingSigningKey)
     }
+}
+
+fn normalized_verified_email(email: Option<&str>, verified: bool) -> Option<String> {
+    verified
+        .then(|| email)
+        .flatten()
+        .map(str::trim)
+        .filter(|email| !email.is_empty() && email.contains('@'))
+        .map(str::to_ascii_lowercase)
 }
 
 async fn fetch_jwks(client: &reqwest::Client, url: &str) -> Result<JwkSet, AuthError> {
@@ -633,7 +651,7 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 mod tests {
     use super::{
         is_authorized, is_protected_api_path, is_public_path, merge_effective_roles,
-        require_api_auth, AuthPrincipal, AuthService,
+        normalized_verified_email, require_api_auth, AuthPrincipal, AuthService,
     };
     use crate::access_control::AccessRole;
     use crate::organizations::OrganizationMembership;
@@ -650,6 +668,7 @@ mod tests {
         AuthPrincipal {
             subject: "test-user".to_string(),
             username: "test@example.com".to_string(),
+            verified_email: Some("test@example.com".to_string()),
             claim_roles: vec![role.clone()],
             roles: vec![role],
         }
@@ -684,6 +703,19 @@ mod tests {
             }],
         )
         .is_empty());
+    }
+
+    #[test]
+    fn accepts_only_normalized_verified_recipient_email() {
+        assert_eq!(
+            normalized_verified_email(Some(" Crew.Member@Example.com "), true).as_deref(),
+            Some("crew.member@example.com")
+        );
+        assert_eq!(
+            normalized_verified_email(Some("crew.member@example.com"), false),
+            None
+        );
+        assert_eq!(normalized_verified_email(None, true), None);
     }
 
     #[test]
@@ -1172,6 +1204,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "new-user".to_string(),
             username: "new-user@example.com".to_string(),
+            verified_email: Some("new-user@example.com".to_string()),
             claim_roles: Vec::new(),
             roles: Vec::new(),
         };

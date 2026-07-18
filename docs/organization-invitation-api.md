@@ -95,9 +95,14 @@ Expected behavior:
 Expected behavior:
 
 - The caller must be authenticated, but does not need an existing application role.
+- The authenticated access token must contain an `email` claim with
+  `email_verified: true`, and its normalized value must match the invitation
+  recipient. Deployments must include those claims in Cognito access tokens.
 - The invitation must be pending and not expired.
 - The linked membership is changed from `invited` to `active`.
 - The linked membership user id is changed to the signed-in principal subject.
+- Recipient mismatch, missing verified email identity, expiry, and unknown token
+  all use the same not-found response so invitation existence is not disclosed.
 - The invitation is marked `accepted`.
 - An `invite_accepted` audit event is recorded.
 - Invitation notifications include an acceptance path in the form

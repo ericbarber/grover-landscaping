@@ -236,6 +236,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Concurrent and case-variant duplicate pending invitations are blocked per organization and recipient, with mobile guidance back to history and reissue
 - Mobile invitation history shows the newest email delivery state and attempt count, with failed-delivery guidance to the retry workflow
 - Owners can return failed or dead-letter invitation email to the delivery queue through a two-step mobile action
+- Invitation acceptance requires the authenticated Cognito token's verified email to match the normalized recipient, without disclosing which guard failed
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -478,7 +479,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Bind invitation acceptance to the authenticated recipient identity
+- Add invitation acceptance identity deployment validation
 
 ## Planned
 

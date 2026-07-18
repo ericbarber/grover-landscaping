@@ -19,7 +19,9 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
       setAccepted(result);
       await auth.refreshAccess();
     } catch {
-      setMessage('This invitation was not found, has expired, or is no longer pending.');
+      setMessage(
+        'This invitation is unavailable, has expired, or was sent to a different verified email. Sign in with the invited address and try again.',
+      );
     } finally {
       setIsAccepting(false);
     }
