@@ -55,10 +55,11 @@ use grover_landscaping_api::{
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
-        BootstrapOrganizationRequest, BootstrapOrganizationResult,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
-        MembershipStatusUpdateResult, OrganizationRepository,
-        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+        validate_reissue_invitation_request, BootstrapOrganizationRequest,
+        BootstrapOrganizationResult, CreateOrganizationInvitationRequest,
+        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
+        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
+        UpdateOrganizationMembershipStatusRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -572,6 +573,10 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/invitations/{invitation_id}",
             delete(revoke_organization_invitation),
+        )
+        .route(
+            "/organizations/{organization_id}/invitations/{invitation_id}/reissue",
+            post(reissue_organization_invitation),
         )
         .route(
             "/organizations/{organization_id}/memberships/{membership_id}/role",
@@ -1377,6 +1382,52 @@ async fn revoke_organization_invitation(
         None => resource_not_found_response(
             "organization_invitation_not_pending",
             "The invitation was not found or is no longer pending.",
+        ),
+    }
+}
+
+async fn reissue_organization_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, invitation_id)): Path<(String, String)>,
+    Json(request): Json<ReissueOrganizationInvitationRequest>,
+) -> Response {
+    if let Err(reason) = validate_reissue_invitation_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_invitation_reissue",
+                message: format!("Invitation reissue payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+
+    match state
+        .organizations
+        .reissue_invitation(
+            &organization_id,
+            &invitation_id,
+            &principal.subject,
+            request,
+        )
+        .await
+    {
+        Some(invitation) => Json(invitation).into_response(),
+        None => resource_not_found_response(
+            "organization_invitation_not_reissuable",
+            "The invitation was not found, is not expired or revoked, or has an invalid new expiration.",
         ),
     }
 }
@@ -4319,6 +4370,37 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_reissue_endpoint_validates_and_requires_persistence() {
+        let invalid = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/invitations/invitation_missing/reissue")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"expires_at":"not-a-date"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
+
+        let missing = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/invitations/invitation_missing/reissue")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"expires_at":"2099-08-01T12:00:00.000Z"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(missing.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

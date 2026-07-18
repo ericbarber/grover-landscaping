@@ -77,6 +77,11 @@ pub struct CreateOrganizationInvitationRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ReissueOrganizationInvitationRequest {
+    pub expires_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct UpdateOrganizationMembershipRoleRequest {
     pub role: String,
 }
@@ -300,6 +305,30 @@ impl OrganizationRepository {
             .await
             .ok()
             .flatten()
+    }
+
+    pub async fn reissue_invitation(
+        &self,
+        organization_id: &str,
+        invitation_id: &str,
+        actor_user_id: &str,
+        request: ReissueOrganizationInvitationRequest,
+    ) -> Option<OrganizationInvitationResponse> {
+        let expires_at = request.expires_at.trim();
+        if validate_reissue_invitation_request(&request).is_err() {
+            return None;
+        }
+        let pool = self.pool.as_ref()?;
+        reissue_invitation(
+            pool,
+            organization_id,
+            invitation_id,
+            actor_user_id,
+            expires_at,
+        )
+        .await
+        .ok()
+        .flatten()
     }
 
     pub async fn accept_invitation(
@@ -604,6 +633,7 @@ async fn list_team_administration_activity(
           AND event_kind IN (
             'invite_accepted',
             'invitation_revoked',
+            'invitation_reissued',
             'role_changed',
             'membership_suspended',
             'membership_reactivated'
@@ -848,6 +878,138 @@ async fn revoke_invitation(
 
     transaction.commit().await?;
     Ok(row.map(organization_invitation_summary_from_row))
+}
+
+async fn reissue_invitation(
+    pool: &PgPool,
+    organization_id: &str,
+    invitation_id: &str,
+    actor_user_id: &str,
+    expires_at: &str,
+) -> Result<Option<OrganizationInvitationResponse>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let invitation = sqlx::query(
+        r#"
+        SELECT invitee_email, role, scope_type, scope_id, membership_id
+        FROM organization_invitations
+        WHERE id = $1
+          AND organization_id = $2
+          AND (
+            status IN ('revoked', 'expired')
+            OR (status = 'pending' AND expires_at <= NOW())
+          )
+          AND $3::timestamptz > NOW()
+        FOR UPDATE
+        "#,
+    )
+    .bind(invitation_id)
+    .bind(organization_id)
+    .bind(expires_at)
+    .fetch_optional(&mut *transaction)
+    .await?;
+
+    let Some(invitation) = invitation else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let invitee_email: String = invitation.get("invitee_email");
+    let role: String = invitation.get("role");
+    let scope_type: String = invitation.get("scope_type");
+    let scope_id: Option<String> = invitation.get("scope_id");
+    let membership_id: String = invitation.get("membership_id");
+    let token = format!("invite_{}", Uuid::new_v4().simple());
+
+    sqlx::query(
+        r#"
+        UPDATE organization_memberships
+        SET user_id = $3,
+            status = 'invited',
+            updated_at = NOW()
+        WHERE id = $1
+          AND organization_id = $2
+          AND status IN ('invited', 'archived')
+        "#,
+    )
+    .bind(&membership_id)
+    .bind(organization_id)
+    .bind(&invitee_email)
+    .execute(&mut *transaction)
+    .await?;
+
+    let row = sqlx::query(
+        r#"
+        UPDATE organization_invitations
+        SET status = 'pending',
+            token = $3,
+            invited_by_user_id = $4,
+            accepted_by_user_id = NULL,
+            accepted_at = NULL,
+            expires_at = $5::timestamptz,
+            updated_at = NOW()
+        WHERE id = $1
+          AND organization_id = $2
+        RETURNING
+            id,
+            organization_id,
+            invitee_email,
+            role,
+            status,
+            scope_type,
+            scope_id,
+            token,
+            membership_id,
+            invited_by_user_id,
+            accepted_by_user_id,
+            expires_at::text AS expires_at
+        "#,
+    )
+    .bind(invitation_id)
+    .bind(organization_id)
+    .bind(&token)
+    .bind(actor_user_id)
+    .bind(expires_at)
+    .fetch_one(&mut *transaction)
+    .await?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id, organization_id, entity_type, entity_id, channel, recipient,
+            template_key, payload
+        )
+        VALUES ($1, $2, 'organization_invitation', $3, 'email', $4,
+                'organization_invitation', $5)
+        "#,
+    )
+    .bind(format!("notification_{}", Uuid::new_v4().simple()))
+    .bind(organization_id)
+    .bind(invitation_id)
+    .bind(&invitee_email)
+    .bind(json!({
+        "organization_id": organization_id,
+        "invitation_id": invitation_id,
+        "invitee_email": invitee_email,
+        "role": role,
+        "scope_type": scope_type,
+        "scope_id": scope_id,
+        "token": token,
+        "acceptance_path": format!("/organization-invitations/{}", token),
+        "expires_at": expires_at,
+        "reissued": true,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    insert_access_audit_event(
+        &mut transaction,
+        actor_user_id,
+        organization_id,
+        "invitation_reissued",
+        invitation_id,
+    )
+    .await?;
+
+    transaction.commit().await?;
+    Ok(Some(organization_invitation_response_from_row(row)))
 }
 
 async fn accept_invitation(
@@ -1275,6 +1437,15 @@ pub fn validate_create_invitation_request(
     Ok(())
 }
 
+pub fn validate_reissue_invitation_request(
+    request: &ReissueOrganizationInvitationRequest,
+) -> Result<(), &'static str> {
+    if !valid_invitation_expiration(request.expires_at.trim()) {
+        return Err("expires_at_invalid");
+    }
+    Ok(())
+}
+
 fn valid_invitation_expiration(value: &str) -> bool {
     let bytes = value.as_bytes();
     if bytes.len() != 24
@@ -1509,10 +1680,11 @@ fn accepting_or_actor(actor_user_id: &str) -> &str {
 mod tests {
     use super::{
         access_role_from_storage, access_role_to_storage, validate_bootstrap_organization_request,
-        validate_create_invitation_request, BootstrapOrganizationRequest,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
-        MembershipStatusUpdateResult, OrganizationRepository,
-        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+        validate_create_invitation_request, validate_reissue_invitation_request,
+        BootstrapOrganizationRequest, CreateOrganizationInvitationRequest,
+        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
+        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
+        UpdateOrganizationMembershipStatusRequest,
     };
     use crate::access_control::{can_manage_schedule, AccessRole};
 
@@ -1575,6 +1747,19 @@ mod tests {
         assert_eq!(
             validate_create_invitation_request(&bad_role),
             Err("role_invalid")
+        );
+
+        assert_eq!(
+            validate_reissue_invitation_request(&ReissueOrganizationInvitationRequest {
+                expires_at: "2026-08-01T12:00:00.000Z".to_string(),
+            }),
+            Ok(())
+        );
+        assert_eq!(
+            validate_reissue_invitation_request(&ReissueOrganizationInvitationRequest {
+                expires_at: "August 1".to_string(),
+            }),
+            Err("expires_at_invalid")
         );
     }
 

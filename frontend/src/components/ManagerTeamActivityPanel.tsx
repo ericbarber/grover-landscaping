@@ -11,6 +11,8 @@ export function teamActivityLabel(eventKind: TeamAdministrationEventKind): strin
       return 'Invitation accepted';
     case 'invitation_revoked':
       return 'Invitation revoked';
+    case 'invitation_reissued':
+      return 'Invitation reissued';
     case 'role_changed':
       return 'Membership role changed';
     case 'membership_suspended':

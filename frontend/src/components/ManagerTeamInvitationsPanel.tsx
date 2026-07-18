@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   createOrganizationInvitation,
   fetchOrganizationInvitations,
+  reissueOrganizationInvitation,
   revokeOrganizationInvitation,
   type OrganizationInvitation,
   type OrganizationInvitationRole,
@@ -46,7 +47,9 @@ export function ManagerTeamInvitationsPanel({
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [confirmingRevocationId, setConfirmingRevocationId] = useState('');
+  const [confirmingReissueId, setConfirmingReissueId] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isReissuing, setIsReissuing] = useState(false);
 
   async function refreshHistory() {
     if (!organizationId) return;
@@ -113,6 +116,29 @@ export function ManagerTeamInvitationsPanel({
       setMessage('The invitation could not be revoked. Refresh its status and try again.');
     } finally {
       setIsRevoking(false);
+    }
+  }
+
+  async function reissueInvitation(invitationId: string) {
+    setIsReissuing(true);
+    setMessage(null);
+    try {
+      const reissued = await reissueOrganizationInvitation(
+        organizationId,
+        invitationId,
+        invitationExpirationIso(expirationDays),
+      );
+      const { token: _token, ...summary } = reissued;
+      setHistory((current) => current.map((item) => (
+        item.id === reissued.id ? summary : item
+      )));
+      setConfirmingReissueId('');
+      setMessage(`Invitation for ${reissued.inviteeEmail} reissued.`);
+      onTeamChanged?.();
+    } catch {
+      setMessage('The invitation could not be reissued. Refresh its status and try again.');
+    } finally {
+      setIsReissuing(false);
     }
   }
 
@@ -257,6 +283,35 @@ export function ManagerTeamInvitationsPanel({
                     type="button"
                   >
                     Revoke pending invitation
+                  </button>
+                )
+              ) : item.status === 'expired' || item.status === 'revoked' ? (
+                confirmingReissueId === item.id ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700"
+                      disabled={isReissuing}
+                      onClick={() => setConfirmingReissueId('')}
+                      type="button"
+                    >
+                      Keep closed
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg bg-slate-950 px-3 text-xs font-bold text-white disabled:opacity-60"
+                      disabled={isReissuing}
+                      onClick={() => void reissueInvitation(item.id)}
+                      type="button"
+                    >
+                      {isReissuing ? 'Reissuing…' : `Confirm ${expirationDays} days`}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="mt-2 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700"
+                    onClick={() => setConfirmingReissueId(item.id)}
+                    type="button"
+                  >
+                    Reissue invitation
                   </button>
                 )
               ) : null}

@@ -1,7 +1,7 @@
 use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
-    OrganizationRepository, UpdateOrganizationMembershipRoleRequest,
-    UpdateOrganizationMembershipStatusRequest,
+    OrganizationRepository, ReissueOrganizationInvitationRequest,
+    UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
 };
 use sqlx::postgres::PgPoolOptions;
 
@@ -269,6 +269,20 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
         )
         .await
         .expect("revocable invitation should be created");
+    assert!(
+        repository
+            .reissue_invitation(
+                organization_id,
+                &revocable.id,
+                actor_user_id,
+                ReissueOrganizationInvitationRequest {
+                    expires_at: "2099-08-01T12:00:00.000Z".to_string(),
+                },
+            )
+            .await
+            .is_none(),
+        "pending invitation should not be reissued"
+    );
     let revoked = repository
         .revoke_invitation(organization_id, &revocable.id, actor_user_id)
         .await
@@ -361,4 +375,38 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("expired membership status should be available");
     assert_eq!(expired_membership_status, "invited");
+
+    let reissued = repository
+        .reissue_invitation(
+            organization_id,
+            &expiring.id,
+            actor_user_id,
+            ReissueOrganizationInvitationRequest {
+                expires_at: "2099-08-01T12:00:00.000Z".to_string(),
+            },
+        )
+        .await
+        .expect("expired invitation should be reissued");
+    assert_eq!(reissued.status, "pending");
+    assert_ne!(reissued.token, expiring.token);
+    assert!(
+        repository
+            .accept_invitation(&expiring.token, "user_old_expired_token")
+            .await
+            .is_none(),
+        "reissue should invalidate the previous token"
+    );
+    let accepted_reissue = repository
+        .accept_invitation(&reissued.token, "user_reissued_invitation")
+        .await
+        .expect("new reissue token should activate access");
+    assert_eq!(accepted_reissue.membership.status, "active");
+    let reissue_audit_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM access_audit_events WHERE event_kind = 'invitation_reissued' AND target_id = $1",
+    )
+    .bind(&expiring.id)
+    .fetch_one(&pool)
+    .await
+    .expect("reissue audit should be available");
+    assert_eq!(reissue_audit_count, 1);
 }

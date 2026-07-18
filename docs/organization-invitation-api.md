@@ -105,6 +105,28 @@ Expected behavior:
 - Accepted, expired, previously revoked, missing, and cross-organization
   invitations are not changed.
 
+### Reissue invitation
+
+`POST /organizations/{organization_id}/invitations/{invitation_id}/reissue`
+
+Required fields:
+
+- `expires_at`
+
+Expected behavior:
+
+- The caller must be an organization owner or support admin with active access
+  to the requested organization.
+- Only revoked invitations or pending invitations whose expiration has elapsed
+  can be reissued.
+- Reissue preserves the invitee, role, scope, invitation, and membership
+  identities while creating a new token and future expiration.
+- The old token is invalidated, the linked membership returns to `invited`, a
+  fresh notification is queued, and an `invitation_reissued` audit event is
+  recorded atomically.
+- Pending, accepted, missing, cross-organization, and non-future reissue
+  requests are not changed.
+
 ### Update membership role
 
 `PUT /organizations/{organization_id}/memberships/{membership_id}/role`

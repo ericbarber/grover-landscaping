@@ -430,6 +430,7 @@ export interface OrganizationMembership {
 export type TeamAdministrationEventKind =
   | 'invite_accepted'
   | 'invitation_revoked'
+  | 'invitation_reissued'
   | 'role_changed'
   | 'membership_suspended'
   | 'membership_reactivated';
@@ -1676,6 +1677,22 @@ export async function revokeOrganizationInvitation(
     await request<ApiOrganizationInvitationSummary>(
       organizationInvitationPath(organizationId, invitationId),
       { method: 'DELETE' },
+    ),
+  );
+}
+
+export async function reissueOrganizationInvitation(
+  organizationId: string,
+  invitationId: string,
+  expiresAt: string,
+): Promise<OrganizationInvitation> {
+  return toOrganizationInvitation(
+    await request<ApiOrganizationInvitation>(
+      `${organizationInvitationPath(organizationId, invitationId)}/reissue`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ expires_at: expiresAt }),
+      },
     ),
   );
 }

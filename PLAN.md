@@ -232,6 +232,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Workspace guidance refreshes after acceptance and hides manager tools from crew and customer roles
 - Mobile invitation creation uses finite 7-, 14-, or 30-day access windows and defaults to seven days
 - Invitation history projects elapsed pending access as expired, and expired invitations cannot be accepted or revoked
+- Owners can reissue expired or revoked invitations through a two-step mobile control that invalidates old tokens, queues fresh delivery, and records an audit event
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -474,7 +475,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add guarded invitation reissue for expired and revoked access
+- Add duplicate pending-invitation prevention and recipient guidance
 
 ## Planned
 

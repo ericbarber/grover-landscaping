@@ -467,7 +467,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path.starts_with("/organizations/") && path.contains("/invitations/") {
-        return *method == Method::DELETE && can_admin_organization;
+        return (*method == Method::DELETE
+            || (*method == Method::POST && path.ends_with("/reissue")))
+            && can_admin_organization;
     }
 
     if path == "/organizations/bootstrap" {
@@ -1099,6 +1101,11 @@ mod tests {
             "/organizations/org_demo_landscaping/invitations/invitation_1001"
         ));
         assert!(is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::POST,
+            "/organizations/org_demo_landscaping/invitations/invitation_1001/reissue"
+        ));
+        assert!(is_authorized(
             &principal(AccessRole::SupportAdmin),
             &Method::PUT,
             "/organizations/org_demo_landscaping/memberships/membership_1001/role"
@@ -1132,6 +1139,11 @@ mod tests {
             &principal(AccessRole::Manager),
             &Method::DELETE,
             "/organizations/org_demo_landscaping/invitations/invitation_1001"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::POST,
+            "/organizations/org_demo_landscaping/invitations/invitation_1001/reissue"
         ));
         assert!(!is_authorized(
             &principal(AccessRole::PropertyManager),
