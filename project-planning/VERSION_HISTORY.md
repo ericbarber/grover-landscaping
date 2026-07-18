@@ -13,9 +13,11 @@ Current continuation work:
 - Finish tenant-aware boundaries for remaining shared customer reads.
 - Configure and validate the production email/SMS provider.
 - Connect manager activity history to persisted events.
-- Add manager property-onboarding forms and first-user administration.
+- Expand account onboarding and first-user administration.
 - Continue replacing seeded or browser-only route behavior with persisted state.
 - Complete authenticated customer-scoped bid history.
+- Manager property onboarding now loads, validates, and saves operational profiles
+  through the persisted API with explicit local-fallback feedback.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

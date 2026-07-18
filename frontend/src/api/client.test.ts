@@ -10,6 +10,7 @@ import {
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
   photoProcessingRetryPath,
+  propertyOnboardingPath,
   propertyCompletionReportsPath,
   toCompletionReport,
   toCompletionReportAction,
@@ -20,6 +21,7 @@ import {
   toNotificationHistoryItem,
   toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
+  toPropertyOnboardingProfile,
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
@@ -115,6 +117,33 @@ describe('core API client mapping', () => {
   it('builds customer property completion report paths with encoded ids', () => {
     expect(propertyCompletionReportsPath('property_1001')).toBe('/properties/property_1001/completion-reports');
     expect(propertyCompletionReportsPath('property/1001')).toBe('/properties/property%2F1001/completion-reports');
+  });
+
+  it('builds and maps property onboarding profiles', () => {
+    expect(propertyOnboardingPath('property/1001')).toBe(
+      '/properties/property%2F1001/onboarding',
+    );
+    expect(toPropertyOnboardingProfile({
+      property_id: 'property_1001',
+      account_id: 'acct_1001',
+      organization_id: 'org_demo_landscaping',
+      service_address: '123 Oak Street',
+      access_notes: null,
+      billing_contact_name: 'Sample Customer',
+      billing_contact_email: 'billing@example.com',
+      notification_contact_name: 'Sample Customer',
+      notification_email: 'notify@example.com',
+      notification_phone: null,
+      onboarding_status: 'active',
+      persisted: true,
+    })).toMatchObject({
+      propertyId: 'property_1001',
+      accountId: 'acct_1001',
+      accessNotes: '',
+      notificationPhone: '',
+      onboardingStatus: 'active',
+      persisted: true,
+    });
   });
 
   it('maps completion report responses with attached photo evidence', () => {

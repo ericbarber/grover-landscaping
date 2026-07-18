@@ -405,6 +405,43 @@ export interface PhotoErasureDeletionHistoryItem {
   updatedAt: string;
 }
 
+export type PropertyOnboardingStatus = 'incomplete' | 'active' | 'blocked' | 'archived';
+
+export interface ApiPropertyOnboardingProfile {
+  property_id: string;
+  account_id: string;
+  organization_id: string;
+  service_address: string;
+  access_notes?: string | null;
+  billing_contact_name: string;
+  billing_contact_email: string;
+  notification_contact_name: string;
+  notification_email?: string | null;
+  notification_phone?: string | null;
+  onboarding_status: PropertyOnboardingStatus;
+  persisted: boolean;
+}
+
+export interface PropertyOnboardingProfile {
+  propertyId: string;
+  accountId: string;
+  organizationId: string;
+  serviceAddress: string;
+  accessNotes: string;
+  billingContactName: string;
+  billingContactEmail: string;
+  notificationContactName: string;
+  notificationEmail: string;
+  notificationPhone: string;
+  onboardingStatus: PropertyOnboardingStatus;
+  persisted: boolean;
+}
+
+export type SavePropertyOnboardingRequest = Omit<
+  PropertyOnboardingProfile,
+  'propertyId' | 'persisted'
+>;
+
 export interface ApiCustomerPrivacyAccount {
   account_id: string;
   customer_name: string;
@@ -763,6 +800,25 @@ export function toPhotoErasureDeletionHistoryItem(
   };
 }
 
+export function toPropertyOnboardingProfile(
+  profile: ApiPropertyOnboardingProfile,
+): PropertyOnboardingProfile {
+  return {
+    propertyId: profile.property_id,
+    accountId: profile.account_id,
+    organizationId: profile.organization_id,
+    serviceAddress: profile.service_address,
+    accessNotes: profile.access_notes ?? '',
+    billingContactName: profile.billing_contact_name,
+    billingContactEmail: profile.billing_contact_email,
+    notificationContactName: profile.notification_contact_name,
+    notificationEmail: profile.notification_email ?? '',
+    notificationPhone: profile.notification_phone ?? '',
+    onboardingStatus: profile.onboarding_status,
+    persisted: profile.persisted,
+  };
+}
+
 export function toCustomerPrivacyExport(apiExport: ApiCustomerPrivacyExport): CustomerPrivacyExport {
   return {
     account: {
@@ -1094,6 +1150,44 @@ export async function resolvePhotoErasureDeletionJob(id: string): Promise<PhotoE
     },
   );
   return toPhotoErasureDeletionHistoryItem(item);
+}
+
+export function propertyOnboardingPath(propertyId: string): string {
+  return `/properties/${encodeURIComponent(propertyId)}/onboarding`;
+}
+
+export async function fetchPropertyOnboarding(
+  propertyId: string,
+): Promise<PropertyOnboardingProfile> {
+  const profile = await request<ApiPropertyOnboardingProfile>(
+    propertyOnboardingPath(propertyId),
+  );
+  return toPropertyOnboardingProfile(profile);
+}
+
+export async function savePropertyOnboarding(
+  propertyId: string,
+  input: SavePropertyOnboardingRequest,
+): Promise<PropertyOnboardingProfile> {
+  const profile = await request<ApiPropertyOnboardingProfile>(
+    propertyOnboardingPath(propertyId),
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        account_id: input.accountId,
+        organization_id: input.organizationId,
+        service_address: input.serviceAddress,
+        access_notes: input.accessNotes || null,
+        billing_contact_name: input.billingContactName,
+        billing_contact_email: input.billingContactEmail,
+        notification_contact_name: input.notificationContactName,
+        notification_email: input.notificationEmail || null,
+        notification_phone: input.notificationPhone || null,
+        onboarding_status: input.onboardingStatus,
+      }),
+    },
+  );
+  return toPropertyOnboardingProfile(profile);
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

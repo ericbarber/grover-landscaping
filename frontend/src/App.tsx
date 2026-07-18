@@ -48,6 +48,7 @@ import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistory
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
+import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnboardingPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -156,6 +157,14 @@ const customerPortalPreviewProperties: CustomerPropertyProfile[] = [
     contractedServiceIds: ['service_tree_limb_removal'],
   },
 ];
+
+const managerPropertyOnboardingOptions = customerPortalPreviewProperties.map((property) => ({
+  propertyId: property.id,
+  accountId: property.customerId === 'customer_1001' ? 'acct_1001' : property.customerId,
+  organizationId: property.organizationId,
+  displayName: property.displayName,
+  serviceAddress: property.address,
+}));
 
 const customerPortalPreviewPortfolios: PropertyPortfolio[] = [
   {
@@ -1757,6 +1766,20 @@ export function App() {
             <ManagementCompanyPreviewPanel
               company={managementCompanyPreview}
               crews={managementCompanyPreviewCrews}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerPropertyOnboardingPanel
+              properties={managerPropertyOnboardingOptions}
+              onSaved={(profile) => {
+                setStatusMessage(`Saved onboarding profile for ${profile.propertyId}.`);
+                recordManagerActivity({
+                  title: 'Property onboarding saved',
+                  message: `${profile.propertyId} is ${profile.onboardingStatus} and ${profile.persisted ? 'persisted' : 'using local fallback'}.`,
+                  tone: profile.persisted ? 'success' : 'warning',
+                  source: 'sync',
+                });
+              }}
             />
           </div>
           <div className="mt-6">

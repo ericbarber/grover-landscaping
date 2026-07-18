@@ -404,12 +404,12 @@ Current state:
 - Backend property crew-assignment routes can assign crews, list property assignment history, and list active crew property workloads within active organization memberships
 - Backend customer property portfolio reads return grouped and ungrouped customer yards within active organization memberships
 - Backend property onboarding profiles capture validated service address, access notes, billing contact, notification contact, and onboarding status
+- Manager dashboard can load, create, validate, and save property onboarding profiles with persisted/local state feedback
 - Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
 - Portfolio coverage summary reports total, grouped, and ungrouped yard counts
 
 Next implementation work:
 
-- Add manager-facing property onboarding forms around the persisted profile APIs
 - Expand account onboarding and first-user administration workflows
 
 ## Planned

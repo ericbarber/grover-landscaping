@@ -14,9 +14,8 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
    - Process provider delivery receipts and manual resolutions.
    - Connect manager activity history to persisted notification and audit events.
    - Add templates, preferences, quiet hours, and customer contact rules.
-3. **Property onboarding**
-   - Build manager forms around the persisted property-onboarding APIs.
-   - Complete customer, property, organization, and first-user setup workflows.
+3. **Account and first-user onboarding**
+   - Complete customer, organization, and first-user setup workflows.
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.
