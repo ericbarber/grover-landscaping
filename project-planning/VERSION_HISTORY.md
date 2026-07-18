@@ -44,6 +44,8 @@ Current continuation work:
   selector, preserving the account-to-property workflow across sessions.
 - Persisted operational onboarding now rejects mismatched or archived property
   ownership and does not return local fallback records from PostgreSQL runtimes.
+- Portfolio reads now use explicit customer properties, while portfolio creation
+  and links enforce active organization/account and same-account ownership.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

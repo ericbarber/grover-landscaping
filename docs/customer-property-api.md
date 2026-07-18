@@ -27,6 +27,10 @@ property manager in the requested organization. The account relationship must be
 active. Creation does not assign a crew, create a portfolio membership, schedule
 work, or send a notification.
 
+Portfolio reads consume these explicit records rather than inferring property
+ownership from service jobs. Matching service jobs may contribute the most recent
+service date.
+
 ## Property Status
 
 New properties begin in `onboarding`. Supported persisted states are

@@ -195,6 +195,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Persisted customer properties repopulate operational onboarding after refresh
 - Operational onboarding writes require matching property, account, and organization ownership
 - PostgreSQL onboarding misses no longer degrade into local seed responses
+- Customer portfolio reads use explicit customer property ownership records
+- Portfolio creation and grouping enforce active account relationships and same-account property ownership
 
 ### Local development and project setup
 

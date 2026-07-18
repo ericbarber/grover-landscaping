@@ -102,6 +102,47 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     .await
     .expect("other test account should be inserted");
 
+    for account in [account_id, other_account_id] {
+        sqlx::query(
+            r#"INSERT INTO organization_customer_accounts (organization_id, account_id)
+            VALUES ($1, $2)"#,
+        )
+        .bind(organization_id)
+        .bind(account)
+        .execute(&pool)
+        .await
+        .expect("test organization account relationship should be inserted");
+    }
+
+    for (property, account, name, address) in [
+        (
+            property_id,
+            account_id,
+            "Grouped Oak",
+            "321 Grouped Oak Road",
+        ),
+        (
+            ungrouped_property_id,
+            account_id,
+            "Ungrouped Pine",
+            "654 Ungrouped Pine Road",
+        ),
+    ] {
+        sqlx::query(
+            r#"INSERT INTO customer_properties (
+                id, organization_id, account_id, display_name, service_address, status
+            ) VALUES ($1, $2, $3, $4, $5, 'active')"#,
+        )
+        .bind(property)
+        .bind(organization_id)
+        .bind(account)
+        .bind(name)
+        .bind(address)
+        .execute(&pool)
+        .await
+        .expect("test customer property should be inserted");
+    }
+
     for (job_id, address) in [
         (grouped_job_id, "321 Grouped Oak Road"),
         (ungrouped_job_id, "654 Ungrouped Pine Road"),
@@ -166,6 +207,18 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     assert_eq!(link.portfolio_id, portfolio.id);
     assert_eq!(link.property_id, property_id);
     assert!(link.persisted);
+
+    let cross_account_link = repository
+        .add_property(
+            &portfolio.id,
+            AddPropertyToPortfolioRequest {
+                property_id: "property_1002".to_string(),
+                organization_id: organization_id.to_string(),
+            },
+            actor_user_id,
+        )
+        .await;
+    assert!(cross_account_link.is_none());
 
     let portfolios = repository
         .list_for_account(account_id, &[organization_id.to_string()])

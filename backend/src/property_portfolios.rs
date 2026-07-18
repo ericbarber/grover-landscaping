@@ -98,11 +98,10 @@ impl PropertyPortfolioRepository {
         );
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(portfolio)) =
-                insert_property_portfolio(pool, &id, &request, actor_user_id).await
-            {
-                return Some(portfolio);
-            }
+            return insert_property_portfolio(pool, &id, &request, actor_user_id)
+                .await
+                .ok()
+                .flatten();
         }
 
         Some(PropertyPortfolioResponse {
@@ -126,12 +125,16 @@ impl PropertyPortfolioRepository {
         let id = portfolio_property_link_id(portfolio_id, &request.property_id);
 
         if let Some(pool) = &self.pool {
-            if let Ok(link) =
-                insert_portfolio_property_link(pool, &id, portfolio_id, &request, actor_user_id)
-                    .await
-            {
-                return link;
-            }
+            return insert_portfolio_property_link(
+                pool,
+                &id,
+                portfolio_id,
+                &request,
+                actor_user_id,
+            )
+            .await
+            .ok()
+            .flatten();
         }
 
         Some(PortfolioPropertyLinkResponse {
@@ -153,11 +156,9 @@ impl PropertyPortfolioRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(portfolios) =
-                list_property_portfolios_for_account(pool, account_id, organization_ids).await
-            {
-                return portfolios;
-            }
+            return list_property_portfolios_for_account(pool, account_id, organization_ids)
+                .await
+                .unwrap_or_default();
         }
 
         seed_portfolios_for_account(account_id, organization_ids)
@@ -179,11 +180,15 @@ impl PropertyPortfolioRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(response) =
-                customer_portfolio_read_for_account(pool, account_id, organization_ids).await
-            {
-                return response;
-            }
+            return customer_portfolio_read_for_account(pool, account_id, organization_ids)
+                .await
+                .unwrap_or_else(|_| CustomerPropertyPortfolioReadResponse {
+                    account_id: account_id.to_string(),
+                    organization_ids: organization_ids.to_vec(),
+                    portfolios: Vec::new(),
+                    ungrouped_properties: Vec::new(),
+                    persisted: true,
+                });
         }
 
         seed_customer_portfolio_read(account_id, organization_ids)
@@ -270,7 +275,11 @@ async fn insert_property_portfolio(
             display_name,
             portfolio_type
         )
-        VALUES ($1, $2, $3, $4, $5)
+        SELECT $1, relation.account_id, relation.organization_id, $4, $5
+        FROM organization_customer_accounts relation
+        WHERE relation.account_id = $2
+          AND relation.organization_id = $3
+          AND relation.status = 'active'
         ON CONFLICT (account_id, organization_id, display_name) DO UPDATE SET
             portfolio_type = EXCLUDED.portfolio_type
         RETURNING
@@ -321,10 +330,17 @@ async fn insert_portfolio_property_link(
     let inserted = sqlx::query(
         r#"
         WITH target_portfolio AS (
-            SELECT id, organization_id
-            FROM property_portfolios
-            WHERE id = $2
-              AND organization_id = $4
+            SELECT portfolio.id, portfolio.organization_id, portfolio.account_id
+            FROM property_portfolios portfolio
+            WHERE portfolio.id = $2
+              AND portfolio.organization_id = $4
+        ),
+        target_property AS (
+            SELECT property.id, property.organization_id, property.account_id
+            FROM customer_properties property
+            WHERE property.id = $3
+              AND property.organization_id = $4
+              AND property.status <> 'archived'
         )
         INSERT INTO portfolio_property_links (
             id,
@@ -335,9 +351,12 @@ async fn insert_portfolio_property_link(
         SELECT
             $1,
             target_portfolio.id,
-            $3,
+            target_property.id,
             target_portfolio.organization_id
         FROM target_portfolio
+        JOIN target_property
+          ON target_property.organization_id = target_portfolio.organization_id
+         AND target_property.account_id = target_portfolio.account_id
         ON CONFLICT DO NOTHING
         RETURNING id, portfolio_id, property_id, organization_id
         "#,
@@ -499,39 +518,22 @@ async fn customer_portfolio_read_for_account(
 
     let property_rows = sqlx::query(
         r#"
-        WITH job_properties AS (
-            SELECT
-                COALESCE(
-                    (
-                        SELECT report.property_id
-                        FROM completion_reports report
-                        WHERE report.job_id = job.id
-                          AND report.organization_id = job.organization_id
-                        ORDER BY report.updated_at DESC, report.id DESC
-                        LIMIT 1
-                    ),
-                    CASE
-                        WHEN job.id LIKE 'job_%' THEN 'property_' || SUBSTRING(job.id FROM 5)
-                        ELSE 'property_' || job.id
-                    END
-                ) AS property_id,
-                job.customer_account_id AS account_id,
-                job.organization_id,
-                job.property_address,
-                MAX(job.scheduled_date) AS last_service_date
-            FROM service_jobs job
-            WHERE job.customer_account_id = $1
-              AND job.organization_id = ANY($2)
-            GROUP BY property_id, job.customer_account_id, job.organization_id, job.property_address
-        )
         SELECT
-            property.property_id,
+            property.id AS property_id,
             property.account_id,
             property.organization_id,
-            property.property_address,
-            property.last_service_date,
+            property.display_name,
+            property.service_address AS property_address,
+            service.last_service_date,
             linked_portfolio.id AS portfolio_id
-        FROM job_properties property
+        FROM customer_properties property
+        LEFT JOIN LATERAL (
+            SELECT MAX(job.scheduled_date) AS last_service_date
+            FROM service_jobs job
+            WHERE job.customer_account_id = property.account_id
+              AND job.organization_id = property.organization_id
+              AND job.property_address = property.service_address
+        ) service ON TRUE
         LEFT JOIN portfolio_property_links link
           ON link.property_id = property.property_id
          AND link.organization_id = property.organization_id
@@ -539,7 +541,10 @@ async fn customer_portfolio_read_for_account(
           ON linked_portfolio.id = link.portfolio_id
          AND linked_portfolio.organization_id = property.organization_id
          AND linked_portfolio.account_id = property.account_id
-        ORDER BY property.property_address ASC, property.property_id ASC
+        WHERE property.account_id = $1
+          AND property.organization_id = ANY($2)
+          AND property.status <> 'archived'
+        ORDER BY property.display_name ASC, property.id ASC
         "#,
     )
     .bind(account_id)
@@ -557,7 +562,7 @@ async fn customer_portfolio_read_for_account(
                     id: property_id.clone(),
                     account_id: row.get("account_id"),
                     organization_id: row.get("organization_id"),
-                    display_name: property_address.clone(),
+                    display_name: row.get("display_name"),
                     address: property_address,
                     last_service_date: row.get("last_service_date"),
                     persisted: true,

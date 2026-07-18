@@ -52,6 +52,8 @@ Validation rules:
 - `property_id` must not be blank.
 - `organization_id` must not be blank.
 - The property and portfolio must belong to the same service organization.
+- The property and portfolio must belong to the same customer account.
+- Archived properties cannot be added to a portfolio.
 - Adding a property to a portfolio must not change customer ownership.
 - Adding a property to a portfolio must not change crew assignment.
 - Persisted portfolio creation and property-link changes write `portfolio_changed` audit events.
@@ -79,7 +81,8 @@ Expected behavior:
 - Return properties inside each portfolio group.
 - Return customer-owned properties without a portfolio link in `ungrouped_properties`.
 - Ignore portfolio links whose portfolio belongs to a different customer account so customer-owned properties remain visible as ungrouped.
-- Derive current property reads from persisted service jobs and completion-report property identifiers when a dedicated property record is not available yet.
+- Read current grouped and ungrouped properties from explicit
+  `customer_properties` ownership records.
 - Reading the endpoint must not change portfolio membership, customer ownership, crew assignment, route state, report status, or job state.
 
 ## Guardrails
@@ -88,5 +91,7 @@ Expected behavior:
 - Customers or property-management accounts own portfolios.
 - Properties stay attached to their customer account and service organization.
 - A link to a portfolio from another customer account must not remove a property from the owning customer's read model.
+- PostgreSQL-backed portfolio writes do not substitute local fallback records
+  when ownership validation rejects a create or link.
 - Crew assignment history should remain separate from portfolio membership history.
 - Persisted portfolio grouping changes are auditable by actor, organization, event kind, target id, and timestamp.
