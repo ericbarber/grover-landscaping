@@ -30,6 +30,8 @@ Current continuation work:
   with manager tools collapsed into a separate workspace and touch-safe controls.
 - A sticky phone navigation bar links the core workflow sections, and opening a
   job moves directly to its detail and field actions on narrow viewports.
+- Mobile application metadata now supports standalone home-screen presentation,
+  portrait orientation, safe-area viewports, and Grover Field branding.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

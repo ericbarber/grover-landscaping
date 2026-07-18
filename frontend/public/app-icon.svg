@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Grover Landscaping</title>
+  <rect width="512" height="512" rx="112" fill="#052e16"/>
+  <path d="M92 320c71-8 128-39 169-94 35-47 66-78 159-86-13 116-76 219-201 224-50 2-91-13-127-44Z" fill="#34d399"/>
+  <path d="M126 367c54-81 133-139 251-180" fill="none" stroke="#ecfdf5" stroke-linecap="round" stroke-width="30"/>
+  <path d="M245 267c-5-58 12-106 51-143" fill="none" stroke="#ecfdf5" stroke-linecap="round" stroke-width="24"/>
+</svg>
