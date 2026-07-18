@@ -35,7 +35,8 @@ use day_plans::{
 };
 use db::{
     CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
-    JobRepository, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
+    JobRepository, PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
+    PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
     PhotoProcessingRetryResult,
 };
 use grover_landscaping_api::{
@@ -211,6 +212,12 @@ struct NotificationHistoryQuery {
 #[derive(Debug, Default, Deserialize)]
 struct PhotoProcessingHistoryQuery {
     task_type: Option<String>,
+    status: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct PhotoErasureDeletionHistoryQuery {
     status: Option<String>,
     limit: Option<i64>,
 }
@@ -484,6 +491,18 @@ fn app_with_runtime(
         .route(
             "/photo-processing-jobs/{id}/resolve",
             post(resolve_photo_processing_job),
+        )
+        .route(
+            "/photo-erasure-deletion-jobs",
+            get(list_photo_erasure_deletion_history),
+        )
+        .route(
+            "/photo-erasure-deletion-jobs/{id}/retry",
+            post(retry_photo_erasure_deletion_job),
+        )
+        .route(
+            "/photo-erasure-deletion-jobs/{id}/resolve",
+            post(resolve_photo_erasure_deletion_job),
         )
         .route(
             "/notifications/{id}/retry",
@@ -1831,6 +1850,154 @@ async fn resolve_photo_processing_job(
             Json(ErrorResponse {
                 error: "photo_processing_resolution_unavailable",
                 message: "Photo processing resolution requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn list_photo_erasure_deletion_history(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Query(query): Query<PhotoErasureDeletionHistoryQuery>,
+) -> Response {
+    if let Some(status) = query.status.as_deref() {
+        if !matches!(
+            status,
+            "queued" | "processing" | "completed" | "failed" | "dead_letter" | "resolved"
+        ) {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_photo_erasure_deletion_filter",
+                    message: "status must be queued, processing, completed, failed, dead_letter, or resolved".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    }
+    let limit = query.limit.unwrap_or(25);
+    if !(1..=100).contains(&limit) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_photo_erasure_deletion_filter",
+                message: "limit must be between 1 and 100".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let filter = PhotoErasureDeletionHistoryFilter {
+        organization_ids: principal_active_organization_ids(&state, &principal).await,
+        status: query.status,
+        limit,
+    };
+    match state.jobs.list_photo_erasure_deletion_history(filter).await {
+        Ok(items) => Json(items).into_response(),
+        Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_history_unavailable",
+                message: "Photo erasure deletion history could not be loaded from persistence."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn retry_photo_erasure_deletion_job(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    match state
+        .jobs
+        .retry_photo_erasure_deletion_job(&id, &organization_ids, &principal.subject)
+        .await
+    {
+        Ok(PhotoErasureDeletionRetryResult::Retried(item)) => Json(item).into_response(),
+        Ok(PhotoErasureDeletionRetryResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_not_retryable",
+                message: "Only failed or dead-letter deletion jobs can be retried.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoErasureDeletionRetryResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_job_not_found",
+                message: "The requested photo erasure deletion job was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoErasureDeletionRetryResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_retry_unavailable",
+                message: "Photo erasure deletion retry requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn resolve_photo_erasure_deletion_job(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+    Json(request): Json<PhotoProcessingResolveRequest>,
+) -> Response {
+    let reason = match normalize_notification_resolution_reason(request.reason) {
+        Ok(reason) => reason,
+        Err(()) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: "invalid_photo_erasure_deletion_resolution_reason",
+                    message: "Resolution reason cannot exceed 1000 characters.".to_string(),
+                }),
+            )
+                .into_response();
+        }
+    };
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    match state
+        .jobs
+        .resolve_photo_erasure_deletion_job(
+            &id,
+            &organization_ids,
+            &principal.subject,
+            reason.as_deref(),
+        )
+        .await
+    {
+        Ok(PhotoErasureDeletionResolveResult::Resolved(item)) => Json(item).into_response(),
+        Ok(PhotoErasureDeletionResolveResult::InvalidStatus) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_not_resolvable",
+                message: "Only failed or dead-letter deletion jobs can be resolved.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoErasureDeletionResolveResult::NotFound) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_job_not_found",
+                message: "The requested photo erasure deletion job was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Ok(PhotoErasureDeletionResolveResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "photo_erasure_deletion_resolution_unavailable",
+                message: "Photo erasure deletion resolution requires database persistence."
+                    .to_string(),
             }),
         )
             .into_response(),
@@ -4500,6 +4667,43 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_photo_processing_history_filter");
+    }
+
+    #[tokio::test]
+    async fn photo_erasure_deletion_history_endpoint_returns_empty_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/photo-erasure-deletion-jobs?status=dead_letter&limit=10")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert!(json.as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn photo_erasure_deletion_retry_endpoint_requires_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/photo-erasure-deletion-jobs/photo_erasure_deletion_1001/retry")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "photo_erasure_deletion_retry_unavailable");
     }
 
     #[tokio::test]

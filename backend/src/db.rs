@@ -66,6 +66,54 @@ pub struct PhotoProcessingClaim {
     pub attempt_count: i32,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PhotoErasureDeletionClaim {
+    pub id: String,
+    pub object_key: String,
+    pub attempt_count: i32,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct PhotoErasureDeletionHistoryFilter {
+    pub organization_ids: Vec<String>,
+    pub status: Option<String>,
+    pub limit: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct PhotoErasureDeletionHistoryItem {
+    pub id: String,
+    pub account_id: String,
+    pub organization_id: String,
+    pub object_key: String,
+    pub status: String,
+    pub attempt_count: i32,
+    pub available_at: String,
+    pub last_attempt_at: Option<String>,
+    pub completed_at: Option<String>,
+    pub resolved_at: Option<String>,
+    pub last_error: Option<String>,
+    pub resolution_note: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PhotoErasureDeletionRetryResult {
+    Retried(Box<PhotoErasureDeletionHistoryItem>),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PhotoErasureDeletionResolveResult {
+    Resolved(Box<PhotoErasureDeletionHistoryItem>),
+    InvalidStatus,
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct PhotoProcessingHistoryFilter {
     pub organization_ids: Vec<String>,
@@ -899,8 +947,108 @@ impl JobRepository {
         summary.deleted_object_key_count = deletion.deleted_object_key_count;
         summary.failed_object_key_count = deletion.failed_object_keys.len() as i64;
         summary.object_keys_pending_deletion = deletion.failed_object_keys;
+        if !summary.object_keys_pending_deletion.is_empty() {
+            let _ = postgres_privacy::queue_photo_erasure_deletion_jobs(
+                pool,
+                account_id,
+                &summary.object_keys_pending_deletion,
+                organization_ids,
+            )
+            .await;
+        }
 
         CustomerPhotoErasureResult::Erased(summary)
+    }
+
+    pub async fn claim_photo_erasure_deletion_batch(
+        &self,
+        limit: i64,
+        max_attempts: i32,
+    ) -> Vec<PhotoErasureDeletionClaim> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        postgres_privacy::claim_photo_erasure_deletion_jobs(pool, limit, max_attempts)
+            .await
+            .unwrap_or_default()
+    }
+
+    pub async fn mark_photo_erasure_deletion_completed(&self, id: &str) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+        postgres_privacy::mark_photo_erasure_deletion_completed(pool, id)
+            .await
+            .unwrap_or(false)
+    }
+
+    pub async fn mark_photo_erasure_deletion_failed(
+        &self,
+        id: &str,
+        attempt_count: i32,
+        max_attempts: i32,
+        error: &str,
+    ) -> bool {
+        let Some(pool) = &self.pool else {
+            return false;
+        };
+        postgres_privacy::mark_photo_erasure_deletion_failed(
+            pool,
+            id,
+            attempt_count,
+            max_attempts,
+            error,
+        )
+        .await
+        .unwrap_or(false)
+    }
+
+    pub async fn list_photo_erasure_deletion_history(
+        &self,
+        filter: PhotoErasureDeletionHistoryFilter,
+    ) -> Result<Vec<PhotoErasureDeletionHistoryItem>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(Vec::new());
+        };
+        postgres_privacy::list_photo_erasure_deletion_history(pool, filter).await
+    }
+
+    pub async fn retry_photo_erasure_deletion_job(
+        &self,
+        id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+    ) -> Result<PhotoErasureDeletionRetryResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(PhotoErasureDeletionRetryResult::Unavailable);
+        };
+        postgres_privacy::retry_photo_erasure_deletion_job(
+            pool,
+            id,
+            organization_ids,
+            actor_user_id,
+        )
+        .await
+    }
+
+    pub async fn resolve_photo_erasure_deletion_job(
+        &self,
+        id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+        reason: Option<&str>,
+    ) -> Result<PhotoErasureDeletionResolveResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(PhotoErasureDeletionResolveResult::Unavailable);
+        };
+        postgres_privacy::resolve_photo_erasure_deletion_job(
+            pool,
+            id,
+            organization_ids,
+            actor_user_id,
+            reason,
+        )
+        .await
     }
 
     #[allow(dead_code)]

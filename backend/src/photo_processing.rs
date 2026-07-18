@@ -90,7 +90,10 @@ pub async fn process_photo_processing_once(
     let claims = repository
         .claim_photo_processing_batch(batch_size, max_attempts)
         .await;
-    let processed = claims.len();
+    let deletion_claims = repository
+        .claim_photo_erasure_deletion_batch(batch_size, max_attempts)
+        .await;
+    let processed = claims.len() + deletion_claims.len();
 
     for claim in claims {
         if claim.task_type != "thumbnail_generation" {
@@ -121,6 +124,26 @@ pub async fn process_photo_processing_once(
                     claim.attempt_count,
                     max_attempts,
                     "thumbnail_generation_failed",
+                )
+                .await;
+        }
+    }
+
+    for claim in deletion_claims {
+        let deletion = photo_storage
+            .delete_objects(std::slice::from_ref(&claim.object_key))
+            .await;
+        if deletion.failed_object_keys.is_empty() {
+            let _ = repository
+                .mark_photo_erasure_deletion_completed(&claim.id)
+                .await;
+        } else {
+            let _ = repository
+                .mark_photo_erasure_deletion_failed(
+                    &claim.id,
+                    claim.attempt_count,
+                    max_attempts,
+                    "photo_object_deletion_failed",
                 )
                 .await;
         }

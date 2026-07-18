@@ -349,10 +349,9 @@ Current state:
 - Manager privacy APIs export customer account/job/report/photo metadata and erase retained photo evidence with audit records, object-key deletion manifests, and delivered snapshot redaction
 - Frontend manager dashboard surfaces customer privacy export and retained photo erasure controls with object-key deletion manifests
 - Photo erasure attempts object-store deletion immediately and returns only failed object keys for follow-up
-
-Next implementation work:
-
-- Add retry tracking for failed object-store deletions after retained photo evidence erasure
+- Failed photo erasure object deletions are queued durably and retried by the photo-processing worker with exponential backoff and dead-lettering
+- Manager APIs expose organization-scoped photo erasure deletion history with audited retry and manual resolution actions
+- Frontend manager dashboard surfaces failed and dead-lettered erasure deletions with retry and resolution controls
 
 ### Completion reports
 

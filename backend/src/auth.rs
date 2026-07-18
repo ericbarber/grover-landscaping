@@ -377,6 +377,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/notifications/")
         || path == "/photo-processing-jobs"
         || path.starts_with("/photo-processing-jobs/")
+        || path == "/photo-erasure-deletion-jobs"
+        || path.starts_with("/photo-erasure-deletion-jobs/")
         || path == "/property-portfolios"
         || path.starts_with("/property-portfolios/")
         || path.starts_with("/properties/")
@@ -454,6 +456,18 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path.starts_with("/photo-processing-jobs/") && path.ends_with("/resolve") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path == "/photo-erasure-deletion-jobs" {
+        return *method == Method::GET && can_review_reports;
+    }
+
+    if path.starts_with("/photo-erasure-deletion-jobs/") && path.ends_with("/retry") {
+        return *method == Method::POST && can_review_reports;
+    }
+
+    if path.starts_with("/photo-erasure-deletion-jobs/") && path.ends_with("/resolve") {
         return *method == Method::POST && can_review_reports;
     }
 
@@ -770,12 +784,22 @@ mod tests {
 
     #[test]
     fn only_completion_report_reviewers_can_recover_photo_processing_jobs() {
-        let list_path = "/photo-processing-jobs";
-        let retry_path = "/photo-processing-jobs/photo-processing-1/retry";
-        let resolve_path = "/photo-processing-jobs/photo-processing-1/resolve";
+        let processing_list_path = "/photo-processing-jobs";
+        let deletion_list_path = "/photo-erasure-deletion-jobs";
+        let processing_retry_path = "/photo-processing-jobs/photo-processing-1/retry";
+        let processing_resolve_path = "/photo-processing-jobs/photo-processing-1/resolve";
+        let deletion_retry_path = "/photo-erasure-deletion-jobs/photo-erasure-deletion-1/retry";
+        let deletion_resolve_path = "/photo-erasure-deletion-jobs/photo-erasure-deletion-1/resolve";
 
-        for path in [list_path, retry_path, resolve_path] {
-            let method = if path == list_path {
+        for path in [
+            processing_list_path,
+            deletion_list_path,
+            processing_retry_path,
+            processing_resolve_path,
+            deletion_retry_path,
+            deletion_resolve_path,
+        ] {
+            let method = if path == processing_list_path || path == deletion_list_path {
                 Method::GET
             } else {
                 Method::POST

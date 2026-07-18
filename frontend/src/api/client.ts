@@ -371,6 +371,40 @@ export interface FetchPhotoProcessingHistoryOptions {
   limit?: number;
 }
 
+export interface ApiPhotoErasureDeletionHistoryItem {
+  id: string;
+  account_id: string;
+  organization_id: string;
+  object_key: string;
+  status: PhotoProcessingStatus;
+  attempt_count: number;
+  available_at: string;
+  last_attempt_at?: string | null;
+  completed_at?: string | null;
+  resolved_at?: string | null;
+  last_error?: string | null;
+  resolution_note?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PhotoErasureDeletionHistoryItem {
+  id: string;
+  accountId: string;
+  organizationId: string;
+  objectKey: string;
+  status: PhotoProcessingStatus;
+  attemptCount: number;
+  availableAt: string;
+  lastAttemptAt: string | null;
+  completedAt: string | null;
+  resolvedAt: string | null;
+  lastError: string | null;
+  resolutionNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApiCustomerPrivacyAccount {
   account_id: string;
   customer_name: string;
@@ -708,6 +742,27 @@ export function toPhotoProcessingHistoryItem(apiItem: ApiPhotoProcessingHistoryI
   };
 }
 
+export function toPhotoErasureDeletionHistoryItem(
+  item: ApiPhotoErasureDeletionHistoryItem,
+): PhotoErasureDeletionHistoryItem {
+  return {
+    id: item.id,
+    accountId: item.account_id,
+    organizationId: item.organization_id,
+    objectKey: item.object_key,
+    status: item.status,
+    attemptCount: item.attempt_count,
+    availableAt: item.available_at,
+    lastAttemptAt: item.last_attempt_at ?? null,
+    completedAt: item.completed_at ?? null,
+    resolvedAt: item.resolved_at ?? null,
+    lastError: item.last_error ?? null,
+    resolutionNote: item.resolution_note ?? null,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  };
+}
+
 export function toCustomerPrivacyExport(apiExport: ApiCustomerPrivacyExport): CustomerPrivacyExport {
   return {
     account: {
@@ -1005,6 +1060,40 @@ export async function resolvePhotoProcessingJob(photoProcessingJobId: string): P
     },
   );
   return toPhotoProcessingHistoryItem(job);
+}
+
+export function photoErasureDeletionHistoryPath(status?: PhotoProcessingStatus): string {
+  return status
+    ? `/photo-erasure-deletion-jobs?status=${encodeURIComponent(status)}&limit=25`
+    : '/photo-erasure-deletion-jobs?limit=25';
+}
+
+export async function fetchPhotoErasureDeletionHistory(
+  status?: PhotoProcessingStatus,
+): Promise<PhotoErasureDeletionHistoryItem[]> {
+  const items = await request<ApiPhotoErasureDeletionHistoryItem[]>(
+    photoErasureDeletionHistoryPath(status),
+  );
+  return items.map(toPhotoErasureDeletionHistoryItem);
+}
+
+export async function retryPhotoErasureDeletionJob(id: string): Promise<PhotoErasureDeletionHistoryItem> {
+  const item = await request<ApiPhotoErasureDeletionHistoryItem>(
+    `/photo-erasure-deletion-jobs/${encodeURIComponent(id)}/retry`,
+    { method: 'POST' },
+  );
+  return toPhotoErasureDeletionHistoryItem(item);
+}
+
+export async function resolvePhotoErasureDeletionJob(id: string): Promise<PhotoErasureDeletionHistoryItem> {
+  const item = await request<ApiPhotoErasureDeletionHistoryItem>(
+    `/photo-erasure-deletion-jobs/${encodeURIComponent(id)}/resolve`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason: 'Manually resolved from manager dashboard' }),
+    },
+  );
+  return toPhotoErasureDeletionHistoryItem(item);
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

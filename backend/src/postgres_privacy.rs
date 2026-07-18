@@ -227,6 +227,333 @@ pub async fn erase_customer_photo_evidence(
     ))
 }
 
+pub async fn queue_photo_erasure_deletion_jobs(
+    pool: &PgPool,
+    account_id: &str,
+    object_keys: &[String],
+    organization_ids: &[String],
+) -> Result<(), sqlx::Error> {
+    let Some(organization_id) = organization_ids.first() else {
+        return Ok(());
+    };
+    for object_key in object_keys {
+        sqlx::query(
+            r#"
+            INSERT INTO photo_erasure_deletion_jobs (
+                id, account_id, organization_id, object_key
+            )
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (organization_id, object_key) DO UPDATE
+            SET
+                status = CASE
+                    WHEN photo_erasure_deletion_jobs.status = 'completed' THEN 'completed'
+                    ELSE 'queued'
+                END,
+                available_at = NOW(),
+                last_error = CASE
+                    WHEN photo_erasure_deletion_jobs.status = 'completed'
+                        THEN photo_erasure_deletion_jobs.last_error
+                    ELSE NULL
+                END,
+                updated_at = NOW()
+            "#,
+        )
+        .bind(format!(
+            "photo_erasure_deletion_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(account_id)
+        .bind(organization_id)
+        .bind(object_key)
+        .execute(pool)
+        .await?;
+    }
+    Ok(())
+}
+
+pub async fn claim_photo_erasure_deletion_jobs(
+    pool: &PgPool,
+    limit: i64,
+    max_attempts: i32,
+) -> Result<Vec<super::PhotoErasureDeletionClaim>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        WITH claimable AS (
+            SELECT id
+            FROM photo_erasure_deletion_jobs
+            WHERE status IN ('queued', 'failed')
+              AND available_at <= NOW()
+              AND attempt_count < $2
+            ORDER BY available_at, created_at
+            FOR UPDATE SKIP LOCKED
+            LIMIT $1
+        )
+        UPDATE photo_erasure_deletion_jobs deletion
+        SET
+            status = 'processing',
+            attempt_count = deletion.attempt_count + 1,
+            last_attempt_at = NOW(),
+            updated_at = NOW()
+        FROM claimable
+        WHERE deletion.id = claimable.id
+        RETURNING deletion.id, deletion.object_key, deletion.attempt_count
+        "#,
+    )
+    .bind(limit.clamp(1, 100))
+    .bind(max_attempts.max(1))
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| super::PhotoErasureDeletionClaim {
+            id: row.get("id"),
+            object_key: row.get("object_key"),
+            attempt_count: row.get("attempt_count"),
+        })
+        .collect())
+}
+
+pub async fn mark_photo_erasure_deletion_completed(
+    pool: &PgPool,
+    id: &str,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query(
+        r#"
+        UPDATE photo_erasure_deletion_jobs
+        SET status = 'completed', completed_at = NOW(), last_error = NULL, updated_at = NOW()
+        WHERE id = $1 AND status = 'processing'
+        "#,
+    )
+    .bind(id)
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+pub async fn mark_photo_erasure_deletion_failed(
+    pool: &PgPool,
+    id: &str,
+    attempt_count: i32,
+    max_attempts: i32,
+    error: &str,
+) -> Result<bool, sqlx::Error> {
+    let retry_seconds = 30_i64 * 2_i64.pow(attempt_count.saturating_sub(1).min(7) as u32);
+    Ok(sqlx::query(
+        r#"
+        UPDATE photo_erasure_deletion_jobs
+        SET
+            status = CASE WHEN $2 >= $3 THEN 'dead_letter' ELSE 'failed' END,
+            available_at = NOW() + ($4 * INTERVAL '1 second'),
+            last_error = LEFT($5, 2000),
+            updated_at = NOW()
+        WHERE id = $1 AND status = 'processing'
+        "#,
+    )
+    .bind(id)
+    .bind(attempt_count)
+    .bind(max_attempts.max(1))
+    .bind(retry_seconds)
+    .bind(error)
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+pub async fn list_photo_erasure_deletion_history(
+    pool: &PgPool,
+    filter: super::PhotoErasureDeletionHistoryFilter,
+) -> Result<Vec<super::PhotoErasureDeletionHistoryItem>, sqlx::Error> {
+    if filter.organization_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            id, account_id, organization_id, object_key, status, attempt_count,
+            available_at::text AS available_at,
+            last_attempt_at::text AS last_attempt_at,
+            completed_at::text AS completed_at,
+            resolved_at::text AS resolved_at,
+            last_error, resolution_note,
+            created_at::text AS created_at,
+            updated_at::text AS updated_at
+        FROM photo_erasure_deletion_jobs
+        WHERE organization_id = ANY($1)
+          AND ($2::text IS NULL OR status = $2)
+        ORDER BY created_at DESC, id DESC
+        LIMIT $3
+        "#,
+    )
+    .bind(filter.organization_ids)
+    .bind(filter.status)
+    .bind(filter.limit.clamp(1, 100))
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(photo_erasure_deletion_history_item)
+        .collect())
+}
+
+pub async fn retry_photo_erasure_deletion_job(
+    pool: &PgPool,
+    id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+) -> Result<super::PhotoErasureDeletionRetryResult, sqlx::Error> {
+    if organization_ids.is_empty() {
+        return Ok(super::PhotoErasureDeletionRetryResult::NotFound);
+    }
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, organization_id FROM photo_erasure_deletion_jobs WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+    )
+    .bind(id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(super::PhotoErasureDeletionRetryResult::NotFound);
+    };
+    let status: String = current.get("status");
+    if !matches!(status.as_str(), "failed" | "dead_letter") {
+        transaction.rollback().await?;
+        return Ok(super::PhotoErasureDeletionRetryResult::InvalidStatus);
+    }
+    sqlx::query(
+        r#"
+        UPDATE photo_erasure_deletion_jobs
+        SET status = 'queued', attempt_count = 0, available_at = NOW(),
+            last_attempt_at = NULL, completed_at = NULL, resolved_at = NULL,
+            last_error = NULL, resolution_note = NULL, updated_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(id)
+    .execute(&mut *transaction)
+    .await?;
+    insert_account_privacy_audit_event_in_transaction(
+        &mut transaction,
+        actor_user_id,
+        current.get("organization_id"),
+        "photo_erasure_deletion_retried",
+        id,
+    )
+    .await?;
+    transaction.commit().await?;
+
+    Ok(
+        photo_erasure_deletion_history_by_id(pool, id, organization_ids)
+            .await?
+            .map(|item| super::PhotoErasureDeletionRetryResult::Retried(Box::new(item)))
+            .unwrap_or(super::PhotoErasureDeletionRetryResult::NotFound),
+    )
+}
+
+pub async fn resolve_photo_erasure_deletion_job(
+    pool: &PgPool,
+    id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+    reason: Option<&str>,
+) -> Result<super::PhotoErasureDeletionResolveResult, sqlx::Error> {
+    if organization_ids.is_empty() {
+        return Ok(super::PhotoErasureDeletionResolveResult::NotFound);
+    }
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, organization_id FROM photo_erasure_deletion_jobs WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+    )
+    .bind(id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(super::PhotoErasureDeletionResolveResult::NotFound);
+    };
+    let status: String = current.get("status");
+    if !matches!(status.as_str(), "failed" | "dead_letter") {
+        transaction.rollback().await?;
+        return Ok(super::PhotoErasureDeletionResolveResult::InvalidStatus);
+    }
+    let resolution_note = reason
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("Manually resolved by manager");
+    sqlx::query(
+        r#"
+        UPDATE photo_erasure_deletion_jobs
+        SET status = 'resolved', resolved_at = NOW(), resolution_note = $2,
+            updated_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(id)
+    .bind(resolution_note.chars().take(500).collect::<String>())
+    .execute(&mut *transaction)
+    .await?;
+    insert_account_privacy_audit_event_in_transaction(
+        &mut transaction,
+        actor_user_id,
+        current.get("organization_id"),
+        "photo_erasure_deletion_resolved",
+        id,
+    )
+    .await?;
+    transaction.commit().await?;
+
+    Ok(
+        photo_erasure_deletion_history_by_id(pool, id, organization_ids)
+            .await?
+            .map(|item| super::PhotoErasureDeletionResolveResult::Resolved(Box::new(item)))
+            .unwrap_or(super::PhotoErasureDeletionResolveResult::NotFound),
+    )
+}
+
+fn photo_erasure_deletion_history_item(
+    row: sqlx::postgres::PgRow,
+) -> super::PhotoErasureDeletionHistoryItem {
+    super::PhotoErasureDeletionHistoryItem {
+        id: row.get("id"),
+        account_id: row.get("account_id"),
+        organization_id: row.get("organization_id"),
+        object_key: row.get("object_key"),
+        status: row.get("status"),
+        attempt_count: row.get("attempt_count"),
+        available_at: row.get("available_at"),
+        last_attempt_at: row.get("last_attempt_at"),
+        completed_at: row.get("completed_at"),
+        resolved_at: row.get("resolved_at"),
+        last_error: row.get("last_error"),
+        resolution_note: row.get("resolution_note"),
+        created_at: row.get("created_at"),
+        updated_at: row.get("updated_at"),
+    }
+}
+
+async fn photo_erasure_deletion_history_by_id(
+    pool: &PgPool,
+    id: &str,
+    organization_ids: &[String],
+) -> Result<Option<super::PhotoErasureDeletionHistoryItem>, sqlx::Error> {
+    let items = list_photo_erasure_deletion_history(
+        pool,
+        super::PhotoErasureDeletionHistoryFilter {
+            organization_ids: organization_ids.to_vec(),
+            status: None,
+            limit: 100,
+        },
+    )
+    .await?;
+    Ok(items.into_iter().find(|item| item.id == id))
+}
+
 async fn customer_privacy_account(
     pool: &PgPool,
     account_id: &str,

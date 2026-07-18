@@ -12,14 +12,17 @@ import {
   fetchJobAddOns,
   fetchJobs,
   fetchNotificationHistory,
+  fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
   requestCompletionReportChanges,
   queueCompletionReportDeliveryNotification,
   readPhotoUploadMetadata,
   resolveNotificationDelivery,
+  resolvePhotoErasureDeletionJob,
   resolvePhotoProcessingJob,
   retryNotificationDelivery,
+  retryPhotoErasureDeletionJob,
   retryPhotoProcessingJob,
   resubmitCompletionReport,
   startJob,
@@ -32,6 +35,7 @@ import {
   type JobDetail,
   type JobAddOn,
   type NotificationHistoryItem,
+  type PhotoErasureDeletionHistoryItem,
   type PhotoProcessingHistoryItem,
   type PhotoUploadTicket,
   type PropertyCompletionReportSummary,
@@ -52,6 +56,7 @@ import {
   ManagerPhotoProcessingRecoveryPanel,
   type PhotoProcessingRecoveryFilters,
 } from './components/ManagerPhotoProcessingRecoveryPanel';
+import { ManagerPhotoErasureRecoveryPanel } from './components/ManagerPhotoErasureRecoveryPanel';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
@@ -796,6 +801,8 @@ export function App() {
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
+  const [photoErasureDeletionHistory, setPhotoErasureDeletionHistory] = useState<PhotoErasureDeletionHistoryItem[]>([]);
+  const [isLoadingPhotoErasureDeletionHistory, setIsLoadingPhotoErasureDeletionHistory] = useState(false);
   const [customerPrivacyExport, setCustomerPrivacyExport] = useState<CustomerPrivacyExport | null>(null);
   const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
   const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
@@ -1433,6 +1440,56 @@ export function App() {
     }
   }
 
+  async function refreshPhotoErasureDeletionHistory() {
+    setIsLoadingPhotoErasureDeletionHistory(true);
+    try {
+      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
+      setStatusMessage('Photo erasure deletion recovery queue refreshed.');
+    } catch {
+      setStatusMessage('Could not refresh photo erasure deletion history.');
+    } finally {
+      setIsLoadingPhotoErasureDeletionHistory(false);
+    }
+  }
+
+  async function handleRetryPhotoErasureDeletion(id: string) {
+    setIsLoadingPhotoErasureDeletionHistory(true);
+    try {
+      const retried = await retryPhotoErasureDeletionJob(id);
+      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
+      setStatusMessage(`${retried.id} queued for object deletion retry.`);
+      recordManagerActivity({
+        title: 'Photo erasure deletion retry queued',
+        message: `${retried.objectKey} was returned to the deletion queue.`,
+        tone: 'success',
+        source: 'photo',
+      });
+    } catch {
+      setStatusMessage('Could not retry the photo erasure object deletion.');
+    } finally {
+      setIsLoadingPhotoErasureDeletionHistory(false);
+    }
+  }
+
+  async function handleResolvePhotoErasureDeletion(id: string) {
+    setIsLoadingPhotoErasureDeletionHistory(true);
+    try {
+      const resolved = await resolvePhotoErasureDeletionJob(id);
+      setPhotoErasureDeletionHistory(await fetchPhotoErasureDeletionHistory());
+      setStatusMessage(`${resolved.id} marked resolved.`);
+      recordManagerActivity({
+        title: 'Photo erasure deletion resolved',
+        message: `${resolved.objectKey} was manually resolved.`,
+        tone: 'success',
+        source: 'photo',
+      });
+    } catch {
+      setStatusMessage('Could not resolve the photo erasure object deletion.');
+    } finally {
+      setIsLoadingPhotoErasureDeletionHistory(false);
+    }
+  }
+
   async function handleCustomerPrivacyExport(accountId: string) {
     setIsLoadingCustomerPrivacy(true);
     try {
@@ -1756,6 +1813,15 @@ export function App() {
               isLoading={isLoadingCustomerPrivacy}
               onExport={(accountId) => void handleCustomerPrivacyExport(accountId)}
               onErasePhotos={(accountId, reason) => void handleCustomerPhotoErasure(accountId, reason)}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerPhotoErasureRecoveryPanel
+              items={photoErasureDeletionHistory}
+              isLoading={isLoadingPhotoErasureDeletionHistory}
+              onRefresh={() => void refreshPhotoErasureDeletionHistory()}
+              onRetry={(id) => void handleRetryPhotoErasureDeletion(id)}
+              onResolve={(id) => void handleResolvePhotoErasureDeletion(id)}
             />
           </div>
           <div className="mt-6">

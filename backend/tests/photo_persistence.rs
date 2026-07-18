@@ -1,7 +1,9 @@
 use grover_landscaping_api::{
     db::{
         CustomerPhotoErasureResult, CustomerPrivacyExportResult, JobRepository,
-        PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+        PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
+        PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter,
+        PhotoProcessingResolveResult, PhotoProcessingRetryResult,
     },
     photo_processing::process_photo_processing_once,
     photo_storage::PhotoStorageConfig,
@@ -537,6 +539,155 @@ async fn repository_recovers_failed_photo_processing_jobs() {
     .await
     .unwrap();
     assert_eq!(audit_events, 2);
+}
+
+#[tokio::test]
+async fn photo_processing_worker_completes_queued_erasure_deletions() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = repository
+        .pool()
+        .expect("photo erasure worker test should have a PostgreSQL pool");
+    let deletion_id = format!(
+        "photo_erasure_worker_test_{}",
+        uuid::Uuid::new_v4().simple()
+    );
+    let object_key = format!("jobs/job_1001/photos/{}.jpg", uuid::Uuid::new_v4().simple());
+
+    sqlx::query(
+        r#"
+        INSERT INTO photo_erasure_deletion_jobs (
+            id, account_id, organization_id, object_key
+        )
+        VALUES ($1, 'acct_1001', 'org_demo_landscaping', $2)
+        "#,
+    )
+    .bind(&deletion_id)
+    .bind(&object_key)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    assert_eq!(
+        process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 3).await,
+        1
+    );
+
+    let row = sqlx::query(
+        r#"
+        SELECT status, attempt_count, completed_at::text AS completed_at, last_error
+        FROM photo_erasure_deletion_jobs
+        WHERE id = $1
+        "#,
+    )
+    .bind(&deletion_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert_eq!(row.get::<String, _>("status"), "completed");
+    assert_eq!(row.get::<i32, _>("attempt_count"), 1);
+    assert!(row.get::<Option<String>, _>("completed_at").is_some());
+    assert_eq!(row.get::<Option<String>, _>("last_error"), None);
+}
+
+#[tokio::test]
+async fn repository_lists_retries_and_resolves_erasure_deletion_jobs() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = repository
+        .pool()
+        .expect("photo erasure recovery test should have a PostgreSQL pool");
+    let deletion_id = format!(
+        "photo_erasure_recovery_test_{}",
+        uuid::Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        r#"
+        INSERT INTO photo_erasure_deletion_jobs (
+            id, account_id, organization_id, object_key, status, attempt_count, last_error
+        )
+        VALUES ($1, 'acct_1001', 'org_demo_landscaping', $2, 'dead_letter', 5, 'storage unavailable')
+        "#,
+    )
+    .bind(&deletion_id)
+    .bind(format!("jobs/job_1001/photos/{deletion_id}.jpg"))
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let organizations = vec!["org_demo_landscaping".to_string()];
+    let history = repository
+        .list_photo_erasure_deletion_history(PhotoErasureDeletionHistoryFilter {
+            organization_ids: organizations.clone(),
+            status: Some("dead_letter".to_string()),
+            limit: 25,
+        })
+        .await
+        .unwrap();
+    assert!(history.iter().any(|item| item.id == deletion_id));
+
+    let retried = repository
+        .retry_photo_erasure_deletion_job(&deletion_id, &organizations, "manager_user_1")
+        .await
+        .unwrap();
+    let PhotoErasureDeletionRetryResult::Retried(retried) = retried else {
+        panic!("dead-lettered deletion should be retryable");
+    };
+    assert_eq!(retried.status, "queued");
+    assert_eq!(retried.attempt_count, 0);
+
+    sqlx::query(
+        "UPDATE photo_erasure_deletion_jobs SET status = 'dead_letter', attempt_count = 5 WHERE id = $1",
+    )
+    .bind(&deletion_id)
+    .execute(&pool)
+    .await
+    .unwrap();
+    let resolved = repository
+        .resolve_photo_erasure_deletion_job(
+            &deletion_id,
+            &organizations,
+            "manager_user_1",
+            Some("Object confirmed absent in storage"),
+        )
+        .await
+        .unwrap();
+    let PhotoErasureDeletionResolveResult::Resolved(resolved) = resolved else {
+        panic!("dead-lettered deletion should be manually resolvable");
+    };
+    assert_eq!(resolved.status, "resolved");
+    assert_eq!(
+        resolved.resolution_note.as_deref(),
+        Some("Object confirmed absent in storage")
+    );
+    assert!(resolved.resolved_at.is_some());
+
+    let audit_count: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE target_id = $1
+          AND event_kind IN (
+              'photo_erasure_deletion_retried',
+              'photo_erasure_deletion_resolved'
+          )
+        "#,
+    )
+    .bind(&deletion_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(audit_count, 2);
 }
 
 #[tokio::test]

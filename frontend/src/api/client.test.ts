@@ -6,6 +6,7 @@ import {
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
+  photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
   photoProcessingRetryPath,
@@ -17,6 +18,7 @@ import {
   toCustomerPrivacyExport,
   toJobAddOn,
   toNotificationHistoryItem,
+  toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
@@ -73,6 +75,35 @@ describe('core API client mapping', () => {
     expect(photoProcessingResolvePath('photo/processing/1001')).toBe(
       '/photo-processing-jobs/photo%2Fprocessing%2F1001/resolve',
     );
+  });
+
+  it('builds and maps photo erasure deletion recovery data', () => {
+    expect(photoErasureDeletionHistoryPath()).toBe('/photo-erasure-deletion-jobs?limit=25');
+    expect(photoErasureDeletionHistoryPath('dead_letter')).toBe(
+      '/photo-erasure-deletion-jobs?status=dead_letter&limit=25',
+    );
+    expect(toPhotoErasureDeletionHistoryItem({
+      id: 'photo_erasure_deletion_1001',
+      account_id: 'acct_1001',
+      organization_id: 'org_demo_landscaping',
+      object_key: 'jobs/job_1001/photos/before.jpg',
+      status: 'dead_letter',
+      attempt_count: 5,
+      available_at: '2026-07-18 08:00:00+00',
+      last_attempt_at: '2026-07-18 07:00:00+00',
+      completed_at: null,
+      resolved_at: null,
+      last_error: 'photo_object_deletion_failed',
+      resolution_note: null,
+      created_at: '2026-07-18 06:00:00+00',
+      updated_at: '2026-07-18 07:00:00+00',
+    })).toMatchObject({
+      id: 'photo_erasure_deletion_1001',
+      accountId: 'acct_1001',
+      objectKey: 'jobs/job_1001/photos/before.jpg',
+      status: 'dead_letter',
+      attemptCount: 5,
+    });
   });
 
   it('builds customer privacy paths with encoded account ids', () => {
