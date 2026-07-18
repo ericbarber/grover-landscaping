@@ -1461,6 +1461,13 @@ export function organizationInvitationsPath(organizationId: string): string {
   return `/organizations/${encodeURIComponent(organizationId)}/invitations`;
 }
 
+export function organizationInvitationPath(
+  organizationId: string,
+  invitationId: string,
+): string {
+  return `${organizationInvitationsPath(organizationId)}/${encodeURIComponent(invitationId)}`;
+}
+
 export function toOrganizationInvitation(
   invitation: ApiOrganizationInvitation,
 ): OrganizationInvitation {
@@ -1524,6 +1531,18 @@ export async function fetchOrganizationInvitations(
     organizationInvitationsPath(organizationId),
   );
   return invitations.map(toOrganizationInvitationSummary);
+}
+
+export async function revokeOrganizationInvitation(
+  organizationId: string,
+  invitationId: string,
+): Promise<OrganizationInvitationSummary> {
+  return toOrganizationInvitationSummary(
+    await request<ApiOrganizationInvitationSummary>(
+      organizationInvitationPath(organizationId, invitationId),
+      { method: 'DELETE' },
+    ),
+  );
 }
 
 function toCustomerAccountRecord(item: {

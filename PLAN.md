@@ -221,6 +221,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile team administration creates organization-scoped role invitations and distinguishes queued delivery from local fallback
 - First-owner setup actions open property, crew, route-planning, and team-invitation workspaces
 - Owners can review tenant-scoped invitation history and distinguish pending, accepted, revoked, and expired access without exposing invite tokens
+- Owners can revoke only pending invitations through a two-step mobile control that archives invited membership access and records an audit event
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -463,7 +464,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add guarded invitation revocation for pending access
+- Add organization membership visibility and guarded role administration
 
 ## Planned
 

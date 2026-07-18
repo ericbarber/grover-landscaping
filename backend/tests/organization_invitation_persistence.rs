@@ -164,4 +164,58 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("audit count should be available");
     assert_eq!(audit_count, 2);
+
+    let revocable_email = "invite-revocation@example.com";
+    sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
+        .bind(revocable_email)
+        .execute(&pool)
+        .await
+        .expect("revocation invitation should reset");
+    sqlx::query("DELETE FROM organization_memberships WHERE user_id = $1")
+        .bind(revocable_email)
+        .execute(&pool)
+        .await
+        .expect("revocation membership should reset");
+    let revocable = repository
+        .create_invitation(
+            organization_id,
+            actor_user_id,
+            CreateOrganizationInvitationRequest {
+                invitee_email: revocable_email.to_string(),
+                role: "manager".to_string(),
+                scope_type: Some("organization".to_string()),
+                scope_id: Some(organization_id.to_string()),
+                expires_at: None,
+            },
+        )
+        .await
+        .expect("revocable invitation should be created");
+    let revoked = repository
+        .revoke_invitation(organization_id, &revocable.id, actor_user_id)
+        .await
+        .expect("pending invitation should be revoked");
+    assert_eq!(revoked.status, "revoked");
+    assert!(
+        repository
+            .revoke_invitation(organization_id, &revocable.id, actor_user_id)
+            .await
+            .is_none(),
+        "revocation should be idempotently guarded by pending status"
+    );
+    let revoked_membership_status = sqlx::query_scalar::<_, String>(
+        "SELECT status FROM organization_memberships WHERE id = $1",
+    )
+    .bind(&revocable.membership_id)
+    .fetch_one(&pool)
+    .await
+    .expect("revoked membership status should be available");
+    assert_eq!(revoked_membership_status, "archived");
+    let revocation_audit_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM access_audit_events WHERE event_kind = 'invitation_revoked' AND target_id = $1",
+    )
+    .bind(&revocable.id)
+    .fetch_one(&pool)
+    .await
+    .expect("revocation audit should be available");
+    assert_eq!(revocation_audit_count, 1);
 }

@@ -7,6 +7,7 @@ import {
   notificationResolvePath,
   notificationRetryPath,
   organizationInvitationsPath,
+  organizationInvitationPath,
   photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
@@ -73,6 +74,9 @@ describe('core API client mapping', () => {
   it('builds and maps organization invitations', () => {
     expect(organizationInvitationsPath('org/demo')).toBe(
       '/organizations/org%2Fdemo/invitations',
+    );
+    expect(organizationInvitationPath('org/demo', 'invite/1')).toBe(
+      '/organizations/org%2Fdemo/invitations/invite%2F1',
     );
     expect(toOrganizationInvitation({
       id: 'invitation_1',

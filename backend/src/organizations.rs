@@ -232,6 +232,19 @@ impl OrganizationRepository {
             .unwrap_or_default()
     }
 
+    pub async fn revoke_invitation(
+        &self,
+        organization_id: &str,
+        invitation_id: &str,
+        actor_user_id: &str,
+    ) -> Option<OrganizationInvitationSummary> {
+        let pool = self.pool.as_ref()?;
+        revoke_invitation(pool, organization_id, invitation_id, actor_user_id)
+            .await
+            .ok()
+            .flatten()
+    }
+
     pub async fn accept_invitation(
         &self,
         token: &str,
@@ -576,6 +589,68 @@ async fn list_invitations(
         .into_iter()
         .map(organization_invitation_summary_from_row)
         .collect())
+}
+
+async fn revoke_invitation(
+    pool: &PgPool,
+    organization_id: &str,
+    invitation_id: &str,
+    actor_user_id: &str,
+) -> Result<Option<OrganizationInvitationSummary>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        r#"
+        UPDATE organization_invitations
+        SET status = 'revoked',
+            updated_at = NOW()
+        WHERE id = $1
+          AND organization_id = $2
+          AND status = 'pending'
+        RETURNING
+            id,
+            organization_id,
+            invitee_email,
+            role,
+            status,
+            scope_type,
+            scope_id,
+            membership_id,
+            expires_at::text AS expires_at
+        "#,
+    )
+    .bind(invitation_id)
+    .bind(organization_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+
+    if let Some(invitation) = row.as_ref() {
+        let membership_id: String = invitation.get("membership_id");
+        sqlx::query(
+            r#"
+            UPDATE organization_memberships
+            SET status = 'archived',
+                updated_at = NOW()
+            WHERE id = $1
+              AND organization_id = $2
+              AND status = 'invited'
+            "#,
+        )
+        .bind(&membership_id)
+        .bind(organization_id)
+        .execute(&mut *transaction)
+        .await?;
+        insert_access_audit_event(
+            &mut transaction,
+            actor_user_id,
+            organization_id,
+            "invitation_revoked",
+            invitation_id,
+        )
+        .await?;
+    }
+
+    transaction.commit().await?;
+    Ok(row.map(organization_invitation_summary_from_row))
 }
 
 async fn accept_invitation(

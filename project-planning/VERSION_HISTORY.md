@@ -77,6 +77,8 @@ Current continuation work:
   and team-administration workspaces.
 - Added an owner-only invitation history endpoint and mobile pending-access list
   that omits invitation tokens and stays scoped to the active organization.
+- Added guarded pending-invitation revocation with mobile confirmation, atomic
+  membership archival, and a tenant-scoped audit event.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

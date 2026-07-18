@@ -85,6 +85,18 @@ Expected behavior:
 - The invitation is marked `accepted`.
 - An `invite_accepted` audit event is recorded.
 
+### Revoke invitation
+
+`DELETE /organizations/{organization_id}/invitations/{invitation_id}`
+
+- The caller must be an organization owner or support admin with active access
+  to the requested organization.
+- Only pending invitations can be revoked.
+- Revocation atomically marks the invitation `revoked`, archives its still-invited
+  membership, and records an `invitation_revoked` audit event.
+- Accepted, expired, previously revoked, missing, and cross-organization
+  invitations are not changed.
+
 ### Update membership role
 
 `PUT /organizations/{organization_id}/memberships/{membership_id}/role`
@@ -116,4 +128,5 @@ invitations report that delivery was queued; local fallback invitations expose
 their manual pilot token so local acceptance can be tested without a configured
 email provider. The browser does not treat invitation creation as accepted access.
 Owners can also refresh a token-free invitation history and see pending access
-separately from accepted memberships.
+separately from accepted memberships. Pending rows use a two-step mobile
+confirmation before revocation.

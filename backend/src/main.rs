@@ -568,6 +568,10 @@ fn app_with_runtime(
             post(accept_organization_invitation),
         )
         .route(
+            "/organizations/{organization_id}/invitations/{invitation_id}",
+            delete(revoke_organization_invitation),
+        )
+        .route(
             "/organizations/{organization_id}/memberships/{membership_id}/role",
             put(update_organization_membership_role),
         )
@@ -1332,6 +1336,35 @@ async fn list_organization_invitations(
     }
 
     Json(state.organizations.list_invitations(&organization_id).await).into_response()
+}
+
+async fn revoke_organization_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, invitation_id)): Path<(String, String)>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+
+    match state
+        .organizations
+        .revoke_invitation(&organization_id, &invitation_id, &principal.subject)
+        .await
+    {
+        Some(invitation) => Json(invitation).into_response(),
+        None => resource_not_found_response(
+            "organization_invitation_not_pending",
+            "The invitation was not found or is no longer pending.",
+        ),
+    }
 }
 
 async fn accept_organization_invitation(
@@ -4131,6 +4164,22 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json, serde_json::json!([]));
+    }
+
+    #[tokio::test]
+    async fn organization_invitation_revoke_endpoint_requires_pending_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri("/organizations/org_demo_landscaping/invitations/invitation_missing")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

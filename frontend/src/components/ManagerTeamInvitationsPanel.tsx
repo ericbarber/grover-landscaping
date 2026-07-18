@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   createOrganizationInvitation,
   fetchOrganizationInvitations,
+  revokeOrganizationInvitation,
   type OrganizationInvitation,
   type OrganizationInvitationRole,
   type OrganizationInvitationSummary,
@@ -37,6 +38,8 @@ export function ManagerTeamInvitationsPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [confirmingRevocationId, setConfirmingRevocationId] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
 
   async function refreshHistory() {
     if (!organizationId) return;
@@ -80,6 +83,23 @@ export function ManagerTeamInvitationsPanel({
       setMessage('The invitation could not be created. Confirm owner access and try again.');
     } finally {
       setIsSending(false);
+    }
+  }
+
+  async function revokeInvitation(invitationId: string) {
+    setIsRevoking(true);
+    setMessage(null);
+    try {
+      const revoked = await revokeOrganizationInvitation(organizationId, invitationId);
+      setHistory((current) => current.map((item) => (
+        item.id === revoked.id ? revoked : item
+      )));
+      setConfirmingRevocationId('');
+      setMessage(`Invitation for ${revoked.inviteeEmail} revoked.`);
+    } catch {
+      setMessage('The invitation could not be revoked. Refresh its status and try again.');
+    } finally {
+      setIsRevoking(false);
     }
   }
 
@@ -181,6 +201,36 @@ export function ManagerTeamInvitationsPanel({
                   {item.status}
                 </span>
               </div>
+              {item.status === 'pending' ? (
+                confirmingRevocationId === item.id ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700"
+                      disabled={isRevoking}
+                      onClick={() => setConfirmingRevocationId('')}
+                      type="button"
+                    >
+                      Keep invitation
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg bg-red-700 px-3 text-xs font-bold text-white disabled:opacity-60"
+                      disabled={isRevoking}
+                      onClick={() => void revokeInvitation(item.id)}
+                      type="button"
+                    >
+                      {isRevoking ? 'Revoking…' : 'Confirm revoke'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="mt-2 min-h-11 w-full rounded-lg border border-red-200 px-3 text-xs font-semibold text-red-700"
+                    onClick={() => setConfirmingRevocationId(item.id)}
+                    type="button"
+                  >
+                    Revoke pending invitation
+                  </button>
+                )
+              ) : null}
             </li>
           ))}
         </ul>
