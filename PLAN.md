@@ -200,6 +200,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Tenant-scoped crew list API for property setup
 - Crew assignment requires an existing non-archived property in the crew organization
 - Manager property setup panel creates portfolios, groups properties, and assigns crews independently
+- Property setup loads portfolio and crew capabilities independently so limited roles retain their authorized tools
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -442,7 +443,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Expand property administration and connect property creation to portfolio and crew setup
+- Show current portfolio membership directly in manager property setup
 
 ## Planned
 

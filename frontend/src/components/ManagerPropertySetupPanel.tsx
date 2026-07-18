@@ -26,6 +26,8 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState('');
   const [selectedCrewId, setSelectedCrewId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [portfolioSetupAvailable, setPortfolioSetupAvailable] = useState(true);
+  const [crewSetupAvailable, setCrewSetupAvailable] = useState(true);
   const [message, setMessage] = useState('Choose a property to finish service setup.');
   const selectedProperty = properties.find((property) => property.propertyId === propertyId);
   const accountPortfolios = selectedProperty ? portfolios[selectedProperty.accountId] ?? [] : [];
@@ -44,28 +46,39 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    Promise.all([
-      fetchCrews(),
+    Promise.allSettled([
+      Promise.all([
+        fetchCrews(),
+        Promise.all(properties.map(async (property) => [
+          property.propertyId,
+          await fetchPropertyCrewAssignments(property.propertyId),
+        ] as const)),
+      ]),
       Promise.all(
         Array.from(new Set(properties.map((property) => property.accountId))).map(async (accountId) => [
           accountId,
           await fetchPropertyPortfolios(accountId),
         ] as const),
       ),
-      Promise.all(properties.map(async (property) => [
-        property.propertyId,
-        await fetchPropertyCrewAssignments(property.propertyId),
-      ] as const)),
     ])
-      .then(([loadedCrews, loadedPortfolios, loadedAssignments]) => {
+      .then(([crewResult, portfolioResult]) => {
         if (!active) return;
-        setCrews(loadedCrews);
-        setPortfolios(Object.fromEntries(loadedPortfolios));
-        setAssignments(Object.fromEntries(loadedAssignments));
-        setMessage('Loaded persisted portfolio and crew setup.');
-      })
-      .catch(() => {
-        if (active) setMessage('Some property setup records could not be loaded.');
+        const crewAvailable = crewResult.status === 'fulfilled';
+        const portfolioAvailable = portfolioResult.status === 'fulfilled';
+        setCrewSetupAvailable(crewAvailable);
+        setPortfolioSetupAvailable(portfolioAvailable);
+        if (crewAvailable) {
+          setCrews(crewResult.value[0]);
+          setAssignments(Object.fromEntries(crewResult.value[1]));
+        }
+        if (portfolioAvailable) {
+          setPortfolios(Object.fromEntries(portfolioResult.value));
+        }
+        setMessage(
+          crewAvailable && portfolioAvailable
+            ? 'Loaded persisted portfolio and crew setup.'
+            : 'Loaded the property setup tools available to your role.',
+        );
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -166,11 +179,16 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Portfolio grouping</p>
+            {!portfolioSetupAvailable ? (
+              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+                Portfolio setup is not available for your current access.
+              </p>
+            ) : null}
             <select className="mt-3 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={selectedPortfolioId} onChange={(event) => setSelectedPortfolioId(event.target.value)}>
               <option value="">No portfolio selected</option>
               {accountPortfolios.map((portfolio) => <option key={portfolio.id} value={portfolio.id}>{portfolio.displayName}</option>)}
             </select>
-            <button className="mt-2 w-full rounded-lg bg-sky-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!selectedPortfolioId || isLoading} onClick={() => void groupProperty()} type="button">Group property</button>
+            <button className="mt-2 w-full rounded-lg bg-sky-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!portfolioSetupAvailable || !selectedPortfolioId || isLoading} onClick={() => void groupProperty()} type="button">Group property</button>
             <details className="mt-3 rounded-lg border border-slate-200 px-3">
               <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-sky-700 [&::-webkit-details-marker]:hidden">Create portfolio</summary>
               <div className="grid gap-2 border-t border-slate-100 py-3">
@@ -181,13 +199,18 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
                   <option value="hoa">HOA</option>
                   <option value="commercial_client">Commercial client</option>
                 </select>
-                <button className="rounded-lg border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 disabled:opacity-60" disabled={isLoading} onClick={() => void addPortfolio()} type="button">Create portfolio</button>
+                <button className="rounded-lg border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 disabled:opacity-60" disabled={!portfolioSetupAvailable || isLoading} onClick={() => void addPortfolio()} type="button">Create portfolio</button>
               </div>
             </details>
           </div>
 
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Service crew</p>
+            {!crewSetupAvailable ? (
+              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+                Crew assignment is limited to organization owners and managers.
+              </p>
+            ) : null}
             <p className="mt-1 text-xs text-slate-500">
               {activeAssignment ? `Currently assigned to ${crews.find((crew) => crew.id === activeAssignment.crewId)?.name ?? activeAssignment.crewId}.` : 'No active crew assignment.'}
             </p>
@@ -195,7 +218,7 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
               <option value="">No crew selected</option>
               {eligibleCrews.map((crew) => <option key={crew.id} value={crew.id}>{crew.name}</option>)}
             </select>
-            <button className="mt-2 w-full rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!selectedCrewId || isLoading} onClick={() => void assignCrew()} type="button">Assign crew</button>
+            <button className="mt-2 w-full rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60" disabled={!crewSetupAvailable || !selectedCrewId || isLoading} onClick={() => void assignCrew()} type="button">Assign crew</button>
           </div>
         </div>
       ) : <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Create a customer property before portfolio or crew setup.</p>}
