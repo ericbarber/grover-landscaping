@@ -67,6 +67,8 @@ Current continuation work:
   incomplete profiles, missing crews, blocked yards, and pending activation.
 - Linked each property attention action to the matching mobile workspace while
   preserving the affected property selection.
+- Added a mobile customer-detail readiness action that opens and focuses the
+  affected account editor.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

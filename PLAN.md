@@ -216,6 +216,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
+- Incomplete customer-detail progress opens the account editor with a mobile-sized action
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -458,7 +459,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Surface customer-detail readiness actions from incomplete account progress
+- Link missing-property progress directly to the account property form
 
 ## Planned
 

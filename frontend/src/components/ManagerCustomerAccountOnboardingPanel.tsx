@@ -132,6 +132,16 @@ export function ManagerCustomerAccountOnboardingPanel({
     }
   }
 
+  function openAccountDetails(account: CustomerAccountRecord) {
+    setEditingAccount(account);
+    window.setTimeout(() => {
+      document.getElementById(`customer-account-${account.accountId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 0);
+  }
+
   function updatePropertyDraft(accountId: string, update: Partial<PropertyDraft>) {
     setPropertyDrafts((current) => {
       const draft = current[accountId] ?? { displayName: '', serviceAddress: '' };
@@ -204,7 +214,11 @@ export function ManagerCustomerAccountOnboardingPanel({
       </div>
       <div className="mt-4 space-y-2">
         {filteredAccounts.map((account) => (
-          <div className="rounded-lg border border-slate-200 p-3" key={account.accountId}>
+          <div
+            className="scroll-mt-20 rounded-lg border border-slate-200 p-3"
+            id={`customer-account-${account.accountId}`}
+            key={account.accountId}
+          >
             {editingAccount?.accountId === account.accountId ? (
               <AccountEditor account={editingAccount} disabled={isLoading} onCancel={() => setEditingAccount(null)} onChange={setEditingAccount} onSave={() => void save(editingAccount)} />
             ) : (
@@ -214,10 +228,13 @@ export function ManagerCustomerAccountOnboardingPanel({
                     <p className="font-semibold text-slate-950">{account.customerName}</p>
                     <p className="text-xs text-slate-500">{account.billingModel.replace('_', ' ')} · {account.paymentStatus.replace('_', ' ')}</p>
                   </div>
-                  <button className="text-sm font-semibold text-emerald-700" onClick={() => setEditingAccount(account)} type="button">Edit</button>
+                  <button className="min-h-11 px-2 text-sm font-semibold text-emerald-700" onClick={() => openAccountDetails(account)} type="button">Edit</button>
                 </div>
                 {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
-                <AccountProgress progress={progress[account.accountId]} />
+                <AccountProgress
+                  onOpenCustomerDetails={() => openAccountDetails(account)}
+                  progress={progress[account.accountId]}
+                />
                 <div className="mt-3 space-y-2">
                   {(properties[account.accountId] ?? []).map((property) => {
                     const attention = progress[account.accountId]?.propertiesNeedingAttention
@@ -294,7 +311,13 @@ export function ManagerCustomerAccountOnboardingPanel({
   );
 }
 
-function AccountProgress({ progress }: { progress?: CustomerAccountOnboardingProgress }) {
+function AccountProgress({
+  progress,
+  onOpenCustomerDetails,
+}: {
+  progress?: CustomerAccountOnboardingProgress;
+  onOpenCustomerDetails: () => void;
+}) {
   if (!progress) return null;
   return (
     <div className="mt-3 rounded-lg bg-slate-50 p-3">
@@ -322,6 +345,16 @@ function AccountProgress({ progress }: { progress?: CustomerAccountOnboardingPro
           {' '}{progress.activePropertyCount} of {progress.propertyCount} properties active
         </li>
       </ul>
+      {!progress.customerDetailsReady ? (
+        <button
+          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+          onClick={onOpenCustomerDetails}
+          type="button"
+        >
+          Complete customer service details
+          <span aria-hidden="true"> →</span>
+        </button>
+      ) : null}
     </div>
   );
 }
