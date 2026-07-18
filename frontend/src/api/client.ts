@@ -468,6 +468,7 @@ interface ApiOrganizationMembership {
 interface ApiPrincipalAccessSummary {
   user_id: string;
   username: string;
+  verified_email?: string | null;
   claim_roles: AccessRole[];
   memberships: ApiOrganizationMembership[];
 }
@@ -475,6 +476,7 @@ interface ApiPrincipalAccessSummary {
 export interface PrincipalAccessSummary {
   userId: string;
   username: string;
+  verifiedEmail: string | null;
   claimRoles: AccessRole[];
   memberships: OrganizationMembership[];
 }
@@ -1100,6 +1102,7 @@ export function toPrincipalAccessSummary(
   return {
     userId: summary.user_id,
     username: summary.username,
+    verifiedEmail: summary.verified_email ?? null,
     claimRoles: summary.claim_roles,
     memberships: summary.memberships.map(toOrganizationMembership),
   };

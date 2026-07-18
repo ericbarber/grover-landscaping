@@ -261,6 +261,7 @@ describe('core API client mapping', () => {
     expect(toPrincipalAccessSummary({
       user_id: 'cognito-sub-1',
       username: 'owner@example.com',
+      verified_email: 'owner@example.com',
       claim_roles: ['OrganizationOwner'],
       memberships: [{
         id: 'membership_1',
@@ -275,6 +276,7 @@ describe('core API client mapping', () => {
       }],
     })).toMatchObject({
       userId: 'cognito-sub-1',
+      verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
       memberships: [{
         organizationId: 'org_1',

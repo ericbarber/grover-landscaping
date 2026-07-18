@@ -7,6 +7,7 @@ describe('first owner onboarding steps', () => {
     expect(firstOwnerSetupSteps({
       userId: 'user_1',
       username: 'owner@example.com',
+      verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
       memberships: [],
     })).toEqual(['Create your organization']);
@@ -16,6 +17,7 @@ describe('first owner onboarding steps', () => {
     const access: PrincipalAccessSummary = {
       userId: 'user_1',
       username: 'owner@example.com',
+      verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
       memberships: [{
         id: 'membership_1',

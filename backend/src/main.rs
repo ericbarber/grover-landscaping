@@ -785,6 +785,7 @@ async fn get_my_access(
             .principal_access_summary(
                 &principal.subject,
                 &principal.username,
+                principal.verified_email.clone(),
                 principal.claim_roles.clone(),
             )
             .await,

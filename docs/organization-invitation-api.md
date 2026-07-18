@@ -103,6 +103,9 @@ Expected behavior:
 - The linked membership user id is changed to the signed-in principal subject.
 - Recipient mismatch, missing verified email identity, expiry, and unknown token
   all use the same not-found response so invitation existence is not disclosed.
+- `GET /me/access` returns the current normalized `verified_email` when the
+  access token satisfies the identity requirement. The mobile acceptance screen
+  disables activation and shows deployment/sign-in guidance when it is absent.
 - The invitation is marked `accepted`.
 - An `invite_accepted` audit event is recorded.
 - Invitation notifications include an acceptance path in the form

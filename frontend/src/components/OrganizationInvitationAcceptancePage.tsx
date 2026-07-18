@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthProvider';
 
 export function OrganizationInvitationAcceptancePage({ token }: { token: string }) {
   const auth = useAuth();
+  const identityReady = auth.authMode !== 'cognito' || Boolean(auth.verifiedEmail);
   const [accepted, setAccepted] = useState<OrganizationInvitationAcceptance | null>(null);
   const [isAccepting, setIsAccepting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -60,9 +61,19 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
               Accepting activates the role and access scope selected by the organization owner.
               Confirm only if you recognize the invitation.
             </p>
+            {auth.verifiedEmail ? (
+              <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                Signed in as {auth.verifiedEmail}
+              </p>
+            ) : auth.authMode === 'cognito' ? (
+              <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+                This access token does not include a verified email. Sign out and use an invited
+                account whose Cognito access token includes verified email claims.
+              </p>
+            ) : null}
             <button
               className="mt-6 min-h-12 w-full rounded-xl bg-emerald-700 px-4 py-3 font-bold text-white disabled:opacity-60"
-              disabled={isAccepting}
+              disabled={isAccepting || !identityReady}
               onClick={() => void accept()}
               type="button"
             >

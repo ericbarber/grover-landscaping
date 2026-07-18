@@ -26,6 +26,7 @@ interface AuthContextValue {
   authenticated: boolean;
   error: string | null;
   displayName: string;
+  verifiedEmail: string | null;
   roles: string[];
   refreshAccess: () => Promise<void>;
   authMode: AuthMode | null;
@@ -129,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [initializationAttempt, setInitializationAttempt] = useState(0);
   const [membershipRoles, setMembershipRoles] = useState<string[]>([]);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -239,8 +241,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const access = await fetchPrincipalAccessSummary();
       setMembershipRoles(access.memberships.map((membership) => membership.role));
+      setVerifiedEmail(access.verifiedEmail);
     } catch {
       setMembershipRoles([]);
+      setVerifiedEmail(null);
     }
   }, []);
 
@@ -263,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authenticated: authMode === 'disabled' || Boolean(user && !user.expired),
       error,
       displayName: authMode === 'disabled' ? 'Local development user' : displayNameFromUser(user),
+      verifiedEmail,
       roles,
       authMode,
       refreshAccess,
@@ -271,7 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
     };
     },
-    [authMode, error, loading, membershipRoles, refreshAccess, retryInitialization, signIn, signOut, user],
+    [authMode, error, loading, membershipRoles, refreshAccess, retryInitialization, signIn, signOut, user, verifiedEmail],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

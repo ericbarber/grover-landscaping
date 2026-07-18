@@ -102,6 +102,8 @@ Current continuation work:
   invitation email to the existing audited notification queue.
 - Bound invitation acceptance to the authenticated token's normalized verified
   email, with non-disclosing mismatch responses and recipient sign-in guidance.
+- Added verified-email readiness to current-user access and disabled mobile
+  invitation activation early when Cognito identity claims are unavailable.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

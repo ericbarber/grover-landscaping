@@ -54,9 +54,14 @@ async fn repository_reads_seeded_local_owner_membership_from_postgres() {
         .principal_access_summary(
             "local-development-user",
             "local.development@example.com",
+            Some("local.development@example.com".to_string()),
             vec![AccessRole::OrganizationOwner],
         )
         .await;
+    assert_eq!(
+        summary.verified_email.as_deref(),
+        Some("local.development@example.com")
+    );
     assert!(summary.memberships.iter().any(|membership| {
         membership.organization_id == "org_demo_landscaping"
             && membership.role == AccessRole::OrganizationOwner

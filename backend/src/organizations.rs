@@ -26,6 +26,7 @@ pub struct OrganizationMembership {
 pub struct PrincipalAccessSummary {
     pub user_id: String,
     pub username: String,
+    pub verified_email: Option<String>,
     pub claim_roles: Vec<AccessRole>,
     pub memberships: Vec<OrganizationMembership>,
 }
@@ -150,6 +151,7 @@ impl OrganizationRepository {
         &self,
         user_id: &str,
         username: &str,
+        verified_email: Option<String>,
         claim_roles: Vec<AccessRole>,
     ) -> PrincipalAccessSummary {
         let memberships = self.list_active_memberships(user_id).await;
@@ -158,6 +160,7 @@ impl OrganizationRepository {
         PrincipalAccessSummary {
             user_id: user_id.to_string(),
             username: username.to_string(),
+            verified_email,
             claim_roles,
             memberships,
         }
