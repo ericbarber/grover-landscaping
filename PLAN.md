@@ -235,6 +235,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owners can reissue expired or revoked invitations through a two-step mobile control that invalidates old tokens, queues fresh delivery, and records an audit event
 - Concurrent and case-variant duplicate pending invitations are blocked per organization and recipient, with mobile guidance back to history and reissue
 - Mobile invitation history shows the newest email delivery state and attempt count, with failed-delivery guidance to the retry workflow
+- Owners can return failed or dead-letter invitation email to the delivery queue through a two-step mobile action
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -477,7 +478,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add an owner retry action for failed invitation delivery
+- Bind invitation acceptance to the authenticated recipient identity
 
 ## Planned
 

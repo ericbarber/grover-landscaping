@@ -3,6 +3,7 @@ import {
   createOrganizationInvitation,
   fetchOrganizationInvitations,
   reissueOrganizationInvitation,
+  retryNotificationDelivery,
   revokeOrganizationInvitation,
   type OrganizationInvitation,
   type OrganizationInvitationRole,
@@ -56,6 +57,10 @@ export function invitationDeliveryLabel(status: string | null, attempts: number)
   }
 }
 
+export function invitationDeliveryCanRetry(status: string | null): boolean {
+  return status === 'failed' || status === 'dead_letter';
+}
+
 export function ManagerTeamInvitationsPanel({
   organizationId,
   onTeamChanged,
@@ -73,8 +78,10 @@ export function ManagerTeamInvitationsPanel({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [confirmingRevocationId, setConfirmingRevocationId] = useState('');
   const [confirmingReissueId, setConfirmingReissueId] = useState('');
+  const [confirmingDeliveryRetryId, setConfirmingDeliveryRetryId] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
   const [isReissuing, setIsReissuing] = useState(false);
+  const [isRetryingDelivery, setIsRetryingDelivery] = useState(false);
 
   async function refreshHistory() {
     if (!organizationId) return;
@@ -111,6 +118,7 @@ export function ManagerTeamInvitationsPanel({
       const { token: _token, ...createdSummary } = created;
       const summary: OrganizationInvitationSummary = {
         ...createdSummary,
+        deliveryNotificationId: null,
         deliveryStatus: created.persisted ? 'queued' : null,
         deliveryAttemptCount: 0,
       };
@@ -161,6 +169,7 @@ export function ManagerTeamInvitationsPanel({
       const { token: _token, ...reissuedSummary } = reissued;
       const summary: OrganizationInvitationSummary = {
         ...reissuedSummary,
+        deliveryNotificationId: null,
         deliveryStatus: reissued.persisted ? 'queued' : null,
         deliveryAttemptCount: 0,
       };
@@ -174,6 +183,27 @@ export function ManagerTeamInvitationsPanel({
       setMessage('The invitation could not be reissued. Refresh its status and try again.');
     } finally {
       setIsReissuing(false);
+    }
+  }
+
+  async function retryInvitationDelivery(item: OrganizationInvitationSummary) {
+    if (!item.deliveryNotificationId) return;
+    setIsRetryingDelivery(true);
+    setMessage(null);
+    try {
+      await retryNotificationDelivery(item.deliveryNotificationId);
+      setHistory((current) => current.map((candidate) => (
+        candidate.id === item.id
+          ? { ...candidate, deliveryStatus: 'queued', deliveryAttemptCount: 0 }
+          : candidate
+      )));
+      setConfirmingDeliveryRetryId('');
+      setMessage(`Email retry queued for ${item.inviteeEmail}.`);
+      onTeamChanged?.();
+    } catch {
+      setMessage('The invitation email could not be retried. Refresh delivery status and try again.');
+    } finally {
+      setIsRetryingDelivery(false);
     }
   }
 
@@ -288,9 +318,9 @@ export function ManagerTeamInvitationsPanel({
                       )}
                     </p>
                   ) : null}
-                  {item.deliveryStatus === 'failed' || item.deliveryStatus === 'dead_letter' ? (
+                  {invitationDeliveryCanRetry(item.deliveryStatus) ? (
                     <p className="mt-1 text-xs font-semibold text-red-700">
-                      Review delivery history to retry this email.
+                      Delivery needs owner attention.
                     </p>
                   ) : null}
                 </div>
@@ -304,6 +334,36 @@ export function ManagerTeamInvitationsPanel({
                   {item.status}
                 </span>
               </div>
+              {invitationDeliveryCanRetry(item.deliveryStatus) && item.deliveryNotificationId ? (
+                confirmingDeliveryRetryId === item.id ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700"
+                      disabled={isRetryingDelivery}
+                      onClick={() => setConfirmingDeliveryRetryId('')}
+                      type="button"
+                    >
+                      Keep failed
+                    </button>
+                    <button
+                      className="min-h-11 rounded-lg bg-slate-950 px-3 text-xs font-bold text-white disabled:opacity-60"
+                      disabled={isRetryingDelivery}
+                      onClick={() => void retryInvitationDelivery(item)}
+                      type="button"
+                    >
+                      {isRetryingDelivery ? 'Queuing…' : 'Confirm email retry'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="mt-2 min-h-11 w-full rounded-lg border border-red-200 px-3 text-xs font-semibold text-red-700"
+                    onClick={() => setConfirmingDeliveryRetryId(item.id)}
+                    type="button"
+                  >
+                    Retry invitation email
+                  </button>
+                )
+              ) : null}
               {item.status === 'pending' ? (
                 confirmingRevocationId === item.id ? (
                   <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">

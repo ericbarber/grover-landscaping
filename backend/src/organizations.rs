@@ -119,6 +119,7 @@ pub struct OrganizationInvitationSummary {
     pub scope_id: Option<String>,
     pub membership_id: String,
     pub expires_at: Option<String>,
+    pub delivery_notification_id: Option<String>,
     pub delivery_status: Option<String>,
     pub delivery_attempt_count: i32,
     pub persisted: bool,
@@ -834,11 +835,12 @@ async fn list_invitations(
             scope_id,
             membership_id,
             invitation.expires_at::text AS expires_at,
+            delivery.id AS delivery_notification_id,
             delivery.status AS delivery_status,
             COALESCE(delivery.attempt_count, 0) AS delivery_attempt_count
         FROM organization_invitations invitation
         LEFT JOIN LATERAL (
-            SELECT status, attempt_count
+            SELECT id, status, attempt_count
             FROM notification_outbox
             WHERE entity_type = 'organization_invitation'
               AND entity_id = invitation.id
@@ -1614,6 +1616,7 @@ fn organization_invitation_summary_from_row(
         scope_id: row.get("scope_id"),
         membership_id: row.get("membership_id"),
         expires_at: row.get("expires_at"),
+        delivery_notification_id: row.try_get("delivery_notification_id").ok().flatten(),
         delivery_status: row.try_get("delivery_status").ok().flatten(),
         delivery_attempt_count: row.try_get("delivery_attempt_count").unwrap_or(0),
         persisted: true,

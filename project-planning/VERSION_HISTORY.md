@@ -98,6 +98,8 @@ Current continuation work:
   recipient, and added mobile guidance to existing history and reissue controls.
 - Added latest invitation-email delivery status and attempt counts to owner
   history, with concise mobile failed-delivery retry guidance.
+- Added a two-step owner retry action that safely returns failed or dead-letter
+  invitation email to the existing audited notification queue.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

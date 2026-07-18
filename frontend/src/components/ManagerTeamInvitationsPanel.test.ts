@@ -3,6 +3,7 @@ import {
   invitationExpirationIso,
   invitationCreationFailureMessage,
   invitationDeliveryLabel,
+  invitationDeliveryCanRetry,
   validateTeamInvitation,
 } from './ManagerTeamInvitationsPanel';
 
@@ -34,5 +35,7 @@ describe('team invitation validation', () => {
     expect(invitationDeliveryLabel('queued', 0)).toBe('Email queued');
     expect(invitationDeliveryLabel('failed', 2)).toBe('Email retry pending · 2 attempts');
     expect(invitationDeliveryLabel('dead_letter', 5)).toBe('Email delivery failed · 5 attempts');
+    expect(invitationDeliveryCanRetry('failed')).toBe(true);
+    expect(invitationDeliveryCanRetry('sent')).toBe(false);
   });
 });
