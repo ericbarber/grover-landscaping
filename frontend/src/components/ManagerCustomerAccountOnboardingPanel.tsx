@@ -46,6 +46,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
+  const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
   const [filter, setFilter] = useState<AccountOnboardingFilter>('all');
   const filteredAccounts = filterAccountsByOnboardingProgress(accounts, progress, filter);
   const completeCount = accounts.filter((account) => progress[account.accountId]?.complete).length;
@@ -142,6 +143,16 @@ export function ManagerCustomerAccountOnboardingPanel({
     }, 0);
   }
 
+  function openPropertyForm(accountId: string) {
+    setAddingPropertyAccountId(accountId);
+    window.setTimeout(() => {
+      document.getElementById(`customer-property-form-${accountId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 0);
+  }
+
   function updatePropertyDraft(accountId: string, update: Partial<PropertyDraft>) {
     setPropertyDrafts((current) => {
       const draft = current[accountId] ?? { displayName: '', serviceAddress: '' };
@@ -173,6 +184,7 @@ export function ManagerCustomerAccountOnboardingPanel({
       );
       setProgress((current) => ({ ...current, [account.accountId]: accountProgress }));
       setPropertyDrafts((current) => ({ ...current, [account.accountId]: { displayName: '', serviceAddress: '' } }));
+      setAddingPropertyAccountId('');
       setMessage(`${property.displayName} property created.`);
       onPropertyCreated?.(property);
     } catch {
@@ -232,6 +244,7 @@ export function ManagerCustomerAccountOnboardingPanel({
                 </div>
                 {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
                 <AccountProgress
+                  onAddProperty={() => openPropertyForm(account.accountId)}
                   onOpenCustomerDetails={() => openAccountDetails(account)}
                   progress={progress[account.accountId]}
                 />
@@ -269,7 +282,18 @@ export function ManagerCustomerAccountOnboardingPanel({
                     <p className="text-xs text-amber-700">No properties have been added.</p>
                   ) : null}
                 </div>
-                <details className="mt-3 rounded-lg border border-slate-200 px-3">
+                <details
+                  className="mt-3 scroll-mt-20 rounded-lg border border-slate-200 px-3"
+                  id={`customer-property-form-${account.accountId}`}
+                  onToggle={(event) => {
+                    const isOpen = event.currentTarget.open;
+                    setAddingPropertyAccountId((current) => {
+                      if (isOpen) return account.accountId;
+                      return current === account.accountId ? '' : current;
+                    });
+                  }}
+                  open={addingPropertyAccountId === account.accountId}
+                >
                   <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-emerald-700 [&::-webkit-details-marker]:hidden">
                     Add property
                   </summary>
@@ -314,9 +338,11 @@ export function ManagerCustomerAccountOnboardingPanel({
 function AccountProgress({
   progress,
   onOpenCustomerDetails,
+  onAddProperty,
 }: {
   progress?: CustomerAccountOnboardingProgress;
   onOpenCustomerDetails: () => void;
+  onAddProperty: () => void;
 }) {
   if (!progress) return null;
   return (
@@ -352,6 +378,16 @@ function AccountProgress({
           type="button"
         >
           Complete customer service details
+          <span aria-hidden="true"> →</span>
+        </button>
+      ) : null}
+      {progress.propertyCount === 0 ? (
+        <button
+          className="mt-3 min-h-11 w-full rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700"
+          onClick={onAddProperty}
+          type="button"
+        >
+          Add first property
           <span aria-hidden="true"> →</span>
         </button>
       ) : null}

@@ -69,6 +69,8 @@ Current continuation work:
   preserving the affected property selection.
 - Added a mobile customer-detail readiness action that opens and focuses the
   affected account editor.
+- Added a missing-property progress action that opens the affected account's
+  property form and closes it after successful creation.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 
