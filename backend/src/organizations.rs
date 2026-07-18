@@ -46,6 +46,21 @@ pub struct BootstrapOrganizationResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OrganizationProfile {
+    pub id: String,
+    pub display_name: String,
+    pub organization_type: String,
+    pub status: String,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateOrganizationProfileRequest {
+    pub display_name: String,
+    pub organization_type: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BootstrapOrganizationResult {
     Created(Box<BootstrapOrganizationResponse>),
@@ -262,6 +277,39 @@ impl OrganizationRepository {
         bootstrap_organization(pool, user_id, &request).await
     }
 
+    pub async fn organization_profile(&self, organization_id: &str) -> Option<OrganizationProfile> {
+        if let Some(pool) = &self.pool {
+            return organization_profile(pool, organization_id)
+                .await
+                .ok()
+                .flatten();
+        }
+        local_organization_profile(organization_id)
+    }
+
+    pub async fn update_organization_profile(
+        &self,
+        organization_id: &str,
+        actor_user_id: &str,
+        request: UpdateOrganizationProfileRequest,
+    ) -> Option<OrganizationProfile> {
+        let request = normalize_update_organization_profile_request(request);
+        if validate_update_organization_profile_request(&request).is_err() {
+            return None;
+        }
+        if let Some(pool) = &self.pool {
+            return update_organization_profile(pool, organization_id, actor_user_id, &request)
+                .await
+                .ok()
+                .flatten();
+        }
+        local_organization_profile(organization_id).map(|profile| OrganizationProfile {
+            display_name: request.display_name,
+            organization_type: request.organization_type,
+            ..profile
+        })
+    }
+
     pub async fn create_invitation(
         &self,
         organization_id: &str,
@@ -463,6 +511,24 @@ pub fn validate_bootstrap_organization_request(
     Ok(())
 }
 
+pub fn validate_update_organization_profile_request(
+    request: &UpdateOrganizationProfileRequest,
+) -> Result<(), &'static str> {
+    validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
+        display_name: request.display_name.clone(),
+        organization_type: request.organization_type.clone(),
+    })
+}
+
+fn normalize_update_organization_profile_request(
+    request: UpdateOrganizationProfileRequest,
+) -> UpdateOrganizationProfileRequest {
+    UpdateOrganizationProfileRequest {
+        display_name: request.display_name.trim().to_string(),
+        organization_type: request.organization_type.trim().to_string(),
+    }
+}
+
 fn normalize_bootstrap_organization_request(
     request: BootstrapOrganizationRequest,
 ) -> BootstrapOrganizationRequest {
@@ -548,6 +614,56 @@ async fn bootstrap_organization(
             persisted: true,
         },
     )))
+}
+
+async fn organization_profile(
+    pool: &PgPool,
+    organization_id: &str,
+) -> Result<Option<OrganizationProfile>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT id, display_name, organization_type, status FROM organizations WHERE id = $1",
+    )
+    .bind(organization_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(organization_profile_from_row))
+}
+
+async fn update_organization_profile(
+    pool: &PgPool,
+    organization_id: &str,
+    actor_user_id: &str,
+    request: &UpdateOrganizationProfileRequest,
+) -> Result<Option<OrganizationProfile>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        r#"
+        UPDATE organizations
+        SET display_name = $2,
+            organization_type = $3,
+            updated_at = NOW()
+        WHERE id = $1
+          AND status = 'active'
+        RETURNING id, display_name, organization_type, status
+        "#,
+    )
+    .bind(organization_id)
+    .bind(&request.display_name)
+    .bind(&request.organization_type)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if row.is_some() {
+        insert_access_audit_event(
+            &mut transaction,
+            actor_user_id,
+            organization_id,
+            "organization_profile_updated",
+            organization_id,
+        )
+        .await?;
+    }
+    transaction.commit().await?;
+    Ok(row.map(organization_profile_from_row))
 }
 
 async fn list_active_memberships(
@@ -643,6 +759,7 @@ async fn list_team_administration_activity(
         FROM access_audit_events
         WHERE organization_id = $1
           AND event_kind IN (
+            'organization_profile_updated',
             'invite_accepted',
             'invitation_revoked',
             'invitation_reissued',
@@ -1616,6 +1733,26 @@ fn organization_invitation_response_from_row(
     }
 }
 
+fn organization_profile_from_row(row: sqlx::postgres::PgRow) -> OrganizationProfile {
+    OrganizationProfile {
+        id: row.get("id"),
+        display_name: row.get("display_name"),
+        organization_type: row.get("organization_type"),
+        status: row.get("status"),
+        persisted: true,
+    }
+}
+
+fn local_organization_profile(organization_id: &str) -> Option<OrganizationProfile> {
+    (organization_id == "org_demo_landscaping").then(|| OrganizationProfile {
+        id: organization_id.to_string(),
+        display_name: "Grover Demo Landscaping".to_string(),
+        organization_type: "yard_care_company".to_string(),
+        status: "active".to_string(),
+        persisted: false,
+    })
+}
+
 fn organization_invitation_summary_from_row(
     row: sqlx::postgres::PgRow,
 ) -> OrganizationInvitationSummary {
@@ -1742,10 +1879,11 @@ mod tests {
     use super::{
         access_role_from_storage, access_role_to_storage, validate_bootstrap_organization_request,
         validate_create_invitation_request, validate_reissue_invitation_request,
-        BootstrapOrganizationRequest, CreateOrganizationInvitationRequest,
-        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
-        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
-        UpdateOrganizationMembershipStatusRequest,
+        validate_update_organization_profile_request, BootstrapOrganizationRequest,
+        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
+        MembershipStatusUpdateResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
+        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+        UpdateOrganizationProfileRequest,
     };
     use crate::access_control::{can_manage_schedule, AccessRole};
 
@@ -1846,6 +1984,13 @@ mod tests {
                 organization_type: "platform".to_string(),
             }),
             Err("organization_type_invalid")
+        );
+        assert_eq!(
+            validate_update_organization_profile_request(&UpdateOrganizationProfileRequest {
+                display_name: "Updated Landscaping".to_string(),
+                organization_type: "property_management_company".to_string(),
+            }),
+            Ok(())
         );
     }
 

@@ -3,6 +3,7 @@ use grover_landscaping_api::{
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
+        UpdateOrganizationProfileRequest,
     },
 };
 use sqlx::Row;
@@ -122,6 +123,32 @@ async fn repository_bootstraps_first_owner_once() {
     assert_eq!(created.membership.user_id, user_id);
     assert_eq!(created.membership.role, AccessRole::OrganizationOwner);
 
+    let updated_profile = organizations
+        .update_organization_profile(
+            &created.organization_id,
+            &user_id,
+            UpdateOrganizationProfileRequest {
+                display_name: "First Owner Property Services".to_string(),
+                organization_type: "property_management_company".to_string(),
+            },
+        )
+        .await
+        .expect("owner should update organization profile");
+    assert_eq!(
+        updated_profile.display_name,
+        "First Owner Property Services"
+    );
+    assert_eq!(
+        updated_profile.organization_type,
+        "property_management_company"
+    );
+    assert_eq!(
+        organizations
+            .organization_profile(&created.organization_id)
+            .await,
+        Some(updated_profile)
+    );
+
     let duplicate = organizations
         .bootstrap_organization(
             &user_id,
@@ -142,4 +169,12 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .unwrap();
     assert_eq!(audit_count, 1);
+    let profile_audit_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM access_audit_events WHERE actor_user_id = $1 AND event_kind = 'organization_profile_updated'",
+    )
+    .bind(&user_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(profile_audit_count, 1);
 }

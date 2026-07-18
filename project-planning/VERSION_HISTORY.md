@@ -104,6 +104,8 @@ Current continuation work:
   email, with non-disclosing mismatch responses and recipient sign-in guidance.
 - Added verified-email readiness to current-user access and disabled mobile
   invitation activation early when Cognito identity claims are unavailable.
+- Added tenant-guarded, audited organization profile reads and updates plus a
+  mobile owner editor for company name and organization type.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

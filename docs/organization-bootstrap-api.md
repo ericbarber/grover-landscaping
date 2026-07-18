@@ -38,3 +38,17 @@ One transaction:
 The endpoint returns `201 Created` with the organization and membership. It
 returns `409 Conflict` when the identity already belongs to an active organization
 and `503 Service Unavailable` when persistence is unavailable.
+
+## Owner Profile Administration
+
+`GET /organizations/{organization_id}` returns the active organization profile.
+`PUT /organizations/{organization_id}` updates its trimmed `display_name` and
+supported `organization_type`.
+
+- Both endpoints require an active organization-owner or support-admin
+  membership in the path organization.
+- Updates reuse bootstrap validation, update `updated_at`, and record an
+  `organization_profile_updated` access-audit event atomically.
+- The mobile first-owner workspace loads the profile and keeps editing behind an
+  explicit owner control.
+- Seed-local development returns and updates a non-persisted demo profile.

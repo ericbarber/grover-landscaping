@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
   bootstrapOrganization,
+  fetchOrganizationProfile,
   fetchPrincipalAccessSummary,
+  updateOrganizationProfile,
   type PrincipalAccessSummary,
 } from '../api/client';
 
@@ -52,12 +54,20 @@ export function FirstOwnerOnboardingPanel({
     'yard_care_company' | 'property_management_company'
   >('yard_care_company');
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
     setIsLoading(true);
     try {
-      setAccess(await fetchPrincipalAccessSummary());
+      const nextAccess = await fetchPrincipalAccessSummary();
+      setAccess(nextAccess);
+      const nextMembership = nextAccess.memberships[0];
+      if (nextMembership) {
+        const profile = await fetchOrganizationProfile(nextMembership.organizationId);
+        setOrganizationName(profile.displayName);
+        setOrganizationType(profile.organizationType);
+      }
       setMessage(null);
     } catch {
       setMessage('Your access summary could not be loaded. Check authentication and try again.');
@@ -84,6 +94,30 @@ export function FirstOwnerOnboardingPanel({
       setAccess(await fetchPrincipalAccessSummary());
     } catch {
       setMessage('The organization could not be created. Confirm owner access and database availability.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveOrganizationProfile() {
+    const displayName = organizationName.trim();
+    if (displayName.length < 2 || !membership) {
+      setMessage('Enter an organization name with at least two characters.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const profile = await updateOrganizationProfile(
+        membership.organizationId,
+        displayName,
+        organizationType,
+      );
+      setMessage(`${profile.displayName} profile saved.`);
+      setIsEditingProfile(false);
+      onOrganizationReady?.(profile.displayName, profile.id);
+      setAccess(await fetchPrincipalAccessSummary());
+    } catch {
+      setMessage('The organization profile could not be saved. Confirm owner access and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -171,6 +205,52 @@ export function FirstOwnerOnboardingPanel({
             <p className="rounded-lg bg-slate-50 p-3 text-slate-700">
               Access scope: {membership.scopeType}
             </p>
+          </div>
+          <div className="mt-4 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-slate-950">Organization profile</h3>
+                <p className="text-xs text-slate-500">Owner-managed company identity</p>
+              </div>
+              <button
+                className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+                onClick={() => setIsEditingProfile((current) => !current)}
+                type="button"
+              >
+                {isEditingProfile ? 'Cancel edit' : 'Edit profile'}
+              </button>
+            </div>
+            {isEditingProfile ? (
+              <div className="mt-3 grid gap-3">
+                <label className="text-sm font-semibold text-slate-700">
+                  Organization name
+                  <input
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    onChange={(event) => setOrganizationName(event.target.value)}
+                    value={organizationName}
+                  />
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Organization type
+                  <select
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+                    onChange={(event) => setOrganizationType(event.target.value as typeof organizationType)}
+                    value={organizationType}
+                  >
+                    <option value="yard_care_company">Yard-care company</option>
+                    <option value="property_management_company">Property management company</option>
+                  </select>
+                </label>
+                <button
+                  className="min-h-11 rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+                  disabled={isLoading}
+                  onClick={() => void saveOrganizationProfile()}
+                  type="button"
+                >
+                  {isLoading ? 'Saving…' : 'Save organization profile'}
+                </button>
+              </div>
+            ) : null}
           </div>
           <ol className="mt-4 space-y-2">
             {firstOwnerSetupSteps(access).map((step, index) => {

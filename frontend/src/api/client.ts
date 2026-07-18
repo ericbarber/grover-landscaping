@@ -428,6 +428,7 @@ export interface OrganizationMembership {
 }
 
 export type TeamAdministrationEventKind =
+  | 'organization_profile_updated'
   | 'invite_accepted'
   | 'invitation_revoked'
   | 'invitation_reissued'
@@ -494,6 +495,22 @@ export interface BootstrapOrganizationResponse {
   displayName: string;
   organizationType: string;
   membership: OrganizationMembership;
+  persisted: boolean;
+}
+
+interface ApiOrganizationProfile {
+  id: string;
+  display_name: string;
+  organization_type: 'yard_care_company' | 'property_management_company';
+  status: string;
+  persisted: boolean;
+}
+
+export interface OrganizationProfile {
+  id: string;
+  displayName: string;
+  organizationType: ApiOrganizationProfile['organization_type'];
+  status: string;
   persisted: boolean;
 }
 
@@ -1596,6 +1613,41 @@ export async function bootstrapOrganization(
     membership: toOrganizationMembership(response.membership),
     persisted: response.persisted,
   };
+}
+
+export function toOrganizationProfile(profile: ApiOrganizationProfile): OrganizationProfile {
+  return {
+    id: profile.id,
+    displayName: profile.display_name,
+    organizationType: profile.organization_type,
+    status: profile.status,
+    persisted: profile.persisted,
+  };
+}
+
+export async function fetchOrganizationProfile(
+  organizationId: string,
+): Promise<OrganizationProfile> {
+  return toOrganizationProfile(await request<ApiOrganizationProfile>(
+    `/organizations/${encodeURIComponent(organizationId)}`,
+  ));
+}
+
+export async function updateOrganizationProfile(
+  organizationId: string,
+  displayName: string,
+  organizationType: OrganizationProfile['organizationType'],
+): Promise<OrganizationProfile> {
+  return toOrganizationProfile(await request<ApiOrganizationProfile>(
+    `/organizations/${encodeURIComponent(organizationId)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        display_name: displayName,
+        organization_type: organizationType,
+      }),
+    },
+  ));
 }
 
 export function organizationInvitationsPath(organizationId: string): string {

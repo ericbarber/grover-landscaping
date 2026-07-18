@@ -55,11 +55,12 @@ use grover_landscaping_api::{
     auth::{require_api_auth, AuthPrincipal, AuthService},
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
-        validate_reissue_invitation_request, BootstrapOrganizationRequest,
-        BootstrapOrganizationResult, CreateOrganizationInvitationRequest,
-        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
-        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
-        UpdateOrganizationMembershipStatusRequest,
+        validate_reissue_invitation_request, validate_update_organization_profile_request,
+        BootstrapOrganizationRequest, BootstrapOrganizationResult,
+        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
+        MembershipStatusUpdateResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
+        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+        UpdateOrganizationProfileRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -519,6 +520,10 @@ fn app_with_runtime(
         )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
+            "/organizations/{organization_id}",
+            get(get_organization_profile).put(update_organization_profile),
+        )
+        .route(
             "/health/ready",
             get(move || readiness(Arc::clone(&readiness_state), persistence, database_required)),
         )
@@ -956,6 +961,73 @@ async fn bootstrap_organization(
             }),
         )
             .into_response(),
+    }
+}
+
+async fn get_organization_profile(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .organizations
+        .organization_profile(&organization_id)
+        .await
+    {
+        Some(profile) => Json(profile).into_response(),
+        None => resource_not_found_response(
+            "organization_not_found",
+            "The requested organization was not found.",
+        ),
+    }
+}
+
+async fn update_organization_profile(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+    Json(request): Json<UpdateOrganizationProfileRequest>,
+) -> Response {
+    if let Err(reason) = validate_update_organization_profile_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_profile",
+                message: format!("Organization profile is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .organizations
+        .update_organization_profile(&organization_id, &principal.subject, request)
+        .await
+    {
+        Some(profile) => Json(profile).into_response(),
+        None => resource_not_found_response(
+            "organization_not_found",
+            "The requested active organization was not found.",
+        ),
     }
 }
 
@@ -4313,6 +4385,40 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "organization_bootstrap_not_available");
+    }
+
+    #[tokio::test]
+    async fn organization_profile_endpoints_return_and_update_local_profile() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/organizations/org_demo_landscaping")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"display_name":"Grover Property Services","organization_type":"property_management_company"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["display_name"], "Grover Property Services");
+        assert_eq!(json["organization_type"], "property_management_company");
+        assert_eq!(json["persisted"], false);
     }
 
     #[tokio::test]

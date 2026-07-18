@@ -7,6 +7,8 @@ import {
 
 export function teamActivityLabel(eventKind: TeamAdministrationEventKind): string {
   switch (eventKind) {
+    case 'organization_profile_updated':
+      return 'Organization profile updated';
     case 'invite_accepted':
       return 'Invitation accepted';
     case 'invitation_revoked':

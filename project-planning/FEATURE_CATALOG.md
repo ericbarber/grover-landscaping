@@ -19,6 +19,7 @@ here does not mean every capability has been delivered.
 - Organization memberships and invitations
 - Tenant-aware resource boundaries
 - Customer, property, crew, manager, and organization onboarding
+- Owner-managed organization profile identity
 - Role administration and audited access changes
 - Branch, territory, region, and service-area hierarchy
 

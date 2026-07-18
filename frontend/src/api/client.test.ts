@@ -30,6 +30,7 @@ import {
   toNotificationHistoryItem,
   toOrganizationInvitation,
   toOrganizationInvitationSummary,
+  toOrganizationProfile,
   toTeamAdministrationActivity,
   toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
@@ -141,6 +142,22 @@ describe('core API client mapping', () => {
       deliveryNotificationId: 'notification_1',
       deliveryStatus: 'sent',
       deliveryAttemptCount: 1,
+      persisted: true,
+    });
+  });
+
+  it('maps owner-managed organization profiles', () => {
+    expect(toOrganizationProfile({
+      id: 'org_1',
+      display_name: 'Grover Property Services',
+      organization_type: 'property_management_company',
+      status: 'active',
+      persisted: true,
+    })).toEqual({
+      id: 'org_1',
+      displayName: 'Grover Property Services',
+      organizationType: 'property_management_company',
+      status: 'active',
       persisted: true,
     });
   });
