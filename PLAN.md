@@ -239,6 +239,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Invitation acceptance requires the authenticated Cognito token's verified email to match the normalized recipient, without disclosing which guard failed
 - Current-user access exposes verified-email readiness, and mobile acceptance blocks early with actionable Cognito claim guidance when identity is unavailable
 - Owners can load and edit organization name and company type from the mobile first-user workspace, with tenant guards and audited persistence
+- Organization profiles include validated contact email, phone, and website details in the same mobile owner editor
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -481,7 +482,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add organization profile contact details
+- Add organization service-area defaults
 
 ## Planned
 

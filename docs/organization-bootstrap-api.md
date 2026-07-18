@@ -42,13 +42,16 @@ and `503 Service Unavailable` when persistence is unavailable.
 ## Owner Profile Administration
 
 `GET /organizations/{organization_id}` returns the active organization profile.
-`PUT /organizations/{organization_id}` updates its trimmed `display_name` and
-supported `organization_type`.
+`PUT /organizations/{organization_id}` updates its trimmed `display_name`,
+supported `organization_type`, optional contact email and phone, and optional
+HTTP(S) website URL.
 
 - Both endpoints require an active organization-owner or support-admin
   membership in the path organization.
 - Updates reuse bootstrap validation, update `updated_at`, and record an
   `organization_profile_updated` access-audit event atomically.
+- Contact email is normalized to lowercase, phone input permits readable
+  punctuation with 7–15 digits, and website URLs require an HTTP(S) origin.
 - The mobile first-owner workspace loads the profile and keeps editing behind an
   explicit owner control.
 - Seed-local development returns and updates a non-persisted demo profile.

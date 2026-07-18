@@ -51,6 +51,9 @@ pub struct OrganizationProfile {
     pub id: String,
     pub display_name: String,
     pub organization_type: String,
+    pub contact_email: Option<String>,
+    pub contact_phone: Option<String>,
+    pub website_url: Option<String>,
     pub status: String,
     pub persisted: bool,
 }
@@ -59,6 +62,9 @@ pub struct OrganizationProfile {
 pub struct UpdateOrganizationProfileRequest {
     pub display_name: String,
     pub organization_type: String,
+    pub contact_email: Option<String>,
+    pub contact_phone: Option<String>,
+    pub website_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -517,7 +523,29 @@ pub fn validate_update_organization_profile_request(
     validate_bootstrap_organization_request(&BootstrapOrganizationRequest {
         display_name: request.display_name.clone(),
         organization_type: request.organization_type.clone(),
-    })
+    })?;
+    if request
+        .contact_email
+        .as_deref()
+        .is_some_and(|email| !valid_invitee_email(email))
+    {
+        return Err("contact_email_invalid");
+    }
+    if request
+        .contact_phone
+        .as_deref()
+        .is_some_and(|phone| !valid_contact_phone(phone))
+    {
+        return Err("contact_phone_invalid");
+    }
+    if request
+        .website_url
+        .as_deref()
+        .is_some_and(|url| !valid_website_url(url))
+    {
+        return Err("website_url_invalid");
+    }
+    Ok(())
 }
 
 fn normalize_update_organization_profile_request(
@@ -526,7 +554,38 @@ fn normalize_update_organization_profile_request(
     UpdateOrganizationProfileRequest {
         display_name: request.display_name.trim().to_string(),
         organization_type: request.organization_type.trim().to_string(),
+        contact_email: normalize_optional_profile_value(request.contact_email)
+            .map(|email| email.to_ascii_lowercase()),
+        contact_phone: normalize_optional_profile_value(request.contact_phone),
+        website_url: normalize_optional_profile_value(request.website_url),
     }
+}
+
+fn normalize_optional_profile_value(value: Option<String>) -> Option<String> {
+    value
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+}
+
+fn valid_contact_phone(phone: &str) -> bool {
+    let digits = phone
+        .chars()
+        .filter(|character| character.is_ascii_digit())
+        .count();
+    (7..=15).contains(&digits)
+        && phone.len() <= 32
+        && phone
+            .chars()
+            .all(|character| character.is_ascii_digit() || " +()-.".contains(character))
+}
+
+fn valid_website_url(url: &str) -> bool {
+    url.len() <= 240
+        && !url.contains(char::is_whitespace)
+        && (url.starts_with("https://") || url.starts_with("http://"))
+        && url
+            .split_once("://")
+            .is_some_and(|(_, host)| host.contains('.'))
 }
 
 fn normalize_bootstrap_organization_request(
@@ -621,7 +680,7 @@ async fn organization_profile(
     organization_id: &str,
 ) -> Result<Option<OrganizationProfile>, sqlx::Error> {
     let row = sqlx::query(
-        "SELECT id, display_name, organization_type, status FROM organizations WHERE id = $1",
+        "SELECT id, display_name, organization_type, contact_email, contact_phone, website_url, status FROM organizations WHERE id = $1",
     )
     .bind(organization_id)
     .fetch_optional(pool)
@@ -641,15 +700,21 @@ async fn update_organization_profile(
         UPDATE organizations
         SET display_name = $2,
             organization_type = $3,
+            contact_email = $4,
+            contact_phone = $5,
+            website_url = $6,
             updated_at = NOW()
         WHERE id = $1
           AND status = 'active'
-        RETURNING id, display_name, organization_type, status
+        RETURNING id, display_name, organization_type, contact_email, contact_phone, website_url, status
         "#,
     )
     .bind(organization_id)
     .bind(&request.display_name)
     .bind(&request.organization_type)
+    .bind(&request.contact_email)
+    .bind(&request.contact_phone)
+    .bind(&request.website_url)
     .fetch_optional(&mut *transaction)
     .await?;
     if row.is_some() {
@@ -1738,6 +1803,9 @@ fn organization_profile_from_row(row: sqlx::postgres::PgRow) -> OrganizationProf
         id: row.get("id"),
         display_name: row.get("display_name"),
         organization_type: row.get("organization_type"),
+        contact_email: row.get("contact_email"),
+        contact_phone: row.get("contact_phone"),
+        website_url: row.get("website_url"),
         status: row.get("status"),
         persisted: true,
     }
@@ -1748,6 +1816,9 @@ fn local_organization_profile(organization_id: &str) -> Option<OrganizationProfi
         id: organization_id.to_string(),
         display_name: "Grover Demo Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
+        contact_email: Some("office@grover.example".to_string()),
+        contact_phone: Some("(602) 555-0142".to_string()),
+        website_url: Some("https://grover.example".to_string()),
         status: "active".to_string(),
         persisted: false,
     })
@@ -1989,6 +2060,9 @@ mod tests {
             validate_update_organization_profile_request(&UpdateOrganizationProfileRequest {
                 display_name: "Updated Landscaping".to_string(),
                 organization_type: "property_management_company".to_string(),
+                contact_email: Some("office@example.com".to_string()),
+                contact_phone: Some("+1 (602) 555-0142".to_string()),
+                website_url: Some("https://example.com".to_string()),
             }),
             Ok(())
         );

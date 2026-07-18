@@ -502,6 +502,9 @@ interface ApiOrganizationProfile {
   id: string;
   display_name: string;
   organization_type: 'yard_care_company' | 'property_management_company';
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  website_url?: string | null;
   status: string;
   persisted: boolean;
 }
@@ -510,6 +513,9 @@ export interface OrganizationProfile {
   id: string;
   displayName: string;
   organizationType: ApiOrganizationProfile['organization_type'];
+  contactEmail: string;
+  contactPhone: string;
+  websiteUrl: string;
   status: string;
   persisted: boolean;
 }
@@ -1620,6 +1626,9 @@ export function toOrganizationProfile(profile: ApiOrganizationProfile): Organiza
     id: profile.id,
     displayName: profile.display_name,
     organizationType: profile.organization_type,
+    contactEmail: profile.contact_email ?? '',
+    contactPhone: profile.contact_phone ?? '',
+    websiteUrl: profile.website_url ?? '',
     status: profile.status,
     persisted: profile.persisted,
   };
@@ -1637,6 +1646,9 @@ export async function updateOrganizationProfile(
   organizationId: string,
   displayName: string,
   organizationType: OrganizationProfile['organizationType'],
+  contactEmail: string,
+  contactPhone: string,
+  websiteUrl: string,
 ): Promise<OrganizationProfile> {
   return toOrganizationProfile(await request<ApiOrganizationProfile>(
     `/organizations/${encodeURIComponent(organizationId)}`,
@@ -1645,6 +1657,9 @@ export async function updateOrganizationProfile(
       body: JSON.stringify({
         display_name: displayName,
         organization_type: organizationType,
+        contact_email: contactEmail || null,
+        contact_phone: contactPhone || null,
+        website_url: websiteUrl || null,
       }),
     },
   ));

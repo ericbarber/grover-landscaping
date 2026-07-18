@@ -53,6 +53,9 @@ export function FirstOwnerOnboardingPanel({
   const [organizationType, setOrganizationType] = useState<
     'yard_care_company' | 'property_management_company'
   >('yard_care_company');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -67,6 +70,9 @@ export function FirstOwnerOnboardingPanel({
         const profile = await fetchOrganizationProfile(nextMembership.organizationId);
         setOrganizationName(profile.displayName);
         setOrganizationType(profile.organizationType);
+        setContactEmail(profile.contactEmail);
+        setContactPhone(profile.contactPhone);
+        setWebsiteUrl(profile.websiteUrl);
       }
       setMessage(null);
     } catch {
@@ -111,6 +117,9 @@ export function FirstOwnerOnboardingPanel({
         membership.organizationId,
         displayName,
         organizationType,
+        contactEmail.trim(),
+        contactPhone.trim(),
+        websiteUrl.trim(),
       );
       setMessage(`${profile.displayName} profile saved.`);
       setIsEditingProfile(false);
@@ -228,6 +237,42 @@ export function FirstOwnerOnboardingPanel({
                     className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
                     onChange={(event) => setOrganizationName(event.target.value)}
                     value={organizationName}
+                  />
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Contact email
+                  <input
+                    autoComplete="email"
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    inputMode="email"
+                    onChange={(event) => setContactEmail(event.target.value)}
+                    placeholder="office@example.com"
+                    type="email"
+                    value={contactEmail}
+                  />
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Contact phone
+                  <input
+                    autoComplete="tel"
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    inputMode="tel"
+                    onChange={(event) => setContactPhone(event.target.value)}
+                    placeholder="(602) 555-0142"
+                    type="tel"
+                    value={contactPhone}
+                  />
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Website
+                  <input
+                    autoComplete="url"
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    inputMode="url"
+                    onChange={(event) => setWebsiteUrl(event.target.value)}
+                    placeholder="https://example.com"
+                    type="url"
+                    value={websiteUrl}
                   />
                 </label>
                 <label className="text-sm font-semibold text-slate-700">

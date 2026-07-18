@@ -106,6 +106,8 @@ Current continuation work:
   invitation activation early when Cognito identity claims are unavailable.
 - Added tenant-guarded, audited organization profile reads and updates plus a
   mobile owner editor for company name and organization type.
+- Extended organization profiles with normalized contact email, readable phone,
+  and HTTP(S) website fields plus mobile-first editing and validation.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

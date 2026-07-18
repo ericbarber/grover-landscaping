@@ -130,6 +130,9 @@ async fn repository_bootstraps_first_owner_once() {
             UpdateOrganizationProfileRequest {
                 display_name: "First Owner Property Services".to_string(),
                 organization_type: "property_management_company".to_string(),
+                contact_email: Some("Office@FirstOwner.example".to_string()),
+                contact_phone: Some("+1 (602) 555-0142".to_string()),
+                website_url: Some("https://first-owner.example".to_string()),
             },
         )
         .await
@@ -141,6 +144,10 @@ async fn repository_bootstraps_first_owner_once() {
     assert_eq!(
         updated_profile.organization_type,
         "property_management_company"
+    );
+    assert_eq!(
+        updated_profile.contact_email.as_deref(),
+        Some("office@firstowner.example")
     );
     assert_eq!(
         organizations

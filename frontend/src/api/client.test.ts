@@ -151,12 +151,18 @@ describe('core API client mapping', () => {
       id: 'org_1',
       display_name: 'Grover Property Services',
       organization_type: 'property_management_company',
+      contact_email: 'office@grover.example',
+      contact_phone: '(602) 555-0142',
+      website_url: 'https://grover.example',
       status: 'active',
       persisted: true,
     })).toEqual({
       id: 'org_1',
       displayName: 'Grover Property Services',
       organizationType: 'property_management_company',
+      contactEmail: 'office@grover.example',
+      contactPhone: '(602) 555-0142',
+      websiteUrl: 'https://grover.example',
       status: 'active',
       persisted: true,
     });
