@@ -36,6 +36,8 @@ Current continuation work:
   request history, and extra-service controls remain available on demand.
 - Mobile job detail now presents lifecycle actions first and condenses the
   read-only checklist into an expandable completion summary.
+- Customer accounts now own explicit persisted property records through
+  tenant-scoped list and create APIs, independently of jobs and crew assignment.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

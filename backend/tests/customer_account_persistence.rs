@@ -64,6 +64,30 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .is_none());
 
+    let property = accounts
+        .create_property(
+            &created.account_id,
+            grover_landscaping_api::accounts::CreateCustomerPropertyRequest {
+                organization_id: "org_demo_landscaping".to_string(),
+                display_name: "Account Test Property".to_string(),
+                service_address: "789 Property Test Avenue".to_string(),
+            },
+        )
+        .await
+        .expect("tenant member should create a property");
+    assert!(property.persisted);
+    assert_eq!(property.account_id, created.account_id);
+
+    let properties = accounts
+        .list_properties(&created.account_id, &["org_demo_landscaping".to_string()])
+        .await;
+    assert_eq!(properties.len(), 1);
+    assert_eq!(properties[0].property_id, property.property_id);
+    assert!(accounts
+        .list_properties(&created.account_id, &["org_outside_tenant".to_string()])
+        .await
+        .is_empty());
+
     sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
         .bind(&created.account_id)
         .execute(&pool)

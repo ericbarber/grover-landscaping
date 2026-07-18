@@ -50,6 +50,24 @@ pub struct CustomerAccountRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateCustomerPropertyRequest {
+    pub organization_id: String,
+    pub display_name: String,
+    pub service_address: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyRecord {
+    pub property_id: String,
+    pub account_id: String,
+    pub organization_id: String,
+    pub display_name: String,
+    pub service_address: String,
+    pub status: String,
+    pub persisted: bool,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct AccountRepository {
     pool: Option<PgPool>,
@@ -95,6 +113,34 @@ impl AccountRepository {
             return local_update_record(account_id, organization_ids, &request);
         };
         update_account(pool, account_id, organization_ids, &request)
+            .await
+            .ok()
+            .flatten()
+    }
+
+    pub async fn list_properties(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+    ) -> Vec<CustomerPropertyRecord> {
+        let Some(pool) = &self.pool else {
+            return seed_properties(account_id, organization_ids);
+        };
+        list_properties(pool, account_id, organization_ids)
+            .await
+            .unwrap_or_default()
+    }
+
+    pub async fn create_property(
+        &self,
+        account_id: &str,
+        request: CreateCustomerPropertyRequest,
+    ) -> Option<CustomerPropertyRecord> {
+        let request = normalize_create_property_request(request);
+        let Some(pool) = &self.pool else {
+            return local_property_record(account_id, &request);
+        };
+        create_property(pool, account_id, &request)
             .await
             .ok()
             .flatten()
@@ -158,6 +204,21 @@ pub fn validate_update_customer_account_request(
     validate_create_customer_account_request(&create_request)
 }
 
+pub fn validate_create_customer_property_request(
+    request: &CreateCustomerPropertyRequest,
+) -> Result<(), &'static str> {
+    if request.organization_id.trim().is_empty() {
+        return Err("organization_id_required");
+    }
+    if request.display_name.trim().len() < 2 || request.display_name.trim().len() > 160 {
+        return Err("display_name_invalid");
+    }
+    if request.service_address.trim().len() < 5 || request.service_address.trim().len() > 240 {
+        return Err("service_address_invalid");
+    }
+    Ok(())
+}
+
 fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustomerAccountRequest {
     request.organization_id = request.organization_id.trim().to_string();
     request.customer_name = request.customer_name.trim().to_string();
@@ -182,6 +243,15 @@ fn normalize_update_request(
         .billing_notes
         .map(|notes| notes.trim().to_string())
         .filter(|notes| !notes.is_empty());
+    request
+}
+
+fn normalize_create_property_request(
+    mut request: CreateCustomerPropertyRequest,
+) -> CreateCustomerPropertyRequest {
+    request.organization_id = request.organization_id.trim().to_string();
+    request.display_name = request.display_name.trim().to_string();
+    request.service_address = request.service_address.trim().to_string();
     request
 }
 
@@ -261,6 +331,72 @@ async fn update_account(
         billing_notes: row.get("billing_notes"),
         persisted: true,
     }))
+}
+
+async fn create_property(
+    pool: &PgPool,
+    account_id: &str,
+    request: &CreateCustomerPropertyRequest,
+) -> Result<Option<CustomerPropertyRecord>, sqlx::Error> {
+    let property_id = format!("property_{}", Uuid::new_v4().simple());
+    let row = sqlx::query(
+        r#"INSERT INTO customer_properties (
+            id, organization_id, account_id, display_name, service_address
+        )
+        SELECT $1, relation.organization_id, relation.account_id, $4, $5
+        FROM organization_customer_accounts relation
+        WHERE relation.organization_id = $2
+          AND relation.account_id = $3
+          AND relation.status = 'active'
+        RETURNING id, account_id, organization_id, display_name, service_address, status"#,
+    )
+    .bind(&property_id)
+    .bind(&request.organization_id)
+    .bind(account_id)
+    .bind(&request.display_name)
+    .bind(&request.service_address)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|row| property_record_from_row(row, true)))
+}
+
+async fn list_properties(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+) -> Result<Vec<CustomerPropertyRecord>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"SELECT property.id, property.account_id, property.organization_id,
+            property.display_name, property.service_address, property.status
+        FROM customer_properties property
+        JOIN organization_customer_accounts relation
+          ON relation.organization_id = property.organization_id
+         AND relation.account_id = property.account_id
+        WHERE property.account_id = $1
+          AND property.organization_id = ANY($2)
+          AND relation.status = 'active'
+        ORDER BY property.display_name"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| property_record_from_row(row, true))
+        .collect())
+}
+
+fn property_record_from_row(row: sqlx::postgres::PgRow, persisted: bool) -> CustomerPropertyRecord {
+    CustomerPropertyRecord {
+        property_id: row.get("id"),
+        account_id: row.get("account_id"),
+        organization_id: row.get("organization_id"),
+        display_name: row.get("display_name"),
+        service_address: row.get("service_address"),
+        status: row.get("status"),
+        persisted,
+    }
 }
 
 async fn list_accounts(
@@ -348,6 +484,43 @@ fn local_update_record(
     })
 }
 
+fn local_property_record(
+    account_id: &str,
+    request: &CreateCustomerPropertyRequest,
+) -> Option<CustomerPropertyRecord> {
+    if account_id.trim().is_empty() {
+        return None;
+    }
+    Some(CustomerPropertyRecord {
+        property_id: format!("property_local_{}", Uuid::new_v4().simple()),
+        account_id: account_id.to_string(),
+        organization_id: request.organization_id.clone(),
+        display_name: request.display_name.clone(),
+        service_address: request.service_address.clone(),
+        status: "onboarding".to_string(),
+        persisted: false,
+    })
+}
+
+fn seed_properties(account_id: &str, organization_ids: &[String]) -> Vec<CustomerPropertyRecord> {
+    if account_id != "acct_1001"
+        || !organization_ids
+            .iter()
+            .any(|id| id == "org_demo_landscaping")
+    {
+        return Vec::new();
+    }
+    vec![CustomerPropertyRecord {
+        property_id: "property_1001".to_string(),
+        account_id: account_id.to_string(),
+        organization_id: "org_demo_landscaping".to_string(),
+        display_name: "Sample Customer Home".to_string(),
+        service_address: "123 Oak Street".to_string(),
+        status: "active".to_string(),
+        persisted: false,
+    }]
+}
+
 fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
     if !organization_ids
         .iter()
@@ -422,6 +595,23 @@ mod tests {
         assert_eq!(
             validate_update_customer_account_request(&invalid),
             Err("payment_status_invalid")
+        );
+    }
+
+    #[test]
+    fn property_validation_requires_identity_and_address() {
+        let valid = CreateCustomerPropertyRequest {
+            organization_id: "org_demo_landscaping".to_string(),
+            display_name: "North yard".to_string(),
+            service_address: "123 Oak Street".to_string(),
+        };
+        assert_eq!(validate_create_customer_property_request(&valid), Ok(()));
+        assert_eq!(
+            validate_create_customer_property_request(&CreateCustomerPropertyRequest {
+                service_address: "x".to_string(),
+                ..valid
+            }),
+            Err("service_address_invalid")
         );
     }
 

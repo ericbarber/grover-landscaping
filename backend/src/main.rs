@@ -11,8 +11,9 @@ mod project_bids;
 mod stop_progress;
 
 use accounts::{
-    validate_create_customer_account_request, validate_update_customer_account_request,
-    AccountRepository, CreateCustomerAccountRequest, UpdateCustomerAccountRequest,
+    validate_create_customer_account_request, validate_create_customer_property_request,
+    validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
+    CreateCustomerPropertyRequest, UpdateCustomerAccountRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -490,6 +491,10 @@ fn app_with_runtime(
         .route(
             "/customer-accounts/{account_id}",
             put(update_customer_account),
+        )
+        .route(
+            "/customer-accounts/{account_id}/properties",
+            get(list_customer_properties).post(create_customer_property),
         )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
@@ -998,6 +1003,61 @@ async fn update_customer_account(
             }),
         )
             .into_response(),
+    }
+}
+
+async fn list_customer_properties(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    Json(
+        state
+            .accounts
+            .list_properties(&account_id, &organization_ids)
+            .await,
+    )
+    .into_response()
+}
+
+async fn create_customer_property(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+    Json(request): Json<CreateCustomerPropertyRequest>,
+) -> Response {
+    if let Err(reason) = validate_create_customer_property_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_customer_property",
+                message: format!("Customer property payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        request.organization_id.trim(),
+        can_manage_property_portfolios,
+    )
+    .await
+    {
+        return response;
+    }
+    match state.accounts.create_property(&account_id, request).await {
+        Some(property) => (StatusCode::CREATED, Json(property)).into_response(),
+        None => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested customer account was not found.",
+        ),
     }
 }
 
