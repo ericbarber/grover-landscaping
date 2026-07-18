@@ -186,6 +186,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Organization-to-customer account relationship persistence
 - Tenant-scoped customer account list and create APIs
 - Manager customer-account onboarding panel with local fallback visibility
+- Tenant-scoped customer account detail updates for billing and service state
+- Manager customer-account editing controls for account status and billing notes
 
 ### Local development and project setup
 
@@ -416,7 +418,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add customer account detail editing and connect newly created accounts to property creation
+- Connect newly created accounts to property creation
 
 ## Planned
 

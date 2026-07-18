@@ -11,7 +11,8 @@ mod project_bids;
 mod stop_progress;
 
 use accounts::{
-    validate_create_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
+    validate_create_customer_account_request, validate_update_customer_account_request,
+    AccountRepository, CreateCustomerAccountRequest, UpdateCustomerAccountRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -486,6 +487,10 @@ fn app_with_runtime(
             "/customer-accounts",
             get(list_customer_accounts).post(create_customer_account),
         )
+        .route(
+            "/customer-accounts/{account_id}",
+            put(update_customer_account),
+        )
         .route("/organizations/bootstrap", post(bootstrap_organization))
         .route(
             "/health/ready",
@@ -951,6 +956,45 @@ async fn create_customer_account(
             Json(ErrorResponse {
                 error: "customer_account_not_created",
                 message: "The customer account could not be created.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn update_customer_account(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+    Json(request): Json<UpdateCustomerAccountRequest>,
+) -> Response {
+    if let Err(reason) = validate_update_customer_account_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_customer_account",
+                message: format!("Customer account payload is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .update(&account_id, &organization_ids, request)
+        .await
+    {
+        Some(account) => Json(account).into_response(),
+        None => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "customer_account_not_found",
+                message: "The requested customer account was not found.".to_string(),
             }),
         )
             .into_response(),

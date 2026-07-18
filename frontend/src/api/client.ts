@@ -1361,6 +1361,28 @@ export async function createCustomerAccount(
   return toCustomerAccountRecord(item);
 }
 
+export function customerAccountPath(accountId: string): string {
+  return `/customer-accounts/${encodeURIComponent(accountId)}`;
+}
+
+export async function updateCustomerAccount(
+  accountId: string,
+  input: Omit<CustomerAccountRecord, 'accountId' | 'organizationId' | 'completedServicesThisPeriod' | 'persisted'>,
+): Promise<CustomerAccountRecord> {
+  const item = await request<Parameters<typeof toCustomerAccountRecord>[0]>(customerAccountPath(accountId), {
+    method: 'PUT',
+    body: JSON.stringify({
+      customer_name: input.customerName,
+      billing_model: input.billingModel,
+      payment_status: input.paymentStatus,
+      service_approval_status: input.serviceApprovalStatus,
+      contracted_services_per_period: input.contractedServicesPerPeriod,
+      billing_notes: input.billingNotes || null,
+    }),
+  });
+  return toCustomerAccountRecord(item);
+}
+
 export function customerPrivacyExportPath(accountId: string): string {
   return `/accounts/${encodeURIComponent(accountId)}/privacy-export`;
 }

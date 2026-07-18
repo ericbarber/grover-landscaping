@@ -22,6 +22,8 @@ Current continuation work:
   from the signed-in Cognito subject, then presents the first-route setup sequence.
 - Customer-account onboarding can create and list organization-scoped accounts,
   with explicit organization relationships and manager-visible billing state.
+- Managers can edit tenant-scoped customer account billing, payment, service
+  approval, service-frequency, and notes fields.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

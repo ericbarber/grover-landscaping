@@ -27,6 +27,16 @@ pub struct CreateCustomerAccountRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateCustomerAccountRequest {
+    pub customer_name: String,
+    pub billing_model: String,
+    pub payment_status: String,
+    pub service_approval_status: String,
+    pub contracted_services_per_period: u32,
+    pub billing_notes: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerAccountRecord {
     pub account_id: String,
     pub organization_id: String,
@@ -74,6 +84,22 @@ impl AccountRepository {
         create_account(pool, &request).await.ok()
     }
 
+    pub async fn update(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        request: UpdateCustomerAccountRequest,
+    ) -> Option<CustomerAccountRecord> {
+        let request = normalize_update_request(request);
+        let Some(pool) = &self.pool else {
+            return local_update_record(account_id, organization_ids, &request);
+        };
+        update_account(pool, account_id, organization_ids, &request)
+            .await
+            .ok()
+            .flatten()
+    }
+
     pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummary {
         seed_summary(job_id)
     }
@@ -117,8 +143,37 @@ pub fn validate_create_customer_account_request(
     Ok(())
 }
 
+pub fn validate_update_customer_account_request(
+    request: &UpdateCustomerAccountRequest,
+) -> Result<(), &'static str> {
+    let create_request = CreateCustomerAccountRequest {
+        organization_id: "validation".to_string(),
+        customer_name: request.customer_name.clone(),
+        billing_model: request.billing_model.clone(),
+        payment_status: request.payment_status.clone(),
+        service_approval_status: request.service_approval_status.clone(),
+        contracted_services_per_period: request.contracted_services_per_period,
+        billing_notes: request.billing_notes.clone(),
+    };
+    validate_create_customer_account_request(&create_request)
+}
+
 fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustomerAccountRequest {
     request.organization_id = request.organization_id.trim().to_string();
+    request.customer_name = request.customer_name.trim().to_string();
+    request.billing_model = request.billing_model.trim().to_string();
+    request.payment_status = request.payment_status.trim().to_string();
+    request.service_approval_status = request.service_approval_status.trim().to_string();
+    request.billing_notes = request
+        .billing_notes
+        .map(|notes| notes.trim().to_string())
+        .filter(|notes| !notes.is_empty());
+    request
+}
+
+fn normalize_update_request(
+    mut request: UpdateCustomerAccountRequest,
+) -> UpdateCustomerAccountRequest {
     request.customer_name = request.customer_name.trim().to_string();
     request.billing_model = request.billing_model.trim().to_string();
     request.payment_status = request.payment_status.trim().to_string();
@@ -161,6 +216,51 @@ async fn create_account(
     .await?;
     tx.commit().await?;
     Ok(record_from_request(account_id, request, true))
+}
+
+async fn update_account(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+    request: &UpdateCustomerAccountRequest,
+) -> Result<Option<CustomerAccountRecord>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"UPDATE customer_accounts account
+        SET customer_name = $3, billing_model = $4, payment_status = $5,
+            service_approval_status = $6, contracted_services_per_period = $7,
+            billing_notes = $8, updated_at = NOW()
+        FROM organization_customer_accounts relation
+        WHERE account.id = $1
+          AND relation.account_id = account.id
+          AND relation.organization_id = ANY($2)
+          AND relation.status = 'active'
+        RETURNING account.id, relation.organization_id, account.customer_name,
+            account.billing_model, account.payment_status, account.service_approval_status,
+            account.contracted_services_per_period, account.completed_services_this_period,
+            COALESCE(account.billing_notes, '') AS billing_notes"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .bind(&request.customer_name)
+    .bind(&request.billing_model)
+    .bind(&request.payment_status)
+    .bind(&request.service_approval_status)
+    .bind(request.contracted_services_per_period as i32)
+    .bind(&request.billing_notes)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|row| CustomerAccountRecord {
+        account_id: row.get("id"),
+        organization_id: row.get("organization_id"),
+        customer_name: row.get("customer_name"),
+        billing_model: row.get("billing_model"),
+        payment_status: row.get("payment_status"),
+        service_approval_status: row.get("service_approval_status"),
+        contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period") as u32,
+        completed_services_this_period: row.get::<i32, _>("completed_services_this_period") as u32,
+        billing_notes: row.get("billing_notes"),
+        persisted: true,
+    }))
 }
 
 async fn list_accounts(
@@ -222,6 +322,32 @@ fn local_record(request: CreateCustomerAccountRequest) -> CustomerAccountRecord 
     record_from_request("acct_local_new".to_string(), &request, false)
 }
 
+fn local_update_record(
+    account_id: &str,
+    organization_ids: &[String],
+    request: &UpdateCustomerAccountRequest,
+) -> Option<CustomerAccountRecord> {
+    if account_id != "acct_1001"
+        || !organization_ids
+            .iter()
+            .any(|id| id == "org_demo_landscaping")
+    {
+        return None;
+    }
+    Some(CustomerAccountRecord {
+        account_id: account_id.to_string(),
+        organization_id: "org_demo_landscaping".to_string(),
+        customer_name: request.customer_name.clone(),
+        billing_model: request.billing_model.clone(),
+        payment_status: request.payment_status.clone(),
+        service_approval_status: request.service_approval_status.clone(),
+        contracted_services_per_period: request.contracted_services_per_period,
+        completed_services_this_period: 0,
+        billing_notes: request.billing_notes.clone().unwrap_or_default(),
+        persisted: false,
+    })
+}
+
 fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
     if !organization_ids
         .iter()
@@ -267,5 +393,52 @@ fn seed_summary(job_id: &str) -> CustomerAccountSummary {
         contracted_services_per_period: account.4,
         completed_services_this_period: account.5,
         billing_notes: String::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn update_request() -> UpdateCustomerAccountRequest {
+        UpdateCustomerAccountRequest {
+            customer_name: "Updated Customer".to_string(),
+            billing_model: "monthly_plan".to_string(),
+            payment_status: "paid".to_string(),
+            service_approval_status: "approved".to_string(),
+            contracted_services_per_period: 4,
+            billing_notes: Some("Account is current.".to_string()),
+        }
+    }
+
+    #[test]
+    fn update_validation_reuses_account_field_rules() {
+        assert_eq!(
+            validate_update_customer_account_request(&update_request()),
+            Ok(())
+        );
+        let mut invalid = update_request();
+        invalid.payment_status = "unknown".to_string();
+        assert_eq!(
+            validate_update_customer_account_request(&invalid),
+            Err("payment_status_invalid")
+        );
+    }
+
+    #[tokio::test]
+    async fn local_updates_stay_tenant_scoped() {
+        let repository = AccountRepository::new();
+        assert!(repository
+            .update(
+                "acct_1001",
+                &["org_demo_landscaping".to_string()],
+                update_request(),
+            )
+            .await
+            .is_some());
+        assert!(repository
+            .update("acct_1001", &["org_other".to_string()], update_request())
+            .await
+            .is_none());
     }
 }

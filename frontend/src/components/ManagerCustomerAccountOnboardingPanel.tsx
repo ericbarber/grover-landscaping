@@ -3,6 +3,7 @@ import {
   createCustomerAccount,
   fetchCustomerAccounts,
   type CustomerAccountRecord,
+  updateCustomerAccount,
 } from '../api/client';
 
 type Props = { organizationId: string };
@@ -12,6 +13,7 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
 
   async function refresh() {
     setIsLoading(true);
@@ -52,6 +54,21 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
     }
   }
 
+  async function save(account: CustomerAccountRecord) {
+    setIsLoading(true);
+    try {
+      const updated = await updateCustomerAccount(account.accountId, account);
+      setAccounts((current) => current.map((item) => item.accountId === updated.accountId ? updated : item)
+        .sort((a, b) => a.customerName.localeCompare(b.customerName)));
+      setEditingAccount(null);
+      setMessage(`${updated.customerName} account updated.`);
+    } catch {
+      setMessage('The customer account could not be updated.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Customer onboarding</p>
@@ -64,12 +81,69 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
       <div className="mt-4 space-y-2">
         {accounts.map((account) => (
           <div className="rounded-lg border border-slate-200 p-3" key={account.accountId}>
-            <p className="font-semibold text-slate-950">{account.customerName}</p>
-            <p className="text-xs text-slate-500">{account.billingModel.replace('_', ' ')} · {account.paymentStatus.replace('_', ' ')}</p>
+            {editingAccount?.accountId === account.accountId ? (
+              <AccountEditor account={editingAccount} disabled={isLoading} onCancel={() => setEditingAccount(null)} onChange={setEditingAccount} onSave={() => void save(editingAccount)} />
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">{account.customerName}</p>
+                    <p className="text-xs text-slate-500">{account.billingModel.replace('_', ' ')} · {account.paymentStatus.replace('_', ' ')}</p>
+                  </div>
+                  <button className="text-sm font-semibold text-emerald-700" onClick={() => setEditingAccount(account)} type="button">Edit</button>
+                </div>
+                {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
+              </>
+            )}
           </div>
         ))}
         {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
       </div>
     </section>
+  );
+}
+
+function AccountEditor({ account, disabled, onCancel, onChange, onSave }: {
+  account: CustomerAccountRecord;
+  disabled: boolean;
+  onCancel: () => void;
+  onChange: (account: CustomerAccountRecord) => void;
+  onSave: () => void;
+}) {
+  const update = <K extends keyof CustomerAccountRecord>(key: K, value: CustomerAccountRecord[K]) =>
+    onChange({ ...account, [key]: value });
+  return (
+    <div className="grid gap-3">
+      <label className="text-sm font-semibold text-slate-700">Customer name
+        <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.customerName} onChange={(event) => update('customerName', event.target.value)} />
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-sm font-semibold text-slate-700">Billing model
+          <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.billingModel} onChange={(event) => update('billingModel', event.target.value as CustomerAccountRecord['billingModel'])}>
+            <option value="per_job">Per job</option><option value="monthly_plan">Monthly plan</option><option value="prepaid_package">Prepaid package</option><option value="manual_account">Manual account</option>
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Payment status
+          <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.paymentStatus} onChange={(event) => update('paymentStatus', event.target.value as CustomerAccountRecord['paymentStatus'])}>
+            <option value="not_required">Not required</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="past_due">Past due</option><option value="waived">Waived</option><option value="manager_review">Manager review</option>
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Service approval
+          <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.serviceApprovalStatus} onChange={(event) => update('serviceApprovalStatus', event.target.value as CustomerAccountRecord['serviceApprovalStatus'])}>
+            <option value="approved">Approved</option><option value="blocked">Blocked</option><option value="manager_review">Manager review</option>
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Services per period
+          <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" min="0" type="number" value={account.contractedServicesPerPeriod} onChange={(event) => update('contractedServicesPerPeriod', Math.max(0, Number(event.target.value)))} />
+        </label>
+      </div>
+      <label className="text-sm font-semibold text-slate-700">Billing notes
+        <textarea className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" maxLength={1000} rows={2} value={account.billingNotes} onChange={(event) => update('billingNotes', event.target.value)} />
+      </label>
+      <div className="flex justify-end gap-2">
+        <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" disabled={disabled} onClick={onCancel} type="button">Cancel</button>
+        <button className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={disabled || account.customerName.trim().length < 2} onClick={onSave} type="button">Save account</button>
+      </div>
+    </div>
   );
 }
