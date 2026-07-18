@@ -38,6 +38,8 @@ Current continuation work:
   read-only checklist into an expandable completion summary.
 - Customer accounts now own explicit persisted property records through
   tenant-scoped list and create APIs, independently of jobs and crew assignment.
+- Manager account onboarding can list and create properties inline, then pass new
+  properties directly into the operational onboarding workflow.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

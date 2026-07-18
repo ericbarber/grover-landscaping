@@ -190,6 +190,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager customer-account editing controls for account status and billing notes
 - Persisted customer properties linked to organization/account relationships
 - Tenant-scoped customer property list and create APIs
+- Manager account cards list and create customer properties inline
+- Newly created properties become available to operational onboarding without reload
 
 ### Local development and project setup
 
@@ -431,7 +433,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Connect account onboarding UI to property creation and operational onboarding
+- Expand property administration and connect property creation to portfolio and crew setup
 
 ## Planned
 

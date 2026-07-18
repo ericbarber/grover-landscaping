@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
 import {
   createCustomerAccount,
+  createCustomerProperty,
   fetchCustomerAccounts,
+  fetchCustomerProperties,
   type CustomerAccountRecord,
+  type CustomerPropertyRecord,
   updateCustomerAccount,
 } from '../api/client';
 
-type Props = { organizationId: string };
+type Props = {
+  organizationId: string;
+  onPropertyCreated?: (property: CustomerPropertyRecord) => void;
+};
 
-export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props) {
+type PropertyDraft = { displayName: string; serviceAddress: string };
+
+export function ManagerCustomerAccountOnboardingPanel({ organizationId, onPropertyCreated }: Props) {
   const [accounts, setAccounts] = useState<CustomerAccountRecord[]>([]);
+  const [properties, setProperties] = useState<Record<string, CustomerPropertyRecord[]>>({});
+  const [propertyDrafts, setPropertyDrafts] = useState<Record<string, PropertyDraft>>({});
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -18,7 +28,15 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
   async function refresh() {
     setIsLoading(true);
     try {
-      setAccounts(await fetchCustomerAccounts());
+      const loadedAccounts = await fetchCustomerAccounts();
+      setAccounts(loadedAccounts);
+      const loadedProperties = await Promise.all(
+        loadedAccounts.map(async (account) => [
+          account.accountId,
+          await fetchCustomerProperties(account.accountId).catch(() => []),
+        ] as const),
+      );
+      setProperties(Object.fromEntries(loadedProperties));
     } catch {
       setMessage('Customer accounts could not be loaded.');
     } finally {
@@ -69,6 +87,41 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
     }
   }
 
+  function updatePropertyDraft(accountId: string, update: Partial<PropertyDraft>) {
+    setPropertyDrafts((current) => {
+      const draft = current[accountId] ?? { displayName: '', serviceAddress: '' };
+      return { ...current, [accountId]: { ...draft, ...update } };
+    });
+  }
+
+  async function addProperty(account: CustomerAccountRecord) {
+    const draft = propertyDrafts[account.accountId] ?? { displayName: '', serviceAddress: '' };
+    if (draft.displayName.trim().length < 2 || draft.serviceAddress.trim().length < 5) {
+      setMessage('Enter a property name and complete service address.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const property = await createCustomerProperty(account.accountId, {
+        organizationId: account.organizationId,
+        displayName: draft.displayName.trim(),
+        serviceAddress: draft.serviceAddress.trim(),
+      });
+      setProperties((current) => ({
+        ...current,
+        [account.accountId]: [...(current[account.accountId] ?? []), property]
+          .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+      }));
+      setPropertyDrafts((current) => ({ ...current, [account.accountId]: { displayName: '', serviceAddress: '' } }));
+      setMessage(`${property.displayName} property created.`);
+      onPropertyCreated?.(property);
+    } catch {
+      setMessage('The customer property could not be created.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Customer onboarding</p>
@@ -93,6 +146,44 @@ export function ManagerCustomerAccountOnboardingPanel({ organizationId }: Props)
                   <button className="text-sm font-semibold text-emerald-700" onClick={() => setEditingAccount(account)} type="button">Edit</button>
                 </div>
                 {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
+                <div className="mt-3 space-y-2">
+                  {(properties[account.accountId] ?? []).map((property) => (
+                    <div className="rounded-lg bg-slate-50 px-3 py-2" key={property.propertyId}>
+                      <p className="text-sm font-semibold text-slate-800">{property.displayName}</p>
+                      <p className="text-xs text-slate-500">{property.serviceAddress} · {property.status}</p>
+                    </div>
+                  ))}
+                  {(properties[account.accountId] ?? []).length === 0 ? (
+                    <p className="text-xs text-amber-700">No properties have been added.</p>
+                  ) : null}
+                </div>
+                <details className="mt-3 rounded-lg border border-slate-200 px-3">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-emerald-700 [&::-webkit-details-marker]:hidden">
+                    Add property
+                  </summary>
+                  <div className="grid gap-2 border-t border-slate-100 py-3">
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      onChange={(event) => updatePropertyDraft(account.accountId, { displayName: event.target.value })}
+                      placeholder="Property name"
+                      value={propertyDrafts[account.accountId]?.displayName ?? ''}
+                    />
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      onChange={(event) => updatePropertyDraft(account.accountId, { serviceAddress: event.target.value })}
+                      placeholder="Service address"
+                      value={propertyDrafts[account.accountId]?.serviceAddress ?? ''}
+                    />
+                    <button
+                      className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                      disabled={isLoading}
+                      onClick={() => void addProperty(account)}
+                      type="button"
+                    >
+                      Create property
+                    </button>
+                  </div>
+                </details>
               </>
             )}
           </div>

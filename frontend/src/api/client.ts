@@ -482,6 +482,16 @@ export interface CustomerAccountRecord {
   persisted: boolean;
 }
 
+export interface CustomerPropertyRecord {
+  propertyId: string;
+  accountId: string;
+  organizationId: string;
+  displayName: string;
+  serviceAddress: string;
+  status: 'onboarding' | 'active' | 'blocked' | 'archived';
+  persisted: boolean;
+}
+
 export interface ApiPropertyOnboardingProfile {
   property_id: string;
   account_id: string;
@@ -1381,6 +1391,55 @@ export async function updateCustomerAccount(
     }),
   });
   return toCustomerAccountRecord(item);
+}
+
+export function customerAccountPropertiesPath(accountId: string): string {
+  return `/customer-accounts/${encodeURIComponent(accountId)}/properties`;
+}
+
+function toCustomerPropertyRecord(item: {
+  property_id: string;
+  account_id: string;
+  organization_id: string;
+  display_name: string;
+  service_address: string;
+  status: CustomerPropertyRecord['status'];
+  persisted: boolean;
+}): CustomerPropertyRecord {
+  return {
+    propertyId: item.property_id,
+    accountId: item.account_id,
+    organizationId: item.organization_id,
+    displayName: item.display_name,
+    serviceAddress: item.service_address,
+    status: item.status,
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchCustomerProperties(accountId: string): Promise<CustomerPropertyRecord[]> {
+  const items = await request<Parameters<typeof toCustomerPropertyRecord>[0][]>(
+    customerAccountPropertiesPath(accountId),
+  );
+  return items.map(toCustomerPropertyRecord);
+}
+
+export async function createCustomerProperty(
+  accountId: string,
+  input: Pick<CustomerPropertyRecord, 'organizationId' | 'displayName' | 'serviceAddress'>,
+): Promise<CustomerPropertyRecord> {
+  const item = await request<Parameters<typeof toCustomerPropertyRecord>[0]>(
+    customerAccountPropertiesPath(accountId),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        organization_id: input.organizationId,
+        display_name: input.displayName,
+        service_address: input.serviceAddress,
+      }),
+    },
+  );
+  return toCustomerPropertyRecord(item);
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

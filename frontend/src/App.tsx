@@ -160,7 +160,7 @@ const customerPortalPreviewProperties: CustomerPropertyProfile[] = [
   },
 ];
 
-const managerPropertyOnboardingOptions = customerPortalPreviewProperties.map((property) => ({
+const initialManagerPropertyOnboardingOptions = customerPortalPreviewProperties.map((property) => ({
   propertyId: property.id,
   accountId: property.customerId === 'customer_1001' ? 'acct_1001' : property.customerId,
   organizationId: property.organizationId,
@@ -824,6 +824,9 @@ export function App() {
   const [customerPhotoErasureSummary, setCustomerPhotoErasureSummary] = useState<CustomerPhotoErasureSummary | null>(null);
   const [isLoadingCustomerPrivacy, setIsLoadingCustomerPrivacy] = useState(false);
   const [activeManagerOrganizationId, setActiveManagerOrganizationId] = useState('org_demo_landscaping');
+  const [managerPropertyOnboardingOptions, setManagerPropertyOnboardingOptions] = useState(
+    initialManagerPropertyOnboardingOptions,
+  );
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
@@ -1850,7 +1853,22 @@ export function App() {
             />
           </div>
           <div className="mt-6">
-            <ManagerCustomerAccountOnboardingPanel organizationId={activeManagerOrganizationId} />
+            <ManagerCustomerAccountOnboardingPanel
+              organizationId={activeManagerOrganizationId}
+              onPropertyCreated={(property) => {
+                setManagerPropertyOnboardingOptions((current) => [
+                  ...current.filter((item) => item.propertyId !== property.propertyId),
+                  {
+                    propertyId: property.propertyId,
+                    accountId: property.accountId,
+                    organizationId: property.organizationId,
+                    displayName: property.displayName,
+                    serviceAddress: property.serviceAddress,
+                  },
+                ].sort((a, b) => a.displayName.localeCompare(b.displayName)));
+                setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
+              }}
+            />
           </div>
           <div className="mt-6">
             <CustomerPortalPreviewPanel
