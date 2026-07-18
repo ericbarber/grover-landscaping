@@ -532,6 +532,16 @@ export interface OrganizationInvitation {
   persisted: boolean;
 }
 
+interface ApiOrganizationInvitationAcceptance {
+  invitation: ApiOrganizationInvitation;
+  membership: ApiOrganizationMembership;
+}
+
+export interface OrganizationInvitationAcceptance {
+  invitation: OrganizationInvitation;
+  membership: OrganizationMembership;
+}
+
 interface ApiOrganizationInvitationSummary {
   id: string;
   organization_id: string;
@@ -1588,6 +1598,10 @@ export function organizationInvitationPath(
   return `${organizationInvitationsPath(organizationId)}/${encodeURIComponent(invitationId)}`;
 }
 
+export function organizationInvitationAcceptancePath(token: string): string {
+  return `/organization-invitations/${encodeURIComponent(token)}/accept`;
+}
+
 export function toOrganizationInvitation(
   invitation: ApiOrganizationInvitation,
 ): OrganizationInvitation {
@@ -1663,6 +1677,19 @@ export async function revokeOrganizationInvitation(
       { method: 'DELETE' },
     ),
   );
+}
+
+export async function acceptOrganizationInvitation(
+  token: string,
+): Promise<OrganizationInvitationAcceptance> {
+  const accepted = await request<ApiOrganizationInvitationAcceptance>(
+    organizationInvitationAcceptancePath(token),
+    { method: 'POST' },
+  );
+  return {
+    invitation: toOrganizationInvitation(accepted.invitation),
+    membership: toOrganizationMembership(accepted.membership),
+  };
 }
 
 function toCustomerAccountRecord(item: {

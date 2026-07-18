@@ -84,6 +84,8 @@ Expected behavior:
 - The linked membership user id is changed to the signed-in principal subject.
 - The invitation is marked `accepted`.
 - An `invite_accepted` audit event is recorded.
+- Invitation notifications include an acceptance path in the form
+  `/organization-invitations/{token}`.
 
 ### Revoke invitation
 
@@ -167,3 +169,9 @@ two-step confirmation, and both the browser and repository guard the final
 active organization owner. Suspension and reactivation use the same confirmation
 and last-owner safeguards. Recent access activity refreshes after browser role,
 revocation, and membership lifecycle actions.
+
+Authenticated recipients can open the invitation path, sign in, review the
+activation effect, and accept explicitly. The authentication redirect preserves
+the local invitation path and rejects external return destinations. Successful
+acceptance shows the activated organization, role, and scope before entering the
+workspace. Local fallback creation links directly to the same acceptance page.

@@ -32,6 +32,16 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
+export function safeAuthReturnPath(state: unknown): string {
+  if (!state || typeof state !== 'object' || !('returnTo' in state)) return '/';
+  const returnTo = (state as { returnTo?: unknown }).returnTo;
+  return typeof returnTo === 'string'
+    && returnTo.startsWith('/')
+    && !returnTo.startsWith('//')
+    ? returnTo
+    : '/';
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function requireCognitoConfig(config: RuntimeAuthConfig): {
@@ -154,7 +164,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let currentUser: User | null;
         if (window.location.pathname === '/auth/callback') {
           currentUser = await nextManager.signinRedirectCallback();
-          window.history.replaceState({}, document.title, '/');
+          window.history.replaceState(
+            {},
+            document.title,
+            safeAuthReturnPath(currentUser.state),
+          );
         } else {
           currentUser = await nextManager.getUser();
           if (currentUser?.expired) {
@@ -203,7 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async () => {
     if (!manager) return;
-    await manager.signinRedirect();
+    await manager.signinRedirect({
+      state: { returnTo: `${window.location.pathname}${window.location.search}` },
+    });
   }, [manager]);
 
   const signOut = useCallback(async () => {

@@ -8,6 +8,7 @@ import {
   notificationRetryPath,
   organizationInvitationsPath,
   organizationInvitationPath,
+  organizationInvitationAcceptancePath,
   organizationMembershipRolePath,
   organizationMembershipStatusPath,
   organizationMembershipsPath,
@@ -82,6 +83,9 @@ describe('core API client mapping', () => {
     );
     expect(organizationInvitationPath('org/demo', 'invite/1')).toBe(
       '/organizations/org%2Fdemo/invitations/invite%2F1',
+    );
+    expect(organizationInvitationAcceptancePath('token/1')).toBe(
+      '/organization-invitations/token%2F1/accept',
     );
     expect(toOrganizationInvitation({
       id: 'invitation_1',

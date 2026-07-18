@@ -91,9 +91,9 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_eq!(pending_summary.invitee_email, invitee_email);
     assert_eq!(pending_summary.status, "pending");
 
-    let notification_template = sqlx::query_scalar::<_, String>(
+    let notification = sqlx::query_as::<_, (String, serde_json::Value)>(
         r#"
-        SELECT template_key
+        SELECT template_key, payload
         FROM notification_outbox
         WHERE entity_type = 'organization_invitation'
           AND entity_id = $1
@@ -107,7 +107,11 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .fetch_one(&pool)
     .await
     .expect("invitation notification should be queued");
-    assert_eq!(notification_template, "organization_invitation");
+    assert_eq!(notification.0, "organization_invitation");
+    assert_eq!(
+        notification.1["acceptance_path"],
+        format!("/organization-invitations/{}", invitation.token)
+    );
 
     let pending_status = sqlx::query_scalar::<_, String>(
         "SELECT status FROM organization_memberships WHERE id = $1",

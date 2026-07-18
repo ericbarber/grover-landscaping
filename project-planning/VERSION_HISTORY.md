@@ -85,6 +85,8 @@ Current continuation work:
   confirmation and the same repository-enforced last-owner invariant.
 - Added an owner-only recent team-access activity feed and a fresh-database
   migration for invitation and membership lifecycle audit event kinds.
+- Added an authenticated recipient invitation page, safe post-sign-in return
+  paths, explicit acceptance feedback, and notification acceptance paths.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

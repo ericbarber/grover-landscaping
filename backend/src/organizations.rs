@@ -742,6 +742,7 @@ async fn create_invitation(
         "invitee_email": request.invitee_email,
         "role": role,
         "token": token,
+        "acceptance_path": format!("/organization-invitations/{}", token),
         "expires_at": request.expires_at,
     }))
     .execute(&mut *transaction)

@@ -161,9 +161,12 @@ export function ManagerTeamInvitationsPanel({
             {invitation.persisted ? ' · delivery queued' : ' · local fallback'}
           </p>
           {!invitation.persisted ? (
-            <p className="mt-2 break-all text-xs">
-              Manual pilot token: <code>{invitation.token}</code>
-            </p>
+            <a
+              className="mt-3 flex min-h-11 items-center justify-center rounded-lg bg-white px-3 text-center text-xs font-bold text-emerald-800"
+              href={`/organization-invitations/${encodeURIComponent(invitation.token)}`}
+            >
+              Open local acceptance page
+            </a>
           ) : null}
         </div>
       ) : null}

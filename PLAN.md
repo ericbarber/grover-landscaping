@@ -226,6 +226,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owners can suspend and reactivate memberships through audited two-step controls while preserving the last active owner
 - Owners can review the 25 newest tenant-scoped team access events, refreshed after mobile administration actions
 - Fresh database migrations permit invitation revocation and membership lifecycle audit events
+- Authenticated recipients can preserve an invitation route through sign-in, explicitly accept access, and review the activated organization role and scope
+- Invitation notification payloads and local fallback receipts link to the browser acceptance workflow
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -468,7 +470,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add authenticated invitation acceptance guidance and result handling
+- Refresh role-aware workspace guidance after invitation acceptance
 
 ## Planned
 
