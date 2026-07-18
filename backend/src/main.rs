@@ -469,6 +469,7 @@ fn app_with_runtime(
     production: bool,
 ) -> Router {
     let readiness_state = Arc::clone(&state);
+    let auth = auth.with_organization_repository(state.organizations.clone());
     let public_auth_config = auth.public_config();
     let index_file = frontend_dist.join("index.html");
     let shared_bid_frontend = ServeFile::new(index_file.clone());
@@ -779,7 +780,7 @@ async fn get_my_access(
             .principal_access_summary(
                 &principal.subject,
                 &principal.username,
-                principal.roles.clone(),
+                principal.claim_roles.clone(),
             )
             .await,
     )
@@ -4015,6 +4016,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
 
@@ -4034,6 +4036,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "other-user".to_string(),
             username: "Other User".to_string(),
+            claim_roles: vec![AccessRole::Manager],
             roles: vec![AccessRole::Manager],
         };
 
@@ -4055,6 +4058,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
 
@@ -4076,6 +4080,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "other-user".to_string(),
             username: "Other User".to_string(),
+            claim_roles: vec![AccessRole::CrewMember],
             roles: vec![AccessRole::CrewMember],
         };
 
@@ -4093,6 +4098,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
 
@@ -4110,6 +4116,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "local-development-user".to_string(),
             username: "Local Developer".to_string(),
+            claim_roles: vec![AccessRole::OrganizationOwner],
             roles: vec![AccessRole::OrganizationOwner],
         };
 

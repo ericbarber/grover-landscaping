@@ -175,3 +175,8 @@ activation effect, and accept explicitly. The authentication redirect preserves
 the local invitation path and rejects external return destinations. Successful
 acceptance shows the activated organization, role, and scope before entering the
 workspace. Local fallback creation links directly to the same acceptance page.
+Subsequent authenticated requests merge active database membership roles with
+coarse Cognito claims, while retaining the original claims separately in the
+access summary. The browser refreshes membership roles after acceptance, shows
+role-specific workspace guidance, and hides manager tools from crew and customer
+roles.

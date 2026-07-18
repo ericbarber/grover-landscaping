@@ -4,6 +4,7 @@ use crate::access_control::{
     can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
     AccessRole,
 };
+use crate::organizations::{OrganizationMembership, OrganizationRepository};
 use axum::{
     extract::{Request, State},
     http::{header::AUTHORIZATION, HeaderMap, Method, StatusCode},
@@ -39,6 +40,7 @@ pub struct PublicAuthConfig {
 pub struct AuthPrincipal {
     pub subject: String,
     pub username: String,
+    pub claim_roles: Vec<AccessRole>,
     pub roles: Vec<AccessRole>,
 }
 
@@ -46,6 +48,7 @@ pub struct AuthPrincipal {
 pub struct AuthService {
     backend: AuthBackend,
     public_config: PublicAuthConfig,
+    organizations: Option<OrganizationRepository>,
 }
 
 #[derive(Clone)]
@@ -149,6 +152,7 @@ impl AuthService {
                         client_id: Some(client_id),
                         login_domain: Some(login_domain.trim_end_matches('/').to_string()),
                     },
+                    organizations: None,
                 })
             }
             unsupported => Err(AuthError::Configuration(format!(
@@ -166,6 +170,7 @@ impl AuthService {
                 client_id: None,
                 login_domain: None,
             },
+            organizations: None,
         }
     }
 
@@ -179,7 +184,13 @@ impl AuthService {
                 client_id: Some("test-client".to_string()),
                 login_domain: Some("https://login.example.test".to_string()),
             },
+            organizations: None,
         }
+    }
+
+    pub fn with_organization_repository(mut self, organizations: OrganizationRepository) -> Self {
+        self.organizations = Some(organizations);
+        self
     }
 
     pub fn public_config(&self) -> PublicAuthConfig {
@@ -187,10 +198,11 @@ impl AuthService {
     }
 
     async fn authenticate(&self, headers: &HeaderMap) -> Result<AuthPrincipal, AuthError> {
-        match &self.backend {
+        let mut principal = match &self.backend {
             AuthBackend::Disabled => Ok(AuthPrincipal {
                 subject: "local-development-user".to_string(),
                 username: "Local Developer".to_string(),
+                claim_roles: vec![AccessRole::OrganizationOwner],
                 roles: vec![AccessRole::OrganizationOwner],
             }),
             AuthBackend::Cognito(verifier) => {
@@ -202,8 +214,31 @@ impl AuthService {
                 bearer_token(headers)?;
                 Err(AuthError::InvalidToken("test token rejected".to_string()))
             }
+        }?;
+        if let Some(organizations) = &self.organizations {
+            let memberships = organizations
+                .list_active_memberships(&principal.subject)
+                .await;
+            principal.roles = merge_effective_roles(&principal.claim_roles, &memberships);
+        }
+        Ok(principal)
+    }
+}
+
+fn merge_effective_roles(
+    claim_roles: &[AccessRole],
+    memberships: &[OrganizationMembership],
+) -> Vec<AccessRole> {
+    let mut roles = claim_roles.to_vec();
+    for membership in memberships
+        .iter()
+        .filter(|membership| membership.status == "active")
+    {
+        if !roles.contains(&membership.role) {
+            roles.push(membership.role.clone());
         }
     }
+    roles
 }
 
 impl CognitoJwtVerifier {
@@ -259,7 +294,7 @@ impl CognitoJwtVerifier {
             ));
         }
 
-        let roles = claims
+        let roles: Vec<AccessRole> = claims
             .groups
             .iter()
             .filter_map(|group| AccessRole::from_cognito_group(group))
@@ -268,6 +303,7 @@ impl CognitoJwtVerifier {
         Ok(AuthPrincipal {
             username: claims.username.unwrap_or_else(|| claims.sub.clone()),
             subject: claims.sub,
+            claim_roles: roles.clone(),
             roles,
         })
     }
@@ -594,10 +630,11 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 #[cfg(test)]
 mod tests {
     use super::{
-        is_authorized, is_protected_api_path, is_public_path, require_api_auth, AuthPrincipal,
-        AuthService,
+        is_authorized, is_protected_api_path, is_public_path, merge_effective_roles,
+        require_api_auth, AuthPrincipal, AuthService,
     };
     use crate::access_control::AccessRole;
+    use crate::organizations::OrganizationMembership;
     use axum::{
         body::Body,
         http::{Method, Request, StatusCode},
@@ -611,8 +648,40 @@ mod tests {
         AuthPrincipal {
             subject: "test-user".to_string(),
             username: "test@example.com".to_string(),
+            claim_roles: vec![role.clone()],
             roles: vec![role],
         }
+    }
+
+    #[test]
+    fn active_membership_roles_extend_claim_authorization_without_duplicates() {
+        let membership = OrganizationMembership {
+            id: "membership_1".to_string(),
+            organization_id: "org_1".to_string(),
+            organization_name: "Test".to_string(),
+            organization_type: "yard_care_company".to_string(),
+            user_id: "user_1".to_string(),
+            role: AccessRole::CrewMember,
+            status: "active".to_string(),
+            scope_type: "organization".to_string(),
+            scope_id: Some("org_1".to_string()),
+        };
+        assert_eq!(
+            merge_effective_roles(&[], std::slice::from_ref(&membership)),
+            vec![AccessRole::CrewMember]
+        );
+        assert_eq!(
+            merge_effective_roles(&[AccessRole::CrewMember], std::slice::from_ref(&membership),),
+            vec![AccessRole::CrewMember]
+        );
+        assert!(merge_effective_roles(
+            &[],
+            &[OrganizationMembership {
+                status: "suspended".to_string(),
+                ..membership
+            }],
+        )
+        .is_empty());
     }
 
     #[test]
@@ -1091,6 +1160,7 @@ mod tests {
         let principal = AuthPrincipal {
             subject: "new-user".to_string(),
             username: "new-user@example.com".to_string(),
+            claim_roles: Vec::new(),
             roles: Vec::new(),
         };
 

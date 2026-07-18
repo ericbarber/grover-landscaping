@@ -87,6 +87,8 @@ Current continuation work:
   migration for invitation and membership lifecycle audit event kinds.
 - Added an authenticated recipient invitation page, safe post-sign-in return
   paths, explicit acceptance feedback, and notification acceptance paths.
+- Merged active membership roles into request authorization after token
+  verification and added refreshed role-aware workspace guidance.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

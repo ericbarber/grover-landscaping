@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { API_BASE_URL } from '../api/baseUrl';
+import { fetchPrincipalAccessSummary } from '../api/client';
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
 type AuthMode = 'disabled' | 'cognito';
@@ -26,6 +27,7 @@ interface AuthContextValue {
   error: string | null;
   displayName: string;
   roles: string[];
+  refreshAccess: () => Promise<void>;
   authMode: AuthMode | null;
   retryInitialization: () => void;
   signIn: () => Promise<void>;
@@ -126,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<RuntimeAuthConfig | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [initializationAttempt, setInitializationAttempt] = useState(0);
+  const [membershipRoles, setMembershipRoles] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -232,19 +235,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.assign(logoutUrl);
   }, [config, manager]);
 
+  const refreshAccess = useCallback(async () => {
+    try {
+      const access = await fetchPrincipalAccessSummary();
+      setMembershipRoles(access.memberships.map((membership) => membership.role));
+    } catch {
+      setMembershipRoles([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authMode === 'disabled' || (user && !user.expired)) {
+      void refreshAccess();
+    } else {
+      setMembershipRoles([]);
+    }
+  }, [authMode, refreshAccess, user]);
+
   const value = useMemo<AuthContextValue>(
-    () => ({
+    () => {
+      const roles = Array.from(new Set([
+        ...(authMode === 'disabled' ? ['OrganizationOwner'] : rolesFromUser(user)),
+        ...membershipRoles,
+      ]));
+      return {
       loading,
       authenticated: authMode === 'disabled' || Boolean(user && !user.expired),
       error,
       displayName: authMode === 'disabled' ? 'Local development user' : displayNameFromUser(user),
-      roles: authMode === 'disabled' ? ['OrganizationOwner'] : rolesFromUser(user),
+      roles,
       authMode,
+      refreshAccess,
       retryInitialization,
       signIn,
       signOut,
-    }),
-    [authMode, error, loading, retryInitialization, signIn, signOut, user],
+    };
+    },
+    [authMode, error, loading, membershipRoles, refreshAccess, retryInitialization, signIn, signOut, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

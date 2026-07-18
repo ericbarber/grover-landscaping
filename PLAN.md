@@ -228,6 +228,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Fresh database migrations permit invitation revocation and membership lifecycle audit events
 - Authenticated recipients can preserve an invitation route through sign-in, explicitly accept access, and review the activated organization role and scope
 - Invitation notification payloads and local fallback receipts link to the browser acceptance workflow
+- API authorization merges active database membership roles with Cognito claims while preserving original claim roles in access summaries
+- Workspace guidance refreshes after acceptance and hides manager tools from crew and customer roles
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -470,7 +472,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Refresh role-aware workspace guidance after invitation acceptance
+- Add invitation expiration controls and expired-state visibility
 
 ## Planned
 

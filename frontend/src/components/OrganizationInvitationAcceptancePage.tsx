@@ -3,8 +3,10 @@ import {
   acceptOrganizationInvitation,
   type OrganizationInvitationAcceptance,
 } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
 
 export function OrganizationInvitationAcceptancePage({ token }: { token: string }) {
+  const auth = useAuth();
   const [accepted, setAccepted] = useState<OrganizationInvitationAcceptance | null>(null);
   const [isAccepting, setIsAccepting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -13,7 +15,9 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
     setIsAccepting(true);
     setMessage(null);
     try {
-      setAccepted(await acceptOrganizationInvitation(token));
+      const result = await acceptOrganizationInvitation(token);
+      setAccepted(result);
+      await auth.refreshAccess();
     } catch {
       setMessage('This invitation was not found, has expired, or is no longer pending.');
     } finally {

@@ -64,4 +64,10 @@ Then start the frontend with `npm run dev --prefix frontend` and open <http://lo
 
 ## Remaining Tenant Boundary
 
-Cognito proves identity and supplies coarse roles. Before property owners, property managers, or multiple landscaping organizations use real data, add PostgreSQL-backed organization memberships and organization predicates to every repository query. Cognito groups alone are not a sufficient tenant boundary.
+Cognito proves identity and supplies coarse roles. Active PostgreSQL membership
+roles are merged into the request's effective role set after token verification,
+so an accepted invite can authorize its role without requiring an immediate
+Cognito group mutation. The original token roles remain separately available in
+`/me/access` as `claim_roles`. Repository queries and organization membership
+checks remain the tenant boundary; an effective role from one organization does
+not grant access to another organization.
