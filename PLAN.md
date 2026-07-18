@@ -212,6 +212,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile property setup shows activation prerequisites before enabling activation
 - Account onboarding progress combines customer details, property coverage, service readiness, and activation
 - Mobile customer account cards refresh progress after profile, crew, and lifecycle changes
+- Manager account onboarding filters separate incomplete work from completed accounts
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -454,7 +455,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add manager filtering for incomplete customer accounts and properties needing attention
+- Add property-level attention reasons to account onboarding progress
 
 ## Planned
 

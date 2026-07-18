@@ -62,6 +62,7 @@ Current continuation work:
   operational-profile and crew prerequisites.
 - Added account-level onboarding progress across service details, current
   properties, service readiness, and activation, with live mobile card refresh.
+- Added mobile account filters for all, incomplete, and completed onboarding work.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

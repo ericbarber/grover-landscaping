@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { CustomerAccountRecord, CustomerPropertyRecord } from '../api/client';
-import { deriveAccountOnboardingProgress } from './accountOnboardingProgress';
+import {
+  deriveAccountOnboardingProgress,
+  filterAccountsByOnboardingProgress,
+} from './accountOnboardingProgress';
 
 const account: CustomerAccountRecord = {
   accountId: 'acct_1',
@@ -42,5 +45,25 @@ describe('account onboarding progress', () => {
       activePropertyCount: 1,
       complete: false,
     });
+  });
+
+  it('filters complete and incomplete accounts while treating missing progress as incomplete', () => {
+    const completeAccount = account;
+    const incompleteAccount = { ...account, accountId: 'acct_2', customerName: 'Needs setup' };
+    const missingProgressAccount = { ...account, accountId: 'acct_3', customerName: 'Loading' };
+    const progress = {
+      acct_1: deriveAccountOnboardingProgress(completeAccount, [property('active')]),
+      acct_2: deriveAccountOnboardingProgress(incompleteAccount, [property('onboarding')]),
+    };
+    expect(filterAccountsByOnboardingProgress(
+      [completeAccount, incompleteAccount, missingProgressAccount],
+      progress,
+      'complete',
+    ).map((item) => item.accountId)).toEqual(['acct_1']);
+    expect(filterAccountsByOnboardingProgress(
+      [completeAccount, incompleteAccount, missingProgressAccount],
+      progress,
+      'incomplete',
+    ).map((item) => item.accountId)).toEqual(['acct_2', 'acct_3']);
   });
 });

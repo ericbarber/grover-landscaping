@@ -10,7 +10,11 @@ import {
   type CustomerPropertyRecord,
   updateCustomerAccount,
 } from '../api/client';
-import { deriveAccountOnboardingProgress } from '../domain/accountOnboardingProgress';
+import {
+  deriveAccountOnboardingProgress,
+  filterAccountsByOnboardingProgress,
+  type AccountOnboardingFilter,
+} from '../domain/accountOnboardingProgress';
 
 type Props = {
   organizationId: string;
@@ -35,6 +39,10 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
+  const [filter, setFilter] = useState<AccountOnboardingFilter>('all');
+  const filteredAccounts = filterAccountsByOnboardingProgress(accounts, progress, filter);
+  const completeCount = accounts.filter((account) => progress[account.accountId]?.complete).length;
+  const incompleteCount = accounts.length - completeCount;
 
   async function refresh() {
     setIsLoading(true);
@@ -166,8 +174,29 @@ export function ManagerCustomerAccountOnboardingPanel({
         <button className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={isLoading} onClick={() => void create()} type="button">Add account</button>
       </div>
       {message ? <p className="mt-2 text-sm text-slate-600" role="status">{message}</p> : null}
+      <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Account onboarding filters">
+        {([
+          ['all', `All ${accounts.length}`],
+          ['incomplete', `Needs setup ${incompleteCount}`],
+          ['complete', `Complete ${completeCount}`],
+        ] as const).map(([value, label]) => (
+          <button
+            aria-pressed={filter === value}
+            className={`min-h-11 rounded-lg px-2 py-2 text-xs font-semibold ${
+              filter === value
+                ? 'bg-slate-900 text-white'
+                : 'border border-slate-300 bg-white text-slate-700'
+            }`}
+            key={value}
+            onClick={() => setFilter(value)}
+            type="button"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="mt-4 space-y-2">
-        {accounts.map((account) => (
+        {filteredAccounts.map((account) => (
           <div className="rounded-lg border border-slate-200 p-3" key={account.accountId}>
             {editingAccount?.accountId === account.accountId ? (
               <AccountEditor account={editingAccount} disabled={isLoading} onCancel={() => setEditingAccount(null)} onChange={setEditingAccount} onSave={() => void save(editingAccount)} />
@@ -224,6 +253,11 @@ export function ManagerCustomerAccountOnboardingPanel({
             )}
           </div>
         ))}
+        {!isLoading && accounts.length > 0 && filteredAccounts.length === 0 ? (
+          <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            No accounts match this onboarding filter.
+          </p>
+        ) : null}
         {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
       </div>
     </section>

@@ -26,3 +26,17 @@ export function deriveAccountOnboardingProgress(
     persisted: false,
   };
 }
+
+export type AccountOnboardingFilter = 'all' | 'incomplete' | 'complete';
+
+export function filterAccountsByOnboardingProgress(
+  accounts: CustomerAccountRecord[],
+  progress: Record<string, CustomerAccountOnboardingProgress>,
+  filter: AccountOnboardingFilter,
+): CustomerAccountRecord[] {
+  if (filter === 'all') return accounts;
+  return accounts.filter((account) => {
+    const complete = progress[account.accountId]?.complete ?? false;
+    return filter === 'complete' ? complete : !complete;
+  });
+}
