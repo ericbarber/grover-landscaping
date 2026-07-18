@@ -16,6 +16,7 @@ import {
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toCustomerPhotoErasureSummary,
+  toCustomerPropertyPortfolioRecord,
   toCustomerPrivacyExport,
   toJobAddOn,
   toNotificationHistoryItem,
@@ -548,6 +549,56 @@ describe('core API client mapping', () => {
       unitPriceCents: 8500,
       note: 'Approved by customer',
       status: 'scheduled',
+    });
+  });
+
+  it('maps persisted customer portfolio membership for property setup', () => {
+    expect(toCustomerPropertyPortfolioRecord({
+      account_id: 'acct_1001',
+      organization_ids: ['org_1001'],
+      portfolios: [{
+        id: 'portfolio_1001',
+        account_id: 'acct_1001',
+        organization_id: 'org_1001',
+        display_name: 'North Phoenix homes',
+        portfolio_type: 'property_management_company',
+        property_count: 1,
+        properties: [{
+          id: 'property_1001',
+          account_id: 'acct_1001',
+          organization_id: 'org_1001',
+          display_name: 'Desert Ridge',
+          address: '100 Desert Ridge Way',
+          last_service_date: '2026-07-17',
+          persisted: true,
+        }],
+        persisted: true,
+      }],
+      ungrouped_properties: [],
+      persisted: true,
+    })).toEqual({
+      accountId: 'acct_1001',
+      organizationIds: ['org_1001'],
+      portfolios: [{
+        id: 'portfolio_1001',
+        accountId: 'acct_1001',
+        organizationId: 'org_1001',
+        displayName: 'North Phoenix homes',
+        portfolioType: 'property_management_company',
+        propertyCount: 1,
+        properties: [{
+          id: 'property_1001',
+          accountId: 'acct_1001',
+          organizationId: 'org_1001',
+          displayName: 'Desert Ridge',
+          address: '100 Desert Ridge Way',
+          lastServiceDate: '2026-07-17',
+          persisted: true,
+        }],
+        persisted: true,
+      }],
+      ungroupedProperties: [],
+      persisted: true,
     });
   });
 });

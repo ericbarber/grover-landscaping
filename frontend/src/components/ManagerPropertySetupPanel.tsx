@@ -4,8 +4,8 @@ import {
   assignPropertyCrew,
   createPropertyPortfolio,
   fetchCrews,
+  fetchCustomerPropertyPortfolio,
   fetchPropertyCrewAssignments,
-  fetchPropertyPortfolios,
   type CrewRecord,
   type CustomerPropertyRecord,
   type PropertyCrewAssignmentRecord,
@@ -20,6 +20,7 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
   const [propertyId, setPropertyId] = useState(properties[0]?.propertyId ?? '');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [portfolios, setPortfolios] = useState<Record<string, PropertyPortfolioRecord[]>>({});
+  const [portfolioMemberships, setPortfolioMemberships] = useState<Record<string, string>>({});
   const [assignments, setAssignments] = useState<Record<string, PropertyCrewAssignmentRecord[]>>({});
   const [portfolioName, setPortfolioName] = useState('');
   const [portfolioType, setPortfolioType] = useState<PropertyPortfolioRecord['portfolioType']>('individual_owner');
@@ -36,6 +37,9 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
     [crews, selectedProperty?.organizationId],
   );
   const activeAssignment = (assignments[propertyId] ?? []).find((assignment) => assignment.active);
+  const currentPortfolio = accountPortfolios.find(
+    (portfolio) => portfolio.id === portfolioMemberships[propertyId],
+  );
 
   useEffect(() => {
     if (!properties.some((property) => property.propertyId === propertyId)) {
@@ -55,10 +59,9 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
         ] as const)),
       ]),
       Promise.all(
-        Array.from(new Set(properties.map((property) => property.accountId))).map(async (accountId) => [
-          accountId,
-          await fetchPropertyPortfolios(accountId),
-        ] as const),
+        Array.from(new Set(properties.map((property) => property.accountId))).map(
+          (accountId) => fetchCustomerPropertyPortfolio(accountId),
+        ),
       ),
     ])
       .then(([crewResult, portfolioResult]) => {
@@ -72,7 +75,14 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
           setAssignments(Object.fromEntries(crewResult.value[1]));
         }
         if (portfolioAvailable) {
-          setPortfolios(Object.fromEntries(portfolioResult.value));
+          setPortfolios(Object.fromEntries(
+            portfolioResult.value.map((account) => [account.accountId, account.portfolios]),
+          ));
+          setPortfolioMemberships(Object.fromEntries(
+            portfolioResult.value.flatMap((account) => account.portfolios.flatMap(
+              (portfolio) => portfolio.properties.map((property) => [property.id, portfolio.id]),
+            )),
+          ));
         }
         setMessage(
           crewAvailable && portfolioAvailable
@@ -128,6 +138,24 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
         selectedProperty.propertyId,
         selectedProperty.organizationId,
       );
+      setPortfolioMemberships((current) => ({
+        ...current,
+        [selectedProperty.propertyId]: selectedPortfolioId,
+      }));
+      setPortfolios((current) => ({
+        ...current,
+        [selectedProperty.accountId]: (current[selectedProperty.accountId] ?? []).map(
+          (portfolio) => ({
+            ...portfolio,
+            propertyCount: portfolio.id === selectedPortfolioId
+              ? portfolio.propertyCount
+                + (portfolioMemberships[selectedProperty.propertyId] === selectedPortfolioId ? 0 : 1)
+              : portfolio.id === portfolioMemberships[selectedProperty.propertyId]
+                ? Math.max(0, portfolio.propertyCount - 1)
+                : portfolio.propertyCount,
+          }),
+        ),
+      }));
       setMessage(`${selectedProperty.displayName} grouped into the selected portfolio.`);
     } catch {
       setMessage('The property could not be grouped into that portfolio.');
@@ -179,6 +207,11 @@ export function ManagerPropertySetupPanel({ properties }: Props) {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Portfolio grouping</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {currentPortfolio
+                ? `Currently grouped in ${currentPortfolio.displayName}.`
+                : 'This property is not currently grouped in a portfolio.'}
+            </p>
             {!portfolioSetupAvailable ? (
               <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
                 Portfolio setup is not available for your current access.

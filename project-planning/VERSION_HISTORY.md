@@ -50,6 +50,8 @@ Current continuation work:
   tenant-scoped crews as separate operations.
 - Portfolio management remains usable for property managers when their role does
   not allow crew assignment.
+- Manager property setup now shows each yard's current persisted portfolio and
+  updates portfolio membership counts immediately after regrouping.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

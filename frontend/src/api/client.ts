@@ -509,6 +509,24 @@ export interface PropertyPortfolioRecord {
   persisted: boolean;
 }
 
+export interface PortfolioPropertyRecord {
+  id: string;
+  accountId: string;
+  organizationId: string;
+  displayName: string;
+  address: string;
+  lastServiceDate: string | null;
+  persisted: boolean;
+}
+
+export interface CustomerPropertyPortfolioRecord {
+  accountId: string;
+  organizationIds: string[];
+  portfolios: Array<PropertyPortfolioRecord & { properties: PortfolioPropertyRecord[] }>;
+  ungroupedProperties: PortfolioPropertyRecord[];
+  persisted: boolean;
+}
+
 export interface PropertyCrewAssignmentRecord {
   id: string;
   propertyId: string;
@@ -1502,6 +1520,51 @@ export async function fetchPropertyPortfolios(accountId: string): Promise<Proper
     `/accounts/${encodeURIComponent(accountId)}/property-portfolios`,
   );
   return items.map(toPropertyPortfolioRecord);
+}
+
+function toPortfolioPropertyRecord(item: {
+  id: string; account_id: string; organization_id: string; display_name: string;
+  address: string; last_service_date: string | null; persisted: boolean;
+}): PortfolioPropertyRecord {
+  return {
+    id: item.id,
+    accountId: item.account_id,
+    organizationId: item.organization_id,
+    displayName: item.display_name,
+    address: item.address,
+    lastServiceDate: item.last_service_date,
+    persisted: item.persisted,
+  };
+}
+
+export function toCustomerPropertyPortfolioRecord(item: {
+  account_id: string;
+  organization_ids: string[];
+  portfolios: Array<Parameters<typeof toPropertyPortfolioRecord>[0] & {
+    properties: Parameters<typeof toPortfolioPropertyRecord>[0][];
+  }>;
+  ungrouped_properties: Parameters<typeof toPortfolioPropertyRecord>[0][];
+  persisted: boolean;
+}): CustomerPropertyPortfolioRecord {
+  return {
+    accountId: item.account_id,
+    organizationIds: item.organization_ids,
+    portfolios: item.portfolios.map((portfolio) => ({
+      ...toPropertyPortfolioRecord(portfolio),
+      properties: portfolio.properties.map(toPortfolioPropertyRecord),
+    })),
+    ungroupedProperties: item.ungrouped_properties.map(toPortfolioPropertyRecord),
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchCustomerPropertyPortfolio(
+  accountId: string,
+): Promise<CustomerPropertyPortfolioRecord> {
+  const item = await request<Parameters<typeof toCustomerPropertyPortfolioRecord>[0]>(
+    `/accounts/${encodeURIComponent(accountId)}/customer-property-portfolio`,
+  );
+  return toCustomerPropertyPortfolioRecord(item);
 }
 
 export async function createPropertyPortfolio(input: Omit<PropertyPortfolioRecord, 'id' | 'propertyCount' | 'persisted'>): Promise<PropertyPortfolioRecord> {

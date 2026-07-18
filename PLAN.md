@@ -201,6 +201,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Crew assignment requires an existing non-archived property in the crew organization
 - Manager property setup panel creates portfolios, groups properties, and assigns crews independently
 - Property setup loads portfolio and crew capabilities independently so limited roles retain their authorized tools
+- Manager property setup shows persisted portfolio membership and updates membership counts after regrouping
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -443,7 +444,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Show current portfolio membership directly in manager property setup
+- Add property archive and reactivation controls with assignment safeguards
 
 ## Planned
 
