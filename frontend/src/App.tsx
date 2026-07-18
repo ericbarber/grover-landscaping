@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   completeJob,
   completePhotoUpload,
@@ -832,6 +832,16 @@ export function App() {
     readStoredManagerActivityItems(seedManagerActivityItems),
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
+  const jobDetailRef = useRef<HTMLDivElement>(null);
+
+  function selectJobForReview(jobId: string) {
+    setSelectedJobId(jobId);
+    if (window.innerWidth < 1024) {
+      window.setTimeout(() => {
+        jobDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+    }
+  }
 
   const selectedJobTickets = useMemo(
     () => uploadTickets.filter((ticket) => ticket.jobId === selectedJobId),
@@ -1748,12 +1758,24 @@ export function App() {
         </div>
       </section>
 
+      <nav
+        aria-label="Mobile workflow"
+        className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden"
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
+          <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#today-route">Route</a>
+          <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#assigned-jobs">Jobs</a>
+          <a className="flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-2 text-center text-xs font-semibold text-white" href="#job-detail">Job detail</a>
+          <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#manager-tools">Manager</a>
+        </div>
+      </nav>
+
       <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
-          <div>
-          <DayPlanPanel onSelectJob={setSelectedJobId} refreshSignal={dayPlanRefreshSignal} />
+          <div className="scroll-mt-16" id="today-route">
+            <DayPlanPanel onSelectJob={selectJobForReview} refreshSignal={dayPlanRefreshSignal} />
           </div>
-          <div className="mb-4 mt-6">
+          <div className="mb-4 mt-6 scroll-mt-16" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
           </div>
@@ -1764,12 +1786,12 @@ export function App() {
                 key={job.id}
                 job={job}
                 isSelected={job.id === selectedJobId}
-                onSelect={setSelectedJobId}
+                onSelect={selectJobForReview}
               />
             ))}
           </div>
 
-          <details className="mt-6 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:open:bg-transparent">
+          <details className="mt-6 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:open:bg-transparent" id="manager-tools">
             <summary className="cursor-pointer list-none rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               Manager and office tools
               <span className="ml-2 text-xs font-normal text-slate-300">Scheduling, customers, and recovery</span>
@@ -1894,30 +1916,30 @@ export function App() {
               reports={managerReportQueueReports}
               isLoading={isLoadingReportQueue}
               onRefresh={() => void refreshManagerReportQueue()}
-              onSelectJob={setSelectedJobId}
+              onSelectJob={selectJobForReview}
             />
           </div>
             </div>
           </details>
         </div>
 
-        <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+        <div className="min-w-0 scroll-mt-16 lg:sticky lg:top-4 lg:self-start" id="job-detail" ref={jobDetailRef}>
           <JobDetailPanel
-          job={selectedJob}
-          isLoading={isLoadingDetail}
-          addOns={selectedJobAddOns}
-          uploadTickets={selectedJobTickets}
-          reportSnapshot={selectedCompletionReport?.jobId === selectedJobId ? selectedCompletionReport : null}
-          onStart={handleStartJob}
-          onComplete={handleCompleteJob}
-          onPhotoSelected={handlePhotoSelected}
-          onAddOnStatusChange={handleAddOnStatusChange}
-          onStartReportReview={handleStartReportReview}
-          onRequestReportChanges={handleRequestReportChanges}
-          onResubmitReport={handleResubmitReport}
-          onDeliverReport={handleDeliverReport}
-          onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
-          reportActionStatus={completionReportActionStatus}
+            job={selectedJob}
+            isLoading={isLoadingDetail}
+            addOns={selectedJobAddOns}
+            uploadTickets={selectedJobTickets}
+            reportSnapshot={selectedCompletionReport?.jobId === selectedJobId ? selectedCompletionReport : null}
+            onStart={handleStartJob}
+            onComplete={handleCompleteJob}
+            onPhotoSelected={handlePhotoSelected}
+            onAddOnStatusChange={handleAddOnStatusChange}
+            onStartReportReview={handleStartReportReview}
+            onRequestReportChanges={handleRequestReportChanges}
+            onResubmitReport={handleResubmitReport}
+            onDeliverReport={handleDeliverReport}
+            onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
+            reportActionStatus={completionReportActionStatus}
           />
         </div>
       </section>

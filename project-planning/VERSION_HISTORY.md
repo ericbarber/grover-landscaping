@@ -28,6 +28,8 @@ Current continuation work:
   Tailscale address without requiring Docker or PostgreSQL.
 - The dashboard now prioritizes route, assigned jobs, and job actions on phones,
   with manager tools collapsed into a separate workspace and touch-safe controls.
+- A sticky phone navigation bar links the core workflow sections, and opening a
+  job moves directly to its detail and field actions on narrow viewports.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

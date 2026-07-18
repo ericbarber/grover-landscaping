@@ -196,6 +196,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile-first dashboard flow prioritizing route, assigned jobs, and field actions
 - Collapsible mobile manager workspace separated from the crew workflow
 - Phone-safe gutters, form sizing, overflow handling, and touch targets
+- Sticky mobile workflow navigation for route, jobs, job detail, and manager tools
+- Phone job selection moves directly to the actionable job detail
 - PostgreSQL migrations
 - Day-plan, crew, and stop table migration
 - Local migration script
