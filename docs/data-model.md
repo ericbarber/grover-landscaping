@@ -313,3 +313,9 @@ created_at
 ```
 
 Current `event_kind` values include login and access events plus business-sensitive changes such as `login`, `invite_accepted`, `invitation_revoked`, `role_changed`, `membership_suspended`, `membership_reactivated`, `account_viewed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, `bid_rejected`, `bid_converted`, `notification_retried`, `notification_resolved`, `report_review_started`, `report_changes_requested`, `report_resubmitted`, and `report_delivered`. Authenticated current-user access summary reads write one `login` audit row per active organization membership. Persisted job account-summary reads write `account_viewed` audit rows after organization access is authorized. Completion report review-start, change-request, resubmit, and delivery transitions write audit rows in the same transaction as the lifecycle transition so manager approval workflow and customer-visible report exposure are traceable by actor, organization, and report ID. Shared customer bid approvals/rejections, manager bid conversions, and notification recovery actions write audit rows in the same transactions as their persisted status changes. Invitation acceptance, revocation, role administration, membership lifecycle changes, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.
+
+The team-administration activity read is limited to the 25 newest invitation
+acceptance/revocation, role-change, suspension, and reactivation events inside
+the requested active organization membership. The July 18 team-admin audit
+migration expands the database event-kind constraint for these lifecycle events
+on fresh deployments.

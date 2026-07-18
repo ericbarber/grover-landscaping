@@ -118,6 +118,16 @@ pub struct OrganizationInvitationSummary {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct TeamAdministrationActivity {
+    pub id: String,
+    pub actor_user_id: String,
+    pub organization_id: String,
+    pub event_kind: String,
+    pub target_id: String,
+    pub occurred_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationInvitationAcceptanceResponse {
     pub invitation: OrganizationInvitationResponse,
     pub membership: OrganizationMembership,
@@ -168,6 +178,18 @@ impl OrganizationRepository {
             .into_iter()
             .filter(|membership| membership.organization_id == organization_id)
             .collect()
+    }
+
+    pub async fn list_team_administration_activity(
+        &self,
+        organization_id: &str,
+    ) -> Vec<TeamAdministrationActivity> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        list_team_administration_activity(pool, organization_id)
+            .await
+            .unwrap_or_default()
     }
 
     async fn record_login_audit_events(
@@ -560,6 +582,48 @@ async fn list_organization_memberships(
         .filter_map(|row| {
             let role: String = row.get("role");
             organization_membership_from_row(row, role)
+        })
+        .collect())
+}
+
+async fn list_team_administration_activity(
+    pool: &PgPool,
+    organization_id: &str,
+) -> Result<Vec<TeamAdministrationActivity>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            id,
+            actor_user_id,
+            organization_id,
+            event_kind,
+            target_id,
+            occurred_at::text AS occurred_at
+        FROM access_audit_events
+        WHERE organization_id = $1
+          AND event_kind IN (
+            'invite_accepted',
+            'invitation_revoked',
+            'role_changed',
+            'membership_suspended',
+            'membership_reactivated'
+          )
+        ORDER BY occurred_at DESC, id DESC
+        LIMIT 25
+        "#,
+    )
+    .bind(organization_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| TeamAdministrationActivity {
+            id: row.get("id"),
+            actor_user_id: row.get("actor_user_id"),
+            organization_id: row.get("organization_id"),
+            event_kind: row.get("event_kind"),
+            target_id: row.get("target_id"),
+            occurred_at: row.get("occurred_at"),
         })
         .collect())
 }

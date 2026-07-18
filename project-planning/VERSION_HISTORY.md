@@ -83,6 +83,8 @@ Current continuation work:
   administration with a repository-enforced last-owner invariant.
 - Added audited membership suspension and reactivation with two-step mobile
   confirmation and the same repository-enforced last-owner invariant.
+- Added an owner-only recent team-access activity feed and a fresh-database
+  migration for invitation and membership lifecycle audit event kinds.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

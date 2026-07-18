@@ -28,8 +28,10 @@ export function validateTeamInvitation(email: string): string | null {
 
 export function ManagerTeamInvitationsPanel({
   organizationId,
+  onTeamChanged,
 }: {
   organizationId: string;
+  onTeamChanged?: () => void;
 }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<OrganizationInvitationRole>('crew_member');
@@ -96,6 +98,7 @@ export function ManagerTeamInvitationsPanel({
       )));
       setConfirmingRevocationId('');
       setMessage(`Invitation for ${revoked.inviteeEmail} revoked.`);
+      onTeamChanged?.();
     } catch {
       setMessage('The invitation could not be revoked. Refresh its status and try again.');
     } finally {

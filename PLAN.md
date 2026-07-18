@@ -224,6 +224,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owners can revoke only pending invitations through a two-step mobile control that archives invited membership access and records an audit event
 - Owners can review active and suspended tenant memberships and make two-step role changes without removing the last active organization owner
 - Owners can suspend and reactivate memberships through audited two-step controls while preserving the last active owner
+- Owners can review the 25 newest tenant-scoped team access events, refreshed after mobile administration actions
+- Fresh database migrations permit invitation revocation and membership lifecycle audit events
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -466,7 +468,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Surface role and membership lifecycle activity in team administration
+- Add authenticated invitation acceptance guidance and result handling
 
 ## Planned
 

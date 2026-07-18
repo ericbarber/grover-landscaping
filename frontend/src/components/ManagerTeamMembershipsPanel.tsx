@@ -34,8 +34,10 @@ export function canSuspendMembership(
 
 export function ManagerTeamMembershipsPanel({
   organizationId,
+  onTeamChanged,
 }: {
   organizationId: string;
+  onTeamChanged?: () => void;
 }) {
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [draftRoles, setDraftRoles] = useState<Record<string, AccessRole>>({});
@@ -81,6 +83,7 @@ export function ManagerTeamMembershipsPanel({
       )));
       setConfirmingMembershipId('');
       setMessage(`Role updated for ${updated.userId}.`);
+      onTeamChanged?.();
     } catch {
       setMessage('The role could not be changed. Keep at least one active organization owner.');
     } finally {
@@ -104,6 +107,7 @@ export function ManagerTeamMembershipsPanel({
       )));
       setConfirmingLifecycleId('');
       setMessage(`${updated.userId} membership ${status === 'active' ? 'reactivated' : 'suspended'}.`);
+      onTeamChanged?.();
     } catch {
       setMessage('The membership status could not be changed. Keep at least one active owner.');
     } finally {

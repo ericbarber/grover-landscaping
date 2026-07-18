@@ -11,6 +11,7 @@ import {
   organizationMembershipRolePath,
   organizationMembershipStatusPath,
   organizationMembershipsPath,
+  organizationTeamActivityPath,
   photoErasureDeletionHistoryPath,
   photoProcessingHistoryPath,
   photoProcessingResolvePath,
@@ -28,6 +29,7 @@ import {
   toNotificationHistoryItem,
   toOrganizationInvitation,
   toOrganizationInvitationSummary,
+  toTeamAdministrationActivity,
   toPhotoErasureDeletionHistoryItem,
   toPhotoProcessingHistoryItem,
   toPropertyOnboardingProfile,
@@ -143,6 +145,24 @@ describe('core API client mapping', () => {
     expect(organizationMembershipStatusPath('org/demo', 'member/1')).toBe(
       '/organizations/org%2Fdemo/memberships/member%2F1/status',
     );
+    expect(organizationTeamActivityPath('org/demo')).toBe(
+      '/organizations/org%2Fdemo/team-activity',
+    );
+    expect(toTeamAdministrationActivity({
+      id: 'audit_1',
+      actor_user_id: 'owner_1',
+      organization_id: 'org_1',
+      event_kind: 'membership_suspended',
+      target_id: 'membership_1',
+      occurred_at: '2026-07-18T12:00:00Z',
+    })).toEqual({
+      id: 'audit_1',
+      actorUserId: 'owner_1',
+      organizationId: 'org_1',
+      eventKind: 'membership_suspended',
+      targetId: 'membership_1',
+      occurredAt: '2026-07-18T12:00:00Z',
+    });
   });
 
   it('builds photo processing recovery paths with optional filters', () => {

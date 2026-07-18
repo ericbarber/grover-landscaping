@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 pub enum AccessAuditEventKind {
     Login,
     InviteAccepted,
+    InvitationRevoked,
     RoleChanged,
+    MembershipSuspended,
+    MembershipReactivated,
     AccountViewed,
     PortfolioChanged,
     CrewAssignmentChanged,

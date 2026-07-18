@@ -55,6 +55,7 @@ import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnbo
 import { ManagerPropertySetupPanel } from './components/ManagerPropertySetupPanel';
 import { ManagerTeamInvitationsPanel } from './components/ManagerTeamInvitationsPanel';
 import { ManagerTeamMembershipsPanel } from './components/ManagerTeamMembershipsPanel';
+import { ManagerTeamActivityPanel } from './components/ManagerTeamActivityPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -853,6 +854,7 @@ export function App() {
   const [dayPlanRefreshSignal, setDayPlanRefreshSignal] = useState(0);
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
+  const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -1956,8 +1958,18 @@ export function App() {
             />
           </div>
           <div className="mt-6 scroll-mt-20 space-y-6" id="first-owner-team-invitations">
-            <ManagerTeamMembershipsPanel organizationId={activeManagerOrganizationId} />
-            <ManagerTeamInvitationsPanel organizationId={activeManagerOrganizationId} />
+            <ManagerTeamMembershipsPanel
+              onTeamChanged={() => setTeamActivityRefreshSignal((current) => current + 1)}
+              organizationId={activeManagerOrganizationId}
+            />
+            <ManagerTeamInvitationsPanel
+              onTeamChanged={() => setTeamActivityRefreshSignal((current) => current + 1)}
+              organizationId={activeManagerOrganizationId}
+            />
+            <ManagerTeamActivityPanel
+              organizationId={activeManagerOrganizationId}
+              refreshSignal={teamActivityRefreshSignal}
+            />
           </div>
           <div className="mt-6">
             <CustomerPortalPreviewPanel

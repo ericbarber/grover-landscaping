@@ -427,6 +427,31 @@ export interface OrganizationMembership {
   scopeId: string | null;
 }
 
+export type TeamAdministrationEventKind =
+  | 'invite_accepted'
+  | 'invitation_revoked'
+  | 'role_changed'
+  | 'membership_suspended'
+  | 'membership_reactivated';
+
+interface ApiTeamAdministrationActivity {
+  id: string;
+  actor_user_id: string;
+  organization_id: string;
+  event_kind: TeamAdministrationEventKind;
+  target_id: string;
+  occurred_at: string;
+}
+
+export interface TeamAdministrationActivity {
+  id: string;
+  actorUserId: string;
+  organizationId: string;
+  eventKind: TeamAdministrationEventKind;
+  targetId: string;
+  occurredAt: string;
+}
+
 interface ApiOrganizationMembership {
   id: string;
   organization_id: string;
@@ -1441,6 +1466,10 @@ export function organizationMembershipsPath(organizationId: string): string {
   return `/organizations/${encodeURIComponent(organizationId)}/memberships`;
 }
 
+export function organizationTeamActivityPath(organizationId: string): string {
+  return `/organizations/${encodeURIComponent(organizationId)}/team-activity`;
+}
+
 export function organizationMembershipRolePath(
   organizationId: string,
   membershipId: string,
@@ -1462,6 +1491,28 @@ export async function fetchOrganizationMemberships(
     organizationMembershipsPath(organizationId),
   );
   return memberships.map(toOrganizationMembership);
+}
+
+export function toTeamAdministrationActivity(
+  item: ApiTeamAdministrationActivity,
+): TeamAdministrationActivity {
+  return {
+    id: item.id,
+    actorUserId: item.actor_user_id,
+    organizationId: item.organization_id,
+    eventKind: item.event_kind,
+    targetId: item.target_id,
+    occurredAt: item.occurred_at,
+  };
+}
+
+export async function fetchTeamAdministrationActivity(
+  organizationId: string,
+): Promise<TeamAdministrationActivity[]> {
+  const activity = await request<ApiTeamAdministrationActivity[]>(
+    organizationTeamActivityPath(organizationId),
+  );
+  return activity.map(toTeamAdministrationActivity);
 }
 
 const membershipRoleStorage: Record<AccessRole, string> = {

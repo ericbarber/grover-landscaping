@@ -136,6 +136,15 @@ last active organization owner is rejected. Successful transitions record
 `membership_suspended` or `membership_reactivated`; repeating the current status
 is idempotent and does not add another audit event.
 
+### List team administration activity
+
+`GET /organizations/{organization_id}/team-activity`
+
+The owner-only response returns the 25 most recent invitation acceptance,
+invitation revocation, role change, suspension, and reactivation audit events
+for the requested organization. Results include the actor, target, event kind,
+and timestamp and never cross the active tenant boundary.
+
 ## Guardrails
 
 - Invite acceptance must not grant access outside the invited organization and scope.
@@ -156,4 +165,5 @@ separately from accepted memberships. Pending rows use a two-step mobile
 confirmation before revocation. Active membership role changes also use a
 two-step confirmation, and both the browser and repository guard the final
 active organization owner. Suspension and reactivation use the same confirmation
-and last-owner safeguards.
+and last-owner safeguards. Recent access activity refreshes after browser role,
+revocation, and membership lifecycle actions.

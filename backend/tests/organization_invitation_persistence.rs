@@ -227,6 +227,18 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("membership lifecycle audits should be available");
     assert_eq!(lifecycle_audit_count, 2);
+    let team_activity = repository
+        .list_team_administration_activity(organization_id)
+        .await;
+    assert!(team_activity.iter().any(|item| {
+        item.target_id == invitation.membership_id && item.event_kind == "role_changed"
+    }));
+    assert!(team_activity.iter().any(|item| {
+        item.target_id == invitation.membership_id && item.event_kind == "membership_suspended"
+    }));
+    assert!(team_activity.iter().any(|item| {
+        item.target_id == invitation.membership_id && item.event_kind == "membership_reactivated"
+    }));
 
     let revocable_email = "invite-revocation@example.com";
     sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
