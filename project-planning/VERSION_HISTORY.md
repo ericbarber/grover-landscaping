@@ -24,6 +24,8 @@ Current continuation work:
   with explicit organization relationships and manager-visible billing state.
 - Managers can edit tenant-scoped customer account billing, payment, service
   approval, service-frequency, and notes fields.
+- Local mobile review can start the seeded API and Vite frontend on a detected
+  Tailscale address without requiring Docker or PostgreSQL.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

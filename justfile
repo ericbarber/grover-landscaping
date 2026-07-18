@@ -54,6 +54,10 @@ dev-backend:
 dev-frontend:
   cd {{frontend_dir}} && npm run dev
 
+# Start the local fallback app on the workstation's Tailscale address for phone review.
+mobile-review:
+  bash scripts/mobile-review.sh
+
 # Check Rust formatting.
 backend-fmt:
   cd {{backend_dir}} && cargo fmt --all -- --check

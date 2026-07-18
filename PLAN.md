@@ -192,6 +192,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 ### Local development and project setup
 
 - Docker Compose local stack
+- Tailscale mobile-review command for phone testing without Docker or PostgreSQL
 - PostgreSQL migrations
 - Day-plan, crew, and stop table migration
 - Local migration script
