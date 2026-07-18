@@ -492,6 +492,34 @@ export interface CustomerPropertyRecord {
   persisted: boolean;
 }
 
+export interface CrewRecord {
+  id: string;
+  name: string;
+  organizationId: string;
+  persisted: boolean;
+}
+
+export interface PropertyPortfolioRecord {
+  id: string;
+  accountId: string;
+  organizationId: string;
+  displayName: string;
+  portfolioType: 'individual_owner' | 'property_management_company' | 'hoa' | 'commercial_client';
+  propertyCount: number;
+  persisted: boolean;
+}
+
+export interface PropertyCrewAssignmentRecord {
+  id: string;
+  propertyId: string;
+  crewId: string;
+  organizationId: string;
+  active: boolean;
+  assignedAt: string;
+  endedAt: string | null;
+  persisted: boolean;
+}
+
 export interface ApiPropertyOnboardingProfile {
   property_id: string;
   account_id: string;
@@ -1440,6 +1468,102 @@ export async function createCustomerProperty(
     },
   );
   return toCustomerPropertyRecord(item);
+}
+
+export async function fetchCrews(): Promise<CrewRecord[]> {
+  const items = await request<Array<{
+    id: string; name: string; organization_id: string; persisted: boolean;
+  }>>('/crews');
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    organizationId: item.organization_id,
+    persisted: item.persisted,
+  }));
+}
+
+function toPropertyPortfolioRecord(item: {
+  id: string; account_id: string; organization_id: string; display_name: string;
+  portfolio_type: PropertyPortfolioRecord['portfolioType']; property_count: number; persisted: boolean;
+}): PropertyPortfolioRecord {
+  return {
+    id: item.id,
+    accountId: item.account_id,
+    organizationId: item.organization_id,
+    displayName: item.display_name,
+    portfolioType: item.portfolio_type,
+    propertyCount: item.property_count,
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchPropertyPortfolios(accountId: string): Promise<PropertyPortfolioRecord[]> {
+  const items = await request<Parameters<typeof toPropertyPortfolioRecord>[0][]>(
+    `/accounts/${encodeURIComponent(accountId)}/property-portfolios`,
+  );
+  return items.map(toPropertyPortfolioRecord);
+}
+
+export async function createPropertyPortfolio(input: Omit<PropertyPortfolioRecord, 'id' | 'propertyCount' | 'persisted'>): Promise<PropertyPortfolioRecord> {
+  const item = await request<Parameters<typeof toPropertyPortfolioRecord>[0]>('/property-portfolios', {
+    method: 'POST',
+    body: JSON.stringify({
+      account_id: input.accountId,
+      organization_id: input.organizationId,
+      display_name: input.displayName,
+      portfolio_type: input.portfolioType,
+    }),
+  });
+  return toPropertyPortfolioRecord(item);
+}
+
+export async function addPropertyToPortfolio(
+  portfolioId: string,
+  propertyId: string,
+  organizationId: string,
+): Promise<void> {
+  await request(`/property-portfolios/${encodeURIComponent(portfolioId)}/properties`, {
+    method: 'POST',
+    body: JSON.stringify({ property_id: propertyId, organization_id: organizationId }),
+  });
+}
+
+function toPropertyCrewAssignmentRecord(item: {
+  id: string; property_id: string; crew_id: string; organization_id: string;
+  active: boolean; assigned_at: string; ended_at: string | null; persisted: boolean;
+}): PropertyCrewAssignmentRecord {
+  return {
+    id: item.id,
+    propertyId: item.property_id,
+    crewId: item.crew_id,
+    organizationId: item.organization_id,
+    active: item.active,
+    assignedAt: item.assigned_at,
+    endedAt: item.ended_at,
+    persisted: item.persisted,
+  };
+}
+
+export async function fetchPropertyCrewAssignments(propertyId: string): Promise<PropertyCrewAssignmentRecord[]> {
+  const items = await request<Parameters<typeof toPropertyCrewAssignmentRecord>[0][]>(
+    `/properties/${encodeURIComponent(propertyId)}/crew-assignments`,
+  );
+  return items.map(toPropertyCrewAssignmentRecord);
+}
+
+export async function assignPropertyCrew(
+  propertyId: string,
+  crewId: string,
+  organizationId: string,
+): Promise<PropertyCrewAssignmentRecord> {
+  const item = await request<Parameters<typeof toPropertyCrewAssignmentRecord>[0]>(
+    `/properties/${encodeURIComponent(propertyId)}/crew-assignments`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ crew_id: crewId, organization_id: organizationId }),
+    },
+  );
+  return toPropertyCrewAssignmentRecord(item);
 }
 
 export function customerPrivacyExportPath(accountId: string): string {

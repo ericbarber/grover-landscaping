@@ -590,6 +590,7 @@ fn app_with_runtime(
             "/properties/{property_id}/onboarding",
             get(get_property_onboarding).put(upsert_property_onboarding),
         )
+        .route("/crews", get(list_crews))
         .route(
             "/crews/{crew_id}/property-assignments/active",
             get(list_active_crew_property_assignments),
@@ -1468,6 +1469,16 @@ async fn assign_property_crew(
     };
 
     (StatusCode::CREATED, Json(assignment)).into_response()
+}
+
+async fn list_crews(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids =
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
+            .await;
+    Json(state.day_plans.list_crews(&organization_ids).await).into_response()
 }
 
 async fn list_property_crew_assignments(

@@ -195,6 +195,7 @@ Current backend endpoints include:
 | POST | `/property-portfolios/{portfolio_id}/properties` | Add a yard/property to a portfolio without changing ownership or crew assignment |
 | GET | `/properties/{property_id}/crew-assignments` | List organization-scoped crew assignment history for a property |
 | POST | `/properties/{property_id}/crew-assignments` | Assign a crew to service a property without changing ownership or portfolio grouping |
+| GET | `/crews` | List crews within the manager's active organization memberships |
 | GET | `/properties/{property_id}/onboarding` | Read property onboarding details for service address, access, billing, and notification readiness |
 | PUT | `/properties/{property_id}/onboarding` | Save validated property onboarding details without changing portfolio grouping or crew assignment |
 | GET | `/crews/{crew_id}/property-assignments/active` | List active property assignments for a crew |

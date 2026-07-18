@@ -372,6 +372,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/organization-invitations/")
         || path.starts_with("/accounts/")
         || path == "/customer-accounts"
+        || path.starts_with("/customer-accounts/")
         || path == "/completion-reports"
         || path.starts_with("/completion-reports/")
         || path == "/notifications"
@@ -383,6 +384,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/property-portfolios"
         || path.starts_with("/property-portfolios/")
         || path.starts_with("/properties/")
+        || path == "/crews"
         || path.starts_with("/crews/")
         || path == "/day-plans"
         || path.starts_with("/day-plans/")
@@ -504,6 +506,11 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return (*method == Method::GET || *method == Method::POST) && can_manage_portfolios;
     }
 
+    if path.starts_with("/customer-accounts/") {
+        return matches!(*method, Method::GET | Method::POST | Method::PUT)
+            && can_manage_portfolios;
+    }
+
     if path.starts_with("/accounts/") && path.ends_with("/customer-property-portfolio") {
         return *method == Method::GET && can_view_customer_portfolios;
     }
@@ -545,6 +552,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::GET && can_manage_assignments;
     }
 
+    if path == "/crews" {
+        return *method == Method::GET && can_manage_assignments;
+    }
+
     if path.starts_with("/day-plans/") && (path.ends_with("/bids") || path.ends_with("/bid")) {
         return can_manage_routes;
     }
@@ -566,7 +577,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
 #[cfg(test)]
 mod tests {
-    use super::{is_authorized, is_public_path, require_api_auth, AuthPrincipal, AuthService};
+    use super::{
+        is_authorized, is_protected_api_path, is_public_path, require_api_auth, AuthPrincipal,
+        AuthService,
+    };
     use crate::access_control::AccessRole;
     use axum::{
         body::Body,
@@ -1167,6 +1181,36 @@ mod tests {
             &Method::GET,
             "/crews/crew_1001/property-assignments/active"
         ));
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            "/crews"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::GET,
+            "/crews"
+        ));
+    }
+
+    #[test]
+    fn customer_account_detail_routes_are_protected_and_manager_scoped() {
+        for path in [
+            "/customer-accounts/acct_1001",
+            "/customer-accounts/acct_1001/properties",
+        ] {
+            assert!(is_protected_api_path(path));
+            assert!(is_authorized(
+                &principal(AccessRole::Manager),
+                &Method::GET,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::CrewMember),
+                &Method::GET,
+                path
+            ));
+        }
     }
 
     #[test]

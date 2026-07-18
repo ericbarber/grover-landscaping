@@ -52,6 +52,7 @@ import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacy
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
 import { ManagerPropertyOnboardingPanel } from './components/ManagerPropertyOnboardingPanel';
+import { ManagerPropertySetupPanel } from './components/ManagerPropertySetupPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -168,6 +169,13 @@ const initialManagerPropertyOnboardingOptions = customerPortalPreviewProperties.
   displayName: property.displayName,
   serviceAddress: property.address,
 }));
+
+const initialManagerCustomerProperties: CustomerPropertyRecord[] =
+  initialManagerPropertyOnboardingOptions.map((property) => ({
+    ...property,
+    status: 'active',
+    persisted: false,
+  }));
 
 const customerPortalPreviewPortfolios: PropertyPortfolio[] = [
   {
@@ -828,6 +836,9 @@ export function App() {
   const [managerPropertyOnboardingOptions, setManagerPropertyOnboardingOptions] = useState(
     initialManagerPropertyOnboardingOptions,
   );
+  const [managerCustomerProperties, setManagerCustomerProperties] = useState(
+    initialManagerCustomerProperties,
+  );
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
@@ -845,6 +856,11 @@ export function App() {
   const jobDetailRef = useRef<HTMLDivElement>(null);
 
   function registerManagerProperties(properties: CustomerPropertyRecord[]) {
+    setManagerCustomerProperties((current) => {
+      const next = new Map(current.map((property) => [property.propertyId, property]));
+      properties.forEach((property) => next.set(property.propertyId, property));
+      return Array.from(next.values()).sort((a, b) => a.displayName.localeCompare(b.displayName));
+    });
     setManagerPropertyOnboardingOptions((current) => {
       const next = new Map(current.map((property) => [property.propertyId, property]));
       properties.forEach((property) => {
@@ -1868,6 +1884,9 @@ export function App() {
                 });
               }}
             />
+          </div>
+          <div className="mt-6">
+            <ManagerPropertySetupPanel properties={managerCustomerProperties} />
           </div>
           <div className="mt-6">
             <ManagerCustomerAccountOnboardingPanel

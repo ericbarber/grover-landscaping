@@ -38,6 +38,21 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
         .execute(&pool)
         .await
         .expect("test audit rows should reset");
+    sqlx::query("DELETE FROM customer_properties WHERE id = $1")
+        .bind(property_id)
+        .execute(&pool)
+        .await
+        .expect("test property should reset");
+    sqlx::query(
+        r#"INSERT INTO customer_properties (
+            id, organization_id, account_id, display_name, service_address
+        ) VALUES ($1, $2, 'acct_1001', 'Crew Assignment Test', '900 Crew Test Road')"#,
+    )
+    .bind(property_id)
+    .bind(organization_id)
+    .execute(&pool)
+    .await
+    .expect("test property should exist");
 
     let first = repository
         .assign_crew(
@@ -109,4 +124,23 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
     .await
     .expect("crew assignment audit count should be available");
     assert_eq!(audit_count, 2);
+
+    assert!(repository
+        .assign_crew(
+            "property_missing",
+            AssignPropertyCrewRequest {
+                crew_id: crew_id.to_string(),
+                organization_id: organization_id.to_string(),
+                assigned_at: Some("2026-06-17T08:00:00Z".to_string()),
+            },
+            actor_user_id,
+        )
+        .await
+        .is_none());
+
+    sqlx::query("DELETE FROM customer_properties WHERE id = $1")
+        .bind(property_id)
+        .execute(&pool)
+        .await
+        .expect("test property should be cleaned up");
 }

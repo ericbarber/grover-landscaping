@@ -46,7 +46,7 @@ impl PropertyCrewAssignmentRepository {
         let id = assignment_id(property_id, &request.crew_id);
 
         if let Some(pool) = &self.pool {
-            if let Ok(assignment) = insert_property_crew_assignment(
+            return insert_property_crew_assignment(
                 pool,
                 &id,
                 property_id,
@@ -55,9 +55,8 @@ impl PropertyCrewAssignmentRepository {
                 actor_user_id,
             )
             .await
-            {
-                return assignment;
-            }
+            .ok()
+            .flatten();
         }
 
         Some(PropertyCrewAssignmentResponse {
@@ -82,11 +81,9 @@ impl PropertyCrewAssignmentRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(assignments) =
-                list_property_crew_assignments(pool, property_id, organization_ids).await
-            {
-                return assignments;
-            }
+            return list_property_crew_assignments(pool, property_id, organization_ids)
+                .await
+                .unwrap_or_default();
         }
 
         seed_property_assignments(property_id, organization_ids, false)
@@ -102,11 +99,9 @@ impl PropertyCrewAssignmentRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(assignments) =
-                list_active_property_crew_assignments(pool, crew_id, organization_ids).await
-            {
-                return assignments;
-            }
+            return list_active_property_crew_assignments(pool, crew_id, organization_ids)
+                .await
+                .unwrap_or_default();
         }
 
         seed_property_assignments_for_crew(crew_id, organization_ids)
@@ -183,22 +178,27 @@ async fn insert_property_crew_assignment(
 ) -> Result<Option<PropertyCrewAssignmentResponse>, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
-    let crew_belongs_to_organization: bool = sqlx::query_scalar(
+    let crew_and_property_are_assignable: bool = sqlx::query_scalar(
         r#"
         SELECT EXISTS (
             SELECT 1
-            FROM crews
-            WHERE id = $1
-              AND organization_id = $2
+            FROM crews crew
+            JOIN customer_properties property
+              ON property.id = $3
+             AND property.organization_id = crew.organization_id
+             AND property.status <> 'archived'
+            WHERE crew.id = $1
+              AND crew.organization_id = $2
         )
         "#,
     )
     .bind(&request.crew_id)
     .bind(&request.organization_id)
+    .bind(property_id.trim())
     .fetch_one(&mut *tx)
     .await?;
 
-    if !crew_belongs_to_organization {
+    if !crew_and_property_are_assignable {
         tx.commit().await?;
         return Ok(None);
     }

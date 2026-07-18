@@ -30,6 +30,8 @@ Expected behavior:
 - Require manager, organization owner, or support admin authorization.
 - Require active membership in the requested service organization.
 - The requested crew must belong to the requested service organization.
+- The requested property must be an existing, non-archived customer property in
+  the requested service organization.
 - End the current active assignment for the property, if one exists.
 - Create a new active assignment for the requested crew.
 - Keep the property attached to the same customer account.
@@ -58,6 +60,15 @@ Expected behavior:
 - Scope results to the signed-in principal's active organization memberships.
 - Exclude ended or inactive assignments.
 
+### List eligible crews
+
+`GET /crews`
+
+- Require manager, organization owner, or support administrator authorization.
+- Return only crews in the caller's active organization memberships.
+- Provide the crew id, name, organization id, and persistence state needed by
+  property setup controls.
+
 ## Guardrails
 
 - Crews service yards; they do not own yards.
@@ -66,3 +77,5 @@ Expected behavior:
 - Crew assignment history remains separate from job completion history.
 - A property should have at most one active crew assignment per service organization.
 - Persisted crew assignment changes are auditable by actor, organization, event kind, target id, and timestamp.
+- PostgreSQL assignment operations do not return local fallback records when the
+  crew or property boundary rejects an assignment.

@@ -3,7 +3,7 @@ mod postgres_day_plans;
 
 use crate::db::DatabaseConfig;
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Debug, Serialize)]
@@ -28,6 +28,14 @@ pub struct DayPlanSummary {
     pub status: String,
     pub route_status: String,
     pub stops: Vec<DayPlanStop>,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct CrewSummary {
+    pub id: String,
+    pub name: String,
+    pub organization_id: String,
+    pub persisted: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -162,6 +170,33 @@ impl DayPlanRepository {
         }
 
         seed_organization_id_for_crew(crew_id)
+    }
+
+    pub async fn list_crews(&self, organization_ids: &[String]) -> Vec<CrewSummary> {
+        if organization_ids.is_empty() {
+            return Vec::new();
+        }
+        let Some(pool) = &self.pool else {
+            return seed_crews(organization_ids);
+        };
+        let rows = sqlx::query(
+            r#"SELECT id, name, organization_id
+            FROM crews
+            WHERE organization_id = ANY($1)
+            ORDER BY name, id"#,
+        )
+        .bind(organization_ids)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default();
+        rows.into_iter()
+            .map(|row| CrewSummary {
+                id: row.get("id"),
+                name: row.get("name"),
+                organization_id: row.get("organization_id"),
+                persisted: true,
+            })
+            .collect()
     }
 
     pub async fn organization_id_for_day_plan(&self, day_plan_id: &str) -> Option<String> {
@@ -612,6 +647,21 @@ fn seed_organization_id_for_crew(crew_id: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+fn seed_crews(organization_ids: &[String]) -> Vec<CrewSummary> {
+    if !organization_ids
+        .iter()
+        .any(|id| id == "org_demo_landscaping")
+    {
+        return Vec::new();
+    }
+    vec![CrewSummary {
+        id: "crew_1001".to_string(),
+        name: "North Route Crew".to_string(),
+        organization_id: "org_demo_landscaping".to_string(),
+        persisted: false,
+    }]
 }
 
 #[cfg(test)]

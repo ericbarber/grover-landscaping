@@ -197,6 +197,10 @@ This file tracks what has been delivered, what is actively being built, what is 
 - PostgreSQL onboarding misses no longer degrade into local seed responses
 - Customer portfolio reads use explicit customer property ownership records
 - Portfolio creation and grouping enforce active account relationships and same-account property ownership
+- Tenant-scoped crew list API for property setup
+- Crew assignment requires an existing non-archived property in the crew organization
+- Manager property setup panel creates portfolios, groups properties, and assigns crews independently
+- Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
 

@@ -46,6 +46,10 @@ Current continuation work:
   ownership and does not return local fallback records from PostgreSQL runtimes.
 - Portfolio reads now use explicit customer properties, while portfolio creation
   and links enforce active organization/account and same-account ownership.
+- Manager property setup can create portfolios, group properties, and assign
+  tenant-scoped crews as separate operations.
+- Nested customer-account routes are now explicitly protected, and crew
+  assignment requires an existing non-archived property in the crew organization.
 
 ## 2026-07-17 — Photo Erasure Recovery
 
