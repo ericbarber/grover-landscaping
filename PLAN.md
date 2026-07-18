@@ -199,6 +199,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Sticky mobile workflow navigation for route, jobs, job detail, and manager tools
 - Phone job selection moves directly to the actionable job detail
 - Mobile application manifest, standalone display metadata, field icon, and safe-area viewport support
+- Compact mobile route cards with primary progress actions kept visible
+- Progressive disclosure for route changes, submitted requests, and per-stop amendments
 - PostgreSQL migrations
 - Day-plan, crew, and stop table migration
 - Local migration script

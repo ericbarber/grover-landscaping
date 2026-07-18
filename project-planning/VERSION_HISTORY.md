@@ -32,6 +32,8 @@ Current continuation work:
   job moves directly to its detail and field actions on narrow viewports.
 - Mobile application metadata now supports standalone home-screen presentation,
   portrait orientation, safe-area viewports, and Grover Field branding.
+- Mobile route cards now keep stop progress prominent while route changes,
+  request history, and extra-service controls remain available on demand.
 
 ## 2026-07-17 — Photo Erasure Recovery
 
