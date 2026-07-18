@@ -230,6 +230,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Invitation notification payloads and local fallback receipts link to the browser acceptance workflow
 - API authorization merges active database membership roles with Cognito claims while preserving original claim roles in access summaries
 - Workspace guidance refreshes after acceptance and hides manager tools from crew and customer roles
+- Mobile invitation creation uses finite 7-, 14-, or 30-day access windows and defaults to seven days
+- Invitation history projects elapsed pending access as expired, and expired invitations cannot be accepted or revoked
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -472,7 +474,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add invitation expiration controls and expired-state visibility
+- Add guarded invitation reissue for expired and revoked access
 
 ## Planned
 

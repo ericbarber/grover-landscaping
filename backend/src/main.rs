@@ -4341,6 +4341,25 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let invalid_expiration = serde_json::json!({
+            "invitee_email": "new.manager@example.com",
+            "role": "manager",
+            "expires_at": "2026-02-30T12:00:00.000Z"
+        });
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/invitations")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_expiration.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

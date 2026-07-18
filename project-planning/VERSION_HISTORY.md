@@ -89,6 +89,9 @@ Current continuation work:
   paths, explicit acceptance feedback, and notification acceptance paths.
 - Merged active membership roles into request authorization after token
   verification and added refreshed role-aware workspace guidance.
+- Added finite 7-, 14-, and 30-day mobile invitation windows, strict UTC
+  expiration validation, effective expired-state visibility, and acceptance and
+  revocation guards after expiration.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

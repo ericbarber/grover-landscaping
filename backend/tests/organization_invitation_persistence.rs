@@ -297,4 +297,68 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("revocation audit should be available");
     assert_eq!(revocation_audit_count, 1);
+
+    let expiring_email = "invite-expiration@example.com";
+    sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
+        .bind(expiring_email)
+        .execute(&pool)
+        .await
+        .expect("expiration invitation should reset");
+    sqlx::query("DELETE FROM organization_memberships WHERE user_id = $1")
+        .bind(expiring_email)
+        .execute(&pool)
+        .await
+        .expect("expiration membership should reset");
+    let expiring = repository
+        .create_invitation(
+            organization_id,
+            actor_user_id,
+            CreateOrganizationInvitationRequest {
+                invitee_email: expiring_email.to_string(),
+                role: "crew_member".to_string(),
+                scope_type: Some("organization".to_string()),
+                scope_id: Some(organization_id.to_string()),
+                expires_at: Some("2099-07-25T12:00:00.000Z".to_string()),
+            },
+        )
+        .await
+        .expect("expiring invitation should be created");
+    sqlx::query(
+        "UPDATE organization_invitations SET expires_at = NOW() - INTERVAL '1 minute' WHERE id = $1",
+    )
+    .bind(&expiring.id)
+    .execute(&pool)
+    .await
+    .expect("invitation expiration should be simulated");
+
+    let invitations = repository.list_invitations(organization_id).await;
+    assert_eq!(
+        invitations
+            .iter()
+            .find(|item| item.id == expiring.id)
+            .map(|item| item.status.as_str()),
+        Some("expired")
+    );
+    assert!(
+        repository
+            .accept_invitation(&expiring.token, "user_expired_invitation")
+            .await
+            .is_none(),
+        "expired invitation should not activate access"
+    );
+    assert!(
+        repository
+            .revoke_invitation(organization_id, &expiring.id, actor_user_id)
+            .await
+            .is_none(),
+        "expired invitation should not be revocable"
+    );
+    let expired_membership_status = sqlx::query_scalar::<_, String>(
+        "SELECT status FROM organization_memberships WHERE id = $1",
+    )
+    .bind(&expiring.membership_id)
+    .fetch_one(&pool)
+    .await
+    .expect("expired membership status should be available");
+    assert_eq!(expired_membership_status, "invited");
 }

@@ -1624,6 +1624,7 @@ export async function createOrganizationInvitation(
   organizationId: string,
   inviteeEmail: string,
   role: OrganizationInvitationRole,
+  expiresAt: string,
 ): Promise<OrganizationInvitation> {
   const invitation = await request<ApiOrganizationInvitation>(
     organizationInvitationsPath(organizationId),
@@ -1634,7 +1635,7 @@ export async function createOrganizationInvitation(
         role,
         scope_type: 'organization',
         scope_id: organizationId,
-        expires_at: null,
+        expires_at: expiresAt,
       }),
     },
   );

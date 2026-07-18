@@ -764,7 +764,10 @@ async fn list_invitations(
             organization_id,
             invitee_email,
             role,
-            status,
+            CASE
+              WHEN status = 'pending' AND expires_at <= NOW() THEN 'expired'
+              ELSE status
+            END AS status,
             scope_type,
             scope_id,
             membership_id,
@@ -799,6 +802,7 @@ async fn revoke_invitation(
         WHERE id = $1
           AND organization_id = $2
           AND status = 'pending'
+          AND (expires_at IS NULL OR expires_at > NOW())
         RETURNING
             id,
             organization_id,
@@ -1260,8 +1264,56 @@ pub fn validate_create_invitation_request(
     ) {
         return Err("scope_type_invalid");
     }
+    if request
+        .expires_at
+        .as_deref()
+        .is_some_and(|expires_at| !valid_invitation_expiration(expires_at.trim()))
+    {
+        return Err("expires_at_invalid");
+    }
 
     Ok(())
+}
+
+fn valid_invitation_expiration(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.len() != 24
+        || bytes[4] != b'-'
+        || bytes[7] != b'-'
+        || bytes[10] != b'T'
+        || bytes[13] != b':'
+        || bytes[16] != b':'
+        || bytes[19] != b'.'
+        || bytes[23] != b'Z'
+    {
+        return false;
+    }
+    let parse = |start: usize, end: usize| {
+        bytes[start..end].iter().try_fold(0_u32, |value, byte| {
+            byte.is_ascii_digit()
+                .then_some(value * 10 + u32::from(byte - b'0'))
+        })
+    };
+    let (Some(year), Some(month), Some(day), Some(hour), Some(minute), Some(second), Some(_)) = (
+        parse(0, 4),
+        parse(5, 7),
+        parse(8, 10),
+        parse(11, 13),
+        parse(14, 16),
+        parse(17, 19),
+        parse(20, 23),
+    ) else {
+        return false;
+    };
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let days = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if leap => 29,
+        2 => 28,
+        _ => return false,
+    };
+    day > 0 && day <= days && hour < 24 && minute < 60 && second < 60
 }
 
 fn normalize_create_invitation_request(
@@ -1492,6 +1544,24 @@ mod tests {
         };
 
         assert_eq!(validate_create_invitation_request(&request), Ok(()));
+
+        let mut expiring = request.clone();
+        expiring.expires_at = Some("2026-07-25T12:00:00.000Z".to_string());
+        assert_eq!(validate_create_invitation_request(&expiring), Ok(()));
+
+        let mut impossible_expiration = request.clone();
+        impossible_expiration.expires_at = Some("2026-02-30T12:00:00.000Z".to_string());
+        assert_eq!(
+            validate_create_invitation_request(&impossible_expiration),
+            Err("expires_at_invalid")
+        );
+
+        let mut malformed_expiration = request.clone();
+        malformed_expiration.expires_at = Some("2026-07-25 12:00:00Z".to_string());
+        assert_eq!(
+            validate_create_invitation_request(&malformed_expiration),
+            Err("expires_at_invalid")
+        );
 
         let mut bad_email = request.clone();
         bad_email.invitee_email = "not-an-email".to_string();

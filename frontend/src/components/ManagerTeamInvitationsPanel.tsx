@@ -17,6 +17,10 @@ const roles: Array<{ value: OrganizationInvitationRole; label: string }> = [
   { value: 'organization_owner', label: 'Organization owner' },
 ];
 
+export function invitationExpirationIso(days: number, now = new Date()): string {
+  return new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export function validateTeamInvitation(email: string): string | null {
   const normalized = email.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
@@ -35,6 +39,7 @@ export function ManagerTeamInvitationsPanel({
 }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<OrganizationInvitationRole>('crew_member');
+  const [expirationDays, setExpirationDays] = useState(7);
   const [invitation, setInvitation] = useState<OrganizationInvitation | null>(null);
   const [history, setHistory] = useState<OrganizationInvitationSummary[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -68,7 +73,12 @@ export function ManagerTeamInvitationsPanel({
     setIsSending(true);
     setMessage(null);
     try {
-      const created = await createOrganizationInvitation(organizationId, email.trim(), role);
+      const created = await createOrganizationInvitation(
+        organizationId,
+        email.trim(),
+        role,
+        invitationExpirationIso(expirationDays),
+      );
       setInvitation(created);
       const { token: _token, ...summary } = created;
       setHistory((current) => [
@@ -130,6 +140,18 @@ export function ManagerTeamInvitationsPanel({
             type="email"
             value={email}
           />
+        </label>
+        <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
+          Invitation expires
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+            onChange={(event) => setExpirationDays(Number(event.target.value))}
+            value={expirationDays}
+          >
+            <option value={7}>In 7 days</option>
+            <option value={14}>In 14 days</option>
+            <option value={30}>In 30 days</option>
+          </select>
         </label>
         <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
           Organization role
@@ -195,6 +217,7 @@ export function ManagerTeamInvitationsPanel({
                   <p className="truncate font-semibold text-slate-900">{item.inviteeEmail}</p>
                   <p className="mt-1 text-xs text-slate-600">
                     {item.role.replace(/_/g, ' ')}
+                    {item.expiresAt ? ` · expires ${new Date(item.expiresAt).toLocaleDateString()}` : ''}
                   </p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${

@@ -52,6 +52,8 @@ Validation rules:
 - `invitee_email` must be an email-shaped destination and cannot exceed 320 characters.
 - `role` must be one of the supported membership roles: `organization_owner`, `manager`, `crew_lead`, `crew_member`, `property_owner`, `property_manager`, or `support_admin`.
 - `scope_type`, when present, must be one of `organization`, `region`, `branch`, `crew`, `portfolio`, or `property`.
+- `expires_at`, when present, must be an exact UTC ISO timestamp in
+  `YYYY-MM-DDTHH:MM:SS.sssZ` form and represent a valid calendar date.
 
 Expected behavior:
 
@@ -59,6 +61,8 @@ Expected behavior:
 - Create a pending invitation token linked to that membership.
 - Queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available.
 - Return the invitation token so local fallback and manual pilot workflows can still proceed if delivery is not configured.
+- The mobile team workflow always supplies a finite 7-, 14-, or 30-day
+  expiration; seven days is the default.
 
 ### List invitations
 
@@ -68,6 +72,8 @@ Expected behavior:
   membership in the requested organization.
 - Results are ordered newest first and include pending, accepted, revoked, and
   expired invitations.
+- A stored pending invitation whose expiration has passed is projected as
+  `expired`, so history reflects its effective state without a maintenance job.
 - Invitation tokens and actor identifiers are omitted from list responses.
 - Local fallback returns an empty history because local invitations are not
   persisted between requests.
