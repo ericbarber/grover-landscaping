@@ -42,6 +42,8 @@ Current continuation work:
   properties directly into the operational onboarding workflow.
 - Reloaded persisted properties also repopulate the operational onboarding
   selector, preserving the account-to-property workflow across sessions.
+- Persisted operational onboarding now rejects mismatched or archived property
+  ownership and does not return local fallback records from PostgreSQL runtimes.
 
 ## 2026-07-17 — Photo Erasure Recovery
 

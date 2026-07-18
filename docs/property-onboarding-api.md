@@ -62,6 +62,8 @@ Validation rules:
 
 - The caller must be a manager, organization owner, support admin, or property manager.
 - The caller must have an active membership in the requested service organization.
+- The property must be an existing, non-archived customer property owned by the
+  submitted account and organization.
 - `service_address` must be between 5 and 240 characters after trimming.
 - `access_notes` cannot exceed 1000 characters after trimming.
 - `billing_contact_email` must be a valid email destination.
@@ -76,3 +78,5 @@ Validation rules:
 - Saving onboarding data must not assign or reassign crews.
 - Saving onboarding data must not create, reschedule, start, or complete jobs.
 - Saving onboarding data must not enqueue customer notifications.
+- A PostgreSQL-backed runtime does not substitute seeded/local onboarding data
+  when a persisted read or ownership-validated write misses.

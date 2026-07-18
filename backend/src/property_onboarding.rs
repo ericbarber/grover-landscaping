@@ -53,11 +53,10 @@ impl PropertyOnboardingRepository {
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(profile)) =
-                get_property_onboarding(pool, property_id, organization_ids).await
-            {
-                return Some(profile);
-            }
+            return get_property_onboarding(pool, property_id, organization_ids)
+                .await
+                .ok()
+                .flatten();
         }
 
         seed_property_onboarding(property_id, organization_ids)
@@ -71,10 +70,10 @@ impl PropertyOnboardingRepository {
         let request = normalize_upsert_property_onboarding_request(request);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(profile)) = upsert_property_onboarding(pool, property_id, &request).await
-            {
-                return Some(profile);
-            }
+            return upsert_property_onboarding(pool, property_id, &request)
+                .await
+                .ok()
+                .flatten();
         }
 
         Some(local_property_onboarding_response(property_id, request))
@@ -229,7 +228,12 @@ async fn upsert_property_onboarding(
             notification_phone,
             onboarding_status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+        FROM customer_properties property
+        WHERE property.id = $1
+          AND property.account_id = $2
+          AND property.organization_id = $3
+          AND property.status <> 'archived'
         ON CONFLICT (property_id, organization_id) DO UPDATE SET
             account_id = EXCLUDED.account_id,
             service_address = EXCLUDED.service_address,

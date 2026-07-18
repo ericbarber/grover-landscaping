@@ -193,6 +193,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager account cards list and create customer properties inline
 - Newly created properties become available to operational onboarding without reload
 - Persisted customer properties repopulate operational onboarding after refresh
+- Operational onboarding writes require matching property, account, and organization ownership
+- PostgreSQL onboarding misses no longer degrade into local seed responses
 
 ### Local development and project setup
 
