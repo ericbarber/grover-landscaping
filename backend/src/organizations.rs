@@ -119,6 +119,8 @@ pub struct OrganizationInvitationSummary {
     pub scope_id: Option<String>,
     pub membership_id: String,
     pub expires_at: Option<String>,
+    pub delivery_status: Option<String>,
+    pub delivery_attempt_count: i32,
     pub persisted: bool,
 }
 
@@ -823,16 +825,28 @@ async fn list_invitations(
             invitee_email,
             role,
             CASE
-              WHEN status = 'pending' AND expires_at <= NOW() THEN 'expired'
-              ELSE status
+              WHEN invitation.status = 'pending'
+                AND invitation.expires_at <= NOW()
+              THEN 'expired'
+              ELSE invitation.status
             END AS status,
             scope_type,
             scope_id,
             membership_id,
-            expires_at::text AS expires_at
-        FROM organization_invitations
-        WHERE organization_id = $1
-        ORDER BY created_at DESC, id DESC
+            invitation.expires_at::text AS expires_at,
+            delivery.status AS delivery_status,
+            COALESCE(delivery.attempt_count, 0) AS delivery_attempt_count
+        FROM organization_invitations invitation
+        LEFT JOIN LATERAL (
+            SELECT status, attempt_count
+            FROM notification_outbox
+            WHERE entity_type = 'organization_invitation'
+              AND entity_id = invitation.id
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        ) delivery ON TRUE
+        WHERE invitation.organization_id = $1
+        ORDER BY invitation.created_at DESC, invitation.id DESC
         "#,
     )
     .bind(organization_id)
@@ -1600,6 +1614,8 @@ fn organization_invitation_summary_from_row(
         scope_id: row.get("scope_id"),
         membership_id: row.get("membership_id"),
         expires_at: row.get("expires_at"),
+        delivery_status: row.try_get("delivery_status").ok().flatten(),
+        delivery_attempt_count: row.try_get("delivery_attempt_count").unwrap_or(0),
         persisted: true,
     }
 }

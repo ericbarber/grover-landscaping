@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   invitationExpirationIso,
   invitationCreationFailureMessage,
+  invitationDeliveryLabel,
   validateTeamInvitation,
 } from './ManagerTeamInvitationsPanel';
 
@@ -27,5 +28,11 @@ describe('team invitation validation', () => {
     expect(invitationCreationFailureMessage(new Error('API request failed with status 409'))).toBe(
       'This recipient may already have pending access. Refresh history, or reissue expired or revoked access.',
     );
+  });
+
+  it('turns delivery state into concise mobile guidance', () => {
+    expect(invitationDeliveryLabel('queued', 0)).toBe('Email queued');
+    expect(invitationDeliveryLabel('failed', 2)).toBe('Email retry pending · 2 attempts');
+    expect(invitationDeliveryLabel('dead_letter', 5)).toBe('Email delivery failed · 5 attempts');
   });
 });

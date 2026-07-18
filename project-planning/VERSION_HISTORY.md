@@ -96,6 +96,8 @@ Current continuation work:
   token, queued delivery, restored invited membership, and tenant-scoped audit.
 - Prevented concurrent, case-variant duplicate pending invitations per tenant and
   recipient, and added mobile guidance to existing history and reissue controls.
+- Added latest invitation-email delivery status and attempt counts to owner
+  history, with concise mobile failed-delivery retry guidance.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

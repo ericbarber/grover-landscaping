@@ -90,6 +90,8 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
         .expect("created invitation should be listed");
     assert_eq!(pending_summary.invitee_email, invitee_email);
     assert_eq!(pending_summary.status, "pending");
+    assert_eq!(pending_summary.delivery_status.as_deref(), Some("queued"));
+    assert_eq!(pending_summary.delivery_attempt_count, 0);
 
     let duplicate = repository
         .create_invitation(

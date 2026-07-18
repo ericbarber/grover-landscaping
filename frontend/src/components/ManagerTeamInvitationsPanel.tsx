@@ -37,6 +37,25 @@ export function invitationCreationFailureMessage(error: unknown): string {
     : 'The invitation could not be created. Confirm owner access and try again.';
 }
 
+export function invitationDeliveryLabel(status: string | null, attempts: number): string {
+  switch (status) {
+    case 'queued':
+      return attempts > 0 ? `Email retry queued · ${attempts} attempts` : 'Email queued';
+    case 'sending':
+      return 'Email sending';
+    case 'sent':
+      return 'Email sent';
+    case 'failed':
+      return `Email retry pending · ${attempts} attempts`;
+    case 'dead_letter':
+      return `Email delivery failed · ${attempts} attempts`;
+    case 'skipped':
+      return 'Email delivery skipped';
+    default:
+      return 'Email delivery unavailable';
+  }
+}
+
 export function ManagerTeamInvitationsPanel({
   organizationId,
   onTeamChanged,
@@ -89,7 +108,12 @@ export function ManagerTeamInvitationsPanel({
         invitationExpirationIso(expirationDays),
       );
       setInvitation(created);
-      const { token: _token, ...summary } = created;
+      const { token: _token, ...createdSummary } = created;
+      const summary: OrganizationInvitationSummary = {
+        ...createdSummary,
+        deliveryStatus: created.persisted ? 'queued' : null,
+        deliveryAttemptCount: 0,
+      };
       setHistory((current) => [
         summary,
         ...current.filter((item) => item.id !== created.id),
@@ -134,7 +158,12 @@ export function ManagerTeamInvitationsPanel({
         invitationId,
         invitationExpirationIso(expirationDays),
       );
-      const { token: _token, ...summary } = reissued;
+      const { token: _token, ...reissuedSummary } = reissued;
+      const summary: OrganizationInvitationSummary = {
+        ...reissuedSummary,
+        deliveryStatus: reissued.persisted ? 'queued' : null,
+        deliveryAttemptCount: 0,
+      };
       setHistory((current) => current.map((item) => (
         item.id === reissued.id ? summary : item
       )));
@@ -251,6 +280,19 @@ export function ManagerTeamInvitationsPanel({
                     {item.role.replace(/_/g, ' ')}
                     {item.expiresAt ? ` · expires ${new Date(item.expiresAt).toLocaleDateString()}` : ''}
                   </p>
+                  {item.persisted ? (
+                    <p className="mt-1 text-xs text-slate-500">
+                      {invitationDeliveryLabel(
+                        item.deliveryStatus,
+                        item.deliveryAttemptCount,
+                      )}
+                    </p>
+                  ) : null}
+                  {item.deliveryStatus === 'failed' || item.deliveryStatus === 'dead_letter' ? (
+                    <p className="mt-1 text-xs font-semibold text-red-700">
+                      Review delivery history to retry this email.
+                    </p>
+                  ) : null}
                 </div>
                 <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${
                   item.status === 'accepted'

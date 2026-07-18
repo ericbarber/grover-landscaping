@@ -553,10 +553,15 @@ interface ApiOrganizationInvitationSummary {
   scope_id?: string | null;
   membership_id: string;
   expires_at?: string | null;
+  delivery_status?: string | null;
+  delivery_attempt_count?: number;
   persisted: boolean;
 }
 
-export type OrganizationInvitationSummary = Omit<OrganizationInvitation, 'token'>;
+export type OrganizationInvitationSummary = Omit<OrganizationInvitation, 'token'> & {
+  deliveryStatus: string | null;
+  deliveryAttemptCount: number;
+};
 
 export interface CustomerAccountRecord {
   accountId: string;
@@ -1656,6 +1661,8 @@ export function toOrganizationInvitationSummary(
     scopeId: invitation.scope_id ?? null,
     membershipId: invitation.membership_id,
     expiresAt: invitation.expires_at ?? null,
+    deliveryStatus: invitation.delivery_status ?? null,
+    deliveryAttemptCount: invitation.delivery_attempt_count ?? 0,
     persisted: invitation.persisted,
   };
 }

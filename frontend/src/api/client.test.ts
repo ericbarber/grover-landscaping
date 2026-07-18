@@ -124,6 +124,8 @@ describe('core API client mapping', () => {
       scope_id: 'org_1',
       membership_id: 'membership_1',
       expires_at: null,
+      delivery_status: 'sent',
+      delivery_attempt_count: 1,
       persisted: true,
     })).toEqual({
       id: 'invitation_1',
@@ -135,6 +137,8 @@ describe('core API client mapping', () => {
       scopeId: 'org_1',
       membershipId: 'membership_1',
       expiresAt: null,
+      deliveryStatus: 'sent',
+      deliveryAttemptCount: 1,
       persisted: true,
     });
   });

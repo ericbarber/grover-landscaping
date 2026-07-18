@@ -78,6 +78,11 @@ Expected behavior:
   expired invitations.
 - A stored pending invitation whose expiration has passed is projected as
   `expired`, so history reflects its effective state without a maintenance job.
+- Each persisted summary includes the newest invitation-email
+  `delivery_status` and `delivery_attempt_count`; tokens and provider error
+  details remain excluded.
+- Mobile history distinguishes queued, sending, sent, retry-pending, skipped,
+  and dead-letter delivery, and directs failed delivery to notification history.
 - Invitation tokens and actor identifiers are omitted from list responses.
 - Local fallback returns an empty history because local invitations are not
   persisted between requests.
