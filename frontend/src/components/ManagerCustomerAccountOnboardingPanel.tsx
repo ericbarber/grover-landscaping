@@ -13,6 +13,7 @@ import {
 import {
   deriveAccountOnboardingProgress,
   filterAccountsByOnboardingProgress,
+  propertyAttentionReasonLabel,
   type AccountOnboardingFilter,
 } from '../domain/accountOnboardingProgress';
 
@@ -212,12 +213,28 @@ export function ManagerCustomerAccountOnboardingPanel({
                 {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
                 <AccountProgress progress={progress[account.accountId]} />
                 <div className="mt-3 space-y-2">
-                  {(properties[account.accountId] ?? []).map((property) => (
-                    <div className="rounded-lg bg-slate-50 px-3 py-2" key={property.propertyId}>
-                      <p className="text-sm font-semibold text-slate-800">{property.displayName}</p>
-                      <p className="text-xs text-slate-500">{property.serviceAddress} · {property.status}</p>
-                    </div>
-                  ))}
+                  {(properties[account.accountId] ?? []).map((property) => {
+                    const attention = progress[account.accountId]?.propertiesNeedingAttention
+                      .find((item) => item.propertyId === property.propertyId);
+                    return (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2" key={property.propertyId}>
+                        <p className="text-sm font-semibold text-slate-800">{property.displayName}</p>
+                        <p className="text-xs text-slate-500">{property.serviceAddress} · {property.status}</p>
+                        {attention ? (
+                          <ul className="mt-2 flex flex-wrap gap-1">
+                            {attention.reasons.map((reason) => (
+                              <li
+                                className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900"
+                                key={reason}
+                              >
+                                {propertyAttentionReasonLabel(reason)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                   {(properties[account.accountId] ?? []).length === 0 ? (
                     <p className="text-xs text-amber-700">No properties have been added.</p>
                   ) : null}
@@ -282,6 +299,10 @@ function AccountProgress({ progress }: { progress?: CustomerAccountOnboardingPro
         <li>
           {progress.serviceReadyPropertyCount === progress.propertyCount && progress.propertyCount > 0 ? '✓' : '○'}
           {' '}{progress.serviceReadyPropertyCount} of {progress.propertyCount} properties service-ready
+        </li>
+        <li>
+          {progress.propertiesNeedingAttention.length === 0 ? '✓' : '○'}
+          {' '}{progress.propertiesNeedingAttention.length} properties need attention
         </li>
         <li>
           {progress.activePropertyCount === progress.propertyCount && progress.propertyCount > 0 ? '✓' : '○'}

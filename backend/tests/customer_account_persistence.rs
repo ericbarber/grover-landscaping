@@ -170,6 +170,11 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert_eq!(initial_progress.property_count, 1);
     assert_eq!(initial_progress.service_ready_property_count, 0);
     assert_eq!(initial_progress.active_property_count, 0);
+    assert_eq!(initial_progress.properties_needing_attention.len(), 1);
+    assert_eq!(
+        initial_progress.properties_needing_attention[0].reasons,
+        vec!["operational_profile_incomplete", "crew_unassigned"]
+    );
     assert!(!initial_progress.complete);
     sqlx::query(
         r#"INSERT INTO property_onboarding_profiles (
@@ -218,6 +223,10 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .expect("tenant member should read service-ready account progress");
     assert_eq!(service_ready_progress.service_ready_property_count, 1);
     assert_eq!(service_ready_progress.active_property_count, 0);
+    assert_eq!(
+        service_ready_progress.properties_needing_attention[0].reasons,
+        vec!["activation_pending"]
+    );
     assert!(!service_ready_progress.complete);
 
     let activated = accounts
@@ -238,6 +247,7 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("tenant member should read completed account progress");
     assert_eq!(complete_progress.active_property_count, 1);
+    assert!(complete_progress.properties_needing_attention.is_empty());
     assert!(complete_progress.complete);
 
     let archived = accounts

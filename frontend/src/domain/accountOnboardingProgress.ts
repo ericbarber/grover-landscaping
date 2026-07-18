@@ -1,6 +1,7 @@
 import type {
   CustomerAccountOnboardingProgress,
   CustomerAccountRecord,
+  CustomerPropertyAttentionReason,
   CustomerPropertyRecord,
 } from '../api/client';
 
@@ -20,11 +21,40 @@ export function deriveAccountOnboardingProgress(
     propertyCount: currentProperties.length,
     serviceReadyPropertyCount: activePropertyCount,
     activePropertyCount,
+    propertiesNeedingAttention: currentProperties.flatMap((property) => {
+      if (property.status === 'active') return [];
+      return [{
+        propertyId: property.propertyId,
+        displayName: property.displayName,
+        status: property.status,
+        reasons: property.status === 'blocked'
+          ? ['property_blocked' as const]
+          : [
+              'operational_profile_incomplete' as const,
+              'crew_unassigned' as const,
+            ],
+      }];
+    }),
     complete: customerDetailsReady
       && currentProperties.length > 0
       && activePropertyCount === currentProperties.length,
     persisted: false,
   };
+}
+
+export function propertyAttentionReasonLabel(
+  reason: CustomerPropertyAttentionReason,
+): string {
+  switch (reason) {
+    case 'operational_profile_incomplete':
+      return 'Finish operational profile';
+    case 'crew_unassigned':
+      return 'Assign service crew';
+    case 'property_blocked':
+      return 'Resolve blocked status';
+    case 'activation_pending':
+      return 'Activate property';
+  }
 }
 
 export type AccountOnboardingFilter = 'all' | 'incomplete' | 'complete';

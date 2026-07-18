@@ -63,6 +63,8 @@ Current continuation work:
 - Added account-level onboarding progress across service details, current
   properties, service readiness, and activation, with live mobile card refresh.
 - Added mobile account filters for all, incomplete, and completed onboarding work.
+- Added property-level onboarding attention reasons and mobile action labels for
+  incomplete profiles, missing crews, blocked yards, and pending activation.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

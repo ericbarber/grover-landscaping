@@ -3,6 +3,7 @@ import type { CustomerAccountRecord, CustomerPropertyRecord } from '../api/clien
 import {
   deriveAccountOnboardingProgress,
   filterAccountsByOnboardingProgress,
+  propertyAttentionReasonLabel,
 } from './accountOnboardingProgress';
 
 const account: CustomerAccountRecord = {
@@ -65,5 +66,14 @@ describe('account onboarding progress', () => {
       progress,
       'incomplete',
     ).map((item) => item.accountId)).toEqual(['acct_2', 'acct_3']);
+  });
+
+  it('labels property attention reasons as manager actions', () => {
+    expect(propertyAttentionReasonLabel('operational_profile_incomplete')).toBe(
+      'Finish operational profile',
+    );
+    expect(propertyAttentionReasonLabel('crew_unassigned')).toBe('Assign service crew');
+    expect(propertyAttentionReasonLabel('property_blocked')).toBe('Resolve blocked status');
+    expect(propertyAttentionReasonLabel('activation_pending')).toBe('Activate property');
   });
 });

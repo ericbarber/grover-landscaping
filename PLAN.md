@@ -213,6 +213,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Account onboarding progress combines customer details, property coverage, service readiness, and activation
 - Mobile customer account cards refresh progress after profile, crew, and lifecycle changes
 - Manager account onboarding filters separate incomplete work from completed accounts
+- Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
+- Mobile property cards translate attention reasons into manager actions
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -455,7 +457,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add property-level attention reasons to account onboarding progress
+- Link onboarding attention actions directly to the relevant property setup workspace
 
 ## Planned
 

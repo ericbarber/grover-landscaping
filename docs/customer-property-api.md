@@ -15,8 +15,10 @@ organization memberships. Cross-organization properties are omitted.
 
 Summarizes account-wide onboarding with customer-detail readiness, non-archived
 property count, service-ready property count, active property count, and a
-combined completion flag. Account completion requires approved service details,
-at least one current property, and every current property to be active.
+combined completion flag. Non-archived properties needing attention include
+action reasons for an incomplete operational profile, missing crew, blocked
+status, or pending activation. Account completion requires approved service
+details, at least one current property, and every current property to be active.
 
 ### `POST /customer-accounts/{account_id}/properties`
 

@@ -4355,6 +4355,10 @@ mod tests {
         assert_eq!(json["property_count"], 1);
         assert_eq!(json["service_ready_property_count"], 1);
         assert_eq!(json["active_property_count"], 1);
+        assert!(json["properties_needing_attention"]
+            .as_array()
+            .unwrap()
+            .is_empty());
         assert_eq!(json["complete"], true);
         assert_eq!(json["persisted"], false);
     }

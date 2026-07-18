@@ -560,6 +560,12 @@ describe('core API client mapping', () => {
       property_count: 2,
       service_ready_property_count: 1,
       active_property_count: 1,
+      properties_needing_attention: [{
+        property_id: 'property_1002',
+        display_name: 'Back yard',
+        status: 'onboarding',
+        reasons: ['crew_unassigned'],
+      }],
       complete: false,
       persisted: true,
     })).toEqual({
@@ -568,6 +574,12 @@ describe('core API client mapping', () => {
       propertyCount: 2,
       serviceReadyPropertyCount: 1,
       activePropertyCount: 1,
+      propertiesNeedingAttention: [{
+        propertyId: 'property_1002',
+        displayName: 'Back yard',
+        status: 'onboarding',
+        reasons: ['crew_unassigned'],
+      }],
       complete: false,
       persisted: true,
     });

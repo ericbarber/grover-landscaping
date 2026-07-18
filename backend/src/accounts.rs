@@ -110,8 +110,17 @@ pub struct CustomerAccountOnboardingProgress {
     pub property_count: u32,
     pub service_ready_property_count: u32,
     pub active_property_count: u32,
+    pub properties_needing_attention: Vec<CustomerPropertyOnboardingAttention>,
     pub complete: bool,
     pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CustomerPropertyOnboardingAttention {
+    pub property_id: String,
+    pub display_name: String,
+    pub status: String,
+    pub reasons: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -811,7 +820,71 @@ async fn account_onboarding_progress(
     .bind(organization_ids)
     .fetch_optional(pool)
     .await?;
-    Ok(row.map(|row| {
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let attention_rows = sqlx::query(
+        r#"SELECT
+            property.id AS property_id,
+            property.display_name,
+            property.status,
+            EXISTS (
+                SELECT 1 FROM property_onboarding_profiles profile
+                WHERE profile.property_id = property.id
+                  AND profile.organization_id = property.organization_id
+                  AND profile.onboarding_status = 'active'
+            ) AS profile_ready,
+            EXISTS (
+                SELECT 1 FROM property_crew_assignments assignment
+                WHERE assignment.property_id = property.id
+                  AND assignment.organization_id = property.organization_id
+                  AND assignment.active
+            ) AS crew_ready
+        FROM customer_properties property
+        JOIN organization_customer_accounts relation
+          ON relation.account_id = property.account_id
+         AND relation.organization_id = property.organization_id
+         AND relation.organization_id = ANY($2)
+         AND relation.status = 'active'
+        WHERE property.account_id = $1
+          AND property.status <> 'archived'
+        ORDER BY property.display_name, property.id"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+    let properties_needing_attention = attention_rows
+        .into_iter()
+        .filter_map(|row| {
+            let status: String = row.get("status");
+            let profile_ready: bool = row.get("profile_ready");
+            let crew_ready: bool = row.get("crew_ready");
+            let mut reasons = Vec::new();
+            if !profile_ready {
+                reasons.push("operational_profile_incomplete".to_string());
+            }
+            if !crew_ready {
+                reasons.push("crew_unassigned".to_string());
+            }
+            if status == "blocked" {
+                reasons.push("property_blocked".to_string());
+            } else if status != "active" && profile_ready && crew_ready {
+                reasons.push("activation_pending".to_string());
+            }
+            if reasons.is_empty() {
+                None
+            } else {
+                Some(CustomerPropertyOnboardingAttention {
+                    property_id: row.get("property_id"),
+                    display_name: row.get("display_name"),
+                    status,
+                    reasons,
+                })
+            }
+        })
+        .collect();
+    Ok(Some({
         let customer_details_ready: bool = row.get("customer_details_ready");
         let property_count = row.get::<i64, _>("property_count") as u32;
         let service_ready_property_count = row.get::<i64, _>("service_ready_property_count") as u32;
@@ -822,6 +895,7 @@ async fn account_onboarding_progress(
             property_count,
             service_ready_property_count,
             active_property_count,
+            properties_needing_attention,
             complete: customer_details_ready
                 && property_count > 0
                 && active_property_count == property_count,
@@ -1033,6 +1107,19 @@ fn local_account_onboarding_progress(
         property_count,
         service_ready_property_count: active_property_count,
         active_property_count,
+        properties_needing_attention: properties
+            .iter()
+            .filter(|property| property.status != "archived" && property.status != "active")
+            .map(|property| CustomerPropertyOnboardingAttention {
+                property_id: property.property_id.clone(),
+                display_name: property.display_name.clone(),
+                status: property.status.clone(),
+                reasons: vec![
+                    "operational_profile_incomplete".to_string(),
+                    "crew_unassigned".to_string(),
+                ],
+            })
+            .collect(),
         complete: customer_details_ready
             && property_count > 0
             && active_property_count == property_count,

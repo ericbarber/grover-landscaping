@@ -488,8 +488,22 @@ export interface CustomerAccountOnboardingProgress {
   propertyCount: number;
   serviceReadyPropertyCount: number;
   activePropertyCount: number;
+  propertiesNeedingAttention: CustomerPropertyOnboardingAttention[];
   complete: boolean;
   persisted: boolean;
+}
+
+export type CustomerPropertyAttentionReason =
+  | 'operational_profile_incomplete'
+  | 'crew_unassigned'
+  | 'property_blocked'
+  | 'activation_pending';
+
+export interface CustomerPropertyOnboardingAttention {
+  propertyId: string;
+  displayName: string;
+  status: CustomerPropertyRecord['status'];
+  reasons: CustomerPropertyAttentionReason[];
 }
 
 export interface CustomerPropertyRecord {
@@ -1423,6 +1437,12 @@ export function toCustomerAccountOnboardingProgress(item: {
   property_count: number;
   service_ready_property_count: number;
   active_property_count: number;
+  properties_needing_attention: Array<{
+    property_id: string;
+    display_name: string;
+    status: CustomerPropertyRecord['status'];
+    reasons: CustomerPropertyAttentionReason[];
+  }>;
   complete: boolean;
   persisted: boolean;
 }): CustomerAccountOnboardingProgress {
@@ -1432,6 +1452,12 @@ export function toCustomerAccountOnboardingProgress(item: {
     propertyCount: item.property_count,
     serviceReadyPropertyCount: item.service_ready_property_count,
     activePropertyCount: item.active_property_count,
+    propertiesNeedingAttention: item.properties_needing_attention.map((property) => ({
+      propertyId: property.property_id,
+      displayName: property.display_name,
+      status: property.status,
+      reasons: property.reasons,
+    })),
     complete: item.complete,
     persisted: item.persisted,
   };
