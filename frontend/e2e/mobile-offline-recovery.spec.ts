@@ -101,3 +101,33 @@ test('queues route progress during interruption and replays after recovery', asy
     );
   }).toBe(true);
 });
+
+test('restores persisted manager report filters after a mobile reload', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.removeItem('grover.manager-completion-report-filters.v1'));
+  await page.reload();
+
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const reportQueue = page
+    .getByRole('heading', { name: 'Completion review queue' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(reportQueue).toBeVisible();
+  await reportQueue.getByLabel('Customer').fill('Sample');
+  await reportQueue.getByLabel('Readiness blocker').selectOption('route_stop');
+  await reportQueue.getByRole('button', { name: 'Apply' }).click();
+  await expect(reportQueue.getByText('2 persisted filters applied.')).toBeVisible();
+
+  const restoredRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/completion-reports'
+      && url.searchParams.get('customer') === 'Sample'
+      && url.searchParams.get('readiness_blocker') === 'route_stop';
+  });
+  await page.reload();
+  await restoredRequest;
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+
+  await expect(reportQueue.getByLabel('Customer')).toHaveValue('Sample');
+  await expect(reportQueue.getByLabel('Readiness blocker')).toHaveValue('route_stop');
+  await expect(reportQueue.getByText('2 persisted filters applied.')).toBeVisible();
+});
