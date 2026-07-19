@@ -6,7 +6,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   reporter: 'line',
-  timeout: 45_000,
+  timeout: 60_000,
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:5173',
     launchOptions: process.env.PLAYWRIGHT_EXECUTABLE_PATH

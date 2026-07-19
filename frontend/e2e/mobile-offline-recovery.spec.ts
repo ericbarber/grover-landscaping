@@ -80,8 +80,24 @@ test('queues route progress during interruption and replays after recovery', asy
   ), { timeout: 15_000 }).toBe(1);
   await expect(page.getByText('1 offline change waiting to sync')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/1 pending · 0 retry failed · 0 conflicted/)).toBeVisible();
+  await page.locator('summary').filter({ hasText: 'Route changes' }).click();
+  await page.getByRole('button', { name: 'Request unplanned stop' }).click();
+  await expect(page.getByText('1 route request is queued offline.')).toBeVisible({
+    timeout: 15_000,
+  });
 
   await context.setOffline(false);
   await expect(page.getByText('1 offline change waiting to sync')).toBeHidden({ timeout: 30_000 });
+  await expect(page.getByText('1 route request is queued offline.')).toBeHidden({
+    timeout: 30_000,
+  });
   await expect(page.getByText('Progress: synced')).toBeVisible();
+  await expect.poll(async () => {
+    const response = await request.get(`${apiOrigin}/day-plans/${dayPlan.id}/amendments`);
+    if (!response.ok()) return false;
+    const amendments = await response.json() as Array<{ note?: string }>;
+    return amendments.some((amendment) =>
+      amendment.note === 'North Route Crew requested an unplanned stop for manager review.'
+    );
+  }).toBe(true);
 });

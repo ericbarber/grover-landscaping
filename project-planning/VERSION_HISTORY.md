@@ -93,6 +93,7 @@
 - 2026-07-19: Queued failed day-plan amendments with durable field feedback.
 - 2026-07-19: Added ordered idempotent replay for offline day-plan amendments.
 - 2026-07-19: Added crew amendment queue review and reviewed-conflict recovery.
+- 2026-07-19: Extended the mobile recovery smoke to offline route amendments.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

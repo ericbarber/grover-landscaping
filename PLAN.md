@@ -601,10 +601,11 @@ Current state:
 - Failed day-plan amendment submissions enter the durable tenant/actor queue with accurate route-request feedback
 - Queued day-plan amendments replay oldest-first with deterministic server IDs, PostgreSQL deduplication, automatic recovery, manual retry, and conflict blocking
 - Crew amendment queue review exposes safe route-request details and two-step reviewed-conflict recovery
+- The Tailscale mobile smoke test proves both stop-progress and unplanned-stop amendment queueing and confirmed recovery
 
 Next implementation work:
 
-- Extend the mobile interruption smoke test to day-plan amendment replay
+- Add persisted organization and crew filters to the Phase 3 manager completion-report queue
 
 ## Planned
 

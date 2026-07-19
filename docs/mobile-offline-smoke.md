@@ -6,8 +6,12 @@ frontend and API. It resets only browser-local Grover field state, then verifies
 1. the day plan loads from the API without horizontal overflow;
 2. a browser network interruption produces the global offline warning;
 3. a stop-progress action enters IndexedDB with visible pending state;
-4. restoring connectivity triggers automatic ordered replay;
-5. the queue clears only after the API confirms persistence.
+4. an unplanned-stop amendment enters the same tenant/actor queue with separate
+   route-request feedback;
+5. restoring connectivity triggers automatic ordered replay for both mutation
+   types;
+6. both queues clear only after the API confirms persistence, and the amendment
+   appears in the manager-review API.
 
 Run it against the local Docker stack:
 
