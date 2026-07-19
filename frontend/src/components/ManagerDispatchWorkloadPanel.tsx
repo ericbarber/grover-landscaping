@@ -1,7 +1,10 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { fetchCrews, type CrewRecord } from '../api/client';
 import type { YardCareJob } from '../domain/jobs';
-import { buildDispatchWorkload } from '../domain/managerDispatchWorkload';
+import {
+  buildDispatchWorkload,
+  dispatchMoveCapacityImpact,
+} from '../domain/managerDispatchWorkload';
 
 type ManagerDispatchWorkloadPanelProps = {
   jobs: YardCareJob[];
@@ -32,6 +35,16 @@ export function ManagerDispatchWorkloadPanel({
     [jobs, scheduledDate],
   );
   const editingJob = jobs.find((job) => job.id === editingJobId);
+  const targetCrew = crews.find((crew) => crew.id === targetCrewId);
+  const capacityImpact = editingJob && targetCrew && targetDate
+    ? dispatchMoveCapacityImpact(
+        jobs,
+        editingJob.id,
+        targetCrew.id,
+        targetDate,
+        targetCrew.dailyStopCapacity,
+      )
+    : null;
   const hasDispatchChange = Boolean(
     editingJob
     && targetCrewId
@@ -54,7 +67,13 @@ export function ManagerDispatchWorkloadPanel({
 
   async function submitMove(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editingJobId || !targetCrewId || !targetDate || !hasDispatchChange) return;
+    if (
+      !editingJobId
+      || !targetCrewId
+      || !targetDate
+      || !hasDispatchChange
+      || capacityImpact?.overCapacity
+    ) return;
     setIsSaving(true);
     setActionStatus(null);
     try {
@@ -177,7 +196,7 @@ export function ManagerDispatchWorkloadPanel({
                   <div className="flex items-end gap-2">
                     <button
                       className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
-                      disabled={isSaving || !hasDispatchChange}
+                      disabled={isSaving || !hasDispatchChange || capacityImpact?.overCapacity}
                       type="submit"
                     >
                       {isSaving ? 'Saving' : 'Save move'}
@@ -190,6 +209,17 @@ export function ManagerDispatchWorkloadPanel({
                       Cancel
                     </button>
                   </div>
+                  {capacityImpact ? (
+                    <p className={`text-xs font-semibold sm:col-span-3 ${
+                      capacityImpact.overCapacity ? 'text-rose-700' : 'text-slate-600'
+                    }`}>
+                      Projected destination workload: {capacityImpact.projectedJobs} of{' '}
+                      {capacityImpact.capacity} active stops.
+                      {capacityImpact.overCapacity
+                        ? ' Select another crew or date before saving.'
+                        : ` ${capacityImpact.capacity - capacityImpact.projectedJobs} stop slots remain.`}
+                    </p>
+                  ) : null}
                 </form>
               ) : null}
             </article>

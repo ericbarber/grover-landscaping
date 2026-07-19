@@ -19,3 +19,7 @@ along with the authenticated actor and organization boundary.
 The manager day-workload view exposes the operation only for scheduled jobs,
 loads active tenant crew choices, requires an actual crew or date change, and
 refreshes the local workload grouping from the persisted response.
+
+Before confirmation, the view projects active destination stops against the
+crew's daily stop capacity. Moves that would exceed the loaded crew capacity are
+blocked with guidance to choose another crew or service date.

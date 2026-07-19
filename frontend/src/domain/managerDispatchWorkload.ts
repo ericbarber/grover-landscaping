@@ -11,6 +11,34 @@ export interface DispatchWorkloadGroup {
   needsAssignment: boolean;
 }
 
+export interface DispatchMoveCapacityImpact {
+  currentJobs: number;
+  projectedJobs: number;
+  capacity: number;
+  overCapacity: boolean;
+}
+
+export function dispatchMoveCapacityImpact(
+  jobs: YardCareJob[],
+  movingJobId: string,
+  crewId: string,
+  scheduledDate: string,
+  capacity: number,
+): DispatchMoveCapacityImpact {
+  const currentJobs = jobs.filter((job) =>
+    job.id !== movingJobId
+    && job.assignedCrewId === crewId
+    && job.scheduledDate === scheduledDate
+    && job.status !== 'completed').length;
+  const projectedJobs = currentJobs + 1;
+  return {
+    currentJobs,
+    projectedJobs,
+    capacity,
+    overCapacity: projectedJobs > capacity,
+  };
+}
+
 export function buildDispatchWorkload(jobs: YardCareJob[]): DispatchWorkloadGroup[] {
   const groups = new Map<string, DispatchWorkloadGroup>();
   for (const job of jobs) {
