@@ -107,6 +107,7 @@
 - 2026-07-19: Added audited tenant-scoped scheduled-job reassignment.
 - 2026-07-19: Connected scheduled-job move controls to the manager dispatch view.
 - 2026-07-19: Added destination capacity impact and overload guards to dispatch moves.
+- 2026-07-19: Enforced destination crew capacity transactionally during reassignment.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

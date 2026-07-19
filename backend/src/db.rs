@@ -279,6 +279,7 @@ pub enum JobDispatchAssignmentResult {
     Updated(JobDetail),
     JobNotFound,
     CrewNotFound,
+    CrewCapacityExceeded { capacity: i32, projected: i64 },
     JobAlreadyStarted,
     Unavailable,
 }
@@ -423,17 +424,42 @@ impl JobRepository {
         if status != "scheduled" {
             return JobDispatchAssignmentResult::JobAlreadyStarted;
         }
-        let crew_exists = sqlx::query_scalar::<_, bool>(
-            "SELECT EXISTS(SELECT 1 FROM crews WHERE id = $1 AND organization_id = $2 AND status = 'active')",
+        let crew_capacity = sqlx::query_scalar::<_, i32>(
+            "SELECT daily_stop_capacity FROM crews WHERE id = $1 AND organization_id = $2 AND status = 'active' FOR UPDATE",
         )
         .bind(crew_id)
         .bind(&organization_id)
-        .fetch_one(&mut *tx)
+        .fetch_optional(&mut *tx)
         .await;
-        if !matches!(crew_exists, Ok(true)) {
-            return match crew_exists {
-                Ok(false) => JobDispatchAssignmentResult::CrewNotFound,
-                _ => JobDispatchAssignmentResult::Unavailable,
+        let capacity = match crew_capacity {
+            Ok(Some(capacity)) => capacity,
+            Ok(None) => return JobDispatchAssignmentResult::CrewNotFound,
+            Err(_) => return JobDispatchAssignmentResult::Unavailable,
+        };
+        let current_jobs = match sqlx::query_scalar::<_, i64>(
+            r#"
+            SELECT COUNT(*)
+            FROM service_jobs
+            WHERE assigned_crew_id = $1
+              AND scheduled_date = $2::date
+              AND id <> $3
+              AND status <> 'completed'
+            "#,
+        )
+        .bind(crew_id)
+        .bind(scheduled_date)
+        .bind(job_id)
+        .fetch_one(&mut *tx)
+        .await
+        {
+            Ok(count) => count,
+            Err(_) => return JobDispatchAssignmentResult::Unavailable,
+        };
+        let projected = current_jobs + 1;
+        if projected > i64::from(capacity) {
+            return JobDispatchAssignmentResult::CrewCapacityExceeded {
+                capacity,
+                projected,
             };
         }
         if sqlx::query(

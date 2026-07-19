@@ -23,3 +23,8 @@ refreshes the local workload grouping from the persisted response.
 Before confirmation, the view projects active destination stops against the
 crew's daily stop capacity. Moves that would exceed the loaded crew capacity are
 blocked with guidance to choose another crew or service date.
+
+The API repeats this capacity calculation while holding a lock on the
+destination crew. Concurrent dispatch requests therefore cannot both consume
+the final slot, and an overloaded request returns `crew_capacity_exceeded`
+without changing the job or writing a reassignment audit event.

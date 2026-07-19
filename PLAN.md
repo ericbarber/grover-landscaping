@@ -477,6 +477,7 @@ Current state:
 - Tenant-scoped dispatch assignment API moves only scheduled jobs to active same-organization crews and transactionally audits old/new crew and date context
 - Manager day workload exposes persisted move controls for scheduled jobs with active tenant crew choices and no-op prevention
 - Dispatch move review projects destination active stops against crew daily capacity and blocks overloaded choices before confirmation
+- Persisted job reassignment locks the destination crew and transactionally rejects projected active stops beyond daily capacity
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -617,7 +618,7 @@ Current state:
 
 Next implementation work:
 
-- Enforce destination crew capacity transactionally in the persisted reassignment endpoint
+- Show customer continuity and source/destination workload impacts in dispatch move review
 
 ## Planned
 

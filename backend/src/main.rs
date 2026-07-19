@@ -1035,6 +1035,19 @@ async fn update_job_dispatch_assignment(
             }),
         )
             .into_response(),
+        JobDispatchAssignmentResult::CrewCapacityExceeded {
+            capacity,
+            projected,
+        } => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "crew_capacity_exceeded",
+                message: format!(
+                    "This move would schedule {projected} active stops against a crew capacity of {capacity}."
+                ),
+            }),
+        )
+            .into_response(),
         JobDispatchAssignmentResult::JobAlreadyStarted => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
