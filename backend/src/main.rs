@@ -1754,6 +1754,9 @@ async fn list_operational_activity(
         "route_draft_saved",
         "route_published",
         "route_completed",
+        "route_stop_assigned",
+        "route_stop_removed",
+        "route_stops_reordered",
         "report_review_started",
         "report_changes_requested",
         "report_resubmitted",
@@ -3738,7 +3741,12 @@ async fn create_draft_day_plan(
 
     (
         StatusCode::CREATED,
-        Json(state.day_plans.create_draft_day_plan(request).await),
+        Json(
+            state
+                .day_plans
+                .create_draft_day_plan_as(request, &principal.subject)
+                .await,
+        ),
     )
         .into_response()
 }
@@ -3755,7 +3763,13 @@ async fn publish_day_plan(
         return response;
     }
 
-    Json(state.day_plans.publish_day_plan(&day_plan_id).await).into_response()
+    Json(
+        state
+            .day_plans
+            .publish_day_plan_as(&day_plan_id, &principal.subject)
+            .await,
+    )
+    .into_response()
 }
 
 async fn create_day_plan_amendment(
@@ -4095,7 +4109,12 @@ async fn assign_day_plan_stop(
 
     (
         StatusCode::CREATED,
-        Json(state.day_plans.assign_stop(&day_plan_id, request).await),
+        Json(
+            state
+                .day_plans
+                .assign_stop_as(&day_plan_id, request, &principal.subject)
+                .await,
+        ),
     )
         .into_response()
 }
@@ -4112,7 +4131,13 @@ async fn remove_day_plan_stop(
         return response;
     }
 
-    Json(state.day_plans.remove_stop(&day_plan_id, &stop_id).await).into_response()
+    Json(
+        state
+            .day_plans
+            .remove_stop_as(&day_plan_id, &stop_id, &principal.subject)
+            .await,
+    )
+    .into_response()
 }
 
 async fn reorder_day_plan_stops(
@@ -4128,7 +4153,13 @@ async fn reorder_day_plan_stops(
         return response;
     }
 
-    Json(state.day_plans.reorder_stops(&day_plan_id, request).await).into_response()
+    Json(
+        state
+            .day_plans
+            .reorder_stops_as(&day_plan_id, request, &principal.subject)
+            .await,
+    )
+    .into_response()
 }
 
 async fn update_stop_progress(

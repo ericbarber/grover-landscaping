@@ -21,6 +21,23 @@ const activityPresentation: Record<
     tone: 'success',
     source: 'route',
   },
+  route_stop_assigned: {
+    title: 'Route stop assigned',
+    tone: 'info',
+    source: 'route',
+    recommendedAction: 'Review route capacity and stop order before publishing.',
+  },
+  route_stop_removed: {
+    title: 'Route stop removed',
+    tone: 'warning',
+    source: 'route',
+    recommendedAction: 'Confirm the removed work is reassigned or intentionally unscheduled.',
+  },
+  route_stops_reordered: {
+    title: 'Route stops reordered',
+    tone: 'info',
+    source: 'route',
+  },
   report_review_started: {
     title: 'Completion report review started',
     tone: 'info',

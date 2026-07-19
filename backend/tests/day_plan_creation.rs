@@ -9,6 +9,11 @@ use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 mod common;
 
 async fn reset_day_plan_fixture(pool: &PgPool, day_plan_id: &str) {
+    sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
+        .bind(day_plan_id)
+        .execute(pool)
+        .await
+        .expect("test day plan audit events should reset");
     sqlx::query("DELETE FROM day_plan_amendment_requests WHERE day_plan_id = $1")
         .bind(day_plan_id)
         .execute(pool)
@@ -84,31 +89,46 @@ async fn repository_publishes_draft_day_plan() {
     reset_day_plan_fixture(&pool, "day_plan_2026_06_18_crew_1001").await;
 
     let day_plans = DayPlanRepository::new();
+    let actor_user_id = "manager_publish_audit_test";
     let draft = day_plans
-        .create_draft_day_plan(CreateDayPlanRequest {
-            crew_id: "crew_1001".to_string(),
-            service_date: "2026-06-18".to_string(),
-        })
+        .create_draft_day_plan_as(
+            CreateDayPlanRequest {
+                crew_id: "crew_1001".to_string(),
+                service_date: "2026-06-18".to_string(),
+            },
+            actor_user_id,
+        )
         .await;
     let assigned_stop = day_plans
-        .assign_stop(
+        .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
                 job_id: "job_1001".to_string(),
                 estimated_drive_minutes: Some(10),
                 estimated_service_minutes: Some(45),
             },
+            actor_user_id,
         )
         .await;
 
     assert!(assigned_stop.persisted);
 
-    let response = day_plans.publish_day_plan(&draft.id).await;
+    let response = day_plans
+        .publish_day_plan_as(&draft.id, actor_user_id)
+        .await;
 
     assert_eq!(response.id, "day_plan_2026_06_18_crew_1001");
     assert_eq!(response.status, "published");
     assert_eq!(response.route_status, "manual");
     assert!(response.persisted);
+    let published_actor: String = sqlx::query_scalar(
+        "SELECT actor_user_id FROM access_audit_events WHERE target_id = $1 AND event_kind = 'route_published' ORDER BY occurred_at DESC LIMIT 1",
+    )
+    .bind(&draft.id)
+    .fetch_one(&pool)
+    .await
+    .expect("route publication audit should be readable");
+    assert_eq!(published_actor, actor_user_id);
 }
 
 #[tokio::test]
@@ -193,31 +213,37 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
     reset_day_plan_fixture(&pool, "day_plan_2026_06_20_crew_1001").await;
 
     let day_plans = DayPlanRepository::new();
+    let actor_user_id = "manager_schedule_audit_test";
     let draft = day_plans
-        .create_draft_day_plan(CreateDayPlanRequest {
-            crew_id: "crew_1001".to_string(),
-            service_date: "2026-06-20".to_string(),
-        })
+        .create_draft_day_plan_as(
+            CreateDayPlanRequest {
+                crew_id: "crew_1001".to_string(),
+                service_date: "2026-06-20".to_string(),
+            },
+            actor_user_id,
+        )
         .await;
 
     let first_stop = day_plans
-        .assign_stop(
+        .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
                 job_id: "job_1001".to_string(),
                 estimated_drive_minutes: Some(10),
                 estimated_service_minutes: Some(45),
             },
+            actor_user_id,
         )
         .await;
     let second_stop = day_plans
-        .assign_stop(
+        .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
                 job_id: "job_1002".to_string(),
                 estimated_drive_minutes: Some(8),
                 estimated_service_minutes: Some(60),
             },
+            actor_user_id,
         )
         .await;
 
@@ -227,17 +253,20 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
     assert_eq!(second_stop.stop_order, 2);
 
     let reorder = day_plans
-        .reorder_stops(
+        .reorder_stops_as(
             &draft.id,
             ReorderDayPlanStopsRequest {
                 stop_ids: vec![second_stop.stop_id.clone(), first_stop.stop_id.clone()],
             },
+            actor_user_id,
         )
         .await;
 
     assert!(reorder.persisted);
 
-    let removal = day_plans.remove_stop(&draft.id, &second_stop.stop_id).await;
+    let removal = day_plans
+        .remove_stop_as(&draft.id, &second_stop.stop_id, actor_user_id)
+        .await;
 
     assert!(removal.persisted);
 
@@ -251,8 +280,41 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
 
     assert_eq!(remaining_stop.get::<i32, _>("stop_order"), 1);
 
-    let final_removal = day_plans.remove_stop(&draft.id, &first_stop.stop_id).await;
+    let final_removal = day_plans
+        .remove_stop_as(&draft.id, &first_stop.stop_id, actor_user_id)
+        .await;
     assert!(final_removal.persisted);
+
+    let audit_events = sqlx::query(
+        r#"
+        SELECT event_kind, actor_user_id
+        FROM access_audit_events
+        WHERE target_id = $1
+        ORDER BY occurred_at, id
+        "#,
+    )
+    .bind(&draft.id)
+    .fetch_all(&pool)
+    .await
+    .expect("schedule audit events should be readable");
+    let event_kinds = audit_events
+        .iter()
+        .map(|row| row.get::<String, _>("event_kind"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        event_kinds,
+        vec![
+            "route_draft_saved",
+            "route_stop_assigned",
+            "route_stop_assigned",
+            "route_stops_reordered",
+            "route_stop_removed",
+            "route_stop_removed",
+        ]
+    );
+    assert!(audit_events
+        .iter()
+        .all(|row| row.get::<String, _>("actor_user_id") == actor_user_id));
 }
 
 #[tokio::test]

@@ -1038,11 +1038,15 @@ async fn list_operational_activity(
         r#"
         SELECT id, organization_id, event_kind, target_id, actor_user_id,
             occurred_at::text AS occurred_at
-        FROM (
-            SELECT id, organization_id, event_kind, target_id, actor_user_id, occurred_at
-            FROM access_audit_events
-            WHERE organization_id = ANY($1)
-              AND event_kind IN (
+        FROM access_audit_events
+        WHERE organization_id = ANY($1)
+          AND event_kind IN (
+                'route_draft_saved',
+                'route_published',
+                'route_completed',
+                'route_stop_assigned',
+                'route_stop_removed',
+                'route_stops_reordered',
                 'report_review_started',
                 'report_changes_requested',
                 'report_resubmitted',
@@ -1053,27 +1057,8 @@ async fn list_operational_activity(
                 'photo_processing_retried',
                 'photo_processing_resolved',
                 'customer_photo_evidence_erased'
-              )
-            UNION ALL
-            SELECT
-                'route_' || plan.id || '_' || plan.status AS id,
-                crew.organization_id,
-                CASE
-                    WHEN plan.status = 'published' THEN 'route_published'
-                    WHEN plan.status = 'completed' THEN 'route_completed'
-                    ELSE 'route_draft_saved'
-                END AS event_kind,
-                plan.id AS target_id,
-                'system' AS actor_user_id,
-                CASE
-                    WHEN plan.status = 'draft' THEN plan.created_at
-                    ELSE plan.updated_at
-                END AS occurred_at
-            FROM day_plans plan
-            JOIN crews crew ON crew.id = plan.crew_id
-            WHERE crew.organization_id = ANY($1)
-        ) activity
-        WHERE ($2::text IS NULL OR event_kind = $2)
+          )
+          AND ($2::text IS NULL OR event_kind = $2)
           AND ($3::timestamptz IS NULL OR occurred_at < $3::timestamptz)
         ORDER BY occurred_at DESC, id DESC
         LIMIT $4

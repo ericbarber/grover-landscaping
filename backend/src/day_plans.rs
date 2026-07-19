@@ -326,6 +326,14 @@ impl DayPlanRepository {
         &self,
         request: CreateDayPlanRequest,
     ) -> DayPlanMutationResponse {
+        self.create_draft_day_plan_as(request, "system").await
+    }
+
+    pub async fn create_draft_day_plan_as(
+        &self,
+        request: CreateDayPlanRequest,
+        actor_user_id: &str,
+    ) -> DayPlanMutationResponse {
         let request = normalize_create_day_plan_request(request);
         let id = draft_day_plan_id(&request.crew_id, &request.service_date);
 
@@ -335,6 +343,7 @@ impl DayPlanRepository {
                 &id,
                 &request.crew_id,
                 &request.service_date,
+                actor_user_id,
             )
             .await
             {
@@ -346,8 +355,18 @@ impl DayPlanRepository {
     }
 
     pub async fn publish_day_plan(&self, id: &str) -> DayPlanMutationResponse {
+        self.publish_day_plan_as(id, "system").await
+    }
+
+    pub async fn publish_day_plan_as(
+        &self,
+        id: &str,
+        actor_user_id: &str,
+    ) -> DayPlanMutationResponse {
         if let Some(pool) = &self.pool {
-            if let Ok(Some(day_plan)) = postgres_day_plans::publish_day_plan(pool, id).await {
+            if let Ok(Some(day_plan)) =
+                postgres_day_plans::publish_day_plan(pool, id, actor_user_id).await
+            {
                 return day_plan;
             }
         }
@@ -360,11 +379,26 @@ impl DayPlanRepository {
         day_plan_id: &str,
         request: AssignDayPlanStopRequest,
     ) -> DayPlanStopMutationResponse {
+        self.assign_stop_as(day_plan_id, request, "system").await
+    }
+
+    pub async fn assign_stop_as(
+        &self,
+        day_plan_id: &str,
+        request: AssignDayPlanStopRequest,
+        actor_user_id: &str,
+    ) -> DayPlanStopMutationResponse {
         let stop_id = draft_stop_id(day_plan_id, &request.job_id);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(response)) =
-                postgres_day_plans::assign_stop(pool, day_plan_id, &stop_id, &request).await
+            if let Ok(Some(response)) = postgres_day_plans::assign_stop(
+                pool,
+                day_plan_id,
+                &stop_id,
+                &request,
+                actor_user_id,
+            )
+            .await
             {
                 return response;
             }
@@ -384,8 +418,19 @@ impl DayPlanRepository {
         day_plan_id: &str,
         stop_id: &str,
     ) -> DayPlanStopRemovalResponse {
+        self.remove_stop_as(day_plan_id, stop_id, "system").await
+    }
+
+    pub async fn remove_stop_as(
+        &self,
+        day_plan_id: &str,
+        stop_id: &str,
+        actor_user_id: &str,
+    ) -> DayPlanStopRemovalResponse {
         if let Some(pool) = &self.pool {
-            if let Ok(true) = postgres_day_plans::remove_stop(pool, day_plan_id, stop_id).await {
+            if let Ok(true) =
+                postgres_day_plans::remove_stop(pool, day_plan_id, stop_id, actor_user_id).await
+            {
                 return DayPlanStopRemovalResponse {
                     day_plan_id: day_plan_id.to_string(),
                     stop_id: stop_id.to_string(),
@@ -406,9 +451,23 @@ impl DayPlanRepository {
         day_plan_id: &str,
         request: ReorderDayPlanStopsRequest,
     ) -> DayPlanStopReorderResponse {
+        self.reorder_stops_as(day_plan_id, request, "system").await
+    }
+
+    pub async fn reorder_stops_as(
+        &self,
+        day_plan_id: &str,
+        request: ReorderDayPlanStopsRequest,
+        actor_user_id: &str,
+    ) -> DayPlanStopReorderResponse {
         if let Some(pool) = &self.pool {
-            if let Ok(true) =
-                postgres_day_plans::reorder_stops(pool, day_plan_id, &request.stop_ids).await
+            if let Ok(true) = postgres_day_plans::reorder_stops(
+                pool,
+                day_plan_id,
+                &request.stop_ids,
+                actor_user_id,
+            )
+            .await
             {
                 return DayPlanStopReorderResponse {
                     day_plan_id: day_plan_id.to_string(),

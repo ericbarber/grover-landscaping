@@ -17,6 +17,21 @@ describe('persisted operational manager activity', () => {
     });
   });
 
+  it('shows authenticated route mutation actors', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_route_stop_1001',
+      organizationId: 'org_1001',
+      eventKind: 'route_stop_assigned',
+      targetId: 'plan_1001',
+      actorUserId: 'manager_1001',
+      occurredAt: '2026-07-19T17:01:00Z',
+    })).toMatchObject({
+      title: 'Route stop assigned',
+      message: 'plan_1001 · recorded by manager_1001',
+      source: 'route',
+    });
+  });
+
   it('maps report change requests to warning activity with guidance', () => {
     expect(operationalToManagerActivity({
       id: 'audit_1001',

@@ -5,7 +5,7 @@ use crate::day_plans::{
 };
 use std::collections::HashSet;
 
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Postgres, Row, Transaction};
 use uuid::Uuid;
 
 pub async fn create_crew(
@@ -251,7 +251,9 @@ pub async fn create_draft_day_plan(
     id: &str,
     crew_id: &str,
     service_date: &str,
+    actor_user_id: &str,
 ) -> Result<Option<DayPlanMutationResponse>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
     let row = sqlx::query(
         r#"
         INSERT INTO day_plans (
@@ -284,16 +286,22 @@ pub async fn create_draft_day_plan(
     .bind(id)
     .bind(crew_id)
     .bind(service_date)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?;
 
+    if row.is_some() {
+        insert_route_audit_event(&mut tx, id, actor_user_id, "route_draft_saved").await?;
+    }
+    tx.commit().await?;
     Ok(row.map(|row| day_plan_mutation_response(row, true)))
 }
 
 pub async fn publish_day_plan(
     pool: &PgPool,
     id: &str,
+    actor_user_id: &str,
 ) -> Result<Option<DayPlanMutationResponse>, sqlx::Error> {
+    let mut tx = pool.begin().await?;
     let Some(row) = sqlx::query(
         r#"
         UPDATE day_plans
@@ -315,12 +323,15 @@ pub async fn publish_day_plan(
         "#,
     )
     .bind(id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?
     else {
+        tx.rollback().await?;
         return Ok(None);
     };
 
+    insert_route_audit_event(&mut tx, id, actor_user_id, "route_published").await?;
+    tx.commit().await?;
     Ok(Some(day_plan_mutation_response(row, true)))
 }
 
@@ -346,10 +357,12 @@ pub async fn assign_stop(
     day_plan_id: &str,
     stop_id: &str,
     request: &AssignDayPlanStopRequest,
+    actor_user_id: &str,
 ) -> Result<Option<DayPlanStopMutationResponse>, sqlx::Error> {
     let estimated_drive_minutes = request.estimated_drive_minutes.unwrap_or(0) as i32;
     let estimated_service_minutes = request.estimated_service_minutes.unwrap_or(0) as i32;
 
+    let mut tx = pool.begin().await?;
     let Some(row) = sqlx::query(
         r#"
         WITH candidate_plan AS (
@@ -411,12 +424,15 @@ pub async fn assign_stop(
     .bind(&request.job_id)
     .bind(estimated_drive_minutes)
     .bind(estimated_service_minutes)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *tx)
     .await?
     else {
+        tx.rollback().await?;
         return Ok(None);
     };
 
+    insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stop_assigned").await?;
+    tx.commit().await?;
     Ok(Some(DayPlanStopMutationResponse {
         day_plan_id: row.get("day_plan_id"),
         stop_id: row.get("stop_id"),
@@ -430,6 +446,7 @@ pub async fn remove_stop(
     pool: &PgPool,
     day_plan_id: &str,
     stop_id: &str,
+    actor_user_id: &str,
 ) -> Result<bool, sqlx::Error> {
     let mut tx = pool.begin().await?;
 
@@ -470,6 +487,7 @@ pub async fn remove_stop(
     .execute(&mut *tx)
     .await?;
 
+    insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stop_removed").await?;
     tx.commit().await?;
     Ok(true)
 }
@@ -478,6 +496,7 @@ pub async fn reorder_stops(
     pool: &PgPool,
     day_plan_id: &str,
     stop_ids: &[String],
+    actor_user_id: &str,
 ) -> Result<bool, sqlx::Error> {
     if stop_ids.is_empty() {
         return Ok(false);
@@ -533,9 +552,39 @@ pub async fn reorder_stops(
     .await?;
 
     let persisted = result.rows_affected() == stop_ids.len() as u64;
+    if persisted {
+        insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stops_reordered")
+            .await?;
+    }
     tx.commit().await?;
 
     Ok(persisted)
+}
+
+async fn insert_route_audit_event(
+    tx: &mut Transaction<'_, Postgres>,
+    day_plan_id: &str,
+    actor_user_id: &str,
+    event_kind: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        )
+        SELECT $1, $2, crew.organization_id, $3, plan.id, now()
+        FROM day_plans plan
+        JOIN crews crew ON crew.id = plan.crew_id
+        WHERE plan.id = $4
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(event_kind)
+    .bind(day_plan_id)
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
 }
 
 pub async fn create_amendment(

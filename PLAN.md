@@ -509,10 +509,13 @@ Current state:
 - Clearing browser activity preserves tenant-scoped operational history
 - Operational activity supports bounded event-kind filtering and timestamp-cursor pagination
 - Managers can load older persisted activity without duplicating records already in the review queue
+- Draft creation, route publication, stop assignment/removal, and stop reorder operations write transactional audit events
+- Schedule audit events retain the authenticated manager identity and organization boundary
+- Existing persisted route states are backfilled into operational history during migration
 
 Next implementation work:
 
-- Record schedule mutation audit events with the authenticated manager identity
+- Include route mutation details in audit metadata for richer manager activity messages
 
 ## Planned
 
