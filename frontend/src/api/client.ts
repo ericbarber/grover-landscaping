@@ -40,6 +40,7 @@ export interface JobDetail extends YardCareJob {
 export interface UpdateJobDispatchAssignmentRequest {
   crewId: string;
   scheduledDate: string;
+  customerNotificationRequired: boolean;
 }
 
 export interface ApiJobAddOn {
@@ -1400,6 +1401,7 @@ export async function updateJobDispatchAssignment(
       body: JSON.stringify({
         crew_id: assignment.crewId,
         scheduled_date: assignment.scheduledDate,
+        customer_notification_required: assignment.customerNotificationRequired,
       }),
     },
   );

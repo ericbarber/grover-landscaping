@@ -109,6 +109,7 @@
 - 2026-07-19: Added destination capacity impact and overload guards to dispatch moves.
 - 2026-07-19: Enforced destination crew capacity transactionally during reassignment.
 - 2026-07-19: Added source workload and customer-continuity impact to dispatch review.
+- 2026-07-19: Audited explicit customer-notification intent for dispatch date changes.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

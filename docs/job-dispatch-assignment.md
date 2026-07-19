@@ -5,7 +5,8 @@ Managers and organization owners can move scheduled work through:
 `PUT /jobs/{job_id}/dispatch-assignment`
 
 The JSON body requires an active destination `crew_id` and a valid
-`scheduled_date` in `YYYY-MM-DD` form.
+`scheduled_date` in `YYYY-MM-DD` form. It also requires the explicit boolean
+`customer_notification_required`.
 
 The API authorizes schedule management against the job's organization before
 processing the destination. The crew must be active in that same organization,
@@ -27,6 +28,11 @@ blocked with guidance to choose another crew or service date.
 Move review also shows the source workload remaining after removal and whether
 the customer keeps the same crew and service date. Crew or date changes are
 called out before confirmation as customer-continuity impacts.
+
+When the service date changes, manager confirmation requires an explicit
+notification intent. That decision is retained in the reassignment audit
+metadata so office staff can distinguish customer follow-up still required from
+a move where notification was intentionally unnecessary.
 
 The API repeats this capacity calculation while holding a lock on the
 destination crew. Concurrent dispatch requests therefore cannot both consume

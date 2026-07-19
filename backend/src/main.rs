@@ -216,6 +216,7 @@ struct CompletionReportChangeRequest {
 struct UpdateJobDispatchAssignmentRequest {
     crew_id: String,
     scheduled_date: String,
+    customer_notification_required: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1017,9 +1018,10 @@ async fn update_job_dispatch_assignment(
         .jobs
         .update_dispatch_assignment(
             &id,
-            request.crew_id.trim(),
-            &request.scheduled_date,
-            &principal.subject,
+        request.crew_id.trim(),
+        &request.scheduled_date,
+        request.customer_notification_required,
+        &principal.subject,
         )
         .await
     {
@@ -6336,7 +6338,7 @@ mod tests {
                     .uri("/jobs/job_1001/dispatch-assignment")
                     .header("content-type", "application/json")
                     .body(Body::from(
-                        r#"{"crew_id":"crew_1001","scheduled_date":"2026-02-29"}"#,
+                        r#"{"crew_id":"crew_1001","scheduled_date":"2026-02-29","customer_notification_required":true}"#,
                     ))
                     .unwrap(),
             )

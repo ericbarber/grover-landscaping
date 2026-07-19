@@ -1832,8 +1832,13 @@ export function App() {
     jobId: string,
     crewId: string,
     scheduledDate: string,
+    customerNotificationRequired: boolean,
   ) {
-    const updated = await updateJobDispatchAssignment(jobId, { crewId, scheduledDate });
+    const updated = await updateJobDispatchAssignment(jobId, {
+      crewId,
+      scheduledDate,
+      customerNotificationRequired,
+    });
     setJobs((current) => current.map((job) => job.id === updated.id ? updated : job));
     setStatusMessage(`${updated.customerName} moved to ${crewId} on ${scheduledDate}.`);
     setFirstOwnerProgressRefreshSignal((current) => current + 1);

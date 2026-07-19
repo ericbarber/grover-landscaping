@@ -9,7 +9,12 @@ import {
 type ManagerDispatchWorkloadPanelProps = {
   jobs: YardCareJob[];
   onSelectJob: (jobId: string) => void;
-  onReassign: (jobId: string, crewId: string, scheduledDate: string) => Promise<void>;
+  onReassign: (
+    jobId: string,
+    crewId: string,
+    scheduledDate: string,
+    customerNotificationRequired: boolean,
+  ) => Promise<void>;
 };
 
 export function ManagerDispatchWorkloadPanel({
@@ -27,6 +32,7 @@ export function ManagerDispatchWorkloadPanel({
   const [targetCrewId, setTargetCrewId] = useState('');
   const [targetDate, setTargetDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [customerNotificationRequired, setCustomerNotificationRequired] = useState<boolean | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const groups = useMemo(
     () => buildDispatchWorkload(jobs).filter(
@@ -51,6 +57,8 @@ export function ManagerDispatchWorkloadPanel({
     && targetDate
     && (editingJob.assignedCrewId !== targetCrewId || editingJob.scheduledDate !== targetDate),
   );
+  const notificationIntentReady = !capacityImpact?.dateChanges
+    || customerNotificationRequired !== null;
 
   useEffect(() => {
     void fetchCrews()
@@ -62,6 +70,7 @@ export function ManagerDispatchWorkloadPanel({
     setEditingJobId(job.id);
     setTargetCrewId(job.assignedCrewId ?? '');
     setTargetDate(job.scheduledDate);
+    setCustomerNotificationRequired(null);
     setActionStatus(null);
   }
 
@@ -73,11 +82,17 @@ export function ManagerDispatchWorkloadPanel({
       || !targetDate
       || !hasDispatchChange
       || capacityImpact?.overCapacity
+      || !notificationIntentReady
     ) return;
     setIsSaving(true);
     setActionStatus(null);
     try {
-      await onReassign(editingJobId, targetCrewId, targetDate);
+      await onReassign(
+        editingJobId,
+        targetCrewId,
+        targetDate,
+        customerNotificationRequired ?? false,
+      );
       setActionStatus('Dispatch assignment saved and audited.');
       setEditingJobId(null);
     } catch {
@@ -196,7 +211,12 @@ export function ManagerDispatchWorkloadPanel({
                   <div className="flex items-end gap-2">
                     <button
                       className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
-                      disabled={isSaving || !hasDispatchChange || capacityImpact?.overCapacity}
+                      disabled={
+                        isSaving
+                        || !hasDispatchChange
+                        || capacityImpact?.overCapacity
+                        || !notificationIntentReady
+                      }
                       type="submit"
                     >
                       {isSaving ? 'Saving' : 'Save move'}
@@ -228,6 +248,29 @@ export function ManagerDispatchWorkloadPanel({
                         {capacityImpact.dateChanges ? ' Service date also changes.' : ' Service date retained.'}
                       </p>
                     </div>
+                  ) : null}
+                  {capacityImpact?.dateChanges ? (
+                    <label className="rounded-lg bg-amber-50 p-2 text-xs font-semibold text-amber-900 sm:col-span-3">
+                      Customer schedule notification
+                      <select
+                        className="mt-1 block w-full rounded-lg border border-amber-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+                        onChange={(event) => setCustomerNotificationRequired(
+                          event.target.value === ''
+                            ? null
+                            : event.target.value === 'required',
+                        )}
+                        required
+                        value={
+                          customerNotificationRequired === null
+                            ? ''
+                            : customerNotificationRequired ? 'required' : 'not_required'
+                        }
+                      >
+                        <option value="">Select notification intent</option>
+                        <option value="required">Notification required</option>
+                        <option value="not_required">No notification required</option>
+                      </select>
+                    </label>
                   ) : null}
                 </form>
               ) : null}

@@ -397,6 +397,7 @@ impl JobRepository {
         job_id: &str,
         crew_id: &str,
         scheduled_date: &str,
+        customer_notification_required: bool,
         actor_user_id: &str,
     ) -> JobDispatchAssignmentResult {
         let Some(pool) = &self.pool else {
@@ -482,7 +483,8 @@ impl JobRepository {
                 $1, $2, $3, 'job_reassigned', $4, NOW(),
                 jsonb_build_object(
                     'old_crew_id', $5::text, 'new_crew_id', $6::text,
-                    'old_scheduled_date', $7::text, 'new_scheduled_date', $8::text
+                    'old_scheduled_date', $7::text, 'new_scheduled_date', $8::text,
+                    'customer_notification_required', $9::boolean
                 )
             )
             "#,
@@ -495,6 +497,7 @@ impl JobRepository {
         .bind(crew_id)
         .bind(old_scheduled_date)
         .bind(scheduled_date)
+        .bind(customer_notification_required)
         .execute(&mut *tx)
         .await
         .is_err()

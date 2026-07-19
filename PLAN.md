@@ -479,6 +479,7 @@ Current state:
 - Dispatch move review projects destination active stops against crew daily capacity and blocks overloaded choices before confirmation
 - Persisted job reassignment locks the destination crew and transactionally rejects projected active stops beyond daily capacity
 - Dispatch move review shows remaining source workload and flags crew/date changes as customer-continuity impacts
+- Date-changing dispatch moves require explicit customer-notification intent and retain it in transactional audit metadata
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -619,7 +620,7 @@ Current state:
 
 Next implementation work:
 
-- Add explicit customer-notification intent and audit context to schedule-changing dispatch moves
+- Surface pending dispatch customer-notification follow-up in manager operational activity
 
 ## Planned
 
