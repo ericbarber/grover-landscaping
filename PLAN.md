@@ -561,10 +561,11 @@ Current state:
 - A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
 - Mobile diagnostics react to network and shell-control changes and copy a token-safe support summary
 - Supported phones can send the sanitized diagnostics summary through the native share sheet
+- Mobile diagnostics can download the sanitized support summary as a dated text file
 
 Next implementation work:
 
-- Add a downloadable diagnostics fallback where clipboard and native sharing are unavailable
+- Add mobile diagnostics guidance for each failed capability
 
 ## Planned
 

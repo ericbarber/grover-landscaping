@@ -128,6 +128,18 @@ export function MobileDiagnosticsPage() {
     }
   }
 
+  function downloadSupportDetails() {
+    const blobUrl = URL.createObjectURL(new Blob([supportDetails()], { type: 'text/plain' }));
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `grover-field-diagnostics-${new Date().toISOString().slice(0, 10)}.txt`;
+    link.hidden = true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 0);
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
       <section className="mx-auto max-w-xl">
@@ -205,6 +217,13 @@ export function MobileDiagnosticsPage() {
               Share safe support details
             </button>
           )}
+          <button
+            className="min-h-12 rounded-xl border border-slate-400 bg-white px-5 font-bold text-slate-800 sm:col-span-2"
+            onClick={downloadSupportDetails}
+            type="button"
+          >
+            Download support details
+          </button>
         </div>
         {shareStatus !== 'idle' && (
           <p className={`mt-3 text-sm font-semibold ${
