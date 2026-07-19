@@ -1,26 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function NetworkStatusBanner() {
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [status, setStatus] = useState<'online' | 'offline' | 'recovered'>(
+    () => navigator.onLine ? 'online' : 'offline',
+  );
+  const recoveryTimeout = useRef<number | null>(null);
 
   useEffect(() => {
-    const updateStatus = () => setIsOnline(navigator.onLine);
-    window.addEventListener('online', updateStatus);
-    window.addEventListener('offline', updateStatus);
+    const clearRecoveryTimeout = () => {
+      if (recoveryTimeout.current !== null) {
+        window.clearTimeout(recoveryTimeout.current);
+        recoveryTimeout.current = null;
+      }
+    };
+    const markOnline = () => {
+      clearRecoveryTimeout();
+      setStatus('recovered');
+      recoveryTimeout.current = window.setTimeout(() => setStatus('online'), 4_000);
+    };
+    const markOffline = () => {
+      clearRecoveryTimeout();
+      setStatus('offline');
+    };
+    window.addEventListener('online', markOnline);
+    window.addEventListener('offline', markOffline);
     return () => {
-      window.removeEventListener('online', updateStatus);
-      window.removeEventListener('offline', updateStatus);
+      clearRecoveryTimeout();
+      window.removeEventListener('online', markOnline);
+      window.removeEventListener('offline', markOffline);
     };
   }, []);
 
-  if (isOnline) return null;
+  if (status === 'online') return null;
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 bg-amber-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg"
+      className={`fixed inset-x-0 top-0 z-50 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg ${
+        status === 'offline' ? 'bg-amber-900' : 'bg-emerald-800'
+      }`}
       role="status"
     >
-      You are offline. Saved screens remain available, but syncing and new loads will wait.
+      {status === 'offline'
+        ? 'You are offline. Saved screens remain available, but syncing and new loads will wait.'
+        : 'Back online. New loads and syncing are available again.'}
     </div>
   );
 }

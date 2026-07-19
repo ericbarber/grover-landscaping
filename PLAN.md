@@ -549,10 +549,11 @@ Current state:
 - Public bid and report startup paths defer the authenticated shell and OIDC bundle, reducing the entry chunk below 5 kB
 - Lazy-route failures render a touch-safe reload recovery screen instead of leaving a blank mobile view
 - A global mobile banner distinguishes offline state from slow startup across public and authenticated routes
+- Mobile users receive a four-second confirmation when network connectivity returns
 
 Next implementation work:
 
-- Confirm network recovery after a mobile device comes back online
+- Roll the latest persisted team-search API into Docker and verify all Tailscale routes
 
 ## Planned
 
