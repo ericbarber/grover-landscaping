@@ -240,6 +240,15 @@ export function ManagerTeamMembershipsPanel({
     URL.revokeObjectURL(url);
   }
 
+  async function copyMemberIdentity(userId: string) {
+    try {
+      await navigator.clipboard.writeText(userId);
+      setMessage('Member identity copied.');
+    } catch {
+      setMessage('Copy is unavailable. Select the member identity text instead.');
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -365,6 +374,13 @@ export function ManagerTeamMembershipsPanel({
                 {membership.displayName ?? membership.userId}
               </p>
               <p className="mt-0.5 break-all text-xs text-slate-500">{membership.userId}</p>
+              <button
+                className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+                onClick={() => void copyMemberIdentity(membership.userId)}
+                type="button"
+              >
+                Copy member identity
+              </button>
               <p className="mt-1 text-xs text-slate-500">
                 {membership.status} · {membership.scopeType}
               </p>

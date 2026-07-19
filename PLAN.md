@@ -538,10 +538,11 @@ Current state:
 - Owner team activity shows each event's exact local date and time
 - Owners can reveal immutable actor and target IDs per activity event without cluttering the readable default view
 - Touch-safe activity controls copy immutable actor and target IDs with mobile clipboard feedback
+- Mobile member cards copy immutable user identities with success and unavailable-clipboard feedback
 
 Next implementation work:
 
-- Add copy controls for immutable member identities
+- Let owners reveal and copy immutable membership record IDs
 
 ## Planned
 
