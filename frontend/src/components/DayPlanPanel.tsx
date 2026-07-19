@@ -79,12 +79,21 @@ function loadStopStates(dayPlanId: string): StopStateMap {
   }
 }
 
-function saveStopStates(dayPlanId: string, stopStates: StopStateMap) {
-  window.localStorage.setItem(storageKey(dayPlanId), JSON.stringify(stopStates));
+function saveStopStates(dayPlanId: string, stopStates: StopStateMap): boolean {
+  try {
+    window.localStorage.setItem(storageKey(dayPlanId), JSON.stringify(stopStates));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function clearStopStates(dayPlanId: string) {
-  window.localStorage.removeItem(storageKey(dayPlanId));
+  try {
+    window.localStorage.removeItem(storageKey(dayPlanId));
+  } catch {
+    // In-memory route state still resets when browser storage is unavailable.
+  }
 }
 
 function servicePriceLabel(service: ServiceCatalogItem): string {
@@ -110,6 +119,7 @@ export function DayPlanPanel({
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
+  const [queueStorageUnavailable, setQueueStorageUnavailable] = useState(false);
   const replayInProgress = useRef(false);
   const offlineSummary = summarizeOfflineMutations(offlineMutations);
   const pendingMutationCount = offlineSummary.total;
@@ -195,8 +205,10 @@ export function DayPlanPanel({
       setOfflineMutations((current) => [...current, mutation].sort(
         (left, right) => left.createdAt.localeCompare(right.createdAt),
       ));
+      setQueueStorageUnavailable(false);
     } catch {
       // Browser-local progress remains available when durable storage is blocked.
+      setQueueStorageUnavailable(true);
     } finally {
       setSyncStatus('local');
     }
@@ -291,10 +303,12 @@ export function DayPlanPanel({
         }
       }
       const remaining = await listOfflineMutations(dayPlan.organizationId, actorId);
+      setQueueStorageUnavailable(false);
       setOfflineMutations(remaining);
       if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
     } catch {
       // Keep the visible count from the last successful IndexedDB read.
+      setQueueStorageUnavailable(true);
     } finally {
       replayInProgress.current = false;
       setIsReplayingMutations(false);
@@ -306,6 +320,7 @@ export function DayPlanPanel({
       await removeOfflineMutation(mutation.id);
     } catch {
       setConflictResolutionError(true);
+      setQueueStorageUnavailable(true);
       return;
     }
     setConflictResolutionError(false);
@@ -375,10 +390,14 @@ export function DayPlanPanel({
     }
     void listOfflineMutations(dayPlan.organizationId, actorId)
       .then((mutations) => {
+        setQueueStorageUnavailable(false);
         setOfflineMutations(mutations);
         if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
       })
-      .catch(() => setOfflineMutations([]));
+      .catch(() => {
+        setOfflineMutations([]);
+        setQueueStorageUnavailable(true);
+      });
     const handleOnline = () => void replayOfflineMutations();
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -393,6 +412,11 @@ export function DayPlanPanel({
           <p className="mt-1 text-sm text-slate-600">{dayPlan.serviceDate}</p>
           <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
           <p className="mt-1 text-xs text-slate-500">Progress: {syncStatusLabel(syncStatus)}</p>
+          {queueStorageUnavailable && (
+            <p className="mt-2 rounded-lg bg-red-50 p-2 text-xs font-semibold text-red-900" role="alert">
+              Durable offline storage is unavailable. Keep this app open and reconnect before continuing field work.
+            </p>
+          )}
           {pendingMutationCount > 0 && (
             <div className="mt-2 rounded-lg bg-amber-50 p-2 text-xs font-semibold text-amber-900" role="status">
               <p>

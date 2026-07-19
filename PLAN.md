@@ -573,10 +573,11 @@ Current state:
 - Offline queue tenancy binds to the loaded crew day plan's server-owned organization rather than membership ordering
 - Offline stop-progress replay uses transactionally persisted client mutation IDs for exact deduplication and conflicting-reuse rejection
 - Mobile route queue feedback summarizes state counts, oldest queued time, and maximum retry attempts
+- Mobile route feedback distinguishes unavailable durable browser storage, and legacy local progress writes no longer throw when storage is blocked
 
 Next implementation work:
 
-- Surface IndexedDB storage unavailability separately from durable queued state
+- Request persistent browser storage after the first durable field mutation
 
 ## Planned
 

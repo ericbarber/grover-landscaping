@@ -67,6 +67,7 @@
 - 2026-07-19: Bound offline progress tenancy to the loaded crew day plan.
 - 2026-07-19: Added transactional server idempotency for offline stop-progress replay.
 - 2026-07-19: Added mobile offline queue age and retry-state summaries.
+- 2026-07-19: Added explicit durable-storage failure guidance for mobile field work.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

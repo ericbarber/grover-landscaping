@@ -57,6 +57,11 @@ The mobile route summarizes pending, retry-failed, and conflicted counts, the
 oldest queued timestamp, and the maximum replay-attempt count before the detailed
 ordered review.
 
+IndexedDB failures are shown separately from a successfully queued change. The
+crew is told to keep the app open and reconnect rather than receiving a false
+durability claim. Legacy local-storage progress writes and resets also tolerate
+blocked browser storage without breaking the in-memory field controls.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.
