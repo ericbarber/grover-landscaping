@@ -663,9 +663,14 @@ pub async fn queue_delivery_notification(
             report.report_status,
             report.delivered_at IS NOT NULL AS delivered_at_present,
             report.share_token,
-            job.organization_id
+            job.organization_id,
+            account.email_notifications_enabled,
+            account.sms_notifications_enabled,
+            account.contact_email,
+            account.contact_phone
         FROM job_completion_reports report
         JOIN service_jobs job ON job.id = report.job_id
+        JOIN customer_accounts account ON account.id = job.customer_account_id
         WHERE report.id = $1
         FOR UPDATE
         "#,
@@ -692,17 +697,57 @@ pub async fn queue_delivery_notification(
         transaction.rollback().await?;
         return Ok(CompletionReportDeliveryNotificationResult::NotDelivered);
     }
+    let preference_allowed = match channel {
+        "email" => {
+            current.get::<bool, _>("email_notifications_enabled")
+                && current
+                    .get::<Option<String>, _>("contact_email")
+                    .is_some_and(|value| value.eq_ignore_ascii_case(recipient.trim()))
+        }
+        "sms" => {
+            current.get::<bool, _>("sms_notifications_enabled")
+                && current.get::<Option<String>, _>("contact_phone").as_deref()
+                    == Some(recipient.trim())
+        }
+        _ => false,
+    };
+    if !preference_allowed {
+        transaction.rollback().await?;
+        return Ok(CompletionReportDeliveryNotificationResult::PreferenceBlocked);
+    }
 
     let notification_id = format!("notification_{}", Uuid::new_v4().simple());
     let share_url = shared_report_url(&share_token);
     sqlx::query(
         r#"
         INSERT INTO notification_outbox (
-            id, organization_id, entity_type, entity_id, channel, recipient, template_key, payload
+            id, organization_id, entity_type, entity_id, channel, recipient, template_key, payload,
+            available_at
         )
         VALUES (
             $1, $2, 'completion_report', $3, $4, $5, 'completion_report_delivery',
-            jsonb_build_object('report_id', $3::text, 'share_url', $6::text)
+            jsonb_build_object('report_id', $3::text, 'share_url', $6::text),
+            COALESCE((
+                SELECT CASE
+                    WHEN account.quiet_hours_start IS NULL THEN now()
+                    WHEN account.quiet_hours_start < account.quiet_hours_end
+                      AND (now() AT TIME ZONE organization.time_zone)::time >= account.quiet_hours_start
+                      AND (now() AT TIME ZONE organization.time_zone)::time < account.quiet_hours_end
+                      THEN ((now() AT TIME ZONE organization.time_zone)::date + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                    WHEN account.quiet_hours_start > account.quiet_hours_end
+                      AND (now() AT TIME ZONE organization.time_zone)::time >= account.quiet_hours_start
+                      THEN ((now() AT TIME ZONE organization.time_zone)::date + 1 + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                    WHEN account.quiet_hours_start > account.quiet_hours_end
+                      AND (now() AT TIME ZONE organization.time_zone)::time < account.quiet_hours_end
+                      THEN ((now() AT TIME ZONE organization.time_zone)::date + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                    ELSE now()
+                END
+                FROM service_jobs job
+                JOIN customer_accounts account ON account.id = job.customer_account_id
+                JOIN organizations organization ON organization.id = job.organization_id
+                JOIN job_completion_reports report ON report.job_id = job.id
+                WHERE report.id = $3
+            ), now())
         )
         "#,
     )

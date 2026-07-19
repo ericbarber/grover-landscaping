@@ -63,6 +63,14 @@ pub struct SendProjectBidRequest {
     pub recipient: String,
 }
 
+#[derive(Clone, Debug)]
+pub enum ProjectBidSendResult {
+    Sent(ProjectBidResponse),
+    NotSendable,
+    PreferenceBlocked,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct ProjectBidDecisionRequest {
     pub decision: String,
@@ -154,12 +162,13 @@ impl ProjectBidRepository {
         day_plan_id: &str,
         bid_id: &str,
         request: &SendProjectBidRequest,
-    ) -> Option<ProjectBidResponse> {
-        let pool = self.pool.as_ref()?;
+    ) -> ProjectBidSendResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return ProjectBidSendResult::Unavailable;
+        };
         postgres_project_bids::send(pool, day_plan_id, bid_id, request)
             .await
-            .ok()
-            .flatten()
+            .unwrap_or(ProjectBidSendResult::Unavailable)
     }
 
     pub async fn revoke(&self, day_plan_id: &str, bid_id: &str) -> Option<ProjectBidResponse> {

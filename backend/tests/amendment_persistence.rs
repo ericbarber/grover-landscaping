@@ -6,7 +6,7 @@ use grover_landscaping_api::{
     db::{JobAddOnStatusUpdate, JobRepository},
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidRepository,
-        SendProjectBidRequest,
+        ProjectBidSendResult, SendProjectBidRequest,
     },
 };
 use sqlx::Row;
@@ -22,6 +22,12 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .await
         .expect("repository should connect and run migrations");
     let pool = jobs.pool().expect("database pool should be available");
+    sqlx::query(
+        "UPDATE customer_accounts SET contact_email = 'customer@example.com', email_notifications_enabled = TRUE, contact_phone = NULL, sms_notifications_enabled = FALSE, quiet_hours_start = NULL, quiet_hours_end = NULL WHERE id = 'acct_1001'",
+    )
+    .execute(&pool)
+    .await
+    .expect("customer notification fixture should reset");
     sqlx::query(
         "UPDATE day_plan_stops SET estimated_service_minutes = 45 WHERE day_plan_id = $1 AND id = $2",
     )
@@ -125,7 +131,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     let bids = bid_repository.list_for_day_plan(day_plan_id).await;
     assert!(bids.iter().any(|item| item.id == bid.id));
 
-    let sent = bid_repository
+    let ProjectBidSendResult::Sent(sent) = bid_repository
         .send(
             day_plan_id,
             &bid.id,
@@ -135,7 +141,9 @@ async fn repository_persists_and_lists_day_plan_amendments() {
             },
         )
         .await
-        .expect("persisted draft bid should be sendable");
+    else {
+        panic!("persisted draft bid should be sendable");
+    };
     assert_eq!(sent.status, "sent");
     assert_eq!(sent.delivery_status.as_deref(), Some("queued"));
     assert_eq!(sent.delivery_channel.as_deref(), Some("email"));
@@ -161,7 +169,29 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert_eq!(revoked.delivery_status.as_deref(), Some("skipped"));
     assert!(bid_repository.shared_for_token(share_token).await.is_none());
 
-    let resent = bid_repository
+    assert!(matches!(
+        bid_repository
+            .send(
+                day_plan_id,
+                &bid.id,
+                &SendProjectBidRequest {
+                    channel: "sms".to_string(),
+                    recipient: "+16025550123".to_string(),
+                },
+            )
+            .await,
+        ProjectBidSendResult::PreferenceBlocked
+    ));
+    sqlx::query(
+        "UPDATE customer_accounts SET contact_phone = $2, sms_notifications_enabled = TRUE WHERE id = $1",
+    )
+    .bind("acct_1001")
+    .bind("+16025550123")
+    .execute(&pool)
+    .await
+    .expect("test customer SMS preference should be enabled");
+
+    let ProjectBidSendResult::Sent(resent) = bid_repository
         .send(
             day_plan_id,
             &bid.id,
@@ -171,7 +201,9 @@ async fn repository_persists_and_lists_day_plan_amendments() {
             },
         )
         .await
-        .expect("revoked bid should allow a new delivery and token");
+    else {
+        panic!("revoked bid should allow a new delivery and token");
+    };
     let resent_share_token = resent
         .share_url
         .as_deref()

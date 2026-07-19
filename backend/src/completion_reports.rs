@@ -60,6 +60,7 @@ pub enum CompletionReportDeliveryNotificationResult {
     Queued(CompletionReportDeliveryNotificationResponse),
     NotFound,
     NotDelivered,
+    PreferenceBlocked,
     Unavailable,
 }
 

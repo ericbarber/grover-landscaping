@@ -1,4 +1,6 @@
-use crate::project_bids::{ProjectBidLineItemResponse, ProjectBidResponse, SendProjectBidRequest};
+use crate::project_bids::{
+    ProjectBidLineItemResponse, ProjectBidResponse, ProjectBidSendResult, SendProjectBidRequest,
+};
 use sqlx::{PgPool, Row};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -481,10 +483,48 @@ pub async fn send(
     day_plan_id: &str,
     bid_id: &str,
     request: &SendProjectBidRequest,
-) -> Result<Option<ProjectBidResponse>, sqlx::Error> {
+) -> Result<ProjectBidSendResult, sqlx::Error> {
     let proposed_token = Uuid::new_v4().simple().to_string();
     let notification_id = format!("notification_{}", Uuid::new_v4().simple());
     let mut transaction = pool.begin().await?;
+    let preference = sqlx::query(
+        r#"
+        SELECT account.email_notifications_enabled, account.sms_notifications_enabled,
+            account.contact_email, account.contact_phone
+        FROM project_bids bid
+        JOIN customer_accounts account ON account.id = bid.customer_account_id
+        WHERE bid.id = $1 AND bid.day_plan_id = $2 AND bid.status IN ('draft', 'sent')
+        FOR UPDATE
+        "#,
+    )
+    .bind(bid_id)
+    .bind(day_plan_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(preference) = preference else {
+        transaction.rollback().await?;
+        return Ok(ProjectBidSendResult::NotSendable);
+    };
+    let preference_allowed = match request.channel.as_str() {
+        "email" => {
+            preference.get::<bool, _>("email_notifications_enabled")
+                && preference
+                    .get::<Option<String>, _>("contact_email")
+                    .is_some_and(|value| value.eq_ignore_ascii_case(request.recipient.trim()))
+        }
+        "sms" => {
+            preference.get::<bool, _>("sms_notifications_enabled")
+                && preference
+                    .get::<Option<String>, _>("contact_phone")
+                    .as_deref()
+                    == Some(request.recipient.trim())
+        }
+        _ => false,
+    };
+    if !preference_allowed {
+        transaction.rollback().await?;
+        return Ok(ProjectBidSendResult::PreferenceBlocked);
+    }
     let share_token = sqlx::query_scalar::<_, String>(
         r#"
         UPDATE project_bids
@@ -513,19 +553,39 @@ pub async fn send(
 
     let Some(share_token) = share_token else {
         transaction.rollback().await?;
-        return Ok(None);
+        return Ok(ProjectBidSendResult::NotSendable);
     };
 
     let share_url = shared_bid_url(&share_token);
     sqlx::query(
         r#"
         INSERT INTO notification_outbox (
-            id, entity_type, entity_id, channel, recipient, template_key, payload
+            id, organization_id, entity_type, entity_id, channel, recipient, template_key, payload,
+            available_at
         )
-        VALUES (
-            $1, 'project_bid', $2, $3, $4, 'project_bid_review',
-            jsonb_build_object('bid_id', $2::text, 'share_url', $5::text)
-        )
+        SELECT
+            $1, organization.id, 'project_bid', $2, $3, $4, 'project_bid_review',
+            jsonb_build_object('bid_id', $2::text, 'share_url', $5::text),
+            CASE
+                WHEN account.quiet_hours_start IS NULL THEN now()
+                WHEN account.quiet_hours_start < account.quiet_hours_end
+                  AND (now() AT TIME ZONE organization.time_zone)::time >= account.quiet_hours_start
+                  AND (now() AT TIME ZONE organization.time_zone)::time < account.quiet_hours_end
+                  THEN ((now() AT TIME ZONE organization.time_zone)::date + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                WHEN account.quiet_hours_start > account.quiet_hours_end
+                  AND (now() AT TIME ZONE organization.time_zone)::time >= account.quiet_hours_start
+                  THEN ((now() AT TIME ZONE organization.time_zone)::date + 1 + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                WHEN account.quiet_hours_start > account.quiet_hours_end
+                  AND (now() AT TIME ZONE organization.time_zone)::time < account.quiet_hours_end
+                  THEN ((now() AT TIME ZONE organization.time_zone)::date + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                ELSE now()
+            END
+        FROM project_bids bid
+        JOIN day_plans plan ON plan.id = bid.day_plan_id
+        JOIN crews crew ON crew.id = plan.crew_id
+        JOIN organizations organization ON organization.id = crew.organization_id
+        JOIN customer_accounts account ON account.id = bid.customer_account_id
+        WHERE bid.id = $2
         "#,
     )
     .bind(notification_id)
@@ -540,7 +600,9 @@ pub async fn send(
     Ok(list_for_day_plan(pool, day_plan_id)
         .await?
         .into_iter()
-        .find(|bid| bid.id == bid_id))
+        .find(|bid| bid.id == bid_id)
+        .map(ProjectBidSendResult::Sent)
+        .unwrap_or(ProjectBidSendResult::NotSendable))
 }
 
 pub async fn revoke(

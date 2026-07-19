@@ -22,6 +22,12 @@ async fn repository_persists_completion_report_state() {
     let pool = repository
         .pool()
         .expect("repository should expose its pool");
+    sqlx::query(
+        "UPDATE customer_accounts SET contact_email = 'customer@example.com', email_notifications_enabled = TRUE, contact_phone = NULL, sms_notifications_enabled = FALSE, quiet_hours_start = NULL, quiet_hours_end = NULL WHERE id = 'acct_1001'",
+    )
+    .execute(&pool)
+    .await
+    .expect("customer notification fixture should reset");
     sqlx::query("DELETE FROM job_completion_report_status_history WHERE completion_report_id = $1")
         .bind("report_job_1001")
         .execute(&pool)
@@ -99,7 +105,6 @@ async fn repository_persists_completion_report_state() {
         CompletionReportActionResult::Updated(ref response)
             if response.report_status == "in_review" && response.persisted
     ));
-
     let second_persistence = repository.persist_completion_report(&report).await;
     assert_eq!(
         second_persistence.report_status.as_deref(),
@@ -253,6 +258,14 @@ async fn repository_persists_completion_report_state() {
         .await
         .expect("seed job name should be restored after snapshot assertion");
 
+    let blocked_sms = repository
+        .queue_completion_report_delivery_notification("report_job_1001", "sms", "+16025550123")
+        .await;
+    assert_eq!(
+        blocked_sms,
+        CompletionReportDeliveryNotificationResult::PreferenceBlocked
+    );
+
     let notification = repository
         .queue_completion_report_delivery_notification(
             "report_job_1001",
@@ -288,6 +301,38 @@ async fn repository_persists_completion_report_state() {
         notification_row.get::<String, _>("template_key"),
         "completion_report_delivery"
     );
+    sqlx::query(
+        r#"UPDATE customer_accounts
+        SET quiet_hours_start = ((now() AT TIME ZONE 'America/Phoenix') - interval '1 minute')::time,
+            quiet_hours_end = ((now() AT TIME ZONE 'America/Phoenix') + interval '1 hour')::time
+        WHERE id = 'acct_1001'"#,
+    )
+    .execute(&pool)
+    .await
+    .expect("test quiet hours should cover the current local time");
+    let deferred = repository
+        .queue_completion_report_delivery_notification(
+            "report_job_1001",
+            "email",
+            "CUSTOMER@EXAMPLE.COM",
+        )
+        .await;
+    let CompletionReportDeliveryNotificationResult::Queued(deferred) = deferred else {
+        panic!("enabled email delivery should queue during quiet hours");
+    };
+    let deferred_until: bool =
+        sqlx::query_scalar("SELECT available_at > now() FROM notification_outbox WHERE id = $1")
+            .bind(&deferred.notification_id)
+            .fetch_one(&pool)
+            .await
+            .expect("quiet-hour delivery availability should be readable");
+    assert!(deferred_until);
+    sqlx::query(
+        "UPDATE customer_accounts SET quiet_hours_start = NULL, quiet_hours_end = NULL WHERE id = 'acct_1001'",
+    )
+    .execute(&pool)
+    .await
+    .expect("test quiet hours should reset");
     assert_eq!(notification_row.get::<String, _>("status"), "queued");
     assert_eq!(
         notification_row.get::<String, _>("share_url"),

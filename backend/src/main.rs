@@ -86,7 +86,7 @@ use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfi
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
-    ProjectBidRepository, SendProjectBidRequest,
+    ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -3436,6 +3436,14 @@ async fn queue_completion_report_delivery_notification(
             }),
         )
             .into_response(),
+        CompletionReportDeliveryNotificationResult::PreferenceBlocked => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "completion_report_notification_preference_blocked",
+                message: "The selected channel or recipient is not enabled in this customer's account preferences.".to_string(),
+            }),
+        )
+            .into_response(),
         CompletionReportDeliveryNotificationResult::Unavailable => (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(ErrorResponse {
@@ -3836,22 +3844,37 @@ async fn send_project_bid(
         return response;
     }
 
-    let Some(bid) = state
+    match state
         .project_bids
         .send(&day_plan_id, &bid_id, &request)
         .await
-    else {
-        return (
+    {
+        ProjectBidSendResult::Sent(bid) => Json(bid).into_response(),
+        ProjectBidSendResult::PreferenceBlocked => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "project_bid_notification_preference_blocked",
+                message: "The selected channel or recipient is not enabled in this customer's account preferences.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidSendResult::NotSendable => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "project_bid_not_sendable",
                 message: "Only a persisted draft bid can be sent.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    Json(bid).into_response()
+            .into_response(),
+        ProjectBidSendResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "project_bid_notification_unavailable",
+                message: "Project bid delivery requires database persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn revoke_project_bid(
@@ -6700,7 +6723,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn send_project_bid_requires_a_persisted_draft() {
+    async fn send_project_bid_requires_persistence() {
         let request_body = serde_json::json!({
             "channel": "email",
             "recipient": "customer@example.com"
@@ -6717,7 +6740,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]

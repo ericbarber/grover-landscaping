@@ -497,10 +497,13 @@ Current state:
 - Manager dashboard can load, create, validate, and save property onboarding profiles with persisted/local state feedback
 - Customer portal preview displays grouped yards and keeps customer-owned ungrouped yards visible
 - Portfolio coverage summary reports total, grouped, and ungrouped yard counts
+- Completion-report and project-bid delivery queues enforce each account's enabled channel and configured recipient
+- Customer deliveries queued during account quiet hours are deferred until quiet hours end in the organization's timezone
+- Project-bid notification records carry organization ownership for tenant-scoped history and recovery
 
 Next implementation work:
 
-- Enforce account notification preferences when queueing customer deliveries
+- Surface preference-blocked delivery guidance in manager report and bid workflows
 
 ## Planned
 
