@@ -219,6 +219,15 @@ export function ManagerTeamActivityPanel({
     URL.revokeObjectURL(url);
   }
 
+  async function copyActivityId(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage(`${label} copied.`);
+    } catch {
+      setMessage(`Copy is unavailable. Select the ${label.toLowerCase()} text instead.`);
+    }
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
@@ -356,10 +365,24 @@ export function ManagerTeamActivityPanel({
                 <div>
                   <dt className="font-semibold">Actor ID</dt>
                   <dd className="break-all">{item.actorUserId}</dd>
+                  <button
+                    className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 font-semibold"
+                    onClick={() => void copyActivityId(item.actorUserId, 'Actor ID')}
+                    type="button"
+                  >
+                    Copy actor ID
+                  </button>
                 </div>
                 <div>
                   <dt className="font-semibold">Target ID</dt>
                   <dd className="break-all">{item.targetId}</dd>
+                  <button
+                    className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 font-semibold"
+                    onClick={() => void copyActivityId(item.targetId, 'Target ID')}
+                    type="button"
+                  >
+                    Copy target ID
+                  </button>
                 </div>
               </dl>
             </details>

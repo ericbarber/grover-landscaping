@@ -537,10 +537,11 @@ Current state:
 - Owner team activity sorts the loaded filtered view and CSV export newest-first or oldest-first without changing pagination cursors
 - Owner team activity shows each event's exact local date and time
 - Owners can reveal immutable actor and target IDs per activity event without cluttering the readable default view
+- Touch-safe activity controls copy immutable actor and target IDs with mobile clipboard feedback
 
 Next implementation work:
 
-- Add copy controls for immutable team activity IDs
+- Add copy controls for immutable member identities
 
 ## Planned
 
