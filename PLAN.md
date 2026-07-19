@@ -556,10 +556,11 @@ Current state:
 - Mobile users receive a four-second confirmation when API readiness recovers
 - API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
 - API downtime feedback includes a touch-safe immediate readiness retry action
+- Production shell updates are announced and applied only after a user-controlled reload
 
 Next implementation work:
 
-- Show production service-worker update availability and offer a controlled reload
+- Add installability guidance for iOS and Android mobile users
 
 ## Planned
 

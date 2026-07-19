@@ -50,6 +50,7 @@
 - 2026-07-19: Paused mobile API readiness checks while tabs are hidden.
 - 2026-07-19: Added a manual mobile API readiness retry action.
 - 2026-07-19: Added a production service worker for resilient mobile shell loading.
+- 2026-07-19: Added controlled production service-worker update prompts.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

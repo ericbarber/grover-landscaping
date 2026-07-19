@@ -13,6 +13,9 @@ The worker uses a versioned shell cache with these boundaries:
 - Navigation URLs are not used as cache keys, preventing invitation, report, or
   bid tokens from being retained in cache metadata.
 - Activation removes older Grover shell cache versions.
+- An installed update waits until the application announces it and the user
+  chooses **Update and reload**. The active page reloads only after the new worker
+  takes control.
 
 The service worker improves shell recovery and repeat loading. It does not claim
 that mutations work offline. Offline data queues remain a separate planned phase

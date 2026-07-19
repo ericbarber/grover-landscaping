@@ -7,6 +7,7 @@ import { RouteLoadBoundary } from './components/RouteLoadBoundary';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { ApiStatusBanner } from './components/ApiStatusBanner';
 import { registerProductionServiceWorker } from './registerServiceWorker';
+import { ServiceWorkerUpdateBanner } from './components/ServiceWorkerUpdateBanner';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <NetworkStatusBanner />
     <ApiStatusBanner />
+    <ServiceWorkerUpdateBanner />
     <RouteLoadBoundary>
       <React.Suspense fallback={(
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grover-field-shell-v1';
+const CACHE_NAME = 'grover-field-shell-v2';
 const SHELL_ASSETS = ['/', '/manifest.webmanifest', '/app-icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -19,6 +19,10 @@ self.addEventListener('activate', (event) => {
       ))
       .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
