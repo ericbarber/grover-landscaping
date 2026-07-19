@@ -545,10 +545,11 @@ Current state:
 - Owners can reveal and copy immutable audit event IDs from each mobile activity card
 - Owner audit-ID search is debounced, tenant-scoped, and applied across server-paginated history
 - Production builds split React and OIDC vendor code from the application bundle, keeping every chunk below the 500 kB warning threshold
+- Public bid, report, invitation, and authenticated dashboard route bodies are lazy-loaded with an accessible loading state
 
 Next implementation work:
 
-- Lazy-load public bid, report, invitation, and authenticated dashboard routes
+- Keep OIDC and the authenticated shell out of public bid and report startup paths
 
 ## Planned
 
