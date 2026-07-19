@@ -484,6 +484,7 @@ Current state:
 - Pixel 7 smoke coverage proves audited date-change confirmation, required notification intent, persisted dispatch movement, activity follow-up, and cleanup over Tailscale
 - Tenant-scoped dispatch notification completion records channel/note context once against the latest unresolved notification-required move
 - Manager operational activity can complete dispatch customer follow-up by channel and suppresses actions for linked completed reassignment events
+- Pixel 7 dispatch smoke completes and verifies channel-specific customer follow-up before restoring the baseline schedule
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -624,7 +625,7 @@ Current state:
 
 Next implementation work:
 
-- Extend the live mobile dispatch smoke through audited customer-notification completion
+- Add branch and territory foundations for multi-crew dispatch hierarchy
 
 ## Planned
 

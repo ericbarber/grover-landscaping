@@ -177,6 +177,9 @@ test('moves scheduled work with notification follow-up from mobile dispatch', as
     await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
     await expect(page.getByText('Scheduled job moved').first()).toBeVisible();
     await expect(page.getByText(/Notify the customer about the changed service schedule/).first()).toBeVisible();
+    await page.getByRole('button', { name: 'Mark customer notified' }).first().click();
+    await expect(page.getByText('Dispatch customer notified').first()).toBeVisible();
+    await expect(page.getByText(/Customer contacted by phone/).first()).toBeVisible();
   } finally {
     await request.put(
       `${apiOrigin}/jobs/job_1003/dispatch-assignment`,
