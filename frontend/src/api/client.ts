@@ -1597,10 +1597,11 @@ export function organizationMembershipsPath(organizationId: string): string {
 
 export function organizationTeamActivityPath(
   organizationId: string,
-  options: { before?: string; limit?: number } = {},
+  options: { eventKind?: TeamAdministrationEventKind; before?: string; limit?: number } = {},
 ): string {
   const path = `/organizations/${encodeURIComponent(organizationId)}/team-activity`;
   const params = new URLSearchParams();
+  if (options.eventKind) params.set('event_kind', options.eventKind);
   if (options.before) params.set('before', options.before);
   if (options.limit !== undefined) params.set('limit', String(options.limit));
   const query = params.toString();
@@ -1654,7 +1655,7 @@ export function toTeamAdministrationActivity(
 
 export async function fetchTeamAdministrationActivity(
   organizationId: string,
-  options: { before?: string; limit?: number } = {},
+  options: { eventKind?: TeamAdministrationEventKind; before?: string; limit?: number } = {},
 ): Promise<TeamAdministrationActivity[]> {
   const activity = await request<ApiTeamAdministrationActivity[]>(
     organizationTeamActivityPath(organizationId, options),

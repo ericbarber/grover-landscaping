@@ -372,9 +372,19 @@ async fn repository_bootstraps_first_owner_once() {
     assert_eq!(profile_activity.target_label, "Jordan Grover");
     assert_eq!(
         organizations
-            .list_team_administration_activity_page(&created.organization_id, None, 1)
+            .list_team_administration_activity_page(&created.organization_id, None, None, 1)
             .await
             .len(),
         1
     );
+    assert!(organizations
+        .list_team_administration_activity_page(
+            &created.organization_id,
+            Some("membership_profile_updated"),
+            None,
+            25,
+        )
+        .await
+        .iter()
+        .all(|item| item.event_kind == "membership_profile_updated"));
 }

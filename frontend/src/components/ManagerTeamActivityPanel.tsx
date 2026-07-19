@@ -80,7 +80,10 @@ export function ManagerTeamActivityPanel({
     if (!organizationId) return;
     setIsLoading(true);
     try {
-      const loaded = await fetchTeamAdministrationActivity(organizationId, { limit: 25 });
+      const loaded = await fetchTeamAdministrationActivity(organizationId, {
+        eventKind: eventFilter === 'all' ? undefined : eventFilter,
+        limit: 25,
+      });
       setActivity(loaded);
       setHasOlder(loaded.length === 25);
       setMessage(null);
@@ -98,6 +101,7 @@ export function ManagerTeamActivityPanel({
     try {
       const older = await fetchTeamAdministrationActivity(organizationId, {
         before,
+        eventKind: eventFilter === 'all' ? undefined : eventFilter,
         limit: 25,
       });
       setActivity((current) => [
@@ -115,7 +119,7 @@ export function ManagerTeamActivityPanel({
 
   useEffect(() => {
     void refresh();
-  }, [organizationId, refreshSignal]);
+  }, [organizationId, refreshSignal, eventFilter]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

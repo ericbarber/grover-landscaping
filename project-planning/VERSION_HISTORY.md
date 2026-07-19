@@ -20,6 +20,7 @@
 - 2026-07-19: Added mobile team member search and role/status filters.
 - 2026-07-19: Added actor and event filters to mobile owner activity.
 - 2026-07-19: Added bounded pagination for persisted owner team activity.
+- 2026-07-19: Applied owner team event filters across persisted history.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

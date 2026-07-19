@@ -525,10 +525,11 @@ Current state:
 - Mobile team administration supports member-name or identity search plus role and status filters
 - Owner team activity supports actor-name or identity search plus event-type filtering
 - Owner team activity supports bounded timestamp-cursor pagination and duplicate-safe older-event loading
+- Owner team event filters are tenant-scoped and applied across server-paginated history
 
 Next implementation work:
 
-- Apply owner team event filters server-side across paginated history
+- Apply owner team actor search server-side across paginated history
 
 ## Planned
 

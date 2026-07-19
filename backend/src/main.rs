@@ -231,6 +231,7 @@ struct OperationalActivityQuery {
 
 #[derive(Debug, Default, Deserialize)]
 struct TeamActivityQuery {
+    event_kind: Option<String>,
     before: Option<String>,
     limit: Option<i64>,
 }
@@ -913,7 +914,6 @@ async fn get_job(
     {
         return response;
     }
-
     Json(state.jobs.get_job(id).await).into_response()
 }
 
@@ -1783,6 +1783,19 @@ async fn list_team_administration_activity(
     Path(organization_id): Path<String>,
     Query(query): Query<TeamActivityQuery>,
 ) -> Response {
+    const EVENT_KINDS: &[&str] = &[
+        "organization_profile_updated",
+        "invite_accepted",
+        "invitation_revoked",
+        "invitation_reissued",
+        "role_changed",
+        "membership_suspended",
+        "membership_reactivated",
+        "membership_profile_updated",
+        "crew_profile_updated",
+        "crew_deactivated",
+        "crew_reactivated",
+    ];
     if let Err(response) = require_organization_membership(
         &state,
         &principal,
@@ -1792,6 +1805,17 @@ async fn list_team_administration_activity(
     .await
     {
         return response;
+    }
+    let event_kind = query.event_kind.as_deref().map(str::trim);
+    if event_kind.is_some_and(|value| !EVENT_KINDS.contains(&value)) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "event_kind is not a supported team activity event.".to_string(),
+            }),
+        )
+            .into_response();
     }
     let before = query.before.as_deref().map(str::trim);
     if before.is_some_and(|value| value.is_empty() || value.len() > 64) {
@@ -1819,7 +1843,7 @@ async fn list_team_administration_activity(
     Json(
         state
             .organizations
-            .list_team_administration_activity_page(&organization_id, before, limit)
+            .list_team_administration_activity_page(&organization_id, event_kind, before, limit)
             .await,
     )
     .into_response()
@@ -5186,6 +5210,22 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_team_activity_filter");
+    }
+
+    #[tokio::test]
+    async fn organization_team_activity_endpoint_rejects_unknown_events() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/team-activity?event_kind=unknown")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

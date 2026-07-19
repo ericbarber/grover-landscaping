@@ -260,20 +260,21 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
     ) -> Vec<TeamAdministrationActivity> {
-        self.list_team_administration_activity_page(organization_id, None, 25)
+        self.list_team_administration_activity_page(organization_id, None, None, 25)
             .await
     }
 
     pub async fn list_team_administration_activity_page(
         &self,
         organization_id: &str,
+        event_kind: Option<&str>,
         before: Option<&str>,
         limit: i64,
     ) -> Vec<TeamAdministrationActivity> {
         let Some(pool) = &self.pool else {
             return Vec::new();
         };
-        list_team_administration_activity(pool, organization_id, before, limit)
+        list_team_administration_activity(pool, organization_id, event_kind, before, limit)
             .await
             .unwrap_or_default()
     }
@@ -1045,6 +1046,7 @@ async fn list_organization_memberships(
 async fn list_team_administration_activity(
     pool: &PgPool,
     organization_id: &str,
+    event_kind: Option<&str>,
     before: Option<&str>,
     limit: i64,
 ) -> Result<Vec<TeamAdministrationActivity>, sqlx::Error> {
@@ -1087,7 +1089,8 @@ async fn list_team_administration_activity(
           ON target_crew.organization_id = audit.organization_id
          AND target_crew.id = audit.target_id
         WHERE audit.organization_id = $1
-          AND ($2::timestamptz IS NULL OR audit.occurred_at < $2::timestamptz)
+          AND ($2::text IS NULL OR audit.event_kind = $2)
+          AND ($3::timestamptz IS NULL OR audit.occurred_at < $3::timestamptz)
           AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
@@ -1102,10 +1105,11 @@ async fn list_team_administration_activity(
             'crew_reactivated'
         )
         ORDER BY occurred_at DESC, id DESC
-        LIMIT $3
+        LIMIT $4
         "#,
     )
     .bind(organization_id)
+    .bind(event_kind)
     .bind(before)
     .bind(limit)
     .fetch_all(pool)
