@@ -12,6 +12,7 @@ import {
 import type { CompletionReportSnapshot } from '../api/client';
 import type { CompletionReportQueueItem } from '../domain/completionReportQueue';
 import type { CompletionReportOperationalFilters } from '../domain/completionReportOperationalFilters';
+import { completionReportOperationalFilterCount } from '../domain/completionReportOperationalFilters';
 
 type ManagerCompletionReportQueuePanelProps = {
   reports: CompletionReportSnapshot[];
@@ -61,6 +62,7 @@ export function ManagerCompletionReportQueuePanel({
   const [property, setProperty] = useState('');
   const [scheduledFrom, setScheduledFrom] = useState('');
   const [scheduledTo, setScheduledTo] = useState('');
+  const [appliedFilterCount, setAppliedFilterCount] = useState(0);
   const hasInvalidDateRange = Boolean(scheduledFrom && scheduledTo && scheduledFrom > scheduledTo);
   const queueItems = useMemo(() => buildCompletionReportQueue(reports), [reports]);
   const organizationIds = useMemo(
@@ -118,17 +120,21 @@ export function ManagerCompletionReportQueuePanel({
           <button
             className="self-end rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
             disabled={isLoading || hasInvalidDateRange}
-            onClick={() => onRefresh({
-              organizationId: organizationId || undefined,
-              crewId: crewId || undefined,
-              customer: customer.trim() || undefined,
-              property: property.trim() || undefined,
-              scheduledFrom: scheduledFrom || undefined,
-              scheduledTo: scheduledTo || undefined,
-              status: statusFilter === 'needs_review' ? 'submitted' : statusFilter,
-              readiness: readinessFilter,
-              readinessBlocker,
-            })}
+            onClick={() => {
+              const filters: CompletionReportOperationalFilters = {
+                organizationId: organizationId || undefined,
+                crewId: crewId || undefined,
+                customer: customer.trim() || undefined,
+                property: property.trim() || undefined,
+                scheduledFrom: scheduledFrom || undefined,
+                scheduledTo: scheduledTo || undefined,
+                status: statusFilter === 'needs_review' ? 'submitted' : statusFilter,
+                readiness: readinessFilter,
+                readinessBlocker,
+              };
+              setAppliedFilterCount(completionReportOperationalFilterCount(filters));
+              onRefresh(filters);
+            }}
             type="button"
           >
             {isLoading ? 'Applying' : 'Apply'}
@@ -180,6 +186,35 @@ export function ManagerCompletionReportQueuePanel({
           Scheduled through must be on or after the starting date.
         </p>
       ) : null}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <p aria-live="polite" className="text-xs font-medium text-slate-500">
+          {appliedFilterCount === 0
+            ? 'Using the default active-report queue.'
+            : `${appliedFilterCount} persisted ${appliedFilterCount === 1 ? 'filter' : 'filters'} applied.`}
+        </p>
+        {appliedFilterCount > 0 ? (
+          <button
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            disabled={isLoading}
+            onClick={() => {
+              setOrganizationId('');
+              setCrewId('');
+              setCustomer('');
+              setProperty('');
+              setScheduledFrom('');
+              setScheduledTo('');
+              setStatusFilter('active');
+              setReadinessFilter('all');
+              setReadinessBlocker('all');
+              setAppliedFilterCount(0);
+              onRefresh({ status: 'active', readiness: 'all', readinessBlocker: 'all' });
+            }}
+            type="button"
+          >
+            Clear filters
+          </button>
+        ) : null}
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
         <div className="rounded-lg bg-amber-50 p-3">

@@ -469,6 +469,7 @@ Current state:
 - Manager report queue controls apply persisted organization and crew filters with local fallback parity
 - Manager report queue controls apply persisted customer, property, and inclusive scheduled-date filters with validated date ranges
 - Manager lifecycle, readiness, and readiness-blocker controls apply to persisted report loading with equivalent local fallback filtering
+- Manager report queue summarizes applied persisted filters and restores the default active queue in one action
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -609,7 +610,7 @@ Current state:
 
 Next implementation work:
 
-- Add clear-filter and active-filter feedback to the Phase 3 manager completion-report queue
+- Preserve manager completion-report filter selections across mobile browser reloads
 
 ## Planned
 

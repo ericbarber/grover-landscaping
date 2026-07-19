@@ -17,6 +17,24 @@ export type CompletionReportOperationalFilters = {
   readinessBlocker?: CompletionReportListReadinessBlockerFilter;
 };
 
+export function completionReportOperationalFilterCount(
+  filters: CompletionReportOperationalFilters,
+): number {
+  return [
+    filters.organizationId,
+    filters.crewId,
+    filters.customer,
+    filters.property,
+    filters.scheduledFrom,
+    filters.scheduledTo,
+    filters.status && filters.status !== 'active' ? filters.status : undefined,
+    filters.readiness && filters.readiness !== 'all' ? filters.readiness : undefined,
+    filters.readinessBlocker && filters.readinessBlocker !== 'all'
+      ? filters.readinessBlocker
+      : undefined,
+  ].filter(Boolean).length;
+}
+
 function includesNormalized(value: string, query?: string): boolean {
   return !query || value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
 }

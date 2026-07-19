@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { CompletionReportSnapshot } from '../api/client';
-import { matchesCompletionReportOperationalFilters } from './completionReportOperationalFilters';
+import {
+  completionReportOperationalFilterCount,
+  matchesCompletionReportOperationalFilters,
+} from './completionReportOperationalFilters';
 
 const report = {
   reportStatus: 'submitted',
@@ -43,5 +46,19 @@ describe('completion report operational filters', () => {
     expect(matchesCompletionReportOperationalFilters(report, { status: 'delivered' })).toBe(false);
     expect(matchesCompletionReportOperationalFilters(report, { readiness: 'ready' })).toBe(false);
     expect(matchesCompletionReportOperationalFilters(report, { readinessBlocker: 'add_ons' })).toBe(false);
+  });
+
+  it('counts only non-default persisted filters', () => {
+    expect(completionReportOperationalFilterCount({
+      status: 'active',
+      readiness: 'all',
+      readinessBlocker: 'all',
+    })).toBe(0);
+    expect(completionReportOperationalFilterCount({
+      organizationId: 'org_1001',
+      customer: 'Desert',
+      status: 'submitted',
+      readiness: 'blocked',
+    })).toBe(4);
   });
 });
