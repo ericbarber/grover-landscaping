@@ -233,6 +233,7 @@ struct OperationalActivityQuery {
 struct TeamActivityQuery {
     event_kind: Option<String>,
     actor: Option<String>,
+    target: Option<String>,
     before: Option<String>,
     limit: Option<i64>,
 }
@@ -1830,6 +1831,18 @@ async fn list_team_administration_activity(
         )
             .into_response();
     }
+    let target_query = query.target.as_deref().map(str::trim);
+    if target_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "target must be a non-empty search no longer than 120 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
     let before = query.before.as_deref().map(str::trim);
     if before.is_some_and(|value| value.is_empty() || value.len() > 64) {
         return (
@@ -1860,6 +1873,7 @@ async fn list_team_administration_activity(
                 &organization_id,
                 event_kind,
                 actor_query,
+                target_query,
                 before,
                 limit,
             )

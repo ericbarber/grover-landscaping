@@ -49,15 +49,23 @@ const eventKinds: TeamAdministrationEventKind[] = [
 export function filterTeamActivity(
   activity: TeamAdministrationActivity[],
   actorQuery: string,
+  targetQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
 ): TeamAdministrationActivity[] {
   const normalizedQuery = actorQuery.trim().toLocaleLowerCase();
+  const normalizedTarget = targetQuery.trim().toLocaleLowerCase();
   return activity.filter((item) => {
     const matchesActor = !normalizedQuery || [
       item.actorLabel,
       item.actorUserId,
     ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
-    return matchesActor && (eventKind === 'all' || item.eventKind === eventKind);
+    const matchesTarget = !normalizedTarget || [
+      item.targetLabel,
+      item.targetId,
+    ].some((value) => value.toLocaleLowerCase().includes(normalizedTarget));
+    return matchesActor
+      && matchesTarget
+      && (eventKind === 'all' || item.eventKind === eventKind);
   });
 }
 
@@ -70,11 +78,12 @@ export function ManagerTeamActivityPanel({
 }) {
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
   const [actorQuery, setActorQuery] = useState('');
+  const [targetQuery, setTargetQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const filteredActivity = filterTeamActivity(activity, actorQuery, eventFilter);
+  const filteredActivity = filterTeamActivity(activity, actorQuery, targetQuery, eventFilter);
 
   async function refresh() {
     if (!organizationId) return;
@@ -83,6 +92,7 @@ export function ManagerTeamActivityPanel({
       const loaded = await fetchTeamAdministrationActivity(organizationId, {
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
         actor: actorQuery.trim() || undefined,
+        target: targetQuery.trim() || undefined,
         limit: 25,
       });
       setActivity(loaded);
@@ -104,6 +114,7 @@ export function ManagerTeamActivityPanel({
         before,
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
         actor: actorQuery.trim() || undefined,
+        target: targetQuery.trim() || undefined,
         limit: 25,
       });
       setActivity((current) => [
@@ -120,9 +131,12 @@ export function ManagerTeamActivityPanel({
   }
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => void refresh(), actorQuery ? 300 : 0);
+    const timeout = window.setTimeout(
+      () => void refresh(),
+      actorQuery || targetQuery ? 300 : 0,
+    );
     return () => window.clearTimeout(timeout);
-  }, [organizationId, refreshSignal, eventFilter, actorQuery]);
+  }, [organizationId, refreshSignal, eventFilter, actorQuery, targetQuery]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -143,7 +157,7 @@ export function ManagerTeamActivityPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
           <input
@@ -152,6 +166,16 @@ export function ManagerTeamActivityPanel({
             placeholder="Name or identity"
             type="search"
             value={actorQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Find affected item
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setTargetQuery(event.target.value)}
+            placeholder="Member, crew, or ID"
+            type="search"
+            value={targetQuery}
           />
         </label>
         <label className="text-xs font-semibold text-slate-700">

@@ -527,10 +527,11 @@ Current state:
 - Owner team activity supports bounded timestamp-cursor pagination and duplicate-safe older-event loading
 - Owner team event filters are tenant-scoped and applied across server-paginated history
 - Owner team actor search matches readable names or immutable identities across server-paginated history
+- Owner team affected-item search matches readable member, crew, or organization labels and immutable target IDs across persisted history
 
 Next implementation work:
 
-- Add affected-member and crew search to owner team activity
+- Add one-click filter clearing and active-filter summaries to mobile team administration
 
 ## Planned
 
