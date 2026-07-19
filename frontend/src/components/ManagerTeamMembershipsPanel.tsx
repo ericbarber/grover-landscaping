@@ -53,6 +53,14 @@ export function filterTeamMemberships(
   });
 }
 
+export function teamMembershipActiveFilterCount(
+  query: string,
+  role: AccessRole | 'all',
+  status: MembershipStatusFilter,
+): number {
+  return Number(Boolean(query.trim())) + Number(role !== 'all') + Number(status !== 'all');
+}
+
 export function ManagerTeamMembershipsPanel({
   organizationId,
   onTeamChanged,
@@ -76,6 +84,11 @@ export function ManagerTeamMembershipsPanel({
   ).length;
   const filteredMemberships = filterTeamMemberships(
     memberships,
+    searchQuery,
+    roleFilter,
+    statusFilter,
+  );
+  const activeFilterCount = teamMembershipActiveFilterCount(
     searchQuery,
     roleFilter,
     statusFilter,
@@ -229,9 +242,25 @@ export function ManagerTeamMembershipsPanel({
           </select>
         </label>
       </div>
-      <p className="mt-3 text-xs text-slate-500" aria-live="polite">
-        Showing {filteredMemberships.length} of {memberships.length} members
-      </p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-500" aria-live="polite">
+          Showing {filteredMemberships.length} of {memberships.length} members
+          {activeFilterCount ? ` · ${activeFilterCount} active filter${activeFilterCount === 1 ? '' : 's'}` : ''}
+        </p>
+        {activeFilterCount ? (
+          <button
+            className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+            onClick={() => {
+              setSearchQuery('');
+              setRoleFilter('all');
+              setStatusFilter('all');
+            }}
+            type="button"
+          >
+            Clear filters
+          </button>
+        ) : null}
+      </div>
       <ul className="mt-4 space-y-3">
         {filteredMemberships.map((membership) => {
           const canChange = canChangeMembershipRole(membership, activeOwnerCount);

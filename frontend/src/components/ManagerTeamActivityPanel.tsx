@@ -69,6 +69,16 @@ export function filterTeamActivity(
   });
 }
 
+export function teamActivityActiveFilterCount(
+  actorQuery: string,
+  targetQuery: string,
+  eventKind: TeamAdministrationEventKind | 'all',
+): number {
+  return Number(Boolean(actorQuery.trim()))
+    + Number(Boolean(targetQuery.trim()))
+    + Number(eventKind !== 'all');
+}
+
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
@@ -84,6 +94,11 @@ export function ManagerTeamActivityPanel({
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const filteredActivity = filterTeamActivity(activity, actorQuery, targetQuery, eventFilter);
+  const activeFilterCount = teamActivityActiveFilterCount(
+    actorQuery,
+    targetQuery,
+    eventFilter,
+  );
 
   async function refresh() {
     if (!organizationId) return;
@@ -194,9 +209,25 @@ export function ManagerTeamActivityPanel({
           </select>
         </label>
       </div>
-      <p className="mt-3 text-xs text-slate-500" aria-live="polite">
-        Showing {filteredActivity.length} of {activity.length} events
-      </p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-500" aria-live="polite">
+          Showing {filteredActivity.length} of {activity.length} events
+          {activeFilterCount ? ` · ${activeFilterCount} active filter${activeFilterCount === 1 ? '' : 's'}` : ''}
+        </p>
+        {activeFilterCount ? (
+          <button
+            className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+            onClick={() => {
+              setActorQuery('');
+              setTargetQuery('');
+              setEventFilter('all');
+            }}
+            type="button"
+          >
+            Clear filters
+          </button>
+        ) : null}
+      </div>
       <ol className="mt-4 space-y-2">
         {filteredActivity.map((item) => (
           <li className="rounded-lg bg-slate-50 p-3 text-sm" key={item.id}>

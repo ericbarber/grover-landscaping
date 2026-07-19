@@ -528,10 +528,11 @@ Current state:
 - Owner team event filters are tenant-scoped and applied across server-paginated history
 - Owner team actor search matches readable names or immutable identities across server-paginated history
 - Owner team affected-item search matches readable member, crew, or organization labels and immutable target IDs across persisted history
+- Mobile member and team-activity filters show active-filter counts and offer one-tap clearing
 
 Next implementation work:
 
-- Add one-click filter clearing and active-filter summaries to mobile team administration
+- Add compact role and status summary counts to owner team administration
 
 ## Planned
 

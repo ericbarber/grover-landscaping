@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { TeamAdministrationActivity } from '../api/client';
-import { filterTeamActivity, teamActivityLabel } from './ManagerTeamActivityPanel';
+import {
+  filterTeamActivity,
+  teamActivityActiveFilterCount,
+  teamActivityLabel,
+} from './ManagerTeamActivityPanel';
 
 describe('team administration activity labels', () => {
   it('labels every supported audit event as a manager action', () => {
@@ -46,5 +50,10 @@ describe('team administration activity labels', () => {
     expect(filterTeamActivity(activity, '', 'crew_1', 'all')).toEqual([activity[1]]);
     expect(filterTeamActivity(activity, '', '', 'role_changed')).toEqual([activity[0]]);
     expect(filterTeamActivity(activity, 'sam', '', 'role_changed')).toEqual([]);
+  });
+
+  it('counts active activity filters', () => {
+    expect(teamActivityActiveFilterCount('', '', 'all')).toBe(0);
+    expect(teamActivityActiveFilterCount('Jordan', 'North', 'crew_profile_updated')).toBe(3);
   });
 });

@@ -4,6 +4,7 @@ import {
   canChangeMembershipRole,
   canSuspendMembership,
   filterTeamMemberships,
+  teamMembershipActiveFilterCount,
 } from './ManagerTeamMembershipsPanel';
 
 const membership = (
@@ -53,5 +54,10 @@ describe('team membership role controls', () => {
     expect(filterTeamMemberships(members, 'identity-2', 'all', 'all')).toEqual([members[1]]);
     expect(filterTeamMemberships(members, '', 'Manager', 'suspended')).toEqual([members[1]]);
     expect(filterTeamMemberships(members, '', 'CrewLead', 'suspended')).toEqual([]);
+  });
+
+  it('counts active team member filters', () => {
+    expect(teamMembershipActiveFilterCount('', 'all', 'all')).toBe(0);
+    expect(teamMembershipActiveFilterCount('Jordan', 'CrewLead', 'active')).toBe(3);
   });
 });
