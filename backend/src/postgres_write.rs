@@ -138,6 +138,43 @@ pub async fn complete_job(
     Ok(JobLifecycleWriteResult::Persisted)
 }
 
+pub async fn update_checklist_item(
+    pool: &PgPool,
+    job_id: &str,
+    item_id: &str,
+    completed: bool,
+) -> Result<bool, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let result =
+        sqlx::query("UPDATE job_checklist_items SET completed = $3 WHERE job_id = $1 AND id = $2")
+            .bind(job_id)
+            .bind(item_id)
+            .bind(completed)
+            .execute(&mut *transaction)
+            .await?;
+    if result.rows_affected() != 1 {
+        transaction.rollback().await?;
+        return Ok(false);
+    }
+    sqlx::query(
+        r#"
+        UPDATE service_jobs
+        SET completed_checklist_items = (
+            SELECT COUNT(*)::INTEGER
+            FROM job_checklist_items
+            WHERE job_id = $1 AND completed
+        ),
+        updated_at = now()
+        WHERE id = $1
+        "#,
+    )
+    .bind(job_id)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(true)
+}
+
 pub async fn update_job_add_on_status(
     pool: &PgPool,
     job_id: &str,

@@ -2562,6 +2562,24 @@ export function completeJob(
   return updateJobLifecycle(jobId, 'complete', clientMutationId);
 }
 
+export async function updateChecklistItem(
+  jobId: string,
+  checklistItemId: string,
+  completed: boolean,
+): Promise<JobLifecycleActionResponse> {
+  const response = await request<{
+    persisted: boolean;
+    idempotent_replay?: boolean;
+  }>(`/jobs/${jobId}/checklist/${checklistItemId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ completed }),
+  });
+  return {
+    persisted: response.persisted,
+    idempotentReplay: response.idempotent_replay ?? false,
+  };
+}
+
 export async function createPhotoUploadTicket(
   jobId: string,
   file: File,

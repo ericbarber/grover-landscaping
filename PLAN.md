@@ -580,10 +580,11 @@ Current state:
 - Queued job lifecycle actions replay ordered per tenant with transactional server idempotency, automatic recovery, manual retry, and conflict blocking
 - Crew job queue review exposes safe action details and two-step reviewed-conflict discard with server-state refresh
 - The offline mutation schema supports tenant/actor-scoped checklist item completion records
+- Crew checklist toggles persist item and summary state transactionally and queue failed writes with mobile pending feedback
 
 Next implementation work:
 
-- Add persisted checklist item controls with durable offline queueing
+- Add transactional idempotency and ordered replay for queued checklist mutations
 
 ## Planned
 

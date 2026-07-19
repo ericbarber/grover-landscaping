@@ -473,6 +473,22 @@ impl JobRepository {
         JobLifecycleWriteResult::NotFound
     }
 
+    pub async fn update_checklist_item(
+        &self,
+        job_id: &str,
+        item_id: &str,
+        completed: bool,
+    ) -> bool {
+        if let Some(pool) = &self.pool {
+            if let Ok(persisted) =
+                postgres_write::update_checklist_item(pool, job_id, item_id, completed).await
+            {
+                return persisted;
+            }
+        }
+        false
+    }
+
     pub async fn update_stop_progress(
         &self,
         day_plan_id: &str,

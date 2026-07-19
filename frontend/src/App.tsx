@@ -28,6 +28,7 @@ import {
   retryPhotoProcessingJob,
   resubmitCompletionReport,
   startJob,
+  updateChecklistItem,
   startCompletionReportReview,
   uploadPhotoToTicket,
   updateJobAddOnStatus,
@@ -47,13 +48,16 @@ import {
 import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { useAuth } from './auth/AuthProvider';
 import {
+  enqueueChecklistMutation,
   enqueueJobLifecycleMutation,
+  isChecklistOfflineMutation,
   isOfflineMutationConflict,
   isJobLifecycleOfflineMutation,
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
+  type ChecklistOfflineMutation,
   type JobLifecycleOfflineMutation,
 } from './domain/offlineMutationQueue';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
@@ -585,6 +589,7 @@ function JobDetailPanel({
   addOns,
   onStart,
   onComplete,
+  onChecklistItemChange,
   onPhotoSelected,
   onAddOnStatusChange,
   onStartReportReview,
@@ -601,6 +606,7 @@ function JobDetailPanel({
   addOns: JobAddOn[];
   onStart: () => Promise<void>;
   onComplete: () => Promise<void>;
+  onChecklistItemChange: (itemId: string, completed: boolean) => Promise<void>;
   onPhotoSelected: (file: File, photoType: PhotoType) => Promise<void>;
   onAddOnStatusChange: (addOnId: string, status: JobAddOn['status']) => Promise<void>;
   onStartReportReview: (reportId: string) => Promise<void>;
@@ -668,13 +674,18 @@ function JobDetailPanel({
           </summary>
           <div className="mt-3 space-y-2">
             {job.checklist.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-xl bg-white p-3">
+              <button
+                key={item.id}
+                className="flex min-h-12 w-full items-center gap-3 rounded-xl bg-white p-3 text-left"
+                onClick={() => void onChecklistItemChange(item.id, !item.completed)}
+                type="button"
+              >
                 <span
                   className={`h-3 w-3 rounded-full ${item.completed ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium text-slate-700">{item.label}</span>
-              </div>
+              </button>
             ))}
           </div>
           <div className="h-3" />
@@ -880,6 +891,7 @@ export function App() {
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
+  const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
   const jobReplayInProgress = useRef(false);
@@ -1045,6 +1057,7 @@ export function App() {
   useEffect(() => {
     if (!auth.userId) {
       setOfflineJobMutations([]);
+      setOfflineChecklistMutations([]);
       return;
     }
     const organizationIds = Array.from(new Set(
@@ -1058,6 +1071,7 @@ export function App() {
         if (!active) return;
         const mutations = groups.flat().filter(isJobLifecycleOfflineMutation);
         setOfflineJobMutations(mutations);
+        setOfflineChecklistMutations(groups.flat().filter(isChecklistOfflineMutation));
         if (mutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
       })
       .catch(() => {
@@ -1455,6 +1469,42 @@ export function App() {
       setStatusMessage(`Discarded the reviewed ${mutation.action} conflict; refresh when the API is available.`);
     }
     await replayJobLifecycleMutations();
+  }
+
+  async function handleChecklistItemChange(itemId: string, completed: boolean) {
+    if (!selectedJobId || !selectedJob) return;
+    let outcome = 'Checklist updated.';
+    try {
+      const result = await updateChecklistItem(selectedJobId, itemId, completed);
+      if (!result.persisted) throw new Error('Checklist update used local fallback');
+    } catch {
+      if (selectedJob.organizationId && auth.userId) {
+        try {
+          const mutation = await enqueueChecklistMutation({
+            organizationId: selectedJob.organizationId,
+            actorId: auth.userId,
+            jobId: selectedJobId,
+            checklistItemId: itemId,
+            completed,
+          });
+          setOfflineChecklistMutations((current) => [...current, mutation]);
+          outcome = 'Checklist change saved locally and queued offline.';
+        } catch {
+          outcome = 'Checklist changed locally, but durable offline storage is unavailable.';
+        }
+      } else {
+        outcome = 'Checklist changed locally without a resolved tenant; reconnect before continuing.';
+      }
+    }
+    const checklist = selectedJob.checklist.map(
+      (item) => item.id === itemId ? { ...item, completed } : item,
+    );
+    const completedChecklistItems = checklist.filter((item) => item.completed).length;
+    setSelectedJob({ ...selectedJob, checklist, completedChecklistItems });
+    setJobs((current) => current.map((job) => job.id === selectedJobId
+      ? { ...job, completedChecklistItems }
+      : job));
+    setStatusMessage(outcome);
   }
 
   async function handleStartJob() {
@@ -2139,6 +2189,11 @@ export function App() {
                 </button>
               </div>
             )}
+            {offlineChecklistMutations.length > 0 && (
+              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -2349,6 +2404,7 @@ export function App() {
             reportSnapshot={selectedCompletionReport?.jobId === selectedJobId ? selectedCompletionReport : null}
             onStart={handleStartJob}
             onComplete={handleCompleteJob}
+            onChecklistItemChange={handleChecklistItemChange}
             onPhotoSelected={handlePhotoSelected}
             onAddOnStatusChange={handleAddOnStatusChange}
             onStartReportReview={handleStartReportReview}

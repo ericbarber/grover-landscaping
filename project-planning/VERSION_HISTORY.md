@@ -74,6 +74,7 @@
 - 2026-07-19: Added ordered idempotent replay for offline job lifecycle actions.
 - 2026-07-19: Added crew job queue review and reviewed-conflict recovery.
 - 2026-07-19: Extended the offline queue contract to checklist item mutations.
+- 2026-07-19: Added persisted checklist controls with durable offline queue fallback.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

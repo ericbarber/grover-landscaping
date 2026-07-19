@@ -182,6 +182,11 @@ struct JobAddOnStatusRequest {
     status: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct ChecklistItemStatusRequest {
+    completed: bool,
+}
+
 #[derive(Debug, Serialize)]
 struct ActionResponse {
     status: &'static str,
@@ -715,6 +720,7 @@ fn app_with_runtime(
         )
         .route("/jobs/{id}/start", post(start_job))
         .route("/jobs/{id}/complete", post(complete_job))
+        .route("/jobs/{id}/checklist/{item_id}", put(update_checklist_item))
         .route("/jobs/{id}/photos", get(list_job_photos))
         .route("/jobs/{id}/photos/presign", post(create_local_photo_upload))
         .route("/jobs/{id}/photos/complete", post(complete_photo_upload))
@@ -4513,6 +4519,30 @@ async fn complete_job(
         }),
     )
         .into_response()
+}
+
+async fn update_checklist_item(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((id, item_id)): Path<(String, String)>,
+    Json(request): Json<ChecklistItemStatusRequest>,
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
+    {
+        return response;
+    }
+    let persisted = state
+        .jobs
+        .update_checklist_item(&id, &item_id, request.completed)
+        .await;
+    Json(JobLifecycleActionResponse {
+        status: "accepted",
+        message: format!("Checklist item {item_id} was updated."),
+        persisted,
+        idempotent_replay: false,
+    })
+    .into_response()
 }
 
 async fn create_local_photo_upload(

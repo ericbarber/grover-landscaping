@@ -30,6 +30,10 @@ server when available, and resumes ordered replay.
 The queue schema also accepts checklist records containing the tenant, actor,
 job, checklist item, requested completion boolean, mutation ID, ordering, and
 retry state. Checklist controls and replay are delivered in the following slice.
+Checklist items now have touch-sized toggle controls backed by a tenant-guarded
+API write that updates the item and the job's completed-item count in one
+transaction. Failed writes update the visible checklist locally, enter the
+durable queue when tenant/actor context is resolved, and show a pending count.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current
