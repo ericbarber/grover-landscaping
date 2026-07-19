@@ -185,6 +185,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Customer account summary model
 - Customer accounts persist normalized primary contact names, email addresses, and E.164 phone numbers
 - Account onboarding readiness requires a named contact and at least one customer communication destination
+- Managers can configure account-level email/SMS opt-ins and paired quiet hours
+- Notification preferences cannot enable a channel without its validated account contact destination
 - Account status card in completion report
 - Seed account states for demo jobs
 - PostgreSQL migration foundation for customer accounts
@@ -498,7 +500,7 @@ Current state:
 
 Next implementation work:
 
-- Add account-level notification preferences and contact rules
+- Enforce account notification preferences when queueing customer deliveries
 
 ## Planned
 

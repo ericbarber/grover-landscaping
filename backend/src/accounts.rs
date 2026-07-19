@@ -27,6 +27,10 @@ pub struct CreateCustomerAccountRequest {
     pub primary_contact_name: Option<String>,
     pub contact_email: Option<String>,
     pub contact_phone: Option<String>,
+    pub email_notifications_enabled: bool,
+    pub sms_notifications_enabled: bool,
+    pub quiet_hours_start: Option<String>,
+    pub quiet_hours_end: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -40,6 +44,10 @@ pub struct UpdateCustomerAccountRequest {
     pub primary_contact_name: Option<String>,
     pub contact_email: Option<String>,
     pub contact_phone: Option<String>,
+    pub email_notifications_enabled: bool,
+    pub sms_notifications_enabled: bool,
+    pub quiet_hours_start: Option<String>,
+    pub quiet_hours_end: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -56,6 +64,10 @@ pub struct CustomerAccountRecord {
     pub primary_contact_name: String,
     pub contact_email: String,
     pub contact_phone: String,
+    pub email_notifications_enabled: bool,
+    pub sms_notifications_enabled: bool,
+    pub quiet_hours_start: String,
+    pub quiet_hours_end: String,
     pub persisted: bool,
 }
 
@@ -363,6 +375,34 @@ pub fn validate_create_customer_account_request(
     }) {
         return Err("contact_phone_invalid");
     }
+    if request.email_notifications_enabled
+        && request
+            .contact_email
+            .as_deref()
+            .is_none_or(|value| value.trim().is_empty())
+    {
+        return Err("email_notifications_require_contact_email");
+    }
+    if request.sms_notifications_enabled
+        && request
+            .contact_phone
+            .as_deref()
+            .is_none_or(|value| value.trim().is_empty())
+    {
+        return Err("sms_notifications_require_contact_phone");
+    }
+    if request.quiet_hours_start.is_some() != request.quiet_hours_end.is_some() {
+        return Err("quiet_hours_pair_required");
+    }
+    if request
+        .quiet_hours_start
+        .as_deref()
+        .into_iter()
+        .chain(request.quiet_hours_end.as_deref())
+        .any(|value| !valid_quiet_hour(value.trim()))
+    {
+        return Err("quiet_hours_invalid");
+    }
     Ok(())
 }
 
@@ -380,6 +420,10 @@ pub fn validate_update_customer_account_request(
         primary_contact_name: request.primary_contact_name.clone(),
         contact_email: request.contact_email.clone(),
         contact_phone: request.contact_phone.clone(),
+        email_notifications_enabled: request.email_notifications_enabled,
+        sms_notifications_enabled: request.sms_notifications_enabled,
+        quiet_hours_start: request.quiet_hours_start.clone(),
+        quiet_hours_end: request.quiet_hours_end.clone(),
     };
     validate_create_customer_account_request(&create_request)
 }
@@ -434,6 +478,7 @@ fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustome
         &mut request.contact_email,
         &mut request.contact_phone,
     );
+    normalize_quiet_hours(&mut request.quiet_hours_start, &mut request.quiet_hours_end);
     request
 }
 
@@ -453,7 +498,29 @@ fn normalize_update_request(
         &mut request.contact_email,
         &mut request.contact_phone,
     );
+    normalize_quiet_hours(&mut request.quiet_hours_start, &mut request.quiet_hours_end);
     request
+}
+
+fn valid_quiet_hour(value: &str) -> bool {
+    let Some((hour, minute)) = value.split_once(':') else {
+        return false;
+    };
+    hour.len() == 2
+        && minute.len() == 2
+        && hour.parse::<u8>().is_ok_and(|value| value < 24)
+        && minute.parse::<u8>().is_ok_and(|value| value < 60)
+}
+
+fn normalize_quiet_hours(start: &mut Option<String>, end: &mut Option<String>) {
+    *start = start
+        .take()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+    *end = end
+        .take()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
 }
 
 fn normalize_account_contacts(
@@ -503,8 +570,10 @@ async fn create_account(
             id, customer_name, billing_model, payment_status,
             service_approval_status, contracted_services_per_period,
             completed_services_this_period, billing_notes
-            , primary_contact_name, contact_email, contact_phone
-        ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8,$9,$10)"#,
+            , primary_contact_name, contact_email, contact_phone,
+            email_notifications_enabled, sms_notifications_enabled,
+            quiet_hours_start, quiet_hours_end
+        ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8,$9,$10,$11,$12,$13::time,$14::time)"#,
     )
     .bind(&account_id)
     .bind(&request.customer_name)
@@ -516,6 +585,10 @@ async fn create_account(
     .bind(&request.primary_contact_name)
     .bind(&request.contact_email)
     .bind(&request.contact_phone)
+    .bind(request.email_notifications_enabled)
+    .bind(request.sms_notifications_enabled)
+    .bind(&request.quiet_hours_start)
+    .bind(&request.quiet_hours_end)
     .execute(&mut *tx)
     .await?;
     sqlx::query(
@@ -540,7 +613,9 @@ async fn update_account(
         SET customer_name = $3, billing_model = $4, payment_status = $5,
             service_approval_status = $6, contracted_services_per_period = $7,
             billing_notes = $8, primary_contact_name = $9, contact_email = $10,
-            contact_phone = $11, updated_at = NOW()
+            contact_phone = $11, email_notifications_enabled = $12,
+            sms_notifications_enabled = $13, quiet_hours_start = $14::time,
+            quiet_hours_end = $15::time, updated_at = NOW()
         FROM organization_customer_accounts relation
         WHERE account.id = $1
           AND relation.account_id = account.id
@@ -552,7 +627,10 @@ async fn update_account(
             COALESCE(account.billing_notes, '') AS billing_notes,
             COALESCE(account.primary_contact_name, '') AS primary_contact_name,
             COALESCE(account.contact_email, '') AS contact_email,
-            COALESCE(account.contact_phone, '') AS contact_phone"#,
+            COALESCE(account.contact_phone, '') AS contact_phone,
+            account.email_notifications_enabled, account.sms_notifications_enabled,
+            COALESCE(TO_CHAR(account.quiet_hours_start, 'HH24:MI'), '') AS quiet_hours_start,
+            COALESCE(TO_CHAR(account.quiet_hours_end, 'HH24:MI'), '') AS quiet_hours_end"#,
     )
     .bind(account_id)
     .bind(organization_ids)
@@ -565,6 +643,10 @@ async fn update_account(
     .bind(&request.primary_contact_name)
     .bind(&request.contact_email)
     .bind(&request.contact_phone)
+    .bind(request.email_notifications_enabled)
+    .bind(request.sms_notifications_enabled)
+    .bind(&request.quiet_hours_start)
+    .bind(&request.quiet_hours_end)
     .fetch_optional(pool)
     .await?;
     Ok(row.map(|row| CustomerAccountRecord {
@@ -580,6 +662,10 @@ async fn update_account(
         primary_contact_name: row.get("primary_contact_name"),
         contact_email: row.get("contact_email"),
         contact_phone: row.get("contact_phone"),
+        email_notifications_enabled: row.get("email_notifications_enabled"),
+        sms_notifications_enabled: row.get("sms_notifications_enabled"),
+        quiet_hours_start: row.get("quiet_hours_start"),
+        quiet_hours_end: row.get("quiet_hours_end"),
         persisted: true,
     }))
 }
@@ -1053,7 +1139,10 @@ async fn list_accounts(
             COALESCE(account.billing_notes, '') AS billing_notes,
             COALESCE(account.primary_contact_name, '') AS primary_contact_name,
             COALESCE(account.contact_email, '') AS contact_email,
-            COALESCE(account.contact_phone, '') AS contact_phone
+            COALESCE(account.contact_phone, '') AS contact_phone,
+            account.email_notifications_enabled, account.sms_notifications_enabled,
+            COALESCE(TO_CHAR(account.quiet_hours_start, 'HH24:MI'), '') AS quiet_hours_start,
+            COALESCE(TO_CHAR(account.quiet_hours_end, 'HH24:MI'), '') AS quiet_hours_end
         FROM organization_customer_accounts relation
         JOIN customer_accounts account ON account.id = relation.account_id
         WHERE relation.organization_id = ANY($1) AND relation.status = 'active'
@@ -1079,6 +1168,10 @@ async fn list_accounts(
             primary_contact_name: row.get("primary_contact_name"),
             contact_email: row.get("contact_email"),
             contact_phone: row.get("contact_phone"),
+            email_notifications_enabled: row.get("email_notifications_enabled"),
+            sms_notifications_enabled: row.get("sms_notifications_enabled"),
+            quiet_hours_start: row.get("quiet_hours_start"),
+            quiet_hours_end: row.get("quiet_hours_end"),
             persisted: true,
         })
         .collect())
@@ -1102,6 +1195,10 @@ fn record_from_request(
         primary_contact_name: request.primary_contact_name.clone().unwrap_or_default(),
         contact_email: request.contact_email.clone().unwrap_or_default(),
         contact_phone: request.contact_phone.clone().unwrap_or_default(),
+        email_notifications_enabled: request.email_notifications_enabled,
+        sms_notifications_enabled: request.sms_notifications_enabled,
+        quiet_hours_start: request.quiet_hours_start.clone().unwrap_or_default(),
+        quiet_hours_end: request.quiet_hours_end.clone().unwrap_or_default(),
         persisted,
     }
 }
@@ -1135,6 +1232,10 @@ fn local_update_record(
         primary_contact_name: request.primary_contact_name.clone().unwrap_or_default(),
         contact_email: request.contact_email.clone().unwrap_or_default(),
         contact_phone: request.contact_phone.clone().unwrap_or_default(),
+        email_notifications_enabled: request.email_notifications_enabled,
+        sms_notifications_enabled: request.sms_notifications_enabled,
+        quiet_hours_start: request.quiet_hours_start.clone().unwrap_or_default(),
+        quiet_hours_end: request.quiet_hours_end.clone().unwrap_or_default(),
         persisted: false,
     })
 }
@@ -1286,6 +1387,10 @@ fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
             primary_contact_name: Some("Sample Customer".to_string()),
             contact_email: Some("customer@example.com".to_string()),
             contact_phone: None,
+            email_notifications_enabled: true,
+            sms_notifications_enabled: false,
+            quiet_hours_start: None,
+            quiet_hours_end: None,
         },
         false,
     )]
@@ -1332,6 +1437,10 @@ mod tests {
             primary_contact_name: Some("Pat Customer".to_string()),
             contact_email: Some("pat@example.com".to_string()),
             contact_phone: None,
+            email_notifications_enabled: true,
+            sms_notifications_enabled: false,
+            quiet_hours_start: Some("20:00".to_string()),
+            quiet_hours_end: Some("07:00".to_string()),
         }
     }
 
@@ -1358,6 +1467,18 @@ mod tests {
         assert_eq!(
             validate_update_customer_account_request(&invalid_phone),
             Err("contact_phone_invalid")
+        );
+        let mut missing_email = update_request();
+        missing_email.contact_email = None;
+        assert_eq!(
+            validate_update_customer_account_request(&missing_email),
+            Err("email_notifications_require_contact_email")
+        );
+        let mut incomplete_quiet_hours = update_request();
+        incomplete_quiet_hours.quiet_hours_end = None;
+        assert_eq!(
+            validate_update_customer_account_request(&incomplete_quiet_hours),
+            Err("quiet_hours_pair_required")
         );
     }
 

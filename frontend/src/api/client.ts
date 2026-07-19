@@ -623,6 +623,10 @@ export interface CustomerAccountRecord {
   primaryContactName: string;
   contactEmail: string;
   contactPhone: string;
+  emailNotificationsEnabled: boolean;
+  smsNotificationsEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
   persisted: boolean;
 }
 
@@ -1857,7 +1861,9 @@ function toCustomerAccountRecord(item: {
   service_approval_status: CustomerAccountRecord['serviceApprovalStatus'];
   contracted_services_per_period: number; completed_services_this_period: number;
   billing_notes: string; primary_contact_name: string; contact_email: string;
-  contact_phone: string; persisted: boolean;
+  contact_phone: string; email_notifications_enabled: boolean;
+  sms_notifications_enabled: boolean; quiet_hours_start: string;
+  quiet_hours_end: string; persisted: boolean;
 }): CustomerAccountRecord {
   return {
     accountId: item.account_id,
@@ -1872,6 +1878,10 @@ function toCustomerAccountRecord(item: {
     primaryContactName: item.primary_contact_name,
     contactEmail: item.contact_email,
     contactPhone: item.contact_phone,
+    emailNotificationsEnabled: item.email_notifications_enabled,
+    smsNotificationsEnabled: item.sms_notifications_enabled,
+    quietHoursStart: item.quiet_hours_start,
+    quietHoursEnd: item.quiet_hours_end,
     persisted: item.persisted,
   };
 }
@@ -1938,6 +1948,10 @@ export async function createCustomerAccount(
       primary_contact_name: input.primaryContactName || null,
       contact_email: input.contactEmail || null,
       contact_phone: input.contactPhone || null,
+      email_notifications_enabled: input.emailNotificationsEnabled,
+      sms_notifications_enabled: input.smsNotificationsEnabled,
+      quiet_hours_start: input.quietHoursStart || null,
+      quiet_hours_end: input.quietHoursEnd || null,
     }),
   });
   return toCustomerAccountRecord(item);
@@ -1963,6 +1977,10 @@ export async function updateCustomerAccount(
       primary_contact_name: input.primaryContactName || null,
       contact_email: input.contactEmail || null,
       contact_phone: input.contactPhone || null,
+      email_notifications_enabled: input.emailNotificationsEnabled,
+      sms_notifications_enabled: input.smsNotificationsEnabled,
+      quiet_hours_start: input.quietHoursStart || null,
+      quiet_hours_end: input.quietHoursEnd || null,
     }),
   });
   return toCustomerAccountRecord(item);

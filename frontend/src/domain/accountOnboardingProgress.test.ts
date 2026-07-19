@@ -20,6 +20,10 @@ const account: CustomerAccountRecord = {
   primaryContactName: 'Pat Customer',
   contactEmail: 'pat@example.com',
   contactPhone: '',
+  emailNotificationsEnabled: true,
+  smsNotificationsEnabled: false,
+  quietHoursStart: '20:00',
+  quietHoursEnd: '07:00',
   persisted: false,
 };
 

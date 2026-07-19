@@ -102,6 +102,10 @@ export function ManagerCustomerAccountOnboardingPanel({
         primaryContactName: '',
         contactEmail: '',
         contactPhone: '',
+        emailNotificationsEnabled: false,
+        smsNotificationsEnabled: false,
+        quietHoursStart: '',
+        quietHoursEnd: '',
       });
       setAccounts((current) => [...current, account].sort((a, b) => a.customerName.localeCompare(b.customerName)));
       setProgress((current) => ({
@@ -246,6 +250,15 @@ export function ManagerCustomerAccountOnboardingPanel({
                       {account.primaryContactName || 'Contact not set'}
                       {account.contactEmail ? ` · ${account.contactEmail}` : ''}
                       {account.contactPhone ? ` · ${account.contactPhone}` : ''}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Notifications: {[
+                        account.emailNotificationsEnabled ? 'email' : null,
+                        account.smsNotificationsEnabled ? 'SMS' : null,
+                      ].filter(Boolean).join(' + ') || 'off'}
+                      {account.quietHoursStart && account.quietHoursEnd
+                        ? ` · quiet ${account.quietHoursStart}–${account.quietHoursEnd}`
+                        : ''}
                     </p>
                   </div>
                   <button className="min-h-11 px-2 text-sm font-semibold text-emerald-700" onClick={() => openAccountDetails(account)} type="button">Edit</button>
@@ -412,6 +425,11 @@ function AccountEditor({ account, disabled, onCancel, onChange, onSave }: {
 }) {
   const update = <K extends keyof CustomerAccountRecord>(key: K, value: CustomerAccountRecord[K]) =>
     onChange({ ...account, [key]: value });
+  const notificationPreferencesValid = (
+    (!account.emailNotificationsEnabled || account.contactEmail.trim().length > 0)
+    && (!account.smsNotificationsEnabled || account.contactPhone.trim().length > 0)
+    && (Boolean(account.quietHoursStart) === Boolean(account.quietHoursEnd))
+  );
   return (
     <div className="grid gap-3">
       <label className="text-sm font-semibold text-slate-700">Customer name
@@ -449,9 +467,29 @@ function AccountEditor({ account, disabled, onCancel, onChange, onSave }: {
       <label className="text-sm font-semibold text-slate-700">Billing notes
         <textarea className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" maxLength={1000} rows={2} value={account.billingNotes} onChange={(event) => update('billingNotes', event.target.value)} />
       </label>
+      <fieldset className="rounded-lg border border-slate-200 p-3">
+        <legend className="px-1 text-sm font-semibold text-slate-700">Notification preferences</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-slate-700">
+            <input checked={account.emailNotificationsEnabled} disabled={!account.contactEmail} onChange={(event) => update('emailNotificationsEnabled', event.target.checked)} type="checkbox" />
+            Email updates
+          </label>
+          <label className="flex min-h-11 items-center gap-2 text-sm font-medium text-slate-700">
+            <input checked={account.smsNotificationsEnabled} disabled={!account.contactPhone} onChange={(event) => update('smsNotificationsEnabled', event.target.checked)} type="checkbox" />
+            SMS updates
+          </label>
+          <label className="text-sm font-semibold text-slate-700">Quiet hours start
+            <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" onChange={(event) => update('quietHoursStart', event.target.value)} type="time" value={account.quietHoursStart} />
+          </label>
+          <label className="text-sm font-semibold text-slate-700">Quiet hours end
+            <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" onChange={(event) => update('quietHoursEnd', event.target.value)} type="time" value={account.quietHoursEnd} />
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">Set both quiet-hour times or leave both blank.</p>
+      </fieldset>
       <div className="flex justify-end gap-2">
         <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" disabled={disabled} onClick={onCancel} type="button">Cancel</button>
-        <button className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={disabled || account.customerName.trim().length < 2} onClick={onSave} type="button">Save account</button>
+        <button className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={disabled || account.customerName.trim().length < 2 || !notificationPreferencesValid} onClick={onSave} type="button">Save account</button>
       </div>
     </div>
   );

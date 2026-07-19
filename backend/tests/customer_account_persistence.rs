@@ -39,6 +39,10 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             primary_contact_name: None,
             contact_email: None,
             contact_phone: None,
+            email_notifications_enabled: false,
+            sms_notifications_enabled: false,
+            quiet_hours_start: None,
+            quiet_hours_end: None,
         })
         .await
         .expect("test account should be created");
@@ -57,6 +61,10 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
                 primary_contact_name: Some("  Pat Customer  ".to_string()),
                 contact_email: Some("  PAT@EXAMPLE.COM  ".to_string()),
                 contact_phone: None,
+                email_notifications_enabled: true,
+                sms_notifications_enabled: false,
+                quiet_hours_start: Some("20:00".to_string()),
+                quiet_hours_end: Some("07:00".to_string()),
             },
         )
         .await
@@ -66,6 +74,9 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert_eq!(updated.billing_notes, "Billing is current.");
     assert_eq!(updated.primary_contact_name, "Pat Customer");
     assert_eq!(updated.contact_email, "pat@example.com");
+    assert!(updated.email_notifications_enabled);
+    assert_eq!(updated.quiet_hours_start, "20:00");
+    assert_eq!(updated.quiet_hours_end, "07:00");
 
     assert!(accounts
         .update(
@@ -81,6 +92,10 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
                 primary_contact_name: None,
                 contact_email: None,
                 contact_phone: None,
+                email_notifications_enabled: false,
+                sms_notifications_enabled: false,
+                quiet_hours_start: None,
+                quiet_hours_end: None,
             },
         )
         .await
