@@ -3,6 +3,7 @@ import type { TeamAdministrationActivity } from '../api/client';
 import {
   filterTeamActivity,
   summarizeTeamActivity,
+  sortTeamActivity,
   teamActivityCsv,
   teamActivityActiveFilterCount,
   teamActivityLabel,
@@ -91,5 +92,27 @@ describe('team administration activity labels', () => {
     expect(teamActivityCsv([item])).toContain(
       '"Grover, ""Jordan""","owner-1","Alex Rivera","membership_1"',
     );
+  });
+
+  it('sorts a copy of loaded activity newest or oldest first', () => {
+    const item = (id: string, occurredAt: string): TeamAdministrationActivity => ({
+      id,
+      actorUserId: 'owner',
+      actorLabel: 'Jordan',
+      organizationId: 'org_1',
+      eventKind: 'role_changed',
+      targetId: 'member',
+      targetLabel: 'Alex',
+      occurredAt,
+    });
+    const activity = [
+      item('audit_1', '2026-07-18T12:00:00Z'),
+      item('audit_2', '2026-07-19T12:00:00Z'),
+    ];
+    expect(sortTeamActivity(activity, 'newest').map((entry) => entry.id))
+      .toEqual(['audit_2', 'audit_1']);
+    expect(sortTeamActivity(activity, 'oldest').map((entry) => entry.id))
+      .toEqual(['audit_1', 'audit_2']);
+    expect(activity[0].id).toBe('audit_1');
   });
 });

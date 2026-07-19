@@ -79,6 +79,19 @@ export function teamActivityActiveFilterCount(
     + Number(eventKind !== 'all');
 }
 
+export type TeamActivitySort = 'newest' | 'oldest';
+
+export function sortTeamActivity(
+  activity: TeamAdministrationActivity[],
+  sort: TeamActivitySort,
+): TeamAdministrationActivity[] {
+  return [...activity].sort((left, right) => {
+    const comparison = left.occurredAt.localeCompare(right.occurredAt)
+      || left.id.localeCompare(right.id);
+    return sort === 'oldest' ? comparison : -comparison;
+  });
+}
+
 export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
   return activity.reduce(
     (summary, item) => {
@@ -127,10 +140,14 @@ export function ManagerTeamActivityPanel({
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
+  const [activitySort, setActivitySort] = useState<TeamActivitySort>('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const filteredActivity = filterTeamActivity(activity, actorQuery, targetQuery, eventFilter);
+  const filteredActivity = sortTeamActivity(
+    filterTeamActivity(activity, actorQuery, targetQuery, eventFilter),
+    activitySort,
+  );
   const activeFilterCount = teamActivityActiveFilterCount(
     actorQuery,
     targetQuery,
@@ -245,7 +262,7 @@ export function ManagerTeamActivityPanel({
           </div>
         ))}
       </dl>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-4">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
           <input
@@ -279,6 +296,17 @@ export function ManagerTeamActivityPanel({
             {eventKinds.map((eventKind) => (
               <option key={eventKind} value={eventKind}>{teamActivityLabel(eventKind)}</option>
             ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Sort
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setActivitySort(event.target.value as TeamActivitySort)}
+            value={activitySort}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
           </select>
         </label>
       </div>

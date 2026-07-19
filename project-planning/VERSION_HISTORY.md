@@ -29,6 +29,7 @@
 - 2026-07-19: Added CSV export for filtered owner team activity.
 - 2026-07-19: Added CSV export for the filtered owner member directory.
 - 2026-07-19: Added name, role, and status sorting to mobile member administration.
+- 2026-07-19: Added newest/oldest sorting to owner team activity.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
