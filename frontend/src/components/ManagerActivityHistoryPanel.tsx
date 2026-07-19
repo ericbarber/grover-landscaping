@@ -44,6 +44,10 @@ type ManagerActivityHistoryPanelProps = {
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
   onResetHistory?: () => void;
+  onCompleteDispatchNotification?: (
+    jobId: string,
+    channel: 'email' | 'sms' | 'phone',
+  ) => Promise<void>;
 };
 
 function readStorageValue(key: string): string | null {
@@ -98,11 +102,14 @@ export function ManagerActivityHistoryPanel({
   isLoadingOlder = false,
   onLoadOlder,
   onResetHistory,
+  onCompleteDispatchNotification,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
   const [canSaveFilters, setCanSaveFilters] = useState(true);
   const [isConfirmingHistoryReset, setIsConfirmingHistoryReset] = useState(false);
+  const [dispatchChannel, setDispatchChannel] = useState<'email' | 'sms' | 'phone'>('phone');
+  const [activeDispatchActionId, setActiveDispatchActionId] = useState<string | null>(null);
   const activityFilters = useMemo(
     () => ({ source: sourceFilter, tone: toneFilter }),
     [sourceFilter, toneFilter],
@@ -464,6 +471,39 @@ export function ManagerActivityHistoryPanel({
                     <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-xs font-medium opacity-90">
                       Recommended action: {item.recommendedAction}
                     </p>
+                  ) : null}
+                  {item.actionKind === 'complete_dispatch_notification'
+                    && item.actionTargetId
+                    && onCompleteDispatchNotification ? (
+                    <div className="mt-2 flex flex-wrap gap-2 rounded-lg bg-white/70 p-2">
+                      <select
+                        aria-label={`Customer notification channel for ${item.actionTargetId}`}
+                        className="rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs text-slate-900"
+                        onChange={(event) => setDispatchChannel(
+                          event.target.value as 'email' | 'sms' | 'phone',
+                        )}
+                        value={dispatchChannel}
+                      >
+                        <option value="phone">Phone</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                      </select>
+                      <button
+                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
+                        disabled={activeDispatchActionId !== null}
+                        onClick={async () => {
+                          setActiveDispatchActionId(item.id);
+                          try {
+                            await onCompleteDispatchNotification(item.actionTargetId!, dispatchChannel);
+                          } finally {
+                            setActiveDispatchActionId(null);
+                          }
+                        }}
+                        type="button"
+                      >
+                        {activeDispatchActionId === item.id ? 'Recording' : 'Mark customer notified'}
+                      </button>
+                    </div>
                   ) : null}
                 </div>
                 <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>

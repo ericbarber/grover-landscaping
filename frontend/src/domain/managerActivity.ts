@@ -9,6 +9,8 @@ export type ManagerActivityItem = {
   source: ManagerActivitySource;
   occurredAt: string;
   recommendedAction?: string;
+  actionKind?: 'complete_dispatch_notification';
+  actionTargetId?: string;
 };
 
 export type ManagerActivityFilters = {

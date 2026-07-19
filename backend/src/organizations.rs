@@ -1212,6 +1212,7 @@ async fn list_operational_activity(
                 'route_stop_removed',
                 'route_stops_reordered',
                 'job_reassigned',
+                'dispatch_customer_notified',
                 'report_review_started',
                 'report_changes_requested',
                 'report_resubmitted',

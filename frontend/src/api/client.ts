@@ -43,6 +43,8 @@ export interface UpdateJobDispatchAssignmentRequest {
   customerNotificationRequired: boolean;
 }
 
+export type DispatchCustomerNotificationChannel = 'email' | 'sms' | 'phone';
+
 export interface ApiJobAddOn {
   id: string;
   job_id: string;
@@ -505,6 +507,7 @@ export type OperationalActivityEventKind =
   | 'route_stop_removed'
   | 'route_stops_reordered'
   | 'job_reassigned'
+  | 'dispatch_customer_notified'
   | 'report_review_started'
   | 'report_changes_requested'
   | 'report_resubmitted'
@@ -1407,6 +1410,16 @@ export async function updateJobDispatchAssignment(
     },
   );
   return toJobDetail(job);
+}
+
+export async function completeDispatchCustomerNotification(
+  jobId: string,
+  channel: DispatchCustomerNotificationChannel,
+): Promise<void> {
+  await request(`/jobs/${encodeURIComponent(jobId)}/dispatch-customer-notification`, {
+    method: 'POST',
+    body: JSON.stringify({ channel }),
+  });
 }
 
 export async function fetchAccountStatus(jobId: string): Promise<AccountStatus> {

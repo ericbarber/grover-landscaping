@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { operationalToManagerActivity } from './operationalManagerActivity';
+import {
+  operationalToManagerActivity,
+  operationsToManagerActivity,
+} from './operationalManagerActivity';
 
 describe('persisted operational manager activity', () => {
   it('maps route publications to successful route activity', () => {
@@ -103,5 +106,36 @@ describe('persisted operational manager activity', () => {
       source: 'route',
       recommendedAction: 'Notify the customer about the changed service schedule and record delivery follow-up.',
     });
+  });
+
+  it('clears the linked move action after customer notification is recorded', () => {
+    const items = operationsToManagerActivity([
+      {
+        id: 'audit_notified_1001',
+        organizationId: 'org_1001',
+        eventKind: 'dispatch_customer_notified',
+        targetId: 'job_1001',
+        actorUserId: 'manager_1001',
+        occurredAt: '2026-07-19T17:25:00Z',
+        metadata: {
+          channel: 'phone',
+          reassignment_audit_id: 'audit_move_1001',
+        },
+      },
+      {
+        id: 'audit_move_1001',
+        organizationId: 'org_1001',
+        eventKind: 'job_reassigned',
+        targetId: 'job_1001',
+        actorUserId: 'manager_1001',
+        occurredAt: '2026-07-19T17:20:00Z',
+        metadata: { customer_notification_required: true },
+      },
+    ]);
+    expect(items[0]).toMatchObject({
+      title: 'Dispatch customer notified',
+      message: 'job_1001 · recorded by manager_1001. Customer contacted by phone.',
+    });
+    expect(items[1].actionKind).toBeUndefined();
   });
 });

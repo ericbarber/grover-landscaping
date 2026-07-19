@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isApiErrorCode } from './api/apiError';
 import {
   completeJob,
+  completeDispatchCustomerNotification,
   completePhotoUpload,
   createPhotoUploadTicket,
   deliverCompletionReport,
@@ -1844,6 +1845,19 @@ export function App() {
     setFirstOwnerProgressRefreshSignal((current) => current + 1);
   }
 
+  async function handleCompleteDispatchCustomerNotification(
+    jobId: string,
+    channel: 'email' | 'sms' | 'phone',
+  ) {
+    try {
+      await completeDispatchCustomerNotification(jobId, channel);
+      await refreshOperationalActivity();
+      setStatusMessage(`Customer notification follow-up recorded by ${channel}.`);
+    } catch {
+      setStatusMessage('Customer notification follow-up could not be recorded.');
+    }
+  }
+
   async function refreshNotificationHistory(filters: NotificationHistoryFilters) {
     setIsLoadingNotificationHistory(true);
     try {
@@ -2760,6 +2774,7 @@ export function App() {
               isLoadingOlder={isLoadingOlderOperationalActivity}
               onLoadOlder={() => void loadOlderOperationalActivity()}
               onResetHistory={resetManagerActivityHistory}
+              onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
             />
           </div>
           <div className="mt-6">

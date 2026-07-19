@@ -43,6 +43,11 @@ const activityPresentation: Record<
     tone: 'warning',
     source: 'route',
   },
+  dispatch_customer_notified: {
+    title: 'Dispatch customer notified',
+    tone: 'success',
+    source: 'route',
+  },
   report_review_started: {
     title: 'Completion report review started',
     tone: 'info',
@@ -115,6 +120,7 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
     ? metadata.new_scheduled_date
     : undefined;
   const customerNotificationRequired = metadata.customer_notification_required === true;
+  const notificationChannel = typeof metadata.channel === 'string' ? metadata.channel : undefined;
   const details = activity.eventKind === 'route_stop_assigned' && stopId && jobId
     ? ` Assigned ${jobId} as ${stopId}.`
     : activity.eventKind === 'route_stop_removed' && stopId
@@ -125,6 +131,8 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
           ? ` Moved ${oldCrewId} → ${newCrewId}${oldScheduledDate && newScheduledDate
             ? ` · ${oldScheduledDate} → ${newScheduledDate}`
             : ''}.`
+          : activity.eventKind === 'dispatch_customer_notified' && notificationChannel
+            ? ` Customer contacted by ${notificationChannel}.`
         : '';
   return {
     id: `operational_${activity.id}`,
@@ -136,11 +144,28 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
     recommendedAction: activity.eventKind === 'job_reassigned' && customerNotificationRequired
       ? 'Notify the customer about the changed service schedule and record delivery follow-up.'
       : presentation.recommendedAction,
+    actionKind: activity.eventKind === 'job_reassigned' && customerNotificationRequired
+      ? 'complete_dispatch_notification'
+      : undefined,
+    actionTargetId: activity.eventKind === 'job_reassigned' && customerNotificationRequired
+      ? activity.targetId
+      : undefined,
   };
 }
 
 export function operationsToManagerActivity(
   activity: OperationalActivity[],
 ): ManagerActivityItem[] {
-  return activity.map(operationalToManagerActivity);
+  const completedReassignmentIds = new Set(activity.flatMap((item) => {
+    if (item.eventKind !== 'dispatch_customer_notified') return [];
+    const reassignmentId = item.metadata?.reassignment_audit_id;
+    return typeof reassignmentId === 'string' ? [reassignmentId] : [];
+  }));
+  return activity.map((item) => {
+    const mapped = operationalToManagerActivity(item);
+    if (item.eventKind === 'job_reassigned' && completedReassignmentIds.has(item.id)) {
+      return { ...mapped, actionKind: undefined, actionTargetId: undefined };
+    }
+    return mapped;
+  });
 }

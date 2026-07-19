@@ -45,6 +45,10 @@ unresolved notification-required reassignment, and writes one
 `dispatch_customer_notified` audit event linked to the reassignment event.
 Repeated or concurrent completion attempts return a conflict.
 
+Manager operational activity renders the unresolved move with a channel selector
+and “Mark customer notified” action. After persistence refreshes, the linked
+move loses its action and a successful channel-specific completion event appears.
+
 The API repeats this capacity calculation while holding a lock on the
 destination crew. Concurrent dispatch requests therefore cannot both consume
 the final slot, and an overloaded request returns `crew_capacity_exceeded`
