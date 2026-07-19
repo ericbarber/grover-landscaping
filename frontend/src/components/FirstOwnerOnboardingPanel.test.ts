@@ -62,7 +62,7 @@ describe('first owner onboarding steps', () => {
 
     expect(milestones.map(({ label, complete, target }) => ({ label, complete, target }))).toEqual([
       { label: 'Complete organization profile', complete: true, target: null },
-      { label: 'Configure the first crew', complete: true, target: 'service-setup' },
+      { label: 'Configure the first crew', complete: true, target: null },
       { label: 'Publish the first route', complete: false, target: 'day-plan' },
       { label: 'Invite a team member', complete: false, target: 'team-invitations' },
     ]);

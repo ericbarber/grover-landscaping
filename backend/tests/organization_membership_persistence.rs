@@ -1,5 +1,6 @@
 use grover_landscaping_api::{
     access_control::{can_manage_schedule, AccessRole},
+    day_plans::{CreateCrewRequest, DayPlanRepository},
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
@@ -169,6 +170,26 @@ async fn repository_bootstraps_first_owner_once() {
     assert_eq!(setup_progress.completed_steps, 1);
     assert_eq!(setup_progress.total_steps, 4);
     assert!(setup_progress.persisted);
+
+    let day_plans = DayPlanRepository::from_pool(pool.clone());
+    let crew = day_plans
+        .create_crew(
+            &created.organization_id,
+            CreateCrewRequest {
+                name: "First Owner Crew".to_string(),
+            },
+        )
+        .await
+        .expect("owner should create the first crew");
+    assert!(crew.persisted);
+    assert_eq!(crew.organization_id, created.organization_id);
+    assert!(
+        organizations
+            .first_owner_setup_progress(&created.organization_id)
+            .await
+            .expect("updated owner setup progress should be available")
+            .crew_configured
+    );
     assert_eq!(
         organizations
             .organization_profile(&created.organization_id)

@@ -5,6 +5,7 @@ use crate::db::DatabaseConfig;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct DayPlanStop {
@@ -36,6 +37,11 @@ pub struct CrewSummary {
     pub name: String,
     pub organization_id: String,
     pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct CreateCrewRequest {
+    pub name: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -200,6 +206,30 @@ impl DayPlanRepository {
                 persisted: true,
             })
             .collect()
+    }
+
+    pub async fn create_crew(
+        &self,
+        organization_id: &str,
+        request: CreateCrewRequest,
+    ) -> Option<CrewSummary> {
+        let name = request.name.trim();
+        if validate_create_crew_name(name).is_err() {
+            return None;
+        }
+        let id = format!("crew_{}", Uuid::new_v4().simple());
+        if let Some(pool) = &self.pool {
+            return postgres_day_plans::create_crew(pool, &id, organization_id, name)
+                .await
+                .ok()
+                .flatten();
+        }
+        Some(CrewSummary {
+            id,
+            name: name.to_string(),
+            organization_id: organization_id.to_string(),
+            persisted: false,
+        })
     }
 
     pub async fn organization_id_for_day_plan(&self, day_plan_id: &str) -> Option<String> {
@@ -394,6 +424,17 @@ pub fn normalize_create_day_plan_request(request: CreateDayPlanRequest) -> Creat
         crew_id: request.crew_id.trim().to_string(),
         service_date: request.service_date.trim().to_string(),
     }
+}
+
+pub fn validate_create_crew_name(name: &str) -> Result<(), String> {
+    let length = name.trim().chars().count();
+    if length < 2 {
+        return Err("crew name must contain at least two characters".to_string());
+    }
+    if length > 120 {
+        return Err("crew name cannot exceed 120 characters".to_string());
+    }
+    Ok(())
 }
 
 pub fn validate_create_day_plan_request(request: &CreateDayPlanRequest) -> Result<(), String> {
@@ -678,10 +719,10 @@ mod tests {
     use super::{
         draft_day_plan_id, draft_stop_id, local_draft_day_plan_response,
         local_published_day_plan_response, normalize_create_day_plan_request, seed_day_plan,
-        validate_amendment_request, validate_amendment_review, validate_create_day_plan_request,
-        AmendmentService, AssignDayPlanStopRequest, CreateDayPlanAmendmentRequest,
-        CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
-        ReviewDayPlanAmendmentRequest,
+        validate_amendment_request, validate_amendment_review, validate_create_crew_name,
+        validate_create_day_plan_request, AmendmentService, AssignDayPlanStopRequest,
+        CreateCrewRequest, CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
+        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
     };
 
     #[test]
@@ -838,6 +879,30 @@ mod tests {
         );
         assert_eq!(response.stop_capacity, 12);
         assert!(!response.persisted);
+    }
+
+    #[test]
+    fn crew_creation_requires_a_bounded_name() {
+        assert!(validate_create_crew_name("North Route").is_ok());
+        assert!(validate_create_crew_name(" ").is_err());
+        assert!(validate_create_crew_name(&"x".repeat(121)).is_err());
+    }
+
+    #[tokio::test]
+    async fn repository_creates_trimmed_local_crew_without_database_pool() {
+        let crew = DayPlanRepository::default()
+            .create_crew(
+                "org_demo_landscaping",
+                CreateCrewRequest {
+                    name: " North Route ".to_string(),
+                },
+            )
+            .await
+            .expect("local crew should be created");
+
+        assert_eq!(crew.name, "North Route");
+        assert_eq!(crew.organization_id, "org_demo_landscaping");
+        assert!(!crew.persisted);
     }
 
     #[test]

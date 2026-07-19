@@ -246,6 +246,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - First-owner setup shows persisted completion for organization profile, first crew, first published route, and team invitation with mobile workspace actions
 - First-owner setup recommends one next incomplete launch action and confirms when all launch milestones are complete
 - First-owner progress refreshes after organization profile, route publication, invitation, and team administration changes
+- Organization owners can create uniquely named tenant-scoped crews from the mobile first-user workflow without seed data
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -488,7 +489,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add owner-managed crew creation so a new tenant can complete crew setup without seed data
+- Replace the manager day-plan crew ID field with tenant-scoped crew selection
 
 ## Planned
 

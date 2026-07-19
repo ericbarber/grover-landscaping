@@ -65,3 +65,8 @@ milestones for a complete organization profile, first configured crew, first
 published route, and first team invitation. The response includes completed and
 total counts so mobile clients can render progress without inferring persisted
 state from fallback route data.
+
+`POST /organizations/{organization_id}/crews` creates the first or an additional
+crew for an active organization owner. Names are trimmed, contain 2–120
+characters, and are unique within an organization without regard to case. The
+mobile first-user workspace exposes this action whenever crew setup is incomplete.

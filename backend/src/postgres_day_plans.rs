@@ -7,6 +7,37 @@ use std::collections::HashSet;
 
 use sqlx::{PgPool, Row};
 
+pub async fn create_crew(
+    pool: &PgPool,
+    id: &str,
+    organization_id: &str,
+    name: &str,
+) -> Result<Option<crate::day_plans::CrewSummary>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"
+        INSERT INTO crews (id, name, organization_id)
+        SELECT $1, $3, organization.id
+        FROM organizations organization
+        WHERE organization.id = $2
+          AND organization.status = 'active'
+        ON CONFLICT DO NOTHING
+        RETURNING id, name, organization_id
+        "#,
+    )
+    .bind(id)
+    .bind(organization_id)
+    .bind(name)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| crate::day_plans::CrewSummary {
+        id: row.get("id"),
+        name: row.get("name"),
+        organization_id: row.get("organization_id"),
+        persisted: true,
+    }))
+}
+
 pub async fn organization_id_for_crew(
     pool: &PgPool,
     crew_id: &str,

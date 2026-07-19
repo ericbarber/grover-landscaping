@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   bootstrapOrganization,
+  createOrganizationCrew,
   fetchFirstOwnerSetupProgress,
   fetchOrganizationProfile,
   fetchPrincipalAccessSummary,
@@ -50,7 +51,7 @@ export function firstOwnerSetupTarget(step: string): FirstOwnerSetupTarget | nul
 export function firstOwnerProgressMilestones(progress: FirstOwnerSetupProgress) {
   return [
     { label: 'Complete organization profile', complete: progress.organizationProfileComplete, target: null },
-    { label: 'Configure the first crew', complete: progress.crewConfigured, target: 'service-setup' as const },
+    { label: 'Configure the first crew', complete: progress.crewConfigured, target: null },
     { label: 'Publish the first route', complete: progress.firstRoutePublished, target: 'day-plan' as const },
     { label: 'Invite a team member', complete: progress.teamInvitationCreated, target: 'team-invitations' as const },
   ];
@@ -77,6 +78,8 @@ export function FirstOwnerOnboardingPanel({
   const [timeZone, setTimeZone] = useState('America/Phoenix');
   const [serviceAreaLabel, setServiceAreaLabel] = useState('');
   const [defaultDailyStopCapacity, setDefaultDailyStopCapacity] = useState(12);
+  const [crewName, setCrewName] = useState('');
+  const [isCreatingCrew, setIsCreatingCrew] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -170,6 +173,25 @@ export function FirstOwnerOnboardingPanel({
       setMessage('The organization profile could not be saved. Confirm owner access and try again.');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function createFirstCrew() {
+    const name = crewName.trim();
+    if (!membership || name.length < 2 || name.length > 120) {
+      setMessage('Enter a crew name from 2 to 120 characters.');
+      return;
+    }
+    setIsCreatingCrew(true);
+    try {
+      const crew = await createOrganizationCrew(membership.organizationId, name);
+      setCrewName('');
+      setMessage(`${crew.name} created${crew.persisted ? '' : ' in local demo mode'}.`);
+      await refresh();
+    } catch {
+      setMessage('The crew could not be created. Use a unique name and try again.');
+    } finally {
+      setIsCreatingCrew(false);
     }
   }
 
@@ -428,6 +450,11 @@ export function FirstOwnerOnboardingPanel({
                   onClick={() => {
                     if (nextMilestone.target) {
                       onOpenSetupStep?.(nextMilestone.target);
+                    } else if (nextMilestone.label === 'Configure the first crew') {
+                      document.getElementById('first-owner-crew-setup')?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                      });
                     } else {
                       setIsEditingProfile(true);
                     }
@@ -441,6 +468,30 @@ export function FirstOwnerOnboardingPanel({
                   Launch setup is complete. Refresh after future changes to keep this status current.
                 </p>
               )}
+            </div>
+          ) : null}
+          {setupProgress && !setupProgress.crewConfigured ? (
+            <div className="mt-4 scroll-mt-20 rounded-xl border border-slate-200 p-4" id="first-owner-crew-setup">
+              <h3 className="font-bold text-slate-950">Create the first crew</h3>
+              <p className="mt-1 text-xs text-slate-600">Crews stay inside this organization and become available for properties and day plans.</p>
+              <label className="mt-3 block text-sm font-semibold text-slate-700">
+                Crew name
+                <input
+                  className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                  maxLength={120}
+                  onChange={(event) => setCrewName(event.target.value)}
+                  placeholder="North Route Crew"
+                  value={crewName}
+                />
+              </label>
+              <button
+                className="mt-3 min-h-11 w-full rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
+                disabled={isCreatingCrew}
+                onClick={() => void createFirstCrew()}
+                type="button"
+              >
+                {isCreatingCrew ? 'Creating crew…' : 'Create crew'}
+              </button>
             </div>
           ) : null}
           <ol className="mt-4 space-y-2">

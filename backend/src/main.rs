@@ -35,9 +35,10 @@ use completion_reports::{
     CompletionReportDeliveryNotificationResult, CompletionReportResponse,
 };
 use day_plans::{
-    validate_amendment_request, validate_amendment_review, AssignDayPlanStopRequest,
-    CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
-    ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+    validate_amendment_request, validate_amendment_review, validate_create_crew_name,
+    AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
+    CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
+    ReviewDayPlanAmendmentRequest,
 };
 use db::{
     CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
@@ -641,6 +642,10 @@ fn app_with_runtime(
             get(get_property_onboarding).put(upsert_property_onboarding),
         )
         .route("/crews", get(list_crews))
+        .route(
+            "/organizations/{organization_id}/crews",
+            post(create_organization_crew),
+        )
         .route(
             "/crews/{crew_id}/property-assignments/active",
             get(list_active_crew_property_assignments),
@@ -2031,6 +2036,45 @@ async fn list_crews(
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
             .await;
     Json(state.day_plans.list_crews(&organization_ids).await).into_response()
+}
+
+async fn create_organization_crew(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+    Json(request): Json<CreateCrewRequest>,
+) -> Response {
+    if let Err(reason) = validate_create_crew_name(&request.name) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew",
+                message: format!("Crew is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state.day_plans.create_crew(&organization_id, request).await {
+        Some(crew) => (StatusCode::CREATED, Json(crew)).into_response(),
+        None => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "crew_already_exists",
+                message: "A crew with this name already exists in the organization.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn list_property_crew_assignments(
@@ -4475,6 +4519,28 @@ mod tests {
         assert_eq!(json["first_route_published"], true);
         assert_eq!(json["completed_steps"], 4);
         assert_eq!(json["total_steps"], 4);
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn organization_crew_endpoint_creates_local_crew() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/organizations/org_demo_landscaping/crews")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"name":"South Route"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["name"], "South Route");
+        assert_eq!(json["organization_id"], "org_demo_landscaping");
         assert_eq!(json["persisted"], false);
     }
 

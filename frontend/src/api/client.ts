@@ -2065,6 +2065,24 @@ export async function fetchCrews(): Promise<CrewRecord[]> {
   }));
 }
 
+export async function createOrganizationCrew(
+  organizationId: string,
+  name: string,
+): Promise<CrewRecord> {
+  const item = await request<{
+    id: string; name: string; organization_id: string; persisted: boolean;
+  }>(`/organizations/${encodeURIComponent(organizationId)}/crews`, {
+    method: 'POST',
+    body: JSON.stringify({ name: name.trim() }),
+  });
+  return {
+    id: item.id,
+    name: item.name,
+    organizationId: item.organization_id,
+    persisted: item.persisted,
+  };
+}
+
 function toPropertyPortfolioRecord(item: {
   id: string; account_id: string; organization_id: string; display_name: string;
   portfolio_type: PropertyPortfolioRecord['portfolioType']; property_count: number; persisted: boolean;
