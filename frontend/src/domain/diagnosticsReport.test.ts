@@ -9,6 +9,7 @@ describe('mobile diagnostics support report', () => {
       apiBaseUrl: 'https://api.example.com',
       online: true,
       apiReady: false,
+      apiLatencyMs: 842,
       secureContext: true,
       workerSupported: true,
       workerControlsPage: false,
@@ -18,6 +19,7 @@ describe('mobile diagnostics support report', () => {
 
     expect(report).toContain('App origin: https://field.example.com');
     expect(report).toContain('API: unavailable');
+    expect(report).toContain('API response time: 842 ms');
     expect(report).toContain('Display mode: browser');
     expect(report).not.toContain('/reports/');
     expect(report).not.toContain('?token=');

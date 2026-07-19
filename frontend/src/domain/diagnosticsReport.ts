@@ -4,6 +4,7 @@ export interface DiagnosticsReportInput {
   apiBaseUrl: string;
   online: boolean;
   apiReady: boolean;
+  apiLatencyMs: number | null;
   secureContext: boolean;
   workerSupported: boolean;
   workerControlsPage: boolean;
@@ -19,6 +20,7 @@ export function buildDiagnosticsReport(input: DiagnosticsReportInput): string {
     `API origin: ${input.apiBaseUrl}`,
     `Browser network: ${input.online ? 'online' : 'offline'}`,
     `API: ${input.apiReady ? 'ready' : 'unavailable'}`,
+    `API response time: ${input.apiLatencyMs === null ? 'not measured' : `${input.apiLatencyMs} ms`}`,
     `Secure context: ${input.secureContext ? 'yes' : 'no'}`,
     `Service worker supported: ${input.workerSupported ? 'yes' : 'no'}`,
     `Service worker controlling page: ${input.workerControlsPage ? 'yes' : 'no'}`,

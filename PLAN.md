@@ -563,10 +563,11 @@ Current state:
 - Supported phones can send the sanitized diagnostics summary through the native share sheet
 - Mobile diagnostics can download the sanitized support summary as a dated text file
 - Every mobile diagnostic warning provides capability-specific recovery guidance
+- Mobile diagnostics measure API readiness latency and flag responses of two seconds or longer
 
 Next implementation work:
 
-- Measure and report mobile API readiness latency
+- Resume the next pilot-readiness roadmap slice after mobile access hardening
 
 ## Planned
 

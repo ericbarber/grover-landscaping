@@ -35,6 +35,7 @@ function DiagnosticRow({
 
 export function MobileDiagnosticsPage() {
   const [apiCheck, setApiCheck] = useState<ApiCheck>('checking');
+  const [apiLatencyMs, setApiLatencyMs] = useState<number | null>(null);
   const [checkedAt, setCheckedAt] = useState<Date | null>(null);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [workerControlsPage, setWorkerControlsPage] = useState(
@@ -45,10 +46,13 @@ export function MobileDiagnosticsPage() {
   async function runApiCheck() {
     if (!navigator.onLine) {
       setApiCheck('unavailable');
+      setApiLatencyMs(null);
       setCheckedAt(new Date());
       return;
     }
     setApiCheck('checking');
+    setApiLatencyMs(null);
+    const startedAt = performance.now();
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5_000);
     try {
@@ -56,8 +60,10 @@ export function MobileDiagnosticsPage() {
         cache: 'no-store',
         signal: controller.signal,
       });
+      setApiLatencyMs(Math.round(performance.now() - startedAt));
       setApiCheck(response.ok && navigator.onLine ? 'ready' : 'unavailable');
     } catch {
+      setApiLatencyMs(Math.round(performance.now() - startedAt));
       setApiCheck('unavailable');
     } finally {
       window.clearTimeout(timeout);
@@ -74,6 +80,7 @@ export function MobileDiagnosticsPage() {
     const handleOffline = () => {
       setOnline(false);
       setApiCheck('unavailable');
+      setApiLatencyMs(null);
       setCheckedAt(new Date());
     };
     const handleControllerChange = () => setWorkerControlsPage(
@@ -101,6 +108,7 @@ export function MobileDiagnosticsPage() {
       apiBaseUrl: API_BASE_URL,
       online,
       apiReady,
+      apiLatencyMs,
       secureContext: window.isSecureContext,
       workerSupported,
       workerControlsPage,
@@ -166,6 +174,12 @@ export function MobileDiagnosticsPage() {
             guidance="Confirm Tailscale is connected and the Grover API container or hosted service is running."
             label="Grover API"
             value={apiCheck === 'checking' ? 'Checking…' : apiReady ? 'Ready' : 'Unavailable'}
+          />
+          <DiagnosticRow
+            healthy={apiLatencyMs !== null && apiLatencyMs < 2_000}
+            guidance="A slow response can indicate weak cellular service, a reconnecting Tailscale tunnel, or a busy API."
+            label="API response time"
+            value={apiLatencyMs === null ? 'Not measured' : `${apiLatencyMs} ms`}
           />
           <DiagnosticRow
             healthy={window.isSecureContext}

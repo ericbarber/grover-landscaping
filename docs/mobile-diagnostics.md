@@ -4,7 +4,7 @@ Open `/diagnostics` on the same Grover Field origin to check a phone without
 signing in. The page reports:
 
 - browser network status;
-- the configured API readiness response;
+- the configured API readiness response and round-trip latency;
 - secure-context availability;
 - service-worker support and whether a worker controls the page; and
 - browser versus installed home-screen display mode.
@@ -26,6 +26,8 @@ clipboard access nor native sharing is practical.
 Every warning includes a next action tailored to that capability, including
 reconnecting Tailscale, using the HTTPS origin, reloading after first production
 registration, or installing from the browser's home-screen flow.
+API responses below two seconds are shown as healthy. Slower responses remain
+reachable but receive cellular, Tailscale, and API-load troubleshooting guidance.
 
 An inactive offline shell can be expected on local Vite development, in an
 insecure non-localhost browser context, or before the production service worker
