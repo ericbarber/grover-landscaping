@@ -12,6 +12,9 @@ const publishedPersistedDayPlan: DayPlanMutationResponse = {
   serviceDate: '2026-06-16',
   status: 'published',
   routeStatus: 'manual',
+  timeZone: 'America/Phoenix',
+  serviceAreaLabel: 'Phoenix metro',
+  stopCapacity: 12,
   persisted: true,
 };
 

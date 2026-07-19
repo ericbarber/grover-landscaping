@@ -23,6 +23,9 @@ describe('manager day plan helpers', () => {
       serviceDate: '2026-06-16',
       status: 'draft',
       routeStatus: 'manual',
+      timeZone: 'America/Phoenix',
+      serviceAreaLabel: 'Phoenix metro',
+      stopCapacity: 12,
       persisted: false,
     });
   });

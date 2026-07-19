@@ -112,6 +112,9 @@ pub struct DayPlanMutationResponse {
     pub service_date: String,
     pub status: String,
     pub route_status: String,
+    pub time_zone: String,
+    pub service_area_label: Option<String>,
+    pub stop_capacity: u32,
     pub persisted: bool,
 }
 
@@ -220,7 +223,7 @@ impl DayPlanRepository {
         let id = draft_day_plan_id(&request.crew_id, &request.service_date);
 
         if let Some(pool) = &self.pool {
-            if let Ok(true) = postgres_day_plans::create_draft_day_plan(
+            if let Ok(Some(day_plan)) = postgres_day_plans::create_draft_day_plan(
                 pool,
                 &id,
                 &request.crew_id,
@@ -228,7 +231,7 @@ impl DayPlanRepository {
             )
             .await
             {
-                return draft_day_plan_response(&request, true);
+                return day_plan;
             }
         }
 
@@ -576,6 +579,9 @@ pub fn local_published_day_plan_response(id: &str) -> DayPlanMutationResponse {
         service_date,
         status: "published".to_string(),
         route_status: "manual".to_string(),
+        time_zone: "America/Phoenix".to_string(),
+        service_area_label: Some("Phoenix metro".to_string()),
+        stop_capacity: 12,
         persisted: false,
     }
 }
@@ -590,6 +596,9 @@ fn draft_day_plan_response(
         service_date: request.service_date.clone(),
         status: "draft".to_string(),
         route_status: "manual".to_string(),
+        time_zone: "America/Phoenix".to_string(),
+        service_area_label: Some("Phoenix metro".to_string()),
+        stop_capacity: 12,
         persisted,
     }
 }
@@ -822,6 +831,12 @@ mod tests {
 
         assert_eq!(response.status, "draft");
         assert_eq!(response.route_status, "manual");
+        assert_eq!(response.time_zone, "America/Phoenix");
+        assert_eq!(
+            response.service_area_label.as_deref(),
+            Some("Phoenix metro")
+        );
+        assert_eq!(response.stop_capacity, 12);
         assert!(!response.persisted);
     }
 

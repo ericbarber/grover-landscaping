@@ -8,6 +8,9 @@ interface ApiDayPlanMutationResponse {
   service_date: string;
   status: DayPlanMutationResponse['status'];
   route_status: DayPlanMutationResponse['routeStatus'];
+  time_zone: string;
+  service_area_label: string | null;
+  stop_capacity: number;
   persisted: boolean;
 }
 
@@ -18,6 +21,9 @@ function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlanMutatio
     serviceDate: response.service_date,
     status: response.status,
     routeStatus: response.route_status,
+    timeZone: response.time_zone,
+    serviceAreaLabel: response.service_area_label,
+    stopCapacity: response.stop_capacity,
     persisted: response.persisted,
   };
 }

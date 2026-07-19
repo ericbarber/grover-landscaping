@@ -45,27 +45,42 @@ pub async fn create_draft_day_plan(
     id: &str,
     crew_id: &str,
     service_date: &str,
-) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
+) -> Result<Option<DayPlanMutationResponse>, sqlx::Error> {
+    let row = sqlx::query(
         r#"
-        INSERT INTO day_plans (id, crew_id, service_date, status, route_status)
-        VALUES ($1, $2, $3::date, 'draft', 'manual')
+        INSERT INTO day_plans (
+            id, crew_id, service_date, status, route_status,
+            time_zone, service_area_label, stop_capacity
+        )
+        SELECT
+            $1, crew.id, $3::date, 'draft', 'manual',
+            organization.time_zone,
+            organization.service_area_label,
+            organization.default_daily_stop_capacity
+        FROM crews crew
+        JOIN organizations organization ON organization.id = crew.organization_id
+        WHERE crew.id = $2
         ON CONFLICT (id) DO UPDATE SET
             crew_id = EXCLUDED.crew_id,
             service_date = EXCLUDED.service_date,
             status = EXCLUDED.status,
             route_status = EXCLUDED.route_status,
+            time_zone = EXCLUDED.time_zone,
+            service_area_label = EXCLUDED.service_area_label,
+            stop_capacity = EXCLUDED.stop_capacity,
             updated_at = now()
         WHERE day_plans.status = 'draft'
+        RETURNING id, crew_id, service_date::text AS service_date, status, route_status,
+            time_zone, service_area_label, stop_capacity
         "#,
     )
     .bind(id)
     .bind(crew_id)
     .bind(service_date)
-    .execute(pool)
+    .fetch_optional(pool)
     .await?;
 
-    Ok(result.rows_affected() == 1)
+    Ok(row.map(|row| day_plan_mutation_response(row, true)))
 }
 
 pub async fn publish_day_plan(
@@ -88,7 +103,8 @@ pub async fn publish_day_plan(
               FROM day_plan_stops
               WHERE day_plan_stops.day_plan_id = day_plans.id
           ), 0) > 0
-        RETURNING id, crew_id, service_date::text AS service_date, status, route_status
+        RETURNING id, crew_id, service_date::text AS service_date, status, route_status,
+            time_zone, service_area_label, stop_capacity
         "#,
     )
     .bind(id)
@@ -98,14 +114,24 @@ pub async fn publish_day_plan(
         return Ok(None);
     };
 
-    Ok(Some(DayPlanMutationResponse {
+    Ok(Some(day_plan_mutation_response(row, true)))
+}
+
+fn day_plan_mutation_response(
+    row: sqlx::postgres::PgRow,
+    persisted: bool,
+) -> DayPlanMutationResponse {
+    DayPlanMutationResponse {
         id: row.get("id"),
         crew_id: row.get("crew_id"),
         service_date: row.get("service_date"),
         status: row.get("status"),
         route_status: row.get("route_status"),
-        persisted: true,
-    }))
+        time_zone: row.get("time_zone"),
+        service_area_label: row.get("service_area_label"),
+        stop_capacity: row.get::<i32, _>("stop_capacity") as u32,
+        persisted,
+    }
 }
 
 pub async fn assign_stop(

@@ -46,6 +46,12 @@ async fn repository_creates_draft_day_plan() {
 
     assert_eq!(response.id, "day_plan_2026_06_16_crew_1001");
     assert_eq!(response.status, "draft");
+    assert_eq!(response.time_zone, "America/Phoenix");
+    assert_eq!(
+        response.service_area_label.as_deref(),
+        Some("Phoenix metro")
+    );
+    assert_eq!(response.stop_capacity, 12);
     assert!(response.persisted);
 }
 

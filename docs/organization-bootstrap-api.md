@@ -54,7 +54,8 @@ service-area label, and a default daily stop capacity from 1–100.
 - Contact email is normalized to lowercase, phone input permits readable
   punctuation with 7–15 digits, and website URLs require an HTTP(S) origin.
 - Timezone choices use supported US IANA identifiers, while capacity is a
-  planning default and does not override a published day plan.
+  planning default. New draft day plans snapshot these settings, so later
+  profile changes do not override an existing draft or published plan.
 - The mobile first-owner workspace loads the profile and keeps editing behind an
   explicit owner control.
 - Seed-local development returns and updates a non-persisted demo profile.

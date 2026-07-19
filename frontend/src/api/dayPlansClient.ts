@@ -37,6 +37,9 @@ export interface ApiDayPlanMutationResponse {
   service_date: string;
   status: DayPlan['status'];
   route_status: DayPlan['routeStatus'];
+  time_zone: string;
+  service_area_label: string | null;
+  stop_capacity: number;
   persisted: boolean;
 }
 
@@ -46,6 +49,9 @@ export interface DayPlanMutationResponse {
   serviceDate: string;
   status: DayPlan['status'];
   routeStatus: DayPlan['routeStatus'];
+  timeZone: string;
+  serviceAreaLabel: string | null;
+  stopCapacity: number;
   persisted: boolean;
 }
 
@@ -206,6 +212,9 @@ export function toDayPlanMutation(response: ApiDayPlanMutationResponse): DayPlan
     serviceDate: response.service_date,
     status: response.status,
     routeStatus: response.route_status,
+    timeZone: response.time_zone,
+    serviceAreaLabel: response.service_area_label,
+    stopCapacity: response.stop_capacity,
     persisted: response.persisted,
   };
 }

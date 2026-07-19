@@ -19,6 +19,9 @@ export function localDraftDayPlanResponse(crewId: string, serviceDate: string): 
     serviceDate,
     status: 'draft',
     routeStatus: 'manual',
+    timeZone: 'America/Phoenix',
+    serviceAreaLabel: 'Phoenix metro',
+    stopCapacity: 12,
     persisted: false,
   };
 }

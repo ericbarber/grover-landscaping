@@ -100,6 +100,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend manager route for creating draft day plans
 - Backend manager route for publishing day plans
 - Backend manager routes for assigning, removing, and reordering day-plan stops
+- New day-plan drafts snapshot the crew organization's timezone, service-area label, and daily stop capacity
 - Frontend API clients for manager day-plan stop assignment, removal, and ordering
 - Manager draft route planner is mounted under created draft day plans
 - Manager add/remove/reorder actions call persisted stop mutation endpoints with local fallback
@@ -483,7 +484,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Apply organization defaults to new day-plan drafts
+- Enforce day-plan stop capacity while managers build draft routes
 
 ## Planned
 

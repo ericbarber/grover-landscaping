@@ -115,6 +115,20 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
 
       {draftPlan ? (
         <div className="mt-5 space-y-5">
+          <dl className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Service area</dt>
+              <dd className="mt-1 font-semibold text-slate-900">{draftPlan.serviceAreaLabel ?? 'Not set'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Stop capacity</dt>
+              <dd className="mt-1 font-semibold text-slate-900">{draftPlan.stopCapacity} stops</dd>
+            </div>
+            <div className="col-span-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Planning timezone</dt>
+              <dd className="mt-1 break-words font-semibold text-slate-900">{draftPlan.timeZone}</dd>
+            </div>
+          </dl>
           <ManagerDraftDayPlanActions
             draftPlan={draftPlan}
             onUpdated={handleDraftPlanUpdated}

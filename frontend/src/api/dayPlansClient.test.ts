@@ -46,6 +46,9 @@ describe('day plan API client mapping', () => {
       service_date: '2026-06-16',
       status: 'draft',
       route_status: 'manual',
+      time_zone: 'America/Phoenix',
+      service_area_label: 'Phoenix metro',
+      stop_capacity: 12,
       persisted: true,
     };
 
@@ -55,6 +58,9 @@ describe('day plan API client mapping', () => {
       serviceDate: '2026-06-16',
       status: 'draft',
       routeStatus: 'manual',
+      timeZone: 'America/Phoenix',
+      serviceAreaLabel: 'Phoenix metro',
+      stopCapacity: 12,
       persisted: true,
     });
   });

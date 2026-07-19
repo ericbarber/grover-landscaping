@@ -6205,6 +6205,9 @@ mod tests {
         assert_eq!(json["id"], "day_plan_2026_06_16_crew_1001");
         assert_eq!(json["status"], "draft");
         assert_eq!(json["route_status"], "manual");
+        assert_eq!(json["time_zone"], "America/Phoenix");
+        assert_eq!(json["service_area_label"], "Phoenix metro");
+        assert_eq!(json["stop_capacity"], 12);
         assert_eq!(json["persisted"], false);
     }
 
