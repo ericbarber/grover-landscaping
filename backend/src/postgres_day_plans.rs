@@ -145,11 +145,29 @@ pub async fn assign_stop(
 
     let Some(row) = sqlx::query(
         r#"
-        WITH draft_plan AS (
-            SELECT id
-            FROM day_plans
-            WHERE id = $1
-              AND status = 'draft'
+        WITH candidate_plan AS (
+            SELECT plan.id, plan.stop_capacity
+            FROM day_plans plan
+            WHERE plan.id = $1
+              AND plan.status = 'draft'
+            FOR UPDATE
+        ),
+        draft_plan AS (
+            SELECT plan.id
+            FROM candidate_plan plan
+            WHERE (
+                  EXISTS (
+                      SELECT 1
+                      FROM day_plan_stops existing
+                      WHERE existing.day_plan_id = plan.id
+                        AND existing.job_id = $3
+                  )
+                  OR (
+                      SELECT COUNT(*)
+                      FROM day_plan_stops existing
+                      WHERE existing.day_plan_id = plan.id
+                  ) < plan.stop_capacity
+              )
         ),
         next_order AS (
             SELECT COALESCE(MAX(stop_order), 0) + 1 AS stop_order

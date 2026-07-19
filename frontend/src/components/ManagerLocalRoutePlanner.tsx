@@ -25,6 +25,7 @@ type ManagerLocalRoutePlannerProps = {
   jobs: YardCareJob[];
   initialStops?: DayPlanStop[];
   dayPlanId?: string;
+  stopCapacity?: number;
   canPersist?: boolean;
   onStopsChanged?: (stops: DayPlanStop[]) => void;
   onPublishGuardChanged?: (publishGuard: ManagerDraftRoutePublishGuard) => void;
@@ -40,6 +41,7 @@ export function ManagerLocalRoutePlanner({
   jobs,
   initialStops = [],
   dayPlanId,
+  stopCapacity = 12,
   canPersist = false,
   onStopsChanged,
   onPublishGuardChanged,
@@ -53,6 +55,7 @@ export function ManagerLocalRoutePlanner({
   const nextStepMessage = nextStep === 'review_route'
     ? `Review route before publishing: ${publishGuard.disabledReason ?? 'check workload and stop order.'}`
     : nextStepCopy[nextStep];
+  const isAtStopCapacity = draftStops.length >= stopCapacity;
 
   useEffect(() => {
     setDraftStops(initialStops);
@@ -125,6 +128,12 @@ export function ManagerLocalRoutePlanner({
   }
 
   async function addJob(jobId: string) {
+    if (isAtStopCapacity) {
+      setMutationNotice(`This draft has reached its ${stopCapacity}-stop organization capacity. Remove a stop or update the organization default before creating a new draft.`);
+      setRetryAction(null);
+      return;
+    }
+
     const nextStops = nextDraftStopsForSelectedJob(draftStops, jobs, jobId);
     const addedStop = nextStops.find((stop) => stop.jobId === jobId);
 
@@ -260,10 +269,19 @@ export function ManagerLocalRoutePlanner({
         </div>
       ) : null}
       <ManagerDraftRouteWorkloadCard stops={draftStops} />
+      {isAtStopCapacity ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          Stop capacity reached ({draftStops.length}/{stopCapacity}). Remove a stop to add another job.
+        </p>
+      ) : (
+        <p className="text-xs font-medium text-slate-600">
+          Route capacity: {draftStops.length}/{stopCapacity} stops
+        </p>
+      )}
       <ManagerDraftRouteWorkspace
         jobs={jobs}
         stops={draftStops}
-        onAddJob={(jobId) => void addJob(jobId)}
+        onAddJob={isAtStopCapacity ? undefined : (jobId) => void addJob(jobId)}
         onMoveUp={moveJobUp}
         onMoveDown={moveJobDown}
         onRemoveJob={(jobId) => void removeJob(jobId)}

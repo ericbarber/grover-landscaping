@@ -143,6 +143,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
             <ManagerLocalRoutePlanner
               jobs={planningJobs}
               dayPlanId={draftPlan.id}
+              stopCapacity={draftPlan.stopCapacity}
               canPersist={draftPlan.persisted}
               onPublishGuardChanged={setRoutePublishGuard}
             />

@@ -243,3 +243,65 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
     let final_removal = day_plans.remove_stop(&draft.id, &first_stop.stop_id).await;
     assert!(final_removal.persisted);
 }
+
+#[tokio::test]
+async fn repository_blocks_stop_assignments_beyond_draft_capacity() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let _jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&config.database_url)
+        .await
+        .expect("test pool should connect");
+    let day_plan_id = "day_plan_2026_06_21_crew_1001";
+    reset_day_plan_fixture(&pool, day_plan_id).await;
+
+    let day_plans = DayPlanRepository::new();
+    let draft = day_plans
+        .create_draft_day_plan(CreateDayPlanRequest {
+            crew_id: "crew_1001".to_string(),
+            service_date: "2026-06-21".to_string(),
+        })
+        .await;
+    sqlx::query("UPDATE day_plans SET stop_capacity = 1 WHERE id = $1")
+        .bind(&draft.id)
+        .execute(&pool)
+        .await
+        .expect("test draft capacity should update");
+
+    let first = day_plans
+        .assign_stop(
+            &draft.id,
+            AssignDayPlanStopRequest {
+                job_id: "job_1001".to_string(),
+                estimated_drive_minutes: Some(10),
+                estimated_service_minutes: Some(45),
+            },
+        )
+        .await;
+    let second = day_plans
+        .assign_stop(
+            &draft.id,
+            AssignDayPlanStopRequest {
+                job_id: "job_1002".to_string(),
+                estimated_drive_minutes: Some(8),
+                estimated_service_minutes: Some(60),
+            },
+        )
+        .await;
+    let stop_count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM day_plan_stops WHERE day_plan_id = $1")
+            .bind(&draft.id)
+            .fetch_one(&pool)
+            .await
+            .expect("test draft stops should be countable");
+
+    assert!(first.persisted);
+    assert!(!second.persisted);
+    assert_eq!(stop_count, 1);
+}
