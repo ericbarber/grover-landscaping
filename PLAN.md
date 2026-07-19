@@ -515,10 +515,13 @@ Current state:
 - Access audit events support structured JSON metadata without changing existing audit writers
 - Route activity metadata records crew/date context plus affected stop, job, or reorder count
 - Manager route activity messages use persisted mutation details instead of generic plan-only copy
+- Organization memberships carry persisted display labels with backfill for existing members
+- Operational activity returns both immutable actor IDs and readable membership labels
+- Backfilled system route history is clearly identified as a migration rather than a human action
 
 Next implementation work:
 
-- Resolve operational actor IDs to organization membership display identities
+- Add owner-managed team member display names to membership administration
 
 ## Planned
 

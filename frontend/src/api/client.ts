@@ -482,6 +482,7 @@ interface ApiOperationalActivity {
   event_kind: OperationalActivityEventKind;
   target_id: string;
   actor_user_id: string;
+  actor_label?: string;
   occurred_at: string;
   metadata?: Record<string, unknown>;
 }
@@ -492,6 +493,7 @@ export interface OperationalActivity {
   eventKind: OperationalActivityEventKind;
   targetId: string;
   actorUserId: string;
+  actorLabel?: string;
   occurredAt: string;
   metadata?: Record<string, unknown>;
 }
@@ -1653,6 +1655,7 @@ export async function fetchOperationalActivity(
     eventKind: item.event_kind,
     targetId: item.target_id,
     actorUserId: item.actor_user_id,
+    actorLabel: item.actor_label ?? item.actor_user_id,
     occurredAt: item.occurred_at,
     metadata: item.metadata ?? {},
   }));

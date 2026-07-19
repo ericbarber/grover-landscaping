@@ -182,6 +182,7 @@ pub struct OperationalActivity {
     pub event_kind: String,
     pub target_id: String,
     pub actor_user_id: String,
+    pub actor_label: String,
     pub occurred_at: String,
     pub metadata: serde_json::Value,
 }
@@ -1037,11 +1038,27 @@ async fn list_operational_activity(
 
     let rows = sqlx::query(
         r#"
-        SELECT id, organization_id, event_kind, target_id, actor_user_id,
-            occurred_at::text AS occurred_at, metadata::text AS metadata
-        FROM access_audit_events
-        WHERE organization_id = ANY($1)
-          AND event_kind IN (
+        SELECT audit.id, audit.organization_id, audit.event_kind, audit.target_id,
+            audit.actor_user_id,
+            CASE
+                WHEN audit.actor_user_id = 'system' THEN 'System migration'
+                ELSE COALESCE(actor.display_name, audit.actor_user_id)
+            END AS actor_label,
+            audit.occurred_at::text AS occurred_at, audit.metadata::text AS metadata
+        FROM access_audit_events audit
+        LEFT JOIN LATERAL (
+            SELECT membership.display_name
+            FROM organization_memberships membership
+            WHERE membership.organization_id = audit.organization_id
+              AND membership.user_id = audit.actor_user_id
+            ORDER BY
+                CASE membership.status WHEN 'active' THEN 0 ELSE 1 END,
+                membership.updated_at DESC,
+                membership.id
+            LIMIT 1
+        ) actor ON TRUE
+        WHERE audit.organization_id = ANY($1)
+          AND audit.event_kind IN (
                 'route_draft_saved',
                 'route_published',
                 'route_completed',
@@ -1059,9 +1076,9 @@ async fn list_operational_activity(
                 'photo_processing_resolved',
                 'customer_photo_evidence_erased'
           )
-          AND ($2::text IS NULL OR event_kind = $2)
-          AND ($3::timestamptz IS NULL OR occurred_at < $3::timestamptz)
-        ORDER BY occurred_at DESC, id DESC
+          AND ($2::text IS NULL OR audit.event_kind = $2)
+          AND ($3::timestamptz IS NULL OR audit.occurred_at < $3::timestamptz)
+        ORDER BY audit.occurred_at DESC, audit.id DESC
         LIMIT $4
         "#,
     )
@@ -1080,6 +1097,7 @@ async fn list_operational_activity(
             event_kind: row.get("event_kind"),
             target_id: row.get("target_id"),
             actor_user_id: row.get("actor_user_id"),
+            actor_label: row.get("actor_label"),
             occurred_at: row.get("occurred_at"),
             metadata: serde_json::from_str(&row.get::<String, _>("metadata"))
                 .unwrap_or_else(|_| serde_json::json!({})),

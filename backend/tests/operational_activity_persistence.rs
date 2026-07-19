@@ -27,7 +27,7 @@ async fn repository_lists_tenant_scoped_operational_activity() {
         INSERT INTO access_audit_events (
             id, actor_user_id, organization_id, event_kind, target_id, occurred_at
         )
-        VALUES ($1, 'manager_operational_test', 'org_demo_landscaping',
+        VALUES ($1, 'local-development-user', 'org_demo_landscaping',
             'report_review_started', 'report_operational_test', now())
         "#,
     )
@@ -62,6 +62,7 @@ async fn repository_lists_tenant_scoped_operational_activity() {
         item.id == audit_id
             && item.event_kind == "report_review_started"
             && item.target_id == "report_operational_test"
+            && item.actor_label == "Local Development Owner"
     }));
     assert!(activity.iter().any(|item| {
         item.event_kind == "route_published"

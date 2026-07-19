@@ -111,7 +111,7 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
   return {
     id: `operational_${activity.id}`,
     title: presentation.title,
-    message: `${activity.targetId} · recorded by ${activity.actorUserId}.${details}`,
+    message: `${activity.targetId} · recorded by ${activity.actorLabel ?? activity.actorUserId}.${details}`,
     tone: presentation.tone,
     source: presentation.source,
     occurredAt: activity.occurredAt,

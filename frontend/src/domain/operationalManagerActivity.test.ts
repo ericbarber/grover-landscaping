@@ -24,6 +24,7 @@ describe('persisted operational manager activity', () => {
       eventKind: 'route_stop_assigned',
       targetId: 'plan_1001',
       actorUserId: 'manager_1001',
+      actorLabel: 'Maria Manager',
       occurredAt: '2026-07-19T17:01:00Z',
       metadata: {
         stop_id: 'stop_1001',
@@ -31,7 +32,7 @@ describe('persisted operational manager activity', () => {
       },
     })).toMatchObject({
       title: 'Route stop assigned',
-      message: 'plan_1001 · recorded by manager_1001. Assigned job_1001 as stop_1001.',
+      message: 'plan_1001 · recorded by Maria Manager. Assigned job_1001 as stop_1001.',
       source: 'route',
     });
   });
