@@ -24,6 +24,9 @@ pub struct CreateCustomerAccountRequest {
     pub service_approval_status: String,
     pub contracted_services_per_period: u32,
     pub billing_notes: Option<String>,
+    pub primary_contact_name: Option<String>,
+    pub contact_email: Option<String>,
+    pub contact_phone: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -34,6 +37,9 @@ pub struct UpdateCustomerAccountRequest {
     pub service_approval_status: String,
     pub contracted_services_per_period: u32,
     pub billing_notes: Option<String>,
+    pub primary_contact_name: Option<String>,
+    pub contact_email: Option<String>,
+    pub contact_phone: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -47,6 +53,9 @@ pub struct CustomerAccountRecord {
     pub contracted_services_per_period: u32,
     pub completed_services_this_period: u32,
     pub billing_notes: String,
+    pub primary_contact_name: String,
+    pub contact_email: String,
+    pub contact_phone: String,
     pub persisted: bool,
 }
 
@@ -326,6 +335,34 @@ pub fn validate_create_customer_account_request(
     {
         return Err("billing_notes_too_long");
     }
+    if request
+        .primary_contact_name
+        .as_deref()
+        .is_some_and(|value| value.trim().len() > 160)
+    {
+        return Err("primary_contact_name_too_long");
+    }
+    if request.contact_email.as_deref().is_some_and(|value| {
+        let value = value.trim();
+        !value.is_empty()
+            && (value.len() > 254
+                || !value.contains('@')
+                || value.starts_with('@')
+                || value.ends_with('@'))
+    }) {
+        return Err("contact_email_invalid");
+    }
+    if request.contact_phone.as_deref().is_some_and(|value| {
+        let value = value.trim();
+        !value.is_empty()
+            && (!value.starts_with('+')
+                || !(8..=16).contains(&value.len())
+                || !value[1..]
+                    .chars()
+                    .all(|character| character.is_ascii_digit()))
+    }) {
+        return Err("contact_phone_invalid");
+    }
     Ok(())
 }
 
@@ -340,6 +377,9 @@ pub fn validate_update_customer_account_request(
         service_approval_status: request.service_approval_status.clone(),
         contracted_services_per_period: request.contracted_services_per_period,
         billing_notes: request.billing_notes.clone(),
+        primary_contact_name: request.primary_contact_name.clone(),
+        contact_email: request.contact_email.clone(),
+        contact_phone: request.contact_phone.clone(),
     };
     validate_create_customer_account_request(&create_request)
 }
@@ -389,6 +429,11 @@ fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustome
         .billing_notes
         .map(|notes| notes.trim().to_string())
         .filter(|notes| !notes.is_empty());
+    normalize_account_contacts(
+        &mut request.primary_contact_name,
+        &mut request.contact_email,
+        &mut request.contact_phone,
+    );
     request
 }
 
@@ -403,7 +448,31 @@ fn normalize_update_request(
         .billing_notes
         .map(|notes| notes.trim().to_string())
         .filter(|notes| !notes.is_empty());
+    normalize_account_contacts(
+        &mut request.primary_contact_name,
+        &mut request.contact_email,
+        &mut request.contact_phone,
+    );
     request
+}
+
+fn normalize_account_contacts(
+    name: &mut Option<String>,
+    email: &mut Option<String>,
+    phone: &mut Option<String>,
+) {
+    *name = name
+        .take()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+    *email = email
+        .take()
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty());
+    *phone = phone
+        .take()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
 }
 
 fn normalize_create_property_request(
@@ -434,7 +503,8 @@ async fn create_account(
             id, customer_name, billing_model, payment_status,
             service_approval_status, contracted_services_per_period,
             completed_services_this_period, billing_notes
-        ) VALUES ($1,$2,$3,$4,$5,$6,0,$7)"#,
+            , primary_contact_name, contact_email, contact_phone
+        ) VALUES ($1,$2,$3,$4,$5,$6,0,$7,$8,$9,$10)"#,
     )
     .bind(&account_id)
     .bind(&request.customer_name)
@@ -443,6 +513,9 @@ async fn create_account(
     .bind(&request.service_approval_status)
     .bind(request.contracted_services_per_period as i32)
     .bind(&request.billing_notes)
+    .bind(&request.primary_contact_name)
+    .bind(&request.contact_email)
+    .bind(&request.contact_phone)
     .execute(&mut *tx)
     .await?;
     sqlx::query(
@@ -466,7 +539,8 @@ async fn update_account(
         r#"UPDATE customer_accounts account
         SET customer_name = $3, billing_model = $4, payment_status = $5,
             service_approval_status = $6, contracted_services_per_period = $7,
-            billing_notes = $8, updated_at = NOW()
+            billing_notes = $8, primary_contact_name = $9, contact_email = $10,
+            contact_phone = $11, updated_at = NOW()
         FROM organization_customer_accounts relation
         WHERE account.id = $1
           AND relation.account_id = account.id
@@ -475,7 +549,10 @@ async fn update_account(
         RETURNING account.id, relation.organization_id, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
             account.contracted_services_per_period, account.completed_services_this_period,
-            COALESCE(account.billing_notes, '') AS billing_notes"#,
+            COALESCE(account.billing_notes, '') AS billing_notes,
+            COALESCE(account.primary_contact_name, '') AS primary_contact_name,
+            COALESCE(account.contact_email, '') AS contact_email,
+            COALESCE(account.contact_phone, '') AS contact_phone"#,
     )
     .bind(account_id)
     .bind(organization_ids)
@@ -485,6 +562,9 @@ async fn update_account(
     .bind(&request.service_approval_status)
     .bind(request.contracted_services_per_period as i32)
     .bind(&request.billing_notes)
+    .bind(&request.primary_contact_name)
+    .bind(&request.contact_email)
+    .bind(&request.contact_phone)
     .fetch_optional(pool)
     .await?;
     Ok(row.map(|row| CustomerAccountRecord {
@@ -497,6 +577,9 @@ async fn update_account(
         contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period") as u32,
         completed_services_this_period: row.get::<i32, _>("completed_services_this_period") as u32,
         billing_notes: row.get("billing_notes"),
+        primary_contact_name: row.get("primary_contact_name"),
+        contact_email: row.get("contact_email"),
+        contact_phone: row.get("contact_phone"),
         persisted: true,
     }))
 }
@@ -778,6 +861,11 @@ async fn account_onboarding_progress(
             (
                 account.service_approval_status = 'approved'
                 AND account.contracted_services_per_period > 0
+                AND NULLIF(BTRIM(account.primary_contact_name), '') IS NOT NULL
+                AND (
+                    NULLIF(BTRIM(account.contact_email), '') IS NOT NULL
+                    OR NULLIF(BTRIM(account.contact_phone), '') IS NOT NULL
+                )
             ) AS customer_details_ready,
             COUNT(property.id) FILTER (
                 WHERE property.status <> 'archived'
@@ -962,7 +1050,10 @@ async fn list_accounts(
         r#"SELECT account.id, relation.organization_id, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
             account.contracted_services_per_period, account.completed_services_this_period,
-            COALESCE(account.billing_notes, '') AS billing_notes
+            COALESCE(account.billing_notes, '') AS billing_notes,
+            COALESCE(account.primary_contact_name, '') AS primary_contact_name,
+            COALESCE(account.contact_email, '') AS contact_email,
+            COALESCE(account.contact_phone, '') AS contact_phone
         FROM organization_customer_accounts relation
         JOIN customer_accounts account ON account.id = relation.account_id
         WHERE relation.organization_id = ANY($1) AND relation.status = 'active'
@@ -985,6 +1076,9 @@ async fn list_accounts(
             completed_services_this_period: row.get::<i32, _>("completed_services_this_period")
                 as u32,
             billing_notes: row.get("billing_notes"),
+            primary_contact_name: row.get("primary_contact_name"),
+            contact_email: row.get("contact_email"),
+            contact_phone: row.get("contact_phone"),
             persisted: true,
         })
         .collect())
@@ -1005,6 +1099,9 @@ fn record_from_request(
         contracted_services_per_period: request.contracted_services_per_period,
         completed_services_this_period: 0,
         billing_notes: request.billing_notes.clone().unwrap_or_default(),
+        primary_contact_name: request.primary_contact_name.clone().unwrap_or_default(),
+        contact_email: request.contact_email.clone().unwrap_or_default(),
+        contact_phone: request.contact_phone.clone().unwrap_or_default(),
         persisted,
     }
 }
@@ -1035,6 +1132,9 @@ fn local_update_record(
         contracted_services_per_period: request.contracted_services_per_period,
         completed_services_this_period: 0,
         billing_notes: request.billing_notes.clone().unwrap_or_default(),
+        primary_contact_name: request.primary_contact_name.clone().unwrap_or_default(),
+        contact_email: request.contact_email.clone().unwrap_or_default(),
+        contact_phone: request.contact_phone.clone().unwrap_or_default(),
         persisted: false,
     })
 }
@@ -1099,8 +1199,10 @@ fn local_account_onboarding_progress(
         .iter()
         .filter(|property| property.status == "active")
         .count() as u32;
-    let customer_details_ready =
-        account.service_approval_status == "approved" && account.contracted_services_per_period > 0;
+    let customer_details_ready = account.service_approval_status == "approved"
+        && account.contracted_services_per_period > 0
+        && !account.primary_contact_name.is_empty()
+        && (!account.contact_email.is_empty() || !account.contact_phone.is_empty());
     Some(CustomerAccountOnboardingProgress {
         account_id: account.account_id,
         customer_details_ready,
@@ -1181,6 +1283,9 @@ fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
             service_approval_status: "approved".to_string(),
             contracted_services_per_period: 1,
             billing_notes: Some("Payment can be marked complete after service.".to_string()),
+            primary_contact_name: Some("Sample Customer".to_string()),
+            contact_email: Some("customer@example.com".to_string()),
+            contact_phone: None,
         },
         false,
     )]
@@ -1224,6 +1329,9 @@ mod tests {
             service_approval_status: "approved".to_string(),
             contracted_services_per_period: 4,
             billing_notes: Some("Account is current.".to_string()),
+            primary_contact_name: Some("Pat Customer".to_string()),
+            contact_email: Some("pat@example.com".to_string()),
+            contact_phone: None,
         }
     }
 
@@ -1238,6 +1346,18 @@ mod tests {
         assert_eq!(
             validate_update_customer_account_request(&invalid),
             Err("payment_status_invalid")
+        );
+        let mut invalid_email = update_request();
+        invalid_email.contact_email = Some("not-an-email".to_string());
+        assert_eq!(
+            validate_update_customer_account_request(&invalid_email),
+            Err("contact_email_invalid")
+        );
+        let mut invalid_phone = update_request();
+        invalid_phone.contact_phone = Some("480-555-0100".to_string());
+        assert_eq!(
+            validate_update_customer_account_request(&invalid_phone),
+            Err("contact_phone_invalid")
         );
     }
 

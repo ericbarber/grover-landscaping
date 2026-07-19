@@ -14,7 +14,9 @@ export function deriveAccountOnboardingProgress(
     (property) => property.status === 'active',
   ).length;
   const customerDetailsReady = account.serviceApprovalStatus === 'approved'
-    && account.contractedServicesPerPeriod > 0;
+    && account.contractedServicesPerPeriod > 0
+    && account.primaryContactName.trim().length > 0
+    && (account.contactEmail.trim().length > 0 || account.contactPhone.trim().length > 0);
   return {
     accountId: account.accountId,
     customerDetailsReady,

@@ -3,6 +3,7 @@
 - 2026-07-19: Added tenant-scoped crew daily capacity and eligible crew-lead assignment controls.
 - 2026-07-19: Applied crew-specific daily capacity snapshots to new draft route guards.
 - 2026-07-19: Added crew capacity and leadership readiness to manager route selection.
+- 2026-07-19: Added persisted customer contacts to onboarding readiness and repaired property lifecycle audit constraints.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

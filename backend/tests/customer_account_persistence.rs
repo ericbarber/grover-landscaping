@@ -20,6 +20,12 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     let pool = jobs
         .pool()
         .expect("connected repository should expose its pool");
+    sqlx::query(
+        "DELETE FROM customer_accounts WHERE customer_name IN ('Account Update Test', 'Updated Account Test')",
+    )
+    .execute(&pool)
+    .await
+    .expect("prior account test fixtures should reset");
     let accounts = AccountRepository::from_pool(pool.clone());
     let created = accounts
         .create(CreateCustomerAccountRequest {
@@ -30,6 +36,9 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             service_approval_status: "manager_review".to_string(),
             contracted_services_per_period: 1,
             billing_notes: None,
+            primary_contact_name: None,
+            contact_email: None,
+            contact_phone: None,
         })
         .await
         .expect("test account should be created");
@@ -45,6 +54,9 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
                 service_approval_status: "approved".to_string(),
                 contracted_services_per_period: 4,
                 billing_notes: Some("  Billing is current.  ".to_string()),
+                primary_contact_name: Some("  Pat Customer  ".to_string()),
+                contact_email: Some("  PAT@EXAMPLE.COM  ".to_string()),
+                contact_phone: None,
             },
         )
         .await
@@ -52,6 +64,8 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert!(updated.persisted);
     assert_eq!(updated.customer_name, "Updated Account Test");
     assert_eq!(updated.billing_notes, "Billing is current.");
+    assert_eq!(updated.primary_contact_name, "Pat Customer");
+    assert_eq!(updated.contact_email, "pat@example.com");
 
     assert!(accounts
         .update(
@@ -64,6 +78,9 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
                 service_approval_status: "blocked".to_string(),
                 contracted_services_per_period: 0,
                 billing_notes: None,
+                primary_contact_name: None,
+                contact_email: None,
+                contact_phone: None,
             },
         )
         .await

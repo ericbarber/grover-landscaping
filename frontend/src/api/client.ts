@@ -620,6 +620,9 @@ export interface CustomerAccountRecord {
   contractedServicesPerPeriod: number;
   completedServicesThisPeriod: number;
   billingNotes: string;
+  primaryContactName: string;
+  contactEmail: string;
+  contactPhone: string;
   persisted: boolean;
 }
 
@@ -1853,7 +1856,8 @@ function toCustomerAccountRecord(item: {
   payment_status: CustomerAccountRecord['paymentStatus'];
   service_approval_status: CustomerAccountRecord['serviceApprovalStatus'];
   contracted_services_per_period: number; completed_services_this_period: number;
-  billing_notes: string; persisted: boolean;
+  billing_notes: string; primary_contact_name: string; contact_email: string;
+  contact_phone: string; persisted: boolean;
 }): CustomerAccountRecord {
   return {
     accountId: item.account_id,
@@ -1865,6 +1869,9 @@ function toCustomerAccountRecord(item: {
     contractedServicesPerPeriod: item.contracted_services_per_period,
     completedServicesThisPeriod: item.completed_services_this_period,
     billingNotes: item.billing_notes,
+    primaryContactName: item.primary_contact_name,
+    contactEmail: item.contact_email,
+    contactPhone: item.contact_phone,
     persisted: item.persisted,
   };
 }
@@ -1928,6 +1935,9 @@ export async function createCustomerAccount(
       service_approval_status: input.serviceApprovalStatus,
       contracted_services_per_period: input.contractedServicesPerPeriod,
       billing_notes: input.billingNotes || null,
+      primary_contact_name: input.primaryContactName || null,
+      contact_email: input.contactEmail || null,
+      contact_phone: input.contactPhone || null,
     }),
   });
   return toCustomerAccountRecord(item);
@@ -1950,6 +1960,9 @@ export async function updateCustomerAccount(
       service_approval_status: input.serviceApprovalStatus,
       contracted_services_per_period: input.contractedServicesPerPeriod,
       billing_notes: input.billingNotes || null,
+      primary_contact_name: input.primaryContactName || null,
+      contact_email: input.contactEmail || null,
+      contact_phone: input.contactPhone || null,
     }),
   });
   return toCustomerAccountRecord(item);

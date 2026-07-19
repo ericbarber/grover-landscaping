@@ -99,6 +99,9 @@ export function ManagerCustomerAccountOnboardingPanel({
         serviceApprovalStatus: 'approved',
         contractedServicesPerPeriod: 1,
         billingNotes: '',
+        primaryContactName: '',
+        contactEmail: '',
+        contactPhone: '',
       });
       setAccounts((current) => [...current, account].sort((a, b) => a.customerName.localeCompare(b.customerName)));
       setProgress((current) => ({
@@ -239,6 +242,11 @@ export function ManagerCustomerAccountOnboardingPanel({
                   <div>
                     <p className="font-semibold text-slate-950">{account.customerName}</p>
                     <p className="text-xs text-slate-500">{account.billingModel.replace('_', ' ')} · {account.paymentStatus.replace('_', ' ')}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {account.primaryContactName || 'Contact not set'}
+                      {account.contactEmail ? ` · ${account.contactEmail}` : ''}
+                      {account.contactPhone ? ` · ${account.contactPhone}` : ''}
+                    </p>
                   </div>
                   <button className="min-h-11 px-2 text-sm font-semibold text-emerald-700" onClick={() => openAccountDetails(account)} type="button">Edit</button>
                 </div>
@@ -410,6 +418,15 @@ function AccountEditor({ account, disabled, onCancel, onChange, onSave }: {
         <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.customerName} onChange={(event) => update('customerName', event.target.value)} />
       </label>
       <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-sm font-semibold text-slate-700">Primary contact
+          <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" maxLength={160} value={account.primaryContactName} onChange={(event) => update('primaryContactName', event.target.value)} />
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Contact email
+          <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" maxLength={254} type="email" value={account.contactEmail} onChange={(event) => update('contactEmail', event.target.value)} />
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Contact phone
+          <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" inputMode="tel" placeholder="+14805550123" value={account.contactPhone} onChange={(event) => update('contactPhone', event.target.value)} />
+        </label>
         <label className="text-sm font-semibold text-slate-700">Billing model
           <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal" value={account.billingModel} onChange={(event) => update('billingModel', event.target.value as CustomerAccountRecord['billingModel'])}>
             <option value="per_job">Per job</option><option value="monthly_plan">Monthly plan</option><option value="prepaid_package">Prepaid package</option><option value="manual_account">Manual account</option>

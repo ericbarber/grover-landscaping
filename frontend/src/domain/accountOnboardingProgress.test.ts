@@ -17,6 +17,9 @@ const account: CustomerAccountRecord = {
   contractedServicesPerPeriod: 2,
   completedServicesThisPeriod: 0,
   billingNotes: '',
+  primaryContactName: 'Pat Customer',
+  contactEmail: 'pat@example.com',
+  contactPhone: '',
   persisted: false,
 };
 
@@ -45,6 +48,14 @@ describe('account onboarding progress', () => {
     ])).toMatchObject({
       propertyCount: 2,
       activePropertyCount: 1,
+      complete: false,
+    });
+    expect(deriveAccountOnboardingProgress({
+      ...account,
+      primaryContactName: '',
+      contactEmail: '',
+    }, [property('active')])).toMatchObject({
+      customerDetailsReady: false,
       complete: false,
     });
   });

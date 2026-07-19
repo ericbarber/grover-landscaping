@@ -183,6 +183,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 ### Account and service tracking foundation
 
 - Customer account summary model
+- Customer accounts persist normalized primary contact names, email addresses, and E.164 phone numbers
+- Account onboarding readiness requires a named contact and at least one customer communication destination
 - Account status card in completion report
 - Seed account states for demo jobs
 - PostgreSQL migration foundation for customer accounts
@@ -206,6 +208,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Property setup loads portfolio and crew capabilities independently so limited roles retain their authorized tools
 - Manager property setup shows persisted portfolio membership and updates membership counts after regrouping
 - Tenant-scoped property archive/reactivation ends active crew service and records lifecycle audit events
+- Property identity, activation, archival, reactivation, and status audit events are accepted by fresh database migrations
 - Mobile property setup uses two-step lifecycle controls and excludes archived properties from operational onboarding
 - Managers can edit property names and service addresses from mobile setup
 - Database uniqueness prevents duplicate property identities while permitting distinct service areas at one address
@@ -495,7 +498,7 @@ Current state:
 
 Next implementation work:
 
-- Expand account onboarding and first-user administration workflows
+- Add account-level notification preferences and contact rules
 
 ## Planned
 
