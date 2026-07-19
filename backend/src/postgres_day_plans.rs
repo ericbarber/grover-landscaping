@@ -262,7 +262,7 @@ pub async fn create_draft_day_plan(
             $1, crew.id, $3::date, 'draft', 'manual',
             organization.time_zone,
             organization.service_area_label,
-            organization.default_daily_stop_capacity
+            crew.daily_stop_capacity
         FROM crews crew
         JOIN organizations organization ON organization.id = crew.organization_id
         WHERE crew.id = $2

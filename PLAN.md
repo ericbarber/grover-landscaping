@@ -252,6 +252,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owner administration history includes crew rename, deactivation, and reactivation audit events
 - Owners can set a tenant crew's 1–100 stop daily capacity and assign an active owner or crew-lead membership
 - Crew lead assignments are constrained to active eligible memberships in the same organization
+- New draft routes snapshot the selected crew's daily stop capacity for assignment and publish guards
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -494,7 +495,6 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Apply crew-specific capacity to route planning and publish guards
 
 ## Planned
 

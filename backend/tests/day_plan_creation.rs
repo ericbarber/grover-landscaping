@@ -37,6 +37,17 @@ async fn repository_creates_draft_day_plan() {
         .expect("repository should connect and run migrations");
 
     let day_plans = DayPlanRepository::new();
+    let pool = _jobs.pool().expect("database pool should be available");
+    sqlx::query(
+        "UPDATE organizations SET time_zone = 'America/Phoenix', service_area_label = 'Phoenix metro' WHERE id = 'org_demo_landscaping'",
+    )
+    .execute(&pool)
+    .await
+    .expect("seed organization route defaults should be configurable");
+    sqlx::query("UPDATE crews SET daily_stop_capacity = 7 WHERE id = 'crew_1001'")
+        .execute(&pool)
+        .await
+        .expect("seed crew capacity should be configurable");
     let response = day_plans
         .create_draft_day_plan(CreateDayPlanRequest {
             crew_id: "crew_1001".to_string(),
@@ -51,7 +62,7 @@ async fn repository_creates_draft_day_plan() {
         response.service_area_label.as_deref(),
         Some("Phoenix metro")
     );
-    assert_eq!(response.stop_capacity, 12);
+    assert_eq!(response.stop_capacity, 7);
     assert!(response.persisted);
 }
 
