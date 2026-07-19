@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   buildCompletionReportQueue,
   completionReportQueueReadinessFilterLabel,
@@ -12,7 +12,11 @@ import {
 import type { CompletionReportSnapshot } from '../api/client';
 import type { CompletionReportQueueItem } from '../domain/completionReportQueue';
 import type { CompletionReportOperationalFilters } from '../domain/completionReportOperationalFilters';
-import { completionReportOperationalFilterCount } from '../domain/completionReportOperationalFilters';
+import {
+  COMPLETION_REPORT_FILTER_STORAGE_KEY,
+  completionReportOperationalFilterCount,
+  parseCompletionReportOperationalFilters,
+} from '../domain/completionReportOperationalFilters';
 
 type ManagerCompletionReportQueuePanelProps = {
   reports: CompletionReportSnapshot[];
@@ -53,16 +57,36 @@ export function ManagerCompletionReportQueuePanel({
   onRefresh,
   onSelectJob,
 }: ManagerCompletionReportQueuePanelProps) {
-  const [statusFilter, setStatusFilter] = useState<CompletionReportQueueStatusFilter>('active');
-  const [readinessFilter, setReadinessFilter] = useState<CompletionReportQueueReadinessFilter>('all');
-  const [readinessBlocker, setReadinessBlocker] = useState<(typeof readinessBlockers)[number][0]>('all');
-  const [organizationId, setOrganizationId] = useState('');
-  const [crewId, setCrewId] = useState('');
-  const [customer, setCustomer] = useState('');
-  const [property, setProperty] = useState('');
-  const [scheduledFrom, setScheduledFrom] = useState('');
-  const [scheduledTo, setScheduledTo] = useState('');
-  const [appliedFilterCount, setAppliedFilterCount] = useState(0);
+  const initialFilters = useMemo(
+    () => {
+      try {
+        return parseCompletionReportOperationalFilters(
+          window.localStorage.getItem(COMPLETION_REPORT_FILTER_STORAGE_KEY),
+        );
+      } catch {
+        return {};
+      }
+    },
+    [],
+  );
+  const [statusFilter, setStatusFilter] = useState<CompletionReportQueueStatusFilter>(
+    initialFilters.status === 'submitted' ? 'needs_review' : initialFilters.status ?? 'active',
+  );
+  const [readinessFilter, setReadinessFilter] = useState<CompletionReportQueueReadinessFilter>(
+    initialFilters.readiness ?? 'all',
+  );
+  const [readinessBlocker, setReadinessBlocker] = useState<(typeof readinessBlockers)[number][0]>(
+    initialFilters.readinessBlocker ?? 'all',
+  );
+  const [organizationId, setOrganizationId] = useState(initialFilters.organizationId ?? '');
+  const [crewId, setCrewId] = useState(initialFilters.crewId ?? '');
+  const [customer, setCustomer] = useState(initialFilters.customer ?? '');
+  const [property, setProperty] = useState(initialFilters.property ?? '');
+  const [scheduledFrom, setScheduledFrom] = useState(initialFilters.scheduledFrom ?? '');
+  const [scheduledTo, setScheduledTo] = useState(initialFilters.scheduledTo ?? '');
+  const [appliedFilterCount, setAppliedFilterCount] = useState(
+    completionReportOperationalFilterCount(initialFilters),
+  );
   const hasInvalidDateRange = Boolean(scheduledFrom && scheduledTo && scheduledFrom > scheduledTo);
   const queueItems = useMemo(() => buildCompletionReportQueue(reports), [reports]);
   const organizationIds = useMemo(
@@ -86,6 +110,12 @@ export function ManagerCompletionReportQueuePanel({
     [queueItems, readinessFilter, statusFilter],
   );
   const summary = summarizeCompletionReportQueue(queueItems);
+
+  useEffect(() => {
+    if (completionReportOperationalFilterCount(initialFilters) > 0) {
+      onRefresh(initialFilters);
+    }
+  }, []);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -133,6 +163,11 @@ export function ManagerCompletionReportQueuePanel({
                 readinessBlocker,
               };
               setAppliedFilterCount(completionReportOperationalFilterCount(filters));
+              try {
+                window.localStorage.setItem(COMPLETION_REPORT_FILTER_STORAGE_KEY, JSON.stringify(filters));
+              } catch {
+                // Filtering remains available when browser storage is unavailable.
+              }
               onRefresh(filters);
             }}
             type="button"
@@ -207,6 +242,11 @@ export function ManagerCompletionReportQueuePanel({
               setReadinessFilter('all');
               setReadinessBlocker('all');
               setAppliedFilterCount(0);
+              try {
+                window.localStorage.removeItem(COMPLETION_REPORT_FILTER_STORAGE_KEY);
+              } catch {
+                // The in-memory reset still applies when browser storage is unavailable.
+              }
               onRefresh({ status: 'active', readiness: 'all', readinessBlocker: 'all' });
             }}
             type="button"

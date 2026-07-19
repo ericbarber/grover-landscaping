@@ -3,6 +3,7 @@ import type { CompletionReportSnapshot } from '../api/client';
 import {
   completionReportOperationalFilterCount,
   matchesCompletionReportOperationalFilters,
+  parseCompletionReportOperationalFilters,
 } from './completionReportOperationalFilters';
 
 const report = {
@@ -60,5 +61,19 @@ describe('completion report operational filters', () => {
       status: 'submitted',
       readiness: 'blocked',
     })).toBe(4);
+  });
+
+  it('restores supported saved filters and ignores invalid storage', () => {
+    expect(parseCompletionReportOperationalFilters(JSON.stringify({
+      customer: 'Desert View',
+      status: 'submitted',
+      readinessBlocker: 'route_stop',
+      unsupported: 'ignored',
+    }))).toEqual({
+      customer: 'Desert View',
+      status: 'submitted',
+      readinessBlocker: 'route_stop',
+    });
+    expect(parseCompletionReportOperationalFilters('{broken')).toEqual({});
   });
 });

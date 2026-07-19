@@ -17,6 +17,59 @@ export type CompletionReportOperationalFilters = {
   readinessBlocker?: CompletionReportListReadinessBlockerFilter;
 };
 
+export const COMPLETION_REPORT_FILTER_STORAGE_KEY = 'grover.manager-completion-report-filters.v1';
+
+const statusFilters = ['all', 'active', 'draft', 'submitted', 'in_review', 'changes_requested', 'delivered'];
+const readinessFilters = ['all', 'ready', 'blocked', 'local_only'];
+const blockerFilters = [
+  'all',
+  'any',
+  'checklist',
+  'before_photos',
+  'after_photos',
+  'add_ons',
+  'route_stop',
+];
+
+export function parseCompletionReportOperationalFilters(
+  serialized: string | null,
+): CompletionReportOperationalFilters {
+  if (!serialized) return {};
+  try {
+    const value = JSON.parse(serialized) as Record<string, unknown>;
+    const text = (key: string) => typeof value[key] === 'string' && value[key]
+      ? value[key] as string
+      : undefined;
+    const status = text('status');
+    const readiness = text('readiness');
+    const readinessBlocker = text('readinessBlocker');
+    const filters: CompletionReportOperationalFilters = {};
+    for (const key of [
+      'organizationId',
+      'crewId',
+      'customer',
+      'property',
+      'scheduledFrom',
+      'scheduledTo',
+    ] as const) {
+      const entry = text(key);
+      if (entry) filters[key] = entry;
+    }
+    if (status && statusFilters.includes(status)) {
+      filters.status = status as CompletionReportListStatusFilter;
+    }
+    if (readiness && readinessFilters.includes(readiness)) {
+      filters.readiness = readiness as CompletionReportListReadinessFilter;
+    }
+    if (readinessBlocker && blockerFilters.includes(readinessBlocker)) {
+      filters.readinessBlocker = readinessBlocker as CompletionReportListReadinessBlockerFilter;
+    }
+    return filters;
+  } catch {
+    return {};
+  }
+}
+
 export function completionReportOperationalFilterCount(
   filters: CompletionReportOperationalFilters,
 ): number {

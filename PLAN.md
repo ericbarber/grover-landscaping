@@ -470,6 +470,7 @@ Current state:
 - Manager report queue controls apply persisted customer, property, and inclusive scheduled-date filters with validated date ranges
 - Manager lifecycle, readiness, and readiness-blocker controls apply to persisted report loading with equivalent local fallback filtering
 - Manager report queue summarizes applied persisted filters and restores the default active queue in one action
+- Manager report queue safely restores supported persisted filters after mobile browser reloads and reapplies them to server loading
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -610,7 +611,7 @@ Current state:
 
 Next implementation work:
 
-- Preserve manager completion-report filter selections across mobile browser reloads
+- Add a mobile completion-report queue smoke test for persisted filtering and reload restoration
 
 ## Planned
 
