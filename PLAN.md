@@ -501,10 +501,11 @@ Current state:
 - Customer deliveries queued during account quiet hours are deferred until quiet hours end in the organization's timezone
 - Project-bid notification records carry organization ownership for tenant-scoped history and recovery
 - Manager report and bid workflows explain when delivery is blocked by account channel or recipient preferences
+- Manager activity history includes persisted queued, sent, failed, skipped, and dead-letter customer notification events
 
 Next implementation work:
 
-- Connect manager activity history to persisted notification events
+- Connect manager activity history to persisted route and report events
 
 ## Planned
 

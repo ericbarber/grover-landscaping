@@ -99,6 +99,7 @@ import {
   readStoredManagerActivityItems,
   writeStoredManagerActivityItems,
 } from './domain/managerActivityLocalStore';
+import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
@@ -947,6 +948,10 @@ export function App() {
   const managerReportQueueReports = useMemo(
     () => Object.values(completionReportSnapshots),
     [completionReportSnapshots],
+  );
+  const visibleManagerActivity = useMemo(
+    () => [...notificationsToManagerActivity(notificationHistory), ...managerActivity],
+    [managerActivity, notificationHistory],
   );
   const privacyAccountIds = useMemo(() => {
     const reportAccountIds = managerReportQueueReports
@@ -2030,7 +2035,7 @@ export function App() {
           </div>
           <div className="mt-6">
             <ManagerActivityHistoryPanel
-              items={managerActivity}
+              items={visibleManagerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
               onResetHistory={resetManagerActivityHistory}
             />
