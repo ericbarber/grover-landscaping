@@ -102,3 +102,10 @@ the queue as unavailable.
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.
+
+The shared mutation union now also accepts day-plan amendment requests. Each
+record retains the server-owned organization, authenticated actor, day plan,
+requesting crew, amendment type, optional stop, optional service/pricing context,
+crew note, UUID identity, ordering, and retry state. These JSON-compatible
+records use the existing mutation store and indexes, so no database-version
+upgrade is required. Queue fallback and replay are delivered in the next slices.

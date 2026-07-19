@@ -89,6 +89,7 @@
 - 2026-07-19: Fixed Docker API routing and local CORS for Tailscale phone access.
 - 2026-07-19: Added a passing Tailscale mobile interruption-and-recovery smoke test.
 - 2026-07-19: Fixed cross-origin API preflight and HTTP-origin offline UUID generation.
+- 2026-07-19: Extended the offline queue contract to day-plan amendment requests.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

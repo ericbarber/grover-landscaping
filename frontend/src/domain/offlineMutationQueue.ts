@@ -1,4 +1,8 @@
-import type { StopProgressStatus } from './stopProgress';
+import type {
+  DayPlanAmendmentType,
+  ServiceCatalogItem,
+  StopProgressStatus,
+} from './stopProgress';
 import { ApiRequestError } from '../api/apiError';
 
 const DATABASE_NAME = 'grover-field-offline';
@@ -58,11 +62,22 @@ export interface PhotoUploadOfflineMutation extends OfflineMutationBase {
   fileSizeBytes: number;
 }
 
+export interface DayPlanAmendmentOfflineMutation extends OfflineMutationBase {
+  kind: 'day_plan_amendment';
+  dayPlanId: string;
+  amendmentType: DayPlanAmendmentType;
+  requestedByCrewId: string;
+  stopId?: string;
+  service?: ServiceCatalogItem;
+  note?: string;
+}
+
 export type OfflineMutation =
   | StopProgressOfflineMutation
   | JobLifecycleOfflineMutation
   | ChecklistOfflineMutation
-  | PhotoUploadOfflineMutation;
+  | PhotoUploadOfflineMutation
+  | DayPlanAmendmentOfflineMutation;
 
 export interface NewStopProgressOfflineMutation {
   organizationId: string;
@@ -95,6 +110,17 @@ export interface NewPhotoUploadOfflineMutation {
   fileName: string;
   contentType: string;
   fileSizeBytes: number;
+}
+
+export interface NewDayPlanAmendmentOfflineMutation {
+  organizationId: string;
+  actorId: string;
+  dayPlanId: string;
+  amendmentType: DayPlanAmendmentType;
+  requestedByCrewId: string;
+  stopId?: string;
+  service?: ServiceCatalogItem;
+  note?: string;
 }
 
 export interface OfflineMutationSummary {
@@ -202,6 +228,28 @@ export function createPhotoUploadOfflineMutation(
   };
 }
 
+export function createDayPlanAmendmentOfflineMutation(
+  input: NewDayPlanAmendmentOfflineMutation,
+  id: string = createOfflineMutationId(),
+  createdAt = new Date(),
+): DayPlanAmendmentOfflineMutation {
+  return {
+    id,
+    kind: 'day_plan_amendment',
+    organizationId: input.organizationId,
+    actorId: input.actorId,
+    dayPlanId: input.dayPlanId,
+    amendmentType: input.amendmentType,
+    requestedByCrewId: input.requestedByCrewId,
+    stopId: input.stopId,
+    service: input.service,
+    note: input.note,
+    createdAt: createdAt.toISOString(),
+    attemptCount: 0,
+    syncState: 'pending',
+  };
+}
+
 export function isStopProgressOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is StopProgressOfflineMutation {
@@ -224,6 +272,12 @@ export function isPhotoUploadOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is PhotoUploadOfflineMutation {
   return mutation.kind === 'photo_upload';
+}
+
+export function isDayPlanAmendmentOfflineMutation(
+  mutation: OfflineMutation,
+): mutation is DayPlanAmendmentOfflineMutation {
+  return mutation.kind === 'day_plan_amendment';
 }
 
 export function createStopProgressOfflineMutation(
@@ -344,6 +398,21 @@ export async function enqueuePhotoUploadMutation(
     );
     transaction.objectStore(MUTATION_STORE).put(mutation);
     transaction.objectStore(PHOTO_BLOB_STORE).put(blob, mutation.id);
+    await waitForTransaction(transaction);
+    return mutation;
+  } finally {
+    database.close();
+  }
+}
+
+export async function enqueueDayPlanAmendmentMutation(
+  input: NewDayPlanAmendmentOfflineMutation,
+): Promise<DayPlanAmendmentOfflineMutation> {
+  const mutation = createDayPlanAmendmentOfflineMutation(input);
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(MUTATION_STORE, 'readwrite');
+    transaction.objectStore(MUTATION_STORE).put(mutation);
     await waitForTransaction(transaction);
     return mutation;
   } finally {

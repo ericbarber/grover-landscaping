@@ -4,9 +4,11 @@ import {
   createStopProgressOfflineMutation,
   createJobLifecycleOfflineMutation,
   createChecklistOfflineMutation,
+  createDayPlanAmendmentOfflineMutation,
   createOfflineMutationId,
   createPhotoUploadOfflineMutation,
   enqueuePhotoUploadMutation,
+  enqueueDayPlanAmendmentMutation,
   getOfflinePhotoBlob,
   isOfflineMutationConflict,
   listOfflineMutations,
@@ -212,6 +214,45 @@ describe('offline mutation queue records', () => {
       completed: true,
       syncState: 'pending',
     });
+  });
+
+  it('persists tenant-scoped day-plan amendment requests with service context', async () => {
+    const mutation = createDayPlanAmendmentOfflineMutation(
+      {
+        organizationId: 'org-1',
+        actorId: 'crew-user-1',
+        dayPlanId: 'day-plan-1',
+        amendmentType: 'add_service',
+        requestedByCrewId: 'crew-1',
+        stopId: 'stop-1',
+        service: {
+          id: 'service-1',
+          name: 'Sprinkler repair',
+          requiresManagerApproval: true,
+        },
+        note: 'Broken sprinkler head',
+      },
+      'mutation-amendment',
+      new Date('2026-07-19T22:30:00.000Z'),
+    );
+    expect(mutation).toMatchObject({
+      id: 'mutation-amendment',
+      kind: 'day_plan_amendment',
+      amendmentType: 'add_service',
+      stopId: 'stop-1',
+      syncState: 'pending',
+    });
+
+    const persisted = await enqueueDayPlanAmendmentMutation({
+      organizationId: 'org-1',
+      actorId: 'crew-user-1',
+      dayPlanId: 'day-plan-1',
+      amendmentType: 'remove_stop',
+      requestedByCrewId: 'crew-1',
+      stopId: 'stop-1',
+      note: 'Gate is inaccessible',
+    });
+    expect(await listOfflineMutations('org-1', 'crew-user-1')).toEqual([persisted]);
   });
 
   it('captures tenant, actor, and idempotency context for job lifecycle actions', () => {
