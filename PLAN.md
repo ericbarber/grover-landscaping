@@ -583,10 +583,11 @@ Current state:
 - Crew checklist toggles persist item and summary state transactionally and queue failed writes with mobile pending feedback
 - Queued checklist changes replay ordered per tenant with transactional idempotency, retry-state feedback, and conflict blocking
 - Crew checklist queue review exposes safe details and two-step reviewed-conflict recovery with server-state refresh
+- Offline photo capture boundaries define atomic blob/metadata storage, validation, privacy, quota, and replay behavior
 
 Next implementation work:
 
-- Define durable offline photo capture storage and replay boundaries
+- Implement the versioned IndexedDB photo blob store and atomic queue writes
 
 ## Planned
 

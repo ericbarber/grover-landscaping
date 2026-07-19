@@ -38,6 +38,7 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 - Add an installable PWA, application-shell caching, and mobile metadata.
 - Store offline field mutations in IndexedDB.
+- Store offline photo metadata and blobs atomically without retaining upload credentials.
 - Synchronize stop progress, job lifecycle, checklists, photos, and amendments.
 - Standardize pending, persisted, failed, conflict, and retry states.
 - Add before/after evidence, quality, previewability, and duplicate-photo checks.
