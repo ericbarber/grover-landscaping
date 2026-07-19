@@ -547,10 +547,11 @@ Current state:
 - Production builds split React and OIDC vendor code from the application bundle, keeping every chunk below the 500 kB warning threshold
 - Public bid, report, invitation, and authenticated dashboard route bodies are lazy-loaded with an accessible loading state
 - Public bid and report startup paths defer the authenticated shell and OIDC bundle, reducing the entry chunk below 5 kB
+- Lazy-route failures render a touch-safe reload recovery screen instead of leaving a blank mobile view
 
 Next implementation work:
 
-- Add recoverable lazy-route loading failure UI for weak mobile connections
+- Show global online/offline state during mobile application startup
 
 ## Planned
 

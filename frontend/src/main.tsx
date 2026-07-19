@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { sharedBidTokenFromPath } from './domain/sharedBidRoute';
 import { sharedReportTokenFromPath } from './domain/sharedReportRoute';
 import { organizationInvitationTokenFromPath } from './domain/organizationInvitationRoute';
+import { RouteLoadBoundary } from './components/RouteLoadBoundary';
 import './styles.css';
 
 const CustomerBidReviewPage = React.lazy(
@@ -24,20 +25,22 @@ const organizationInvitationToken = organizationInvitationTokenFromPath(window.l
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <React.Suspense fallback={(
-      <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
-        <p className="text-sm font-semibold text-slate-700" role="status">
-          Loading Grover Field…
-        </p>
-      </main>
-    )}>
-      {sharedBidToken ? (
-        <CustomerBidReviewPage shareToken={sharedBidToken} />
-      ) : sharedReportToken ? (
-        <CustomerCompletionReportPage shareToken={sharedReportToken} />
-      ) : (
-        <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
-      )}
-    </React.Suspense>
+    <RouteLoadBoundary>
+      <React.Suspense fallback={(
+        <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
+          <p className="text-sm font-semibold text-slate-700" role="status">
+            Loading Grover Field…
+          </p>
+        </main>
+      )}>
+        {sharedBidToken ? (
+          <CustomerBidReviewPage shareToken={sharedBidToken} />
+        ) : sharedReportToken ? (
+          <CustomerCompletionReportPage shareToken={sharedReportToken} />
+        ) : (
+          <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
+        )}
+      </React.Suspense>
+    </RouteLoadBoundary>
   </React.StrictMode>,
 );
