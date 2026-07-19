@@ -553,10 +553,11 @@ Current state:
 - A global readiness probe distinguishes API downtime from phone connectivity and retries automatically every 30 seconds
 - Mobile users receive a four-second confirmation when API readiness recovers
 - API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
+- API downtime feedback includes a touch-safe immediate readiness retry action
 
 Next implementation work:
 
-- Add a touch-safe manual API retry action during downtime
+- Add a production service worker for resilient shell and hashed-asset loading
 
 ## Planned
 

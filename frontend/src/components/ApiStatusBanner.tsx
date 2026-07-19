@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../api/baseUrl';
 
 export function ApiStatusBanner() {
   const [status, setStatus] = useState<'ready' | 'unavailable' | 'recovered'>('ready');
+  const [retrySignal, setRetrySignal] = useState(0);
   const wasUnavailable = useRef(false);
   const recoveryTimeout = useRef<number | null>(null);
 
@@ -79,7 +80,7 @@ export function ApiStatusBanner() {
       window.removeEventListener('offline', handleOffline);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [retrySignal]);
 
   if (status === 'ready') return null;
 
@@ -90,9 +91,20 @@ export function ApiStatusBanner() {
       }`}
       role="status"
     >
-      {status === 'unavailable'
-        ? 'The Grover API is temporarily unavailable. This screen will retry automatically.'
-        : 'The Grover API is available again. Syncing and new requests can resume.'}
+      <p>
+        {status === 'unavailable'
+          ? 'The Grover API is temporarily unavailable. This screen will retry automatically.'
+          : 'The Grover API is available again. Syncing and new requests can resume.'}
+      </p>
+      {status === 'unavailable' ? (
+        <button
+          className="mt-2 min-h-11 rounded-lg border border-white/70 bg-white/10 px-4 font-bold"
+          onClick={() => setRetrySignal((current) => current + 1)}
+          type="button"
+        >
+          Check API now
+        </button>
+      ) : null}
     </div>
   );
 }
