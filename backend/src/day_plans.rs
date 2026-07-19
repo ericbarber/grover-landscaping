@@ -37,6 +37,8 @@ pub struct CrewSummary {
     pub name: String,
     pub organization_id: String,
     pub status: String,
+    pub daily_stop_capacity: u32,
+    pub lead_membership_id: Option<String>,
     pub persisted: bool,
 }
 
@@ -49,6 +51,8 @@ pub struct CreateCrewRequest {
 pub struct UpdateCrewRequest {
     pub name: String,
     pub status: String,
+    pub daily_stop_capacity: Option<u32>,
+    pub lead_membership_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -203,7 +207,7 @@ impl DayPlanRepository {
             return seed_crews(organization_ids);
         };
         let rows = sqlx::query(
-            r#"SELECT id, name, organization_id, status
+            r#"SELECT id, name, organization_id, status, daily_stop_capacity, lead_membership_id
             FROM crews
             WHERE organization_id = ANY($1)
               AND status = 'active'
@@ -219,6 +223,8 @@ impl DayPlanRepository {
                 name: row.get("name"),
                 organization_id: row.get("organization_id"),
                 status: row.get("status"),
+                daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
+                lead_membership_id: row.get("lead_membership_id"),
                 persisted: true,
             })
             .collect()
@@ -245,6 +251,8 @@ impl DayPlanRepository {
             name: name.to_string(),
             organization_id: organization_id.to_string(),
             status: "active".to_string(),
+            daily_stop_capacity: 10,
+            lead_membership_id: None,
             persisted: false,
         })
     }
@@ -267,7 +275,11 @@ impl DayPlanRepository {
     ) -> UpdateCrewResult {
         let name = request.name.trim();
         let status = request.status.trim();
-        if validate_create_crew_name(name).is_err() || !matches!(status, "active" | "inactive") {
+        let daily_stop_capacity = request.daily_stop_capacity.unwrap_or(10);
+        if validate_create_crew_name(name).is_err()
+            || !matches!(status, "active" | "inactive")
+            || !(1..=100).contains(&daily_stop_capacity)
+        {
             return UpdateCrewResult::NotFound;
         }
         if let Some(pool) = &self.pool {
@@ -278,6 +290,8 @@ impl DayPlanRepository {
                 actor_user_id,
                 name,
                 status,
+                daily_stop_capacity,
+                request.lead_membership_id.as_deref(),
             )
             .await
             .unwrap_or(UpdateCrewResult::NotFound);
@@ -290,6 +304,8 @@ impl DayPlanRepository {
         };
         crew.name = name.to_string();
         crew.status = status.to_string();
+        crew.daily_stop_capacity = daily_stop_capacity;
+        crew.lead_membership_id = request.lead_membership_id;
         UpdateCrewResult::Updated(crew)
     }
 
@@ -772,6 +788,8 @@ fn seed_crews(organization_ids: &[String]) -> Vec<CrewSummary> {
         name: "North Route Crew".to_string(),
         organization_id: "org_demo_landscaping".to_string(),
         status: "active".to_string(),
+        daily_stop_capacity: 10,
+        lead_membership_id: None,
         persisted: false,
     }]
 }

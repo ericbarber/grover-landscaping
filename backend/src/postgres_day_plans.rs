@@ -22,7 +22,7 @@ pub async fn create_crew(
         WHERE organization.id = $2
           AND organization.status = 'active'
         ON CONFLICT DO NOTHING
-        RETURNING id, name, organization_id, status
+        RETURNING id, name, organization_id, status, daily_stop_capacity, lead_membership_id
         "#,
     )
     .bind(id)
@@ -36,6 +36,8 @@ pub async fn create_crew(
         name: row.get("name"),
         organization_id: row.get("organization_id"),
         status: row.get("status"),
+        daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
+        lead_membership_id: row.get("lead_membership_id"),
         persisted: true,
     }))
 }
@@ -46,7 +48,7 @@ pub async fn list_organization_crews(
 ) -> Result<Vec<crate::day_plans::CrewSummary>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
-        SELECT id, name, organization_id, status
+        SELECT id, name, organization_id, status, daily_stop_capacity, lead_membership_id
         FROM crews
         WHERE organization_id = $1
         ORDER BY status, name, id
@@ -62,6 +64,8 @@ pub async fn list_organization_crews(
             name: row.get("name"),
             organization_id: row.get("organization_id"),
             status: row.get("status"),
+            daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
+            lead_membership_id: row.get("lead_membership_id"),
             persisted: true,
         })
         .collect())
@@ -74,6 +78,8 @@ pub async fn update_crew(
     actor_user_id: &str,
     name: &str,
     status: &str,
+    daily_stop_capacity: u32,
+    lead_membership_id: Option<&str>,
 ) -> Result<crate::day_plans::UpdateCrewResult, sqlx::Error> {
     use crate::day_plans::UpdateCrewResult;
 
@@ -131,18 +137,44 @@ pub async fn update_crew(
         UPDATE crews
         SET name = $3,
             status = $4,
+            daily_stop_capacity = $5,
+            lead_membership_id = (
+                SELECT membership.id
+                FROM organization_memberships membership
+                WHERE membership.id = $6
+                  AND membership.organization_id = $2
+                  AND membership.status = 'active'
+                  AND membership.role IN ('crew_lead', 'organization_owner')
+            ),
             updated_at = NOW()
         WHERE id = $1
           AND organization_id = $2
-        RETURNING id, name, organization_id, status
+          AND (
+              $6::TEXT IS NULL
+              OR EXISTS (
+                  SELECT 1
+                  FROM organization_memberships membership
+                  WHERE membership.id = $6
+                    AND membership.organization_id = $2
+                    AND membership.status = 'active'
+                    AND membership.role IN ('crew_lead', 'organization_owner')
+              )
+          )
+        RETURNING id, name, organization_id, status, daily_stop_capacity, lead_membership_id
         "#,
     )
     .bind(crew_id)
     .bind(organization_id)
     .bind(name)
     .bind(status)
-    .fetch_one(&mut *tx)
+    .bind(daily_stop_capacity as i32)
+    .bind(lead_membership_id)
+    .fetch_optional(&mut *tx)
     .await?;
+    let Some(row) = row else {
+        tx.rollback().await?;
+        return Ok(UpdateCrewResult::NotFound);
+    };
 
     let event_kind = if current_status != status {
         if status == "active" {
@@ -175,6 +207,8 @@ pub async fn update_crew(
         name: row.get("name"),
         organization_id: row.get("organization_id"),
         status: row.get("status"),
+        daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
+        lead_membership_id: row.get("lead_membership_id"),
         persisted: true,
     }))
 }

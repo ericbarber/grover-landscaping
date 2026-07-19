@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   fetchOrganizationCrews,
+  fetchOrganizationMemberships,
   updateOrganizationCrew,
   type CrewRecord,
+  type OrganizationMembership,
 } from '../api/client';
 
 type Props = {
@@ -19,6 +21,9 @@ export function OwnerCrewAdministrationPanel({
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState('');
   const [name, setName] = useState('');
+  const [dailyStopCapacity, setDailyStopCapacity] = useState(10);
+  const [leadMembershipId, setLeadMembershipId] = useState('');
+  const [leadCandidates, setLeadCandidates] = useState<OrganizationMembership[]>([]);
   const [pendingStatus, setPendingStatus] = useState<CrewRecord['status'] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +32,15 @@ export function OwnerCrewAdministrationPanel({
   async function refresh() {
     setIsLoading(true);
     try {
-      const nextCrews = await fetchOrganizationCrews(organizationId);
+      const [nextCrews, memberships] = await Promise.all([
+        fetchOrganizationCrews(organizationId),
+        fetchOrganizationMemberships(organizationId),
+      ]);
       setCrews(nextCrews);
+      setLeadCandidates(memberships.filter((membership) => (
+        membership.status === 'active'
+        && (membership.role === 'CrewLead' || membership.role === 'OrganizationOwner')
+      )));
       setSelectedCrewId((current) => (
         nextCrews.some((crew) => crew.id === current) ? current : nextCrews[0]?.id ?? ''
       ));
@@ -46,12 +58,26 @@ export function OwnerCrewAdministrationPanel({
 
   useEffect(() => {
     setName(selectedCrew?.name ?? '');
+    setDailyStopCapacity(selectedCrew?.dailyStopCapacity ?? 10);
+    setLeadMembershipId(selectedCrew?.leadMembershipId ?? '');
     setPendingStatus(null);
-  }, [selectedCrewId, selectedCrew?.name]);
+  }, [
+    selectedCrewId,
+    selectedCrew?.name,
+    selectedCrew?.dailyStopCapacity,
+    selectedCrew?.leadMembershipId,
+  ]);
 
   async function save(nextStatus = selectedCrew?.status) {
-    if (!selectedCrew || !nextStatus || name.trim().length < 2 || name.trim().length > 120) {
-      setMessage('Enter a crew name from 2 to 120 characters.');
+    if (
+      !selectedCrew
+      || !nextStatus
+      || name.trim().length < 2
+      || name.trim().length > 120
+      || dailyStopCapacity < 1
+      || dailyStopCapacity > 100
+    ) {
+      setMessage('Enter a 2–120 character name and a daily capacity from 1 to 100 stops.');
       return;
     }
     setIsLoading(true);
@@ -61,6 +87,8 @@ export function OwnerCrewAdministrationPanel({
         selectedCrew.id,
         name,
         nextStatus,
+        dailyStopCapacity,
+        leadMembershipId || null,
       );
       setCrews((current) => current.map((crew) => crew.id === updated.id ? updated : crew));
       setPendingStatus(null);
@@ -86,7 +114,7 @@ export function OwnerCrewAdministrationPanel({
   return (
     <div className="mt-4 rounded-xl border border-slate-200 p-4">
       <h3 className="font-bold text-slate-950">Crew administration</h3>
-      <p className="mt-1 text-xs text-slate-600">Rename crews or remove inactive crews from new scheduling.</p>
+      <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
       {message ? <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs font-medium text-slate-700" role="status">{message}</p> : null}
       {crews.length > 0 ? (
         <div className="mt-3 space-y-3">
@@ -115,13 +143,48 @@ export function OwnerCrewAdministrationPanel({
               value={name}
             />
           </label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Daily stop capacity
+            <input
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+              disabled={isLoading}
+              max={100}
+              min={1}
+              onChange={(event) => setDailyStopCapacity(Number(event.target.value))}
+              type="number"
+              value={dailyStopCapacity}
+            />
+          </label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Crew lead
+            <select
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+              disabled={isLoading}
+              onChange={(event) => setLeadMembershipId(event.target.value)}
+              value={leadMembershipId}
+            >
+              <option value="">Unassigned</option>
+              {leadCandidates.map((membership) => (
+                <option key={membership.id} value={membership.id}>
+                  {membership.userId} · {membership.role === 'CrewLead' ? 'crew lead' : 'owner'}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             className="min-h-11 w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 disabled:opacity-60"
-            disabled={isLoading || name.trim() === selectedCrew?.name}
+            disabled={
+              isLoading
+              || (
+                name.trim() === selectedCrew?.name
+                && dailyStopCapacity === selectedCrew.dailyStopCapacity
+                && (leadMembershipId || null) === selectedCrew.leadMembershipId
+              )
+            }
             onClick={() => void save()}
             type="button"
           >
-            Save crew name
+            Save crew profile
           </button>
           {selectedCrew ? (
             pendingStatus ? (

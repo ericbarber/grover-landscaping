@@ -250,6 +250,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager day-plan creation loads tenant-scoped crews and uses a mobile select instead of accepting arbitrary crew IDs
 - Owners can rename, deactivate, and reactivate crews with audit history; crews with active property assignments or current routes cannot be deactivated
 - Owner administration history includes crew rename, deactivation, and reactivation audit events
+- Owners can set a tenant crew's 1–100 stop daily capacity and assign an active owner or crew-lead membership
+- Crew lead assignments are constrained to active eligible memberships in the same organization
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -492,7 +494,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add organization crew capacity and lead-assignment metadata
+- Apply crew-specific capacity to route planning and publish guards
 
 ## Planned
 

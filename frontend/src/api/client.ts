@@ -670,6 +670,8 @@ export interface CrewRecord {
   name: string;
   organizationId: string;
   status: 'active' | 'inactive';
+  dailyStopCapacity: number;
+  leadMembershipId: string | null;
   persisted: boolean;
 }
 
@@ -2059,13 +2061,16 @@ export async function fetchCustomerPropertyActivationReadiness(
 
 export async function fetchCrews(): Promise<CrewRecord[]> {
   const items = await request<Array<{
-    id: string; name: string; organization_id: string; status: CrewRecord['status']; persisted: boolean;
+    id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>>('/crews');
   return items.map((item) => ({
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
     status: item.status,
+    dailyStopCapacity: item.daily_stop_capacity,
+    leadMembershipId: item.lead_membership_id ?? null,
     persisted: item.persisted,
   }));
 }
@@ -2075,7 +2080,8 @@ export async function createOrganizationCrew(
   name: string,
 ): Promise<CrewRecord> {
   const item = await request<{
-    id: string; name: string; organization_id: string; status: CrewRecord['status']; persisted: boolean;
+    id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>(`/organizations/${encodeURIComponent(organizationId)}/crews`, {
     method: 'POST',
     body: JSON.stringify({ name: name.trim() }),
@@ -2085,19 +2091,24 @@ export async function createOrganizationCrew(
     name: item.name,
     organizationId: item.organization_id,
     status: item.status,
+    dailyStopCapacity: item.daily_stop_capacity,
+    leadMembershipId: item.lead_membership_id ?? null,
     persisted: item.persisted,
   };
 }
 
 export async function fetchOrganizationCrews(organizationId: string): Promise<CrewRecord[]> {
   const items = await request<Array<{
-    id: string; name: string; organization_id: string; status: CrewRecord['status']; persisted: boolean;
+    id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>>(`/organizations/${encodeURIComponent(organizationId)}/crews`);
   return items.map((item) => ({
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
     status: item.status,
+    dailyStopCapacity: item.daily_stop_capacity,
+    leadMembershipId: item.lead_membership_id ?? null,
     persisted: item.persisted,
   }));
 }
@@ -2107,14 +2118,22 @@ export async function updateOrganizationCrew(
   crewId: string,
   name: string,
   status: CrewRecord['status'],
+  dailyStopCapacity: number,
+  leadMembershipId: string | null,
 ): Promise<CrewRecord> {
   const item = await request<{
-    id: string; name: string; organization_id: string; status: CrewRecord['status']; persisted: boolean;
+    id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>(
     `/organizations/${encodeURIComponent(organizationId)}/crews/${encodeURIComponent(crewId)}`,
     {
       method: 'PUT',
-      body: JSON.stringify({ name: name.trim(), status }),
+      body: JSON.stringify({
+        name: name.trim(),
+        status,
+        daily_stop_capacity: dailyStopCapacity,
+        lead_membership_id: leadMembershipId,
+      }),
     },
   );
   return {
@@ -2122,6 +2141,8 @@ export async function updateOrganizationCrew(
     name: item.name,
     organizationId: item.organization_id,
     status: item.status,
+    dailyStopCapacity: item.daily_stop_capacity,
+    leadMembershipId: item.lead_membership_id ?? null,
     persisted: item.persisted,
   };
 }

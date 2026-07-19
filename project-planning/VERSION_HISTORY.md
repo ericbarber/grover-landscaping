@@ -1,5 +1,7 @@
 # Version History
 
+- 2026-07-19: Added tenant-scoped crew daily capacity and eligible crew-lead assignment controls.
+
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
 delivery plan and commit history. Future deployable releases should add an explicit

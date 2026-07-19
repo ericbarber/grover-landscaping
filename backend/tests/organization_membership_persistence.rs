@@ -210,6 +210,8 @@ async fn repository_bootstraps_first_owner_once() {
             UpdateCrewRequest {
                 name: crew.name.clone(),
                 status: "inactive".to_string(),
+                daily_stop_capacity: Some(12),
+                lead_membership_id: Some(created.membership.id.clone()),
             },
         )
         .await;
@@ -228,6 +230,8 @@ async fn repository_bootstraps_first_owner_once() {
             UpdateCrewRequest {
                 name: "First Owner Operations".to_string(),
                 status: "inactive".to_string(),
+                daily_stop_capacity: Some(12),
+                lead_membership_id: Some(created.membership.id.clone()),
             },
         )
         .await;
@@ -236,6 +240,11 @@ async fn repository_bootstraps_first_owner_once() {
     };
     assert_eq!(renamed.name, "First Owner Operations");
     assert_eq!(renamed.status, "inactive");
+    assert_eq!(renamed.daily_stop_capacity, 12);
+    assert_eq!(
+        renamed.lead_membership_id.as_deref(),
+        Some(created.membership.id.as_str())
+    );
     assert!(
         !organizations
             .first_owner_setup_progress(&created.organization_id)
@@ -252,6 +261,8 @@ async fn repository_bootstraps_first_owner_once() {
             UpdateCrewRequest {
                 name: renamed.name,
                 status: "active".to_string(),
+                daily_stop_capacity: Some(12),
+                lead_membership_id: Some(created.membership.id.clone()),
             },
         )
         .await;

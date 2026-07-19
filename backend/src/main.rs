@@ -2131,6 +2131,19 @@ async fn update_organization_crew(
         )
             .into_response();
     }
+    if request
+        .daily_stop_capacity
+        .is_some_and(|capacity| !(1..=100).contains(&capacity))
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew",
+                message: "Crew daily stop capacity must be from 1 to 100.".to_string(),
+            }),
+        )
+            .into_response();
+    }
     if let Err(response) = require_organization_membership(
         &state,
         &principal,
