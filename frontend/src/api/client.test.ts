@@ -154,6 +154,9 @@ describe('core API client mapping', () => {
       contact_email: 'office@grover.example',
       contact_phone: '(602) 555-0142',
       website_url: 'https://grover.example',
+      time_zone: 'America/Phoenix',
+      service_area_label: 'Phoenix metro',
+      default_daily_stop_capacity: 12,
       status: 'active',
       persisted: true,
     })).toEqual({
@@ -163,6 +166,9 @@ describe('core API client mapping', () => {
       contactEmail: 'office@grover.example',
       contactPhone: '(602) 555-0142',
       websiteUrl: 'https://grover.example',
+      timeZone: 'America/Phoenix',
+      serviceAreaLabel: 'Phoenix metro',
+      defaultDailyStopCapacity: 12,
       status: 'active',
       persisted: true,
     });

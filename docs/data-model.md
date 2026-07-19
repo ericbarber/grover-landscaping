@@ -41,6 +41,9 @@ Job-scoped API routes use `organization_id` as the tenant boundary. Job list/det
 Organization identity also includes optional `contact_email`, `contact_phone`,
 and `website_url` profile fields. Owner-scoped updates validate and audit these
 operational contact details without changing membership or resource ownership.
+Scheduling defaults include `time_zone`, `service_area_label`, and
+`default_daily_stop_capacity`; they describe the tenant's planning baseline
+without rewriting existing crews, jobs, or day plans.
 
 ## crews and day_plans
 

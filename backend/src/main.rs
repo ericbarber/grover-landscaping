@@ -4407,7 +4407,7 @@ mod tests {
                     .uri("/organizations/org_demo_landscaping")
                     .header("content-type", "application/json")
                     .body(Body::from(
-                        r#"{"display_name":"Grover Property Services","organization_type":"property_management_company"}"#,
+                        r#"{"display_name":"Grover Property Services","organization_type":"property_management_company","time_zone":"America/Phoenix","service_area_label":"Phoenix metro","default_daily_stop_capacity":12}"#,
                     ))
                     .unwrap(),
             )

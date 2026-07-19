@@ -133,6 +133,9 @@ async fn repository_bootstraps_first_owner_once() {
                 contact_email: Some("Office@FirstOwner.example".to_string()),
                 contact_phone: Some("+1 (602) 555-0142".to_string()),
                 website_url: Some("https://first-owner.example".to_string()),
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: Some("East Valley".to_string()),
+                default_daily_stop_capacity: 16,
             },
         )
         .await
@@ -149,6 +152,11 @@ async fn repository_bootstraps_first_owner_once() {
         updated_profile.contact_email.as_deref(),
         Some("office@firstowner.example")
     );
+    assert_eq!(
+        updated_profile.service_area_label.as_deref(),
+        Some("East Valley")
+    );
+    assert_eq!(updated_profile.default_daily_stop_capacity, 16);
     assert_eq!(
         organizations
             .organization_profile(&created.organization_id)

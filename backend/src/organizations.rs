@@ -54,6 +54,9 @@ pub struct OrganizationProfile {
     pub contact_email: Option<String>,
     pub contact_phone: Option<String>,
     pub website_url: Option<String>,
+    pub time_zone: String,
+    pub service_area_label: Option<String>,
+    pub default_daily_stop_capacity: i32,
     pub status: String,
     pub persisted: bool,
 }
@@ -65,6 +68,9 @@ pub struct UpdateOrganizationProfileRequest {
     pub contact_email: Option<String>,
     pub contact_phone: Option<String>,
     pub website_url: Option<String>,
+    pub time_zone: String,
+    pub service_area_label: Option<String>,
+    pub default_daily_stop_capacity: i32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -545,6 +551,26 @@ pub fn validate_update_organization_profile_request(
     {
         return Err("website_url_invalid");
     }
+    if !matches!(
+        request.time_zone.as_str(),
+        "America/Phoenix"
+            | "America/Los_Angeles"
+            | "America/Denver"
+            | "America/Chicago"
+            | "America/New_York"
+    ) {
+        return Err("time_zone_invalid");
+    }
+    if request
+        .service_area_label
+        .as_deref()
+        .is_some_and(|label| label.is_empty() || label.len() > 120)
+    {
+        return Err("service_area_label_invalid");
+    }
+    if !(1..=100).contains(&request.default_daily_stop_capacity) {
+        return Err("default_daily_stop_capacity_invalid");
+    }
     Ok(())
 }
 
@@ -558,6 +584,9 @@ fn normalize_update_organization_profile_request(
             .map(|email| email.to_ascii_lowercase()),
         contact_phone: normalize_optional_profile_value(request.contact_phone),
         website_url: normalize_optional_profile_value(request.website_url),
+        time_zone: request.time_zone.trim().to_string(),
+        service_area_label: normalize_optional_profile_value(request.service_area_label),
+        default_daily_stop_capacity: request.default_daily_stop_capacity,
     }
 }
 
@@ -680,7 +709,7 @@ async fn organization_profile(
     organization_id: &str,
 ) -> Result<Option<OrganizationProfile>, sqlx::Error> {
     let row = sqlx::query(
-        "SELECT id, display_name, organization_type, contact_email, contact_phone, website_url, status FROM organizations WHERE id = $1",
+        "SELECT id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, status FROM organizations WHERE id = $1",
     )
     .bind(organization_id)
     .fetch_optional(pool)
@@ -703,10 +732,13 @@ async fn update_organization_profile(
             contact_email = $4,
             contact_phone = $5,
             website_url = $6,
+            time_zone = $7,
+            service_area_label = $8,
+            default_daily_stop_capacity = $9,
             updated_at = NOW()
         WHERE id = $1
           AND status = 'active'
-        RETURNING id, display_name, organization_type, contact_email, contact_phone, website_url, status
+        RETURNING id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, status
         "#,
     )
     .bind(organization_id)
@@ -715,6 +747,9 @@ async fn update_organization_profile(
     .bind(&request.contact_email)
     .bind(&request.contact_phone)
     .bind(&request.website_url)
+    .bind(&request.time_zone)
+    .bind(&request.service_area_label)
+    .bind(request.default_daily_stop_capacity)
     .fetch_optional(&mut *transaction)
     .await?;
     if row.is_some() {
@@ -1806,6 +1841,9 @@ fn organization_profile_from_row(row: sqlx::postgres::PgRow) -> OrganizationProf
         contact_email: row.get("contact_email"),
         contact_phone: row.get("contact_phone"),
         website_url: row.get("website_url"),
+        time_zone: row.get("time_zone"),
+        service_area_label: row.get("service_area_label"),
+        default_daily_stop_capacity: row.get("default_daily_stop_capacity"),
         status: row.get("status"),
         persisted: true,
     }
@@ -1819,6 +1857,9 @@ fn local_organization_profile(organization_id: &str) -> Option<OrganizationProfi
         contact_email: Some("office@grover.example".to_string()),
         contact_phone: Some("(602) 555-0142".to_string()),
         website_url: Some("https://grover.example".to_string()),
+        time_zone: "America/Phoenix".to_string(),
+        service_area_label: Some("Phoenix metro".to_string()),
+        default_daily_stop_capacity: 12,
         status: "active".to_string(),
         persisted: false,
     })
@@ -2063,6 +2104,9 @@ mod tests {
                 contact_email: Some("office@example.com".to_string()),
                 contact_phone: Some("+1 (602) 555-0142".to_string()),
                 website_url: Some("https://example.com".to_string()),
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: Some("Phoenix metro".to_string()),
+                default_daily_stop_capacity: 12,
             }),
             Ok(())
         );

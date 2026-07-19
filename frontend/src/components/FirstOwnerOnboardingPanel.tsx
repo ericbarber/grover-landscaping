@@ -56,6 +56,9 @@ export function FirstOwnerOnboardingPanel({
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
+  const [timeZone, setTimeZone] = useState('America/Phoenix');
+  const [serviceAreaLabel, setServiceAreaLabel] = useState('');
+  const [defaultDailyStopCapacity, setDefaultDailyStopCapacity] = useState(12);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -73,6 +76,9 @@ export function FirstOwnerOnboardingPanel({
         setContactEmail(profile.contactEmail);
         setContactPhone(profile.contactPhone);
         setWebsiteUrl(profile.websiteUrl);
+        setTimeZone(profile.timeZone);
+        setServiceAreaLabel(profile.serviceAreaLabel);
+        setDefaultDailyStopCapacity(profile.defaultDailyStopCapacity);
       }
       setMessage(null);
     } catch {
@@ -111,6 +117,14 @@ export function FirstOwnerOnboardingPanel({
       setMessage('Enter an organization name with at least two characters.');
       return;
     }
+    if (
+      !Number.isInteger(defaultDailyStopCapacity)
+      || defaultDailyStopCapacity < 1
+      || defaultDailyStopCapacity > 100
+    ) {
+      setMessage('Daily stop capacity must be a whole number from 1 to 100.');
+      return;
+    }
     setIsLoading(true);
     try {
       const profile = await updateOrganizationProfile(
@@ -120,6 +134,9 @@ export function FirstOwnerOnboardingPanel({
         contactEmail.trim(),
         contactPhone.trim(),
         websiteUrl.trim(),
+        timeZone,
+        serviceAreaLabel.trim(),
+        defaultDailyStopCapacity,
       );
       setMessage(`${profile.displayName} profile saved.`);
       setIsEditingProfile(false);
@@ -285,6 +302,41 @@ export function FirstOwnerOnboardingPanel({
                     <option value="yard_care_company">Yard-care company</option>
                     <option value="property_management_company">Property management company</option>
                   </select>
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Operating timezone
+                  <select
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+                    onChange={(event) => setTimeZone(event.target.value)}
+                    value={timeZone}
+                  >
+                    <option value="America/Phoenix">Arizona</option>
+                    <option value="America/Los_Angeles">Pacific</option>
+                    <option value="America/Denver">Mountain</option>
+                    <option value="America/Chicago">Central</option>
+                    <option value="America/New_York">Eastern</option>
+                  </select>
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Default service area
+                  <input
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    onChange={(event) => setServiceAreaLabel(event.target.value)}
+                    placeholder="Phoenix metro"
+                    value={serviceAreaLabel}
+                  />
+                </label>
+                <label className="text-sm font-semibold text-slate-700">
+                  Daily stop capacity
+                  <input
+                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                    inputMode="numeric"
+                    max={100}
+                    min={1}
+                    onChange={(event) => setDefaultDailyStopCapacity(Number(event.target.value))}
+                    type="number"
+                    value={defaultDailyStopCapacity}
+                  />
                 </label>
                 <button
                   className="min-h-11 rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"

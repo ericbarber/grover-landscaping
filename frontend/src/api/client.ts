@@ -505,6 +505,9 @@ interface ApiOrganizationProfile {
   contact_email?: string | null;
   contact_phone?: string | null;
   website_url?: string | null;
+  time_zone: string;
+  service_area_label?: string | null;
+  default_daily_stop_capacity: number;
   status: string;
   persisted: boolean;
 }
@@ -516,6 +519,9 @@ export interface OrganizationProfile {
   contactEmail: string;
   contactPhone: string;
   websiteUrl: string;
+  timeZone: string;
+  serviceAreaLabel: string;
+  defaultDailyStopCapacity: number;
   status: string;
   persisted: boolean;
 }
@@ -1629,6 +1635,9 @@ export function toOrganizationProfile(profile: ApiOrganizationProfile): Organiza
     contactEmail: profile.contact_email ?? '',
     contactPhone: profile.contact_phone ?? '',
     websiteUrl: profile.website_url ?? '',
+    timeZone: profile.time_zone,
+    serviceAreaLabel: profile.service_area_label ?? '',
+    defaultDailyStopCapacity: profile.default_daily_stop_capacity,
     status: profile.status,
     persisted: profile.persisted,
   };
@@ -1649,6 +1658,9 @@ export async function updateOrganizationProfile(
   contactEmail: string,
   contactPhone: string,
   websiteUrl: string,
+  timeZone: string,
+  serviceAreaLabel: string,
+  defaultDailyStopCapacity: number,
 ): Promise<OrganizationProfile> {
   return toOrganizationProfile(await request<ApiOrganizationProfile>(
     `/organizations/${encodeURIComponent(organizationId)}`,
@@ -1660,6 +1672,9 @@ export async function updateOrganizationProfile(
         contact_email: contactEmail || null,
         contact_phone: contactPhone || null,
         website_url: websiteUrl || null,
+        time_zone: timeZone,
+        service_area_label: serviceAreaLabel || null,
+        default_daily_stop_capacity: defaultDailyStopCapacity,
       }),
     },
   ));

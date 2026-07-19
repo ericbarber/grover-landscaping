@@ -108,6 +108,8 @@ Current continuation work:
   mobile owner editor for company name and organization type.
 - Extended organization profiles with normalized contact email, readable phone,
   and HTTP(S) website fields plus mobile-first editing and validation.
+- Added owner-managed timezone, service-area label, and daily stop-capacity
+  defaults with database constraints and mobile numeric controls.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 
