@@ -8,6 +8,17 @@ const PHOTO_BLOB_STORE = 'photo_blobs';
 export const MAX_OFFLINE_PHOTO_BYTES = 20 * 1024 * 1024;
 const OFFLINE_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
+type OfflineCrypto = Pick<Crypto, 'getRandomValues'> & Partial<Pick<Crypto, 'randomUUID'>>;
+
+export function createOfflineMutationId(random: OfflineCrypto = crypto): string {
+  if (typeof random.randomUUID === 'function') return random.randomUUID();
+  const bytes = random.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const value = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
+}
+
 interface OfflineMutationBase {
   id: string;
   organizationId: string;
@@ -129,7 +140,7 @@ export function summarizeOfflineMutations(
 
 export function createJobLifecycleOfflineMutation(
   input: NewJobLifecycleOfflineMutation,
-  id: string = crypto.randomUUID(),
+  id: string = createOfflineMutationId(),
   createdAt = new Date(),
 ): JobLifecycleOfflineMutation {
   return {
@@ -147,7 +158,7 @@ export function createJobLifecycleOfflineMutation(
 
 export function createChecklistOfflineMutation(
   input: NewChecklistOfflineMutation,
-  id: string = crypto.randomUUID(),
+  id: string = createOfflineMutationId(),
   createdAt = new Date(),
 ): ChecklistOfflineMutation {
   return {
@@ -166,7 +177,7 @@ export function createChecklistOfflineMutation(
 
 export function createPhotoUploadOfflineMutation(
   input: NewPhotoUploadOfflineMutation,
-  id: string = crypto.randomUUID(),
+  id: string = createOfflineMutationId(),
   createdAt = new Date(),
 ): PhotoUploadOfflineMutation {
   if (!OFFLINE_PHOTO_TYPES.has(input.contentType.toLowerCase())) {
@@ -217,7 +228,7 @@ export function isPhotoUploadOfflineMutation(
 
 export function createStopProgressOfflineMutation(
   input: NewStopProgressOfflineMutation,
-  id: string = crypto.randomUUID(),
+  id: string = createOfflineMutationId(),
   createdAt = new Date(),
 ): StopProgressOfflineMutation {
   return {

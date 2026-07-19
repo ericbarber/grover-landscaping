@@ -13,6 +13,7 @@ import { fetchPrincipalAccessSummary, type OrganizationMembership } from '../api
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
 type AuthMode = 'disabled' | 'cognito';
+export const LOCAL_DEVELOPMENT_USER_ID = 'local-development-user';
 
 interface RuntimeAuthConfig {
   mode: AuthMode;
@@ -149,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (runtimeConfig.mode === 'disabled') {
           configureApiAuthentication(false, async () => null);
+          setUserId(LOCAL_DEVELOPMENT_USER_ID);
           setLoading(false);
           return;
         }

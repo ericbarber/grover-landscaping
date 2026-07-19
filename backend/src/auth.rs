@@ -376,6 +376,9 @@ pub async fn require_api_auth(
     mut request: Request,
     next: Next,
 ) -> Response {
+    if request.method() == Method::OPTIONS {
+        return next.run(request).await;
+    }
     let path = request.uri().path();
     if !is_protected_api_path(path) || is_public_path(path, request.method()) {
         return next.run(request).await;

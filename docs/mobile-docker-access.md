@@ -16,3 +16,9 @@ The Compose local default leaves `CORS_ALLOWED_ORIGIN` empty, selecting the
 backend's existing permissive non-production CORS policy. Hosted environments
 must continue to set an explicit allowed origin. An explicitly configured
 non-loopback API URL is never rewritten.
+
+Protected API authorization bypasses only `OPTIONS` requests so the CORS layer
+can answer browser preflight without a bearer principal. The actual GET, POST,
+PUT, and DELETE request remains fully authenticated and authorized. Read-only
+client requests omit an unnecessary JSON content-type header to avoid needless
+preflight traffic.

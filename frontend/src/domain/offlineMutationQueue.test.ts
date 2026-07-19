@@ -4,6 +4,7 @@ import {
   createStopProgressOfflineMutation,
   createJobLifecycleOfflineMutation,
   createChecklistOfflineMutation,
+  createOfflineMutationId,
   createPhotoUploadOfflineMutation,
   enqueuePhotoUploadMutation,
   getOfflinePhotoBlob,
@@ -26,6 +27,16 @@ describe('offline mutation queue records', () => {
       request.onerror = () => reject(request.error);
       request.onblocked = () => reject(new Error('offline test database deletion was blocked'));
     });
+  });
+
+  it('creates an RFC 4122 mutation UUID when randomUUID is unavailable', () => {
+    const mutationId = createOfflineMutationId({
+      getRandomValues: (values) => {
+        (values as unknown as Uint8Array).fill(0xab);
+        return values;
+      },
+    });
+    expect(mutationId).toBe('abababab-abab-4bab-abab-abababababab');
   });
 
   it('captures tenant, actor, ordering, and retry context for stop progress', () => {

@@ -594,10 +594,13 @@ Current state:
 - Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance
 - Completion reports attach current route-stop context and block submission for unfinished stops or approved add-on work
 - Docker mobile access rewrites only loopback API hosts to the page's Tailscale host and enables the existing permissive local CORS policy
+- Cross-origin JSON preflight bypasses API authorization only for OPTIONS, while protected business requests retain normal authorization
+- Offline mutation IDs remain RFC 4122 UUIDs on non-secure HTTP phone origins through a cryptographic random-values fallback
+- A Pixel 7 viewport smoke test proves Tailscale route loading, interruption queueing, pending feedback, automatic recovery, and confirmed queue clearance
 
 Next implementation work:
 
-- Add a mobile viewport interruption-and-recovery smoke script for the Phase 2 field route
+- Extend the Phase 2 offline queue to day-plan amendment requests
 
 ## Planned
 
