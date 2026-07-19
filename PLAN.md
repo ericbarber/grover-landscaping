@@ -481,6 +481,7 @@ Current state:
 - Dispatch move review shows remaining source workload and flags crew/date changes as customer-continuity impacts
 - Date-changing dispatch moves require explicit customer-notification intent and retain it in transactional audit metadata
 - Manager operational activity renders reassignment context and recommends customer follow-up when the audited intent requires notification
+- Pixel 7 smoke coverage proves audited date-change confirmation, required notification intent, persisted dispatch movement, activity follow-up, and cleanup over Tailscale
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -621,7 +622,7 @@ Current state:
 
 Next implementation work:
 
-- Add dispatch move confirmation and activity coverage to the live mobile smoke suite
+- Add an audited manager action for marking dispatch customer notification follow-up complete
 
 ## Planned
 

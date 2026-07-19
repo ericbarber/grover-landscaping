@@ -131,3 +131,56 @@ test('restores persisted manager report filters after a mobile reload', async ({
   await expect(reportQueue.getByLabel('Readiness blocker')).toHaveValue('route_stop');
   await expect(reportQueue.getByText('2 persisted filters applied.')).toBeVisible();
 });
+
+test('moves scheduled work with notification follow-up from mobile dispatch', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  const frontendUrl = new URL(page.url());
+  const apiOrigin = `${frontendUrl.protocol}//${frontendUrl.hostname}:8080`;
+  const baseline = {
+    crew_id: 'crew_1001',
+    scheduled_date: '2026-06-16',
+    customer_notification_required: false,
+  };
+  const resetResponse = await request.put(
+    `${apiOrigin}/jobs/job_1003/dispatch-assignment`,
+    { data: baseline },
+  );
+  expect(resetResponse.ok()).toBe(true);
+
+  try {
+    await page.reload();
+    await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+    const dispatch = page
+      .getByRole('heading', { name: 'Day workload' })
+      .locator('xpath=ancestor::section[1]');
+    const jobRow = dispatch.locator('div').filter({
+      has: page.getByRole('button', { name: 'Route Planning Demo Customer' }),
+    }).last();
+    await jobRow.getByRole('button', { name: 'Move' }).click();
+    await dispatch.getByLabel('Service date').last().fill('2026-06-17');
+    await dispatch.getByLabel('Customer schedule notification').selectOption('required');
+    await expect(dispatch.getByText(/Customer continuity:/)).toBeVisible();
+    await dispatch.getByRole('button', { name: 'Save move' }).click();
+    await expect(dispatch.getByText('Dispatch assignment saved and audited.')).toBeVisible();
+
+    await expect.poll(async () => {
+      const response = await request.get(`${apiOrigin}/jobs/job_1003`);
+      if (!response.ok()) return false;
+      const job = await response.json() as { scheduled_date: string };
+      return job.scheduled_date === '2026-06-17';
+    }).toBe(true);
+
+    await page.reload();
+    await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+    await expect(page.getByText('Scheduled job moved').first()).toBeVisible();
+    await expect(page.getByText(/Notify the customer about the changed service schedule/).first()).toBeVisible();
+  } finally {
+    await request.put(
+      `${apiOrigin}/jobs/job_1003/dispatch-assignment`,
+      { data: baseline },
+    );
+  }
+});
