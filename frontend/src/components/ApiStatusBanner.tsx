@@ -33,6 +33,7 @@ export function ApiStatusBanner() {
     };
 
     async function checkReadiness() {
+      if (document.hidden) return;
       if (!navigator.onLine) {
         wasUnavailable.current = false;
         setStatus('ready');
@@ -62,8 +63,12 @@ export function ApiStatusBanner() {
       wasUnavailable.current = false;
       setStatus('ready');
     };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) void checkReadiness();
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     void checkReadiness();
     return () => {
       disposed = true;
@@ -72,6 +77,7 @@ export function ApiStatusBanner() {
       window.clearInterval(interval);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 

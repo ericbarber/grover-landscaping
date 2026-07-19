@@ -552,10 +552,11 @@ Current state:
 - Mobile users receive a four-second confirmation when network connectivity returns
 - A global readiness probe distinguishes API downtime from phone connectivity and retries automatically every 30 seconds
 - Mobile users receive a four-second confirmation when API readiness recovers
+- API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
 
 Next implementation work:
 
-- Pause API readiness polling while the mobile tab is hidden and refresh on return
+- Add a touch-safe manual API retry action during downtime
 
 ## Planned
 

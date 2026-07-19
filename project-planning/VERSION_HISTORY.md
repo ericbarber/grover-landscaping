@@ -47,6 +47,7 @@
 - 2026-07-19: Added mobile network-recovery confirmation.
 - 2026-07-19: Added global mobile API-readiness feedback and automatic retry.
 - 2026-07-19: Added mobile API-recovery confirmation.
+- 2026-07-19: Paused mobile API readiness checks while tabs are hidden.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
