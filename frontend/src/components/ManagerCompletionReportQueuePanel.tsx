@@ -11,17 +11,13 @@ import {
 } from '../domain/completionReportQueue';
 import type { CompletionReportSnapshot } from '../api/client';
 import type { CompletionReportQueueItem } from '../domain/completionReportQueue';
+import type { CompletionReportOperationalFilters } from '../domain/completionReportOperationalFilters';
 
 type ManagerCompletionReportQueuePanelProps = {
   reports: CompletionReportSnapshot[];
   isLoading: boolean;
-  onRefresh: (filters: ManagerCompletionReportOperationalFilters) => void;
+  onRefresh: (filters: CompletionReportOperationalFilters) => void;
   onSelectJob: (jobId: string) => void;
-};
-
-export type ManagerCompletionReportOperationalFilters = {
-  organizationId?: string;
-  crewId?: string;
 };
 
 function readinessLabel(item: CompletionReportQueueItem): string {
@@ -51,6 +47,11 @@ export function ManagerCompletionReportQueuePanel({
   const [readinessFilter, setReadinessFilter] = useState<CompletionReportQueueReadinessFilter>('all');
   const [organizationId, setOrganizationId] = useState('');
   const [crewId, setCrewId] = useState('');
+  const [customer, setCustomer] = useState('');
+  const [property, setProperty] = useState('');
+  const [scheduledFrom, setScheduledFrom] = useState('');
+  const [scheduledTo, setScheduledTo] = useState('');
+  const hasInvalidDateRange = Boolean(scheduledFrom && scheduledTo && scheduledFrom > scheduledTo);
   const queueItems = useMemo(() => buildCompletionReportQueue(reports), [reports]);
   const organizationIds = useMemo(
     () => Array.from(new Set([
@@ -106,10 +107,14 @@ export function ManagerCompletionReportQueuePanel({
           </label>
           <button
             className="self-end rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-            disabled={isLoading}
+            disabled={isLoading || hasInvalidDateRange}
             onClick={() => onRefresh({
               organizationId: organizationId || undefined,
               crewId: crewId || undefined,
+              customer: customer.trim() || undefined,
+              property: property.trim() || undefined,
+              scheduledFrom: scheduledFrom || undefined,
+              scheduledTo: scheduledTo || undefined,
             })}
             type="button"
           >
@@ -117,6 +122,51 @@ export function ManagerCompletionReportQueuePanel({
           </button>
         </div>
       </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="text-xs font-semibold text-slate-600">
+          Customer
+          <input
+            className="mt-1 block w-full rounded-lg border border-slate-300 px-2 py-2 text-sm font-normal text-slate-900"
+            onChange={(event) => setCustomer(event.target.value)}
+            placeholder="Name contains"
+            value={customer}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-600">
+          Property
+          <input
+            className="mt-1 block w-full rounded-lg border border-slate-300 px-2 py-2 text-sm font-normal text-slate-900"
+            onChange={(event) => setProperty(event.target.value)}
+            placeholder="Address contains"
+            value={property}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-600">
+          Scheduled from
+          <input
+            className="mt-1 block w-full rounded-lg border border-slate-300 px-2 py-2 text-sm font-normal text-slate-900"
+            onChange={(event) => setScheduledFrom(event.target.value)}
+            type="date"
+            value={scheduledFrom}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-600">
+          Scheduled through
+          <input
+            className="mt-1 block w-full rounded-lg border border-slate-300 px-2 py-2 text-sm font-normal text-slate-900"
+            min={scheduledFrom || undefined}
+            onChange={(event) => setScheduledTo(event.target.value)}
+            type="date"
+            value={scheduledTo}
+          />
+        </label>
+      </div>
+      {hasInvalidDateRange ? (
+        <p className="mt-2 text-xs font-semibold text-rose-700" role="alert">
+          Scheduled through must be on or after the starting date.
+        </p>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
         <div className="rounded-lg bg-amber-50 p-3">

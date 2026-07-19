@@ -81,7 +81,10 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
-import type { ManagerCompletionReportOperationalFilters } from './components/ManagerCompletionReportQueuePanel';
+import {
+  matchesCompletionReportOperationalFilters,
+  type CompletionReportOperationalFilters,
+} from './domain/completionReportOperationalFilters';
 import { ManagerCustomerPrivacyPanel } from './components/ManagerCustomerPrivacyPanel';
 import { ManagerCustomerAccountOnboardingPanel } from './components/ManagerCustomerAccountOnboardingPanel';
 import { ManagerDayPlanPanel } from './components/ManagerDayPlanPanel';
@@ -1791,7 +1794,7 @@ export function App() {
     return report;
   }
 
-  async function refreshManagerReportQueue(filters: ManagerCompletionReportOperationalFilters = {}) {
+  async function refreshManagerReportQueue(filters: CompletionReportOperationalFilters = {}) {
     if (jobs.length === 0) return;
 
     setIsLoadingReportQueue(true);
@@ -1801,10 +1804,7 @@ export function App() {
         reports = await fetchCompletionReports(filters);
       } catch {
         reports = await Promise.all(jobs.map((job) => fetchCompletionReport(job.id)));
-        reports = reports.filter((report) => (
-          (!filters.organizationId || report.job.organizationId === filters.organizationId)
-          && (!filters.crewId || (report.job.assignedCrewId ?? report.routeStop?.crewId) === filters.crewId)
-        ));
+        reports = reports.filter((report) => matchesCompletionReportOperationalFilters(report, filters));
       }
       setCompletionReportSnapshots(
         reports.reduce<Record<string, CompletionReportSnapshot>>((next, report) => {
