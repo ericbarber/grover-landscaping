@@ -579,10 +579,11 @@ Current state:
 - Failed job start and completion actions queue only with resolved server tenancy and show durable mobile pending feedback
 - Queued job lifecycle actions replay ordered per tenant with transactional server idempotency, automatic recovery, manual retry, and conflict blocking
 - Crew job queue review exposes safe action details and two-step reviewed-conflict discard with server-state refresh
+- The offline mutation schema supports tenant/actor-scoped checklist item completion records
 
 Next implementation work:
 
-- Extend the Phase 2 offline queue to checklist mutations
+- Add persisted checklist item controls with durable offline queueing
 
 ## Planned
 

@@ -28,9 +28,17 @@ export interface JobLifecycleOfflineMutation extends OfflineMutationBase {
   action: 'start' | 'complete';
 }
 
+export interface ChecklistOfflineMutation extends OfflineMutationBase {
+  kind: 'checklist';
+  jobId: string;
+  checklistItemId: string;
+  completed: boolean;
+}
+
 export type OfflineMutation =
   | StopProgressOfflineMutation
-  | JobLifecycleOfflineMutation;
+  | JobLifecycleOfflineMutation
+  | ChecklistOfflineMutation;
 
 export interface NewStopProgressOfflineMutation {
   organizationId: string;
@@ -45,6 +53,14 @@ export interface NewJobLifecycleOfflineMutation {
   actorId: string;
   jobId: string;
   action: JobLifecycleOfflineMutation['action'];
+}
+
+export interface NewChecklistOfflineMutation {
+  organizationId: string;
+  actorId: string;
+  jobId: string;
+  checklistItemId: string;
+  completed: boolean;
 }
 
 export interface OfflineMutationSummary {
@@ -106,6 +122,25 @@ export function createJobLifecycleOfflineMutation(
   };
 }
 
+export function createChecklistOfflineMutation(
+  input: NewChecklistOfflineMutation,
+  id: string = crypto.randomUUID(),
+  createdAt = new Date(),
+): ChecklistOfflineMutation {
+  return {
+    id,
+    kind: 'checklist',
+    organizationId: input.organizationId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    checklistItemId: input.checklistItemId,
+    completed: input.completed,
+    createdAt: createdAt.toISOString(),
+    attemptCount: 0,
+    syncState: 'pending',
+  };
+}
+
 export function isStopProgressOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is StopProgressOfflineMutation {
@@ -116,6 +151,12 @@ export function isJobLifecycleOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is JobLifecycleOfflineMutation {
   return mutation.kind === 'job_lifecycle';
+}
+
+export function isChecklistOfflineMutation(
+  mutation: OfflineMutation,
+): mutation is ChecklistOfflineMutation {
+  return mutation.kind === 'checklist';
 }
 
 export function createStopProgressOfflineMutation(
@@ -190,6 +231,21 @@ export async function enqueueJobLifecycleMutation(
   input: NewJobLifecycleOfflineMutation,
 ): Promise<JobLifecycleOfflineMutation> {
   const mutation = createJobLifecycleOfflineMutation(input);
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(MUTATION_STORE, 'readwrite');
+    transaction.objectStore(MUTATION_STORE).put(mutation);
+    await waitForTransaction(transaction);
+    return mutation;
+  } finally {
+    database.close();
+  }
+}
+
+export async function enqueueChecklistMutation(
+  input: NewChecklistOfflineMutation,
+): Promise<ChecklistOfflineMutation> {
+  const mutation = createChecklistOfflineMutation(input);
   const database = await openOfflineDatabase();
   try {
     const transaction = database.transaction(MUTATION_STORE, 'readwrite');

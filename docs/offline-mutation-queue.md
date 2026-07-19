@@ -27,6 +27,9 @@ The assigned-jobs queue review shows customer/job context, action, queued time,
 state, and attempt count without internal error text. After manager review, a
 two-step discard removes only the conflicted record, refreshes the job from the
 server when available, and resumes ordered replay.
+The queue schema also accepts checklist records containing the tenant, actor,
+job, checklist item, requested completion boolean, mutation ID, ordering, and
+retry state. Checklist controls and replay are delivered in the following slice.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current

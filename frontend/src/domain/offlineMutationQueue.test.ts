@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createStopProgressOfflineMutation,
   createJobLifecycleOfflineMutation,
+  createChecklistOfflineMutation,
   isOfflineMutationConflict,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
@@ -33,6 +34,27 @@ describe('offline mutation queue records', () => {
       status: 'in_progress',
       createdAt: '2026-07-19T20:30:00.000Z',
       attemptCount: 0,
+      syncState: 'pending',
+    });
+  });
+
+  it('captures tenant and item state for checklist mutations', () => {
+    expect(createChecklistOfflineMutation(
+      {
+        organizationId: 'org-1',
+        actorId: 'user-1',
+        jobId: 'job-1',
+        checklistItemId: 'checklist-1',
+        completed: true,
+      },
+      'mutation-3',
+      new Date('2026-07-19T21:10:00.000Z'),
+    )).toMatchObject({
+      id: 'mutation-3',
+      kind: 'checklist',
+      jobId: 'job-1',
+      checklistItemId: 'checklist-1',
+      completed: true,
       syncState: 'pending',
     });
   });
