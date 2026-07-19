@@ -592,10 +592,11 @@ Current state:
 - Client photo checks reject unsupported, unpreviewable, undersized, and duplicate captures before upload or offline storage
 - Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
 - Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance
+- Completion reports attach current route-stop context and block submission for unfinished stops or approved add-on work
 
 Next implementation work:
 
-- Include route-stop and add-on context in completion report readiness
+- Add a mobile viewport interruption-and-recovery smoke script for the Phase 2 field route
 
 ## Planned
 

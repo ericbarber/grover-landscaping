@@ -124,7 +124,18 @@ export function CompletionReport({
               checklist: 'finish the checklist',
               before_photos: 'capture a before photo',
               after_photos: 'capture an after photo',
+              add_ons: 'finish approved add-on work',
+              route_stop: 'finish the route stop',
             })[blocker]).join(' · ')}
+          </p>
+        )}
+        {reportSnapshot?.routeStop && (
+          <p className="mt-3 text-xs font-medium text-slate-500">
+            Route stop {reportSnapshot.routeStop.stopOrder} · {reportSnapshot.routeStop.serviceDate} ·{' '}
+            {reportStatusLabel(reportSnapshot.routeStop.stopStatus)}
+            {reportSnapshot.pendingAddOns > 0
+              ? ` · ${reportSnapshot.pendingAddOns} unfinished add-on${reportSnapshot.pendingAddOns === 1 ? '' : 's'}`
+              : ''}
           </p>
         )}
       </div>

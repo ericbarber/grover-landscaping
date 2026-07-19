@@ -3871,6 +3871,22 @@ async fn build_and_persist_completion_report(
     let photo_evidence = state.jobs.list_photo_evidence(id).await;
     let add_ons = state.jobs.list_job_add_ons(id).await;
     let mut report = build_completion_report(job, account, photo_evidence, add_ons);
+    if let Some(crew_id) = report.job.assigned_crew_id.as_deref() {
+        let day_plan = state.day_plans.today_for_crew(crew_id).await;
+        if let Some(stop) = day_plan.stops.iter().find(|stop| stop.job_id == id) {
+            completion_reports::attach_completion_report_route_stop(
+                &mut report,
+                completion_reports::CompletionReportRouteStopContext {
+                    day_plan_id: day_plan.id,
+                    crew_id: day_plan.crew_id,
+                    service_date: day_plan.service_date,
+                    stop_id: stop.id.clone(),
+                    stop_order: stop.stop_order,
+                    stop_status: stop.stop_status.clone(),
+                },
+            );
+        }
+    }
     let persistence = state.jobs.persist_completion_report(&report).await;
     apply_completion_report_persistence(&mut report, persistence);
 

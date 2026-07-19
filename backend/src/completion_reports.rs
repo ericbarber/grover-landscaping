@@ -76,6 +76,9 @@ pub struct CompletionReportResponse {
     pub before_photos: u32,
     pub after_photos: u32,
     pub issue_photos: u32,
+    pub pending_add_ons: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub route_stop: Option<CompletionReportRouteStopContext>,
     pub share_url: Option<String>,
     pub job: JobDetail,
     pub account: CustomerAccountSummary,
@@ -83,6 +86,16 @@ pub struct CompletionReportResponse {
     pub completed_add_ons: Vec<JobAddOn>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub snapshot_metadata: Option<CompletionReportSnapshotMetadata>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CompletionReportRouteStopContext {
+    pub day_plan_id: String,
+    pub crew_id: String,
+    pub service_date: String,
+    pub stop_id: String,
+    pub stop_order: u32,
+    pub stop_status: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -208,8 +221,17 @@ pub fn build_completion_report(
     let issue_photos = count_photo_type(&photo_evidence, "issue");
     let before_photos = job.before_photos.max(before_photo_evidence);
     let after_photos = job.after_photos.max(after_photo_evidence);
-    let readiness_blockers =
-        completion_report_readiness_blockers(checklist_progress, before_photos, after_photos);
+    let pending_add_ons = add_ons
+        .iter()
+        .filter(|add_on| add_on.status != "completed")
+        .count() as u32;
+    let readiness_blockers = completion_report_readiness_blockers(
+        checklist_progress,
+        before_photos,
+        after_photos,
+        pending_add_ons,
+        None,
+    );
     let ready_for_customer = readiness_blockers.is_empty();
 
     CompletionReportResponse {
@@ -228,6 +250,8 @@ pub fn build_completion_report(
         before_photos,
         after_photos,
         issue_photos,
+        pending_add_ons,
+        route_stop: None,
         share_url: None,
         job,
         account,
@@ -298,6 +322,8 @@ pub fn apply_completion_report_persistence(
         report.checklist_progress,
         report.before_photos,
         report.after_photos,
+        report.pending_add_ons,
+        report.route_stop.as_ref(),
     );
     report.share_url = persistence
         .share_token
@@ -310,6 +336,8 @@ pub fn completion_report_readiness_blockers(
     checklist_progress: u32,
     before_photos: u32,
     after_photos: u32,
+    pending_add_ons: u32,
+    route_stop: Option<&CompletionReportRouteStopContext>,
 ) -> Vec<String> {
     let mut blockers = Vec::new();
     if checklist_progress < 100 {
@@ -321,7 +349,31 @@ pub fn completion_report_readiness_blockers(
     if after_photos == 0 {
         blockers.push("after_photos".to_string());
     }
+    if pending_add_ons > 0 {
+        blockers.push("add_ons".to_string());
+    }
+    if route_stop.is_some_and(|stop| stop.stop_status != "finished") {
+        blockers.push("route_stop".to_string());
+    }
     blockers
+}
+
+pub fn attach_completion_report_route_stop(
+    report: &mut CompletionReportResponse,
+    route_stop: CompletionReportRouteStopContext,
+) {
+    report.route_stop = Some(route_stop);
+    report.readiness_blockers = completion_report_readiness_blockers(
+        report.checklist_progress,
+        report.before_photos,
+        report.after_photos,
+        report.pending_add_ons,
+        report.route_stop.as_ref(),
+    );
+    report.ready_for_customer = report.readiness_blockers.is_empty();
+    if !report.ready_for_customer && report.report_status == "submitted" {
+        report.report_status = "draft".to_string();
+    }
 }
 
 fn completion_progress(job: &JobDetail) -> u32 {
@@ -342,8 +394,9 @@ fn count_photo_type(photo_evidence: &[PhotoEvidence], photo_type: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_completion_report_persistence, attach_delivered_snapshot_metadata,
-        build_completion_report, completion_report_delivery_action_is_available,
+        apply_completion_report_persistence, attach_completion_report_route_stop,
+        attach_delivered_snapshot_metadata, build_completion_report,
+        completion_report_delivery_action_is_available,
         completion_report_is_active_manager_queue_status, completion_report_is_ready_for_delivery,
         completion_report_is_visible_to_customer,
         completion_report_lifecycle_transition_is_allowed, completion_report_manager_queue_label,
@@ -352,7 +405,7 @@ mod tests {
         completion_report_resubmit_action_is_available, completion_report_share_link_is_available,
         completion_report_start_review_action_is_available,
         is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
-        COMPLETION_REPORT_SNAPSHOT_VERSION,
+        CompletionReportRouteStopContext, COMPLETION_REPORT_SNAPSHOT_VERSION,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -432,6 +485,39 @@ mod tests {
         );
         assert!(ready.ready_for_customer);
         assert!(ready.readiness_blockers.is_empty());
+    }
+
+    #[test]
+    fn report_readiness_includes_pending_add_ons_and_route_stop_state() {
+        let add_on_blocked = build_completion_report(
+            job(4, 1, 1),
+            account(),
+            vec![],
+            vec![add_on("add_on_pending", "in_progress")],
+        );
+        assert_eq!(add_on_blocked.pending_add_ons, 1);
+        assert_eq!(add_on_blocked.readiness_blockers, vec!["add_ons"]);
+
+        let mut route_blocked = build_completion_report(job(4, 1, 1), account(), vec![], vec![]);
+        attach_completion_report_route_stop(
+            &mut route_blocked,
+            CompletionReportRouteStopContext {
+                day_plan_id: "day_plan_1".to_string(),
+                crew_id: "crew_1".to_string(),
+                service_date: "2026-07-19".to_string(),
+                stop_id: "stop_1".to_string(),
+                stop_order: 2,
+                stop_status: "in_progress".to_string(),
+            },
+        );
+        assert_eq!(route_blocked.readiness_blockers, vec!["route_stop"]);
+        assert!(!route_blocked.ready_for_customer);
+
+        route_blocked.route_stop.as_mut().unwrap().stop_status = "finished".to_string();
+        let finished_stop = route_blocked.route_stop.clone().unwrap();
+        attach_completion_report_route_stop(&mut route_blocked, finished_stop);
+        assert!(route_blocked.readiness_blockers.is_empty());
+        assert!(route_blocked.ready_for_customer);
     }
 
     #[test]

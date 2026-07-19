@@ -147,11 +147,22 @@ export interface ApiCompletionReport {
   report_status: CompletionReportStatus;
   persisted: boolean;
   ready_for_customer: boolean;
-  readiness_blockers?: Array<'checklist' | 'before_photos' | 'after_photos'>;
+  readiness_blockers?: Array<
+    'checklist' | 'before_photos' | 'after_photos' | 'add_ons' | 'route_stop'
+  >;
   checklist_progress: number;
   before_photos: number;
   after_photos: number;
   issue_photos: number;
+  pending_add_ons?: number;
+  route_stop?: {
+    day_plan_id: string;
+    crew_id: string;
+    service_date: string;
+    stop_id: string;
+    stop_order: number;
+    stop_status: string;
+  } | null;
   share_url: string | null;
   job: ApiJobDetail;
   account: ApiAccountStatus;
@@ -180,11 +191,22 @@ export interface CompletionReportSnapshot {
   reportStatus: CompletionReportStatus;
   persisted: boolean;
   readyForCustomer: boolean;
-  readinessBlockers?: Array<'checklist' | 'before_photos' | 'after_photos'>;
+  readinessBlockers?: Array<
+    'checklist' | 'before_photos' | 'after_photos' | 'add_ons' | 'route_stop'
+  >;
   checklistProgress: number;
   beforePhotos: number;
   afterPhotos: number;
   issuePhotos: number;
+  pendingAddOns: number;
+  routeStop?: {
+    dayPlanId: string;
+    crewId: string;
+    serviceDate: string;
+    stopId: string;
+    stopOrder: number;
+    stopStatus: string;
+  };
   shareUrl: string | null;
   job: JobDetail;
   account: AccountStatus;
@@ -1046,6 +1068,17 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
     beforePhotos: apiReport.before_photos,
     afterPhotos: apiReport.after_photos,
     issuePhotos: apiReport.issue_photos,
+    pendingAddOns: apiReport.pending_add_ons ?? 0,
+    routeStop: apiReport.route_stop
+      ? {
+          dayPlanId: apiReport.route_stop.day_plan_id,
+          crewId: apiReport.route_stop.crew_id,
+          serviceDate: apiReport.route_stop.service_date,
+          stopId: apiReport.route_stop.stop_id,
+          stopOrder: apiReport.route_stop.stop_order,
+          stopStatus: apiReport.route_stop.stop_status,
+        }
+      : undefined,
     shareUrl: apiReport.share_url ? toBrowserUrl(apiReport.share_url) : null,
     job: toJobDetail(apiReport.job),
     account: toAccountStatus(apiReport.account),

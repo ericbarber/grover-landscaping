@@ -85,6 +85,7 @@
 - 2026-07-19: Added browser-compatible offline photo persistence and replay coverage.
 - 2026-07-19: Added client photo quality checks and required before/after completion evidence.
 - 2026-07-19: Added server-owned completion-report readiness blocker context.
+- 2026-07-19: Added route-stop and unfinished add-on context to report readiness.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

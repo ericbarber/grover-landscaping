@@ -27,6 +27,7 @@ function report(
     beforePhotos: status === 'draft' ? 0 : 1,
     afterPhotos: status === 'draft' ? 0 : 1,
     issuePhotos: 0,
+    pendingAddOns: 0,
     shareUrl: status === 'delivered' ? `/report-view/share_${jobId}` : null,
     job: {
       id: jobId,
