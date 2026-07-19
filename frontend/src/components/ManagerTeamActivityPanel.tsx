@@ -79,6 +79,19 @@ export function teamActivityActiveFilterCount(
     + Number(eventKind !== 'all');
 }
 
+export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
+  return activity.reduce(
+    (summary, item) => {
+      if (item.eventKind.startsWith('crew_')) summary.crew += 1;
+      else if (item.eventKind === 'organization_profile_updated') summary.organization += 1;
+      else summary.access += 1;
+      summary.total += 1;
+      return summary;
+    },
+    { total: 0, access: 0, crew: 0, organization: 0 },
+  );
+}
+
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
@@ -99,6 +112,7 @@ export function ManagerTeamActivityPanel({
     targetQuery,
     eventFilter,
   );
+  const summary = summarizeTeamActivity(activity);
 
   async function refresh() {
     if (!organizationId) return;
@@ -172,6 +186,19 @@ export function ManagerTeamActivityPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+        {[
+          ['Loaded', summary.total],
+          ['Access', summary.access],
+          ['Crew', summary.crew],
+          ['Organization', summary.organization],
+        ].map(([label, value]) => (
+          <div className="rounded-lg bg-slate-50 px-2 py-3" key={label}>
+            <dt className="text-xs text-slate-500">{label}</dt>
+            <dd className="mt-1 text-lg font-bold text-slate-950">{value}</dd>
+          </div>
+        ))}
+      </dl>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="text-xs font-semibold text-slate-700">
           Find actor

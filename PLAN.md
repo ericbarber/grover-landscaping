@@ -530,10 +530,11 @@ Current state:
 - Owner team affected-item search matches readable member, crew, or organization labels and immutable target IDs across persisted history
 - Mobile member and team-activity filters show active-filter counts and offer one-tap clearing
 - Mobile team administration summarizes active, suspended, owner, manager, and field-team counts
+- Mobile owner activity summarizes loaded access, crew, and organization changes
 
 Next implementation work:
 
-- Add compact access-change and crew-change counts to owner team activity
+- Add CSV export for the owner-filtered team activity view
 
 ## Planned
 

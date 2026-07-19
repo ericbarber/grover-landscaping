@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TeamAdministrationActivity } from '../api/client';
 import {
   filterTeamActivity,
+  summarizeTeamActivity,
   teamActivityActiveFilterCount,
   teamActivityLabel,
 } from './ManagerTeamActivityPanel';
@@ -55,5 +56,23 @@ describe('team administration activity labels', () => {
   it('counts active activity filters', () => {
     expect(teamActivityActiveFilterCount('', '', 'all')).toBe(0);
     expect(teamActivityActiveFilterCount('Jordan', 'North', 'crew_profile_updated')).toBe(3);
+  });
+
+  it('summarizes loaded access, crew, and organization changes', () => {
+    const base: TeamAdministrationActivity = {
+      id: 'audit_1',
+      actorUserId: 'owner',
+      actorLabel: 'Jordan Grover',
+      organizationId: 'org_1',
+      eventKind: 'role_changed',
+      targetId: 'membership_1',
+      targetLabel: 'Alex Rivera',
+      occurredAt: '2026-07-19T12:00:00Z',
+    };
+    expect(summarizeTeamActivity([
+      base,
+      { ...base, id: 'audit_2', eventKind: 'crew_profile_updated' },
+      { ...base, id: 'audit_3', eventKind: 'organization_profile_updated' },
+    ])).toEqual({ total: 3, access: 1, crew: 1, organization: 1 });
   });
 });
