@@ -128,7 +128,9 @@ export type CompletionReportListReadinessBlockerFilter =
   | 'any'
   | 'checklist'
   | 'before_photos'
-  | 'after_photos';
+  | 'after_photos'
+  | 'add_ons'
+  | 'route_stop';
 
 export interface FetchCompletionReportsOptions {
   status?: CompletionReportListStatusFilter;

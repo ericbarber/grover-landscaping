@@ -97,6 +97,7 @@
 - 2026-07-19: Added persisted organization and crew filtering to the manager completion-report API.
 - 2026-07-19: Connected manager organization and crew filters to persisted report loading.
 - 2026-07-19: Added persisted customer, property, and scheduled-date manager report controls.
+- 2026-07-19: Expanded report blocker filtering to add-on and route-stop readiness.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

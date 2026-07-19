@@ -465,6 +465,7 @@ Current state:
 - Frontend manager report queue summarizes current report review work across loaded jobs
 - Backend exposes `GET /completion-reports` for manager report queue loading
 - Backend manager report queue loading supports `status`, `readiness`, readiness-blocker, organization, crew, customer, property, and scheduled-date query filters
+- Backend readiness-blocker filtering covers checklist, before/after evidence, unfinished add-ons, and route-stop state
 - Manager report queue controls apply persisted organization and crew filters with local fallback parity
 - Manager report queue controls apply persisted customer, property, and inclusive scheduled-date filters with validated date ranges
 - Backend manager report queue loading is scoped to the principal's active organization memberships

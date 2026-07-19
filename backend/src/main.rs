@@ -2634,10 +2634,16 @@ fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> R
     if let Some(readiness_blocker) = query.readiness_blocker.as_deref() {
         if !matches!(
             readiness_blocker,
-            "all" | "any" | "checklist" | "before_photos" | "after_photos"
+            "all"
+                | "any"
+                | "checklist"
+                | "before_photos"
+                | "after_photos"
+                | "add_ons"
+                | "route_stop"
         ) {
             return Err(
-                "readiness_blocker must be all, any, checklist, before_photos, or after_photos"
+                "readiness_blocker must be all, any, checklist, before_photos, after_photos, add_ons, or route_stop"
                     .to_string(),
             );
         }
@@ -2791,6 +2797,10 @@ fn completion_report_matches_readiness_blocker_filter(
         "checklist" => report.checklist_progress < 100,
         "before_photos" => report.before_photos == 0,
         "after_photos" => report.after_photos == 0,
+        "add_ons" => report.readiness_blockers.contains(&"add_ons".to_string()),
+        "route_stop" => report
+            .readiness_blockers
+            .contains(&"route_stop".to_string()),
         _ => true,
     }
 }
@@ -6370,6 +6380,32 @@ mod tests {
         assert_eq!(reports.len(), 1);
         assert_eq!(reports[0]["job_id"], "job_1001");
         assert_eq!(reports[0]["before_photos"], 0);
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_route_stop_blocker() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/completion-reports?readiness_blocker=route_stop")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let reports: Value = serde_json::from_slice(&body).unwrap();
+        assert!(!reports.as_array().unwrap().is_empty());
+        assert!(reports.as_array().unwrap().iter().all(|report| {
+            report["readiness_blockers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|blocker| blocker == "route_stop")
+        }));
     }
 
     #[tokio::test]
