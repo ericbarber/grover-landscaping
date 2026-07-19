@@ -442,7 +442,7 @@ impl JobRepository {
             SELECT COUNT(*)
             FROM service_jobs
             WHERE assigned_crew_id = $1
-              AND scheduled_date = $2::date
+              AND scheduled_date = $2
               AND id <> $3
               AND status <> 'completed'
             "#,
@@ -464,7 +464,7 @@ impl JobRepository {
             };
         }
         if sqlx::query(
-            "UPDATE service_jobs SET assigned_crew_id = $2, scheduled_date = $3::date, updated_at = NOW() WHERE id = $1",
+            "UPDATE service_jobs SET assigned_crew_id = $2, scheduled_date = $3, updated_at = NOW() WHERE id = $1",
         )
         .bind(job_id)
         .bind(crew_id)
