@@ -582,10 +582,11 @@ Current state:
 - The offline mutation schema supports tenant/actor-scoped checklist item completion records
 - Crew checklist toggles persist item and summary state transactionally and queue failed writes with mobile pending feedback
 - Queued checklist changes replay ordered per tenant with transactional idempotency, retry-state feedback, and conflict blocking
+- Crew checklist queue review exposes safe details and two-step reviewed-conflict recovery with server-state refresh
 
 Next implementation work:
 
-- Add crew-readable checklist queue review and reviewed-conflict recovery
+- Define durable offline photo capture storage and replay boundaries
 
 ## Planned
 

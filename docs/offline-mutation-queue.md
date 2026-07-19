@@ -38,6 +38,10 @@ Queued checklist changes replay oldest-first per tenant on load, network recover
 or manual retry. Their mutation UUID is stored transactionally with the checklist
 and job summary update; exact retries are deduplicated and conflicting reuse
 blocks later checklist replay for review.
+Checklist queue review shows customer/job context, item label when loaded,
+requested state, queue time, sync state, and attempts without internal errors.
+After manager review, two-step conflict discard restores server checklist state
+when reachable and resumes ordered replay.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current
