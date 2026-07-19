@@ -108,4 +108,10 @@ record retains the server-owned organization, authenticated actor, day plan,
 requesting crew, amendment type, optional stop, optional service/pricing context,
 crew note, UUID identity, ordering, and retry state. These JSON-compatible
 records use the existing mutation store and indexes, so no database-version
-upgrade is required. Queue fallback and replay are delivered in the next slices.
+upgrade is required.
+
+Failed add-stop, remove-stop, and add-service submissions now retain the existing
+crew-visible local request and write the complete amendment context to IndexedDB.
+Only a committed queue transaction receives the durable pending message. Storage
+failure instead reuses the explicit keep-the-app-open warning. Queue loading is
+scoped to the current day plan's organization and authenticated actor.

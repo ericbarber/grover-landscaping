@@ -8,7 +8,9 @@ import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
+  enqueueDayPlanAmendmentMutation,
   enqueueStopProgressMutation,
+  isDayPlanAmendmentOfflineMutation,
   isOfflineMutationConflict,
   isStopProgressOfflineMutation,
   listOfflineMutations,
@@ -17,6 +19,7 @@ import {
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
   type OfflineStoragePersistence,
+  type DayPlanAmendmentOfflineMutation,
   type StopProgressOfflineMutation,
 } from '../domain/offlineMutationQueue';
 import {
@@ -119,6 +122,9 @@ export function DayPlanPanel({
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
   const [offlineMutations, setOfflineMutations] = useState<StopProgressOfflineMutation[]>([]);
+  const [offlineAmendmentMutations, setOfflineAmendmentMutations] = useState<
+    DayPlanAmendmentOfflineMutation[]
+  >([]);
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
@@ -186,10 +192,30 @@ export function DayPlanPanel({
           [created, ...current.filter((item) => item.id !== request.id)].slice(0, 5),
         );
       })
-      .catch(() => {
+      .catch(async () => {
         setAmendmentRequests((current) =>
           current.map((item) => (item.id === request.id ? { ...item, persisted: false } : item)),
         );
+        if (!dayPlan.organizationId || !actorId) return;
+        try {
+          const mutation = await enqueueDayPlanAmendmentMutation({
+            organizationId: dayPlan.organizationId,
+            actorId,
+            dayPlanId: dayPlan.id,
+            amendmentType,
+            requestedByCrewId: dayPlan.crewId,
+            stopId,
+            service,
+            note,
+          });
+          setOfflineAmendmentMutations((current) => [...current, mutation].sort(
+            (left, right) => left.createdAt.localeCompare(right.createdAt),
+          ));
+          setQueueStorageUnavailable(false);
+          setStoragePersistence(await requestPersistentOfflineStorage());
+        } catch {
+          setQueueStorageUnavailable(true);
+        }
       });
   }
 
@@ -393,6 +419,7 @@ export function DayPlanPanel({
   useEffect(() => {
     if (!dayPlan.organizationId || !actorId) {
       setOfflineMutations([]);
+      setOfflineAmendmentMutations([]);
       return;
     }
     void listOfflineMutations(dayPlan.organizationId, actorId)
@@ -400,10 +427,12 @@ export function DayPlanPanel({
         setQueueStorageUnavailable(false);
         const stopMutations = mutations.filter(isStopProgressOfflineMutation);
         setOfflineMutations(stopMutations);
+        setOfflineAmendmentMutations(mutations.filter(isDayPlanAmendmentOfflineMutation));
         if (stopMutations.length > 0 && navigator.onLine) void replayOfflineMutations();
       })
       .catch(() => {
         setOfflineMutations([]);
+        setOfflineAmendmentMutations([]);
         setQueueStorageUnavailable(true);
       });
     const handleOnline = () => void replayOfflineMutations();
@@ -624,6 +653,16 @@ export function DayPlanPanel({
           </div>
         </details>
       ) : null}
+      {offlineAmendmentMutations.length > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900" role="status">
+          <p>
+            {offlineAmendmentMutations.length} route {offlineAmendmentMutations.length === 1 ? 'request is' : 'requests are'} queued offline.
+          </p>
+          <p className="mt-1 font-medium">
+            Keep the request on this phone. It will be sent for manager review after connectivity returns.
+          </p>
+        </div>
+      )}
 
       <div className="mt-5 space-y-3">
         {dayPlan.stops.map((stop) => {

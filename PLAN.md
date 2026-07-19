@@ -598,10 +598,11 @@ Current state:
 - Offline mutation IDs remain RFC 4122 UUIDs on non-secure HTTP phone origins through a cryptographic random-values fallback
 - A Pixel 7 viewport smoke test proves Tailscale route loading, interruption queueing, pending feedback, automatic recovery, and confirmed queue clearance
 - The offline mutation schema supports tenant/actor-scoped day-plan amendment requests with stop, service, pricing, and note context
+- Failed day-plan amendment submissions enter the durable tenant/actor queue with accurate route-request feedback
 
 Next implementation work:
 
-- Queue failed day-plan amendment requests with durable field feedback
+- Add idempotent ordered replay for queued day-plan amendments
 
 ## Planned
 
