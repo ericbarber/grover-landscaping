@@ -103,6 +103,7 @@
 - 2026-07-19: Restored manager report filters across mobile browser reloads.
 - 2026-07-19: Added a live mobile smoke test for persisted manager report filtering.
 - 2026-07-19: Added actionable report-blocker recovery guidance to the manager queue.
+- 2026-07-19: Added a manager day-level crew workload and unassigned-work dispatch view.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

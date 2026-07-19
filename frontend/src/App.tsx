@@ -81,6 +81,7 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
+import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
 import {
   matchesCompletionReportOperationalFilters,
   type CompletionReportOperationalFilters,
@@ -2779,6 +2780,12 @@ export function App() {
               onRefresh={() => void refreshPhotoErasureDeletionHistory()}
               onRetry={(id) => void handleRetryPhotoErasureDeletion(id)}
               onResolve={(id) => void handleResolvePhotoErasureDeletion(id)}
+            />
+          </div>
+          <div className="mt-6">
+            <ManagerDispatchWorkloadPanel
+              jobs={jobs}
+              onSelectJob={selectJobForReview}
             />
           </div>
           <div className="mt-6">
