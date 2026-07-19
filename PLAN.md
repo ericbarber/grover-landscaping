@@ -560,10 +560,11 @@ Current state:
 - Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
 - A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
 - Mobile diagnostics react to network and shell-control changes and copy a token-safe support summary
+- Supported phones can send the sanitized diagnostics summary through the native share sheet
 
 Next implementation work:
 
-- Let mobile users share safe diagnostics through the phone share sheet
+- Add a downloadable diagnostics fallback where clipboard and native sharing are unavailable
 
 ## Planned
 

@@ -35,7 +35,7 @@ export function MobileDiagnosticsPage() {
   const [workerControlsPage, setWorkerControlsPage] = useState(
     () => Boolean(navigator.serviceWorker?.controller),
   );
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'unavailable'>('idle');
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'shared' | 'unavailable'>('idle');
 
   async function runApiCheck() {
     if (!navigator.onLine) {
@@ -87,9 +87,10 @@ export function MobileDiagnosticsPage() {
   const workerSupported = 'serviceWorker' in navigator;
   const apiReady = apiCheck === 'ready';
   const installedMode = installedDisplayMode();
+  const nativeShare = (navigator as unknown as { share?: Navigator['share'] }).share;
 
-  async function copySupportDetails() {
-    const report = buildDiagnosticsReport({
+  function supportDetails() {
+    return buildDiagnosticsReport({
       checkedAt: checkedAt ?? new Date(),
       origin: window.location.origin,
       apiBaseUrl: API_BASE_URL,
@@ -101,11 +102,29 @@ export function MobileDiagnosticsPage() {
       installedMode,
       userAgent: navigator.userAgent,
     });
+  }
+
+  async function copySupportDetails() {
     try {
-      await navigator.clipboard.writeText(report);
-      setCopyStatus('copied');
+      await navigator.clipboard.writeText(supportDetails());
+      setShareStatus('copied');
     } catch {
-      setCopyStatus('unavailable');
+      setShareStatus('unavailable');
+    }
+  }
+
+  async function shareSupportDetails() {
+    if (!nativeShare) return;
+    try {
+      await nativeShare.call(navigator, {
+        title: 'Grover Field mobile diagnostics',
+        text: supportDetails(),
+      });
+      setShareStatus('shared');
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setShareStatus('unavailable');
+      }
     }
   }
 
@@ -177,14 +196,27 @@ export function MobileDiagnosticsPage() {
           >
             Copy safe support details
           </button>
+          {nativeShare && (
+            <button
+              className="min-h-12 rounded-xl border border-slate-400 bg-white px-5 font-bold text-slate-800 sm:col-span-2"
+              onClick={() => void shareSupportDetails()}
+              type="button"
+            >
+              Share safe support details
+            </button>
+          )}
         </div>
-        {copyStatus !== 'idle' && (
+        {shareStatus !== 'idle' && (
           <p className={`mt-3 text-sm font-semibold ${
-            copyStatus === 'copied' ? 'text-emerald-800' : 'text-amber-800'
+            shareStatus === 'copied' || shareStatus === 'shared'
+              ? 'text-emerald-800'
+              : 'text-amber-800'
           }`} role="status">
-            {copyStatus === 'copied'
+            {shareStatus === 'copied'
               ? 'Support details copied.'
-              : 'Clipboard access is unavailable in this browser.'}
+              : shareStatus === 'shared'
+                ? 'Support details shared.'
+                : 'Support details could not be sent from this browser.'}
           </p>
         )}
       </section>
