@@ -115,3 +115,11 @@ crew-visible local request and write the complete amendment context to IndexedDB
 Only a committed queue transaction receives the durable pending message. Storage
 failure instead reuses the explicit keep-the-app-open warning. Queue loading is
 scoped to the current day plan's organization and authenticated actor.
+
+Queued amendments replay oldest-first for the current tenant and actor on app
+load, network recovery, or manual retry. Replay sends the mutation UUID in the
+request body; the backend derives a deterministic amendment ID, and PostgreSQL
+returns the existing persisted request on an exact retry. The client replaces
+the matching browser-local request with the persisted manager-review item and
+removes the queue record only after confirmation. The first retryable failure or
+review-blocking conflict stops later amendment replay.

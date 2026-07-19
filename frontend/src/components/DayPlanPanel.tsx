@@ -126,11 +126,13 @@ export function DayPlanPanel({
     DayPlanAmendmentOfflineMutation[]
   >([]);
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
+  const [isReplayingAmendments, setIsReplayingAmendments] = useState(false);
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const [queueStorageUnavailable, setQueueStorageUnavailable] = useState(false);
   const [storagePersistence, setStoragePersistence] = useState<OfflineStoragePersistence | null>(null);
   const replayInProgress = useRef(false);
+  const amendmentReplayInProgress = useRef(false);
   const offlineSummary = summarizeOfflineMutations(offlineMutations);
   const pendingMutationCount = offlineSummary.total;
   const conflictMutationCount = offlineSummary.conflicts;
@@ -348,6 +350,70 @@ export function DayPlanPanel({
     }
   }, [actorId, dayPlan.organizationId]);
 
+  const replayOfflineAmendments = useCallback(async () => {
+    if (
+      !dayPlan.organizationId
+      || !actorId
+      || !navigator.onLine
+      || amendmentReplayInProgress.current
+    ) return;
+    amendmentReplayInProgress.current = true;
+    setIsReplayingAmendments(true);
+    try {
+      const mutations = (await listOfflineMutations(dayPlan.organizationId, actorId))
+        .filter(isDayPlanAmendmentOfflineMutation);
+      for (const mutation of mutations) {
+        if (mutation.syncState === 'conflict') break;
+        try {
+          const created = await createDayPlanAmendment(
+            mutation.dayPlanId,
+            {
+              amendmentType: mutation.amendmentType,
+              requestedByCrewId: mutation.requestedByCrewId,
+              stopId: mutation.stopId,
+              service: mutation.service,
+              note: mutation.note,
+            },
+            mutation.id,
+          );
+          if (!created.persisted) {
+            await markOfflineMutationFailed(mutation, 'API used local fallback');
+            break;
+          }
+          await removeOfflineMutation(mutation.id);
+          setAmendmentRequests((current) => [
+            created,
+            ...current.filter((item) =>
+              item.id !== created.id
+              && !(
+                item.id.startsWith('local_amendment_')
+                && item.amendmentType === mutation.amendmentType
+                && item.stopId === mutation.stopId
+                && item.note === mutation.note
+              )
+            ),
+          ].slice(0, 5));
+        } catch (error) {
+          await markOfflineMutationFailed(
+            mutation,
+            error instanceof Error ? error.message : 'Route request sync failed',
+            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
+          );
+          break;
+        }
+      }
+      const remaining = (await listOfflineMutations(dayPlan.organizationId, actorId))
+        .filter(isDayPlanAmendmentOfflineMutation);
+      setQueueStorageUnavailable(false);
+      setOfflineAmendmentMutations(remaining);
+    } catch {
+      setQueueStorageUnavailable(true);
+    } finally {
+      amendmentReplayInProgress.current = false;
+      setIsReplayingAmendments(false);
+    }
+  }, [actorId, dayPlan.organizationId]);
+
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
       await removeOfflineMutation(mutation.id);
@@ -427,18 +493,30 @@ export function DayPlanPanel({
         setQueueStorageUnavailable(false);
         const stopMutations = mutations.filter(isStopProgressOfflineMutation);
         setOfflineMutations(stopMutations);
-        setOfflineAmendmentMutations(mutations.filter(isDayPlanAmendmentOfflineMutation));
+        const amendmentMutations = mutations.filter(isDayPlanAmendmentOfflineMutation);
+        setOfflineAmendmentMutations(amendmentMutations);
         if (stopMutations.length > 0 && navigator.onLine) void replayOfflineMutations();
+        if (amendmentMutations.length > 0 && navigator.onLine) {
+          void replayOfflineAmendments();
+        }
       })
       .catch(() => {
         setOfflineMutations([]);
         setOfflineAmendmentMutations([]);
         setQueueStorageUnavailable(true);
       });
-    const handleOnline = () => void replayOfflineMutations();
+    const handleOnline = () => {
+      void replayOfflineMutations();
+      void replayOfflineAmendments();
+    };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [actorId, dayPlan.organizationId, replayOfflineMutations]);
+  }, [
+    actorId,
+    dayPlan.organizationId,
+    replayOfflineAmendments,
+    replayOfflineMutations,
+  ]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -661,6 +739,22 @@ export function DayPlanPanel({
           <p className="mt-1 font-medium">
             Keep the request on this phone. It will be sent for manager review after connectivity returns.
           </p>
+          <p className="mt-1 font-medium">
+            {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
+            {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+          </p>
+          <button
+            className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
+            disabled={
+              !navigator.onLine
+              || isReplayingAmendments
+              || offlineAmendmentMutations.some((mutation) => mutation.syncState === 'conflict')
+            }
+            onClick={() => void replayOfflineAmendments()}
+            type="button"
+          >
+            {isReplayingAmendments ? 'Sending requests…' : 'Send queued requests'}
+          </button>
         </div>
       )}
 

@@ -13,6 +13,52 @@ use sqlx::Row;
 mod common;
 
 #[tokio::test]
+async fn repository_deduplicates_offline_day_plan_amendments() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let repository = DayPlanRepository::new();
+    let mutation_id = uuid::Uuid::new_v4().to_string();
+    let request = || CreateDayPlanAmendmentRequest {
+        amendment_type: "remove_stop".to_string(),
+        requested_by_crew_id: "crew_1001".to_string(),
+        stop_id: Some("stop_1001".to_string()),
+        service: None,
+        note: Some("Offline gate access conflict".to_string()),
+        client_mutation_id: Some(mutation_id.clone()),
+    };
+
+    let first = repository
+        .create_amendment("day_plan_2026_06_15_crew_1001", request())
+        .await;
+    let replay = repository
+        .create_amendment("day_plan_2026_06_15_crew_1001", request())
+        .await;
+    let count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM day_plan_amendment_requests WHERE id = $1")
+            .bind(&first.id)
+            .fetch_one(&jobs.pool().expect("database pool should be available"))
+            .await
+            .unwrap();
+
+    assert!(first.persisted);
+    assert!(replay.persisted);
+    assert_eq!(replay.id, first.id);
+    assert_eq!(
+        first.id,
+        format!(
+            "amendment_offline_{}",
+            uuid::Uuid::parse_str(&mutation_id).unwrap().simple()
+        )
+    );
+    assert_eq!(count, 1);
+}
+
+#[tokio::test]
 async fn repository_persists_and_lists_day_plan_amendments() {
     let Some(config) = common::database_config() else {
         return;
@@ -57,6 +103,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
                     requires_manager_approval: true,
                 }),
                 note: Some("Customer requested an onsite estimate.".to_string()),
+                client_mutation_id: None,
             },
         )
         .await;

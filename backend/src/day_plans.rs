@@ -98,6 +98,7 @@ pub struct CreateDayPlanAmendmentRequest {
     pub stop_id: Option<String>,
     pub service: Option<AmendmentService>,
     pub note: Option<String>,
+    pub client_mutation_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -503,9 +504,19 @@ impl DayPlanRepository {
         let response = local_amendment_response(day_plan_id, request);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(persisted)) = postgres_day_plans::create_amendment(pool, &response).await
-            {
-                return persisted;
+            if let Ok(persisted) = postgres_day_plans::create_amendment(pool, &response).await {
+                if let Some(persisted) = persisted {
+                    return persisted;
+                }
+                if let Ok(amendments) = postgres_day_plans::list_amendments(pool, day_plan_id).await
+                {
+                    if let Some(existing) = amendments
+                        .into_iter()
+                        .find(|amendment| amendment.id == response.id)
+                    {
+                        return existing;
+                    }
+                }
             }
         }
 
@@ -667,6 +678,13 @@ fn amendment_review_status(decision: &str) -> Option<&'static str> {
 }
 
 pub fn validate_amendment_request(request: &CreateDayPlanAmendmentRequest) -> Result<(), String> {
+    if request
+        .client_mutation_id
+        .as_deref()
+        .is_some_and(|id| Uuid::parse_str(id).is_err())
+    {
+        return Err("client_mutation_id must be a UUID when provided".to_string());
+    }
     if request.requested_by_crew_id.trim().is_empty() {
         return Err("requested_by_crew_id is required".to_string());
     }
@@ -705,10 +723,16 @@ fn local_amendment_response(
     day_plan_id: &str,
     request: CreateDayPlanAmendmentRequest,
 ) -> DayPlanAmendmentResponse {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or(0);
+    let mutation_uuid = request
+        .client_mutation_id
+        .as_deref()
+        .and_then(|id| Uuid::parse_str(id).ok());
+    let nonce = mutation_uuid.map(|id| id.as_u128()).unwrap_or_else(|| {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or(0)
+    });
     let requires_bid = request.amendment_type == "add_service"
         && request
             .service
@@ -716,12 +740,16 @@ fn local_amendment_response(
             .is_some_and(|service| service.requires_manager_approval);
 
     DayPlanAmendmentResponse {
-        id: format!(
-            "amendment_{}_{}_{}",
-            day_plan_id.replace(|character: char| !character.is_ascii_alphanumeric(), "_"),
-            request.amendment_type,
-            nonce
-        ),
+        id: mutation_uuid
+            .map(|id| format!("amendment_offline_{}", id.simple()))
+            .unwrap_or_else(|| {
+                format!(
+                    "amendment_{}_{}_{}",
+                    day_plan_id.replace(|character: char| !character.is_ascii_alphanumeric(), "_"),
+                    request.amendment_type,
+                    nonce
+                )
+            }),
         day_plan_id: day_plan_id.to_string(),
         amendment_type: request.amendment_type,
         status: "submitted".to_string(),
@@ -941,6 +969,7 @@ mod tests {
             stop_id: None,
             service: None,
             note: Some("Skip inaccessible property".to_string()),
+            client_mutation_id: None,
         };
 
         assert!(validate_amendment_request(&request).is_err());
@@ -981,9 +1010,27 @@ mod tests {
                 requires_manager_approval: true,
             }),
             note: Some("Broken sprinkler head".to_string()),
+            client_mutation_id: None,
         };
 
         assert!(validate_amendment_request(&request).is_ok());
+    }
+
+    #[test]
+    fn amendment_validation_rejects_invalid_client_mutation_ids() {
+        let request = CreateDayPlanAmendmentRequest {
+            amendment_type: "add_stop".to_string(),
+            requested_by_crew_id: "crew_1001".to_string(),
+            stop_id: None,
+            service: None,
+            note: Some("Customer requested an additional visit".to_string()),
+            client_mutation_id: Some("not-a-uuid".to_string()),
+        };
+
+        assert_eq!(
+            validate_amendment_request(&request),
+            Err("client_mutation_id must be a UUID when provided".to_string())
+        );
     }
 
     #[test]

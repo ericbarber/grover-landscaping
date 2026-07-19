@@ -5,6 +5,7 @@ import type {
 } from '../domain/stopProgress';
 import { API_BASE_URL } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
+import { apiRequestError } from './apiError';
 
 export interface ApiAmendmentService {
   id: string;
@@ -99,6 +100,7 @@ export async function fetchDayPlanAmendments(
 export async function createDayPlanAmendment(
   dayPlanId: string,
   input: CreateDayPlanAmendmentInput,
+  clientMutationId?: string,
 ): Promise<DayPlanAmendmentRequest> {
   const service = input.service;
   const response = await authenticatedFetch(`${API_BASE_URL}/day-plans/${dayPlanId}/amendments`, {
@@ -119,10 +121,14 @@ export async function createDayPlanAmendment(
           }
         : undefined,
       note: input.note,
+      ...(clientMutationId ? { client_mutation_id: clientMutationId } : {}),
     }),
   });
   if (!response.ok) {
-    throw new Error(`Create amendment request failed with status ${response.status}`);
+    throw await apiRequestError(
+      response,
+      `Create amendment request failed with status ${response.status}`,
+    );
   }
 
   return toDayPlanAmendment((await response.json()) as ApiDayPlanAmendment);

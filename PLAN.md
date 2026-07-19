@@ -599,10 +599,11 @@ Current state:
 - A Pixel 7 viewport smoke test proves Tailscale route loading, interruption queueing, pending feedback, automatic recovery, and confirmed queue clearance
 - The offline mutation schema supports tenant/actor-scoped day-plan amendment requests with stop, service, pricing, and note context
 - Failed day-plan amendment submissions enter the durable tenant/actor queue with accurate route-request feedback
+- Queued day-plan amendments replay oldest-first with deterministic server IDs, PostgreSQL deduplication, automatic recovery, manual retry, and conflict blocking
 
 Next implementation work:
 
-- Add idempotent ordered replay for queued day-plan amendments
+- Add crew-readable amendment queue review and reviewed-conflict recovery
 
 ## Planned
 
