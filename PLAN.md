@@ -532,10 +532,11 @@ Current state:
 - Mobile team administration summarizes active, suspended, owner, manager, and field-team counts
 - Mobile owner activity summarizes loaded access, crew, and organization changes
 - Owners can export the currently filtered loaded team activity as quoted CSV with readable and immutable audit identities
+- Owners can export the currently filtered member directory as quoted CSV with identity, role, status, and scope
 
 Next implementation work:
 
-- Add CSV export for the owner-filtered team member directory
+- Add readable name, role, and status sorting to the mobile member directory
 
 ## Planned
 

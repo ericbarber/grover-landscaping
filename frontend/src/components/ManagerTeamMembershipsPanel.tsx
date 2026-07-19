@@ -73,6 +73,20 @@ export function summarizeTeamMemberships(memberships: OrganizationMembership[]) 
   };
 }
 
+export function teamMembershipsCsv(memberships: OrganizationMembership[]): string {
+  const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const header = ['display_name', 'identity_id', 'role', 'status', 'scope_type', 'scope_id'];
+  const rows = memberships.map((membership) => [
+    membership.displayName ?? membership.userId,
+    membership.userId,
+    membership.role,
+    membership.status,
+    membership.scopeType,
+    membership.scopeId ?? '',
+  ]);
+  return [header, ...rows].map((row) => row.map(cell).join(',')).join('\n');
+}
+
 export function ManagerTeamMembershipsPanel({
   organizationId,
   onTeamChanged,
@@ -199,6 +213,18 @@ export function ManagerTeamMembershipsPanel({
     }
   }
 
+  function exportFilteredMemberships() {
+    const url = URL.createObjectURL(new Blob(
+      [teamMembershipsCsv(filteredMemberships)],
+      { type: 'text/csv;charset=utf-8' },
+    ));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `team-members-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -208,14 +234,24 @@ export function ManagerTeamMembershipsPanel({
           </p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Active memberships</h2>
         </div>
-        <button
-          className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
-          disabled={isLoading}
-          onClick={() => void refresh()}
-          type="button"
-        >
-          {isLoading ? 'Loading…' : 'Refresh'}
-        </button>
+        <div className="grid gap-2">
+          <button
+            className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
+            disabled={isLoading}
+            onClick={() => void refresh()}
+            type="button"
+          >
+            {isLoading ? 'Loading…' : 'Refresh'}
+          </button>
+          <button
+            className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
+            disabled={filteredMemberships.length === 0}
+            onClick={exportFilteredMemberships}
+            type="button"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
       <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">

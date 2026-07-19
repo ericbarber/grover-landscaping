@@ -27,6 +27,7 @@
 - 2026-07-19: Added mobile team composition summary counts.
 - 2026-07-19: Added mobile owner activity category summary counts.
 - 2026-07-19: Added CSV export for filtered owner team activity.
+- 2026-07-19: Added CSV export for the filtered owner member directory.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

@@ -6,6 +6,7 @@ import {
   filterTeamMemberships,
   teamMembershipActiveFilterCount,
   summarizeTeamMemberships,
+  teamMembershipsCsv,
 } from './ManagerTeamMembershipsPanel';
 
 const membership = (
@@ -76,5 +77,14 @@ describe('team membership role controls', () => {
       managers: 1,
       fieldTeam: 2,
     });
+  });
+
+  it('exports quoted member directory identities and access state', () => {
+    expect(teamMembershipsCsv([{
+      ...membership('CrewLead'),
+      displayName: 'Grover, "Jordan"',
+    }])).toContain(
+      '"Grover, ""Jordan""","user_1","CrewLead","active","organization","org_1"',
+    );
   });
 });
