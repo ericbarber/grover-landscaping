@@ -13,6 +13,7 @@ import {
   fetchJobAddOns,
   fetchJobs,
   fetchNotificationHistory,
+  fetchOperationalActivity,
   fetchPhotoErasureDeletionHistory,
   fetchPhotoProcessingHistory,
   fetchPropertyCompletionReports,
@@ -37,6 +38,7 @@ import {
   type JobDetail,
   type JobAddOn,
   type NotificationHistoryItem,
+  type OperationalActivity,
   type PhotoErasureDeletionHistoryItem,
   type PhotoProcessingHistoryItem,
   type PhotoUploadTicket,
@@ -100,6 +102,7 @@ import {
   writeStoredManagerActivityItems,
 } from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
+import { operationsToManagerActivity } from './domain/operationalManagerActivity';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
@@ -834,6 +837,7 @@ export function App() {
   const [completionReportSnapshots, setCompletionReportSnapshots] = useState<Record<string, CompletionReportSnapshot>>({});
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
+  const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
@@ -950,8 +954,12 @@ export function App() {
     [completionReportSnapshots],
   );
   const visibleManagerActivity = useMemo(
-    () => [...notificationsToManagerActivity(notificationHistory), ...managerActivity],
-    [managerActivity, notificationHistory],
+    () => [
+      ...operationsToManagerActivity(operationalActivity),
+      ...notificationsToManagerActivity(notificationHistory),
+      ...managerActivity,
+    ],
+    [managerActivity, notificationHistory, operationalActivity],
   );
   const privacyAccountIds = useMemo(() => {
     const reportAccountIds = managerReportQueueReports
@@ -1285,6 +1293,18 @@ export function App() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    void refreshOperationalActivity();
+  }, [dayPlanRefreshSignal]);
+
+  async function refreshOperationalActivity() {
+    try {
+      setOperationalActivity(await fetchOperationalActivity());
+    } catch {
+      setOperationalActivity([]);
+    }
+  }
 
   async function handleStartJob() {
     if (!selectedJobId) {
@@ -1673,14 +1693,9 @@ export function App() {
     try {
       const action = await startCompletionReportReview(reportId);
       await refreshCompletionReport(action.jobId);
+      await refreshOperationalActivity();
       setStatusMessage(`${action.reportId} is in manager review.`);
       setCompletionReportActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report in review',
-        message: `${action.reportId} moved into manager review.`,
-        tone: 'success',
-        source: 'job',
-      });
     } catch {
       setCompletionReportActionStatus(null);
       setStatusMessage('Could not start manager review. Confirm the report is submitted and persisted.');
@@ -1693,14 +1708,9 @@ export function App() {
     try {
       const action = await requestCompletionReportChanges(reportId, reason);
       await refreshCompletionReport(action.jobId);
+      await refreshOperationalActivity();
       setStatusMessage(`${action.reportId} has changes requested.`);
       setCompletionReportActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report changes requested',
-        message: reason.trim() || `${action.reportId} needs crew follow-up before delivery.`,
-        tone: 'warning',
-        source: 'job',
-      });
     } catch {
       setCompletionReportActionStatus(null);
       setStatusMessage('Could not request changes. Confirm the report is currently in review.');
@@ -1713,14 +1723,9 @@ export function App() {
     try {
       const action = await resubmitCompletionReport(reportId);
       await refreshCompletionReport(action.jobId);
+      await refreshOperationalActivity();
       setStatusMessage(`${action.reportId} resubmitted for manager review.`);
       setCompletionReportActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report resubmitted',
-        message: `${action.reportId} returned to the manager review queue.`,
-        tone: 'success',
-        source: 'job',
-      });
     } catch {
       setCompletionReportActionStatus(null);
       setStatusMessage('Could not resubmit. Confirm the report is change-requested and delivery-ready.');
@@ -1733,16 +1738,9 @@ export function App() {
     try {
       const action = await deliverCompletionReport(reportId);
       await refreshCompletionReport(action.jobId);
+      await refreshOperationalActivity();
       setStatusMessage(`${action.reportId} delivered to the customer portal.`);
       setCompletionReportActionStatus(null);
-      recordManagerActivity({
-        title: 'Completion report delivered',
-        message: action.shareUrl
-          ? `${action.reportId} is delivered with a share link.`
-          : `${action.reportId} is delivered.`,
-        tone: 'success',
-        source: 'job',
-      });
     } catch {
       setCompletionReportActionStatus(null);
       setStatusMessage('Could not deliver. Confirm the report passed review and delivery readiness checks.');

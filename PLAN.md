@@ -502,10 +502,12 @@ Current state:
 - Project-bid notification records carry organization ownership for tenant-scoped history and recovery
 - Manager report and bid workflows explain when delivery is blocked by account channel or recipient preferences
 - Manager activity history includes persisted queued, sent, failed, skipped, and dead-letter customer notification events
+- Tenant-scoped operational activity combines persisted route state with completion-report lifecycle audit events
+- Manager activity refreshes persisted route and report events after schedule and report workflow changes
 
 Next implementation work:
 
-- Connect manager activity history to persisted route and report events
+- Connect manager activity history to persisted bid and photo events
 
 ## Planned
 

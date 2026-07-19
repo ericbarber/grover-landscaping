@@ -176,6 +176,16 @@ pub struct TeamAdministrationActivity {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OperationalActivity {
+    pub id: String,
+    pub organization_id: String,
+    pub event_kind: String,
+    pub target_id: String,
+    pub actor_user_id: String,
+    pub occurred_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationInvitationAcceptanceResponse {
     pub invitation: OrganizationInvitationResponse,
     pub membership: OrganizationMembership,
@@ -238,6 +248,18 @@ impl OrganizationRepository {
             return Vec::new();
         };
         list_team_administration_activity(pool, organization_id)
+            .await
+            .unwrap_or_default()
+    }
+
+    pub async fn list_operational_activity(
+        &self,
+        organization_ids: &[String],
+    ) -> Vec<OperationalActivity> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        list_operational_activity(pool, organization_ids)
             .await
             .unwrap_or_default()
     }
@@ -985,6 +1007,68 @@ async fn list_team_administration_activity(
             organization_id: row.get("organization_id"),
             event_kind: row.get("event_kind"),
             target_id: row.get("target_id"),
+            occurred_at: row.get("occurred_at"),
+        })
+        .collect())
+}
+
+async fn list_operational_activity(
+    pool: &PgPool,
+    organization_ids: &[String],
+) -> Result<Vec<OperationalActivity>, sqlx::Error> {
+    if organization_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let rows = sqlx::query(
+        r#"
+        SELECT id, organization_id, event_kind, target_id, actor_user_id,
+            occurred_at::text AS occurred_at
+        FROM (
+            SELECT id, organization_id, event_kind, target_id, actor_user_id, occurred_at
+            FROM access_audit_events
+            WHERE organization_id = ANY($1)
+              AND event_kind IN (
+                'report_review_started',
+                'report_changes_requested',
+                'report_resubmitted',
+                'report_delivered'
+              )
+            UNION ALL
+            SELECT
+                'route_' || plan.id || '_' || plan.status AS id,
+                crew.organization_id,
+                CASE
+                    WHEN plan.status = 'published' THEN 'route_published'
+                    WHEN plan.status = 'completed' THEN 'route_completed'
+                    ELSE 'route_draft_saved'
+                END AS event_kind,
+                plan.id AS target_id,
+                'system' AS actor_user_id,
+                CASE
+                    WHEN plan.status = 'draft' THEN plan.created_at
+                    ELSE plan.updated_at
+                END AS occurred_at
+            FROM day_plans plan
+            JOIN crews crew ON crew.id = plan.crew_id
+            WHERE crew.organization_id = ANY($1)
+        ) activity
+        ORDER BY occurred_at DESC, id DESC
+        LIMIT 50
+        "#,
+    )
+    .bind(organization_ids)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| OperationalActivity {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            event_kind: row.get("event_kind"),
+            target_id: row.get("target_id"),
+            actor_user_id: row.get("actor_user_id"),
             occurred_at: row.get("occurred_at"),
         })
         .collect())

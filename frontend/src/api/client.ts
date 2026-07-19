@@ -458,6 +458,33 @@ export interface TeamAdministrationActivity {
   occurredAt: string;
 }
 
+export type OperationalActivityEventKind =
+  | 'route_draft_saved'
+  | 'route_published'
+  | 'route_completed'
+  | 'report_review_started'
+  | 'report_changes_requested'
+  | 'report_resubmitted'
+  | 'report_delivered';
+
+interface ApiOperationalActivity {
+  id: string;
+  organization_id: string;
+  event_kind: OperationalActivityEventKind;
+  target_id: string;
+  actor_user_id: string;
+  occurred_at: string;
+}
+
+export interface OperationalActivity {
+  id: string;
+  organizationId: string;
+  eventKind: OperationalActivityEventKind;
+  targetId: string;
+  actorUserId: string;
+  occurredAt: string;
+}
+
 interface ApiOrganizationMembership {
   id: string;
   organization_id: string;
@@ -1588,6 +1615,18 @@ export async function fetchTeamAdministrationActivity(
     organizationTeamActivityPath(organizationId),
   );
   return activity.map(toTeamAdministrationActivity);
+}
+
+export async function fetchOperationalActivity(): Promise<OperationalActivity[]> {
+  const activity = await request<ApiOperationalActivity[]>('/operational-activity');
+  return activity.map((item) => ({
+    id: item.id,
+    organizationId: item.organization_id,
+    eventKind: item.event_kind,
+    targetId: item.target_id,
+    actorUserId: item.actor_user_id,
+    occurredAt: item.occurred_at,
+  }));
 }
 
 const membershipRoleStorage: Record<AccessRole, string> = {

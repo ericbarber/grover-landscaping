@@ -604,6 +604,7 @@ fn app_with_runtime(
             "/organizations/{organization_id}/team-activity",
             get(list_team_administration_activity),
         )
+        .route("/operational-activity", get(list_operational_activity))
         .route(
             "/accounts/{account_id}/property-portfolios",
             get(list_property_portfolios_for_account),
@@ -1732,6 +1733,21 @@ async fn list_team_administration_activity(
         state
             .organizations
             .list_team_administration_activity(&organization_id)
+            .await,
+    )
+    .into_response()
+}
+
+async fn list_operational_activity(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids =
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await;
+    Json(
+        state
+            .organizations
+            .list_operational_activity(&organization_ids)
             .await,
     )
     .into_response()
@@ -4960,6 +4976,26 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::OK);
         let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json, serde_json::json!([]));
+    }
+
+    #[tokio::test]
+    async fn operational_activity_endpoint_returns_local_history() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/operational-activity")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let status = response.status();
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json, serde_json::json!([]));
     }

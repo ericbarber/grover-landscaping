@@ -8,6 +8,7 @@
 - 2026-07-19: Enforced account channel, recipient, and quiet-hour preferences for report and bid deliveries.
 - 2026-07-19: Added manager guidance for customer deliveries blocked by account preferences.
 - 2026-07-19: Connected persisted customer notification events to manager activity history.
+- 2026-07-19: Connected tenant-scoped route and report events to manager activity history.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
