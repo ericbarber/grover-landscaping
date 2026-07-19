@@ -546,10 +546,11 @@ Current state:
 - Owner audit-ID search is debounced, tenant-scoped, and applied across server-paginated history
 - Production builds split React and OIDC vendor code from the application bundle, keeping every chunk below the 500 kB warning threshold
 - Public bid, report, invitation, and authenticated dashboard route bodies are lazy-loaded with an accessible loading state
+- Public bid and report startup paths defer the authenticated shell and OIDC bundle, reducing the entry chunk below 5 kB
 
 Next implementation work:
 
-- Keep OIDC and the authenticated shell out of public bid and report startup paths
+- Add recoverable lazy-route loading failure UI for weak mobile connections
 
 ## Planned
 

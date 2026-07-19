@@ -3,11 +3,8 @@ import ReactDOM from 'react-dom/client';
 import { sharedBidTokenFromPath } from './domain/sharedBidRoute';
 import { sharedReportTokenFromPath } from './domain/sharedReportRoute';
 import { organizationInvitationTokenFromPath } from './domain/organizationInvitationRoute';
-import { AuthGate } from './auth/AuthGate';
-import { AuthProvider } from './auth/AuthProvider';
 import './styles.css';
 
-const App = React.lazy(() => import('./App').then((module) => ({ default: module.App })));
 const CustomerBidReviewPage = React.lazy(
   () => import('./components/CustomerBidReviewPage')
     .then((module) => ({ default: module.CustomerBidReviewPage })),
@@ -16,9 +13,9 @@ const CustomerCompletionReportPage = React.lazy(
   () => import('./components/CustomerCompletionReportPage')
     .then((module) => ({ default: module.CustomerCompletionReportPage })),
 );
-const OrganizationInvitationAcceptancePage = React.lazy(
-  () => import('./components/OrganizationInvitationAcceptancePage')
-    .then((module) => ({ default: module.OrganizationInvitationAcceptancePage })),
+const AuthenticatedExperience = React.lazy(
+  () => import('./auth/AuthenticatedExperience')
+    .then((module) => ({ default: module.AuthenticatedExperience })),
 );
 
 const sharedBidToken = sharedBidTokenFromPath(window.location.pathname);
@@ -39,15 +36,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       ) : sharedReportToken ? (
         <CustomerCompletionReportPage shareToken={sharedReportToken} />
       ) : (
-        <AuthProvider>
-          <AuthGate>
-            {organizationInvitationToken ? (
-              <OrganizationInvitationAcceptancePage token={organizationInvitationToken} />
-            ) : (
-              <App />
-            )}
-          </AuthGate>
-        </AuthProvider>
+        <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
       )}
     </React.Suspense>
   </React.StrictMode>,

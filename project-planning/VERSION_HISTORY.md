@@ -41,6 +41,7 @@
 - 2026-07-19: Added persisted audit event ID search to owner team activity.
 - 2026-07-19: Split frontend framework and authentication vendor bundles for faster phone startup.
 - 2026-07-19: Lazy-loaded public review, invitation, and authenticated dashboard routes.
+- 2026-07-19: Deferred OIDC and authenticated dashboard code on public customer links.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
