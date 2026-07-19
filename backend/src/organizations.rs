@@ -16,6 +16,7 @@ pub struct OrganizationMembership {
     pub organization_name: String,
     pub organization_type: String,
     pub user_id: String,
+    pub display_name: String,
     pub role: AccessRole,
     pub status: String,
     pub scope_type: String,
@@ -107,6 +108,12 @@ pub enum MembershipStatusUpdateResult {
     NotFound,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MembershipProfileUpdateResult {
+    Updated(OrganizationMembership),
+    NotFound,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateOrganizationInvitationRequest {
     pub invitee_email: String,
@@ -129,6 +136,11 @@ pub struct UpdateOrganizationMembershipRoleRequest {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct UpdateOrganizationMembershipStatusRequest {
     pub status: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateOrganizationMembershipProfileRequest {
+    pub display_name: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -533,6 +545,43 @@ impl OrganizationRepository {
         }
     }
 
+    pub async fn update_membership_profile(
+        &self,
+        organization_id: &str,
+        membership_id: &str,
+        actor_user_id: &str,
+        request: UpdateOrganizationMembershipProfileRequest,
+    ) -> MembershipProfileUpdateResult {
+        let display_name = request.display_name.trim();
+        if !(2..=120).contains(&display_name.chars().count()) {
+            return MembershipProfileUpdateResult::NotFound;
+        }
+        if let Some(pool) = &self.pool {
+            if let Ok(updated) = update_membership_profile(
+                pool,
+                organization_id,
+                membership_id,
+                actor_user_id,
+                display_name,
+            )
+            .await
+            {
+                return updated;
+            }
+        }
+        let Some(mut membership) =
+            seed_memberships("local-development-user")
+                .into_iter()
+                .find(|membership| {
+                    membership.organization_id == organization_id && membership.id == membership_id
+                })
+        else {
+            return MembershipProfileUpdateResult::NotFound;
+        };
+        membership.display_name = display_name.to_string();
+        MembershipProfileUpdateResult::Updated(membership)
+    }
+
     pub async fn update_membership_status(
         &self,
         organization_id: &str,
@@ -732,9 +781,9 @@ async fn bootstrap_organization(
     sqlx::query(
         r#"
         INSERT INTO organization_memberships (
-            id, organization_id, user_id, role, status, scope_type, scope_id
+            id, organization_id, user_id, display_name, role, status, scope_type, scope_id
         )
-        VALUES ($1, $2, $3, 'organization_owner', 'active', 'organization', $2)
+        VALUES ($1, $2, $3, $3, 'organization_owner', 'active', 'organization', $2)
         "#,
     )
     .bind(&membership_id)
@@ -763,6 +812,7 @@ async fn bootstrap_organization(
                 organization_name: request.display_name.clone(),
                 organization_type: request.organization_type.clone(),
                 user_id: user_id.to_string(),
+                display_name: user_id.to_string(),
                 role: AccessRole::OrganizationOwner,
                 status: "active".to_string(),
                 scope_type: "organization".to_string(),
@@ -913,6 +963,7 @@ async fn list_active_memberships(
             organization.display_name AS organization_name,
             organization.organization_type,
             membership.user_id,
+            membership.display_name AS membership_display_name,
             membership.role,
             membership.status,
             membership.scope_type,
@@ -950,6 +1001,7 @@ async fn list_organization_memberships(
             organization.display_name AS organization_name,
             organization.organization_type,
             membership.user_id,
+            membership.display_name AS membership_display_name,
             membership.role,
             membership.status,
             membership.scope_type,
@@ -1001,6 +1053,7 @@ async fn list_team_administration_activity(
             'role_changed',
             'membership_suspended',
             'membership_reactivated',
+            'membership_profile_updated',
             'crew_profile_updated',
             'crew_deactivated',
             'crew_reactivated'
@@ -1162,12 +1215,13 @@ async fn create_invitation(
             id,
             organization_id,
             user_id,
+            display_name,
             role,
             status,
             scope_type,
             scope_id
         )
-        VALUES ($1, $2, $3, $4, 'invited', $5, $6)
+        VALUES ($1, $2, $3, $3, $4, 'invited', $5, $6)
         "#,
     )
     .bind(&membership_id)
@@ -1576,6 +1630,7 @@ async fn accept_invitation(
             organization.display_name AS organization_name,
             organization.organization_type,
             membership.user_id,
+            membership.display_name AS membership_display_name,
             membership.role,
             membership.status,
             membership.scope_type,
@@ -1682,6 +1737,7 @@ async fn update_membership_role(
             organization.display_name AS organization_name,
             organization.organization_type,
             membership.user_id,
+            membership.display_name AS membership_display_name,
             membership.role,
             membership.status,
             membership.scope_type,
@@ -1714,6 +1770,51 @@ async fn update_membership_role(
             None => MembershipRoleUpdateResult::NotFound,
         },
     )
+}
+
+async fn update_membership_profile(
+    pool: &PgPool,
+    organization_id: &str,
+    membership_id: &str,
+    actor_user_id: &str,
+    display_name: &str,
+) -> Result<MembershipProfileUpdateResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let updated = sqlx::query_scalar::<_, String>(
+        r#"
+        UPDATE organization_memberships
+        SET display_name = $3, updated_at = now()
+        WHERE organization_id = $1
+          AND id = $2
+          AND status <> 'archived'
+        RETURNING id
+        "#,
+    )
+    .bind(organization_id)
+    .bind(membership_id)
+    .bind(display_name)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if updated.is_none() {
+        transaction.rollback().await?;
+        return Ok(MembershipProfileUpdateResult::NotFound);
+    }
+    insert_access_audit_event(
+        &mut transaction,
+        actor_user_id,
+        organization_id,
+        "membership_profile_updated",
+        membership_id,
+    )
+    .await?;
+    transaction.commit().await?;
+
+    Ok(list_organization_memberships(pool, organization_id)
+        .await?
+        .into_iter()
+        .find(|membership| membership.id == membership_id)
+        .map(MembershipProfileUpdateResult::Updated)
+        .unwrap_or(MembershipProfileUpdateResult::NotFound))
 }
 
 async fn update_membership_status(
@@ -1859,6 +1960,7 @@ fn seed_memberships(user_id: &str) -> Vec<OrganizationMembership> {
         organization_name: "Grover Demo Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: user_id.to_string(),
+        display_name: "Local Development Owner".to_string(),
         role: AccessRole::OrganizationOwner,
         status: "active".to_string(),
         scope_type: "organization".to_string(),
@@ -2024,6 +2126,11 @@ fn organization_membership_from_row(
         organization_name: row.get("organization_name"),
         organization_type: row.get("organization_type"),
         user_id: row.get("user_id"),
+        display_name: row
+            .try_get::<Option<String>, _>("membership_display_name")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| row.get("user_id")),
         role: access_role_from_storage(&role)?,
         status: row.get("status"),
         scope_type: row.get("scope_type"),
@@ -2165,6 +2272,7 @@ fn local_invitation_acceptance(
         organization_name: "Grover Demo Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: accepting_user_id.to_string(),
+        display_name: invitation.invitee_email.clone(),
         role: AccessRole::Manager,
         status: "active".to_string(),
         scope_type: "organization".to_string(),
@@ -2193,6 +2301,7 @@ fn local_membership_role_update(
         organization_name: "Grover Demo Landscaping".to_string(),
         organization_type: "yard_care_company".to_string(),
         user_id: actor_user_id.to_string(),
+        display_name: actor_user_id.to_string(),
         role,
         status: "active".to_string(),
         scope_type: "organization".to_string(),

@@ -3,7 +3,8 @@ use grover_landscaping_api::{
     day_plans::{CreateCrewRequest, DayPlanRepository, UpdateCrewRequest, UpdateCrewResult},
     db::JobRepository,
     organizations::{
-        BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
+        BootstrapOrganizationRequest, BootstrapOrganizationResult, MembershipProfileUpdateResult,
+        OrganizationRepository, UpdateOrganizationMembershipProfileRequest,
         UpdateOrganizationProfileRequest,
     },
 };
@@ -122,7 +123,30 @@ async fn repository_bootstraps_first_owner_once() {
     };
     assert!(created.persisted);
     assert_eq!(created.membership.user_id, user_id);
+    assert_eq!(created.membership.display_name, user_id);
     assert_eq!(created.membership.role, AccessRole::OrganizationOwner);
+
+    let renamed_member = organizations
+        .update_membership_profile(
+            &created.organization_id,
+            &created.membership.id,
+            &user_id,
+            UpdateOrganizationMembershipProfileRequest {
+                display_name: "Jordan Grover".to_string(),
+            },
+        )
+        .await;
+    let MembershipProfileUpdateResult::Updated(renamed_member) = renamed_member else {
+        panic!("owner membership display name should be editable");
+    };
+    assert_eq!(renamed_member.display_name, "Jordan Grover");
+    assert!(organizations
+        .list_organization_memberships(&created.organization_id)
+        .await
+        .iter()
+        .any(|membership| {
+            membership.id == created.membership.id && membership.display_name == "Jordan Grover"
+        }));
 
     let updated_profile = organizations
         .update_organization_profile(
@@ -326,4 +350,20 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .unwrap();
     assert_eq!(profile_audit_count, 1);
+    let membership_profile_audit_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM access_audit_events WHERE actor_user_id = $1 AND event_kind = 'membership_profile_updated'",
+    )
+    .bind(&user_id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(membership_profile_audit_count, 1);
+    assert!(organizations
+        .list_team_administration_activity(&created.organization_id)
+        .await
+        .iter()
+        .any(|item| {
+            item.target_id == created.membership.id
+                && item.event_kind == "membership_profile_updated"
+        }));
 }

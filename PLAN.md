@@ -518,10 +518,12 @@ Current state:
 - Organization memberships carry persisted display labels with backfill for existing members
 - Operational activity returns both immutable actor IDs and readable membership labels
 - Backfilled system route history is clearly identified as a migration rather than a human action
+- Organization owners can edit active and suspended member display names without changing immutable identity IDs
+- Membership display-name changes are tenant-scoped, validated, and included in owner team-administration history
 
 Next implementation work:
 
-- Add owner-managed team member display names to membership administration
+- Use member display names in crew-lead selection and owner team activity
 
 ## Planned
 

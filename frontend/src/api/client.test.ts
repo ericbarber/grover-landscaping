@@ -11,6 +11,7 @@ import {
   organizationInvitationPath,
   organizationInvitationAcceptancePath,
   organizationMembershipRolePath,
+  organizationMembershipProfilePath,
   organizationMembershipStatusPath,
   organizationMembershipsPath,
   organizationTeamActivityPath,
@@ -181,6 +182,9 @@ describe('core API client mapping', () => {
     );
     expect(organizationMembershipRolePath('org/demo', 'member/1')).toBe(
       '/organizations/org%2Fdemo/memberships/member%2F1/role',
+    );
+    expect(organizationMembershipProfilePath('org/demo', 'member/1')).toBe(
+      '/organizations/org%2Fdemo/memberships/member%2F1/profile',
     );
     expect(organizationMembershipStatusPath('org/demo', 'member/1')).toBe(
       '/organizations/org%2Fdemo/memberships/member%2F1/status',

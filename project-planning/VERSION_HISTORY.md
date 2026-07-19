@@ -15,6 +15,7 @@
 - 2026-07-19: Added actor-attributed transactional audit events for schedule mutations.
 - 2026-07-19: Added structured route mutation metadata to operational activity.
 - 2026-07-19: Added readable organization-member identities to operational activity.
+- 2026-07-19: Added audited owner-managed display names for organization members.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
@@ -135,6 +136,8 @@ Current continuation work:
   and HTTP(S) website fields plus mobile-first editing and validation.
 - Added owner-managed timezone, service-area label, and daily stop-capacity
   defaults with database constraints and mobile numeric controls.
+- Added tenant-scoped member display-name editing to mobile owner administration,
+  while retaining immutable identity IDs and auditing each update.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

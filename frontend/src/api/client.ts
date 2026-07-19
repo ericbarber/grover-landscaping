@@ -422,6 +422,7 @@ export interface OrganizationMembership {
   organizationName: string;
   organizationType: string;
   userId: string;
+  displayName?: string;
   role: AccessRole;
   status: string;
   scopeType: string;
@@ -436,6 +437,7 @@ export type TeamAdministrationEventKind =
   | 'role_changed'
   | 'membership_suspended'
   | 'membership_reactivated'
+  | 'membership_profile_updated'
   | 'crew_profile_updated'
   | 'crew_deactivated'
   | 'crew_reactivated';
@@ -510,6 +512,7 @@ interface ApiOrganizationMembership {
   organization_name: string;
   organization_type: string;
   user_id: string;
+  display_name?: string;
   role: AccessRole;
   status: string;
   scope_type: string;
@@ -1189,6 +1192,7 @@ function toOrganizationMembership(
     organizationName: membership.organization_name,
     organizationType: membership.organization_type,
     userId: membership.user_id,
+    displayName: membership.display_name || membership.user_id,
     role: membership.role,
     status: membership.status,
     scopeType: membership.scope_type,
@@ -1605,6 +1609,13 @@ export function organizationMembershipStatusPath(
   return `${organizationMembershipsPath(organizationId)}/${encodeURIComponent(membershipId)}/status`;
 }
 
+export function organizationMembershipProfilePath(
+  organizationId: string,
+  membershipId: string,
+): string {
+  return `${organizationMembershipsPath(organizationId)}/${encodeURIComponent(membershipId)}/profile`;
+}
+
 export async function fetchOrganizationMemberships(
   organizationId: string,
 ): Promise<OrganizationMembership[]> {
@@ -1682,6 +1693,22 @@ export async function updateOrganizationMembershipRole(
       {
         method: 'PUT',
         body: JSON.stringify({ role: membershipRoleStorage[role] }),
+      },
+    ),
+  );
+}
+
+export async function updateOrganizationMembershipProfile(
+  organizationId: string,
+  membershipId: string,
+  displayName: string,
+): Promise<OrganizationMembership> {
+  return toOrganizationMembership(
+    await request<ApiOrganizationMembership>(
+      organizationMembershipProfilePath(organizationId, membershipId),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ display_name: displayName.trim() }),
       },
     ),
   );

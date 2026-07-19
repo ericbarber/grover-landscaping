@@ -20,6 +20,7 @@ here does not mean every capability has been delivered.
 - Tenant-aware resource boundaries
 - Customer, property, crew, manager, and organization onboarding
 - Owner-managed organization profile identity
+- Owner-managed member display names with immutable identity references
 - Role administration and audited access changes
 - Branch, territory, region, and service-area hierarchy
 

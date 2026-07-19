@@ -58,8 +58,9 @@ use grover_landscaping_api::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
         validate_reissue_invitation_request, validate_update_organization_profile_request,
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
-        MembershipStatusUpdateResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
+        CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
+        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
+        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipProfileRequest,
         UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
         UpdateOrganizationProfileRequest,
     },
@@ -598,6 +599,10 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/memberships/{membership_id}/role",
             put(update_organization_membership_role),
+        )
+        .route(
+            "/organizations/{organization_id}/memberships/{membership_id}/profile",
+            put(update_organization_membership_profile),
         )
         .route(
             "/organizations/{organization_id}/memberships/{membership_id}/status",
@@ -1628,6 +1633,51 @@ async fn update_organization_membership_role(
         )
             .into_response(),
         MembershipRoleUpdateResult::NotFound => resource_not_found_response(
+            "organization_membership_not_found",
+            "The organization membership was not found.",
+        ),
+    }
+}
+
+async fn update_organization_membership_profile(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, membership_id)): Path<(String, String)>,
+    Json(request): Json<UpdateOrganizationMembershipProfileRequest>,
+) -> Response {
+    let display_name = request.display_name.trim();
+    if !(2..=120).contains(&display_name.chars().count()) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_membership_profile",
+                message: "Display name must contain 2 to 120 characters.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .organizations
+        .update_membership_profile(
+            &organization_id,
+            &membership_id,
+            &principal.subject,
+            request,
+        )
+        .await
+    {
+        MembershipProfileUpdateResult::Updated(membership) => Json(membership).into_response(),
+        MembershipProfileUpdateResult::NotFound => resource_not_found_response(
             "organization_membership_not_found",
             "The organization membership was not found.",
         ),
@@ -5027,6 +5077,27 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json[0]["id"], "membership_local_owner_demo");
         assert_eq!(json[0]["role"], "OrganizationOwner");
+    }
+
+    #[tokio::test]
+    async fn organization_membership_profile_endpoint_updates_display_name() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/memberships/membership_local_owner_demo/profile")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"display_name":"Jordan Grover"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["id"], "membership_local_owner_demo");
+        assert_eq!(json["display_name"], "Jordan Grover");
     }
 
     #[tokio::test]

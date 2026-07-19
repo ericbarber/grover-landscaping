@@ -503,6 +503,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::PUT && can_admin_organization;
     }
 
+    if path.starts_with("/organizations/") && path.ends_with("/profile") {
+        return *method == Method::PUT && can_admin_organization;
+    }
+
     if path.starts_with("/organizations/") && path.ends_with("/status") {
         return *method == Method::PUT && can_admin_organization;
     }
@@ -691,6 +695,7 @@ mod tests {
             organization_name: "Test".to_string(),
             organization_type: "yard_care_company".to_string(),
             user_id: "user_1".to_string(),
+            display_name: "Test User".to_string(),
             role: AccessRole::CrewMember,
             status: "active".to_string(),
             scope_type: "organization".to_string(),

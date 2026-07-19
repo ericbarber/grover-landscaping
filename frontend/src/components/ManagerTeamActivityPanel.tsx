@@ -21,6 +21,8 @@ export function teamActivityLabel(eventKind: TeamAdministrationEventKind): strin
       return 'Membership suspended';
     case 'membership_reactivated':
       return 'Membership reactivated';
+    case 'membership_profile_updated':
+      return 'Member display name updated';
     case 'crew_profile_updated':
       return 'Crew profile updated';
     case 'crew_deactivated':

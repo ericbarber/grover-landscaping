@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   fetchOrganizationMemberships,
+  updateOrganizationMembershipProfile,
   updateOrganizationMembershipRole,
   updateOrganizationMembershipStatus,
   type AccessRole,
@@ -41,6 +42,7 @@ export function ManagerTeamMembershipsPanel({
 }) {
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [draftRoles, setDraftRoles] = useState<Record<string, AccessRole>>({});
+  const [draftNames, setDraftNames] = useState<Record<string, string>>({});
   const [confirmingMembershipId, setConfirmingMembershipId] = useState('');
   const [confirmingLifecycleId, setConfirmingLifecycleId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,6 +59,10 @@ export function ManagerTeamMembershipsPanel({
       const loaded = await fetchOrganizationMemberships(organizationId);
       setMemberships(loaded);
       setDraftRoles(Object.fromEntries(loaded.map((item) => [item.id, item.role])));
+      setDraftNames(Object.fromEntries(loaded.map((item) => [
+        item.id,
+        item.displayName ?? item.userId,
+      ])));
       setMessage(null);
     } catch {
       setMessage('Team membership administration requires organization-owner access.');
@@ -86,6 +92,29 @@ export function ManagerTeamMembershipsPanel({
       onTeamChanged?.();
     } catch {
       setMessage('The role could not be changed. Keep at least one active organization owner.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveDisplayName(membership: OrganizationMembership) {
+    const displayName = (draftNames[membership.id] ?? membership.displayName ?? membership.userId).trim();
+    if (Array.from(displayName).length < 2 || Array.from(displayName).length > 120) return;
+    setIsLoading(true);
+    try {
+      const updated = await updateOrganizationMembershipProfile(
+        organizationId,
+        membership.id,
+        displayName,
+      );
+      setMemberships((current) => current.map((item) => (
+        item.id === updated.id ? updated : item
+      )));
+      setDraftNames((current) => ({ ...current, [updated.id]: updated.displayName ?? updated.userId }));
+      setMessage(`Display name updated for ${updated.userId}.`);
+      onTeamChanged?.();
+    } catch {
+      setMessage('The team member display name could not be updated.');
     } finally {
       setIsLoading(false);
     }
@@ -139,15 +168,42 @@ export function ManagerTeamMembershipsPanel({
           const canChange = canChangeMembershipRole(membership, activeOwnerCount);
           const canSuspend = canSuspendMembership(membership, activeOwnerCount);
           const draftRole = draftRoles[membership.id] ?? membership.role;
+          const draftName = draftNames[membership.id] ?? membership.displayName ?? membership.userId;
+          const nameChanged = draftName.trim() !== (membership.displayName ?? membership.userId);
           const changed = draftRole !== membership.role;
           return (
             <li className="rounded-lg bg-slate-50 p-3" key={membership.id}>
               <p className="break-all text-sm font-semibold text-slate-900">
-                {membership.userId}
+                {membership.displayName ?? membership.userId}
               </p>
+              <p className="mt-0.5 break-all text-xs text-slate-500">{membership.userId}</p>
               <p className="mt-1 text-xs text-slate-500">
                 {membership.status} · {membership.scopeType}
               </p>
+              <label className="mt-3 block text-xs font-semibold text-slate-700">
+                Display name
+                <input
+                  className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal disabled:opacity-60"
+                  disabled={isLoading}
+                  maxLength={120}
+                  minLength={2}
+                  onChange={(event) => setDraftNames((current) => ({
+                    ...current,
+                    [membership.id]: event.target.value,
+                  }))}
+                  value={draftName}
+                />
+              </label>
+              {nameChanged ? (
+                <button
+                  className="mt-2 min-h-11 w-full rounded-lg bg-emerald-700 px-3 text-xs font-bold text-white disabled:opacity-60"
+                  disabled={isLoading || Array.from(draftName.trim()).length < 2}
+                  onClick={() => void saveDisplayName(membership)}
+                  type="button"
+                >
+                  Save display name
+                </button>
+              ) : null}
               <label className="mt-3 block text-xs font-semibold text-slate-700">
                 Role
                 <select
