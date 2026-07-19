@@ -551,10 +551,11 @@ Current state:
 - A global mobile banner distinguishes offline state from slow startup across public and authenticated routes
 - Mobile users receive a four-second confirmation when network connectivity returns
 - A global readiness probe distinguishes API downtime from phone connectivity and retries automatically every 30 seconds
+- Mobile users receive a four-second confirmation when API readiness recovers
 
 Next implementation work:
 
-- Confirm API recovery after a backend restart completes
+- Pause API readiness polling while the mobile tab is hidden and refresh on return
 
 ## Planned
 
