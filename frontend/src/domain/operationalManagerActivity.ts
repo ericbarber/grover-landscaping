@@ -97,10 +97,21 @@ const activityPresentation: Record<
 
 export function operationalToManagerActivity(activity: OperationalActivity): ManagerActivityItem {
   const presentation = activityPresentation[activity.eventKind];
+  const metadata = activity.metadata ?? {};
+  const stopId = typeof metadata.stop_id === 'string' ? metadata.stop_id : undefined;
+  const jobId = typeof metadata.job_id === 'string' ? metadata.job_id : undefined;
+  const stopCount = typeof metadata.stop_count === 'number' ? metadata.stop_count : undefined;
+  const details = activity.eventKind === 'route_stop_assigned' && stopId && jobId
+    ? ` Assigned ${jobId} as ${stopId}.`
+    : activity.eventKind === 'route_stop_removed' && stopId
+      ? ` Removed ${stopId}.`
+      : activity.eventKind === 'route_stops_reordered' && stopCount !== undefined
+        ? ` Reordered ${stopCount} stops.`
+        : '';
   return {
     id: `operational_${activity.id}`,
     title: presentation.title,
-    message: `${activity.targetId} · recorded by ${activity.actorUserId}`,
+    message: `${activity.targetId} · recorded by ${activity.actorUserId}.${details}`,
     tone: presentation.tone,
     source: presentation.source,
     occurredAt: activity.occurredAt,

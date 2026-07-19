@@ -315,6 +315,22 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
     assert!(audit_events
         .iter()
         .all(|row| row.get::<String, _>("actor_user_id") == actor_user_id));
+    let assigned_job_id: String = sqlx::query_scalar(
+        "SELECT metadata->>'job_id' FROM access_audit_events WHERE target_id = $1 AND event_kind = 'route_stop_assigned' ORDER BY occurred_at, id LIMIT 1",
+    )
+    .bind(&draft.id)
+    .fetch_one(&pool)
+    .await
+    .expect("route assignment metadata should be readable");
+    assert_eq!(assigned_job_id, "job_1001");
+    let reordered_stop_count: String = sqlx::query_scalar(
+        "SELECT metadata->>'stop_count' FROM access_audit_events WHERE target_id = $1 AND event_kind = 'route_stops_reordered' LIMIT 1",
+    )
+    .bind(&draft.id)
+    .fetch_one(&pool)
+    .await
+    .expect("route reorder metadata should be readable");
+    assert_eq!(reordered_stop_count, "2");
 }
 
 #[tokio::test]

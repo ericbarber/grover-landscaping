@@ -483,6 +483,7 @@ interface ApiOperationalActivity {
   target_id: string;
   actor_user_id: string;
   occurred_at: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface OperationalActivity {
@@ -492,6 +493,7 @@ export interface OperationalActivity {
   targetId: string;
   actorUserId: string;
   occurredAt: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FetchOperationalActivityOptions {
@@ -1652,6 +1654,7 @@ export async function fetchOperationalActivity(
     targetId: item.target_id,
     actorUserId: item.actor_user_id,
     occurredAt: item.occurred_at,
+    metadata: item.metadata ?? {},
   }));
 }
 

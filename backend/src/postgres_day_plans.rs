@@ -290,7 +290,16 @@ pub async fn create_draft_day_plan(
     .await?;
 
     if row.is_some() {
-        insert_route_audit_event(&mut tx, id, actor_user_id, "route_draft_saved").await?;
+        insert_route_audit_event(
+            &mut tx,
+            id,
+            actor_user_id,
+            "route_draft_saved",
+            None,
+            None,
+            None,
+        )
+        .await?;
     }
     tx.commit().await?;
     Ok(row.map(|row| day_plan_mutation_response(row, true)))
@@ -330,7 +339,16 @@ pub async fn publish_day_plan(
         return Ok(None);
     };
 
-    insert_route_audit_event(&mut tx, id, actor_user_id, "route_published").await?;
+    insert_route_audit_event(
+        &mut tx,
+        id,
+        actor_user_id,
+        "route_published",
+        None,
+        None,
+        None,
+    )
+    .await?;
     tx.commit().await?;
     Ok(Some(day_plan_mutation_response(row, true)))
 }
@@ -431,7 +449,16 @@ pub async fn assign_stop(
         return Ok(None);
     };
 
-    insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stop_assigned").await?;
+    insert_route_audit_event(
+        &mut tx,
+        day_plan_id,
+        actor_user_id,
+        "route_stop_assigned",
+        Some(stop_id),
+        Some(&request.job_id),
+        None,
+    )
+    .await?;
     tx.commit().await?;
     Ok(Some(DayPlanStopMutationResponse {
         day_plan_id: row.get("day_plan_id"),
@@ -487,7 +514,16 @@ pub async fn remove_stop(
     .execute(&mut *tx)
     .await?;
 
-    insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stop_removed").await?;
+    insert_route_audit_event(
+        &mut tx,
+        day_plan_id,
+        actor_user_id,
+        "route_stop_removed",
+        Some(stop_id),
+        None,
+        None,
+    )
+    .await?;
     tx.commit().await?;
     Ok(true)
 }
@@ -553,8 +589,16 @@ pub async fn reorder_stops(
 
     let persisted = result.rows_affected() == stop_ids.len() as u64;
     if persisted {
-        insert_route_audit_event(&mut tx, day_plan_id, actor_user_id, "route_stops_reordered")
-            .await?;
+        insert_route_audit_event(
+            &mut tx,
+            day_plan_id,
+            actor_user_id,
+            "route_stops_reordered",
+            None,
+            None,
+            Some(stop_ids.len() as i32),
+        )
+        .await?;
     }
     tx.commit().await?;
 
@@ -566,13 +610,23 @@ async fn insert_route_audit_event(
     day_plan_id: &str,
     actor_user_id: &str,
     event_kind: &str,
+    stop_id: Option<&str>,
+    job_id: Option<&str>,
+    stop_count: Option<i32>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
         INSERT INTO access_audit_events (
-            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
         )
-        SELECT $1, $2, crew.organization_id, $3, plan.id, now()
+        SELECT $1, $2, crew.organization_id, $3, plan.id, now(),
+            jsonb_strip_nulls(jsonb_build_object(
+                'crew_id', plan.crew_id,
+                'service_date', plan.service_date::text,
+                'stop_id', $5::text,
+                'job_id', $6::text,
+                'stop_count', $7::int
+            ))
         FROM day_plans plan
         JOIN crews crew ON crew.id = plan.crew_id
         WHERE plan.id = $4
@@ -582,6 +636,9 @@ async fn insert_route_audit_event(
     .bind(actor_user_id)
     .bind(event_kind)
     .bind(day_plan_id)
+    .bind(stop_id)
+    .bind(job_id)
+    .bind(stop_count)
     .execute(&mut **tx)
     .await?;
     Ok(())

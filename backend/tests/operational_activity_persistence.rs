@@ -64,7 +64,9 @@ async fn repository_lists_tenant_scoped_operational_activity() {
             && item.target_id == "report_operational_test"
     }));
     assert!(activity.iter().any(|item| {
-        item.event_kind == "route_published" && item.target_id == "day_plan_2026_06_15_crew_1001"
+        item.event_kind == "route_published"
+            && item.target_id == "day_plan_2026_06_15_crew_1001"
+            && item.metadata["crew_id"] == "crew_1001"
     }));
     assert!(activity
         .iter()

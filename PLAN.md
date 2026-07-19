@@ -512,10 +512,13 @@ Current state:
 - Draft creation, route publication, stop assignment/removal, and stop reorder operations write transactional audit events
 - Schedule audit events retain the authenticated manager identity and organization boundary
 - Existing persisted route states are backfilled into operational history during migration
+- Access audit events support structured JSON metadata without changing existing audit writers
+- Route activity metadata records crew/date context plus affected stop, job, or reorder count
+- Manager route activity messages use persisted mutation details instead of generic plan-only copy
 
 Next implementation work:
 
-- Include route mutation details in audit metadata for richer manager activity messages
+- Resolve operational actor IDs to organization membership display identities
 
 ## Planned
 

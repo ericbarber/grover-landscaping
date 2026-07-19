@@ -183,6 +183,7 @@ pub struct OperationalActivity {
     pub target_id: String,
     pub actor_user_id: String,
     pub occurred_at: String,
+    pub metadata: serde_json::Value,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -1037,7 +1038,7 @@ async fn list_operational_activity(
     let rows = sqlx::query(
         r#"
         SELECT id, organization_id, event_kind, target_id, actor_user_id,
-            occurred_at::text AS occurred_at
+            occurred_at::text AS occurred_at, metadata::text AS metadata
         FROM access_audit_events
         WHERE organization_id = ANY($1)
           AND event_kind IN (
@@ -1080,6 +1081,8 @@ async fn list_operational_activity(
             target_id: row.get("target_id"),
             actor_user_id: row.get("actor_user_id"),
             occurred_at: row.get("occurred_at"),
+            metadata: serde_json::from_str(&row.get::<String, _>("metadata"))
+                .unwrap_or_else(|_| serde_json::json!({})),
         })
         .collect())
 }

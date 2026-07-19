@@ -25,9 +25,13 @@ describe('persisted operational manager activity', () => {
       targetId: 'plan_1001',
       actorUserId: 'manager_1001',
       occurredAt: '2026-07-19T17:01:00Z',
+      metadata: {
+        stop_id: 'stop_1001',
+        job_id: 'job_1001',
+      },
     })).toMatchObject({
       title: 'Route stop assigned',
-      message: 'plan_1001 · recorded by manager_1001',
+      message: 'plan_1001 · recorded by manager_1001. Assigned job_1001 as stop_1001.',
       source: 'route',
     });
   });
