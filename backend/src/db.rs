@@ -24,6 +24,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
 pub use postgres_stop_progress::StopProgressWriteResult;
+pub use postgres_write::ChecklistWriteResult;
 pub use postgres_write::JobLifecycleWriteResult;
 
 #[derive(Clone, Debug)]
@@ -478,15 +479,24 @@ impl JobRepository {
         job_id: &str,
         item_id: &str,
         completed: bool,
-    ) -> bool {
+        client_mutation_id: Option<&str>,
+        actor_id: &str,
+    ) -> ChecklistWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(persisted) =
-                postgres_write::update_checklist_item(pool, job_id, item_id, completed).await
+            if let Ok(result) = postgres_write::update_checklist_item(
+                pool,
+                job_id,
+                item_id,
+                completed,
+                client_mutation_id,
+                actor_id,
+            )
+            .await
             {
-                return persisted;
+                return result;
             }
         }
-        false
+        ChecklistWriteResult::NotFound
     }
 
     pub async fn update_stop_progress(

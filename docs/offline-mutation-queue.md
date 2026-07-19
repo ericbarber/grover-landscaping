@@ -34,6 +34,10 @@ Checklist items now have touch-sized toggle controls backed by a tenant-guarded
 API write that updates the item and the job's completed-item count in one
 transaction. Failed writes update the visible checklist locally, enter the
 durable queue when tenant/actor context is resolved, and show a pending count.
+Queued checklist changes replay oldest-first per tenant on load, network recovery,
+or manual retry. Their mutation UUID is stored transactionally with the checklist
+and job summary update; exact retries are deduplicated and conflicting reuse
+blocks later checklist replay for review.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current

@@ -19,6 +19,14 @@ pub enum JobLifecycleWriteResult {
     IdempotencyConflict,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChecklistWriteResult {
+    Persisted,
+    Replayed,
+    NotFound,
+    IdempotencyConflict,
+}
+
 async fn claim_job_lifecycle_mutation(
     connection: &mut PgConnection,
     id: &str,
@@ -143,8 +151,62 @@ pub async fn update_checklist_item(
     job_id: &str,
     item_id: &str,
     completed: bool,
-) -> Result<bool, sqlx::Error> {
+    client_mutation_id: Option<&str>,
+    actor_id: &str,
+) -> Result<ChecklistWriteResult, sqlx::Error> {
     let mut transaction = pool.begin().await?;
+    if let Some(client_mutation_id) = client_mutation_id {
+        let inserted = sqlx::query_scalar::<_, String>(
+            r#"
+            INSERT INTO checklist_mutations (
+                client_mutation_id,
+                organization_id,
+                actor_id,
+                job_id,
+                checklist_item_id,
+                requested_completed
+            )
+            SELECT $1::uuid, sj.organization_id, $5, sj.id, jci.id, $4
+            FROM service_jobs sj
+            JOIN job_checklist_items jci ON jci.job_id = sj.id
+            WHERE sj.id = $2 AND jci.id = $3
+            ON CONFLICT (client_mutation_id) DO NOTHING
+            RETURNING client_mutation_id::text
+            "#,
+        )
+        .bind(client_mutation_id)
+        .bind(job_id)
+        .bind(item_id)
+        .bind(completed)
+        .bind(actor_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        if inserted.is_none() {
+            let existing = sqlx::query_as::<_, (String, String, String, bool)>(
+                r#"
+                SELECT actor_id, job_id, checklist_item_id, requested_completed
+                FROM checklist_mutations
+                WHERE client_mutation_id = $1::uuid
+                "#,
+            )
+            .bind(client_mutation_id)
+            .fetch_optional(&mut *transaction)
+            .await?;
+            transaction.rollback().await?;
+            return Ok(match existing {
+                Some((existing_actor, existing_job, existing_item, existing_completed))
+                    if existing_actor == actor_id
+                        && existing_job == job_id
+                        && existing_item == item_id
+                        && existing_completed == completed =>
+                {
+                    ChecklistWriteResult::Replayed
+                }
+                Some(_) => ChecklistWriteResult::IdempotencyConflict,
+                None => ChecklistWriteResult::NotFound,
+            });
+        }
+    }
     let result =
         sqlx::query("UPDATE job_checklist_items SET completed = $3 WHERE job_id = $1 AND id = $2")
             .bind(job_id)
@@ -154,7 +216,7 @@ pub async fn update_checklist_item(
             .await?;
     if result.rows_affected() != 1 {
         transaction.rollback().await?;
-        return Ok(false);
+        return Ok(ChecklistWriteResult::NotFound);
     }
     sqlx::query(
         r#"
@@ -172,7 +234,7 @@ pub async fn update_checklist_item(
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    Ok(true)
+    Ok(ChecklistWriteResult::Persisted)
 }
 
 pub async fn update_job_add_on_status(

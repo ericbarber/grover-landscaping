@@ -2566,12 +2566,14 @@ export async function updateChecklistItem(
   jobId: string,
   checklistItemId: string,
   completed: boolean,
+  clientMutationId?: string,
 ): Promise<JobLifecycleActionResponse> {
   const response = await request<{
     persisted: boolean;
     idempotent_replay?: boolean;
   }>(`/jobs/${jobId}/checklist/${checklistItemId}`, {
     method: 'PUT',
+    headers: clientMutationId ? { 'x-client-mutation-id': clientMutationId } : undefined,
     body: JSON.stringify({ completed }),
   });
   return {

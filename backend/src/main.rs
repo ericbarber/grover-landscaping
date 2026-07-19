@@ -41,11 +41,11 @@ use day_plans::{
     ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
 };
 use db::{
-    CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
-    JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
-    PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
-    PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
-    StopProgressWriteResult,
+    ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
+    JobAddOnStatusUpdate, JobLifecycleWriteResult, JobRepository,
+    PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
+    PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
+    PhotoProcessingRetryResult, StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -4524,6 +4524,7 @@ async fn complete_job(
 async fn update_checklist_item(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
+    headers: HeaderMap,
     Path((id, item_id)): Path<(String, String)>,
     Json(request): Json<ChecklistItemStatusRequest>,
 ) -> Response {
@@ -4532,15 +4533,49 @@ async fn update_checklist_item(
     {
         return response;
     }
+    let client_mutation_id = headers
+        .get("x-client-mutation-id")
+        .and_then(|value| value.to_str().ok());
+    if client_mutation_id.is_some_and(|value| Uuid::parse_str(value).is_err()) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_client_mutation_id",
+                message: "x-client-mutation-id must be a UUID".to_string(),
+            }),
+        )
+            .into_response();
+    }
     let persisted = state
         .jobs
-        .update_checklist_item(&id, &item_id, request.completed)
+        .update_checklist_item(
+            &id,
+            &item_id,
+            request.completed,
+            client_mutation_id,
+            &principal.subject,
+        )
         .await;
+    if persisted == ChecklistWriteResult::IdempotencyConflict {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "checklist_idempotency_conflict",
+                message:
+                    "The client mutation ID was already used for a different checklist change."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    }
     Json(JobLifecycleActionResponse {
         status: "accepted",
         message: format!("Checklist item {item_id} was updated."),
-        persisted,
-        idempotent_replay: false,
+        persisted: matches!(
+            persisted,
+            ChecklistWriteResult::Persisted | ChecklistWriteResult::Replayed
+        ),
+        idempotent_replay: persisted == ChecklistWriteResult::Replayed,
     })
     .into_response()
 }

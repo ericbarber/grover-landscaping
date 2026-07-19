@@ -893,8 +893,10 @@ export function App() {
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
+  const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
   const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
   const jobReplayInProgress = useRef(false);
+  const checklistReplayInProgress = useRef(false);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -1054,6 +1056,53 @@ export function App() {
     }
   }, [auth.userId, jobs]);
 
+  const replayChecklistMutations = useCallback(async () => {
+    if (!auth.userId || !navigator.onLine || checklistReplayInProgress.current) return;
+    checklistReplayInProgress.current = true;
+    setIsReplayingChecklistMutations(true);
+    const organizationIds = Array.from(new Set(
+      jobs.map((job) => job.organizationId).filter((id): id is string => Boolean(id)),
+    ));
+    try {
+      for (const organizationId of organizationIds) {
+        const mutations = (await listOfflineMutations(organizationId, auth.userId))
+          .filter(isChecklistOfflineMutation);
+        for (const mutation of mutations) {
+          if (mutation.syncState === 'conflict') break;
+          try {
+            const result = await updateChecklistItem(
+              mutation.jobId,
+              mutation.checklistItemId,
+              mutation.completed,
+              mutation.id,
+            );
+            if (!result.persisted) {
+              await markOfflineMutationFailed(mutation, 'API used local fallback');
+              break;
+            }
+            await removeOfflineMutation(mutation.id);
+          } catch (error) {
+            await markOfflineMutationFailed(
+              mutation,
+              error instanceof Error ? error.message : 'Checklist sync failed',
+              isOfflineMutationConflict(error) ? 'conflict' : 'failed',
+            );
+            break;
+          }
+        }
+      }
+      const remainingGroups = await Promise.all(
+        organizationIds.map((organizationId) => listOfflineMutations(organizationId, auth.userId!)),
+      );
+      setOfflineChecklistMutations(remainingGroups.flat().filter(isChecklistOfflineMutation));
+    } catch {
+      // Keep the last durable queue snapshot visible.
+    } finally {
+      checklistReplayInProgress.current = false;
+      setIsReplayingChecklistMutations(false);
+    }
+  }, [auth.userId, jobs]);
+
   useEffect(() => {
     if (!auth.userId) {
       setOfflineJobMutations([]);
@@ -1073,17 +1122,23 @@ export function App() {
         setOfflineJobMutations(mutations);
         setOfflineChecklistMutations(groups.flat().filter(isChecklistOfflineMutation));
         if (mutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
+        if (groups.some((group) => group.some(isChecklistOfflineMutation)) && navigator.onLine) {
+          void replayChecklistMutations();
+        }
       })
       .catch(() => {
         if (active) setOfflineJobMutations([]);
       });
-    const handleOnline = () => void replayJobLifecycleMutations();
+    const handleOnline = () => {
+      void replayJobLifecycleMutations();
+      void replayChecklistMutations();
+    };
     window.addEventListener('online', handleOnline);
     return () => {
       active = false;
       window.removeEventListener('online', handleOnline);
     };
-  }, [auth.userId, jobs, replayJobLifecycleMutations]);
+  }, [auth.userId, jobs, replayChecklistMutations, replayJobLifecycleMutations]);
 
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
@@ -2190,9 +2245,27 @@ export function App() {
               </div>
             )}
             {offlineChecklistMutations.length > 0 && (
-              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
-              </p>
+              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                <p>
+                  {offlineChecklistMutations.length} checklist {offlineChecklistMutations.length === 1 ? 'change is' : 'changes are'} queued offline.
+                </p>
+                <p className="mt-1 font-medium">
+                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
+                  {offlineChecklistMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                </p>
+                <button
+                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
+                  disabled={
+                    !navigator.onLine
+                    || isReplayingChecklistMutations
+                    || offlineChecklistMutations.some((mutation) => mutation.syncState === 'conflict')
+                  }
+                  onClick={() => void replayChecklistMutations()}
+                  type="button"
+                >
+                  {isReplayingChecklistMutations ? 'Syncing checklist…' : 'Sync checklist changes'}
+                </button>
+              </div>
             )}
           </div>
 

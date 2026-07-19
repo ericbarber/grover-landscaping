@@ -581,10 +581,11 @@ Current state:
 - Crew job queue review exposes safe action details and two-step reviewed-conflict discard with server-state refresh
 - The offline mutation schema supports tenant/actor-scoped checklist item completion records
 - Crew checklist toggles persist item and summary state transactionally and queue failed writes with mobile pending feedback
+- Queued checklist changes replay ordered per tenant with transactional idempotency, retry-state feedback, and conflict blocking
 
 Next implementation work:
 
-- Add transactional idempotency and ordered replay for queued checklist mutations
+- Add crew-readable checklist queue review and reviewed-conflict recovery
 
 ## Planned
 
