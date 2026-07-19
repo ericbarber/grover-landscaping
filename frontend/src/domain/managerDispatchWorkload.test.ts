@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { YardCareJob } from './jobs';
-import { buildDispatchWorkload, dispatchMoveCapacityImpact } from './managerDispatchWorkload';
+import {
+  buildDispatchWorkload,
+  dispatchMoveCapacityImpact,
+  dispatchMoveOperationalImpact,
+} from './managerDispatchWorkload';
 
 function job(id: string, assignedCrewId: string | undefined, status: YardCareJob['status']): YardCareJob {
   return {
@@ -41,6 +45,24 @@ describe('manager dispatch workload', () => {
       projectedJobs: 2,
       capacity: 1,
       overCapacity: true,
+    });
+  });
+
+  it('explains source workload and customer continuity impact', () => {
+    const moving = job('moving', 'crew_1001', 'scheduled');
+    const impact = dispatchMoveOperationalImpact(
+      [moving, job('source', 'crew_1001', 'scheduled')],
+      moving,
+      'crew_2002',
+      '2026-07-20',
+      4,
+    );
+    expect(impact).toMatchObject({
+      sourceRemainingJobs: 1,
+      projectedJobs: 1,
+      crewChanges: true,
+      dateChanges: true,
+      overCapacity: false,
     });
   });
 });

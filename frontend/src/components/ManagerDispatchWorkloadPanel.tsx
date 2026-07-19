@@ -3,7 +3,7 @@ import { fetchCrews, type CrewRecord } from '../api/client';
 import type { YardCareJob } from '../domain/jobs';
 import {
   buildDispatchWorkload,
-  dispatchMoveCapacityImpact,
+  dispatchMoveOperationalImpact,
 } from '../domain/managerDispatchWorkload';
 
 type ManagerDispatchWorkloadPanelProps = {
@@ -37,9 +37,9 @@ export function ManagerDispatchWorkloadPanel({
   const editingJob = jobs.find((job) => job.id === editingJobId);
   const targetCrew = crews.find((crew) => crew.id === targetCrewId);
   const capacityImpact = editingJob && targetCrew && targetDate
-    ? dispatchMoveCapacityImpact(
+    ? dispatchMoveOperationalImpact(
         jobs,
-        editingJob.id,
+        editingJob,
         targetCrew.id,
         targetDate,
         targetCrew.dailyStopCapacity,
@@ -210,15 +210,24 @@ export function ManagerDispatchWorkloadPanel({
                     </button>
                   </div>
                   {capacityImpact ? (
-                    <p className={`text-xs font-semibold sm:col-span-3 ${
-                      capacityImpact.overCapacity ? 'text-rose-700' : 'text-slate-600'
-                    }`}>
-                      Projected destination workload: {capacityImpact.projectedJobs} of{' '}
-                      {capacityImpact.capacity} active stops.
-                      {capacityImpact.overCapacity
-                        ? ' Select another crew or date before saving.'
-                        : ` ${capacityImpact.capacity - capacityImpact.projectedJobs} stop slots remain.`}
-                    </p>
+                    <div className="space-y-1 rounded-lg bg-slate-50 p-2 text-xs font-semibold sm:col-span-3">
+                      <p className={capacityImpact.overCapacity ? 'text-rose-700' : 'text-slate-600'}>
+                        Destination: {capacityImpact.projectedJobs} of {capacityImpact.capacity} active stops.
+                        {capacityImpact.overCapacity
+                          ? ' Select another crew or date before saving.'
+                          : ` ${capacityImpact.capacity - capacityImpact.projectedJobs} stop slots remain.`}
+                      </p>
+                      <p className="text-slate-600">
+                        Source after move: {capacityImpact.sourceRemainingJobs} active{' '}
+                        {capacityImpact.sourceRemainingJobs === 1 ? 'job' : 'jobs'}.
+                      </p>
+                      <p className={capacityImpact.crewChanges ? 'text-amber-800' : 'text-emerald-800'}>
+                        Customer continuity: {capacityImpact.crewChanges
+                          ? `crew changes from ${editingJob?.assignedCrewId ?? 'unassigned'} to ${targetCrew?.name ?? targetCrewId}.`
+                          : 'existing crew retained.'}
+                        {capacityImpact.dateChanges ? ' Service date also changes.' : ' Service date retained.'}
+                      </p>
+                    </div>
                   ) : null}
                 </form>
               ) : null}

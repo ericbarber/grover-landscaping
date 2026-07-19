@@ -18,6 +18,12 @@ export interface DispatchMoveCapacityImpact {
   overCapacity: boolean;
 }
 
+export interface DispatchMoveOperationalImpact extends DispatchMoveCapacityImpact {
+  sourceRemainingJobs: number;
+  crewChanges: boolean;
+  dateChanges: boolean;
+}
+
 export function dispatchMoveCapacityImpact(
   jobs: YardCareJob[],
   movingJobId: string,
@@ -36,6 +42,32 @@ export function dispatchMoveCapacityImpact(
     projectedJobs,
     capacity,
     overCapacity: projectedJobs > capacity,
+  };
+}
+
+export function dispatchMoveOperationalImpact(
+  jobs: YardCareJob[],
+  movingJob: YardCareJob,
+  crewId: string,
+  scheduledDate: string,
+  capacity: number,
+): DispatchMoveOperationalImpact {
+  const capacityImpact = dispatchMoveCapacityImpact(
+    jobs,
+    movingJob.id,
+    crewId,
+    scheduledDate,
+    capacity,
+  );
+  return {
+    ...capacityImpact,
+    sourceRemainingJobs: jobs.filter((job) =>
+      job.id !== movingJob.id
+      && job.assignedCrewId === movingJob.assignedCrewId
+      && job.scheduledDate === movingJob.scheduledDate
+      && job.status !== 'completed').length,
+    crewChanges: movingJob.assignedCrewId !== crewId,
+    dateChanges: movingJob.scheduledDate !== scheduledDate,
   };
 }
 

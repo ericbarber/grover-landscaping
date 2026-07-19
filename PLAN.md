@@ -478,6 +478,7 @@ Current state:
 - Manager day workload exposes persisted move controls for scheduled jobs with active tenant crew choices and no-op prevention
 - Dispatch move review projects destination active stops against crew daily capacity and blocks overloaded choices before confirmation
 - Persisted job reassignment locks the destination crew and transactionally rejects projected active stops beyond daily capacity
+- Dispatch move review shows remaining source workload and flags crew/date changes as customer-continuity impacts
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -618,7 +619,7 @@ Current state:
 
 Next implementation work:
 
-- Show customer continuity and source/destination workload impacts in dispatch move review
+- Add explicit customer-notification intent and audit context to schedule-changing dispatch moves
 
 ## Planned
 
