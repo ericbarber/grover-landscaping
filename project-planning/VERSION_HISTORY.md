@@ -86,6 +86,7 @@
 - 2026-07-19: Added client photo quality checks and required before/after completion evidence.
 - 2026-07-19: Added server-owned completion-report readiness blocker context.
 - 2026-07-19: Added route-stop and unfinished add-on context to report readiness.
+- 2026-07-19: Fixed Docker API routing and local CORS for Tailscale phone access.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

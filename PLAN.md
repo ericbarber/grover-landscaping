@@ -593,6 +593,7 @@ Current state:
 - Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
 - Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance
 - Completion reports attach current route-stop context and block submission for unfinished stops or approved add-on work
+- Docker mobile access rewrites only loopback API hosts to the page's Tailscale host and enables the existing permissive local CORS policy
 
 Next implementation work:
 
