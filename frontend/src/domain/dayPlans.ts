@@ -16,6 +16,7 @@ export interface DayPlan {
   id: string;
   crewId: string;
   crewName: string;
+  organizationId: string;
   serviceDate: string;
   status: 'draft' | 'published' | 'completed';
   routeStatus: 'manual' | 'optimized';
@@ -26,6 +27,7 @@ export const seedDayPlan: DayPlan = {
   id: 'day_plan_2026_06_15_crew_1001',
   crewId: 'crew_1001',
   crewName: 'North Route Crew',
+  organizationId: 'org_demo_landscaping',
   serviceDate: '2026-06-15',
   status: 'published',
   routeStatus: 'manual',

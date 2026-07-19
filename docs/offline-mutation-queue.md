@@ -16,6 +16,9 @@ responses must never be stored in this database. Sync code must use the current
 authenticated session, confirm that its active organization and actor match the
 queued record, preserve creation ordering, and remove a record only after the API
 confirms persistence.
+The day-plan read contract carries the crew's server-owned organization ID.
+Queue writes and replay use that value rather than a default or first membership,
+so multi-organization users cannot misattribute offline field work.
 
 Stop-progress writes now enter this store when the API rejects the request or
 returns a local-fallback result. Once a tenant has queued progress, later stop

@@ -36,7 +36,6 @@ import {
 type DayPlanPanelProps = {
   actorId?: string | null;
   onSelectJob?: (jobId: string) => void;
-  organizationId?: string | null;
   refreshSignal?: number;
 };
 
@@ -98,7 +97,6 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
 export function DayPlanPanel({
   actorId,
   onSelectJob,
-  organizationId,
   refreshSignal = 0,
 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
@@ -182,13 +180,13 @@ export function DayPlanPanel({
   }
 
   async function queueStopState(stopId: string, status: StopProgressStatus) {
-    if (!organizationId || !actorId) {
+    if (!dayPlan.organizationId || !actorId) {
       setSyncStatus('local');
       return;
     }
     try {
       const mutation = await enqueueStopProgressMutation({
-        organizationId,
+        organizationId: dayPlan.organizationId,
         actorId,
         dayPlanId: dayPlan.id,
         stopId,
@@ -264,11 +262,11 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (!organizationId || !actorId || !navigator.onLine || replayInProgress.current) return;
+    if (!dayPlan.organizationId || !actorId || !navigator.onLine || replayInProgress.current) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
-      const mutations = await listOfflineMutations(organizationId, actorId);
+      const mutations = await listOfflineMutations(dayPlan.organizationId, actorId);
       for (const mutation of mutations) {
         if (mutation.syncState === 'conflict') break;
         try {
@@ -291,7 +289,7 @@ export function DayPlanPanel({
           break;
         }
       }
-      const remaining = await listOfflineMutations(organizationId, actorId);
+      const remaining = await listOfflineMutations(dayPlan.organizationId, actorId);
       setOfflineMutations(remaining);
       if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
     } catch {
@@ -300,7 +298,7 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId, organizationId]);
+  }, [actorId, dayPlan.organizationId]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -370,11 +368,11 @@ export function DayPlanPanel({
   }, [dayPlan.id]);
 
   useEffect(() => {
-    if (!organizationId || !actorId) {
+    if (!dayPlan.organizationId || !actorId) {
       setOfflineMutations([]);
       return;
     }
-    void listOfflineMutations(organizationId, actorId)
+    void listOfflineMutations(dayPlan.organizationId, actorId)
       .then((mutations) => {
         setOfflineMutations(mutations);
         if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
@@ -383,7 +381,7 @@ export function DayPlanPanel({
     const handleOnline = () => void replayOfflineMutations();
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [actorId, organizationId, replayOfflineMutations]);
+  }, [actorId, dayPlan.organizationId, replayOfflineMutations]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">

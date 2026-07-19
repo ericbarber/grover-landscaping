@@ -1910,7 +1910,6 @@ export function App() {
             <DayPlanPanel
               actorId={auth.userId}
               onSelectJob={selectJobForReview}
-              organizationId={auth.memberships[0]?.organizationId ?? activeManagerOrganizationId}
               refreshSignal={dayPlanRefreshSignal}
             />
           </div>

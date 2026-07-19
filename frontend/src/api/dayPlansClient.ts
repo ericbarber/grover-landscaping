@@ -20,6 +20,7 @@ export interface ApiDayPlan {
   id: string;
   crew_id: string;
   crew_name: string;
+  organization_id: string;
   service_date: string;
   status: DayPlan['status'];
   route_status: DayPlan['routeStatus'];
@@ -188,6 +189,7 @@ export function toDayPlan(apiDayPlan: ApiDayPlan): DayPlan {
     id: apiDayPlan.id,
     crewId: apiDayPlan.crew_id,
     crewName: apiDayPlan.crew_name,
+    organizationId: apiDayPlan.organization_id,
     serviceDate: apiDayPlan.service_date,
     status: apiDayPlan.status,
     routeStatus: apiDayPlan.route_status,

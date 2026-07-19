@@ -570,10 +570,11 @@ Current state:
 - Stale or invalid offline transitions become durable conflicts that block blind retry and request manager review
 - Crew queue review shows ordered stop, requested state, queued time, classification, and attempt count without internal error text
 - Two-step reviewed-conflict discard reconciles local stop state and resumes ordered replay without dropping later changes
+- Offline queue tenancy binds to the loaded crew day plan's server-owned organization rather than membership ordering
 
 Next implementation work:
 
-- Bind offline queue tenancy to the loaded day plan instead of a default membership
+- Add server-side idempotency keys for offline stop-progress replay
 
 ## Planned
 

@@ -18,6 +18,7 @@ describe('day plan API client mapping', () => {
       id: 'day_plan_1',
       crew_id: 'crew_1',
       crew_name: 'North Route Crew',
+      organization_id: 'org_1',
       service_date: '2026-06-15',
       status: 'published',
       route_status: 'manual',
@@ -36,7 +37,10 @@ describe('day plan API client mapping', () => {
       ],
     };
 
-    expect(toDayPlan(apiDayPlan).stops[0].stopStatus).toBe('in_progress');
+    expect(toDayPlan(apiDayPlan)).toMatchObject({
+      organizationId: 'org_1',
+      stops: [{ stopStatus: 'in_progress' }],
+    });
   });
 
   it('maps draft day plan mutation responses', () => {
