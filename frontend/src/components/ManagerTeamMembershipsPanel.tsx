@@ -91,9 +91,18 @@ export function summarizeTeamMemberships(memberships: OrganizationMembership[]) 
 
 export function teamMembershipsCsv(memberships: OrganizationMembership[]): string {
   const cell = (value: string) => `"${value.replace(/"/g, '""')}"`;
-  const header = ['display_name', 'identity_id', 'role', 'status', 'scope_type', 'scope_id'];
+  const header = [
+    'display_name',
+    'membership_id',
+    'identity_id',
+    'role',
+    'status',
+    'scope_type',
+    'scope_id',
+  ];
   const rows = memberships.map((membership) => [
     membership.displayName ?? membership.userId,
+    membership.id,
     membership.userId,
     membership.role,
     membership.status,

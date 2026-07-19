@@ -540,10 +540,11 @@ Current state:
 - Touch-safe activity controls copy immutable actor and target IDs with mobile clipboard feedback
 - Mobile member cards copy immutable user identities with success and unavailable-clipboard feedback
 - Owners can reveal and copy immutable membership record IDs without cluttering the default roster
+- Member-directory CSV exports include immutable membership record IDs and user identities
 
 Next implementation work:
 
-- Include membership record IDs in owner team-directory CSV exports
+- Include audit event IDs in owner team-activity CSV exports
 
 ## Planned
 

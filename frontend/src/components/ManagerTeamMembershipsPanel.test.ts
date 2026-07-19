@@ -85,7 +85,7 @@ describe('team membership role controls', () => {
       ...membership('CrewLead'),
       displayName: 'Grover, "Jordan"',
     }])).toContain(
-      '"Grover, ""Jordan""","user_1","CrewLead","active","organization","org_1"',
+      '"Grover, ""Jordan""","membership_1","user_1","CrewLead","active","organization","org_1"',
     );
   });
 
