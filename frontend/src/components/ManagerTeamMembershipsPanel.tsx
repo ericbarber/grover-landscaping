@@ -61,6 +61,18 @@ export function teamMembershipActiveFilterCount(
   return Number(Boolean(query.trim())) + Number(role !== 'all') + Number(status !== 'all');
 }
 
+export function summarizeTeamMemberships(memberships: OrganizationMembership[]) {
+  return {
+    active: memberships.filter((membership) => membership.status === 'active').length,
+    suspended: memberships.filter((membership) => membership.status === 'suspended').length,
+    owners: memberships.filter((membership) => membership.role === 'OrganizationOwner').length,
+    managers: memberships.filter((membership) => membership.role === 'Manager').length,
+    fieldTeam: memberships.filter((membership) => (
+      membership.role === 'CrewLead' || membership.role === 'CrewMember'
+    )).length,
+  };
+}
+
 export function ManagerTeamMembershipsPanel({
   organizationId,
   onTeamChanged,
@@ -93,6 +105,7 @@ export function ManagerTeamMembershipsPanel({
     roleFilter,
     statusFilter,
   );
+  const summary = summarizeTeamMemberships(memberships);
 
   async function refresh() {
     if (!organizationId) return;
@@ -205,6 +218,20 @@ export function ManagerTeamMembershipsPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
+        {[
+          ['Active', summary.active],
+          ['Suspended', summary.suspended],
+          ['Owners', summary.owners],
+          ['Managers', summary.managers],
+          ['Field team', summary.fieldTeam],
+        ].map(([label, value]) => (
+          <div className="rounded-lg bg-slate-50 px-2 py-3" key={label}>
+            <dt className="text-xs text-slate-500">{label}</dt>
+            <dd className="mt-1 text-lg font-bold text-slate-950">{value}</dd>
+          </div>
+        ))}
+      </dl>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="text-xs font-semibold text-slate-700">
           Find member

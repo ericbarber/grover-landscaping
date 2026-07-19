@@ -529,10 +529,11 @@ Current state:
 - Owner team actor search matches readable names or immutable identities across server-paginated history
 - Owner team affected-item search matches readable member, crew, or organization labels and immutable target IDs across persisted history
 - Mobile member and team-activity filters show active-filter counts and offer one-tap clearing
+- Mobile team administration summarizes active, suspended, owner, manager, and field-team counts
 
 Next implementation work:
 
-- Add compact role and status summary counts to owner team administration
+- Add compact access-change and crew-change counts to owner team activity
 
 ## Planned
 

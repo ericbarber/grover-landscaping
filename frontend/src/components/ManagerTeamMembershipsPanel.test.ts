@@ -5,6 +5,7 @@ import {
   canSuspendMembership,
   filterTeamMemberships,
   teamMembershipActiveFilterCount,
+  summarizeTeamMemberships,
 } from './ManagerTeamMembershipsPanel';
 
 const membership = (
@@ -59,5 +60,21 @@ describe('team membership role controls', () => {
   it('counts active team member filters', () => {
     expect(teamMembershipActiveFilterCount('', 'all', 'all')).toBe(0);
     expect(teamMembershipActiveFilterCount('Jordan', 'CrewLead', 'active')).toBe(3);
+  });
+
+  it('summarizes team lifecycle and operating roles', () => {
+    const members = [
+      membership('OrganizationOwner'),
+      { ...membership('Manager', 'suspended'), id: 'membership_2' },
+      { ...membership('CrewLead'), id: 'membership_3' },
+      { ...membership('CrewMember'), id: 'membership_4' },
+    ];
+    expect(summarizeTeamMemberships(members)).toEqual({
+      active: 3,
+      suspended: 1,
+      owners: 1,
+      managers: 1,
+      fieldTeam: 2,
+    });
   });
 });
