@@ -55,6 +55,10 @@ export function firstOwnerProgressMilestones(progress: FirstOwnerSetupProgress) 
   ];
 }
 
+export function firstOwnerNextMilestone(progress: FirstOwnerSetupProgress) {
+  return firstOwnerProgressMilestones(progress).find((milestone) => !milestone.complete) ?? null;
+}
+
 export function FirstOwnerOnboardingPanel({
   onOrganizationReady,
   onOpenSetupStep,
@@ -170,6 +174,7 @@ export function FirstOwnerOnboardingPanel({
   const membership = access?.memberships[0];
   const ownerClaim = access?.claimRoles.includes('OrganizationOwner')
     || access?.claimRoles.includes('SupportAdmin');
+  const nextMilestone = setupProgress ? firstOwnerNextMilestone(setupProgress) : null;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -415,6 +420,25 @@ export function FirstOwnerOnboardingPanel({
               {!setupProgress.persisted ? (
                 <p className="mt-3 text-xs font-medium text-amber-700">Demo progress is local until database persistence is available.</p>
               ) : null}
+              {nextMilestone ? (
+                <button
+                  className="mt-4 min-h-11 w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800"
+                  onClick={() => {
+                    if (nextMilestone.target) {
+                      onOpenSetupStep?.(nextMilestone.target);
+                    } else {
+                      setIsEditingProfile(true);
+                    }
+                  }}
+                  type="button"
+                >
+                  Next: {nextMilestone.label}
+                </button>
+              ) : (
+                <p className="mt-4 rounded-lg bg-emerald-100 px-3 py-3 text-sm font-semibold text-emerald-900">
+                  Launch setup is complete. Refresh after future changes to keep this status current.
+                </p>
+              )}
             </div>
           ) : null}
           <ol className="mt-4 space-y-2">

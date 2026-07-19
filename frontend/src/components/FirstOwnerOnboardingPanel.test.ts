@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { PrincipalAccessSummary } from '../api/client';
 import {
   firstOwnerProgressMilestones,
+  firstOwnerNextMilestone,
   firstOwnerSetupSteps,
   firstOwnerSetupTarget,
 } from './FirstOwnerOnboardingPanel';
@@ -65,5 +66,29 @@ describe('first owner onboarding steps', () => {
       { label: 'Publish the first route', complete: false, target: 'day-plan' },
       { label: 'Invite a team member', complete: false, target: 'team-invitations' },
     ]);
+  });
+
+  it('recommends only the first incomplete launch milestone', () => {
+    const progress = {
+      organizationId: 'org_1',
+      organizationProfileComplete: true,
+      teamInvitationCreated: false,
+      crewConfigured: true,
+      firstRoutePublished: false,
+      completedSteps: 2,
+      totalSteps: 4,
+      persisted: true,
+    };
+
+    expect(firstOwnerNextMilestone(progress)).toMatchObject({
+      label: 'Publish the first route',
+      target: 'day-plan',
+    });
+    expect(firstOwnerNextMilestone({
+      ...progress,
+      teamInvitationCreated: true,
+      firstRoutePublished: true,
+      completedSteps: 4,
+    })).toBeNull();
   });
 });
