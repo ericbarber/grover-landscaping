@@ -5,38 +5,137 @@ use super::{
 use crate::{
     photo_storage::PhotoStorageTicket, PhotoUploadMetadata, PhotoUploadRequest, PhotoUploadResponse,
 };
-use sqlx::{PgPool, Row};
+use sqlx::{PgConnection, PgPool, Row};
 use uuid::Uuid;
 
 const PHOTO_PROCESSING_RETRY_BASE_SECONDS: i32 = 30;
 const PHOTO_PROCESSING_RETRY_MAX_SECONDS: i32 = 900;
 
-pub async fn start_job(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE service_jobs SET status = 'in_progress', updated_at = now() WHERE id = $1")
-        .bind(id)
-        .execute(pool)
-        .await?;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobLifecycleWriteResult {
+    Persisted,
+    Replayed,
+    NotFound,
+    IdempotencyConflict,
+}
+
+async fn claim_job_lifecycle_mutation(
+    connection: &mut PgConnection,
+    id: &str,
+    action: &str,
+    client_mutation_id: Option<&str>,
+    actor_id: &str,
+) -> Result<JobLifecycleWriteResult, sqlx::Error> {
+    let Some(client_mutation_id) = client_mutation_id else {
+        return Ok(JobLifecycleWriteResult::Persisted);
+    };
+    let inserted = sqlx::query_scalar::<_, String>(
+        r#"
+        INSERT INTO job_lifecycle_mutations (
+            client_mutation_id, organization_id, actor_id, job_id, requested_action
+        )
+        SELECT $1::uuid, organization_id, $4, id, $3
+        FROM service_jobs
+        WHERE id = $2
+        ON CONFLICT (client_mutation_id) DO NOTHING
+        RETURNING client_mutation_id::text
+        "#,
+    )
+    .bind(client_mutation_id)
+    .bind(id)
+    .bind(action)
+    .bind(actor_id)
+    .fetch_optional(&mut *connection)
+    .await?;
+    if inserted.is_some() {
+        return Ok(JobLifecycleWriteResult::Persisted);
+    }
+    let existing = sqlx::query_as::<_, (String, String, String)>(
+        "SELECT actor_id, job_id, requested_action FROM job_lifecycle_mutations WHERE client_mutation_id = $1::uuid",
+    )
+    .bind(client_mutation_id)
+    .fetch_optional(&mut *connection)
+    .await?;
+    Ok(match existing {
+        Some((existing_actor, existing_job, existing_action))
+            if existing_actor == actor_id && existing_job == id && existing_action == action =>
+        {
+            JobLifecycleWriteResult::Replayed
+        }
+        Some(_) => JobLifecycleWriteResult::IdempotencyConflict,
+        None => JobLifecycleWriteResult::NotFound,
+    })
+}
+
+pub async fn start_job(
+    pool: &PgPool,
+    id: &str,
+    client_mutation_id: Option<&str>,
+    actor_id: &str,
+) -> Result<JobLifecycleWriteResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let claim =
+        claim_job_lifecycle_mutation(&mut transaction, id, "start", client_mutation_id, actor_id)
+            .await?;
+    if claim != JobLifecycleWriteResult::Persisted {
+        transaction.rollback().await?;
+        return Ok(claim);
+    }
+    let result = sqlx::query(
+        "UPDATE service_jobs SET status = 'in_progress', updated_at = now() WHERE id = $1",
+    )
+    .bind(id)
+    .execute(&mut *transaction)
+    .await?;
+    if result.rows_affected() != 1 {
+        transaction.rollback().await?;
+        return Ok(JobLifecycleWriteResult::NotFound);
+    }
 
     sqlx::query("UPDATE job_checklist_items SET completed = true WHERE job_id = $1 AND id LIKE '%yard_service'")
         .bind(id)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
 
-    Ok(())
+    transaction.commit().await?;
+    Ok(JobLifecycleWriteResult::Persisted)
 }
 
-pub async fn complete_job(pool: &PgPool, id: &str) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE service_jobs SET status = 'completed', completed_checklist_items = checklist_items, updated_at = now() WHERE id = $1")
+pub async fn complete_job(
+    pool: &PgPool,
+    id: &str,
+    client_mutation_id: Option<&str>,
+    actor_id: &str,
+) -> Result<JobLifecycleWriteResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let claim = claim_job_lifecycle_mutation(
+        &mut transaction,
+        id,
+        "complete",
+        client_mutation_id,
+        actor_id,
+    )
+    .await?;
+    if claim != JobLifecycleWriteResult::Persisted {
+        transaction.rollback().await?;
+        return Ok(claim);
+    }
+    let result = sqlx::query("UPDATE service_jobs SET status = 'completed', completed_checklist_items = checklist_items, updated_at = now() WHERE id = $1")
         .bind(id)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
+    if result.rows_affected() != 1 {
+        transaction.rollback().await?;
+        return Ok(JobLifecycleWriteResult::NotFound);
+    }
 
     sqlx::query("UPDATE job_checklist_items SET completed = true WHERE job_id = $1")
         .bind(id)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
 
-    Ok(())
+    transaction.commit().await?;
+    Ok(JobLifecycleWriteResult::Persisted)
 }
 
 pub async fn update_job_add_on_status(

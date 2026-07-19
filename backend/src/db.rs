@@ -24,6 +24,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
 pub use postgres_stop_progress::StopProgressWriteResult;
+pub use postgres_write::JobLifecycleWriteResult;
 
 #[derive(Clone, Debug)]
 pub struct DatabaseConfig {
@@ -440,20 +441,36 @@ impl JobRepository {
         }
     }
 
-    pub async fn start_job(&self, id: &str) -> String {
+    pub async fn start_job(
+        &self,
+        id: &str,
+        client_mutation_id: Option<&str>,
+        actor_id: &str,
+    ) -> JobLifecycleWriteResult {
         if let Some(pool) = &self.pool {
-            let _ = postgres_write::start_job(pool, id).await;
+            if let Ok(result) =
+                postgres_write::start_job(pool, id, client_mutation_id, actor_id).await
+            {
+                return result;
+            }
         }
-
-        format!("Job {id} has been marked as started.")
+        JobLifecycleWriteResult::NotFound
     }
 
-    pub async fn complete_job(&self, id: &str) -> String {
+    pub async fn complete_job(
+        &self,
+        id: &str,
+        client_mutation_id: Option<&str>,
+        actor_id: &str,
+    ) -> JobLifecycleWriteResult {
         if let Some(pool) = &self.pool {
-            let _ = postgres_write::complete_job(pool, id).await;
+            if let Ok(result) =
+                postgres_write::complete_job(pool, id, client_mutation_id, actor_id).await
+            {
+                return result;
+            }
         }
-
-        format!("Job {id} has been marked as complete.")
+        JobLifecycleWriteResult::NotFound
     }
 
     pub async fn update_stop_progress(

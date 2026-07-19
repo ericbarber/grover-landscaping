@@ -21,7 +21,7 @@ use axum::{
     extract::{Extension, Path, Query, State},
     http::{
         header::{AUTHORIZATION, CONTENT_TYPE},
-        HeaderName, HeaderValue, Method, StatusCode,
+        HeaderMap, HeaderName, HeaderValue, Method, StatusCode,
     },
     middleware,
     response::{IntoResponse, Response},
@@ -42,9 +42,10 @@ use day_plans::{
 };
 use db::{
     CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
-    JobRepository, PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
-    PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
-    PhotoProcessingRetryResult, StopProgressWriteResult,
+    JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
+    PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
+    PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+    StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -185,6 +186,14 @@ struct JobAddOnStatusRequest {
 struct ActionResponse {
     status: &'static str,
     message: String,
+}
+
+#[derive(Debug, Serialize)]
+struct JobLifecycleActionResponse {
+    status: &'static str,
+    message: String,
+    persisted: bool,
+    idempotent_replay: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -4397,6 +4406,7 @@ async fn update_stop_progress(
 async fn start_job(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
+    headers: HeaderMap,
     Path(id): Path<String>,
 ) -> Response {
     if let Err(response) =
@@ -4405,13 +4415,45 @@ async fn start_job(
         return response;
     }
 
-    let message = state.jobs.start_job(&id).await;
+    let client_mutation_id = headers
+        .get("x-client-mutation-id")
+        .and_then(|value| value.to_str().ok());
+    if client_mutation_id.is_some_and(|value| Uuid::parse_str(value).is_err()) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_client_mutation_id",
+                message: "x-client-mutation-id must be a UUID".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let result = state
+        .jobs
+        .start_job(&id, client_mutation_id, &principal.subject)
+        .await;
+    if result == JobLifecycleWriteResult::IdempotencyConflict {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "job_lifecycle_idempotency_conflict",
+                message: "The client mutation ID was already used for a different job action."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
 
     (
         StatusCode::ACCEPTED,
-        Json(ActionResponse {
+        Json(JobLifecycleActionResponse {
             status: "accepted",
-            message,
+            message: format!("Job {id} has been marked as started."),
+            persisted: matches!(
+                result,
+                JobLifecycleWriteResult::Persisted | JobLifecycleWriteResult::Replayed
+            ),
+            idempotent_replay: result == JobLifecycleWriteResult::Replayed,
         }),
     )
         .into_response()
@@ -4420,6 +4462,7 @@ async fn start_job(
 async fn complete_job(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
+    headers: HeaderMap,
     Path(id): Path<String>,
 ) -> Response {
     if let Err(response) =
@@ -4428,13 +4471,45 @@ async fn complete_job(
         return response;
     }
 
-    let message = state.jobs.complete_job(&id).await;
+    let client_mutation_id = headers
+        .get("x-client-mutation-id")
+        .and_then(|value| value.to_str().ok());
+    if client_mutation_id.is_some_and(|value| Uuid::parse_str(value).is_err()) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_client_mutation_id",
+                message: "x-client-mutation-id must be a UUID".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let result = state
+        .jobs
+        .complete_job(&id, client_mutation_id, &principal.subject)
+        .await;
+    if result == JobLifecycleWriteResult::IdempotencyConflict {
+        return (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "job_lifecycle_idempotency_conflict",
+                message: "The client mutation ID was already used for a different job action."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
 
     (
         StatusCode::ACCEPTED,
-        Json(ActionResponse {
+        Json(JobLifecycleActionResponse {
             status: "accepted",
-            message,
+            message: format!("Job {id} has been marked as complete."),
+            persisted: matches!(
+                result,
+                JobLifecycleWriteResult::Persisted | JobLifecycleWriteResult::Replayed
+            ),
+            idempotent_replay: result == JobLifecycleWriteResult::Replayed,
         }),
     )
         .into_response()

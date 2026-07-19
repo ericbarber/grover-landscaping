@@ -230,10 +230,10 @@ export async function listOfflineMutations(
 }
 
 export function withOfflineMutationFailure(
-  mutation: StopProgressOfflineMutation,
+  mutation: OfflineMutation,
   lastError: string,
-  syncState: Extract<StopProgressOfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
-): StopProgressOfflineMutation {
+  syncState: Extract<OfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
+): OfflineMutation {
   return {
     ...mutation,
     attemptCount: mutation.attemptCount + 1,
@@ -243,9 +243,9 @@ export function withOfflineMutationFailure(
 }
 
 export async function markOfflineMutationFailed(
-  mutation: StopProgressOfflineMutation,
+  mutation: OfflineMutation,
   lastError: string,
-  syncState: Extract<StopProgressOfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
+  syncState: Extract<OfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
 ): Promise<void> {
   const database = await openOfflineDatabase();
   try {

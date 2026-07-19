@@ -18,6 +18,11 @@ Failed job start and completion requests now enter that queue only when the job
 response carries a server-owned organization and the current actor is known.
 The assigned-jobs section shows a durable pending count and explicitly reports
 when an action remains local because the browser queue is unavailable.
+Job lifecycle replay runs oldest-first per tenant on load, network recovery, or
+manual retry. Each action sends its UUID in `x-client-mutation-id`; PostgreSQL
+records the tenant, actor, job, and action transactionally with the job/checklist
+updates. Exact retries are accepted without reapplying work, while conflicting
+reuse becomes a durable conflict and blocks later actions for that tenant.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current

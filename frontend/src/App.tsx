@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isApiErrorCode } from './api/apiError';
 import {
   completeJob,
@@ -48,8 +48,11 @@ import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { useAuth } from './auth/AuthProvider';
 import {
   enqueueJobLifecycleMutation,
+  isOfflineMutationConflict,
   isJobLifecycleOfflineMutation,
   listOfflineMutations,
+  markOfflineMutationFailed,
+  removeOfflineMutation,
   requestPersistentOfflineStorage,
   type JobLifecycleOfflineMutation,
 } from './domain/offlineMutationQueue';
@@ -877,6 +880,8 @@ export function App() {
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
+  const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
+  const jobReplayInProgress = useRef(false);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -992,6 +997,50 @@ export function App() {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
   }
 
+  const replayJobLifecycleMutations = useCallback(async () => {
+    if (!auth.userId || !navigator.onLine || jobReplayInProgress.current) return;
+    jobReplayInProgress.current = true;
+    setIsReplayingJobMutations(true);
+    const organizationIds = Array.from(new Set(
+      jobs.map((job) => job.organizationId).filter((id): id is string => Boolean(id)),
+    ));
+    try {
+      for (const organizationId of organizationIds) {
+        const mutations = (await listOfflineMutations(organizationId, auth.userId))
+          .filter(isJobLifecycleOfflineMutation);
+        for (const mutation of mutations) {
+          if (mutation.syncState === 'conflict') break;
+          try {
+            const result = mutation.action === 'start'
+              ? await startJob(mutation.jobId, mutation.id)
+              : await completeJob(mutation.jobId, mutation.id);
+            if (!result.persisted) {
+              await markOfflineMutationFailed(mutation, 'API used local fallback');
+              break;
+            }
+            await removeOfflineMutation(mutation.id);
+          } catch (error) {
+            await markOfflineMutationFailed(
+              mutation,
+              error instanceof Error ? error.message : 'Job lifecycle sync failed',
+              isOfflineMutationConflict(error) ? 'conflict' : 'failed',
+            );
+            break;
+          }
+        }
+      }
+      const remainingGroups = await Promise.all(
+        organizationIds.map((organizationId) => listOfflineMutations(organizationId, auth.userId!)),
+      );
+      setOfflineJobMutations(remainingGroups.flat().filter(isJobLifecycleOfflineMutation));
+    } catch {
+      // Keep the last durable queue snapshot visible.
+    } finally {
+      jobReplayInProgress.current = false;
+      setIsReplayingJobMutations(false);
+    }
+  }, [auth.userId, jobs]);
+
   useEffect(() => {
     if (!auth.userId) {
       setOfflineJobMutations([]);
@@ -1005,15 +1054,21 @@ export function App() {
       organizationIds.map((organizationId) => listOfflineMutations(organizationId, auth.userId!)),
     )
       .then((groups) => {
-        if (active) setOfflineJobMutations(groups.flat().filter(isJobLifecycleOfflineMutation));
+        if (!active) return;
+        const mutations = groups.flat().filter(isJobLifecycleOfflineMutation);
+        setOfflineJobMutations(mutations);
+        if (mutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
       })
       .catch(() => {
         if (active) setOfflineJobMutations([]);
       });
+    const handleOnline = () => void replayJobLifecycleMutations();
+    window.addEventListener('online', handleOnline);
     return () => {
       active = false;
+      window.removeEventListener('online', handleOnline);
     };
-  }, [auth.userId, jobs]);
+  }, [auth.userId, jobs, replayJobLifecycleMutations]);
 
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
@@ -1388,7 +1443,8 @@ export function App() {
     }
 
     try {
-      await startJob(selectedJobId);
+      const result = await startJob(selectedJobId);
+      if (!result.persisted) throw new Error('Job start used local fallback');
       setStatusMessage(`Started ${selectedJobId}.`);
     } catch {
       const queued = await queueJobLifecycleAction(selectedJobId, 'start');
@@ -1414,7 +1470,8 @@ export function App() {
     }
 
     try {
-      await completeJob(selectedJobId);
+      const result = await completeJob(selectedJobId);
+      if (!result.persisted) throw new Error('Job completion used local fallback');
       setStatusMessage(`Completed ${selectedJobId}.`);
       recordManagerActivity({
         title: 'Job completion ready',
@@ -1981,9 +2038,27 @@ export function App() {
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
             {offlineJobMutations.length > 0 && (
-              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
-              </p>
+              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                <p>
+                  {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
+                </p>
+                <p className="mt-1 font-medium">
+                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
+                  {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                </p>
+                <button
+                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
+                  disabled={
+                    !navigator.onLine
+                    || isReplayingJobMutations
+                    || offlineJobMutations.some((mutation) => mutation.syncState === 'conflict')
+                  }
+                  onClick={() => void replayJobLifecycleMutations()}
+                  type="button"
+                >
+                  {isReplayingJobMutations ? 'Syncing job changes…' : 'Sync job changes'}
+                </button>
+              </div>
             )}
           </div>
 

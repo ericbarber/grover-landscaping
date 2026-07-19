@@ -2525,12 +2525,41 @@ export async function queueCompletionReportDeliveryNotification(
   return toCompletionReportDeliveryNotification(notification);
 }
 
-export async function startJob(jobId: string): Promise<void> {
-  await request(`/jobs/${jobId}/start`, { method: 'POST' });
+export interface JobLifecycleActionResponse {
+  persisted: boolean;
+  idempotentReplay: boolean;
 }
 
-export async function completeJob(jobId: string): Promise<void> {
-  await request(`/jobs/${jobId}/complete`, { method: 'POST' });
+async function updateJobLifecycle(
+  jobId: string,
+  action: 'start' | 'complete',
+  clientMutationId?: string,
+): Promise<JobLifecycleActionResponse> {
+  const response = await request<{
+    persisted: boolean;
+    idempotent_replay?: boolean;
+  }>(`/jobs/${jobId}/${action}`, {
+    method: 'POST',
+    headers: clientMutationId ? { 'x-client-mutation-id': clientMutationId } : undefined,
+  });
+  return {
+    persisted: response.persisted,
+    idempotentReplay: response.idempotent_replay ?? false,
+  };
+}
+
+export function startJob(
+  jobId: string,
+  clientMutationId?: string,
+): Promise<JobLifecycleActionResponse> {
+  return updateJobLifecycle(jobId, 'start', clientMutationId);
+}
+
+export function completeJob(
+  jobId: string,
+  clientMutationId?: string,
+): Promise<JobLifecycleActionResponse> {
+  return updateJobLifecycle(jobId, 'complete', clientMutationId);
 }
 
 export async function createPhotoUploadTicket(

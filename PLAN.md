@@ -577,10 +577,11 @@ Current state:
 - The first durable field mutation requests persistent browser storage and reports browser-managed retention accurately
 - The offline mutation schema supports tenant/actor-scoped job start and completion records
 - Failed job start and completion actions queue only with resolved server tenancy and show durable mobile pending feedback
+- Queued job lifecycle actions replay ordered per tenant with transactional server idempotency, automatic recovery, manual retry, and conflict blocking
 
 Next implementation work:
 
-- Add idempotent server contracts and ordered replay for queued job lifecycle actions
+- Add crew-readable job lifecycle queue details and reviewed-conflict recovery
 
 ## Planned
 
