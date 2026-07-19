@@ -1,4 +1,4 @@
-import { seedManagerActivityItems, type ManagerActivityItem, type ManagerActivitySource, type ManagerActivityTone } from './managerActivity';
+import type { ManagerActivityItem, ManagerActivitySource, ManagerActivityTone } from './managerActivity';
 
 const managerActivityStorageKey = 'grover.managerActivity.items';
 const maxStoredManagerActivityItems = 20;
@@ -23,7 +23,7 @@ function isManagerActivityItem(value: unknown): value is ManagerActivityItem {
 }
 
 export function readStoredManagerActivityItems(
-  fallbackItems: ManagerActivityItem[] = seedManagerActivityItems,
+  fallbackItems: ManagerActivityItem[] = [],
 ): ManagerActivityItem[] {
   if (typeof window === 'undefined') {
     return fallbackItems;
@@ -44,7 +44,7 @@ export function readStoredManagerActivityItems(
 
     const storedItems = parsedValue.filter(isManagerActivityItem).slice(0, maxStoredManagerActivityItems);
 
-    return storedItems.length > 0 ? storedItems : fallbackItems;
+    return storedItems;
   } catch {
     return fallbackItems;
   }

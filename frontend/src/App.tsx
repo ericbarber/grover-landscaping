@@ -94,7 +94,6 @@ import {
 } from './domain/jobs';
 import {
   prependManagerActivity,
-  seedManagerActivityItems,
   type ManagerActivityItem,
 } from './domain/managerActivity';
 import {
@@ -871,7 +870,7 @@ export function App() {
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
-    readStoredManagerActivityItems(seedManagerActivityItems),
+    readStoredManagerActivityItems(),
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
   const jobDetailRef = useRef<HTMLDivElement>(null);
@@ -979,8 +978,8 @@ export function App() {
   }
 
   function resetManagerActivityHistory() {
-    setManagerActivity(seedManagerActivityItems);
-    setIsManagerActivityPersisted(writeStoredManagerActivityItems(seedManagerActivityItems));
+    setManagerActivity([]);
+    setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
   }
 
   useEffect(() => {

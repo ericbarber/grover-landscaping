@@ -505,10 +505,12 @@ Current state:
 - Tenant-scoped operational activity combines persisted route state with completion-report lifecycle audit events
 - Manager activity refreshes persisted route and report events after schedule and report workflow changes
 - Manager activity includes persisted bid decisions/conversions and photo-processing/privacy recovery events
+- Manager activity starts from persisted operational data instead of demo seed records while retaining current-browser warnings
+- Clearing browser activity preserves tenant-scoped operational history
 
 Next implementation work:
 
-- Replace browser-local manager activity seed records with persisted operational readiness events
+- Add pagination and event-kind filters to operational activity history
 
 ## Planned
 

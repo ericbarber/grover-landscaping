@@ -10,6 +10,7 @@
 - 2026-07-19: Connected persisted customer notification events to manager activity history.
 - 2026-07-19: Connected tenant-scoped route and report events to manager activity history.
 - 2026-07-19: Added persisted bid and photo recovery events to manager activity history.
+- 2026-07-19: Replaced demo manager activity seeds with persisted operational history.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

@@ -84,7 +84,7 @@ export function getManagerActivityEmptyState(
   if (items.length === 0) {
     return {
       title: 'No manager activity has been recorded yet.',
-      message: 'New route reviews, completion evidence, and sync fallback events will appear here.',
+      message: 'Persisted operational events and new runtime warnings will appear here.',
       canResetFilters: false,
     };
   }

@@ -7,7 +7,6 @@ import {
   filterManagerActivityItems,
   getLatestManagerActivityTimestamp,
   getManagerActivityEmptyState,
-  seedManagerActivityItems,
   type ManagerActivityItem,
   type ManagerActivitySource,
   type ManagerActivityTone,
@@ -90,7 +89,7 @@ function readSavedToneFilter(): ActivityToneFilter {
 }
 
 export function ManagerActivityHistoryPanel({
-  items = seedManagerActivityItems,
+  items = [],
   isHistoryPersisted = true,
   onResetHistory,
 }: ManagerActivityHistoryPanelProps) {
@@ -238,7 +237,7 @@ export function ManagerActivityHistoryPanel({
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Manager activity</p>
           <h2 className="mt-1 text-2xl font-bold text-slate-950">Review queue</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Local activity history for route reviews, completion evidence, and sync fallback events.
+            Persisted operational events plus current-browser warnings and fallback activity.
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
@@ -396,8 +395,8 @@ export function ManagerActivityHistoryPanel({
             <button
               aria-label={
                 isConfirmingHistoryReset
-                  ? 'Confirm resetting manager activity history to the default review queue'
-                  : 'Reset manager activity history to the default review queue'
+                  ? 'Confirm clearing browser-only manager activity'
+                  : 'Clear browser-only manager activity'
               }
               className={`text-xs font-semibold underline underline-offset-4 ${
                 isConfirmingHistoryReset ? 'text-amber-700 hover:text-amber-900' : 'text-slate-600 hover:text-slate-950'
@@ -405,7 +404,7 @@ export function ManagerActivityHistoryPanel({
               onClick={handleResetHistoryClick}
               type="button"
             >
-              {isConfirmingHistoryReset ? 'Confirm reset history' : 'Reset activity history'}
+              {isConfirmingHistoryReset ? 'Confirm clear activity' : 'Clear browser activity'}
             </button>
           ) : null}
           {isConfirmingHistoryReset ? (
@@ -423,7 +422,7 @@ export function ManagerActivityHistoryPanel({
 
       {isConfirmingHistoryReset ? (
         <p aria-live="polite" className="mt-2 text-xs font-medium text-amber-700">
-          This will replace runtime activity with the default review queue.
+          This clears browser-only activity. Persisted operational events remain available.
         </p>
       ) : null}
 
