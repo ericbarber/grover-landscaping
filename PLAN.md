@@ -548,6 +548,8 @@ Current state:
 - Public bid, report, invitation, and authenticated dashboard route bodies are lazy-loaded with an accessible loading state
 - Public bid and report startup paths defer the authenticated shell and OIDC bundle, reducing the entry chunk below 5 kB
 - Lazy-route failures render a touch-safe reload recovery screen instead of leaving a blank mobile view
+- Production service-worker caching provides network-first navigation fallback and cache-first static assets without intercepting API traffic or retaining tokenized route keys
+- The service-worker strategy documents cache versioning, security boundaries, and the separation from future offline mutation queues
 - A global mobile banner distinguishes offline state from slow startup across public and authenticated routes
 - Mobile users receive a four-second confirmation when network connectivity returns
 - A global readiness probe distinguishes API downtime from phone connectivity and retries automatically every 30 seconds
@@ -557,7 +559,7 @@ Current state:
 
 Next implementation work:
 
-- Add a production service worker for resilient shell and hashed-asset loading
+- Show production service-worker update availability and offer a controlled reload
 
 ## Planned
 
@@ -608,7 +610,7 @@ Goal: make the daily route and proof-capture workflow dependable from a mobile b
 
 Build scope:
 
-- Add a PWA manifest, installable app metadata, and service worker strategy for shell assets.
+- Validate the delivered PWA manifest, install metadata, and shell service worker on pilot iOS and Android devices.
 - Move queued field mutations into IndexedDB for stop progress, job lifecycle actions, photo completion, checklist updates, and amendment requests.
 - Add sync status and retry controls for each queued mutation type, using consistent pending, persisted, failed, and conflict states.
 - Add client-side photo quality checks for required before/after evidence, minimum previewability, duplicate file selection, and missing evidence before report submission.

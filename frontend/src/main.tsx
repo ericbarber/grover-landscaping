@@ -6,7 +6,10 @@ import { organizationInvitationTokenFromPath } from './domain/organizationInvita
 import { RouteLoadBoundary } from './components/RouteLoadBoundary';
 import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import { ApiStatusBanner } from './components/ApiStatusBanner';
+import { registerProductionServiceWorker } from './registerServiceWorker';
 import './styles.css';
+
+registerProductionServiceWorker();
 
 const CustomerBidReviewPage = React.lazy(
   () => import('./components/CustomerBidReviewPage')
