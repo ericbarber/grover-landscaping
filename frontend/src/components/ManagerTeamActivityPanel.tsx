@@ -92,6 +92,13 @@ export function sortTeamActivity(
   });
 }
 
+export function teamActivityTimestampLabel(occurredAt: string): string {
+  return new Date(occurredAt).toLocaleString([], {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
+
 export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
   return activity.reduce(
     (summary, item) => {
@@ -335,7 +342,7 @@ export function ManagerTeamActivityPanel({
             <div className="flex items-start justify-between gap-3">
               <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
               <time className="shrink-0 text-xs text-slate-500" dateTime={item.occurredAt}>
-                {new Date(item.occurredAt).toLocaleDateString()}
+                {teamActivityTimestampLabel(item.occurredAt)}
               </time>
             </div>
             <p className="mt-1 break-all text-xs text-slate-600">

@@ -5,6 +5,7 @@ import {
   summarizeTeamActivity,
   sortTeamActivity,
   teamActivityCsv,
+  teamActivityTimestampLabel,
   teamActivityActiveFilterCount,
   teamActivityLabel,
 } from './ManagerTeamActivityPanel';
@@ -114,5 +115,11 @@ describe('team administration activity labels', () => {
     expect(sortTeamActivity(activity, 'oldest').map((entry) => entry.id))
       .toEqual(['audit_1', 'audit_2']);
     expect(activity[0].id).toBe('audit_1');
+  });
+
+  it('formats activity with both local date and time detail', () => {
+    const label = teamActivityTimestampLabel('2026-07-19T12:34:00Z');
+    expect(label).toMatch(/2026/);
+    expect(label).toMatch(/34/);
   });
 });

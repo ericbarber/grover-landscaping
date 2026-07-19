@@ -535,10 +535,11 @@ Current state:
 - Owners can export the currently filtered member directory as quoted CSV with identity, role, status, and scope
 - Mobile member administration sorts the visible and exported directory by readable name, role, or status
 - Owner team activity sorts the loaded filtered view and CSV export newest-first or oldest-first without changing pagination cursors
+- Owner team activity shows each event's exact local date and time
 
 Next implementation work:
 
-- Show exact local date and time for owner team activity events
+- Let owners reveal immutable actor and target IDs for individual activity events
 
 ## Planned
 
