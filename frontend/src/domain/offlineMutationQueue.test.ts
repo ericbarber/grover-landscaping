@@ -3,6 +3,7 @@ import {
   createStopProgressOfflineMutation,
   createJobLifecycleOfflineMutation,
   createChecklistOfflineMutation,
+  createPhotoUploadOfflineMutation,
   isOfflineMutationConflict,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
@@ -36,6 +37,38 @@ describe('offline mutation queue records', () => {
       attemptCount: 0,
       syncState: 'pending',
     });
+  });
+
+  it('validates safe offline photo metadata before storing a blob', () => {
+    expect(createPhotoUploadOfflineMutation(
+      {
+        organizationId: 'org-1',
+        actorId: 'user-1',
+        jobId: 'job-1',
+        photoType: 'before',
+        fileName: 'yard.jpg',
+        contentType: 'image/jpeg',
+        fileSizeBytes: 1024,
+      },
+      'mutation-4',
+      new Date('2026-07-19T21:20:00.000Z'),
+    )).toMatchObject({
+      id: 'mutation-4',
+      kind: 'photo_upload',
+      contentType: 'image/jpeg',
+      fileSizeBytes: 1024,
+      syncState: 'pending',
+    });
+
+    expect(() => createPhotoUploadOfflineMutation({
+      organizationId: 'org-1',
+      actorId: 'user-1',
+      jobId: 'job-1',
+      photoType: 'before',
+      fileName: 'document.pdf',
+      contentType: 'application/pdf',
+      fileSizeBytes: 1024,
+    })).toThrow(/JPEG, PNG, GIF, or WebP/);
   });
 
   it('captures tenant and item state for checklist mutations', () => {

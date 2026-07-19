@@ -584,10 +584,11 @@ Current state:
 - Queued checklist changes replay ordered per tenant with transactional idempotency, retry-state feedback, and conflict blocking
 - Crew checklist queue review exposes safe details and two-step reviewed-conflict recovery with server-state refresh
 - Offline photo capture boundaries define atomic blob/metadata storage, validation, privacy, quota, and replay behavior
+- IndexedDB schema version 3 atomically stores validated offline photo metadata and blobs and deletes them together
 
 Next implementation work:
 
-- Implement the versioned IndexedDB photo blob store and atomic queue writes
+- Queue failed photo uploads with durable blob feedback and local previews
 
 ## Planned
 

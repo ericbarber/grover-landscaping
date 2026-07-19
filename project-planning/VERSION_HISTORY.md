@@ -78,6 +78,7 @@
 - 2026-07-19: Added ordered idempotent replay for offline checklist mutations.
 - 2026-07-19: Added crew checklist queue review and reviewed-conflict recovery.
 - 2026-07-19: Defined secure IndexedDB boundaries for offline photo capture and replay.
+- 2026-07-19: Added atomic IndexedDB metadata/blob storage for offline photos.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

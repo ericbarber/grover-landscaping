@@ -2,8 +2,11 @@ import type { StopProgressStatus } from './stopProgress';
 import { ApiRequestError } from '../api/apiError';
 
 const DATABASE_NAME = 'grover-field-offline';
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 const MUTATION_STORE = 'mutations';
+const PHOTO_BLOB_STORE = 'photo_blobs';
+export const MAX_OFFLINE_PHOTO_BYTES = 20 * 1024 * 1024;
+const OFFLINE_PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
 interface OfflineMutationBase {
   id: string;
@@ -35,10 +38,20 @@ export interface ChecklistOfflineMutation extends OfflineMutationBase {
   completed: boolean;
 }
 
+export interface PhotoUploadOfflineMutation extends OfflineMutationBase {
+  kind: 'photo_upload';
+  jobId: string;
+  photoType: 'before' | 'after' | 'issue' | 'extra';
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
+}
+
 export type OfflineMutation =
   | StopProgressOfflineMutation
   | JobLifecycleOfflineMutation
-  | ChecklistOfflineMutation;
+  | ChecklistOfflineMutation
+  | PhotoUploadOfflineMutation;
 
 export interface NewStopProgressOfflineMutation {
   organizationId: string;
@@ -61,6 +74,16 @@ export interface NewChecklistOfflineMutation {
   jobId: string;
   checklistItemId: string;
   completed: boolean;
+}
+
+export interface NewPhotoUploadOfflineMutation {
+  organizationId: string;
+  actorId: string;
+  jobId: string;
+  photoType: PhotoUploadOfflineMutation['photoType'];
+  fileName: string;
+  contentType: string;
+  fileSizeBytes: number;
 }
 
 export interface OfflineMutationSummary {
@@ -141,6 +164,33 @@ export function createChecklistOfflineMutation(
   };
 }
 
+export function createPhotoUploadOfflineMutation(
+  input: NewPhotoUploadOfflineMutation,
+  id: string = crypto.randomUUID(),
+  createdAt = new Date(),
+): PhotoUploadOfflineMutation {
+  if (!OFFLINE_PHOTO_TYPES.has(input.contentType.toLowerCase())) {
+    throw new Error('Offline photos must be JPEG, PNG, GIF, or WebP images.');
+  }
+  if (input.fileSizeBytes <= 0 || input.fileSizeBytes > MAX_OFFLINE_PHOTO_BYTES) {
+    throw new Error('Offline photos must be larger than zero and no more than 20 MiB.');
+  }
+  return {
+    id,
+    kind: 'photo_upload',
+    organizationId: input.organizationId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    photoType: input.photoType,
+    fileName: input.fileName,
+    contentType: input.contentType.toLowerCase(),
+    fileSizeBytes: input.fileSizeBytes,
+    createdAt: createdAt.toISOString(),
+    attemptCount: 0,
+    syncState: 'pending',
+  };
+}
+
 export function isStopProgressOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is StopProgressOfflineMutation {
@@ -157,6 +207,12 @@ export function isChecklistOfflineMutation(
   mutation: OfflineMutation,
 ): mutation is ChecklistOfflineMutation {
   return mutation.kind === 'checklist';
+}
+
+export function isPhotoUploadOfflineMutation(
+  mutation: OfflineMutation,
+): mutation is PhotoUploadOfflineMutation {
+  return mutation.kind === 'photo_upload';
 }
 
 export function createStopProgressOfflineMutation(
@@ -199,6 +255,9 @@ function openOfflineDatabase(): Promise<IDBDatabase> {
           'by_organization_actor_and_created_at',
           ['organizationId', 'actorId', 'createdAt'],
         );
+      }
+      if (!database.objectStoreNames.contains(PHOTO_BLOB_STORE)) {
+        database.createObjectStore(PHOTO_BLOB_STORE);
       }
     };
   });
@@ -252,6 +311,47 @@ export async function enqueueChecklistMutation(
     transaction.objectStore(MUTATION_STORE).put(mutation);
     await waitForTransaction(transaction);
     return mutation;
+  } finally {
+    database.close();
+  }
+}
+
+export async function enqueuePhotoUploadMutation(
+  input: Omit<NewPhotoUploadOfflineMutation, 'contentType' | 'fileSizeBytes'>,
+  blob: Blob,
+): Promise<PhotoUploadOfflineMutation> {
+  const mutation = createPhotoUploadOfflineMutation({
+    ...input,
+    contentType: blob.type,
+    fileSizeBytes: blob.size,
+  });
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(
+      [MUTATION_STORE, PHOTO_BLOB_STORE],
+      'readwrite',
+    );
+    transaction.objectStore(MUTATION_STORE).put(mutation);
+    transaction.objectStore(PHOTO_BLOB_STORE).put(blob, mutation.id);
+    await waitForTransaction(transaction);
+    return mutation;
+  } finally {
+    database.close();
+  }
+}
+
+export async function getOfflinePhotoBlob(mutationId: string): Promise<Blob | null> {
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(PHOTO_BLOB_STORE, 'readonly');
+    const completion = waitForTransaction(transaction);
+    const request = transaction.objectStore(PHOTO_BLOB_STORE).get(mutationId);
+    const blob = await new Promise<Blob | null>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result instanceof Blob ? request.result : null);
+      request.onerror = () => reject(request.error);
+    });
+    await completion;
+    return blob;
   } finally {
     database.close();
   }
@@ -323,8 +423,12 @@ export function isOfflineMutationConflict(error: unknown): boolean {
 export async function removeOfflineMutation(id: string): Promise<void> {
   const database = await openOfflineDatabase();
   try {
-    const transaction = database.transaction(MUTATION_STORE, 'readwrite');
+    const transaction = database.transaction(
+      [MUTATION_STORE, PHOTO_BLOB_STORE],
+      'readwrite',
+    );
     transaction.objectStore(MUTATION_STORE).delete(id);
+    transaction.objectStore(PHOTO_BLOB_STORE).delete(id);
     await waitForTransaction(transaction);
   } finally {
     database.close();

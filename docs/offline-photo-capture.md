@@ -47,3 +47,8 @@ retryable.
 The service worker does not intercept this flow. Background Sync may be added
 later as an accelerator, but visible in-app replay remains the required path
 because iOS support and browser execution budgets vary.
+
+Schema version 3 now adds the `photo_blobs` store. Photo metadata validation
+enforces the documented types and 20 MiB limit before writing. Blob and mutation
+metadata enqueue in one transaction, reads return only browser `Blob` values,
+and mutation removal also removes any matching blob in the same transaction.
