@@ -69,6 +69,7 @@
 - 2026-07-19: Added mobile offline queue age and retry-state summaries.
 - 2026-07-19: Added explicit durable-storage failure guidance for mobile field work.
 - 2026-07-19: Requested persistent browser storage for durable field mutations.
+- 2026-07-19: Extended the offline queue contract to job start and completion actions.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

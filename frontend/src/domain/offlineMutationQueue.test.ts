@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createStopProgressOfflineMutation,
+  createJobLifecycleOfflineMutation,
   isOfflineMutationConflict,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
@@ -31,6 +32,29 @@ describe('offline mutation queue records', () => {
       stopId: 'stop-1',
       status: 'in_progress',
       createdAt: '2026-07-19T20:30:00.000Z',
+      attemptCount: 0,
+      syncState: 'pending',
+    });
+  });
+
+  it('captures tenant, actor, and idempotency context for job lifecycle actions', () => {
+    expect(createJobLifecycleOfflineMutation(
+      {
+        organizationId: 'org-1',
+        actorId: 'user-1',
+        jobId: 'job-1',
+        action: 'complete',
+      },
+      'mutation-2',
+      new Date('2026-07-19T21:00:00.000Z'),
+    )).toEqual({
+      id: 'mutation-2',
+      kind: 'job_lifecycle',
+      organizationId: 'org-1',
+      actorId: 'user-1',
+      jobId: 'job-1',
+      action: 'complete',
+      createdAt: '2026-07-19T21:00:00.000Z',
       attemptCount: 0,
       syncState: 'pending',
     });

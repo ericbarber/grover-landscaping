@@ -10,6 +10,7 @@ import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   enqueueStopProgressMutation,
   isOfflineMutationConflict,
+  isStopProgressOfflineMutation,
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
@@ -282,7 +283,8 @@ export function DayPlanPanel({
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
-      const mutations = await listOfflineMutations(dayPlan.organizationId, actorId);
+      const mutations = (await listOfflineMutations(dayPlan.organizationId, actorId))
+        .filter(isStopProgressOfflineMutation);
       for (const mutation of mutations) {
         if (mutation.syncState === 'conflict') break;
         try {
@@ -306,7 +308,8 @@ export function DayPlanPanel({
           break;
         }
       }
-      const remaining = await listOfflineMutations(dayPlan.organizationId, actorId);
+      const remaining = (await listOfflineMutations(dayPlan.organizationId, actorId))
+        .filter(isStopProgressOfflineMutation);
       setQueueStorageUnavailable(false);
       setOfflineMutations(remaining);
       if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
@@ -395,8 +398,9 @@ export function DayPlanPanel({
     void listOfflineMutations(dayPlan.organizationId, actorId)
       .then((mutations) => {
         setQueueStorageUnavailable(false);
-        setOfflineMutations(mutations);
-        if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
+        const stopMutations = mutations.filter(isStopProgressOfflineMutation);
+        setOfflineMutations(stopMutations);
+        if (stopMutations.length > 0 && navigator.onLine) void replayOfflineMutations();
       })
       .catch(() => {
         setOfflineMutations([]);

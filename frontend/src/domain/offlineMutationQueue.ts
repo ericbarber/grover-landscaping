@@ -5,19 +5,32 @@ const DATABASE_NAME = 'grover-field-offline';
 const DATABASE_VERSION = 2;
 const MUTATION_STORE = 'mutations';
 
-export interface StopProgressOfflineMutation {
+interface OfflineMutationBase {
   id: string;
-  kind: 'stop_progress';
   organizationId: string;
   actorId: string;
-  dayPlanId: string;
-  stopId: string;
-  status: StopProgressStatus;
   createdAt: string;
   attemptCount: number;
   syncState: 'pending' | 'failed' | 'conflict';
   lastError?: string;
 }
+
+export interface StopProgressOfflineMutation extends OfflineMutationBase {
+  kind: 'stop_progress';
+  dayPlanId: string;
+  stopId: string;
+  status: StopProgressStatus;
+}
+
+export interface JobLifecycleOfflineMutation extends OfflineMutationBase {
+  kind: 'job_lifecycle';
+  jobId: string;
+  action: 'start' | 'complete';
+}
+
+export type OfflineMutation =
+  | StopProgressOfflineMutation
+  | JobLifecycleOfflineMutation;
 
 export interface NewStopProgressOfflineMutation {
   organizationId: string;
@@ -25,6 +38,13 @@ export interface NewStopProgressOfflineMutation {
   dayPlanId: string;
   stopId: string;
   status: StopProgressStatus;
+}
+
+export interface NewJobLifecycleOfflineMutation {
+  organizationId: string;
+  actorId: string;
+  jobId: string;
+  action: JobLifecycleOfflineMutation['action'];
 }
 
 export interface OfflineMutationSummary {
@@ -50,7 +70,7 @@ export async function requestPersistentOfflineStorage(
 }
 
 export function summarizeOfflineMutations(
-  mutations: StopProgressOfflineMutation[],
+  mutations: OfflineMutation[],
 ): OfflineMutationSummary {
   return {
     total: mutations.length,
@@ -66,6 +86,30 @@ export function summarizeOfflineMutations(
       0,
     ),
   };
+}
+
+export function createJobLifecycleOfflineMutation(
+  input: NewJobLifecycleOfflineMutation,
+  id: string = crypto.randomUUID(),
+  createdAt = new Date(),
+): JobLifecycleOfflineMutation {
+  return {
+    id,
+    kind: 'job_lifecycle',
+    organizationId: input.organizationId,
+    actorId: input.actorId,
+    jobId: input.jobId,
+    action: input.action,
+    createdAt: createdAt.toISOString(),
+    attemptCount: 0,
+    syncState: 'pending',
+  };
+}
+
+export function isStopProgressOfflineMutation(
+  mutation: OfflineMutation,
+): mutation is StopProgressOfflineMutation {
+  return mutation.kind === 'stop_progress';
 }
 
 export function createStopProgressOfflineMutation(
@@ -136,10 +180,25 @@ export async function enqueueStopProgressMutation(
   }
 }
 
+export async function enqueueJobLifecycleMutation(
+  input: NewJobLifecycleOfflineMutation,
+): Promise<JobLifecycleOfflineMutation> {
+  const mutation = createJobLifecycleOfflineMutation(input);
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(MUTATION_STORE, 'readwrite');
+    transaction.objectStore(MUTATION_STORE).put(mutation);
+    await waitForTransaction(transaction);
+    return mutation;
+  } finally {
+    database.close();
+  }
+}
+
 export async function listOfflineMutations(
   organizationId: string,
   actorId: string,
-): Promise<StopProgressOfflineMutation[]> {
+): Promise<OfflineMutation[]> {
   const database = await openOfflineDatabase();
   try {
     const transaction = database.transaction(MUTATION_STORE, 'readonly');
@@ -152,8 +211,8 @@ export async function listOfflineMutations(
       .objectStore(MUTATION_STORE)
       .index('by_organization_actor_and_created_at')
       .getAll(range);
-    const mutations = await new Promise<StopProgressOfflineMutation[]>((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result as StopProgressOfflineMutation[]);
+    const mutations = await new Promise<OfflineMutation[]>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as OfflineMutation[]);
       request.onerror = () => reject(request.error);
     });
     await completion;

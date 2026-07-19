@@ -11,6 +11,10 @@ The initial record contract covers stop progress and stores:
 - the day plan, stop, and requested progress state; and
 - pending, failed, or conflict state with retry metadata.
 
+The queue schema also accepts job lifecycle records for start and completion.
+They use the same client-generated ID, tenant, actor, ordering, and sync-state
+fields while storing only the job ID and requested lifecycle action.
+
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current
 authenticated session, confirm that its active organization and actor match the
