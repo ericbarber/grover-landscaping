@@ -13,6 +13,11 @@ Use **Run checks again** after changing Wi-Fi, cellular, VPN, or API availabilit
 An API result is bounded by a five-second timeout. The diagnostics page does not
 read authentication state, tenant data, or cached field-work records.
 
+Network and service-worker-control results update while the page is open. **Copy
+safe support details** writes a timestamped text summary containing only origins,
+capability states, and the browser user agent. It deliberately omits the current
+path, query string, authentication state, and customer or tenant data.
+
 An inactive offline shell can be expected on local Vite development, in an
 insecure non-localhost browser context, or before the production service worker
 finishes its first registration. Reload the production page once after initial

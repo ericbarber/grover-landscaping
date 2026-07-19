@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../api/baseUrl';
+import { buildDiagnosticsReport } from '../domain/diagnosticsReport';
 
 type ApiCheck = 'checking' | 'ready' | 'unavailable';
 
@@ -30,8 +31,18 @@ function DiagnosticRow({
 export function MobileDiagnosticsPage() {
   const [apiCheck, setApiCheck] = useState<ApiCheck>('checking');
   const [checkedAt, setCheckedAt] = useState<Date | null>(null);
+  const [online, setOnline] = useState(() => navigator.onLine);
+  const [workerControlsPage, setWorkerControlsPage] = useState(
+    () => Boolean(navigator.serviceWorker?.controller),
+  );
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'unavailable'>('idle');
 
   async function runApiCheck() {
+    if (!navigator.onLine) {
+      setApiCheck('unavailable');
+      setCheckedAt(new Date());
+      return;
+    }
     setApiCheck('checking');
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5_000);
@@ -40,7 +51,7 @@ export function MobileDiagnosticsPage() {
         cache: 'no-store',
         signal: controller.signal,
       });
-      setApiCheck(response.ok ? 'ready' : 'unavailable');
+      setApiCheck(response.ok && navigator.onLine ? 'ready' : 'unavailable');
     } catch {
       setApiCheck('unavailable');
     } finally {
@@ -51,11 +62,52 @@ export function MobileDiagnosticsPage() {
 
   useEffect(() => {
     void runApiCheck();
+    const handleOnline = () => {
+      setOnline(true);
+      void runApiCheck();
+    };
+    const handleOffline = () => {
+      setOnline(false);
+      setApiCheck('unavailable');
+      setCheckedAt(new Date());
+    };
+    const handleControllerChange = () => setWorkerControlsPage(
+      Boolean(navigator.serviceWorker?.controller),
+    );
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    navigator.serviceWorker?.addEventListener('controllerchange', handleControllerChange);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      navigator.serviceWorker?.removeEventListener('controllerchange', handleControllerChange);
+    };
   }, []);
 
   const workerSupported = 'serviceWorker' in navigator;
-  const workerControlsPage = Boolean(navigator.serviceWorker?.controller);
   const apiReady = apiCheck === 'ready';
+  const installedMode = installedDisplayMode();
+
+  async function copySupportDetails() {
+    const report = buildDiagnosticsReport({
+      checkedAt: checkedAt ?? new Date(),
+      origin: window.location.origin,
+      apiBaseUrl: API_BASE_URL,
+      online,
+      apiReady,
+      secureContext: window.isSecureContext,
+      workerSupported,
+      workerControlsPage,
+      installedMode,
+      userAgent: navigator.userAgent,
+    });
+    try {
+      await navigator.clipboard.writeText(report);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('unavailable');
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-950">
@@ -68,9 +120,9 @@ export function MobileDiagnosticsPage() {
 
         <dl className="mt-6 rounded-2xl bg-white px-5 shadow-sm">
           <DiagnosticRow
-            healthy={navigator.onLine}
+            healthy={online}
             label="Browser network"
-            value={navigator.onLine ? 'Online' : 'Offline'}
+            value={online ? 'Online' : 'Offline'}
           />
           <DiagnosticRow
             healthy={apiReady}
@@ -93,9 +145,9 @@ export function MobileDiagnosticsPage() {
             value={workerControlsPage ? 'Active' : 'Not active'}
           />
           <DiagnosticRow
-            healthy={installedDisplayMode()}
+            healthy={installedMode}
             label="Home-screen app"
-            value={installedDisplayMode() ? 'Installed mode' : 'Browser mode'}
+            value={installedMode ? 'Installed mode' : 'Browser mode'}
           />
         </dl>
 
@@ -118,7 +170,23 @@ export function MobileDiagnosticsPage() {
           >
             Return to app
           </a>
+          <button
+            className="min-h-12 rounded-xl border border-slate-400 bg-white px-5 font-bold text-slate-800 sm:col-span-2"
+            onClick={() => void copySupportDetails()}
+            type="button"
+          >
+            Copy safe support details
+          </button>
         </div>
+        {copyStatus !== 'idle' && (
+          <p className={`mt-3 text-sm font-semibold ${
+            copyStatus === 'copied' ? 'text-emerald-800' : 'text-amber-800'
+          }`} role="status">
+            {copyStatus === 'copied'
+              ? 'Support details copied.'
+              : 'Clipboard access is unavailable in this browser.'}
+          </p>
+        )}
       </section>
     </main>
   );

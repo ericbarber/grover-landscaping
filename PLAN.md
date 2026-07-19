@@ -559,10 +559,11 @@ Current state:
 - Production shell updates are announced and applied only after a user-controlled reload
 - Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
 - A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
+- Mobile diagnostics react to network and shell-control changes and copy a token-safe support summary
 
 Next implementation work:
 
-- Make mobile diagnostics react immediately to network changes and expose safe copyable support details
+- Let mobile users share safe diagnostics through the phone share sheet
 
 ## Planned
 

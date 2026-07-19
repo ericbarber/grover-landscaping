@@ -53,6 +53,7 @@
 - 2026-07-19: Added controlled production service-worker update prompts.
 - 2026-07-19: Added Android installation prompts and iPhone home-screen guidance.
 - 2026-07-19: Added a public mobile connectivity and install-state diagnostics page.
+- 2026-07-19: Added live mobile diagnostics and token-safe support-detail copying.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
