@@ -109,6 +109,8 @@ export function DayPlanPanel({
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
   const [offlineMutations, setOfflineMutations] = useState<StopProgressOfflineMutation[]>([]);
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
+  const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
+  const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const replayInProgress = useRef(false);
   const pendingMutationCount = offlineMutations.length;
   const conflictMutationCount = offlineMutations.filter(
@@ -300,6 +302,33 @@ export function DayPlanPanel({
     }
   }, [actorId, organizationId]);
 
+  async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
+    try {
+      await removeOfflineMutation(mutation.id);
+    } catch {
+      setConflictResolutionError(true);
+      return;
+    }
+    setConflictResolutionError(false);
+    const remaining = offlineMutations.filter((item) => item.id !== mutation.id);
+    setOfflineMutations(remaining);
+    setDiscardCandidateId(null);
+    setStopStates((current) => {
+      const next = { ...current };
+      const latestForStop = [...remaining]
+        .reverse()
+        .find((item) => item.stopId === mutation.stopId);
+      if (latestForStop) {
+        next[mutation.stopId] = latestForStop.status;
+      } else {
+        delete next[mutation.stopId];
+      }
+      saveStopStates(dayPlan.id, next);
+      return next;
+    });
+    if (navigator.onLine) await replayOfflineMutations();
+  }
+
   useEffect(() => {
     let isMounted = true;
 
@@ -375,6 +404,11 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
+              {conflictResolutionError && (
+                <p className="mt-1 font-medium text-red-900">
+                  The reviewed conflict could not be removed from this phone. Try again.
+                </p>
+              )}
               <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
                 <summary className="min-h-11 cursor-pointer py-3 font-bold">
                   Review queued changes
@@ -396,6 +430,42 @@ export function DayPlanPanel({
                             ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
                             : ''}
                         </p>
+                        {mutation.syncState === 'conflict' && (
+                          discardCandidateId === mutation.id ? (
+                            <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
+                              <p className="text-red-900">
+                                Confirm a manager reviewed this change. Discarding uses the server or next queued state.
+                              </p>
+                              <div className="mt-2 flex gap-2">
+                                <button
+                                  className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
+                                  onClick={() => void discardReviewedConflict(mutation)}
+                                  type="button"
+                                >
+                                  Discard conflict
+                                </button>
+                                <button
+                                  className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
+                                  onClick={() => setDiscardCandidateId(null)}
+                                  type="button"
+                                >
+                                  Keep change
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
+                              onClick={() => {
+                                setConflictResolutionError(false);
+                                setDiscardCandidateId(mutation.id);
+                              }}
+                              type="button"
+                            >
+                              Resolve after manager review
+                            </button>
+                          )
+                        )}
                       </article>
                     );
                   })}

@@ -569,10 +569,11 @@ Current state:
 - Queued stop progress replays tenant/actor-scoped and oldest-first on load, network recovery, or manual retry
 - Stale or invalid offline transitions become durable conflicts that block blind retry and request manager review
 - Crew queue review shows ordered stop, requested state, queued time, classification, and attempt count without internal error text
+- Two-step reviewed-conflict discard reconciles local stop state and resumes ordered replay without dropping later changes
 
 Next implementation work:
 
-- Add explicit reviewed-conflict discard and resume controls
+- Bind offline queue tenancy to the loaded day plan instead of a default membership
 
 ## Planned
 
