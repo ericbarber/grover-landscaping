@@ -79,4 +79,29 @@ describe('persisted operational manager activity', () => {
       source: 'photo',
     });
   });
+
+  it('surfaces customer follow-up for a schedule-changing dispatch move', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_move_1001',
+      organizationId: 'org_1001',
+      eventKind: 'job_reassigned',
+      targetId: 'job_1001',
+      actorUserId: 'manager_1001',
+      actorLabel: 'Maria Manager',
+      occurredAt: '2026-07-19T17:20:00Z',
+      metadata: {
+        old_crew_id: 'crew_1001',
+        new_crew_id: 'crew_2002',
+        old_scheduled_date: '2026-07-19',
+        new_scheduled_date: '2026-07-20',
+        customer_notification_required: true,
+      },
+    })).toMatchObject({
+      title: 'Scheduled job moved',
+      message: 'job_1001 · recorded by Maria Manager. Moved crew_1001 → crew_2002 · 2026-07-19 → 2026-07-20.',
+      tone: 'warning',
+      source: 'route',
+      recommendedAction: 'Notify the customer about the changed service schedule and record delivery follow-up.',
+    });
+  });
 });

@@ -480,6 +480,7 @@ Current state:
 - Persisted job reassignment locks the destination crew and transactionally rejects projected active stops beyond daily capacity
 - Dispatch move review shows remaining source workload and flags crew/date changes as customer-continuity impacts
 - Date-changing dispatch moves require explicit customer-notification intent and retain it in transactional audit metadata
+- Manager operational activity renders reassignment context and recommends customer follow-up when the audited intent requires notification
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -620,7 +621,7 @@ Current state:
 
 Next implementation work:
 
-- Surface pending dispatch customer-notification follow-up in manager operational activity
+- Add dispatch move confirmation and activity coverage to the live mobile smoke suite
 
 ## Planned
 

@@ -38,6 +38,11 @@ const activityPresentation: Record<
     tone: 'info',
     source: 'route',
   },
+  job_reassigned: {
+    title: 'Scheduled job moved',
+    tone: 'warning',
+    source: 'route',
+  },
   report_review_started: {
     title: 'Completion report review started',
     tone: 'info',
@@ -101,12 +106,25 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
   const stopId = typeof metadata.stop_id === 'string' ? metadata.stop_id : undefined;
   const jobId = typeof metadata.job_id === 'string' ? metadata.job_id : undefined;
   const stopCount = typeof metadata.stop_count === 'number' ? metadata.stop_count : undefined;
+  const oldCrewId = typeof metadata.old_crew_id === 'string' ? metadata.old_crew_id : 'unassigned';
+  const newCrewId = typeof metadata.new_crew_id === 'string' ? metadata.new_crew_id : 'unassigned';
+  const oldScheduledDate = typeof metadata.old_scheduled_date === 'string'
+    ? metadata.old_scheduled_date
+    : undefined;
+  const newScheduledDate = typeof metadata.new_scheduled_date === 'string'
+    ? metadata.new_scheduled_date
+    : undefined;
+  const customerNotificationRequired = metadata.customer_notification_required === true;
   const details = activity.eventKind === 'route_stop_assigned' && stopId && jobId
     ? ` Assigned ${jobId} as ${stopId}.`
     : activity.eventKind === 'route_stop_removed' && stopId
       ? ` Removed ${stopId}.`
       : activity.eventKind === 'route_stops_reordered' && stopCount !== undefined
         ? ` Reordered ${stopCount} stops.`
+        : activity.eventKind === 'job_reassigned'
+          ? ` Moved ${oldCrewId} → ${newCrewId}${oldScheduledDate && newScheduledDate
+            ? ` · ${oldScheduledDate} → ${newScheduledDate}`
+            : ''}.`
         : '';
   return {
     id: `operational_${activity.id}`,
@@ -115,7 +133,9 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
     tone: presentation.tone,
     source: presentation.source,
     occurredAt: activity.occurredAt,
-    recommendedAction: presentation.recommendedAction,
+    recommendedAction: activity.eventKind === 'job_reassigned' && customerNotificationRequired
+      ? 'Notify the customer about the changed service schedule and record delivery follow-up.'
+      : presentation.recommendedAction,
   };
 }
 

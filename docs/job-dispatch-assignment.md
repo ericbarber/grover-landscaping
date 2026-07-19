@@ -34,6 +34,10 @@ notification intent. That decision is retained in the reassignment audit
 metadata so office staff can distinguish customer follow-up still required from
 a move where notification was intentionally unnecessary.
 
+`job_reassigned` events appear in manager operational activity with the
+old/new crew and service dates. Events whose notification intent is required
+carry a specific customer follow-up recommendation.
+
 The API repeats this capacity calculation while holding a lock on the
 destination crew. Concurrent dispatch requests therefore cannot both consume
 the final slot, and an overloaded request returns `crew_capacity_exceeded`

@@ -504,6 +504,7 @@ export type OperationalActivityEventKind =
   | 'route_stop_assigned'
   | 'route_stop_removed'
   | 'route_stops_reordered'
+  | 'job_reassigned'
   | 'report_review_started'
   | 'report_changes_requested'
   | 'report_resubmitted'
