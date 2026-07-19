@@ -50,15 +50,18 @@ import { useAuth } from './auth/AuthProvider';
 import {
   enqueueChecklistMutation,
   enqueueJobLifecycleMutation,
+  enqueuePhotoUploadMutation,
   isChecklistOfflineMutation,
   isOfflineMutationConflict,
   isJobLifecycleOfflineMutation,
+  isPhotoUploadOfflineMutation,
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
   type ChecklistOfflineMutation,
   type JobLifecycleOfflineMutation,
+  type PhotoUploadOfflineMutation,
 } from './domain/offlineMutationQueue';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import { CompletionReport } from './components/CompletionReport';
@@ -892,6 +895,7 @@ export function App() {
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
+  const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
   const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
@@ -1108,6 +1112,7 @@ export function App() {
     if (!auth.userId) {
       setOfflineJobMutations([]);
       setOfflineChecklistMutations([]);
+      setOfflinePhotoMutations([]);
       return;
     }
     const organizationIds = Array.from(new Set(
@@ -1122,6 +1127,7 @@ export function App() {
         const mutations = groups.flat().filter(isJobLifecycleOfflineMutation);
         setOfflineJobMutations(mutations);
         setOfflineChecklistMutations(groups.flat().filter(isChecklistOfflineMutation));
+        setOfflinePhotoMutations(groups.flat().filter(isPhotoUploadOfflineMutation));
         if (mutations.length > 0 && navigator.onLine) void replayJobLifecycleMutations();
         if (groups.some((group) => group.some(isChecklistOfflineMutation)) && navigator.onLine) {
           void replayChecklistMutations();
@@ -2102,10 +2108,36 @@ export function App() {
       });
     } catch {
       ticket = localPhotoTicket(selectedJobId, file, photoType);
-      setStatusMessage(`Prepared ${photoType} photo locally because the API is not reachable.`);
+      let queued = false;
+      if (selectedJob?.organizationId && auth.userId) {
+        try {
+          const mutation = await enqueuePhotoUploadMutation(
+            {
+              organizationId: selectedJob.organizationId,
+              actorId: auth.userId,
+              jobId: selectedJobId,
+              photoType,
+              fileName: file.name,
+            },
+            file,
+          );
+          setOfflinePhotoMutations((current) => [...current, mutation]);
+          void requestPersistentOfflineStorage();
+          queued = true;
+        } catch {
+          queued = false;
+        }
+      }
+      setStatusMessage(
+        queued
+          ? `Saved ${photoType} photo in the durable offline queue.`
+          : `Prepared ${photoType} photo locally, but it could not be queued for offline upload.`,
+      );
       recordManagerActivity({
-        title: 'Photo evidence saved locally',
-        message: `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
+        title: queued ? 'Photo evidence queued offline' : 'Photo evidence saved locally',
+        message: queued
+          ? `${photoType} photo evidence for ${selectedJobId} is queued durably until the API is reachable.`
+          : `${photoType} photo evidence for ${selectedJobId} is browser-local until the API is reachable.`,
         tone: 'warning',
         source: 'photo',
       });
@@ -2350,6 +2382,11 @@ export function App() {
                   {isReplayingChecklistMutations ? 'Syncing checklist…' : 'Sync checklist changes'}
                 </button>
               </div>
+            )}
+            {offlinePhotoMutations.length > 0 && (
+              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
+              </p>
             )}
           </div>
 

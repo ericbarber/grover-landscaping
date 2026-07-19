@@ -52,3 +52,7 @@ Schema version 3 now adds the `photo_blobs` store. Photo metadata validation
 enforces the documented types and 20 MiB limit before writing. Blob and mutation
 metadata enqueue in one transaction, reads return only browser `Blob` values,
 and mutation removal also removes any matching blob in the same transaction.
+Failed photo workflows now keep the existing in-memory preview and attempt the
+atomic blob/metadata transaction using the loaded job tenant and current actor.
+Only a committed transaction receives durable-queue messaging and contributes to
+the mobile pending-photo count.
