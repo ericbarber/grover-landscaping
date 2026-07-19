@@ -93,6 +93,9 @@ describe('team administration activity labels', () => {
     expect(teamActivityCsv([item])).toContain(
       '"Grover, ""Jordan""","owner-1","Alex Rivera","membership_1"',
     );
+    expect(teamActivityCsv([item])).toContain(
+      '"2026-07-19T12:00:00Z","audit_1","Membership role changed"',
+    );
   });
 
   it('sorts a copy of loaded activity newest or oldest first', () => {

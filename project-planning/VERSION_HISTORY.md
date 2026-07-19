@@ -36,6 +36,7 @@
 - 2026-07-19: Added mobile copy controls for member identities.
 - 2026-07-19: Added expandable membership record IDs to mobile team administration.
 - 2026-07-19: Added membership record IDs to team-directory CSV exports.
+- 2026-07-19: Added audit event IDs to owner activity CSV exports.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

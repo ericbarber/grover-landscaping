@@ -119,6 +119,7 @@ function csvCell(value: string): string {
 export function teamActivityCsv(activity: TeamAdministrationActivity[]): string {
   const header = [
     'occurred_at',
+    'audit_event_id',
     'event',
     'actor_label',
     'actor_id',
@@ -127,6 +128,7 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
   ];
   const rows = activity.map((item) => [
     item.occurredAt,
+    item.id,
     teamActivityLabel(item.eventKind),
     item.actorLabel,
     item.actorUserId,
