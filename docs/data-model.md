@@ -59,6 +59,7 @@ updated_at
 
 Crews belong to a service-company organization. Day plans inherit their tenant boundary through the assigned crew, and manager/crew route APIs resolve that organization before returning or mutating day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan outside the signed-in principal's active organization memberships are rejected before local fallback responses are used.
 Crew names are case-insensitively unique within their organization, allowing separate tenants to use the same operational labels while preventing ambiguous route selection inside one tenant.
+Crews have an `active` or `inactive` lifecycle status. Inactive crews are excluded from new property assignments and day-plan creation. Deactivation is rejected while a crew owns an active property assignment or a current draft/published route, preventing lifecycle administration from orphaning operational work.
 
 New draft day plans snapshot the crew organization's current timezone, service-area label, and default daily stop capacity. Later profile changes therefore affect future drafts without silently changing an existing route's planning assumptions.
 Stop assignment checks the snapshot atomically, preventing concurrent manager edits from exceeding the route capacity while still allowing an existing stop assignment to be updated.

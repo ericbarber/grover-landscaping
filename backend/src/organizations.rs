@@ -772,6 +772,7 @@ async fn first_owner_setup_progress(
                 SELECT 1
                 FROM crews crew
                 WHERE crew.organization_id = organization.id
+                  AND crew.status = 'active'
             ) AS crew_configured,
             EXISTS (
                 SELECT 1

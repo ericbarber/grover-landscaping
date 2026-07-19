@@ -10,12 +10,14 @@ import {
   type FirstOwnerSetupProgress,
   type CrewRecord,
 } from '../api/client';
+import { OwnerCrewAdministrationPanel } from './OwnerCrewAdministrationPanel';
 
 type Props = {
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
   onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
   refreshSignal?: number;
   onCrewCreated?: (crew: CrewRecord) => void;
+  onCrewChanged?: (crew: CrewRecord) => void;
 };
 
 export type FirstOwnerSetupTarget =
@@ -68,6 +70,7 @@ export function FirstOwnerOnboardingPanel({
   onOpenSetupStep,
   refreshSignal = 0,
   onCrewCreated,
+  onCrewChanged,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -497,6 +500,13 @@ export function FirstOwnerOnboardingPanel({
                 {isCreatingCrew ? 'Creating crew…' : 'Create crew'}
               </button>
             </div>
+          ) : null}
+          {membership && setupProgress?.crewConfigured ? (
+            <OwnerCrewAdministrationPanel
+              organizationId={membership.organizationId}
+              onCrewChanged={onCrewChanged}
+              refreshSignal={refreshSignal}
+            />
           ) : null}
           <ol className="mt-4 space-y-2">
             {firstOwnerSetupSteps(access).map((step, index) => {

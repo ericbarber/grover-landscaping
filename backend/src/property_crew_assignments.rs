@@ -189,6 +189,7 @@ async fn insert_property_crew_assignment(
              AND property.status <> 'archived'
             WHERE crew.id = $1
               AND crew.organization_id = $2
+              AND crew.status = 'active'
         )
         "#,
     )

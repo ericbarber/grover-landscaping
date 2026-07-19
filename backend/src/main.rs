@@ -38,7 +38,7 @@ use day_plans::{
     validate_amendment_request, validate_amendment_review, validate_create_crew_name,
     AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
     CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
-    ReviewDayPlanAmendmentRequest,
+    ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
 };
 use db::{
     CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
@@ -644,7 +644,11 @@ fn app_with_runtime(
         .route("/crews", get(list_crews))
         .route(
             "/organizations/{organization_id}/crews",
-            post(create_organization_crew),
+            get(list_organization_crews).post(create_organization_crew),
+        )
+        .route(
+            "/organizations/{organization_id}/crews/{crew_id}",
+            put(update_organization_crew),
         )
         .route(
             "/crews/{crew_id}/property-assignments/active",
@@ -2074,6 +2078,89 @@ async fn create_organization_crew(
             }),
         )
             .into_response(),
+    }
+}
+
+async fn list_organization_crews(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    Json(
+        state
+            .day_plans
+            .list_organization_crews(&organization_id)
+            .await,
+    )
+    .into_response()
+}
+
+async fn update_organization_crew(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, crew_id)): Path<(String, String)>,
+    Json(request): Json<UpdateCrewRequest>,
+) -> Response {
+    if let Err(reason) = validate_create_crew_name(&request.name) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew",
+                message: format!("Crew is invalid: {reason}."),
+            }),
+        )
+            .into_response();
+    }
+    if !matches!(request.status.trim(), "active" | "inactive") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew",
+                message: "Crew status must be active or inactive.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .day_plans
+        .update_crew(&organization_id, &crew_id, &principal.subject, request)
+        .await
+    {
+        UpdateCrewResult::Updated(crew) => Json(crew).into_response(),
+        UpdateCrewResult::OperationalConflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "crew_has_active_work",
+                message:
+                    "Reassign active properties and current routes before deactivating this crew."
+                        .to_string(),
+            }),
+        )
+            .into_response(),
+        UpdateCrewResult::NotFound => resource_not_found_response(
+            "crew_not_found",
+            "The requested crew was not found in this organization.",
+        ),
     }
 }
 
@@ -4541,6 +4628,30 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["name"], "South Route");
         assert_eq!(json["organization_id"], "org_demo_landscaping");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn organization_crew_endpoint_updates_local_crew_lifecycle() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/crews/crew_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"name":"North Operations Crew","status":"inactive"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["name"], "North Operations Crew");
+        assert_eq!(json["status"], "inactive");
         assert_eq!(json["persisted"], false);
     }
 

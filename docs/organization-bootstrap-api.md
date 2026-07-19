@@ -70,3 +70,9 @@ state from fallback route data.
 crew for an active organization owner. Names are trimmed, contain 2–120
 characters, and are unique within an organization without regard to case. The
 mobile first-user workspace exposes this action whenever crew setup is incomplete.
+
+`GET /organizations/{organization_id}/crews` lists active and inactive crews for
+owner administration. `PUT /organizations/{organization_id}/crews/{crew_id}`
+renames a crew or changes its active/inactive status. Deactivation requires active
+property assignments and current routes to be reassigned first. Lifecycle changes
+write tenant-scoped audit events.

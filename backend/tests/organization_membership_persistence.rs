@@ -1,6 +1,6 @@
 use grover_landscaping_api::{
     access_control::{can_manage_schedule, AccessRole},
-    day_plans::{CreateCrewRequest, DayPlanRepository},
+    day_plans::{CreateCrewRequest, DayPlanRepository, UpdateCrewRequest, UpdateCrewResult},
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
@@ -190,6 +190,87 @@ async fn repository_bootstraps_first_owner_once() {
             .expect("updated owner setup progress should be available")
             .crew_configured
     );
+
+    let current_service_date: String = sqlx::query_scalar("SELECT CURRENT_DATE::text")
+        .fetch_one(&pool)
+        .await
+        .expect("current service date should be available");
+    let current_draft = day_plans
+        .create_draft_day_plan(grover_landscaping_api::day_plans::CreateDayPlanRequest {
+            crew_id: crew.id.clone(),
+            service_date: current_service_date,
+        })
+        .await;
+    assert!(current_draft.persisted);
+    let blocked_deactivation = day_plans
+        .update_crew(
+            &created.organization_id,
+            &crew.id,
+            &user_id,
+            UpdateCrewRequest {
+                name: crew.name.clone(),
+                status: "inactive".to_string(),
+            },
+        )
+        .await;
+    assert_eq!(blocked_deactivation, UpdateCrewResult::OperationalConflict);
+    sqlx::query("DELETE FROM day_plans WHERE id = $1")
+        .bind(&current_draft.id)
+        .execute(&pool)
+        .await
+        .expect("blocking test draft should be removed");
+
+    let renamed = day_plans
+        .update_crew(
+            &created.organization_id,
+            &crew.id,
+            &user_id,
+            UpdateCrewRequest {
+                name: "First Owner Operations".to_string(),
+                status: "inactive".to_string(),
+            },
+        )
+        .await;
+    let UpdateCrewResult::Updated(renamed) = renamed else {
+        panic!("unassigned crew should be editable and deactivatable");
+    };
+    assert_eq!(renamed.name, "First Owner Operations");
+    assert_eq!(renamed.status, "inactive");
+    assert!(
+        !organizations
+            .first_owner_setup_progress(&created.organization_id)
+            .await
+            .expect("inactive crew progress should be available")
+            .crew_configured
+    );
+
+    let reactivated = day_plans
+        .update_crew(
+            &created.organization_id,
+            &crew.id,
+            &user_id,
+            UpdateCrewRequest {
+                name: renamed.name,
+                status: "active".to_string(),
+            },
+        )
+        .await;
+    assert!(matches!(reactivated, UpdateCrewResult::Updated(_)));
+    let crew_audit_count: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COUNT(*)
+        FROM access_audit_events
+        WHERE organization_id = $1
+          AND target_id = $2
+          AND event_kind IN ('crew_deactivated', 'crew_reactivated')
+        "#,
+    )
+    .bind(&created.organization_id)
+    .bind(&crew.id)
+    .fetch_one(&pool)
+    .await
+    .expect("crew lifecycle audit should be countable");
+    assert_eq!(crew_audit_count, 2);
     assert_eq!(
         organizations
             .organization_profile(&created.organization_id)

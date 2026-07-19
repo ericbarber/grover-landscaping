@@ -36,12 +36,26 @@ pub struct CrewSummary {
     pub id: String,
     pub name: String,
     pub organization_id: String,
+    pub status: String,
     pub persisted: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct CreateCrewRequest {
     pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateCrewRequest {
+    pub name: String,
+    pub status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateCrewResult {
+    Updated(CrewSummary),
+    OperationalConflict,
+    NotFound,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -189,9 +203,10 @@ impl DayPlanRepository {
             return seed_crews(organization_ids);
         };
         let rows = sqlx::query(
-            r#"SELECT id, name, organization_id
+            r#"SELECT id, name, organization_id, status
             FROM crews
             WHERE organization_id = ANY($1)
+              AND status = 'active'
             ORDER BY name, id"#,
         )
         .bind(organization_ids)
@@ -203,6 +218,7 @@ impl DayPlanRepository {
                 id: row.get("id"),
                 name: row.get("name"),
                 organization_id: row.get("organization_id"),
+                status: row.get("status"),
                 persisted: true,
             })
             .collect()
@@ -228,8 +244,53 @@ impl DayPlanRepository {
             id,
             name: name.to_string(),
             organization_id: organization_id.to_string(),
+            status: "active".to_string(),
             persisted: false,
         })
+    }
+
+    pub async fn list_organization_crews(&self, organization_id: &str) -> Vec<CrewSummary> {
+        if let Some(pool) = &self.pool {
+            return postgres_day_plans::list_organization_crews(pool, organization_id)
+                .await
+                .unwrap_or_default();
+        }
+        seed_crews(&[organization_id.to_string()])
+    }
+
+    pub async fn update_crew(
+        &self,
+        organization_id: &str,
+        crew_id: &str,
+        actor_user_id: &str,
+        request: UpdateCrewRequest,
+    ) -> UpdateCrewResult {
+        let name = request.name.trim();
+        let status = request.status.trim();
+        if validate_create_crew_name(name).is_err() || !matches!(status, "active" | "inactive") {
+            return UpdateCrewResult::NotFound;
+        }
+        if let Some(pool) = &self.pool {
+            return postgres_day_plans::update_crew(
+                pool,
+                organization_id,
+                crew_id,
+                actor_user_id,
+                name,
+                status,
+            )
+            .await
+            .unwrap_or(UpdateCrewResult::NotFound);
+        }
+        let Some(mut crew) = seed_crews(&[organization_id.to_string()])
+            .into_iter()
+            .find(|crew| crew.id == crew_id)
+        else {
+            return UpdateCrewResult::NotFound;
+        };
+        crew.name = name.to_string();
+        crew.status = status.to_string();
+        UpdateCrewResult::Updated(crew)
     }
 
     pub async fn organization_id_for_day_plan(&self, day_plan_id: &str) -> Option<String> {
@@ -710,6 +771,7 @@ fn seed_crews(organization_ids: &[String]) -> Vec<CrewSummary> {
         id: "crew_1001".to_string(),
         name: "North Route Crew".to_string(),
         organization_id: "org_demo_landscaping".to_string(),
+        status: "active".to_string(),
         persisted: false,
     }]
 }

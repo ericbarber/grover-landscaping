@@ -6,6 +6,7 @@ use crate::day_plans::{
 use std::collections::HashSet;
 
 use sqlx::{PgPool, Row};
+use uuid::Uuid;
 
 pub async fn create_crew(
     pool: &PgPool,
@@ -21,7 +22,7 @@ pub async fn create_crew(
         WHERE organization.id = $2
           AND organization.status = 'active'
         ON CONFLICT DO NOTHING
-        RETURNING id, name, organization_id
+        RETURNING id, name, organization_id, status
         "#,
     )
     .bind(id)
@@ -34,6 +35,146 @@ pub async fn create_crew(
         id: row.get("id"),
         name: row.get("name"),
         organization_id: row.get("organization_id"),
+        status: row.get("status"),
+        persisted: true,
+    }))
+}
+
+pub async fn list_organization_crews(
+    pool: &PgPool,
+    organization_id: &str,
+) -> Result<Vec<crate::day_plans::CrewSummary>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT id, name, organization_id, status
+        FROM crews
+        WHERE organization_id = $1
+        ORDER BY status, name, id
+        "#,
+    )
+    .bind(organization_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|row| crate::day_plans::CrewSummary {
+            id: row.get("id"),
+            name: row.get("name"),
+            organization_id: row.get("organization_id"),
+            status: row.get("status"),
+            persisted: true,
+        })
+        .collect())
+}
+
+pub async fn update_crew(
+    pool: &PgPool,
+    organization_id: &str,
+    crew_id: &str,
+    actor_user_id: &str,
+    name: &str,
+    status: &str,
+) -> Result<crate::day_plans::UpdateCrewResult, sqlx::Error> {
+    use crate::day_plans::UpdateCrewResult;
+
+    let mut tx = pool.begin().await?;
+    let current_status: Option<String> = sqlx::query_scalar(
+        r#"
+        SELECT status
+        FROM crews
+        WHERE id = $1
+          AND organization_id = $2
+        FOR UPDATE
+        "#,
+    )
+    .bind(crew_id)
+    .bind(organization_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some(current_status) = current_status else {
+        tx.rollback().await?;
+        return Ok(UpdateCrewResult::NotFound);
+    };
+
+    if current_status == "active" && status == "inactive" {
+        let has_operational_work: bool = sqlx::query_scalar(
+            r#"
+            SELECT
+                EXISTS (
+                    SELECT 1
+                    FROM property_crew_assignments assignment
+                    WHERE assignment.crew_id = $1
+                      AND assignment.organization_id = $2
+                      AND assignment.active = TRUE
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM day_plans plan
+                    WHERE plan.crew_id = $1
+                      AND plan.status IN ('draft', 'published')
+                      AND plan.service_date >= CURRENT_DATE
+                )
+            "#,
+        )
+        .bind(crew_id)
+        .bind(organization_id)
+        .fetch_one(&mut *tx)
+        .await?;
+        if has_operational_work {
+            tx.rollback().await?;
+            return Ok(UpdateCrewResult::OperationalConflict);
+        }
+    }
+
+    let row = sqlx::query(
+        r#"
+        UPDATE crews
+        SET name = $3,
+            status = $4,
+            updated_at = NOW()
+        WHERE id = $1
+          AND organization_id = $2
+        RETURNING id, name, organization_id, status
+        "#,
+    )
+    .bind(crew_id)
+    .bind(organization_id)
+    .bind(name)
+    .bind(status)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    let event_kind = if current_status != status {
+        if status == "active" {
+            "crew_reactivated"
+        } else {
+            "crew_deactivated"
+        }
+    } else {
+        "crew_profile_updated"
+    };
+    sqlx::query(
+        r#"
+        INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        "#,
+    )
+    .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(organization_id)
+    .bind(event_kind)
+    .bind(crew_id)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(UpdateCrewResult::Updated(crate::day_plans::CrewSummary {
+        id: row.get("id"),
+        name: row.get("name"),
+        organization_id: row.get("organization_id"),
+        status: row.get("status"),
         persisted: true,
     }))
 }
@@ -91,6 +232,7 @@ pub async fn create_draft_day_plan(
         FROM crews crew
         JOIN organizations organization ON organization.id = crew.organization_id
         WHERE crew.id = $2
+          AND crew.status = 'active'
         ON CONFLICT (id) DO UPDATE SET
             crew_id = EXCLUDED.crew_id,
             service_date = EXCLUDED.service_date,
