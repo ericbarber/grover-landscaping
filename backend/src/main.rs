@@ -42,7 +42,7 @@ use day_plans::{
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
-    JobAddOnStatusUpdate, JobLifecycleWriteResult, JobRepository,
+    JobAddOnStatusUpdate, JobDispatchAssignmentResult, JobLifecycleWriteResult, JobRepository,
     PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
     PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
     PhotoProcessingRetryResult, StopProgressWriteResult,
@@ -210,6 +210,12 @@ struct ErrorResponse {
 #[derive(Debug, Deserialize)]
 struct CompletionReportChangeRequest {
     reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UpdateJobDispatchAssignmentRequest {
+    crew_id: String,
+    scheduled_date: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -606,6 +612,10 @@ fn app_with_runtime(
         )
         .route("/jobs", get(list_jobs))
         .route("/jobs/{id}", get(get_job))
+        .route(
+            "/jobs/{id}/dispatch-assignment",
+            put(update_job_dispatch_assignment),
+        )
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route(
             "/organizations/{organization_id}/invitations",
@@ -936,6 +946,112 @@ async fn get_job(
         return response;
     }
     Json(state.jobs.get_job(id).await).into_response()
+}
+
+fn valid_service_date(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    if bytes.len() != 10
+        || bytes[4] != b'-'
+        || bytes[7] != b'-'
+        || bytes
+            .iter()
+            .enumerate()
+            .any(|(index, byte)| index != 4 && index != 7 && !byte.is_ascii_digit())
+    {
+        return false;
+    }
+    let parts: Vec<_> = value.split('-').collect();
+    let Ok(year) = parts[0].parse::<u32>() else {
+        return false;
+    };
+    let Ok(month) = parts[1].parse::<u32>() else {
+        return false;
+    };
+    let Ok(day) = parts[2].parse::<u32>() else {
+        return false;
+    };
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let max_day = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if leap => 29,
+        2 => 28,
+        _ => return false,
+    };
+    (1..=max_day).contains(&day)
+}
+
+async fn update_job_dispatch_assignment(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+    Json(request): Json<UpdateJobDispatchAssignmentRequest>,
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_manage_schedule).await
+    {
+        return response;
+    }
+    if request.crew_id.trim().is_empty() || request.crew_id.chars().count() > 120 {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew_id",
+                message: "crew_id must be between 1 and 120 characters.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if !valid_service_date(&request.scheduled_date) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_scheduled_date",
+                message: "scheduled_date must be a valid YYYY-MM-DD date.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    match state
+        .jobs
+        .update_dispatch_assignment(
+            &id,
+            request.crew_id.trim(),
+            &request.scheduled_date,
+            &principal.subject,
+        )
+        .await
+    {
+        JobDispatchAssignmentResult::Updated(job) => Json(job).into_response(),
+        JobDispatchAssignmentResult::JobNotFound => {
+            resource_not_found_response("job_not_found", "Job was not found.")
+        }
+        JobDispatchAssignmentResult::CrewNotFound => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "crew_not_available",
+                message: "Select an active crew in the job organization.".to_string(),
+            }),
+        )
+            .into_response(),
+        JobDispatchAssignmentResult::JobAlreadyStarted => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "job_already_started",
+                message: "Only scheduled jobs can be reassigned.".to_string(),
+            }),
+        )
+            .into_response(),
+        JobDispatchAssignmentResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "dispatch_assignment_unavailable",
+                message: "The dispatch assignment could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn get_account_for_job(
@@ -4781,6 +4897,15 @@ mod tests {
     use serde_json::Value;
     use tower::ServiceExt;
 
+    #[test]
+    fn service_date_validation_rejects_impossible_calendar_dates() {
+        assert!(valid_service_date("2026-07-19"));
+        assert!(valid_service_date("2028-02-29"));
+        assert!(!valid_service_date("2026-02-29"));
+        assert!(!valid_service_date("2026-13-01"));
+        assert!(!valid_service_date("07/19/2026"));
+    }
+
     fn seed_state() -> Arc<AppState> {
         Arc::new(AppState {
             jobs: JobRepository::default(),
@@ -6187,6 +6312,28 @@ mod tests {
 
         assert!(json.as_array().unwrap().len() >= 2);
         assert_eq!(json[0]["before_photos"], 0);
+    }
+
+    #[tokio::test]
+    async fn dispatch_assignment_endpoint_rejects_invalid_calendar_date() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/jobs/job_1001/dispatch-assignment")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"crew_id":"crew_1001","scheduled_date":"2026-02-29"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let error: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(error["error"], "invalid_scheduled_date");
     }
 
     #[tokio::test]

@@ -474,6 +474,7 @@ Current state:
 - Pixel 7 smoke coverage proves persisted report filtering and automatic restoration over the live Tailscale Docker stack
 - Blocked queue items name each required checklist, evidence, add-on, or route-stop recovery and open the affected job directly
 - Manager dispatch view groups loaded jobs by service date and assigned crew, prioritizes unassigned work, and summarizes day-level lifecycle counts
+- Tenant-scoped dispatch assignment API moves only scheduled jobs to active same-organization crews and transactionally audits old/new crew and date context
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -614,7 +615,7 @@ Current state:
 
 Next implementation work:
 
-- Add a tenant-scoped persisted job reassignment endpoint with schedule audit history
+- Connect manager dispatch move controls to persisted job reassignment
 
 ## Planned
 

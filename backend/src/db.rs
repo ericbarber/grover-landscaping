@@ -19,7 +19,7 @@ use crate::{
     PhotoUploadRequest, PhotoUploadResponse,
 };
 use serde::Serialize;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
@@ -274,6 +274,15 @@ pub enum JobAddOnStatusUpdate {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum JobDispatchAssignmentResult {
+    Updated(JobDetail),
+    JobNotFound,
+    CrewNotFound,
+    JobAlreadyStarted,
+    Unavailable,
+}
+
 impl JobRepository {
     #[allow(dead_code)]
     pub fn new() -> Self {
@@ -380,6 +389,98 @@ impl JobRepository {
         }
 
         seed_job_summaries()
+    }
+
+    pub async fn update_dispatch_assignment(
+        &self,
+        job_id: &str,
+        crew_id: &str,
+        scheduled_date: &str,
+        actor_user_id: &str,
+    ) -> JobDispatchAssignmentResult {
+        let Some(pool) = &self.pool else {
+            return JobDispatchAssignmentResult::Unavailable;
+        };
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return JobDispatchAssignmentResult::Unavailable,
+        };
+        let current = match sqlx::query(
+            "SELECT organization_id, assigned_crew_id, scheduled_date::text AS scheduled_date, status FROM service_jobs WHERE id = $1 FOR UPDATE",
+        )
+        .bind(job_id)
+        .fetch_optional(&mut *tx)
+        .await
+        {
+            Ok(Some(row)) => row,
+            Ok(None) => return JobDispatchAssignmentResult::JobNotFound,
+            Err(_) => return JobDispatchAssignmentResult::Unavailable,
+        };
+        let organization_id: String = current.get("organization_id");
+        let old_crew_id: Option<String> = current.get("assigned_crew_id");
+        let old_scheduled_date: String = current.get("scheduled_date");
+        let status: String = current.get("status");
+        if status != "scheduled" {
+            return JobDispatchAssignmentResult::JobAlreadyStarted;
+        }
+        let crew_exists = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM crews WHERE id = $1 AND organization_id = $2 AND status = 'active')",
+        )
+        .bind(crew_id)
+        .bind(&organization_id)
+        .fetch_one(&mut *tx)
+        .await;
+        if !matches!(crew_exists, Ok(true)) {
+            return match crew_exists {
+                Ok(false) => JobDispatchAssignmentResult::CrewNotFound,
+                _ => JobDispatchAssignmentResult::Unavailable,
+            };
+        }
+        if sqlx::query(
+            "UPDATE service_jobs SET assigned_crew_id = $2, scheduled_date = $3::date, updated_at = NOW() WHERE id = $1",
+        )
+        .bind(job_id)
+        .bind(crew_id)
+        .bind(scheduled_date)
+        .execute(&mut *tx)
+        .await
+        .is_err()
+        {
+            return JobDispatchAssignmentResult::Unavailable;
+        }
+        if sqlx::query(
+            r#"
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            ) VALUES (
+                $1, $2, $3, 'job_reassigned', $4, NOW(),
+                jsonb_build_object(
+                    'old_crew_id', $5::text, 'new_crew_id', $6::text,
+                    'old_scheduled_date', $7::text, 'new_scheduled_date', $8::text
+                )
+            )
+            "#,
+        )
+        .bind(format!("audit_job_reassigned_{}", Uuid::new_v4().simple()))
+        .bind(actor_user_id)
+        .bind(&organization_id)
+        .bind(job_id)
+        .bind(old_crew_id)
+        .bind(crew_id)
+        .bind(old_scheduled_date)
+        .bind(scheduled_date)
+        .execute(&mut *tx)
+        .await
+        .is_err()
+            || tx.commit().await.is_err()
+        {
+            return JobDispatchAssignmentResult::Unavailable;
+        }
+
+        match postgres_read::get_job(pool, job_id).await {
+            Ok(Some(job)) => JobDispatchAssignmentResult::Updated(job),
+            _ => JobDispatchAssignmentResult::Unavailable,
+        }
     }
 
     pub async fn get_job(&self, id: String) -> JobDetail {
