@@ -531,10 +531,11 @@ Current state:
 - Mobile member and team-activity filters show active-filter counts and offer one-tap clearing
 - Mobile team administration summarizes active, suspended, owner, manager, and field-team counts
 - Mobile owner activity summarizes loaded access, crew, and organization changes
+- Owners can export the currently filtered loaded team activity as quoted CSV with readable and immutable audit identities
 
 Next implementation work:
 
-- Add CSV export for the owner-filtered team activity view
+- Add CSV export for the owner-filtered team member directory
 
 ## Planned
 

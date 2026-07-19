@@ -3,6 +3,7 @@ import type { TeamAdministrationActivity } from '../api/client';
 import {
   filterTeamActivity,
   summarizeTeamActivity,
+  teamActivityCsv,
   teamActivityActiveFilterCount,
   teamActivityLabel,
 } from './ManagerTeamActivityPanel';
@@ -74,5 +75,21 @@ describe('team administration activity labels', () => {
       { ...base, id: 'audit_2', eventKind: 'crew_profile_updated' },
       { ...base, id: 'audit_3', eventKind: 'organization_profile_updated' },
     ])).toEqual({ total: 3, access: 1, crew: 1, organization: 1 });
+  });
+
+  it('exports quoted CSV with readable and immutable audit identities', () => {
+    const item: TeamAdministrationActivity = {
+      id: 'audit_1',
+      actorUserId: 'owner-1',
+      actorLabel: 'Grover, "Jordan"',
+      organizationId: 'org_1',
+      eventKind: 'role_changed',
+      targetId: 'membership_1',
+      targetLabel: 'Alex Rivera',
+      occurredAt: '2026-07-19T12:00:00Z',
+    };
+    expect(teamActivityCsv([item])).toContain(
+      '"Grover, ""Jordan""","owner-1","Alex Rivera","membership_1"',
+    );
   });
 });

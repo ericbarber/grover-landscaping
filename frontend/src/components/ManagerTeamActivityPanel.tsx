@@ -92,6 +92,30 @@ export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
   );
 }
 
+function csvCell(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+export function teamActivityCsv(activity: TeamAdministrationActivity[]): string {
+  const header = [
+    'occurred_at',
+    'event',
+    'actor_label',
+    'actor_id',
+    'target_label',
+    'target_id',
+  ];
+  const rows = activity.map((item) => [
+    item.occurredAt,
+    teamActivityLabel(item.eventKind),
+    item.actorLabel,
+    item.actorUserId,
+    item.targetLabel,
+    item.targetId,
+  ]);
+  return [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\n');
+}
+
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
@@ -159,6 +183,18 @@ export function ManagerTeamActivityPanel({
     }
   }
 
+  function exportFilteredActivity() {
+    const url = URL.createObjectURL(new Blob(
+      [teamActivityCsv(filteredActivity)],
+      { type: 'text/csv;charset=utf-8' },
+    ));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `team-activity-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
@@ -176,14 +212,24 @@ export function ManagerTeamActivityPanel({
           </p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Recent access activity</h2>
         </div>
-        <button
-          className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
-          disabled={isLoading}
-          onClick={() => void refresh()}
-          type="button"
-        >
-          {isLoading ? 'Loading…' : 'Refresh'}
-        </button>
+        <div className="grid gap-2">
+          <button
+            className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
+            disabled={isLoading}
+            onClick={() => void refresh()}
+            type="button"
+          >
+            {isLoading ? 'Loading…' : 'Refresh'}
+          </button>
+          <button
+            className="min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold disabled:opacity-60"
+            disabled={filteredActivity.length === 0}
+            onClick={exportFilteredActivity}
+            type="button"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
       <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
