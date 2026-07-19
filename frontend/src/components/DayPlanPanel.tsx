@@ -128,6 +128,7 @@ export function DayPlanPanel({
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
   const [isReplayingAmendments, setIsReplayingAmendments] = useState(false);
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
+  const [amendmentConflictDiscardId, setAmendmentConflictDiscardId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const [queueStorageUnavailable, setQueueStorageUnavailable] = useState(false);
   const [storagePersistence, setStoragePersistence] = useState<OfflineStoragePersistence | null>(null);
@@ -442,6 +443,30 @@ export function DayPlanPanel({
     if (navigator.onLine) await replayOfflineMutations();
   }
 
+  async function discardReviewedAmendmentConflict(
+    mutation: DayPlanAmendmentOfflineMutation,
+  ) {
+    try {
+      await removeOfflineMutation(mutation.id);
+    } catch {
+      setQueueStorageUnavailable(true);
+      return;
+    }
+    setAmendmentConflictDiscardId(null);
+    setOfflineAmendmentMutations((current) =>
+      current.filter((item) => item.id !== mutation.id)
+    );
+    setAmendmentRequests((current) => current.filter((item) =>
+      !(
+        item.id.startsWith('local_amendment_')
+        && item.amendmentType === mutation.amendmentType
+        && item.stopId === mutation.stopId
+        && item.note === mutation.note
+      )
+    ));
+    if (navigator.onLine) await replayOfflineAmendments();
+  }
+
   useEffect(() => {
     let isMounted = true;
 
@@ -743,6 +768,67 @@ export function DayPlanPanel({
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
             {offlineAmendmentMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
           </p>
+          <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
+            <summary className="min-h-11 cursor-pointer py-3 font-bold">
+              Review queued route requests
+            </summary>
+            <div className="space-y-2 border-t border-amber-200 pt-2">
+              {offlineAmendmentMutations.map((mutation) => {
+                const stop = dayPlan.stops.find((item) => item.id === mutation.stopId);
+                return (
+                  <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
+                    <p className="font-bold text-slate-900">
+                      {dayPlanAmendmentTypeLabel(mutation.amendmentType)}
+                    </p>
+                    <p className="mt-1 text-slate-700">
+                      {stop?.customerName ?? mutation.service?.name ?? 'Route-level request'} ·{' '}
+                      {mutation.syncState}
+                    </p>
+                    {mutation.note && <p className="mt-1 text-slate-600">{mutation.note}</p>}
+                    <p className="mt-1 text-slate-600">
+                      Queued {new Date(mutation.createdAt).toLocaleString()}
+                      {mutation.attemptCount > 0
+                        ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
+                        : ''}
+                    </p>
+                    {mutation.syncState === 'conflict' && (
+                      amendmentConflictDiscardId === mutation.id ? (
+                        <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
+                          <p className="text-red-900">
+                            Confirm a manager reviewed this route request before discarding its local copy.
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
+                              onClick={() => void discardReviewedAmendmentConflict(mutation)}
+                              type="button"
+                            >
+                              Discard request
+                            </button>
+                            <button
+                              className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
+                              onClick={() => setAmendmentConflictDiscardId(null)}
+                              type="button"
+                            >
+                              Keep request
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
+                          onClick={() => setAmendmentConflictDiscardId(mutation.id)}
+                          type="button"
+                        >
+                          Resolve after manager review
+                        </button>
+                      )
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </details>
           <button
             className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
             disabled={

@@ -123,3 +123,9 @@ returns the existing persisted request on an exact retry. The client replaces
 the matching browser-local request with the persisted manager-review item and
 removes the queue record only after confirmation. The first retryable failure or
 review-blocking conflict stops later amendment replay.
+
+Crew review lists each queued request's safe type, stop/customer or service
+context, note, creation time, retry count, and sync state. Conflicts expose a
+two-step manager-reviewed discard action. Confirmed discard removes the durable
+record and its matching browser-local request before resuming later ordered
+replay; internal API errors, tenant IDs, and actor IDs are not rendered.

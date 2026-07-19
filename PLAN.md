@@ -600,10 +600,11 @@ Current state:
 - The offline mutation schema supports tenant/actor-scoped day-plan amendment requests with stop, service, pricing, and note context
 - Failed day-plan amendment submissions enter the durable tenant/actor queue with accurate route-request feedback
 - Queued day-plan amendments replay oldest-first with deterministic server IDs, PostgreSQL deduplication, automatic recovery, manual retry, and conflict blocking
+- Crew amendment queue review exposes safe route-request details and two-step reviewed-conflict recovery
 
 Next implementation work:
 
-- Add crew-readable amendment queue review and reviewed-conflict recovery
+- Extend the mobile interruption smoke test to day-plan amendment replay
 
 ## Planned
 
