@@ -112,6 +112,12 @@ export function isStopProgressOfflineMutation(
   return mutation.kind === 'stop_progress';
 }
 
+export function isJobLifecycleOfflineMutation(
+  mutation: OfflineMutation,
+): mutation is JobLifecycleOfflineMutation {
+  return mutation.kind === 'job_lifecycle';
+}
+
 export function createStopProgressOfflineMutation(
   input: NewStopProgressOfflineMutation,
   id: string = crypto.randomUUID(),

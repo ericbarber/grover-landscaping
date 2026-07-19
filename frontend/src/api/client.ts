@@ -967,6 +967,7 @@ export interface CustomerPhotoErasureSummary {
 function toJob(apiJob: ApiJobSummary): YardCareJob {
   return {
     id: apiJob.id,
+    organizationId: apiJob.organization_id,
     customerName: apiJob.customer_name,
     propertyAddress: apiJob.property_address,
     scheduledDate: apiJob.scheduled_date,

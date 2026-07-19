@@ -14,6 +14,10 @@ The initial record contract covers stop progress and stores:
 The queue schema also accepts job lifecycle records for start and completion.
 They use the same client-generated ID, tenant, actor, ordering, and sync-state
 fields while storing only the job ID and requested lifecycle action.
+Failed job start and completion requests now enter that queue only when the job
+response carries a server-owned organization and the current actor is known.
+The assigned-jobs section shows a durable pending count and explicitly reports
+when an action remains local because the browser queue is unavailable.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current

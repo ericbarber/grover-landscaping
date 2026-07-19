@@ -7,6 +7,7 @@ export type CustomerPortalNextActionKind = 'review_bid' | 'view_report' | 'track
 
 export interface YardCareJob {
   id: string;
+  organizationId?: string;
   customerName: string;
   propertyAddress: string;
   scheduledDate: string;

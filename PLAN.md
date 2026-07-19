@@ -576,10 +576,11 @@ Current state:
 - Mobile route feedback distinguishes unavailable durable browser storage, and legacy local progress writes no longer throw when storage is blocked
 - The first durable field mutation requests persistent browser storage and reports browser-managed retention accurately
 - The offline mutation schema supports tenant/actor-scoped job start and completion records
+- Failed job start and completion actions queue only with resolved server tenancy and show durable mobile pending feedback
 
 Next implementation work:
 
-- Queue failed job start and completion actions with mobile pending feedback
+- Add idempotent server contracts and ordered replay for queued job lifecycle actions
 
 ## Planned
 

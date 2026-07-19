@@ -46,6 +46,13 @@ import {
 } from './api/client';
 import { fetchAccountProjectBids } from './api/projectBidsClient';
 import { useAuth } from './auth/AuthProvider';
+import {
+  enqueueJobLifecycleMutation,
+  isJobLifecycleOfflineMutation,
+  listOfflineMutations,
+  requestPersistentOfflineStorage,
+  type JobLifecycleOfflineMutation,
+} from './domain/offlineMutationQueue';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -869,6 +876,7 @@ export function App() {
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
+  const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -983,6 +991,29 @@ export function App() {
     setManagerActivity([]);
     setIsManagerActivityPersisted(writeStoredManagerActivityItems([]));
   }
+
+  useEffect(() => {
+    if (!auth.userId) {
+      setOfflineJobMutations([]);
+      return;
+    }
+    const organizationIds = Array.from(new Set(
+      jobs.map((job) => job.organizationId).filter((id): id is string => Boolean(id)),
+    ));
+    let active = true;
+    void Promise.all(
+      organizationIds.map((organizationId) => listOfflineMutations(organizationId, auth.userId!)),
+    )
+      .then((groups) => {
+        if (active) setOfflineJobMutations(groups.flat().filter(isJobLifecycleOfflineMutation));
+      })
+      .catch(() => {
+        if (active) setOfflineJobMutations([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [auth.userId, jobs]);
 
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
@@ -1328,6 +1359,29 @@ export function App() {
     }
   }
 
+  async function queueJobLifecycleAction(
+    jobId: string,
+    action: JobLifecycleOfflineMutation['action'],
+  ): Promise<boolean> {
+    const job = jobs.find((item) => item.id === jobId);
+    if (!job?.organizationId || !auth.userId) return false;
+    try {
+      const mutation = await enqueueJobLifecycleMutation({
+        organizationId: job.organizationId,
+        actorId: auth.userId,
+        jobId,
+        action,
+      });
+      setOfflineJobMutations((current) => [...current, mutation].sort(
+        (left, right) => left.createdAt.localeCompare(right.createdAt),
+      ));
+      void requestPersistentOfflineStorage();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function handleStartJob() {
     if (!selectedJobId) {
       return;
@@ -1337,7 +1391,12 @@ export function App() {
       await startJob(selectedJobId);
       setStatusMessage(`Started ${selectedJobId}.`);
     } catch {
-      setStatusMessage(`Started ${selectedJobId} locally because the API is not reachable.`);
+      const queued = await queueJobLifecycleAction(selectedJobId, 'start');
+      setStatusMessage(
+        queued
+          ? `Started ${selectedJobId} locally; the change is queued offline.`
+          : `Started ${selectedJobId} locally, but durable offline storage is unavailable.`,
+      );
       recordManagerActivity({
         title: 'Job started locally',
         message: `${selectedJobId} was started in browser state because the API is not reachable.`,
@@ -1364,7 +1423,12 @@ export function App() {
         source: 'job',
       });
     } catch {
-      setStatusMessage(`Completed ${selectedJobId} locally because the API is not reachable.`);
+      const queued = await queueJobLifecycleAction(selectedJobId, 'complete');
+      setStatusMessage(
+        queued
+          ? `Completed ${selectedJobId} locally; the change is queued offline.`
+          : `Completed ${selectedJobId} locally, but durable offline storage is unavailable.`,
+      );
       recordManagerActivity({
         title: 'Job completed locally',
         message: `${selectedJobId} was completed locally because the API is not reachable.`,
@@ -1916,6 +1980,11 @@ export function App() {
           <div className="mb-4 mt-6 scroll-mt-16" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
+            {offlineJobMutations.length > 0 && (
+              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                {offlineJobMutations.length} job {offlineJobMutations.length === 1 ? 'change is' : 'changes are'} queued offline on this phone.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
