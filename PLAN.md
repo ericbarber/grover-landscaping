@@ -550,10 +550,11 @@ Current state:
 - Lazy-route failures render a touch-safe reload recovery screen instead of leaving a blank mobile view
 - A global mobile banner distinguishes offline state from slow startup across public and authenticated routes
 - Mobile users receive a four-second confirmation when network connectivity returns
+- A global readiness probe distinguishes API downtime from phone connectivity and retries automatically every 30 seconds
 
 Next implementation work:
 
-- Roll the latest persisted team-search API into Docker and verify all Tailscale routes
+- Confirm API recovery after a backend restart completes
 
 ## Planned
 

@@ -45,6 +45,7 @@
 - 2026-07-19: Added recoverable lazy-route failure UI for weak mobile connections.
 - 2026-07-19: Added global mobile offline-state feedback.
 - 2026-07-19: Added mobile network-recovery confirmation.
+- 2026-07-19: Added global mobile API-readiness feedback and automatic retry.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
