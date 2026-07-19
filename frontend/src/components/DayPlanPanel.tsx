@@ -13,6 +13,7 @@ import {
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
+  summarizeOfflineMutations,
   type StopProgressOfflineMutation,
 } from '../domain/offlineMutationQueue';
 import {
@@ -110,10 +111,9 @@ export function DayPlanPanel({
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const replayInProgress = useRef(false);
-  const pendingMutationCount = offlineMutations.length;
-  const conflictMutationCount = offlineMutations.filter(
-    (mutation) => mutation.syncState === 'conflict',
-  ).length;
+  const offlineSummary = summarizeOfflineMutations(offlineMutations);
+  const pendingMutationCount = offlineSummary.total;
+  const conflictMutationCount = offlineSummary.conflicts;
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
@@ -398,6 +398,17 @@ export function DayPlanPanel({
               <p>
                 {pendingMutationCount} offline {pendingMutationCount === 1 ? 'change' : 'changes'} waiting to sync
               </p>
+              <p className="mt-1 font-medium">
+                {offlineSummary.pending} pending · {offlineSummary.failed} retry failed · {offlineSummary.conflicts} conflicted
+              </p>
+              {offlineSummary.oldestCreatedAt && (
+                <p className="mt-1 font-medium">
+                  Oldest queued {new Date(offlineSummary.oldestCreatedAt).toLocaleString()}
+                  {offlineSummary.maxAttempts > 0
+                    ? ` · up to ${offlineSummary.maxAttempts} ${offlineSummary.maxAttempts === 1 ? 'attempt' : 'attempts'}`
+                    : ''}
+                </p>
+              )}
               {conflictMutationCount > 0 && (
                 <p className="mt-1 font-medium">
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.

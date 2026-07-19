@@ -53,6 +53,10 @@ transaction as the stop update. An exact retry returns a persisted idempotent
 replay without applying the update again; reuse for different work returns HTTP
 409. Direct online writes remain backward-compatible without an idempotency key.
 
+The mobile route summarizes pending, retry-failed, and conflicted counts, the
+oldest queued timestamp, and the maximum replay-attempt count before the detailed
+ordered review.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.

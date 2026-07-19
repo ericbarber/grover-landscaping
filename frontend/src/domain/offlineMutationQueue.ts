@@ -27,6 +27,34 @@ export interface NewStopProgressOfflineMutation {
   status: StopProgressStatus;
 }
 
+export interface OfflineMutationSummary {
+  total: number;
+  pending: number;
+  failed: number;
+  conflicts: number;
+  oldestCreatedAt: string | null;
+  maxAttempts: number;
+}
+
+export function summarizeOfflineMutations(
+  mutations: StopProgressOfflineMutation[],
+): OfflineMutationSummary {
+  return {
+    total: mutations.length,
+    pending: mutations.filter((mutation) => mutation.syncState === 'pending').length,
+    failed: mutations.filter((mutation) => mutation.syncState === 'failed').length,
+    conflicts: mutations.filter((mutation) => mutation.syncState === 'conflict').length,
+    oldestCreatedAt: mutations.reduce<string | null>(
+      (oldest, mutation) => !oldest || mutation.createdAt < oldest ? mutation.createdAt : oldest,
+      null,
+    ),
+    maxAttempts: mutations.reduce(
+      (maximum, mutation) => Math.max(maximum, mutation.attemptCount),
+      0,
+    ),
+  };
+}
+
 export function createStopProgressOfflineMutation(
   input: NewStopProgressOfflineMutation,
   id: string = crypto.randomUUID(),

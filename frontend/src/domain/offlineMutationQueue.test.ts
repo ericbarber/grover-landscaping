@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createStopProgressOfflineMutation,
   isOfflineMutationConflict,
+  summarizeOfflineMutations,
   withOfflineMutationFailure,
 } from './offlineMutationQueue';
 import { ApiRequestError } from '../api/apiError';
@@ -31,6 +32,43 @@ describe('offline mutation queue records', () => {
       createdAt: '2026-07-19T20:30:00.000Z',
       attemptCount: 0,
       syncState: 'pending',
+    });
+  });
+
+  it('summarizes ordered queue age and retry states', () => {
+    const first = withOfflineMutationFailure(
+      createStopProgressOfflineMutation(
+        {
+          organizationId: 'org-1',
+          actorId: 'user-1',
+          dayPlanId: 'plan-1',
+          stopId: 'stop-1',
+          status: 'in_progress',
+        },
+        'mutation-1',
+        new Date('2026-07-19T20:00:00.000Z'),
+      ),
+      'network failed',
+    );
+    const second = createStopProgressOfflineMutation(
+      {
+        organizationId: 'org-1',
+        actorId: 'user-1',
+        dayPlanId: 'plan-1',
+        stopId: 'stop-2',
+        status: 'finished',
+      },
+      'mutation-2',
+      new Date('2026-07-19T20:05:00.000Z'),
+    );
+
+    expect(summarizeOfflineMutations([second, first])).toEqual({
+      total: 2,
+      pending: 1,
+      failed: 1,
+      conflicts: 0,
+      oldestCreatedAt: '2026-07-19T20:00:00.000Z',
+      maxAttempts: 1,
     });
   });
 

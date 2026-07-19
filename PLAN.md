@@ -572,10 +572,11 @@ Current state:
 - Two-step reviewed-conflict discard reconciles local stop state and resumes ordered replay without dropping later changes
 - Offline queue tenancy binds to the loaded crew day plan's server-owned organization rather than membership ordering
 - Offline stop-progress replay uses transactionally persisted client mutation IDs for exact deduplication and conflicting-reuse rejection
+- Mobile route queue feedback summarizes state counts, oldest queued time, and maximum retry attempts
 
 Next implementation work:
 
-- Add queue age and retry-state summaries to the mobile route
+- Surface IndexedDB storage unavailability separately from durable queued state
 
 ## Planned
 
