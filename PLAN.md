@@ -485,7 +485,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Expand account onboarding and first-user administration workflows
+- Add first-owner setup completion status for organization profile, team invitation, and first route
 
 ## Planned
 
