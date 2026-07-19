@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createDayPlanAmendment,
   fetchDayPlanAmendments,
@@ -10,6 +10,8 @@ import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   enqueueStopProgressMutation,
   listOfflineMutations,
+  markOfflineMutationFailed,
+  removeOfflineMutation,
 } from '../domain/offlineMutationQueue';
 import {
   amendmentRequiresBid,
@@ -104,6 +106,8 @@ export function DayPlanPanel({
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
   const [pendingMutationCount, setPendingMutationCount] = useState(0);
+  const [isReplayingMutations, setIsReplayingMutations] = useState(false);
+  const replayInProgress = useRef(false);
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
@@ -249,6 +253,43 @@ export function DayPlanPanel({
       });
   }
 
+  const replayOfflineMutations = useCallback(async () => {
+    if (!organizationId || !actorId || !navigator.onLine || replayInProgress.current) return;
+    replayInProgress.current = true;
+    setIsReplayingMutations(true);
+    try {
+      const mutations = await listOfflineMutations(organizationId, actorId);
+      for (const mutation of mutations) {
+        try {
+          const result = await updateStopProgress(
+            mutation.dayPlanId,
+            mutation.stopId,
+            mutation.status,
+          );
+          if (!result.persisted) {
+            await markOfflineMutationFailed(mutation, 'API used local fallback');
+            break;
+          }
+          await removeOfflineMutation(mutation.id);
+        } catch (error) {
+          await markOfflineMutationFailed(
+            mutation,
+            error instanceof Error ? error.message : 'Stop progress sync failed',
+          );
+          break;
+        }
+      }
+      const remaining = await listOfflineMutations(organizationId, actorId);
+      setPendingMutationCount(remaining.length);
+      if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
+    } catch {
+      // Keep the visible count from the last successful IndexedDB read.
+    } finally {
+      replayInProgress.current = false;
+      setIsReplayingMutations(false);
+    }
+  }, [actorId, organizationId]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -290,14 +331,20 @@ export function DayPlanPanel({
   }, [dayPlan.id]);
 
   useEffect(() => {
-    if (!organizationId) {
+    if (!organizationId || !actorId) {
       setPendingMutationCount(0);
       return;
     }
-    void listOfflineMutations(organizationId)
-      .then((mutations) => setPendingMutationCount(mutations.length))
+    void listOfflineMutations(organizationId, actorId)
+      .then((mutations) => {
+        setPendingMutationCount(mutations.length);
+        if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
+      })
       .catch(() => setPendingMutationCount(0));
-  }, [organizationId]);
+    const handleOnline = () => void replayOfflineMutations();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [actorId, organizationId, replayOfflineMutations]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -309,9 +356,19 @@ export function DayPlanPanel({
           <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
           <p className="mt-1 text-xs text-slate-500">Progress: {syncStatusLabel(syncStatus)}</p>
           {pendingMutationCount > 0 && (
-            <p className="mt-1 text-xs font-semibold text-amber-800" role="status">
-              {pendingMutationCount} offline {pendingMutationCount === 1 ? 'change' : 'changes'} waiting to sync
-            </p>
+            <div className="mt-2 rounded-lg bg-amber-50 p-2 text-xs font-semibold text-amber-900" role="status">
+              <p>
+                {pendingMutationCount} offline {pendingMutationCount === 1 ? 'change' : 'changes'} waiting to sync
+              </p>
+              <button
+                className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
+                disabled={!navigator.onLine || isReplayingMutations}
+                onClick={() => void replayOfflineMutations()}
+                type="button"
+              >
+                {isReplayingMutations ? 'Syncing…' : 'Sync now'}
+              </button>
+            </div>
           )}
         </div>
         <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">

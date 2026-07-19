@@ -24,6 +24,11 @@ The crew route displays the number of durable changes awaiting synchronization.
 If IndexedDB itself is blocked, the existing local-storage progress view remains
 available but cannot claim durable queueing.
 
+Queued stop progress replays oldest-first on initial load, network recovery, or a
+manual **Sync now** action. Replay is limited to the current organization and
+actor, stops at the first failure, records the attempt and safe error message,
+and deletes only mutations that the API explicitly reports as persisted.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.

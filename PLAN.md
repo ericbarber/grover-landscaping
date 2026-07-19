@@ -566,10 +566,11 @@ Current state:
 - Mobile diagnostics measure API readiness latency and flag responses of two seconds or longer
 - Phase 2 offline mutations have a versioned IndexedDB queue contract that preserves tenant, actor, ordering, and retry context
 - Failed and local-fallback stop-progress writes enter the tenant/actor queue and show a durable pending count
+- Queued stop progress replays tenant/actor-scoped and oldest-first on load, network recovery, or manual retry
 
 Next implementation work:
 
-- Replay queued stop-progress mutations in order after connectivity returns
+- Classify offline replay conflicts separately from transient failures
 
 ## Planned
 

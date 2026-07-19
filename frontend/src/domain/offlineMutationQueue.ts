@@ -1,7 +1,7 @@
 import type { StopProgressStatus } from './stopProgress';
 
 const DATABASE_NAME = 'grover-field-offline';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const MUTATION_STORE = 'mutations';
 
 export interface StopProgressOfflineMutation {
@@ -52,10 +52,21 @@ function openOfflineDatabase(): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = () => {
       const database = request.result;
-      if (database.objectStoreNames.contains(MUTATION_STORE)) return;
-      const store = database.createObjectStore(MUTATION_STORE, { keyPath: 'id' });
-      store.createIndex('by_sync_state_and_created_at', ['syncState', 'createdAt']);
-      store.createIndex('by_organization_and_created_at', ['organizationId', 'createdAt']);
+      const store = database.objectStoreNames.contains(MUTATION_STORE)
+        ? request.transaction!.objectStore(MUTATION_STORE)
+        : database.createObjectStore(MUTATION_STORE, { keyPath: 'id' });
+      if (!store.indexNames.contains('by_sync_state_and_created_at')) {
+        store.createIndex('by_sync_state_and_created_at', ['syncState', 'createdAt']);
+      }
+      if (!store.indexNames.contains('by_organization_and_created_at')) {
+        store.createIndex('by_organization_and_created_at', ['organizationId', 'createdAt']);
+      }
+      if (!store.indexNames.contains('by_organization_actor_and_created_at')) {
+        store.createIndex(
+          'by_organization_actor_and_created_at',
+          ['organizationId', 'actorId', 'createdAt'],
+        );
+      }
     };
   });
 }
@@ -85,18 +96,19 @@ export async function enqueueStopProgressMutation(
 
 export async function listOfflineMutations(
   organizationId: string,
+  actorId: string,
 ): Promise<StopProgressOfflineMutation[]> {
   const database = await openOfflineDatabase();
   try {
     const transaction = database.transaction(MUTATION_STORE, 'readonly');
     const completion = waitForTransaction(transaction);
     const range = IDBKeyRange.bound(
-      [organizationId, ''],
-      [organizationId, '\uffff'],
+      [organizationId, actorId, ''],
+      [organizationId, actorId, '\uffff'],
     );
     const request = transaction
       .objectStore(MUTATION_STORE)
-      .index('by_organization_and_created_at')
+      .index('by_organization_actor_and_created_at')
       .getAll(range);
     const mutations = await new Promise<StopProgressOfflineMutation[]>((resolve, reject) => {
       request.onsuccess = () => resolve(request.result as StopProgressOfflineMutation[]);
@@ -105,6 +117,34 @@ export async function listOfflineMutations(
     await completion;
     return mutations
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  } finally {
+    database.close();
+  }
+}
+
+export function withOfflineMutationFailure(
+  mutation: StopProgressOfflineMutation,
+  lastError: string,
+): StopProgressOfflineMutation {
+  return {
+    ...mutation,
+    attemptCount: mutation.attemptCount + 1,
+    syncState: 'failed',
+    lastError,
+  };
+}
+
+export async function markOfflineMutationFailed(
+  mutation: StopProgressOfflineMutation,
+  lastError: string,
+): Promise<void> {
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(MUTATION_STORE, 'readwrite');
+    transaction.objectStore(MUTATION_STORE).put(
+      withOfflineMutationFailure(mutation, lastError),
+    );
+    await waitForTransaction(transaction);
   } finally {
     database.close();
   }
