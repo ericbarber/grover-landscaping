@@ -38,6 +38,7 @@
 - 2026-07-19: Added membership record IDs to team-directory CSV exports.
 - 2026-07-19: Added audit event IDs to owner activity CSV exports.
 - 2026-07-19: Added expandable, copyable audit event IDs to mobile activity.
+- 2026-07-19: Added persisted audit event ID search to owner team activity.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

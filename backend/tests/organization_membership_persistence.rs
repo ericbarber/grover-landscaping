@@ -378,6 +378,7 @@ async fn repository_bootstraps_first_owner_once() {
                 None,
                 None,
                 None,
+                None,
                 1,
             )
             .await
@@ -388,6 +389,7 @@ async fn repository_bootstraps_first_owner_once() {
         .list_team_administration_activity_page(
             &created.organization_id,
             Some("membership_profile_updated"),
+            None,
             None,
             None,
             None,
@@ -403,6 +405,7 @@ async fn repository_bootstraps_first_owner_once() {
             Some("jordan"),
             None,
             None,
+            None,
             25,
         )
         .await
@@ -415,9 +418,23 @@ async fn repository_bootstraps_first_owner_once() {
             None,
             Some("jordan"),
             None,
+            None,
             25,
         )
         .await
         .iter()
         .all(|item| item.target_label == "Jordan Grover"));
+    assert!(organizations
+        .list_team_administration_activity_page(
+            &created.organization_id,
+            None,
+            None,
+            None,
+            Some(&profile_activity.id),
+            None,
+            25,
+        )
+        .await
+        .iter()
+        .all(|item| item.id == profile_activity.id));
 }

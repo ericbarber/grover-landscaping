@@ -543,10 +543,11 @@ Current state:
 - Member-directory CSV exports include immutable membership record IDs and user identities
 - Team-activity CSV exports include immutable audit event IDs
 - Owners can reveal and copy immutable audit event IDs from each mobile activity card
+- Owner audit-ID search is debounced, tenant-scoped, and applied across server-paginated history
 
 Next implementation work:
 
-- Add audit event ID search to persisted owner team activity
+- Split the frontend production bundle to remove the 500 kB phone-startup warning
 
 ## Planned
 

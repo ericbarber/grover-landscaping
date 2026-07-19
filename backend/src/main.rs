@@ -234,6 +234,7 @@ struct TeamActivityQuery {
     event_kind: Option<String>,
     actor: Option<String>,
     target: Option<String>,
+    audit_id: Option<String>,
     before: Option<String>,
     limit: Option<i64>,
 }
@@ -1843,6 +1844,18 @@ async fn list_team_administration_activity(
         )
             .into_response();
     }
+    let audit_id_query = query.audit_id.as_deref().map(str::trim);
+    if audit_id_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "audit_id must be a non-empty search no longer than 120 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
     let before = query.before.as_deref().map(str::trim);
     if before.is_some_and(|value| value.is_empty() || value.len() > 64) {
         return (
@@ -1874,6 +1887,7 @@ async fn list_team_administration_activity(
                 event_kind,
                 actor_query,
                 target_query,
+                audit_id_query,
                 before,
                 limit,
             )

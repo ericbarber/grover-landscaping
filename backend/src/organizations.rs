@@ -260,8 +260,16 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
     ) -> Vec<TeamAdministrationActivity> {
-        self.list_team_administration_activity_page(organization_id, None, None, None, None, 25)
-            .await
+        self.list_team_administration_activity_page(
+            organization_id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            25,
+        )
+        .await
     }
 
     pub async fn list_team_administration_activity_page(
@@ -270,6 +278,7 @@ impl OrganizationRepository {
         event_kind: Option<&str>,
         actor_query: Option<&str>,
         target_query: Option<&str>,
+        audit_id_query: Option<&str>,
         before: Option<&str>,
         limit: i64,
     ) -> Vec<TeamAdministrationActivity> {
@@ -282,6 +291,7 @@ impl OrganizationRepository {
             event_kind,
             actor_query,
             target_query,
+            audit_id_query,
             before,
             limit,
         )
@@ -1059,6 +1069,7 @@ async fn list_team_administration_activity(
     event_kind: Option<&str>,
     actor_query: Option<&str>,
     target_query: Option<&str>,
+    audit_id_query: Option<&str>,
     before: Option<&str>,
     limit: i64,
 ) -> Result<Vec<TeamAdministrationActivity>, sqlx::Error> {
@@ -1117,7 +1128,8 @@ async fn list_team_administration_activity(
                   AND organization.display_name ILIKE '%' || $4 || '%'
               )
           )
-          AND ($5::timestamptz IS NULL OR audit.occurred_at < $5::timestamptz)
+          AND ($5::text IS NULL OR audit.id ILIKE '%' || $5 || '%')
+          AND ($6::timestamptz IS NULL OR audit.occurred_at < $6::timestamptz)
           AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
@@ -1132,13 +1144,14 @@ async fn list_team_administration_activity(
             'crew_reactivated'
         )
         ORDER BY occurred_at DESC, id DESC
-        LIMIT $6
+        LIMIT $7
         "#,
     )
     .bind(organization_id)
     .bind(event_kind)
     .bind(actor_query)
     .bind(target_query)
+    .bind(audit_id_query)
     .bind(before)
     .bind(limit)
     .fetch_all(pool)

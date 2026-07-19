@@ -50,10 +50,12 @@ export function filterTeamActivity(
   activity: TeamAdministrationActivity[],
   actorQuery: string,
   targetQuery: string,
+  auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
 ): TeamAdministrationActivity[] {
   const normalizedQuery = actorQuery.trim().toLocaleLowerCase();
   const normalizedTarget = targetQuery.trim().toLocaleLowerCase();
+  const normalizedAuditId = auditIdQuery.trim().toLocaleLowerCase();
   return activity.filter((item) => {
     const matchesActor = !normalizedQuery || [
       item.actorLabel,
@@ -63,8 +65,11 @@ export function filterTeamActivity(
       item.targetLabel,
       item.targetId,
     ].some((value) => value.toLocaleLowerCase().includes(normalizedTarget));
+    const matchesAuditId = !normalizedAuditId
+      || item.id.toLocaleLowerCase().includes(normalizedAuditId);
     return matchesActor
       && matchesTarget
+      && matchesAuditId
       && (eventKind === 'all' || item.eventKind === eventKind);
   });
 }
@@ -72,10 +77,12 @@ export function filterTeamActivity(
 export function teamActivityActiveFilterCount(
   actorQuery: string,
   targetQuery: string,
+  auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
 ): number {
   return Number(Boolean(actorQuery.trim()))
     + Number(Boolean(targetQuery.trim()))
+    + Number(Boolean(auditIdQuery.trim()))
     + Number(eventKind !== 'all');
 }
 
@@ -148,18 +155,20 @@ export function ManagerTeamActivityPanel({
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
+  const [auditIdQuery, setAuditIdQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
   const [activitySort, setActivitySort] = useState<TeamActivitySort>('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const filteredActivity = sortTeamActivity(
-    filterTeamActivity(activity, actorQuery, targetQuery, eventFilter),
+    filterTeamActivity(activity, actorQuery, targetQuery, auditIdQuery, eventFilter),
     activitySort,
   );
   const activeFilterCount = teamActivityActiveFilterCount(
     actorQuery,
     targetQuery,
+    auditIdQuery,
     eventFilter,
   );
   const summary = summarizeTeamActivity(activity);
@@ -172,6 +181,7 @@ export function ManagerTeamActivityPanel({
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
+        auditId: auditIdQuery.trim() || undefined,
         limit: 25,
       });
       setActivity(loaded);
@@ -194,6 +204,7 @@ export function ManagerTeamActivityPanel({
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
+        auditId: auditIdQuery.trim() || undefined,
         limit: 25,
       });
       setActivity((current) => [
@@ -233,10 +244,10 @@ export function ManagerTeamActivityPanel({
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
-      actorQuery || targetQuery ? 300 : 0,
+      actorQuery || targetQuery || auditIdQuery ? 300 : 0,
     );
     return () => window.clearTimeout(timeout);
-  }, [organizationId, refreshSignal, eventFilter, actorQuery, targetQuery]);
+  }, [organizationId, refreshSignal, eventFilter, actorQuery, targetQuery, auditIdQuery]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -280,7 +291,7 @@ export function ManagerTeamActivityPanel({
           </div>
         ))}
       </dl>
-      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
           <input
@@ -299,6 +310,16 @@ export function ManagerTeamActivityPanel({
             placeholder="Member, crew, or ID"
             type="search"
             value={targetQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Find audit ID
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setAuditIdQuery(event.target.value)}
+            placeholder="Audit event ID"
+            type="search"
+            value={auditIdQuery}
           />
         </label>
         <label className="text-xs font-semibold text-slate-700">
@@ -339,6 +360,7 @@ export function ManagerTeamActivityPanel({
             onClick={() => {
               setActorQuery('');
               setTargetQuery('');
+              setAuditIdQuery('');
               setEventFilter('all');
             }}
             type="button"

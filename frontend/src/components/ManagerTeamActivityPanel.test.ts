@@ -48,17 +48,19 @@ describe('team administration activity labels', () => {
         occurredAt: '2026-07-19T13:00:00Z',
       },
     ];
-    expect(filterTeamActivity(activity, 'jordan', '', 'all')).toEqual([activity[0]]);
-    expect(filterTeamActivity(activity, 'manager-identity', '', 'all')).toEqual([activity[1]]);
-    expect(filterTeamActivity(activity, '', 'alex', 'all')).toEqual([activity[0]]);
-    expect(filterTeamActivity(activity, '', 'crew_1', 'all')).toEqual([activity[1]]);
-    expect(filterTeamActivity(activity, '', '', 'role_changed')).toEqual([activity[0]]);
-    expect(filterTeamActivity(activity, 'sam', '', 'role_changed')).toEqual([]);
+    expect(filterTeamActivity(activity, 'jordan', '', '', 'all')).toEqual([activity[0]]);
+    expect(filterTeamActivity(activity, 'manager-identity', '', '', 'all')).toEqual([activity[1]]);
+    expect(filterTeamActivity(activity, '', 'alex', '', 'all')).toEqual([activity[0]]);
+    expect(filterTeamActivity(activity, '', 'crew_1', '', 'all')).toEqual([activity[1]]);
+    expect(filterTeamActivity(activity, '', '', 'audit_2', 'all')).toEqual([activity[1]]);
+    expect(filterTeamActivity(activity, '', '', '', 'role_changed')).toEqual([activity[0]]);
+    expect(filterTeamActivity(activity, 'sam', '', '', 'role_changed')).toEqual([]);
   });
 
   it('counts active activity filters', () => {
-    expect(teamActivityActiveFilterCount('', '', 'all')).toBe(0);
-    expect(teamActivityActiveFilterCount('Jordan', 'North', 'crew_profile_updated')).toBe(3);
+    expect(teamActivityActiveFilterCount('', '', '', 'all')).toBe(0);
+    expect(teamActivityActiveFilterCount('Jordan', 'North', 'audit', 'crew_profile_updated'))
+      .toBe(4);
   });
 
   it('summarizes loaded access, crew, and organization changes', () => {

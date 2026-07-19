@@ -1601,6 +1601,7 @@ export function organizationTeamActivityPath(
     eventKind?: TeamAdministrationEventKind;
     actor?: string;
     target?: string;
+    auditId?: string;
     before?: string;
     limit?: number;
   } = {},
@@ -1610,6 +1611,7 @@ export function organizationTeamActivityPath(
   if (options.eventKind) params.set('event_kind', options.eventKind);
   if (options.actor) params.set('actor', options.actor);
   if (options.target) params.set('target', options.target);
+  if (options.auditId) params.set('audit_id', options.auditId);
   if (options.before) params.set('before', options.before);
   if (options.limit !== undefined) params.set('limit', String(options.limit));
   const query = params.toString();
@@ -1667,6 +1669,7 @@ export async function fetchTeamAdministrationActivity(
     eventKind?: TeamAdministrationEventKind;
     actor?: string;
     target?: string;
+    auditId?: string;
     before?: string;
     limit?: number;
   } = {},
