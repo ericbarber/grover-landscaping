@@ -48,6 +48,11 @@ export function CompletionReport({
   const afterPhotos = Math.max(job.afterPhotos, afterEvidenceCount);
   const issuePhotos = uploadTickets.filter((ticket) => ticket.photoType === 'issue').length;
   const readyForCustomer = progress === 100 && beforePhotos > 0 && afterPhotos > 0;
+  const readinessBlockers = reportSnapshot?.readinessBlockers ?? [
+    ...(progress < 100 ? ['checklist' as const] : []),
+    ...(beforePhotos === 0 ? ['before_photos' as const] : []),
+    ...(afterPhotos === 0 ? ['after_photos' as const] : []),
+  ];
   const reportStatus = reportSnapshot?.reportStatus ?? (readyForCustomer ? 'submitted' : 'draft');
 
   return (
@@ -112,6 +117,15 @@ export function CompletionReport({
           >
             Open shareable report
           </a>
+        )}
+        {readinessBlockers.length > 0 && (
+          <p className="mt-3 rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">
+            Still needed: {readinessBlockers.map((blocker) => ({
+              checklist: 'finish the checklist',
+              before_photos: 'capture a before photo',
+              after_photos: 'capture an after photo',
+            })[blocker]).join(' · ')}
+          </p>
         )}
       </div>
 

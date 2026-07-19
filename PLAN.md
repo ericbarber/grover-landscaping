@@ -591,10 +591,11 @@ Current state:
 - Browser-compatible IndexedDB tests cover photo blob persistence, conflict retention, ordered replay, idempotency identity, and atomic reviewed deletion
 - Client photo checks reject unsupported, unpreviewable, undersized, and duplicate captures before upload or offline storage
 - Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
+- Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance
 
 Next implementation work:
 
-- Add server-side image processing metadata coverage and enforce photo evidence in report readiness context
+- Include route-stop and add-on context in completion report readiness
 
 ## Planned
 

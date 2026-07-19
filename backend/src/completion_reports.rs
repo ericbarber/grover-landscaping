@@ -71,6 +71,7 @@ pub struct CompletionReportResponse {
     pub report_status: String,
     pub persisted: bool,
     pub ready_for_customer: bool,
+    pub readiness_blockers: Vec<String>,
     pub checklist_progress: u32,
     pub before_photos: u32,
     pub after_photos: u32,
@@ -207,7 +208,9 @@ pub fn build_completion_report(
     let issue_photos = count_photo_type(&photo_evidence, "issue");
     let before_photos = job.before_photos.max(before_photo_evidence);
     let after_photos = job.after_photos.max(after_photo_evidence);
-    let ready_for_customer = checklist_progress == 100 && before_photos > 0 && after_photos > 0;
+    let readiness_blockers =
+        completion_report_readiness_blockers(checklist_progress, before_photos, after_photos);
+    let ready_for_customer = readiness_blockers.is_empty();
 
     CompletionReportResponse {
         report_id: completion_report_id(&job.id),
@@ -220,6 +223,7 @@ pub fn build_completion_report(
         .to_string(),
         persisted: false,
         ready_for_customer,
+        readiness_blockers,
         checklist_progress,
         before_photos,
         after_photos,
@@ -290,11 +294,34 @@ pub fn apply_completion_report_persistence(
     if let Some(issue_photos) = persistence.issue_photos {
         report.issue_photos = issue_photos;
     }
+    report.readiness_blockers = completion_report_readiness_blockers(
+        report.checklist_progress,
+        report.before_photos,
+        report.after_photos,
+    );
     report.share_url = persistence
         .share_token
         .as_deref()
         .filter(|_| report.report_status == "delivered")
         .map(shared_report_url);
+}
+
+pub fn completion_report_readiness_blockers(
+    checklist_progress: u32,
+    before_photos: u32,
+    after_photos: u32,
+) -> Vec<String> {
+    let mut blockers = Vec::new();
+    if checklist_progress < 100 {
+        blockers.push("checklist".to_string());
+    }
+    if before_photos == 0 {
+        blockers.push("before_photos".to_string());
+    }
+    if after_photos == 0 {
+        blockers.push("after_photos".to_string());
+    }
+    blockers
 }
 
 fn completion_progress(job: &JobDetail) -> u32 {
@@ -383,6 +410,28 @@ mod tests {
             image_height_px: Some(720),
             metadata_source: Some("client_reported".to_string()),
         }
+    }
+
+    #[test]
+    fn report_readiness_names_each_missing_field_requirement() {
+        let blocked = build_completion_report(job(2, 0, 0), account(), vec![], vec![]);
+        assert!(!blocked.ready_for_customer);
+        assert_eq!(
+            blocked.readiness_blockers,
+            vec!["checklist", "before_photos", "after_photos"]
+        );
+
+        let ready = build_completion_report(
+            job(4, 0, 0),
+            account(),
+            vec![
+                photo("photo_before_ready", "before"),
+                photo("photo_after_ready", "after"),
+            ],
+            vec![],
+        );
+        assert!(ready.ready_for_customer);
+        assert!(ready.readiness_blockers.is_empty());
     }
 
     #[test]

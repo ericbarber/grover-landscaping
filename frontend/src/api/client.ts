@@ -147,6 +147,7 @@ export interface ApiCompletionReport {
   report_status: CompletionReportStatus;
   persisted: boolean;
   ready_for_customer: boolean;
+  readiness_blockers?: Array<'checklist' | 'before_photos' | 'after_photos'>;
   checklist_progress: number;
   before_photos: number;
   after_photos: number;
@@ -179,6 +180,7 @@ export interface CompletionReportSnapshot {
   reportStatus: CompletionReportStatus;
   persisted: boolean;
   readyForCustomer: boolean;
+  readinessBlockers?: Array<'checklist' | 'before_photos' | 'after_photos'>;
   checklistProgress: number;
   beforePhotos: number;
   afterPhotos: number;
@@ -1039,6 +1041,7 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
     reportStatus: apiReport.report_status,
     persisted: apiReport.persisted,
     readyForCustomer: apiReport.ready_for_customer,
+    readinessBlockers: apiReport.readiness_blockers ?? [],
     checklistProgress: apiReport.checklist_progress,
     beforePhotos: apiReport.before_photos,
     afterPhotos: apiReport.after_photos,

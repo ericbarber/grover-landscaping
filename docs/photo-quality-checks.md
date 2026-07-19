@@ -21,3 +21,11 @@ the lifecycle mutation in the existing offline queue.
 These checks improve immediate field feedback; they do not replace backend
 content validation, image processing, malware controls, or report-readiness
 policy.
+
+The completion-report API independently derives an ordered
+`readiness_blockers` list from persisted checklist progress and before/after
+evidence counts. The field report renders those server-owned blockers as
+actionable crew guidance, while retaining the same calculation as a local
+fallback when the API is unavailable. Backend tests cover both fully blocked and
+photo-evidence-satisfied reports, and existing photo persistence coverage proves
+that uploaded dimensions and metadata sources survive processing.
