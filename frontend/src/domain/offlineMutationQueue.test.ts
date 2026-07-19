@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createStopProgressOfflineMutation,
   isOfflineMutationConflict,
+  requestPersistentOfflineStorage,
   summarizeOfflineMutations,
   withOfflineMutationFailure,
 } from './offlineMutationQueue';
@@ -33,6 +34,18 @@ describe('offline mutation queue records', () => {
       attemptCount: 0,
       syncState: 'pending',
     });
+  });
+
+  it('reports whether the browser protects offline storage from eviction', async () => {
+    expect(await requestPersistentOfflineStorage(undefined)).toBe('unsupported');
+    expect(await requestPersistentOfflineStorage({
+      persisted: async () => false,
+      persist: async () => true,
+    })).toBe('persisted');
+    expect(await requestPersistentOfflineStorage({
+      persisted: async () => false,
+      persist: async () => false,
+    })).toBe('browser_managed');
   });
 
   it('summarizes ordered queue age and retry states', () => {

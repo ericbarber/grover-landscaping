@@ -36,6 +36,19 @@ export interface OfflineMutationSummary {
   maxAttempts: number;
 }
 
+type OfflineStorageManager = Pick<StorageManager, 'persist' | 'persisted'>;
+export type OfflineStoragePersistence = 'persisted' | 'browser_managed' | 'unsupported';
+
+export async function requestPersistentOfflineStorage(
+  storage: OfflineStorageManager | undefined = typeof navigator === 'undefined'
+    ? undefined
+    : navigator.storage,
+): Promise<OfflineStoragePersistence> {
+  if (!storage?.persist || !storage.persisted) return 'unsupported';
+  if (await storage.persisted()) return 'persisted';
+  return await storage.persist() ? 'persisted' : 'browser_managed';
+}
+
 export function summarizeOfflineMutations(
   mutations: StopProgressOfflineMutation[],
 ): OfflineMutationSummary {

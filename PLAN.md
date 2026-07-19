@@ -574,10 +574,11 @@ Current state:
 - Offline stop-progress replay uses transactionally persisted client mutation IDs for exact deduplication and conflicting-reuse rejection
 - Mobile route queue feedback summarizes state counts, oldest queued time, and maximum retry attempts
 - Mobile route feedback distinguishes unavailable durable browser storage, and legacy local progress writes no longer throw when storage is blocked
+- The first durable field mutation requests persistent browser storage and reports browser-managed retention accurately
 
 Next implementation work:
 
-- Request persistent browser storage after the first durable field mutation
+- Extend the offline mutation contract to job start and completion actions
 
 ## Planned
 

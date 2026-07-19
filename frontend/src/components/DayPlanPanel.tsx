@@ -13,7 +13,9 @@ import {
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
+  requestPersistentOfflineStorage,
   summarizeOfflineMutations,
+  type OfflineStoragePersistence,
   type StopProgressOfflineMutation,
 } from '../domain/offlineMutationQueue';
 import {
@@ -120,6 +122,7 @@ export function DayPlanPanel({
   const [discardCandidateId, setDiscardCandidateId] = useState<string | null>(null);
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const [queueStorageUnavailable, setQueueStorageUnavailable] = useState(false);
+  const [storagePersistence, setStoragePersistence] = useState<OfflineStoragePersistence | null>(null);
   const replayInProgress = useRef(false);
   const offlineSummary = summarizeOfflineMutations(offlineMutations);
   const pendingMutationCount = offlineSummary.total;
@@ -206,6 +209,7 @@ export function DayPlanPanel({
         (left, right) => left.createdAt.localeCompare(right.createdAt),
       ));
       setQueueStorageUnavailable(false);
+      setStoragePersistence(await requestPersistentOfflineStorage());
     } catch {
       // Browser-local progress remains available when durable storage is blocked.
       setQueueStorageUnavailable(true);
@@ -415,6 +419,16 @@ export function DayPlanPanel({
           {queueStorageUnavailable && (
             <p className="mt-2 rounded-lg bg-red-50 p-2 text-xs font-semibold text-red-900" role="alert">
               Durable offline storage is unavailable. Keep this app open and reconnect before continuing field work.
+            </p>
+          )}
+          {!queueStorageUnavailable && storagePersistence === 'browser_managed' && (
+            <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs font-semibold text-amber-900" role="status">
+              Offline changes are saved, but this browser may remove them under storage pressure. Reconnect and sync soon.
+            </p>
+          )}
+          {!queueStorageUnavailable && storagePersistence === 'unsupported' && (
+            <p className="mt-2 rounded-lg bg-slate-100 p-2 text-xs font-semibold text-slate-700" role="status">
+              Offline changes are saved with browser-managed retention. Keep Grover Field installed and open it regularly.
             </p>
           )}
           {pendingMutationCount > 0 && (

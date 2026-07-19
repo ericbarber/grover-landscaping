@@ -62,6 +62,11 @@ crew is told to keep the app open and reconnect rather than receiving a false
 durability claim. Legacy local-storage progress writes and resets also tolerate
 blocked browser storage without breaking the in-memory field controls.
 
+After the first durable queue write, Grover Field requests persistent browser
+storage where supported. Granted storage needs no extra warning. Browser-managed
+or unsupported retention receives accurate eviction guidance without describing
+the queue as unavailable.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.
