@@ -40,3 +40,12 @@ export function draftPlanPersistenceDetail(persisted: boolean): string {
 export function preferredManagerCrewId(currentCrewId: string, crews: CrewRecord[]): string {
   return crews.some((crew) => crew.id === currentCrewId) ? currentCrewId : crews[0]?.id ?? '';
 }
+
+export function managerCrewPlanningLabel(crew: CrewRecord): string {
+  return `${crew.name} · ${crew.dailyStopCapacity} stops`;
+}
+
+export function managerCrewPlanningGuidance(crew: CrewRecord): string {
+  const leadership = crew.leadMembershipId ? 'Crew lead assigned' : 'Crew lead not assigned';
+  return `${leadership}. New drafts can include up to ${crew.dailyStopCapacity} stops.`;
+}

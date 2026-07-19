@@ -5,12 +5,33 @@ import {
   draftPlanPersistenceDetail,
   draftPlanPersistenceLabel,
   localDraftDayPlanResponse,
+  managerCrewPlanningGuidance,
+  managerCrewPlanningLabel,
   preferredManagerCrewId,
 } from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
   it('formats the default manager service date for date inputs', () => {
     expect(defaultManagerServiceDate(new Date(2026, 0, 9))).toBe('2026-01-09');
+  });
+
+  it('summarizes crew capacity and launch readiness for scheduling', () => {
+    const crew = {
+      id: 'crew_1',
+      name: 'North',
+      organizationId: 'org_1',
+      status: 'active' as const,
+      dailyStopCapacity: 8,
+      leadMembershipId: 'membership_lead',
+      persisted: true,
+    };
+    expect(managerCrewPlanningLabel(crew)).toBe('North · 8 stops');
+    expect(managerCrewPlanningGuidance(crew)).toBe(
+      'Crew lead assigned. New drafts can include up to 8 stops.',
+    );
+    expect(managerCrewPlanningGuidance({ ...crew, leadMembershipId: null })).toBe(
+      'Crew lead not assigned. New drafts can include up to 8 stops.',
+    );
   });
 
   it('creates stable draft day plan IDs', () => {

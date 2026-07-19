@@ -6,7 +6,12 @@ import {
   canCreateManagerDayPlanDraft,
   normalizeManagerDayPlanDraftTarget,
 } from '../domain/managerDayPlanDraftTarget';
-import { defaultManagerServiceDate, preferredManagerCrewId } from '../domain/managerDayPlans';
+import {
+  defaultManagerServiceDate,
+  managerCrewPlanningGuidance,
+  managerCrewPlanningLabel,
+  preferredManagerCrewId,
+} from '../domain/managerDayPlans';
 import type { ManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
@@ -47,6 +52,7 @@ export function ManagerDayPlanPanel({
   );
   const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating && !isPublishedDraftTarget;
   const publishDisabledReason = routePublishGuard.disabledReason ?? 'Review this route before publishing.';
+  const selectedCrew = crews.find((crew) => crew.id === crewId);
 
   useEffect(() => {
     setIsLoadingCrews(true);
@@ -121,10 +127,19 @@ export function ManagerDayPlanPanel({
           >
             <option value="">{isLoadingCrews ? 'Loading crews…' : 'Select a crew'}</option>
             {crews.map((crew) => (
-              <option key={crew.id} value={crew.id}>{crew.name}</option>
+              <option key={crew.id} value={crew.id}>{managerCrewPlanningLabel(crew)}</option>
             ))}
           </select>
         </label>
+        {selectedCrew ? (
+          <p className={`rounded-xl border px-3 py-2 text-xs font-medium ${
+            selectedCrew.leadMembershipId
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}>
+            {managerCrewPlanningGuidance(selectedCrew)}
+          </p>
+        ) : null}
         {crewLoadError ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
             Crew options could not be loaded. Refresh after confirming your organization access.
