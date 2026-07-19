@@ -8,6 +8,7 @@ describe('stop progress API client mapping', () => {
       stop_id: 'stop_1',
       status: 'finished',
       persisted: true,
+      idempotent_replay: true,
     };
 
     expect(toStopProgress(response)).toEqual({
@@ -15,6 +16,7 @@ describe('stop progress API client mapping', () => {
       stopId: 'stop_1',
       status: 'finished',
       persisted: true,
+      idempotentReplay: true,
     });
   });
 });

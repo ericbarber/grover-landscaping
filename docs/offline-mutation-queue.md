@@ -47,6 +47,12 @@ affected stop to the newest remaining queued state (or the server-backed state),
 and resumes ordered replay. Storage-removal failure leaves the conflict intact
 and visible.
 
+Each replay sends the queued mutation UUID as `client_mutation_id`. PostgreSQL
+stores that UUID with the tenant, actor, stop, and requested state in the same
+transaction as the stop update. An exact retry returns a persisted idempotent
+replay without applying the update again; reuse for different work returns HTTP
+409. Direct online writes remain backward-compatible without an idempotency key.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.

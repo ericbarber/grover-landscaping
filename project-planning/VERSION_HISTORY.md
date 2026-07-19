@@ -65,6 +65,7 @@
 - 2026-07-19: Added crew-readable offline stop-progress queue review.
 - 2026-07-19: Added reviewed-conflict discard and ordered replay resumption.
 - 2026-07-19: Bound offline progress tenancy to the loaded crew day plan.
+- 2026-07-19: Added transactional server idempotency for offline stop-progress replay.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

@@ -8,6 +8,7 @@ export interface StopProgressResponse {
   stopId: string;
   status: StopProgressStatus;
   persisted: boolean;
+  idempotentReplay: boolean;
 }
 
 export interface ApiStopProgressResponse {
@@ -15,6 +16,7 @@ export interface ApiStopProgressResponse {
   stop_id: string;
   status: StopProgressStatus;
   persisted: boolean;
+  idempotent_replay?: boolean;
 }
 
 export function toStopProgress(response: ApiStopProgressResponse): StopProgressResponse {
@@ -23,6 +25,7 @@ export function toStopProgress(response: ApiStopProgressResponse): StopProgressR
     stopId: response.stop_id,
     status: response.status,
     persisted: response.persisted,
+    idempotentReplay: response.idempotent_replay ?? false,
   };
 }
 
@@ -30,6 +33,7 @@ export async function updateStopProgress(
   dayPlanId: string,
   stopId: string,
   status: StopProgressStatus,
+  clientMutationId?: string,
 ): Promise<StopProgressResponse> {
   const response = await authenticatedFetch(
     `${API_BASE_URL}/day-plans/${dayPlanId}/stops/${stopId}/status`,
@@ -38,7 +42,10 @@ export async function updateStopProgress(
     headers: {
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({
+      status,
+      ...(clientMutationId ? { client_mutation_id: clientMutationId } : {}),
+    }),
     },
   );
 

@@ -44,7 +44,7 @@ use db::{
     CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig, JobAddOnStatusUpdate,
     JobRepository, PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
     PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
-    PhotoProcessingRetryResult,
+    PhotoProcessingRetryResult, StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -93,7 +93,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
 use stop_progress::{
     is_valid_stop_progress_status, local_stop_progress_response, persisted_stop_progress_response,
-    StopProgressRequest,
+    replayed_stop_progress_response, StopProgressRequest,
 };
 use tower_http::{
     cors::CorsLayer,
@@ -102,6 +102,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use uuid::Uuid;
 
 type DynError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -4329,6 +4330,20 @@ async fn update_stop_progress(
         )
             .into_response();
     }
+    if request
+        .client_mutation_id
+        .as_deref()
+        .is_some_and(|id| Uuid::parse_str(id).is_err())
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_client_mutation_id",
+                message: "client_mutation_id must be a UUID".to_string(),
+            }),
+        )
+            .into_response();
+    }
 
     if let Err(response) =
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
@@ -4339,23 +4354,43 @@ async fn update_stop_progress(
 
     let persisted = state
         .jobs
-        .update_stop_progress(&day_plan_id, &stop_id, &request.status)
+        .update_stop_progress(
+            &day_plan_id,
+            &stop_id,
+            &request.status,
+            request.client_mutation_id.as_deref(),
+            &principal.subject,
+        )
         .await;
 
-    if persisted {
-        Json(persisted_stop_progress_response(
+    match persisted {
+        StopProgressWriteResult::Persisted => Json(persisted_stop_progress_response(
             &day_plan_id,
             &stop_id,
             &request.status,
         ))
-        .into_response()
-    } else {
-        Json(local_stop_progress_response(
+        .into_response(),
+        StopProgressWriteResult::Replayed => Json(replayed_stop_progress_response(
             &day_plan_id,
             &stop_id,
             &request.status,
         ))
-        .into_response()
+        .into_response(),
+        StopProgressWriteResult::IdempotencyConflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "stop_progress_idempotency_conflict",
+                message: "The client mutation ID was already used for different stop progress."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        StopProgressWriteResult::NotFound => Json(local_stop_progress_response(
+            &day_plan_id,
+            &stop_id,
+            &request.status,
+        ))
+        .into_response(),
     }
 }
 

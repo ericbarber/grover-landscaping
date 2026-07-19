@@ -23,6 +23,8 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
+pub use postgres_stop_progress::StopProgressWriteResult;
+
 #[derive(Clone, Debug)]
 pub struct DatabaseConfig {
     pub database_url: String,
@@ -459,17 +461,25 @@ impl JobRepository {
         day_plan_id: &str,
         stop_id: &str,
         status: &str,
-    ) -> bool {
+        client_mutation_id: Option<&str>,
+        actor_id: &str,
+    ) -> StopProgressWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(persisted) =
-                postgres_stop_progress::update_stop_progress(pool, day_plan_id, stop_id, status)
-                    .await
+            if let Ok(result) = postgres_stop_progress::update_stop_progress(
+                pool,
+                day_plan_id,
+                stop_id,
+                status,
+                client_mutation_id,
+                actor_id,
+            )
+            .await
             {
-                return persisted;
+                return result;
             }
         }
 
-        false
+        StopProgressWriteResult::NotFound
     }
 
     pub async fn list_photo_evidence(&self, job_id: &str) -> Vec<PhotoEvidence> {

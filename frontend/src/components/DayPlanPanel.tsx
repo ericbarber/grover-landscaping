@@ -274,6 +274,7 @@ export function DayPlanPanel({
             mutation.dayPlanId,
             mutation.stopId,
             mutation.status,
+            mutation.id,
           );
           if (!result.persisted) {
             await markOfflineMutationFailed(mutation, 'API used local fallback');

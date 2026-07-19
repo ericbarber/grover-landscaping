@@ -571,10 +571,11 @@ Current state:
 - Crew queue review shows ordered stop, requested state, queued time, classification, and attempt count without internal error text
 - Two-step reviewed-conflict discard reconciles local stop state and resumes ordered replay without dropping later changes
 - Offline queue tenancy binds to the loaded crew day plan's server-owned organization rather than membership ordering
+- Offline stop-progress replay uses transactionally persisted client mutation IDs for exact deduplication and conflicting-reuse rejection
 
 Next implementation work:
 
-- Add server-side idempotency keys for offline stop-progress replay
+- Add queue age and retry-state summaries to the mobile route
 
 ## Planned
 
