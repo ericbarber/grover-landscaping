@@ -42,10 +42,11 @@ use day_plans::{
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
-    JobAddOnStatusUpdate, JobDispatchAssignmentResult, JobLifecycleWriteResult, JobRepository,
-    PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
-    PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter, PhotoProcessingResolveResult,
-    PhotoProcessingRetryResult, StopProgressWriteResult,
+    DispatchCustomerNotificationResult, JobAddOnStatusUpdate, JobDispatchAssignmentResult,
+    JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
+    PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
+    PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+    StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -217,6 +218,12 @@ struct UpdateJobDispatchAssignmentRequest {
     crew_id: String,
     scheduled_date: String,
     customer_notification_required: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct CompleteDispatchCustomerNotificationRequest {
+    channel: String,
+    note: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -616,6 +623,10 @@ fn app_with_runtime(
         .route(
             "/jobs/{id}/dispatch-assignment",
             put(update_job_dispatch_assignment),
+        )
+        .route(
+            "/jobs/{id}/dispatch-customer-notification",
+            post(complete_dispatch_customer_notification),
         )
         .route("/jobs/{id}/account", get(get_account_for_job))
         .route(
@@ -1063,6 +1074,76 @@ async fn update_job_dispatch_assignment(
             Json(ErrorResponse {
                 error: "dispatch_assignment_unavailable",
                 message: "The dispatch assignment could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn complete_dispatch_customer_notification(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+    Json(request): Json<CompleteDispatchCustomerNotificationRequest>,
+) -> Response {
+    if let Err(response) =
+        require_job_organization_access(&state, &principal, &id, can_manage_schedule).await
+    {
+        return response;
+    }
+    if !matches!(request.channel.as_str(), "email" | "sms" | "phone") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_notification_channel",
+                message: "channel must be email, sms, or phone.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let note = request
+        .note
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
+    if note.is_some_and(|value| value.chars().count() > 500) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_notification_note",
+                message: "note cannot exceed 500 characters.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .jobs
+        .complete_dispatch_customer_notification(&id, &request.channel, note, &principal.subject)
+        .await
+    {
+        DispatchCustomerNotificationResult::Completed => (
+            StatusCode::CREATED,
+            Json(serde_json::json!({
+                "job_id": id,
+                "status": "completed",
+                "channel": request.channel,
+                "persisted": true
+            })),
+        )
+            .into_response(),
+        DispatchCustomerNotificationResult::NoPendingNotification => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "no_pending_dispatch_notification",
+                message: "This job has no unresolved dispatch customer notification.".to_string(),
+            }),
+        )
+            .into_response(),
+        DispatchCustomerNotificationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "dispatch_notification_unavailable",
+                message: "Customer notification follow-up could not be recorded.".to_string(),
             }),
         )
             .into_response(),
@@ -6350,6 +6431,26 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let error: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(error["error"], "invalid_scheduled_date");
+    }
+
+    #[tokio::test]
+    async fn dispatch_notification_endpoint_rejects_unknown_channel() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/jobs/job_1001/dispatch-customer-notification")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"channel":"chat","note":"Sent"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let error: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(error["error"], "invalid_notification_channel");
     }
 
     #[tokio::test]

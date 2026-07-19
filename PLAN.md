@@ -482,6 +482,7 @@ Current state:
 - Date-changing dispatch moves require explicit customer-notification intent and retain it in transactional audit metadata
 - Manager operational activity renders reassignment context and recommends customer follow-up when the audited intent requires notification
 - Pixel 7 smoke coverage proves audited date-change confirmation, required notification intent, persisted dispatch movement, activity follow-up, and cleanup over Tailscale
+- Tenant-scoped dispatch notification completion records channel/note context once against the latest unresolved notification-required move
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -622,7 +623,7 @@ Current state:
 
 Next implementation work:
 
-- Add an audited manager action for marking dispatch customer notification follow-up complete
+- Connect dispatch notification completion to manager operational activity controls
 
 ## Planned
 

@@ -112,6 +112,7 @@
 - 2026-07-19: Audited explicit customer-notification intent for dispatch date changes.
 - 2026-07-19: Surfaced dispatch moves and required customer follow-up in manager activity.
 - 2026-07-19: Added a live mobile dispatch-move and customer-follow-up smoke test.
+- 2026-07-19: Added audited completion for dispatch customer-notification follow-up.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

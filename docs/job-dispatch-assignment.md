@@ -38,6 +38,13 @@ a move where notification was intentionally unnecessary.
 old/new crew and service dates. Events whose notification intent is required
 carry a specific customer follow-up recommendation.
 
+Managers clear that follow-up through
+`POST /jobs/{job_id}/dispatch-customer-notification` with an `email`, `sms`, or
+`phone` channel and an optional note. The action locks the job, requires an
+unresolved notification-required reassignment, and writes one
+`dispatch_customer_notified` audit event linked to the reassignment event.
+Repeated or concurrent completion attempts return a conflict.
+
 The API repeats this capacity calculation while holding a lock on the
 destination crew. Concurrent dispatch requests therefore cannot both consume
 the final slot, and an overloaded request returns `crew_capacity_exceeded`

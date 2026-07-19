@@ -284,6 +284,13 @@ pub enum JobDispatchAssignmentResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DispatchCustomerNotificationResult {
+    Completed,
+    NoPendingNotification,
+    Unavailable,
+}
+
 impl JobRepository {
     #[allow(dead_code)]
     pub fn new() -> Self {
@@ -509,6 +516,80 @@ impl JobRepository {
         match postgres_read::get_job(pool, job_id).await {
             Ok(Some(job)) => JobDispatchAssignmentResult::Updated(job),
             _ => JobDispatchAssignmentResult::Unavailable,
+        }
+    }
+
+    pub async fn complete_dispatch_customer_notification(
+        &self,
+        job_id: &str,
+        channel: &str,
+        note: Option<&str>,
+        actor_user_id: &str,
+    ) -> DispatchCustomerNotificationResult {
+        let Some(pool) = &self.pool else {
+            return DispatchCustomerNotificationResult::Unavailable;
+        };
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return DispatchCustomerNotificationResult::Unavailable,
+        };
+        if sqlx::query_scalar::<_, String>("SELECT id FROM service_jobs WHERE id = $1 FOR UPDATE")
+            .bind(job_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .is_err()
+        {
+            return DispatchCustomerNotificationResult::Unavailable;
+        }
+        let inserted = sqlx::query_scalar::<_, String>(
+            r#"
+            WITH latest_move AS (
+                SELECT audit.id, audit.organization_id, audit.occurred_at
+                FROM access_audit_events audit
+                WHERE audit.target_id = $1
+                  AND audit.event_kind = 'job_reassigned'
+                  AND audit.metadata->>'customer_notification_required' = 'true'
+                ORDER BY audit.occurred_at DESC, audit.id DESC
+                LIMIT 1
+            )
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            )
+            SELECT $2, $3, move.organization_id, 'dispatch_customer_notified', $1, NOW(),
+                jsonb_strip_nulls(jsonb_build_object(
+                    'channel', $4::text,
+                    'note', $5::text,
+                    'reassignment_audit_id', move.id
+                ))
+            FROM latest_move move
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM access_audit_events completed
+                WHERE completed.target_id = $1
+                  AND completed.event_kind = 'dispatch_customer_notified'
+                  AND completed.occurred_at >= move.occurred_at
+            )
+            RETURNING id
+            "#,
+        )
+        .bind(job_id)
+        .bind(format!(
+            "audit_dispatch_customer_notified_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(actor_user_id)
+        .bind(channel)
+        .bind(note)
+        .fetch_optional(&mut *tx)
+        .await;
+
+        match inserted {
+            Ok(Some(_)) if tx.commit().await.is_ok() => {
+                DispatchCustomerNotificationResult::Completed
+            }
+            Ok(Some(_)) => DispatchCustomerNotificationResult::Unavailable,
+            Ok(None) => DispatchCustomerNotificationResult::NoPendingNotification,
+            Err(_) => DispatchCustomerNotificationResult::Unavailable,
         }
     }
 
