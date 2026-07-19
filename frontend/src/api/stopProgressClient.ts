@@ -1,6 +1,7 @@
 import type { StopProgressStatus } from '../domain/stopProgress';
 import { API_BASE_URL } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
+import { apiRequestError } from './apiError';
 
 export interface StopProgressResponse {
   dayPlanId: string;
@@ -42,7 +43,10 @@ export async function updateStopProgress(
   );
 
   if (!response.ok) {
-    throw new Error(`Stop progress request failed with status ${response.status}`);
+    throw await apiRequestError(
+      response,
+      `Stop progress request failed with status ${response.status}`,
+    );
   }
 
   const progress = (await response.json()) as ApiStopProgressResponse;

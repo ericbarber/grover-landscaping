@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   createStopProgressOfflineMutation,
+  isOfflineMutationConflict,
   withOfflineMutationFailure,
 } from './offlineMutationQueue';
+import { ApiRequestError } from '../api/apiError';
 
 describe('offline mutation queue records', () => {
   it('captures tenant, actor, ordering, and retry context for stop progress', () => {
@@ -52,5 +54,12 @@ describe('offline mutation queue records', () => {
       syncState: 'failed',
       lastError: 'API unavailable',
     });
+  });
+
+  it('classifies stale or invalid server transitions as conflicts', () => {
+    expect(isOfflineMutationConflict(new ApiRequestError(409))).toBe(true);
+    expect(isOfflineMutationConflict(new ApiRequestError(422))).toBe(true);
+    expect(isOfflineMutationConflict(new ApiRequestError(503))).toBe(false);
+    expect(isOfflineMutationConflict(new TypeError('network failed'))).toBe(false);
   });
 });

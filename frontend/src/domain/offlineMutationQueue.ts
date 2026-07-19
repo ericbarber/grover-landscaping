@@ -1,4 +1,5 @@
 import type { StopProgressStatus } from './stopProgress';
+import { ApiRequestError } from '../api/apiError';
 
 const DATABASE_NAME = 'grover-field-offline';
 const DATABASE_VERSION = 2;
@@ -125,11 +126,12 @@ export async function listOfflineMutations(
 export function withOfflineMutationFailure(
   mutation: StopProgressOfflineMutation,
   lastError: string,
+  syncState: Extract<StopProgressOfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
 ): StopProgressOfflineMutation {
   return {
     ...mutation,
     attemptCount: mutation.attemptCount + 1,
-    syncState: 'failed',
+    syncState,
     lastError,
   };
 }
@@ -137,17 +139,23 @@ export function withOfflineMutationFailure(
 export async function markOfflineMutationFailed(
   mutation: StopProgressOfflineMutation,
   lastError: string,
+  syncState: Extract<StopProgressOfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
 ): Promise<void> {
   const database = await openOfflineDatabase();
   try {
     const transaction = database.transaction(MUTATION_STORE, 'readwrite');
     transaction.objectStore(MUTATION_STORE).put(
-      withOfflineMutationFailure(mutation, lastError),
+      withOfflineMutationFailure(mutation, lastError, syncState),
     );
     await waitForTransaction(transaction);
   } finally {
     database.close();
   }
+}
+
+export function isOfflineMutationConflict(error: unknown): boolean {
+  return error instanceof ApiRequestError
+    && [404, 409, 410, 412, 422].includes(error.status);
 }
 
 export async function removeOfflineMutation(id: string): Promise<void> {

@@ -9,6 +9,7 @@ import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/d
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   enqueueStopProgressMutation,
+  isOfflineMutationConflict,
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
@@ -106,6 +107,7 @@ export function DayPlanPanel({
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
   const [pendingMutationCount, setPendingMutationCount] = useState(0);
+  const [conflictMutationCount, setConflictMutationCount] = useState(0);
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
   const replayInProgress = useRef(false);
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
@@ -260,6 +262,7 @@ export function DayPlanPanel({
     try {
       const mutations = await listOfflineMutations(organizationId, actorId);
       for (const mutation of mutations) {
+        if (mutation.syncState === 'conflict') break;
         try {
           const result = await updateStopProgress(
             mutation.dayPlanId,
@@ -275,12 +278,16 @@ export function DayPlanPanel({
           await markOfflineMutationFailed(
             mutation,
             error instanceof Error ? error.message : 'Stop progress sync failed',
+            isOfflineMutationConflict(error) ? 'conflict' : 'failed',
           );
           break;
         }
       }
       const remaining = await listOfflineMutations(organizationId, actorId);
       setPendingMutationCount(remaining.length);
+      setConflictMutationCount(
+        remaining.filter((mutation) => mutation.syncState === 'conflict').length,
+      );
       if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
     } catch {
       // Keep the visible count from the last successful IndexedDB read.
@@ -333,11 +340,15 @@ export function DayPlanPanel({
   useEffect(() => {
     if (!organizationId || !actorId) {
       setPendingMutationCount(0);
+      setConflictMutationCount(0);
       return;
     }
     void listOfflineMutations(organizationId, actorId)
       .then((mutations) => {
         setPendingMutationCount(mutations.length);
+        setConflictMutationCount(
+          mutations.filter((mutation) => mutation.syncState === 'conflict').length,
+        );
         if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
       })
       .catch(() => setPendingMutationCount(0));
@@ -360,13 +371,22 @@ export function DayPlanPanel({
               <p>
                 {pendingMutationCount} offline {pendingMutationCount === 1 ? 'change' : 'changes'} waiting to sync
               </p>
+              {conflictMutationCount > 0 && (
+                <p className="mt-1 font-medium">
+                  {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
+                </p>
+              )}
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
-                disabled={!navigator.onLine || isReplayingMutations}
+                disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}
                 onClick={() => void replayOfflineMutations()}
                 type="button"
               >
-                {isReplayingMutations ? 'Syncing…' : 'Sync now'}
+                {isReplayingMutations
+                  ? 'Syncing…'
+                  : conflictMutationCount > 0
+                    ? 'Manager review needed'
+                    : 'Sync now'}
               </button>
             </div>
           )}
