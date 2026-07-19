@@ -13,6 +13,7 @@ Current continuation work:
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
 - First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.
 - The mobile first-owner workspace now recommends the next incomplete launch action.
+- First-owner launch progress now refreshes automatically after related manager actions.
 - Provision and validate the first production Cognito owner identity.
 - Finish tenant-aware boundaries for remaining shared customer reads.
 - Configure and validate the production email/SMS provider.

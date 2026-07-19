@@ -12,6 +12,7 @@ import {
 type Props = {
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
   onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
+  refreshSignal?: number;
 };
 
 export type FirstOwnerSetupTarget =
@@ -62,6 +63,7 @@ export function firstOwnerNextMilestone(progress: FirstOwnerSetupProgress) {
 export function FirstOwnerOnboardingPanel({
   onOrganizationReady,
   onOpenSetupStep,
+  refreshSignal = 0,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -112,7 +114,7 @@ export function FirstOwnerOnboardingPanel({
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refreshSignal]);
 
   async function createOrganization() {
     const displayName = organizationName.trim();

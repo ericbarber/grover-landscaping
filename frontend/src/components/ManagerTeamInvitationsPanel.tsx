@@ -132,6 +132,7 @@ export function ManagerTeamInvitationsPanel({
           ? `Invitation queued for ${created.inviteeEmail}.`
           : `Local invitation created for ${created.inviteeEmail}.`,
       );
+      onTeamChanged?.();
     } catch (error) {
       setMessage(invitationCreationFailureMessage(error));
     } finally {

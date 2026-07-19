@@ -860,6 +860,7 @@ export function App() {
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
+  const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -1902,8 +1903,10 @@ export function App() {
             <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
             onOpenSetupStep={openFirstOwnerSetupStep}
+            refreshSignal={firstOwnerProgressRefreshSignal}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
+              setFirstOwnerProgressRefreshSignal((current) => current + 1);
               setStatusMessage(`${organizationName} owner setup completed.`);
               recordManagerActivity({
                 title: 'Organization owner setup completed',
@@ -1918,6 +1921,7 @@ export function App() {
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
                 setDayPlanRefreshSignal((current) => current + 1);
+                setFirstOwnerProgressRefreshSignal((current) => current + 1);
                 recordManagerActivity({
                   title: 'Day plan published',
                   message: `${dayPlan.crewId} route for ${dayPlan.serviceDate} was published and crew route refreshed.`,
@@ -1973,11 +1977,17 @@ export function App() {
           </div>
           <div className="mt-6 scroll-mt-20 space-y-6" id="first-owner-team-invitations">
             <ManagerTeamMembershipsPanel
-              onTeamChanged={() => setTeamActivityRefreshSignal((current) => current + 1)}
+              onTeamChanged={() => {
+                setTeamActivityRefreshSignal((current) => current + 1);
+                setFirstOwnerProgressRefreshSignal((current) => current + 1);
+              }}
               organizationId={activeManagerOrganizationId}
             />
             <ManagerTeamInvitationsPanel
-              onTeamChanged={() => setTeamActivityRefreshSignal((current) => current + 1)}
+              onTeamChanged={() => {
+                setTeamActivityRefreshSignal((current) => current + 1);
+                setFirstOwnerProgressRefreshSignal((current) => current + 1);
+              }}
               organizationId={activeManagerOrganizationId}
             />
             <ManagerTeamActivityPanel

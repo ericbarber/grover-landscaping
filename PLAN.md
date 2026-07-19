@@ -245,6 +245,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owners can set a supported operating timezone, default service-area label, and 1–100 daily stop planning capacity
 - First-owner setup shows persisted completion for organization profile, first crew, first published route, and team invitation with mobile workspace actions
 - First-owner setup recommends one next incomplete launch action and confirms when all launch milestones are complete
+- First-owner progress refreshes after organization profile, route publication, invitation, and team administration changes
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -487,7 +488,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Refresh first-owner progress automatically after manager setup work completes
+- Add owner-managed crew creation so a new tenant can complete crew setup without seed data
 
 ## Planned
 
