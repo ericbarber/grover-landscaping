@@ -260,7 +260,7 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
     ) -> Vec<TeamAdministrationActivity> {
-        self.list_team_administration_activity_page(organization_id, None, None, 25)
+        self.list_team_administration_activity_page(organization_id, None, None, None, 25)
             .await
     }
 
@@ -268,15 +268,23 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
         event_kind: Option<&str>,
+        actor_query: Option<&str>,
         before: Option<&str>,
         limit: i64,
     ) -> Vec<TeamAdministrationActivity> {
         let Some(pool) = &self.pool else {
             return Vec::new();
         };
-        list_team_administration_activity(pool, organization_id, event_kind, before, limit)
-            .await
-            .unwrap_or_default()
+        list_team_administration_activity(
+            pool,
+            organization_id,
+            event_kind,
+            actor_query,
+            before,
+            limit,
+        )
+        .await
+        .unwrap_or_default()
     }
 
     pub async fn list_operational_activity(
@@ -1047,6 +1055,7 @@ async fn list_team_administration_activity(
     pool: &PgPool,
     organization_id: &str,
     event_kind: Option<&str>,
+    actor_query: Option<&str>,
     before: Option<&str>,
     limit: i64,
 ) -> Result<Vec<TeamAdministrationActivity>, sqlx::Error> {
@@ -1090,7 +1099,12 @@ async fn list_team_administration_activity(
          AND target_crew.id = audit.target_id
         WHERE audit.organization_id = $1
           AND ($2::text IS NULL OR audit.event_kind = $2)
-          AND ($3::timestamptz IS NULL OR audit.occurred_at < $3::timestamptz)
+          AND (
+              $3::text IS NULL
+              OR audit.actor_user_id ILIKE '%' || $3 || '%'
+              OR COALESCE(actor.display_name, '') ILIKE '%' || $3 || '%'
+          )
+          AND ($4::timestamptz IS NULL OR audit.occurred_at < $4::timestamptz)
           AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
@@ -1105,11 +1119,12 @@ async fn list_team_administration_activity(
             'crew_reactivated'
         )
         ORDER BY occurred_at DESC, id DESC
-        LIMIT $4
+        LIMIT $5
         "#,
     )
     .bind(organization_id)
     .bind(event_kind)
+    .bind(actor_query)
     .bind(before)
     .bind(limit)
     .fetch_all(pool)

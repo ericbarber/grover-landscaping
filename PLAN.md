@@ -526,10 +526,11 @@ Current state:
 - Owner team activity supports actor-name or identity search plus event-type filtering
 - Owner team activity supports bounded timestamp-cursor pagination and duplicate-safe older-event loading
 - Owner team event filters are tenant-scoped and applied across server-paginated history
+- Owner team actor search matches readable names or immutable identities across server-paginated history
 
 Next implementation work:
 
-- Apply owner team actor search server-side across paginated history
+- Add affected-member and crew search to owner team activity
 
 ## Planned
 

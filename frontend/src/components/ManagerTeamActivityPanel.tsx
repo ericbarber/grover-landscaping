@@ -82,6 +82,7 @@ export function ManagerTeamActivityPanel({
     try {
       const loaded = await fetchTeamAdministrationActivity(organizationId, {
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
+        actor: actorQuery.trim() || undefined,
         limit: 25,
       });
       setActivity(loaded);
@@ -102,6 +103,7 @@ export function ManagerTeamActivityPanel({
       const older = await fetchTeamAdministrationActivity(organizationId, {
         before,
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
+        actor: actorQuery.trim() || undefined,
         limit: 25,
       });
       setActivity((current) => [
@@ -118,8 +120,9 @@ export function ManagerTeamActivityPanel({
   }
 
   useEffect(() => {
-    void refresh();
-  }, [organizationId, refreshSignal, eventFilter]);
+    const timeout = window.setTimeout(() => void refresh(), actorQuery ? 300 : 0);
+    return () => window.clearTimeout(timeout);
+  }, [organizationId, refreshSignal, eventFilter, actorQuery]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
