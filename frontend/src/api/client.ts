@@ -526,6 +526,17 @@ export interface OrganizationProfile {
   persisted: boolean;
 }
 
+export interface FirstOwnerSetupProgress {
+  organizationId: string;
+  organizationProfileComplete: boolean;
+  teamInvitationCreated: boolean;
+  crewConfigured: boolean;
+  firstRoutePublished: boolean;
+  completedSteps: number;
+  totalSteps: number;
+  persisted: boolean;
+}
+
 export type OrganizationInvitationRole =
   | 'organization_owner'
   | 'manager'
@@ -1649,6 +1660,31 @@ export async function fetchOrganizationProfile(
   return toOrganizationProfile(await request<ApiOrganizationProfile>(
     `/organizations/${encodeURIComponent(organizationId)}`,
   ));
+}
+
+export async function fetchFirstOwnerSetupProgress(
+  organizationId: string,
+): Promise<FirstOwnerSetupProgress> {
+  const progress = await request<{
+    organization_id: string;
+    organization_profile_complete: boolean;
+    team_invitation_created: boolean;
+    crew_configured: boolean;
+    first_route_published: boolean;
+    completed_steps: number;
+    total_steps: number;
+    persisted: boolean;
+  }>(`/organizations/${encodeURIComponent(organizationId)}/setup-progress`);
+  return {
+    organizationId: progress.organization_id,
+    organizationProfileComplete: progress.organization_profile_complete,
+    teamInvitationCreated: progress.team_invitation_created,
+    crewConfigured: progress.crew_configured,
+    firstRoutePublished: progress.first_route_published,
+    completedSteps: progress.completed_steps,
+    totalSteps: progress.total_steps,
+    persisted: progress.persisted,
+  };
 }
 
 export async function updateOrganizationProfile(

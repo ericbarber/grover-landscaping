@@ -62,6 +62,18 @@ pub struct OrganizationProfile {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct FirstOwnerSetupProgress {
+    pub organization_id: String,
+    pub organization_profile_complete: bool,
+    pub team_invitation_created: bool,
+    pub crew_configured: bool,
+    pub first_route_published: bool,
+    pub completed_steps: i32,
+    pub total_steps: i32,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct UpdateOrganizationProfileRequest {
     pub display_name: String,
     pub organization_type: String,
@@ -297,6 +309,28 @@ impl OrganizationRepository {
                 .flatten();
         }
         local_organization_profile(organization_id)
+    }
+
+    pub async fn first_owner_setup_progress(
+        &self,
+        organization_id: &str,
+    ) -> Option<FirstOwnerSetupProgress> {
+        if let Some(pool) = &self.pool {
+            return first_owner_setup_progress(pool, organization_id)
+                .await
+                .ok()
+                .flatten();
+        }
+        local_organization_profile(organization_id).map(|_| FirstOwnerSetupProgress {
+            organization_id: organization_id.to_string(),
+            organization_profile_complete: true,
+            team_invitation_created: true,
+            crew_configured: true,
+            first_route_published: true,
+            completed_steps: 4,
+            total_steps: 4,
+            persisted: false,
+        })
     }
 
     pub async fn update_organization_profile(
@@ -715,6 +749,71 @@ async fn organization_profile(
     .fetch_optional(pool)
     .await?;
     Ok(row.map(organization_profile_from_row))
+}
+
+async fn first_owner_setup_progress(
+    pool: &PgPool,
+    organization_id: &str,
+) -> Result<Option<FirstOwnerSetupProgress>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"
+        SELECT
+            organization.id,
+            (
+                (organization.contact_email IS NOT NULL OR organization.contact_phone IS NOT NULL)
+                AND organization.service_area_label IS NOT NULL
+            ) AS organization_profile_complete,
+            EXISTS (
+                SELECT 1
+                FROM organization_invitations invitation
+                WHERE invitation.organization_id = organization.id
+            ) AS team_invitation_created,
+            EXISTS (
+                SELECT 1
+                FROM crews crew
+                WHERE crew.organization_id = organization.id
+            ) AS crew_configured,
+            EXISTS (
+                SELECT 1
+                FROM day_plans plan
+                JOIN crews crew ON crew.id = plan.crew_id
+                WHERE crew.organization_id = organization.id
+                  AND plan.status IN ('published', 'completed')
+            ) AS first_route_published
+        FROM organizations organization
+        WHERE organization.id = $1
+          AND organization.status = 'active'
+        "#,
+    )
+    .bind(organization_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| {
+        let organization_profile_complete = row.get("organization_profile_complete");
+        let team_invitation_created = row.get("team_invitation_created");
+        let crew_configured = row.get("crew_configured");
+        let first_route_published = row.get("first_route_published");
+        let completed_steps = [
+            organization_profile_complete,
+            team_invitation_created,
+            crew_configured,
+            first_route_published,
+        ]
+        .into_iter()
+        .filter(|complete| *complete)
+        .count() as i32;
+        FirstOwnerSetupProgress {
+            organization_id: row.get("id"),
+            organization_profile_complete,
+            team_invitation_created,
+            crew_configured,
+            first_route_published,
+            completed_steps,
+            total_steps: 4,
+            persisted: true,
+        }
+    }))
 }
 
 async fn update_organization_profile(

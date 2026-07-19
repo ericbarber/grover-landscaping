@@ -157,6 +157,18 @@ async fn repository_bootstraps_first_owner_once() {
         Some("East Valley")
     );
     assert_eq!(updated_profile.default_daily_stop_capacity, 16);
+
+    let setup_progress = organizations
+        .first_owner_setup_progress(&created.organization_id)
+        .await
+        .expect("owner setup progress should be available");
+    assert!(setup_progress.organization_profile_complete);
+    assert!(!setup_progress.team_invitation_created);
+    assert!(!setup_progress.crew_configured);
+    assert!(!setup_progress.first_route_published);
+    assert_eq!(setup_progress.completed_steps, 1);
+    assert_eq!(setup_progress.total_steps, 4);
+    assert!(setup_progress.persisted);
     assert_eq!(
         organizations
             .organization_profile(&created.organization_id)

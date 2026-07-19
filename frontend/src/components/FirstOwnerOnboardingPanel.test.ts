@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { PrincipalAccessSummary } from '../api/client';
-import { firstOwnerSetupSteps, firstOwnerSetupTarget } from './FirstOwnerOnboardingPanel';
+import {
+  firstOwnerProgressMilestones,
+  firstOwnerSetupSteps,
+  firstOwnerSetupTarget,
+} from './FirstOwnerOnboardingPanel';
 
 describe('first owner onboarding steps', () => {
   it('starts with organization creation when no membership exists', () => {
@@ -41,5 +45,25 @@ describe('first owner onboarding steps', () => {
     expect(firstOwnerSetupTarget('Configure the first crew')).toBe('service-setup');
     expect(firstOwnerSetupTarget('Publish the first day plan')).toBe('day-plan');
     expect(firstOwnerSetupTarget('Invite additional team members')).toBe('team-invitations');
+  });
+
+  it('maps persisted completion state to actionable mobile milestones', () => {
+    const milestones = firstOwnerProgressMilestones({
+      organizationId: 'org_1',
+      organizationProfileComplete: true,
+      teamInvitationCreated: false,
+      crewConfigured: true,
+      firstRoutePublished: false,
+      completedSteps: 2,
+      totalSteps: 4,
+      persisted: true,
+    });
+
+    expect(milestones.map(({ label, complete, target }) => ({ label, complete, target }))).toEqual([
+      { label: 'Complete organization profile', complete: true, target: null },
+      { label: 'Configure the first crew', complete: true, target: 'service-setup' },
+      { label: 'Publish the first route', complete: false, target: 'day-plan' },
+      { label: 'Invite a team member', complete: false, target: 'team-invitations' },
+    ]);
   });
 });

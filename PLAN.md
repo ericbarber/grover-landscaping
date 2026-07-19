@@ -243,6 +243,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Owners can load and edit organization name and company type from the mobile first-user workspace, with tenant guards and audited persistence
 - Organization profiles include validated contact email, phone, and website details in the same mobile owner editor
 - Owners can set a supported operating timezone, default service-area label, and 1–100 daily stop planning capacity
+- First-owner setup shows persisted completion for organization profile, first crew, first published route, and team invitation with mobile workspace actions
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -485,7 +486,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Add first-owner setup completion status for organization profile, team invitation, and first route
+- Guide first owners through the next incomplete setup action after each milestone
 
 ## Planned
 

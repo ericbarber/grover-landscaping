@@ -59,3 +59,9 @@ service-area label, and a default daily stop capacity from 1–100.
 - The mobile first-owner workspace loads the profile and keeps editing behind an
   explicit owner control.
 - Seed-local development returns and updates a non-persisted demo profile.
+
+`GET /organizations/{organization_id}/setup-progress` returns owner-scoped launch
+milestones for a complete organization profile, first configured crew, first
+published route, and first team invitation. The response includes completed and
+total counts so mobile clients can render progress without inferring persisted
+state from fallback route data.

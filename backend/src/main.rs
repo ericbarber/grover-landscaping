@@ -524,6 +524,10 @@ fn app_with_runtime(
             get(get_organization_profile).put(update_organization_profile),
         )
         .route(
+            "/organizations/{organization_id}/setup-progress",
+            get(get_first_owner_setup_progress),
+        )
+        .route(
             "/health/ready",
             get(move || readiness(Arc::clone(&readiness_state), persistence, database_required)),
         )
@@ -985,6 +989,34 @@ async fn get_organization_profile(
         .await
     {
         Some(profile) => Json(profile).into_response(),
+        None => resource_not_found_response(
+            "organization_not_found",
+            "The requested organization was not found.",
+        ),
+    }
+}
+
+async fn get_first_owner_setup_progress(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .organizations
+        .first_owner_setup_progress(&organization_id)
+        .await
+    {
+        Some(progress) => Json(progress).into_response(),
         None => resource_not_found_response(
             "organization_not_found",
             "The requested organization was not found.",
@@ -4418,6 +4450,31 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["display_name"], "Grover Property Services");
         assert_eq!(json["organization_type"], "property_management_company");
+        assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn first_owner_setup_progress_endpoint_returns_local_milestones() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/organizations/org_demo_landscaping/setup-progress")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["organization_id"], "org_demo_landscaping");
+        assert_eq!(json["organization_profile_complete"], true);
+        assert_eq!(json["team_invitation_created"], true);
+        assert_eq!(json["crew_configured"], true);
+        assert_eq!(json["first_route_published"], true);
+        assert_eq!(json["completed_steps"], 4);
+        assert_eq!(json["total_steps"], 4);
         assert_eq!(json["persisted"], false);
     }
 

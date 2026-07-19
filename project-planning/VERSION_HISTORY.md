@@ -11,6 +11,7 @@ Current continuation work:
 
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
+- First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.
 - Provision and validate the first production Cognito owner identity.
 - Finish tenant-aware boundaries for remaining shared customer reads.
 - Configure and validate the production email/SMS provider.

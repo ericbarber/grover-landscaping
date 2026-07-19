@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   bootstrapOrganization,
+  fetchFirstOwnerSetupProgress,
   fetchOrganizationProfile,
   fetchPrincipalAccessSummary,
   updateOrganizationProfile,
   type PrincipalAccessSummary,
+  type FirstOwnerSetupProgress,
 } from '../api/client';
 
 type Props = {
@@ -44,11 +46,21 @@ export function firstOwnerSetupTarget(step: string): FirstOwnerSetupTarget | nul
   }
 }
 
+export function firstOwnerProgressMilestones(progress: FirstOwnerSetupProgress) {
+  return [
+    { label: 'Complete organization profile', complete: progress.organizationProfileComplete, target: null },
+    { label: 'Configure the first crew', complete: progress.crewConfigured, target: 'service-setup' as const },
+    { label: 'Publish the first route', complete: progress.firstRoutePublished, target: 'day-plan' as const },
+    { label: 'Invite a team member', complete: progress.teamInvitationCreated, target: 'team-invitations' as const },
+  ];
+}
+
 export function FirstOwnerOnboardingPanel({
   onOrganizationReady,
   onOpenSetupStep,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
+  const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
   const [organizationName, setOrganizationName] = useState('');
   const [organizationType, setOrganizationType] = useState<
     'yard_care_company' | 'property_management_company'
@@ -70,7 +82,10 @@ export function FirstOwnerOnboardingPanel({
       setAccess(nextAccess);
       const nextMembership = nextAccess.memberships[0];
       if (nextMembership) {
-        const profile = await fetchOrganizationProfile(nextMembership.organizationId);
+        const [profile, progress] = await Promise.all([
+          fetchOrganizationProfile(nextMembership.organizationId),
+          fetchFirstOwnerSetupProgress(nextMembership.organizationId),
+        ]);
         setOrganizationName(profile.displayName);
         setOrganizationType(profile.organizationType);
         setContactEmail(profile.contactEmail);
@@ -79,6 +94,9 @@ export function FirstOwnerOnboardingPanel({
         setTimeZone(profile.timeZone);
         setServiceAreaLabel(profile.serviceAreaLabel);
         setDefaultDailyStopCapacity(profile.defaultDailyStopCapacity);
+        setSetupProgress(progress);
+      } else {
+        setSetupProgress(null);
       }
       setMessage(null);
     } catch {
@@ -103,7 +121,7 @@ export function FirstOwnerOnboardingPanel({
       const result = await bootstrapOrganization(displayName, organizationType);
       setMessage(`${result.displayName} is ready. You are the organization owner.`);
       onOrganizationReady?.(result.displayName, result.organizationId);
-      setAccess(await fetchPrincipalAccessSummary());
+      await refresh();
     } catch {
       setMessage('The organization could not be created. Confirm owner access and database availability.');
     } finally {
@@ -141,7 +159,7 @@ export function FirstOwnerOnboardingPanel({
       setMessage(`${profile.displayName} profile saved.`);
       setIsEditingProfile(false);
       onOrganizationReady?.(profile.displayName, profile.id);
-      setAccess(await fetchPrincipalAccessSummary());
+      await refresh();
     } catch {
       setMessage('The organization profile could not be saved. Confirm owner access and try again.');
     } finally {
@@ -349,6 +367,56 @@ export function FirstOwnerOnboardingPanel({
               </div>
             ) : null}
           </div>
+          {setupProgress ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-slate-950">Setup progress</h3>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {setupProgress.completedSteps} of {setupProgress.totalSteps} launch steps complete
+                  </p>
+                </div>
+                <span className="text-lg font-bold text-slate-950">
+                  {Math.round((setupProgress.completedSteps / setupProgress.totalSteps) * 100)}%
+                </span>
+              </div>
+              <div
+                aria-label={`${setupProgress.completedSteps} of ${setupProgress.totalSteps} setup steps complete`}
+                className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"
+                role="progressbar"
+                aria-valuemax={setupProgress.totalSteps}
+                aria-valuemin={0}
+                aria-valuenow={setupProgress.completedSteps}
+              >
+                <div
+                  className="h-full rounded-full bg-emerald-600"
+                  style={{ width: `${(setupProgress.completedSteps / setupProgress.totalSteps) * 100}%` }}
+                />
+              </div>
+              <ul className="mt-3 space-y-2">
+                {firstOwnerProgressMilestones(setupProgress).map((milestone) => (
+                  <li className="flex min-h-11 items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm" key={milestone.label}>
+                    <span aria-hidden="true" className={milestone.complete ? 'text-emerald-700' : 'text-slate-400'}>
+                      {milestone.complete ? '✓' : '○'}
+                    </span>
+                    <span className="flex-1 font-medium text-slate-800">{milestone.label}</span>
+                    {!milestone.complete && milestone.target ? (
+                      <button
+                        className="min-h-11 rounded-lg px-3 font-semibold text-emerald-700 hover:bg-emerald-50"
+                        onClick={() => onOpenSetupStep?.(milestone.target)}
+                        type="button"
+                      >
+                        Open
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              {!setupProgress.persisted ? (
+                <p className="mt-3 text-xs font-medium text-amber-700">Demo progress is local until database persistence is available.</p>
+              ) : null}
+            </div>
+          ) : null}
           <ol className="mt-4 space-y-2">
             {firstOwnerSetupSteps(access).map((step, index) => {
               const target = firstOwnerSetupTarget(step);
