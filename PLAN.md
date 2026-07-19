@@ -564,10 +564,11 @@ Current state:
 - Mobile diagnostics can download the sanitized support summary as a dated text file
 - Every mobile diagnostic warning provides capability-specific recovery guidance
 - Mobile diagnostics measure API readiness latency and flag responses of two seconds or longer
+- Phase 2 offline mutations have a versioned IndexedDB queue contract that preserves tenant, actor, ordering, and retry context
 
 Next implementation work:
 
-- Resume the next pilot-readiness roadmap slice after mobile access hardening
+- Queue failed stop-progress writes in IndexedDB and surface durable pending state
 
 ## Planned
 
