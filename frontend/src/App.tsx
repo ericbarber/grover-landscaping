@@ -32,6 +32,7 @@ import {
   startCompletionReportReview,
   uploadPhotoToTicket,
   updateJobAddOnStatus,
+  type CompletePhotoUploadMetadata,
   type CompletionReportSnapshot,
   type CustomerPropertyRecord,
   type CustomerPhotoErasureSummary,
@@ -68,6 +69,11 @@ import {
   MissingOfflinePhotoBlobError,
   replayOfflinePhotoMutation,
 } from './domain/offlinePhotoReplay';
+import {
+  assessPhotoQuality,
+  photoQualityMessage,
+  requiredPhotoEvidence,
+} from './domain/photoQuality';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -739,7 +745,7 @@ function JobDetailPanel({
         <div className="mt-6 rounded-2xl bg-slate-50 p-4">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
           <p className="mt-2 text-sm text-slate-600">
-            This flow uses the backend upload-ticket endpoint and uploads directly when object storage is configured.
+            Use a previewable JPEG, PNG, GIF, or WebP image at least 640×480. Duplicate files are blocked, and both before and after evidence are required to complete the job.
           </p>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -820,7 +826,12 @@ function fallbackJobDetail(job: YardCareJob): JobDetail {
   };
 }
 
-function localPhotoTicket(jobId: string, file: File, photoType: PhotoType): PhotoUploadTicket {
+function localPhotoTicket(
+  jobId: string,
+  file: File,
+  photoType: PhotoType,
+  metadata: CompletePhotoUploadMetadata,
+): PhotoUploadTicket {
   return {
     status: 'created',
     jobId,
@@ -832,6 +843,10 @@ function localPhotoTicket(jobId: string, file: File, photoType: PhotoType): Phot
     uploadUrl: `local://${file.name}`,
     objectKey: `browser/jobs/${jobId}/${photoType}/${file.name}`,
     thumbnailUrl: URL.createObjectURL(file),
+    fileSizeBytes: metadata.fileSizeBytes,
+    imageWidthPx: metadata.imageWidthPx,
+    imageHeightPx: metadata.imageHeightPx,
+    metadataSource: 'client_reported',
   };
 }
 
@@ -1710,6 +1725,18 @@ export function App() {
       return;
     }
 
+    const evidence = requiredPhotoEvidence(
+      selectedJob?.beforePhotos ?? 0,
+      selectedJob?.afterPhotos ?? 0,
+      selectedJobTickets,
+    );
+    if (!evidence.ready) {
+      setStatusMessage(
+        `Cannot complete this job yet. Capture ${evidence.missing.join(' and ')} photo evidence first.`,
+      );
+      return;
+    }
+
     try {
       const result = await completeJob(selectedJobId);
       if (!result.persisted) throw new Error('Job completion used local fallback');
@@ -2173,12 +2200,18 @@ export function App() {
       return;
     }
 
+    const metadata = await readPhotoUploadMetadata(file);
+    const quality = assessPhotoQuality(file, metadata, selectedJobTickets);
+    if (!quality.accepted) {
+      setStatusMessage(`Photo not added: ${photoQualityMessage(quality)}.`);
+      return;
+    }
+
     let ticket: PhotoUploadTicket;
 
     try {
       ticket = await createPhotoUploadTicket(selectedJobId, file, photoType);
       await uploadPhotoToTicket(ticket, file);
-      const metadata = await readPhotoUploadMetadata(file);
       await completePhotoUpload(selectedJobId, ticket.photoId, metadata);
       ticket = {
         ...ticket,
@@ -2196,7 +2229,7 @@ export function App() {
         source: 'photo',
       });
     } catch {
-      ticket = localPhotoTicket(selectedJobId, file, photoType);
+      ticket = localPhotoTicket(selectedJobId, file, photoType, metadata);
       let queued = false;
       if (selectedJob?.organizationId && auth.userId) {
         try {

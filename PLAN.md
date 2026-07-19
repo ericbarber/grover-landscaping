@@ -589,10 +589,12 @@ Current state:
 - Queued photo blobs replay oldest-first with deterministic client-mutation ticket identities, fresh upload credentials, completion confirmation, and safe retry/conflict feedback
 - Crew photo queue review exposes safe capture details and two-step reviewed-conflict deletion before ordered replay resumes
 - Browser-compatible IndexedDB tests cover photo blob persistence, conflict retention, ordered replay, idempotency identity, and atomic reviewed deletion
+- Client photo checks reject unsupported, unpreviewable, undersized, and duplicate captures before upload or offline storage
+- Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
 
 Next implementation work:
 
-- Add client-side photo quality checks for previewability, duplicates, and required before/after evidence
+- Add server-side image processing metadata coverage and enforce photo evidence in report readiness context
 
 ## Planned
 
