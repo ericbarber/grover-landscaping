@@ -222,6 +222,13 @@ struct NotificationHistoryQuery {
 }
 
 #[derive(Debug, Default, Deserialize)]
+struct OperationalActivityQuery {
+    event_kind: Option<String>,
+    before: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
 struct PhotoProcessingHistoryQuery {
     task_type: Option<String>,
     status: Option<String>,
@@ -1741,13 +1748,63 @@ async fn list_team_administration_activity(
 async fn list_operational_activity(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
+    Query(query): Query<OperationalActivityQuery>,
 ) -> Response {
+    const EVENT_KINDS: &[&str] = &[
+        "route_draft_saved",
+        "route_published",
+        "route_completed",
+        "report_review_started",
+        "report_changes_requested",
+        "report_resubmitted",
+        "report_delivered",
+        "bid_approved",
+        "bid_rejected",
+        "bid_converted",
+        "photo_processing_retried",
+        "photo_processing_resolved",
+        "customer_photo_evidence_erased",
+    ];
+    let event_kind = query.event_kind.as_deref().map(str::trim);
+    if event_kind.is_some_and(|value| !EVENT_KINDS.contains(&value)) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_activity_filter",
+                message: "event_kind is not a supported operational activity event.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let before = query.before.as_deref().map(str::trim);
+    if before.is_some_and(|value| value.is_empty() || value.len() > 64) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_activity_filter",
+                message: "before must be a non-empty timestamp no longer than 64 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let limit = query.limit.unwrap_or(50);
+    if !(1..=100).contains(&limit) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_activity_filter",
+                message: "limit must be between 1 and 100.".to_string(),
+            }),
+        )
+            .into_response();
+    }
     let organization_ids =
         principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await;
     Json(
         state
             .organizations
-            .list_operational_activity(&organization_ids)
+            .list_operational_activity_page(&organization_ids, event_kind, before, limit)
             .await,
     )
     .into_response()
@@ -4998,6 +5055,18 @@ mod tests {
         assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json, serde_json::json!([]));
+
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/operational-activity?event_kind=unknown&limit=101")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

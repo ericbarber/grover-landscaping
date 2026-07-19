@@ -491,6 +491,12 @@ export interface OperationalActivity {
   occurredAt: string;
 }
 
+export interface FetchOperationalActivityOptions {
+  eventKind?: OperationalActivityEventKind;
+  before?: string;
+  limit?: number;
+}
+
 interface ApiOrganizationMembership {
   id: string;
   organization_id: string;
@@ -1623,8 +1629,19 @@ export async function fetchTeamAdministrationActivity(
   return activity.map(toTeamAdministrationActivity);
 }
 
-export async function fetchOperationalActivity(): Promise<OperationalActivity[]> {
-  const activity = await request<ApiOperationalActivity[]>('/operational-activity');
+export function operationalActivityPath(options: FetchOperationalActivityOptions = {}): string {
+  const params = new URLSearchParams();
+  if (options.eventKind) params.set('event_kind', options.eventKind);
+  if (options.before) params.set('before', options.before);
+  if (options.limit !== undefined) params.set('limit', String(options.limit));
+  const query = params.toString();
+  return query ? `/operational-activity?${query}` : '/operational-activity';
+}
+
+export async function fetchOperationalActivity(
+  options: FetchOperationalActivityOptions = {},
+): Promise<OperationalActivity[]> {
+  const activity = await request<ApiOperationalActivity[]>(operationalActivityPath(options));
   return activity.map((item) => ({
     id: item.id,
     organizationId: item.organization_id,

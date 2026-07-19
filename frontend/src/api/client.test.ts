@@ -6,6 +6,7 @@ import {
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
+  operationalActivityPath,
   organizationInvitationsPath,
   organizationInvitationPath,
   organizationInvitationAcceptancePath,
@@ -202,6 +203,17 @@ describe('core API client mapping', () => {
       targetId: 'membership_1',
       occurredAt: '2026-07-18T12:00:00Z',
     });
+  });
+
+  it('builds operational activity filter and pagination paths', () => {
+    expect(operationalActivityPath()).toBe('/operational-activity');
+    expect(operationalActivityPath({
+      eventKind: 'report_delivered',
+      before: '2026-07-19T17:00:00Z',
+      limit: 25,
+    })).toBe(
+      '/operational-activity?event_kind=report_delivered&before=2026-07-19T17%3A00%3A00Z&limit=25',
+    );
   });
 
   it('builds photo processing recovery paths with optional filters', () => {

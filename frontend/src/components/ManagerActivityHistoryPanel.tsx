@@ -40,6 +40,9 @@ type ActivityToneFilter = ManagerActivityTone | 'all';
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
   isHistoryPersisted?: boolean;
+  canLoadOlder?: boolean;
+  isLoadingOlder?: boolean;
+  onLoadOlder?: () => void;
   onResetHistory?: () => void;
 };
 
@@ -91,6 +94,9 @@ function readSavedToneFilter(): ActivityToneFilter {
 export function ManagerActivityHistoryPanel({
   items = [],
   isHistoryPersisted = true,
+  canLoadOlder = false,
+  isLoadingOlder = false,
+  onLoadOlder,
   onResetHistory,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
@@ -466,6 +472,16 @@ export function ManagerActivityHistoryPanel({
           ))
         )}
       </div>
+      {canLoadOlder && onLoadOlder ? (
+        <button
+          className="mt-4 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          disabled={isLoadingOlder}
+          onClick={onLoadOlder}
+          type="button"
+        >
+          {isLoadingOlder ? 'Loading older activity…' : 'Load older persisted activity'}
+        </button>
+      ) : null}
     </section>
   );
 }

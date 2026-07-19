@@ -507,10 +507,12 @@ Current state:
 - Manager activity includes persisted bid decisions/conversions and photo-processing/privacy recovery events
 - Manager activity starts from persisted operational data instead of demo seed records while retaining current-browser warnings
 - Clearing browser activity preserves tenant-scoped operational history
+- Operational activity supports bounded event-kind filtering and timestamp-cursor pagination
+- Managers can load older persisted activity without duplicating records already in the review queue
 
 Next implementation work:
 
-- Add pagination and event-kind filters to operational activity history
+- Record schedule mutation audit events with the authenticated manager identity
 
 ## Planned
 

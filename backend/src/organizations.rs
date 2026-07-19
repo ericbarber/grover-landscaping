@@ -256,10 +256,21 @@ impl OrganizationRepository {
         &self,
         organization_ids: &[String],
     ) -> Vec<OperationalActivity> {
+        self.list_operational_activity_page(organization_ids, None, None, 50)
+            .await
+    }
+
+    pub async fn list_operational_activity_page(
+        &self,
+        organization_ids: &[String],
+        event_kind: Option<&str>,
+        before: Option<&str>,
+        limit: i64,
+    ) -> Vec<OperationalActivity> {
         let Some(pool) = &self.pool else {
             return Vec::new();
         };
-        list_operational_activity(pool, organization_ids)
+        list_operational_activity(pool, organization_ids, event_kind, before, limit)
             .await
             .unwrap_or_default()
     }
@@ -1015,6 +1026,9 @@ async fn list_team_administration_activity(
 async fn list_operational_activity(
     pool: &PgPool,
     organization_ids: &[String],
+    event_kind: Option<&str>,
+    before: Option<&str>,
+    limit: i64,
 ) -> Result<Vec<OperationalActivity>, sqlx::Error> {
     if organization_ids.is_empty() {
         return Ok(Vec::new());
@@ -1059,11 +1073,16 @@ async fn list_operational_activity(
             JOIN crews crew ON crew.id = plan.crew_id
             WHERE crew.organization_id = ANY($1)
         ) activity
+        WHERE ($2::text IS NULL OR event_kind = $2)
+          AND ($3::timestamptz IS NULL OR occurred_at < $3::timestamptz)
         ORDER BY occurred_at DESC, id DESC
-        LIMIT 50
+        LIMIT $4
         "#,
     )
     .bind(organization_ids)
+    .bind(event_kind)
+    .bind(before)
+    .bind(limit)
     .fetch_all(pool)
     .await?;
 

@@ -837,6 +837,8 @@ export function App() {
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
+  const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
+  const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
@@ -1299,9 +1301,30 @@ export function App() {
 
   async function refreshOperationalActivity() {
     try {
-      setOperationalActivity(await fetchOperationalActivity());
+      const items = await fetchOperationalActivity({ limit: 25 });
+      setOperationalActivity(items);
+      setCanLoadOlderOperationalActivity(items.length === 25);
     } catch {
       setOperationalActivity([]);
+      setCanLoadOlderOperationalActivity(false);
+    }
+  }
+
+  async function loadOlderOperationalActivity() {
+    const before = operationalActivity[operationalActivity.length - 1]?.occurredAt;
+    if (!before || isLoadingOlderOperationalActivity) return;
+    setIsLoadingOlderOperationalActivity(true);
+    try {
+      const items = await fetchOperationalActivity({ before, limit: 25 });
+      setOperationalActivity((current) => {
+        const existingIds = new Set(current.map((item) => item.id));
+        return [...current, ...items.filter((item) => !existingIds.has(item.id))];
+      });
+      setCanLoadOlderOperationalActivity(items.length === 25);
+    } catch {
+      setCanLoadOlderOperationalActivity(false);
+    } finally {
+      setIsLoadingOlderOperationalActivity(false);
     }
   }
 
@@ -2034,6 +2057,9 @@ export function App() {
             <ManagerActivityHistoryPanel
               items={visibleManagerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
+              canLoadOlder={canLoadOlderOperationalActivity}
+              isLoadingOlder={isLoadingOlderOperationalActivity}
+              onLoadOlder={() => void loadOlderOperationalActivity()}
               onResetHistory={resetManagerActivityHistory}
             />
           </div>

@@ -76,6 +76,25 @@ async fn repository_lists_tenant_scoped_operational_activity() {
         .list_operational_activity(&["org_missing".to_string()])
         .await
         .is_empty());
+    let bid_page = repository
+        .list_operational_activity_page(
+            &["org_demo_landscaping".to_string()],
+            Some("bid_approved"),
+            None,
+            1,
+        )
+        .await;
+    assert_eq!(bid_page.len(), 1);
+    assert_eq!(bid_page[0].event_kind, "bid_approved");
+    assert!(repository
+        .list_operational_activity_page(
+            &["org_demo_landscaping".to_string()],
+            None,
+            Some("2000-01-01T00:00:00Z"),
+            25,
+        )
+        .await
+        .is_empty());
 
     sqlx::query("DELETE FROM access_audit_events WHERE id = ANY($1)")
         .bind(vec![audit_id, bid_audit_id, photo_audit_id])
