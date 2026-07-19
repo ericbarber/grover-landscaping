@@ -358,12 +358,16 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .unwrap();
     assert_eq!(membership_profile_audit_count, 1);
-    assert!(organizations
+    let team_activity = organizations
         .list_team_administration_activity(&created.organization_id)
-        .await
+        .await;
+    assert!(team_activity.iter().any(|item| {
+        item.target_id == created.membership.id && item.event_kind == "membership_profile_updated"
+    }));
+    let profile_activity = team_activity
         .iter()
-        .any(|item| {
-            item.target_id == created.membership.id
-                && item.event_kind == "membership_profile_updated"
-        }));
+        .find(|item| item.event_kind == "membership_profile_updated")
+        .expect("member profile activity should be readable");
+    assert_eq!(profile_activity.actor_label, "Jordan Grover");
+    assert_eq!(profile_activity.target_label, "Jordan Grover");
 }

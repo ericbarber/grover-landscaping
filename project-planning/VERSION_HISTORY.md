@@ -16,6 +16,7 @@
 - 2026-07-19: Added structured route mutation metadata to operational activity.
 - 2026-07-19: Added readable organization-member identities to operational activity.
 - 2026-07-19: Added audited owner-managed display names for organization members.
+- 2026-07-19: Used readable member names in crew leadership and owner activity views.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
@@ -138,6 +139,8 @@ Current continuation work:
   defaults with database constraints and mobile numeric controls.
 - Added tenant-scoped member display-name editing to mobile owner administration,
   while retaining immutable identity IDs and auditing each update.
+- Applied member display names to crew-lead choices and resolved readable actor
+  and target labels in the owner team-administration feed.
 - Nested customer-account routes are now explicitly protected, and crew
   assignment requires an existing non-archived property in the crew organization.
 

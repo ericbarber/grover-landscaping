@@ -181,9 +181,11 @@ pub struct OrganizationInvitationSummary {
 pub struct TeamAdministrationActivity {
     pub id: String,
     pub actor_user_id: String,
+    pub actor_label: String,
     pub organization_id: String,
     pub event_kind: String,
     pub target_id: String,
+    pub target_label: String,
     pub occurred_at: String,
 }
 
@@ -1037,15 +1039,43 @@ async fn list_team_administration_activity(
     let rows = sqlx::query(
         r#"
         SELECT
-            id,
-            actor_user_id,
-            organization_id,
-            event_kind,
-            target_id,
-            occurred_at::text AS occurred_at
-        FROM access_audit_events
-        WHERE organization_id = $1
-          AND event_kind IN (
+            audit.id,
+            audit.actor_user_id,
+            CASE
+                WHEN audit.actor_user_id = 'system' THEN 'System migration'
+                ELSE COALESCE(actor.display_name, audit.actor_user_id)
+            END AS actor_label,
+            audit.organization_id,
+            audit.event_kind,
+            audit.target_id,
+            COALESCE(
+                target_member.display_name,
+                target_crew.name,
+                CASE WHEN organization.id = audit.target_id THEN organization.display_name END,
+                audit.target_id
+            ) AS target_label,
+            audit.occurred_at::text AS occurred_at
+        FROM access_audit_events audit
+        JOIN organizations organization ON organization.id = audit.organization_id
+        LEFT JOIN LATERAL (
+            SELECT membership.display_name
+            FROM organization_memberships membership
+            WHERE membership.organization_id = audit.organization_id
+              AND membership.user_id = audit.actor_user_id
+            ORDER BY
+                CASE membership.status WHEN 'active' THEN 0 ELSE 1 END,
+                membership.updated_at DESC,
+                membership.id
+            LIMIT 1
+        ) actor ON TRUE
+        LEFT JOIN organization_memberships target_member
+          ON target_member.organization_id = audit.organization_id
+         AND target_member.id = audit.target_id
+        LEFT JOIN crews target_crew
+          ON target_crew.organization_id = audit.organization_id
+         AND target_crew.id = audit.target_id
+        WHERE audit.organization_id = $1
+          AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
             'invitation_revoked',
@@ -1070,9 +1100,11 @@ async fn list_team_administration_activity(
         .map(|row| TeamAdministrationActivity {
             id: row.get("id"),
             actor_user_id: row.get("actor_user_id"),
+            actor_label: row.get("actor_label"),
             organization_id: row.get("organization_id"),
             event_kind: row.get("event_kind"),
             target_id: row.get("target_id"),
+            target_label: row.get("target_label"),
             occurred_at: row.get("occurred_at"),
         })
         .collect())

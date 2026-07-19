@@ -195,16 +195,20 @@ describe('core API client mapping', () => {
     expect(toTeamAdministrationActivity({
       id: 'audit_1',
       actor_user_id: 'owner_1',
+      actor_label: 'Jordan Grover',
       organization_id: 'org_1',
       event_kind: 'membership_suspended',
       target_id: 'membership_1',
+      target_label: 'Alex Rivera',
       occurred_at: '2026-07-18T12:00:00Z',
     })).toEqual({
       id: 'audit_1',
       actorUserId: 'owner_1',
+      actorLabel: 'Jordan Grover',
       organizationId: 'org_1',
       eventKind: 'membership_suspended',
       targetId: 'membership_1',
+      targetLabel: 'Alex Rivera',
       occurredAt: '2026-07-18T12:00:00Z',
     });
   });

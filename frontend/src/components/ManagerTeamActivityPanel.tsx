@@ -89,7 +89,7 @@ export function ManagerTeamActivityPanel({
               </time>
             </div>
             <p className="mt-1 break-all text-xs text-slate-600">
-              {item.targetId} · by {item.actorUserId}
+              {item.targetLabel} · by {item.actorLabel}
             </p>
           </li>
         ))}

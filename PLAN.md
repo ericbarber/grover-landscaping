@@ -520,10 +520,12 @@ Current state:
 - Backfilled system route history is clearly identified as a migration rather than a human action
 - Organization owners can edit active and suspended member display names without changing immutable identity IDs
 - Membership display-name changes are tenant-scoped, validated, and included in owner team-administration history
+- Crew-lead selection uses readable member names with immutable membership IDs as option values
+- Owner team activity resolves readable actor and affected-resource labels while retaining immutable IDs in the API
 
 Next implementation work:
 
-- Use member display names in crew-lead selection and owner team activity
+- Add member-name search and role/status filters to mobile team administration
 
 ## Planned
 

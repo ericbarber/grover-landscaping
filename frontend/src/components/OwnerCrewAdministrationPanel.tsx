@@ -13,6 +13,11 @@ type Props = {
   onCrewChanged?: (crew: CrewRecord) => void;
 };
 
+export function crewLeadOptionLabel(membership: OrganizationMembership): string {
+  const role = membership.role === 'CrewLead' ? 'crew lead' : 'owner';
+  return `${membership.displayName ?? membership.userId} · ${role}`;
+}
+
 export function OwnerCrewAdministrationPanel({
   organizationId,
   refreshSignal = 0,
@@ -166,7 +171,7 @@ export function OwnerCrewAdministrationPanel({
               <option value="">Unassigned</option>
               {leadCandidates.map((membership) => (
                 <option key={membership.id} value={membership.id}>
-                  {membership.userId} · {membership.role === 'CrewLead' ? 'crew lead' : 'owner'}
+                  {crewLeadOptionLabel(membership)}
                 </option>
               ))}
             </select>

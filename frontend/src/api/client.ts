@@ -445,18 +445,22 @@ export type TeamAdministrationEventKind =
 interface ApiTeamAdministrationActivity {
   id: string;
   actor_user_id: string;
+  actor_label: string;
   organization_id: string;
   event_kind: TeamAdministrationEventKind;
   target_id: string;
+  target_label: string;
   occurred_at: string;
 }
 
 export interface TeamAdministrationActivity {
   id: string;
   actorUserId: string;
+  actorLabel: string;
   organizationId: string;
   eventKind: TeamAdministrationEventKind;
   targetId: string;
+  targetLabel: string;
   occurredAt: string;
 }
 
@@ -1631,9 +1635,11 @@ export function toTeamAdministrationActivity(
   return {
     id: item.id,
     actorUserId: item.actor_user_id,
+    actorLabel: item.actor_label,
     organizationId: item.organization_id,
     eventKind: item.event_kind,
     targetId: item.target_id,
+    targetLabel: item.target_label,
     occurredAt: item.occurred_at,
   };
 }
