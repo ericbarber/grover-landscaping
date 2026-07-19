@@ -15,8 +15,13 @@ import type { CompletionReportQueueItem } from '../domain/completionReportQueue'
 type ManagerCompletionReportQueuePanelProps = {
   reports: CompletionReportSnapshot[];
   isLoading: boolean;
-  onRefresh: () => void;
+  onRefresh: (filters: ManagerCompletionReportOperationalFilters) => void;
   onSelectJob: (jobId: string) => void;
+};
+
+export type ManagerCompletionReportOperationalFilters = {
+  organizationId?: string;
+  crewId?: string;
 };
 
 function readinessLabel(item: CompletionReportQueueItem): string {
@@ -44,7 +49,25 @@ export function ManagerCompletionReportQueuePanel({
 }: ManagerCompletionReportQueuePanelProps) {
   const [statusFilter, setStatusFilter] = useState<CompletionReportQueueStatusFilter>('active');
   const [readinessFilter, setReadinessFilter] = useState<CompletionReportQueueReadinessFilter>('all');
+  const [organizationId, setOrganizationId] = useState('');
+  const [crewId, setCrewId] = useState('');
   const queueItems = useMemo(() => buildCompletionReportQueue(reports), [reports]);
+  const organizationIds = useMemo(
+    () => Array.from(new Set([
+      ...reports.map((report) => report.job.organizationId).filter((id): id is string => Boolean(id)),
+      ...(organizationId ? [organizationId] : []),
+    ])).sort(),
+    [organizationId, reports],
+  );
+  const crewIds = useMemo(
+    () => Array.from(new Set([
+      ...reports
+        .map((report) => report.job.assignedCrewId ?? report.routeStop?.crewId)
+        .filter((id): id is string => Boolean(id)),
+      ...(crewId ? [crewId] : []),
+    ])).sort(),
+    [crewId, reports],
+  );
   const visibleItems = useMemo(
     () => filterCompletionReportQueue(queueItems, { status: statusFilter, readiness: readinessFilter }),
     [queueItems, readinessFilter, statusFilter],
@@ -58,14 +81,41 @@ export function ManagerCompletionReportQueuePanel({
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Manager reports</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Completion review queue</h2>
         </div>
-        <button
-          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-          disabled={isLoading}
-          onClick={onRefresh}
-          type="button"
-        >
-          {isLoading ? 'Refreshing' : 'Refresh'}
-        </button>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <label className="text-xs font-semibold text-slate-600">
+            Organization
+            <select
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+              onChange={(event) => setOrganizationId(event.target.value)}
+              value={organizationId}
+            >
+              <option value="">All organizations</option>
+              {organizationIds.map((id) => <option key={id} value={id}>{id}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-slate-600">
+            Crew
+            <select
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+              onChange={(event) => setCrewId(event.target.value)}
+              value={crewId}
+            >
+              <option value="">All crews</option>
+              {crewIds.map((id) => <option key={id} value={id}>{id}</option>)}
+            </select>
+          </label>
+          <button
+            className="self-end rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            disabled={isLoading}
+            onClick={() => onRefresh({
+              organizationId: organizationId || undefined,
+              crewId: crewId || undefined,
+            })}
+            type="button"
+          >
+            {isLoading ? 'Applying' : 'Apply'}
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">

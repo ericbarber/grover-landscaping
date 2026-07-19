@@ -993,6 +993,7 @@ function toJob(apiJob: ApiJobSummary): YardCareJob {
   return {
     id: apiJob.id,
     organizationId: apiJob.organization_id,
+    assignedCrewId: apiJob.assigned_crew_id ?? undefined,
     customerName: apiJob.customer_name,
     propertyAddress: apiJob.property_address,
     scheduledDate: apiJob.scheduled_date,

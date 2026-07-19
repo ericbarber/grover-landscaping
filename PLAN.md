@@ -465,6 +465,7 @@ Current state:
 - Frontend manager report queue summarizes current report review work across loaded jobs
 - Backend exposes `GET /completion-reports` for manager report queue loading
 - Backend manager report queue loading supports `status`, `readiness`, readiness-blocker, organization, crew, customer, property, and scheduled-date query filters
+- Manager report queue controls apply persisted organization and crew filters with local fallback parity
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -605,7 +606,7 @@ Current state:
 
 Next implementation work:
 
-- Connect persisted organization and crew filters to the Phase 3 manager completion-report queue UI
+- Add persisted customer, property, and scheduled-date controls to the Phase 3 manager completion-report queue UI
 
 ## Planned
 
