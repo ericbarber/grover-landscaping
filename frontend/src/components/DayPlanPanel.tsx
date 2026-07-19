@@ -13,6 +13,7 @@ import {
   listOfflineMutations,
   markOfflineMutationFailed,
   removeOfflineMutation,
+  type StopProgressOfflineMutation,
 } from '../domain/offlineMutationQueue';
 import {
   amendmentRequiresBid,
@@ -106,10 +107,13 @@ export function DayPlanPanel({
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
-  const [pendingMutationCount, setPendingMutationCount] = useState(0);
-  const [conflictMutationCount, setConflictMutationCount] = useState(0);
+  const [offlineMutations, setOfflineMutations] = useState<StopProgressOfflineMutation[]>([]);
   const [isReplayingMutations, setIsReplayingMutations] = useState(false);
   const replayInProgress = useRef(false);
+  const pendingMutationCount = offlineMutations.length;
+  const conflictMutationCount = offlineMutations.filter(
+    (mutation) => mutation.syncState === 'conflict',
+  ).length;
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
@@ -181,14 +185,16 @@ export function DayPlanPanel({
       return;
     }
     try {
-      await enqueueStopProgressMutation({
+      const mutation = await enqueueStopProgressMutation({
         organizationId,
         actorId,
         dayPlanId: dayPlan.id,
         stopId,
         status,
       });
-      setPendingMutationCount((current) => current + 1);
+      setOfflineMutations((current) => [...current, mutation].sort(
+        (left, right) => left.createdAt.localeCompare(right.createdAt),
+      ));
     } catch {
       // Browser-local progress remains available when durable storage is blocked.
     } finally {
@@ -284,10 +290,7 @@ export function DayPlanPanel({
         }
       }
       const remaining = await listOfflineMutations(organizationId, actorId);
-      setPendingMutationCount(remaining.length);
-      setConflictMutationCount(
-        remaining.filter((mutation) => mutation.syncState === 'conflict').length,
-      );
+      setOfflineMutations(remaining);
       if (remaining.length === 0 && mutations.length > 0) setSyncStatus('synced');
     } catch {
       // Keep the visible count from the last successful IndexedDB read.
@@ -339,19 +342,15 @@ export function DayPlanPanel({
 
   useEffect(() => {
     if (!organizationId || !actorId) {
-      setPendingMutationCount(0);
-      setConflictMutationCount(0);
+      setOfflineMutations([]);
       return;
     }
     void listOfflineMutations(organizationId, actorId)
       .then((mutations) => {
-        setPendingMutationCount(mutations.length);
-        setConflictMutationCount(
-          mutations.filter((mutation) => mutation.syncState === 'conflict').length,
-        );
+        setOfflineMutations(mutations);
         if (mutations.length > 0 && navigator.onLine) void replayOfflineMutations();
       })
-      .catch(() => setPendingMutationCount(0));
+      .catch(() => setOfflineMutations([]));
     const handleOnline = () => void replayOfflineMutations();
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -376,6 +375,32 @@ export function DayPlanPanel({
                   {conflictMutationCount} {conflictMutationCount === 1 ? 'change needs' : 'changes need'} manager review before retrying.
                 </p>
               )}
+              <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
+                <summary className="min-h-11 cursor-pointer py-3 font-bold">
+                  Review queued changes
+                </summary>
+                <div className="space-y-2 border-t border-amber-200 pt-2">
+                  {offlineMutations.map((mutation) => {
+                    const stop = dayPlan.stops.find((item) => item.id === mutation.stopId);
+                    return (
+                      <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
+                        <p className="font-bold text-slate-900">
+                          {stop?.customerName ?? `Stop ${mutation.stopId}`}
+                        </p>
+                        <p className="mt-1 text-slate-700">
+                          Set to {mutation.status.replace('_', ' ')} · {mutation.syncState}
+                        </p>
+                        <p className="mt-1 text-slate-600">
+                          Queued {new Date(mutation.createdAt).toLocaleString()}
+                          {mutation.attemptCount > 0
+                            ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
+                            : ''}
+                        </p>
+                      </article>
+                    );
+                  })}
+                </div>
+              </details>
               <button
                 className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-3 font-bold disabled:opacity-60"
                 disabled={!navigator.onLine || isReplayingMutations || conflictMutationCount > 0}

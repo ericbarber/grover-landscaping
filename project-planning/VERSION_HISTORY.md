@@ -62,6 +62,7 @@
 - 2026-07-19: Queued failed stop-progress writes with durable mobile pending feedback.
 - 2026-07-19: Added ordered tenant/actor-scoped replay for queued stop progress.
 - 2026-07-19: Classified offline stop-progress conflicts separately from retryable failures.
+- 2026-07-19: Added crew-readable offline stop-progress queue review.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

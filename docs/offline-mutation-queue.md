@@ -34,6 +34,10 @@ rather than transient failures. A conflict blocks later ordered replay, disables
 blind crew retries, and directs the crew to manager review. Network and server
 availability failures remain retryable.
 
+The crew queue review shows the affected customer stop, requested state, local
+queue time, sync classification, and attempt count in replay order. It does not
+render stored server error text or immutable tenant and actor identifiers.
+
 The first schema includes indexes for ordered state processing and
 organization-scoped inspection. Future schema changes must increment the database
 version and migrate existing records in `onupgradeneeded`.

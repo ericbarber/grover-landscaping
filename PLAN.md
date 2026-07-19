@@ -568,10 +568,11 @@ Current state:
 - Failed and local-fallback stop-progress writes enter the tenant/actor queue and show a durable pending count
 - Queued stop progress replays tenant/actor-scoped and oldest-first on load, network recovery, or manual retry
 - Stale or invalid offline transitions become durable conflicts that block blind retry and request manager review
+- Crew queue review shows ordered stop, requested state, queued time, classification, and attempt count without internal error text
 
 Next implementation work:
 
-- Expose queued stop-progress details for field recovery review
+- Add explicit reviewed-conflict discard and resume controls
 
 ## Planned
 
