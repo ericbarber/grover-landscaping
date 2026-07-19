@@ -260,10 +260,20 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
     ) -> Vec<TeamAdministrationActivity> {
+        self.list_team_administration_activity_page(organization_id, None, 25)
+            .await
+    }
+
+    pub async fn list_team_administration_activity_page(
+        &self,
+        organization_id: &str,
+        before: Option<&str>,
+        limit: i64,
+    ) -> Vec<TeamAdministrationActivity> {
         let Some(pool) = &self.pool else {
             return Vec::new();
         };
-        list_team_administration_activity(pool, organization_id)
+        list_team_administration_activity(pool, organization_id, before, limit)
             .await
             .unwrap_or_default()
     }
@@ -1035,6 +1045,8 @@ async fn list_organization_memberships(
 async fn list_team_administration_activity(
     pool: &PgPool,
     organization_id: &str,
+    before: Option<&str>,
+    limit: i64,
 ) -> Result<Vec<TeamAdministrationActivity>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
@@ -1075,6 +1087,7 @@ async fn list_team_administration_activity(
           ON target_crew.organization_id = audit.organization_id
          AND target_crew.id = audit.target_id
         WHERE audit.organization_id = $1
+          AND ($2::timestamptz IS NULL OR audit.occurred_at < $2::timestamptz)
           AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
@@ -1087,12 +1100,14 @@ async fn list_team_administration_activity(
             'crew_profile_updated',
             'crew_deactivated',
             'crew_reactivated'
-          )
+        )
         ORDER BY occurred_at DESC, id DESC
-        LIMIT 25
+        LIMIT $3
         "#,
     )
     .bind(organization_id)
+    .bind(before)
+    .bind(limit)
     .fetch_all(pool)
     .await?;
     Ok(rows

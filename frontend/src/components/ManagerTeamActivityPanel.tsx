@@ -72,6 +72,7 @@ export function ManagerTeamActivityPanel({
   const [actorQuery, setActorQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const filteredActivity = filterTeamActivity(activity, actorQuery, eventFilter);
 
@@ -79,10 +80,34 @@ export function ManagerTeamActivityPanel({
     if (!organizationId) return;
     setIsLoading(true);
     try {
-      setActivity(await fetchTeamAdministrationActivity(organizationId));
+      const loaded = await fetchTeamAdministrationActivity(organizationId, { limit: 25 });
+      setActivity(loaded);
+      setHasOlder(loaded.length === 25);
       setMessage(null);
     } catch {
       setMessage('Team activity requires organization-owner access.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function loadOlder() {
+    const before = activity[activity.length - 1]?.occurredAt;
+    if (!before) return;
+    setIsLoading(true);
+    try {
+      const older = await fetchTeamAdministrationActivity(organizationId, {
+        before,
+        limit: 25,
+      });
+      setActivity((current) => [
+        ...current,
+        ...older.filter((item) => !current.some((existing) => existing.id === item.id)),
+      ]);
+      setHasOlder(older.length === 25);
+      setMessage(null);
+    } catch {
+      setMessage('Older team activity could not be loaded.');
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +190,16 @@ export function ManagerTeamActivityPanel({
         <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No team activity matches these filters.
         </p>
+      ) : null}
+      {hasOlder ? (
+        <button
+          className="mt-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-semibold disabled:opacity-60"
+          disabled={isLoading}
+          onClick={() => void loadOlder()}
+          type="button"
+        >
+          {isLoading ? 'Loading…' : 'Load older activity'}
+        </button>
       ) : null}
     </section>
   );

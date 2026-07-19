@@ -524,10 +524,11 @@ Current state:
 - Owner team activity resolves readable actor and affected-resource labels while retaining immutable IDs in the API
 - Mobile team administration supports member-name or identity search plus role and status filters
 - Owner team activity supports actor-name or identity search plus event-type filtering
+- Owner team activity supports bounded timestamp-cursor pagination and duplicate-safe older-event loading
 
 Next implementation work:
 
-- Add bounded server-side pagination to owner team-administration activity
+- Apply owner team event filters server-side across paginated history
 
 ## Planned
 

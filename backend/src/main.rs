@@ -230,6 +230,12 @@ struct OperationalActivityQuery {
 }
 
 #[derive(Debug, Default, Deserialize)]
+struct TeamActivityQuery {
+    before: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
 struct PhotoProcessingHistoryQuery {
     task_type: Option<String>,
     status: Option<String>,
@@ -1775,6 +1781,7 @@ async fn list_team_administration_activity(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
     Path(organization_id): Path<String>,
+    Query(query): Query<TeamActivityQuery>,
 ) -> Response {
     if let Err(response) = require_organization_membership(
         &state,
@@ -1786,10 +1793,33 @@ async fn list_team_administration_activity(
     {
         return response;
     }
+    let before = query.before.as_deref().map(str::trim);
+    if before.is_some_and(|value| value.is_empty() || value.len() > 64) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "before must be a non-empty timestamp no longer than 64 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let limit = query.limit.unwrap_or(25);
+    if !(1..=100).contains(&limit) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "limit must be between 1 and 100.".to_string(),
+            }),
+        )
+            .into_response();
+    }
     Json(
         state
             .organizations
-            .list_team_administration_activity(&organization_id)
+            .list_team_administration_activity_page(&organization_id, before, limit)
             .await,
     )
     .into_response()
@@ -5137,6 +5167,25 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json, serde_json::json!([]));
+    }
+
+    #[tokio::test]
+    async fn organization_team_activity_endpoint_rejects_invalid_limits() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/team-activity?limit=101")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_team_activity_filter");
     }
 
     #[tokio::test]

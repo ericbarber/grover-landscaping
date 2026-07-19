@@ -192,6 +192,12 @@ describe('core API client mapping', () => {
     expect(organizationTeamActivityPath('org/demo')).toBe(
       '/organizations/org%2Fdemo/team-activity',
     );
+    expect(organizationTeamActivityPath('org/demo', {
+      before: '2026-07-19T12:00:00Z',
+      limit: 25,
+    })).toBe(
+      '/organizations/org%2Fdemo/team-activity?before=2026-07-19T12%3A00%3A00Z&limit=25',
+    );
     expect(toTeamAdministrationActivity({
       id: 'audit_1',
       actor_user_id: 'owner_1',

@@ -370,4 +370,11 @@ async fn repository_bootstraps_first_owner_once() {
         .expect("member profile activity should be readable");
     assert_eq!(profile_activity.actor_label, "Jordan Grover");
     assert_eq!(profile_activity.target_label, "Jordan Grover");
+    assert_eq!(
+        organizations
+            .list_team_administration_activity_page(&created.organization_id, None, 1)
+            .await
+            .len(),
+        1
+    );
 }
