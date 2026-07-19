@@ -73,6 +73,7 @@ pub struct PhotoUploadRequest {
     pub file_name: String,
     pub content_type: String,
     pub photo_type: String,
+    pub client_mutation_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -287,6 +287,7 @@ pub struct PhotoUploadRequest {
     pub file_name: String,
     pub content_type: String,
     pub photo_type: String,
+    pub client_mutation_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -4705,6 +4706,13 @@ impl PhotoUploadRequest {
             return Err(
                 "content_type must be image/jpeg, image/png, image/gif, or image/webp".to_string(),
             );
+        }
+        if self
+            .client_mutation_id
+            .as_deref()
+            .is_some_and(|id| Uuid::parse_str(id).is_err())
+        {
+            return Err("client_mutation_id must be a UUID when provided".to_string());
         }
 
         Ok(())

@@ -13,6 +13,52 @@ use sqlx::Row;
 mod common;
 
 #[tokio::test]
+async fn repository_reuses_photo_ticket_for_offline_mutation() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let mutation_id = uuid::Uuid::new_v4().to_string();
+
+    let first = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "offline-before.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "before".to_string(),
+                client_mutation_id: Some(mutation_id.clone()),
+            },
+        )
+        .await;
+    let replay = repository
+        .create_photo_upload(
+            "job_1001".to_string(),
+            PhotoUploadRequest {
+                file_name: "offline-before.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                photo_type: "before".to_string(),
+                client_mutation_id: Some(mutation_id.clone()),
+            },
+        )
+        .await;
+
+    assert_eq!(
+        first.photo_id,
+        format!(
+            "photo_offline_{}",
+            uuid::Uuid::parse_str(&mutation_id).unwrap().simple()
+        )
+    );
+    assert_eq!(replay.photo_id, first.photo_id);
+    assert_eq!(replay.object_key, first.object_key);
+    assert_eq!(replay.upload_mode, first.upload_mode);
+}
+
+#[tokio::test]
 async fn repository_persists_and_lists_photo_evidence() {
     let Some(config) = common::database_config() else {
         return;
@@ -29,6 +75,7 @@ async fn repository_persists_and_lists_photo_evidence() {
                 file_name: "issue-test.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "issue".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -81,6 +128,7 @@ async fn repository_persists_and_lists_photo_evidence() {
                 file_name: "server-processed.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "after".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -117,6 +165,7 @@ async fn repository_persists_and_lists_photo_evidence() {
                 file_name: "invalid-image.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "before".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -203,6 +252,7 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
                 file_name: "needs-thumbnail.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "after".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -348,6 +398,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
                 file_name: "worker-thumbnail.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "after".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -423,6 +474,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
                 file_name: "recover-thumbnail.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "after".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;
@@ -707,6 +759,7 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
                 file_name: "privacy-export.jpg".to_string(),
                 content_type: "image/jpeg".to_string(),
                 photo_type: "before".to_string(),
+                client_mutation_id: None,
             },
         )
         .await;

@@ -2586,6 +2586,7 @@ export async function createPhotoUploadTicket(
   jobId: string,
   file: File,
   photoType: 'before' | 'after' | 'issue' | 'extra',
+  clientMutationId?: string,
 ): Promise<PhotoUploadTicket> {
   const ticket = await request<{
     status: string;
@@ -2607,6 +2608,7 @@ export async function createPhotoUploadTicket(
       file_name: file.name,
       content_type: file.type || 'application/octet-stream',
       photo_type: photoType,
+      ...(clientMutationId ? { client_mutation_id: clientMutationId } : {}),
     }),
   });
 

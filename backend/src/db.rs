@@ -707,11 +707,21 @@ impl JobRepository {
         request: PhotoUploadRequest,
     ) -> PhotoUploadResponse {
         let safe_file_name = request.file_name.replace('/', "-");
-        let upload_nonce = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|duration| duration.as_nanos())
-            .unwrap_or(0);
-        let photo_id = format!("photo_{}_{}_{}", job_id, request.photo_type, upload_nonce);
+        let client_mutation_uuid = request
+            .client_mutation_id
+            .as_deref()
+            .and_then(|id| Uuid::parse_str(id).ok());
+        let upload_nonce = client_mutation_uuid
+            .map(|id| id.as_u128())
+            .unwrap_or_else(|| {
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|duration| duration.as_nanos())
+                    .unwrap_or(0)
+            });
+        let photo_id = client_mutation_uuid
+            .map(|id| format!("photo_offline_{}", id.simple()))
+            .unwrap_or_else(|| format!("photo_{}_{}_{}", job_id, request.photo_type, upload_nonce));
         let storage_ticket = PhotoStorageConfig::from_env().upload_ticket(
             &job_id,
             &request.photo_type,

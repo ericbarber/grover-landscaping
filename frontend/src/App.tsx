@@ -51,6 +51,7 @@ import {
   enqueueChecklistMutation,
   enqueueJobLifecycleMutation,
   enqueuePhotoUploadMutation,
+  getOfflinePhotoBlob,
   isChecklistOfflineMutation,
   isOfflineMutationConflict,
   isJobLifecycleOfflineMutation,
@@ -898,10 +899,12 @@ export function App() {
   const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
   const [isReplayingChecklistMutations, setIsReplayingChecklistMutations] = useState(false);
+  const [isReplayingPhotoMutations, setIsReplayingPhotoMutations] = useState(false);
   const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
   const [checklistConflictDiscardId, setChecklistConflictDiscardId] = useState<string | null>(null);
   const jobReplayInProgress = useRef(false);
   const checklistReplayInProgress = useRef(false);
+  const photoReplayInProgress = useRef(false);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -1108,6 +1111,73 @@ export function App() {
     }
   }, [auth.userId, jobs]);
 
+  const replayPhotoMutations = useCallback(async () => {
+    if (!auth.userId || !navigator.onLine || photoReplayInProgress.current) return;
+    photoReplayInProgress.current = true;
+    setIsReplayingPhotoMutations(true);
+    const organizationIds = Array.from(new Set(
+      jobs.map((job) => job.organizationId).filter((id): id is string => Boolean(id)),
+    ));
+    let replayedAny = false;
+    try {
+      for (const organizationId of organizationIds) {
+        const mutations = (await listOfflineMutations(organizationId, auth.userId))
+          .filter(isPhotoUploadOfflineMutation);
+        for (const mutation of mutations) {
+          if (mutation.syncState === 'conflict') break;
+          try {
+            const blob = await getOfflinePhotoBlob(mutation.id);
+            if (!blob) {
+              await markOfflineMutationFailed(mutation, 'Queued photo bytes are missing', 'conflict');
+              break;
+            }
+            const file = new File([blob], mutation.fileName, { type: mutation.contentType });
+            let ticket = await createPhotoUploadTicket(
+              mutation.jobId,
+              file,
+              mutation.photoType,
+              mutation.id,
+            );
+            await uploadPhotoToTicket(ticket, file);
+            const metadata = await readPhotoUploadMetadata(file);
+            await completePhotoUpload(mutation.jobId, ticket.photoId, metadata);
+            ticket = {
+              ...ticket,
+              status: 'uploaded',
+              fileSizeBytes: metadata.fileSizeBytes,
+              imageWidthPx: metadata.imageWidthPx,
+              imageHeightPx: metadata.imageHeightPx,
+              metadataSource: 'client_reported',
+            };
+            setUploadTickets((current) => [
+              ticket,
+              ...current.filter((item) => item.photoId !== ticket.photoId),
+            ]);
+            await removeOfflineMutation(mutation.id);
+            replayedAny = true;
+          } catch (error) {
+            await markOfflineMutationFailed(
+              mutation,
+              error instanceof Error ? error.message : 'Photo replay failed',
+              isOfflineMutationConflict(error) ? 'conflict' : 'failed',
+            );
+            break;
+          }
+        }
+      }
+      const remainingGroups = await Promise.all(
+        organizationIds.map((organizationId) => listOfflineMutations(organizationId, auth.userId!)),
+      );
+      setOfflinePhotoMutations(remainingGroups.flat().filter(isPhotoUploadOfflineMutation));
+      if (replayedAny) setJobs(await fetchJobs());
+    } catch {
+      // Keep the last durable queue snapshot visible.
+    } finally {
+      photoReplayInProgress.current = false;
+      setIsReplayingPhotoMutations(false);
+    }
+  }, [auth.userId, jobs]);
+
   useEffect(() => {
     if (!auth.userId) {
       setOfflineJobMutations([]);
@@ -1132,6 +1202,9 @@ export function App() {
         if (groups.some((group) => group.some(isChecklistOfflineMutation)) && navigator.onLine) {
           void replayChecklistMutations();
         }
+        if (groups.some((group) => group.some(isPhotoUploadOfflineMutation)) && navigator.onLine) {
+          void replayPhotoMutations();
+        }
       })
       .catch(() => {
         if (active) setOfflineJobMutations([]);
@@ -1139,13 +1212,20 @@ export function App() {
     const handleOnline = () => {
       void replayJobLifecycleMutations();
       void replayChecklistMutations();
+      void replayPhotoMutations();
     };
     window.addEventListener('online', handleOnline);
     return () => {
       active = false;
       window.removeEventListener('online', handleOnline);
     };
-  }, [auth.userId, jobs, replayChecklistMutations, replayJobLifecycleMutations]);
+  }, [
+    auth.userId,
+    jobs,
+    replayChecklistMutations,
+    replayJobLifecycleMutations,
+    replayPhotoMutations,
+  ]);
 
   useEffect(() => {
     setIsManagerActivityPersisted(writeStoredManagerActivityItems(managerActivity));
@@ -2384,9 +2464,27 @@ export function App() {
               </div>
             )}
             {offlinePhotoMutations.length > 0 && (
-              <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
-                {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
-              </p>
+              <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
+                <p>
+                  {offlinePhotoMutations.length} photo {offlinePhotoMutations.length === 1 ? 'upload is' : 'uploads are'} stored offline on this phone.
+                </p>
+                <p className="mt-1 font-medium">
+                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
+                  {offlinePhotoMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
+                </p>
+                <button
+                  className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
+                  disabled={
+                    !navigator.onLine
+                    || isReplayingPhotoMutations
+                    || offlinePhotoMutations.some((mutation) => mutation.syncState === 'conflict')
+                  }
+                  onClick={() => void replayPhotoMutations()}
+                  type="button"
+                >
+                  {isReplayingPhotoMutations ? 'Uploading photos…' : 'Upload queued photos'}
+                </button>
+              </div>
             )}
           </div>
 

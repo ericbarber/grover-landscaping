@@ -586,10 +586,11 @@ Current state:
 - Offline photo capture boundaries define atomic blob/metadata storage, validation, privacy, quota, and replay behavior
 - IndexedDB schema version 3 atomically stores validated offline photo metadata and blobs and deletes them together
 - Failed photo workflows retain local previews and claim durable queueing only after the tenant/actor blob transaction commits
+- Queued photo blobs replay oldest-first with deterministic client-mutation ticket identities, fresh upload credentials, completion confirmation, and safe retry/conflict feedback
 
 Next implementation work:
 
-- Add idempotent offline photo ticket creation and ordered blob replay
+- Add crew-readable queued photo review and reviewed-conflict recovery
 
 ## Planned
 

@@ -44,6 +44,13 @@ error classification. Validation or ownership responses become conflicts and
 block later photo replay until reviewed. Network and provider failures remain
 retryable.
 
+The client mutation UUID is sent only when creating a replay ticket. The backend
+derives the pending photo ID and storage nonce from that UUID, so an interrupted
+replay requests the same ticket identity instead of creating duplicate evidence.
+The browser now runs this flow on app load, network recovery, and manual retry,
+refreshes job photo counts after confirmed uploads, and leaves the blob queued
+when any step fails.
+
 The service worker does not intercept this flow. Background Sync may be added
 later as an accelerator, but visible in-app replay remains the required path
 because iOS support and browser execution budgets vary.
@@ -55,4 +62,6 @@ and mutation removal also removes any matching blob in the same transaction.
 Failed photo workflows now keep the existing in-memory preview and attempt the
 atomic blob/metadata transaction using the loaded job tenant and current actor.
 Only a committed transaction receives durable-queue messaging and contributes to
-the mobile pending-photo count.
+the mobile pending-photo count. Pending feedback distinguishes retryable failures
+from review-blocking conflicts and disables blind replay while a conflict is
+present.
