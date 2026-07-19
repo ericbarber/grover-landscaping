@@ -36,6 +36,15 @@ const statusFilters: CompletionReportQueueStatusFilter[] = [
 ];
 
 const readinessFilters: CompletionReportQueueReadinessFilter[] = ['all', 'ready', 'blocked', 'local_only'];
+const readinessBlockers = [
+  ['all', 'All blockers'],
+  ['any', 'Any blocker'],
+  ['checklist', 'Checklist'],
+  ['before_photos', 'Before photos'],
+  ['after_photos', 'After photos'],
+  ['add_ons', 'Add-on work'],
+  ['route_stop', 'Route stop'],
+] as const;
 
 export function ManagerCompletionReportQueuePanel({
   reports,
@@ -45,6 +54,7 @@ export function ManagerCompletionReportQueuePanel({
 }: ManagerCompletionReportQueuePanelProps) {
   const [statusFilter, setStatusFilter] = useState<CompletionReportQueueStatusFilter>('active');
   const [readinessFilter, setReadinessFilter] = useState<CompletionReportQueueReadinessFilter>('all');
+  const [readinessBlocker, setReadinessBlocker] = useState<(typeof readinessBlockers)[number][0]>('all');
   const [organizationId, setOrganizationId] = useState('');
   const [crewId, setCrewId] = useState('');
   const [customer, setCustomer] = useState('');
@@ -115,6 +125,9 @@ export function ManagerCompletionReportQueuePanel({
               property: property.trim() || undefined,
               scheduledFrom: scheduledFrom || undefined,
               scheduledTo: scheduledTo || undefined,
+              status: statusFilter === 'needs_review' ? 'submitted' : statusFilter,
+              readiness: readinessFilter,
+              readinessBlocker,
             })}
             type="button"
           >
@@ -226,6 +239,21 @@ export function ManagerCompletionReportQueuePanel({
           </button>
         ))}
       </div>
+
+      <label className="mt-3 block max-w-xs text-xs font-semibold text-slate-600">
+        Readiness blocker
+        <select
+          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+          onChange={(event) => setReadinessBlocker(
+            event.target.value as (typeof readinessBlockers)[number][0],
+          )}
+          value={readinessBlocker}
+        >
+          {readinessBlockers.map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </label>
 
       <p aria-live="polite" className="mt-3 text-xs font-medium text-slate-500">
         Showing {visibleItems.length} of {summary.total}

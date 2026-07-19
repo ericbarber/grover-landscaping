@@ -468,6 +468,7 @@ Current state:
 - Backend readiness-blocker filtering covers checklist, before/after evidence, unfinished add-ons, and route-stop state
 - Manager report queue controls apply persisted organization and crew filters with local fallback parity
 - Manager report queue controls apply persisted customer, property, and inclusive scheduled-date filters with validated date ranges
+- Manager lifecycle, readiness, and readiness-blocker controls apply to persisted report loading with equivalent local fallback filtering
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -608,7 +609,7 @@ Current state:
 
 Next implementation work:
 
-- Connect status, readiness, and readiness-blocker controls to persisted Phase 3 manager completion-report loading
+- Add clear-filter and active-filter feedback to the Phase 3 manager completion-report queue
 
 ## Planned
 

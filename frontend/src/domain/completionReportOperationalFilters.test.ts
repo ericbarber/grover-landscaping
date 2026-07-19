@@ -3,6 +3,10 @@ import type { CompletionReportSnapshot } from '../api/client';
 import { matchesCompletionReportOperationalFilters } from './completionReportOperationalFilters';
 
 const report = {
+  reportStatus: 'submitted',
+  readyForCustomer: false,
+  persisted: true,
+  readinessBlockers: ['route_stop'],
   routeStop: { crewId: 'crew_1001' },
   job: {
     organizationId: 'org_1001',
@@ -28,5 +32,16 @@ describe('completion report operational filters', () => {
     expect(matchesCompletionReportOperationalFilters(report, { crewId: 'crew_2002' })).toBe(false);
     expect(matchesCompletionReportOperationalFilters(report, { customer: 'commercial' })).toBe(false);
     expect(matchesCompletionReportOperationalFilters(report, { scheduledFrom: '2026-07-20' })).toBe(false);
+  });
+
+  it('matches persisted lifecycle, readiness, and blocker filters', () => {
+    expect(matchesCompletionReportOperationalFilters(report, {
+      status: 'submitted',
+      readiness: 'blocked',
+      readinessBlocker: 'route_stop',
+    })).toBe(true);
+    expect(matchesCompletionReportOperationalFilters(report, { status: 'delivered' })).toBe(false);
+    expect(matchesCompletionReportOperationalFilters(report, { readiness: 'ready' })).toBe(false);
+    expect(matchesCompletionReportOperationalFilters(report, { readinessBlocker: 'add_ons' })).toBe(false);
   });
 });
