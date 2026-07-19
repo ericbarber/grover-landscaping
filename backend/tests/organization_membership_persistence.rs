@@ -271,6 +271,15 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .expect("crew lifecycle audit should be countable");
     assert_eq!(crew_audit_count, 2);
+    let owner_activity = organizations
+        .list_team_administration_activity(&created.organization_id)
+        .await;
+    assert!(owner_activity
+        .iter()
+        .any(|item| { item.target_id == crew.id && item.event_kind == "crew_deactivated" }));
+    assert!(owner_activity
+        .iter()
+        .any(|item| { item.target_id == crew.id && item.event_kind == "crew_reactivated" }));
     assert_eq!(
         organizations
             .organization_profile(&created.organization_id)

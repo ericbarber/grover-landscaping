@@ -10,5 +10,8 @@ describe('team administration activity labels', () => {
     expect(teamActivityLabel('role_changed')).toBe('Membership role changed');
     expect(teamActivityLabel('membership_suspended')).toBe('Membership suspended');
     expect(teamActivityLabel('membership_reactivated')).toBe('Membership reactivated');
+    expect(teamActivityLabel('crew_profile_updated')).toBe('Crew profile updated');
+    expect(teamActivityLabel('crew_deactivated')).toBe('Crew deactivated');
+    expect(teamActivityLabel('crew_reactivated')).toBe('Crew reactivated');
   });
 });

@@ -1906,7 +1906,10 @@ export function App() {
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
             onCrewCreated={() => setCrewRefreshSignal((current) => current + 1)}
-            onCrewChanged={() => setCrewRefreshSignal((current) => current + 1)}
+            onCrewChanged={() => {
+              setCrewRefreshSignal((current) => current + 1);
+              setTeamActivityRefreshSignal((current) => current + 1);
+            }}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
               setFirstOwnerProgressRefreshSignal((current) => current + 1);

@@ -249,6 +249,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Organization owners can create uniquely named tenant-scoped crews from the mobile first-user workflow without seed data
 - Manager day-plan creation loads tenant-scoped crews and uses a mobile select instead of accepting arbitrary crew IDs
 - Owners can rename, deactivate, and reactivate crews with audit history; crews with active property assignments or current routes cannot be deactivated
+- Owner administration history includes crew rename, deactivation, and reactivation audit events
 - Nested customer-account APIs are explicitly protected by route authorization
 
 ### Local development and project setup
@@ -491,7 +492,7 @@ Current state:
 Next implementation work:
 
 - Expand account onboarding and first-user administration workflows
-- Show crew lifecycle activity in the owner administration history
+- Add organization crew capacity and lead-assignment metadata
 
 ## Planned
 

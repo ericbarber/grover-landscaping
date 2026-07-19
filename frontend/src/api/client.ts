@@ -434,7 +434,10 @@ export type TeamAdministrationEventKind =
   | 'invitation_reissued'
   | 'role_changed'
   | 'membership_suspended'
-  | 'membership_reactivated';
+  | 'membership_reactivated'
+  | 'crew_profile_updated'
+  | 'crew_deactivated'
+  | 'crew_reactivated';
 
 interface ApiTeamAdministrationActivity {
   id: string;
