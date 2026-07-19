@@ -7,6 +7,7 @@ import type {
 import type { YardCareJob } from '../domain/jobs';
 import { API_BASE_URL, toBrowserUrl } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
+import { apiRequestError } from './apiError';
 
 interface ApiJobSummary {
   id: string;
@@ -1250,7 +1251,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    throw await apiRequestError(response);
   }
 
   return response.json() as Promise<T>;

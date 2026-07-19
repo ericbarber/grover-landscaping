@@ -500,10 +500,11 @@ Current state:
 - Completion-report and project-bid delivery queues enforce each account's enabled channel and configured recipient
 - Customer deliveries queued during account quiet hours are deferred until quiet hours end in the organization's timezone
 - Project-bid notification records carry organization ownership for tenant-scoped history and recovery
+- Manager report and bid workflows explain when delivery is blocked by account channel or recipient preferences
 
 Next implementation work:
 
-- Surface preference-blocked delivery guidance in manager report and bid workflows
+- Connect manager activity history to persisted notification events
 
 ## Planned
 

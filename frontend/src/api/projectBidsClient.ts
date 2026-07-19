@@ -6,6 +6,7 @@ import type {
 } from '../domain/stopProgress';
 import { API_BASE_URL, toBrowserUrl } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
+import { apiRequestError } from './apiError';
 
 export interface ApiProjectBidLineItem {
   id: string;
@@ -182,7 +183,7 @@ export async function sendProjectBid(
     },
   );
   if (!response.ok) {
-    throw new Error(`Send project bid failed with status ${response.status}`);
+    throw await apiRequestError(response, `Send project bid failed with status ${response.status}`);
   }
 
   return toProjectBid((await response.json()) as ApiProjectBid);

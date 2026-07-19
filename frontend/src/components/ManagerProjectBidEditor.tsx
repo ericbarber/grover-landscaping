@@ -5,6 +5,7 @@ import {
   saveProjectBidDraft,
   sendProjectBid,
 } from '../api/projectBidsClient';
+import { isApiErrorCode } from '../api/apiError';
 import {
   bidDeliveryRecipientIsValid,
   bidDeliveryStatusLabel,
@@ -130,7 +131,11 @@ export function ManagerProjectBidEditor({
         onSaved(bid);
         setMessage('Approval link issued and notification queued for provider delivery.');
       })
-      .catch(() => setMessage('Bid could not be sent. Confirm the draft is persisted and try again.'))
+      .catch((error: unknown) => setMessage(
+        isApiErrorCode(error, 'project_bid_notification_preference_blocked')
+          ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
+          : 'Bid could not be sent. Confirm the draft is persisted and try again.',
+      ))
       .finally(() => setIsSending(false));
   }
 

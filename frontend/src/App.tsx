@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completePhotoUpload,
@@ -1770,9 +1771,13 @@ export function App() {
         tone: 'success',
         source: 'sync',
       });
-    } catch {
+    } catch (error) {
       setCompletionReportActionStatus(null);
-      setStatusMessage('Could not queue the customer notification. Confirm the report is delivered and the recipient is valid.');
+      setStatusMessage(
+        isApiErrorCode(error, 'completion_report_notification_preference_blocked')
+          ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
+          : 'Could not queue the customer notification. Confirm the report is delivered and the recipient is valid.',
+      );
     }
   }
 

@@ -6,6 +6,7 @@
 - 2026-07-19: Added persisted customer contacts to onboarding readiness and repaired property lifecycle audit constraints.
 - 2026-07-19: Added account email/SMS opt-ins and validated quiet-hour preferences.
 - 2026-07-19: Enforced account channel, recipient, and quiet-hour preferences for report and bid deliveries.
+- 2026-07-19: Added manager guidance for customer deliveries blocked by account preferences.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
