@@ -82,6 +82,7 @@
 - 2026-07-19: Queued failed photo captures with durable blob feedback and local previews.
 - 2026-07-19: Added deterministic ordered replay for queued offline photo captures.
 - 2026-07-19: Added crew photo queue review and reviewed-conflict recovery.
+- 2026-07-19: Added browser-compatible offline photo persistence and replay coverage.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

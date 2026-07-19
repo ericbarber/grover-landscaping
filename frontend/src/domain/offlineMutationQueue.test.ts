@@ -1,17 +1,33 @@
-import { describe, expect, it } from 'vitest';
+import 'fake-indexeddb/auto';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createStopProgressOfflineMutation,
   createJobLifecycleOfflineMutation,
   createChecklistOfflineMutation,
   createPhotoUploadOfflineMutation,
+  enqueuePhotoUploadMutation,
+  getOfflinePhotoBlob,
   isOfflineMutationConflict,
+  listOfflineMutations,
+  markOfflineMutationFailed,
+  removeOfflineMutation,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
   withOfflineMutationFailure,
 } from './offlineMutationQueue';
 import { ApiRequestError } from '../api/apiError';
+import { replayOfflinePhotoMutation } from './offlinePhotoReplay';
 
 describe('offline mutation queue records', () => {
+  beforeEach(async () => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase('grover-field-offline');
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('offline test database deletion was blocked'));
+    });
+  });
+
   it('captures tenant, actor, ordering, and retry context for stop progress', () => {
     const record = createStopProgressOfflineMutation(
       {
@@ -69,6 +85,101 @@ describe('offline mutation queue records', () => {
       contentType: 'application/pdf',
       fileSizeBytes: 1024,
     })).toThrow(/JPEG, PNG, GIF, or WebP/);
+  });
+
+  it('persists photo metadata and bytes, retains conflicts, and removes both together', async () => {
+    const bytes = new Blob(['offline image bytes'], { type: 'image/jpeg' });
+    const mutation = await enqueuePhotoUploadMutation({
+      organizationId: 'org-photo',
+      actorId: 'crew-photo',
+      jobId: 'job-photo',
+      photoType: 'after',
+      fileName: 'completed-yard.jpg',
+    }, bytes);
+
+    expect(await listOfflineMutations('org-photo', 'crew-photo')).toEqual([mutation]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toEqual(bytes);
+
+    await markOfflineMutationFailed(mutation, 'server state changed', 'conflict');
+    expect(await listOfflineMutations('org-photo', 'crew-photo')).toEqual([
+      expect.objectContaining({
+        id: mutation.id,
+        attemptCount: 1,
+        syncState: 'conflict',
+      }),
+    ]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toEqual(bytes);
+
+    await removeOfflineMutation(mutation.id);
+    expect(await listOfflineMutations('org-photo', 'crew-photo')).toEqual([]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toBeNull();
+  });
+
+  it('replays a stored photo in order and removes it only after completion', async () => {
+    const mutation = await enqueuePhotoUploadMutation({
+      organizationId: 'org-replay',
+      actorId: 'crew-replay',
+      jobId: 'job-replay',
+      photoType: 'before',
+      fileName: 'arrival.jpg',
+    }, new Blob(['photo bytes'], { type: 'image/jpeg' }));
+    const events: string[] = [];
+    const createTicket = vi.fn(async (
+      _jobId: string,
+      file: File,
+      _photoType: 'before' | 'after' | 'issue' | 'extra',
+      clientMutationId: string,
+    ) => {
+      events.push('ticket');
+      expect(file.name).toBe('arrival.jpg');
+      expect(clientMutationId).toBe(mutation.id);
+      return {
+        status: 'created',
+        jobId: mutation.jobId,
+        photoId: 'photo-replay',
+        photoType: mutation.photoType,
+        fileName: mutation.fileName,
+        contentType: mutation.contentType,
+        uploadMode: 'local-placeholder',
+        uploadUrl: 'local://upload',
+        objectKey: 'local/photo-replay',
+      };
+    });
+
+    const ticket = await replayOfflinePhotoMutation(mutation, {
+      getBlob: getOfflinePhotoBlob,
+      createTicket,
+      upload: async () => {
+        events.push('upload');
+        expect(await getOfflinePhotoBlob(mutation.id)).not.toBeNull();
+      },
+      readMetadata: async () => {
+        events.push('metadata');
+        return {
+          fileSizeBytes: 11,
+          imageWidthPx: 1200,
+          imageHeightPx: 800,
+        };
+      },
+      complete: async () => {
+        events.push('complete');
+        expect(await getOfflinePhotoBlob(mutation.id)).not.toBeNull();
+      },
+      remove: async (mutationId) => {
+        events.push('remove');
+        await removeOfflineMutation(mutationId);
+      },
+    });
+
+    expect(events).toEqual(['ticket', 'upload', 'metadata', 'complete', 'remove']);
+    expect(ticket).toMatchObject({
+      status: 'uploaded',
+      photoId: 'photo-replay',
+      fileSizeBytes: 11,
+      metadataSource: 'client_reported',
+    });
+    expect(await listOfflineMutations('org-replay', 'crew-replay')).toEqual([]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toBeNull();
   });
 
   it('captures tenant and item state for checklist mutations', () => {

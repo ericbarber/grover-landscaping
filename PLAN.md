@@ -588,10 +588,11 @@ Current state:
 - Failed photo workflows retain local previews and claim durable queueing only after the tenant/actor blob transaction commits
 - Queued photo blobs replay oldest-first with deterministic client-mutation ticket identities, fresh upload credentials, completion confirmation, and safe retry/conflict feedback
 - Crew photo queue review exposes safe capture details and two-step reviewed-conflict deletion before ordered replay resumes
+- Browser-compatible IndexedDB tests cover photo blob persistence, conflict retention, ordered replay, idempotency identity, and atomic reviewed deletion
 
 Next implementation work:
 
-- Add browser coverage for offline photo persistence, replay, and conflict recovery
+- Add client-side photo quality checks for previewability, duplicates, and required before/after evidence
 
 ## Planned
 

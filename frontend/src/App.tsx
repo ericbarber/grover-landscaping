@@ -64,6 +64,10 @@ import {
   type JobLifecycleOfflineMutation,
   type PhotoUploadOfflineMutation,
 } from './domain/offlineMutationQueue';
+import {
+  MissingOfflinePhotoBlobError,
+  replayOfflinePhotoMutation,
+} from './domain/offlinePhotoReplay';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -1127,40 +1131,26 @@ export function App() {
         for (const mutation of mutations) {
           if (mutation.syncState === 'conflict') break;
           try {
-            const blob = await getOfflinePhotoBlob(mutation.id);
-            if (!blob) {
-              await markOfflineMutationFailed(mutation, 'Queued photo bytes are missing', 'conflict');
-              break;
-            }
-            const file = new File([blob], mutation.fileName, { type: mutation.contentType });
-            let ticket = await createPhotoUploadTicket(
-              mutation.jobId,
-              file,
-              mutation.photoType,
-              mutation.id,
-            );
-            await uploadPhotoToTicket(ticket, file);
-            const metadata = await readPhotoUploadMetadata(file);
-            await completePhotoUpload(mutation.jobId, ticket.photoId, metadata);
-            ticket = {
-              ...ticket,
-              status: 'uploaded',
-              fileSizeBytes: metadata.fileSizeBytes,
-              imageWidthPx: metadata.imageWidthPx,
-              imageHeightPx: metadata.imageHeightPx,
-              metadataSource: 'client_reported',
-            };
+            const ticket = await replayOfflinePhotoMutation(mutation, {
+              getBlob: getOfflinePhotoBlob,
+              createTicket: createPhotoUploadTicket,
+              upload: uploadPhotoToTicket,
+              readMetadata: readPhotoUploadMetadata,
+              complete: completePhotoUpload,
+              remove: removeOfflineMutation,
+            });
             setUploadTickets((current) => [
               ticket,
               ...current.filter((item) => item.photoId !== ticket.photoId),
             ]);
-            await removeOfflineMutation(mutation.id);
             replayedAny = true;
           } catch (error) {
             await markOfflineMutationFailed(
               mutation,
               error instanceof Error ? error.message : 'Photo replay failed',
-              isOfflineMutationConflict(error) ? 'conflict' : 'failed',
+              error instanceof MissingOfflinePhotoBlobError || isOfflineMutationConflict(error)
+                ? 'conflict'
+                : 'failed',
             );
             break;
           }

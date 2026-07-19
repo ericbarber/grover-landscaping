@@ -69,3 +69,8 @@ state, and attempt count without exposing internal errors or storage credentials
 A two-step reviewed-conflict action warns that local image bytes will be deleted,
 removes the metadata and blob atomically, refreshes server photo counts, and then
 resumes the ordered queue.
+
+Vitest exercises this boundary with a browser-compatible IndexedDB
+implementation. Coverage proves atomic metadata/blob persistence, durable
+conflict retention, ordered ticket-upload-metadata-completion-removal replay, use
+of the mutation UUID as the ticket idempotency key, and atomic reviewed deletion.
