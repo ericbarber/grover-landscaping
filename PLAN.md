@@ -536,10 +536,11 @@ Current state:
 - Mobile member administration sorts the visible and exported directory by readable name, role, or status
 - Owner team activity sorts the loaded filtered view and CSV export newest-first or oldest-first without changing pagination cursors
 - Owner team activity shows each event's exact local date and time
+- Owners can reveal immutable actor and target IDs per activity event without cluttering the readable default view
 
 Next implementation work:
 
-- Let owners reveal immutable actor and target IDs for individual activity events
+- Add copy controls for immutable team activity IDs
 
 ## Planned
 

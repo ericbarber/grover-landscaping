@@ -348,6 +348,21 @@ export function ManagerTeamActivityPanel({
             <p className="mt-1 break-all text-xs text-slate-600">
               {item.targetLabel} · by {item.actorLabel}
             </p>
+            <details className="mt-2 text-xs text-slate-500">
+              <summary className="min-h-11 cursor-pointer content-center font-semibold">
+                Show immutable IDs
+              </summary>
+              <dl className="space-y-1 rounded-lg border border-slate-200 bg-white p-2">
+                <div>
+                  <dt className="font-semibold">Actor ID</dt>
+                  <dd className="break-all">{item.actorUserId}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Target ID</dt>
+                  <dd className="break-all">{item.targetId}</dd>
+                </div>
+              </dl>
+            </details>
           </li>
         ))}
       </ol>
