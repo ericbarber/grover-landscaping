@@ -475,6 +475,7 @@ Current state:
 - Blocked queue items name each required checklist, evidence, add-on, or route-stop recovery and open the affected job directly
 - Manager dispatch view groups loaded jobs by service date and assigned crew, prioritizes unassigned work, and summarizes day-level lifecycle counts
 - Tenant-scoped dispatch assignment API moves only scheduled jobs to active same-organization crews and transactionally audits old/new crew and date context
+- Manager day workload exposes persisted move controls for scheduled jobs with active tenant crew choices and no-op prevention
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -615,7 +616,7 @@ Current state:
 
 Next implementation work:
 
-- Connect manager dispatch move controls to persisted job reassignment
+- Show route and crew capacity impact before a dispatcher confirms a job move
 
 ## Planned
 

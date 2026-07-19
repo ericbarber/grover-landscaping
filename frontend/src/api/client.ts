@@ -37,6 +37,11 @@ export interface JobDetail extends YardCareJob {
   checklist: ChecklistItem[];
 }
 
+export interface UpdateJobDispatchAssignmentRequest {
+  crewId: string;
+  scheduledDate: string;
+}
+
 export interface ApiJobAddOn {
   id: string;
   job_id: string;
@@ -1377,6 +1382,27 @@ export async function updateJobAddOnStatus(
 
 export async function fetchJobDetail(jobId: string): Promise<JobDetail> {
   const job = await request<ApiJobDetail>(`/jobs/${jobId}`);
+  return toJobDetail(job);
+}
+
+export function jobDispatchAssignmentPath(jobId: string): string {
+  return `/jobs/${encodeURIComponent(jobId)}/dispatch-assignment`;
+}
+
+export async function updateJobDispatchAssignment(
+  jobId: string,
+  assignment: UpdateJobDispatchAssignmentRequest,
+): Promise<JobDetail> {
+  const job = await request<ApiJobDetail>(
+    jobDispatchAssignmentPath(jobId),
+    {
+      method: 'PUT',
+      body: JSON.stringify({
+        crew_id: assignment.crewId,
+        scheduled_date: assignment.scheduledDate,
+      }),
+    },
+  );
   return toJobDetail(job);
 }
 

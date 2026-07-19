@@ -8,6 +8,7 @@ import {
   eraseCustomerPhotoEvidence,
   fetchCompletionReport,
   fetchCompletionReports,
+  updateJobDispatchAssignment,
   fetchCustomerPrivacyExport,
   fetchJobDetail,
   fetchJobAddOns,
@@ -1827,6 +1828,17 @@ export function App() {
     }
   }
 
+  async function handleJobDispatchAssignment(
+    jobId: string,
+    crewId: string,
+    scheduledDate: string,
+  ) {
+    const updated = await updateJobDispatchAssignment(jobId, { crewId, scheduledDate });
+    setJobs((current) => current.map((job) => job.id === updated.id ? updated : job));
+    setStatusMessage(`${updated.customerName} moved to ${crewId} on ${scheduledDate}.`);
+    setFirstOwnerProgressRefreshSignal((current) => current + 1);
+  }
+
   async function refreshNotificationHistory(filters: NotificationHistoryFilters) {
     setIsLoadingNotificationHistory(true);
     try {
@@ -2785,6 +2797,7 @@ export function App() {
           <div className="mt-6">
             <ManagerDispatchWorkloadPanel
               jobs={jobs}
+              onReassign={handleJobDispatchAssignment}
               onSelectJob={selectJobForReview}
             />
           </div>

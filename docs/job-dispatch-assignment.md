@@ -15,3 +15,7 @@ return a conflict so dispatch cannot rewrite active field work.
 The service-job update and `job_reassigned` audit event commit in one PostgreSQL
 transaction. Audit metadata records the old and new crew IDs and service dates,
 along with the authenticated actor and organization boundary.
+
+The manager day-workload view exposes the operation only for scheduled jobs,
+loads active tenant crew choices, requires an actual crew or date change, and
+refreshes the local workload grouping from the persisted response.

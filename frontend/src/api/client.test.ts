@@ -3,6 +3,7 @@ import {
   completionReportsPath,
   customerPhotoErasurePath,
   customerPrivacyExportPath,
+  jobDispatchAssignmentPath,
   notificationHistoryPath,
   notificationResolvePath,
   notificationRetryPath,
@@ -73,6 +74,10 @@ describe('core API client mapping', () => {
     })).toBe(
       '/completion-reports?customer=Demo+Owner&property=Maple&scheduled_from=2026-06-15&scheduled_to=2026-06-16',
     );
+  });
+
+  it('escapes job IDs in dispatch assignment paths', () => {
+    expect(jobDispatchAssignmentPath('job/1001')).toBe('/jobs/job%2F1001/dispatch-assignment');
   });
 
   it('builds notification history paths with optional filters', () => {
