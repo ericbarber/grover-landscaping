@@ -9,6 +9,7 @@ import { ApiStatusBanner } from './components/ApiStatusBanner';
 import { registerProductionServiceWorker } from './registerServiceWorker';
 import { ServiceWorkerUpdateBanner } from './components/ServiceWorkerUpdateBanner';
 import { InstallAppBanner } from './components/InstallAppBanner';
+import { isDiagnosticsPath } from './domain/diagnosticsRoute';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -25,7 +26,12 @@ const AuthenticatedExperience = React.lazy(
   () => import('./auth/AuthenticatedExperience')
     .then((module) => ({ default: module.AuthenticatedExperience })),
 );
+const MobileDiagnosticsPage = React.lazy(
+  () => import('./components/MobileDiagnosticsPage')
+    .then((module) => ({ default: module.MobileDiagnosticsPage })),
+);
 
+const diagnosticsRoute = isDiagnosticsPath(window.location.pathname);
 const sharedBidToken = sharedBidTokenFromPath(window.location.pathname);
 const sharedReportToken = sharedReportTokenFromPath(window.location.pathname);
 const organizationInvitationToken = organizationInvitationTokenFromPath(window.location.pathname);
@@ -44,7 +50,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           </p>
         </main>
       )}>
-        {sharedBidToken ? (
+        {diagnosticsRoute ? (
+          <MobileDiagnosticsPage />
+        ) : sharedBidToken ? (
           <CustomerBidReviewPage shareToken={sharedBidToken} />
         ) : sharedReportToken ? (
           <CustomerCompletionReportPage shareToken={sharedReportToken} />

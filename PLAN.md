@@ -558,10 +558,11 @@ Current state:
 - API downtime feedback includes a touch-safe immediate readiness retry action
 - Production shell updates are announced and applied only after a user-controlled reload
 - Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
+- A public mobile diagnostics page checks connectivity, API readiness, secure context, shell control, and installed display mode
 
 Next implementation work:
 
-- Add a mobile diagnostics view for connectivity, API, and installed-app state
+- Make mobile diagnostics react immediately to network changes and expose safe copyable support details
 
 ## Planned
 
