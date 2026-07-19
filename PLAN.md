@@ -544,10 +544,11 @@ Current state:
 - Team-activity CSV exports include immutable audit event IDs
 - Owners can reveal and copy immutable audit event IDs from each mobile activity card
 - Owner audit-ID search is debounced, tenant-scoped, and applied across server-paginated history
+- Production builds split React and OIDC vendor code from the application bundle, keeping every chunk below the 500 kB warning threshold
 
 Next implementation work:
 
-- Split the frontend production bundle to remove the 500 kB phone-startup warning
+- Lazy-load public bid, report, invitation, and authenticated dashboard routes
 
 ## Planned
 
