@@ -1032,7 +1032,13 @@ async fn list_operational_activity(
                 'report_review_started',
                 'report_changes_requested',
                 'report_resubmitted',
-                'report_delivered'
+                'report_delivered',
+                'bid_approved',
+                'bid_rejected',
+                'bid_converted',
+                'photo_processing_retried',
+                'photo_processing_resolved',
+                'customer_photo_evidence_erased'
               )
             UNION ALL
             SELECT

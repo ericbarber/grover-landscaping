@@ -43,6 +43,39 @@ const activityPresentation: Record<
     tone: 'success',
     source: 'job',
   },
+  bid_approved: {
+    title: 'Project bid approved',
+    tone: 'success',
+    source: 'job',
+    recommendedAction: 'Convert approved work into scheduled job add-ons when the crew is ready.',
+  },
+  bid_rejected: {
+    title: 'Project bid rejected',
+    tone: 'warning',
+    source: 'job',
+    recommendedAction: 'Review the rejected scope before revising or closing the proposal.',
+  },
+  bid_converted: {
+    title: 'Approved bid converted to work',
+    tone: 'success',
+    source: 'job',
+  },
+  photo_processing_retried: {
+    title: 'Photo processing retried',
+    tone: 'info',
+    source: 'photo',
+  },
+  photo_processing_resolved: {
+    title: 'Photo processing manually resolved',
+    tone: 'success',
+    source: 'photo',
+  },
+  customer_photo_evidence_erased: {
+    title: 'Customer photo evidence erased',
+    tone: 'warning',
+    source: 'photo',
+    recommendedAction: 'Confirm customer-facing reports and privacy records reflect the erasure.',
+  },
 };
 
 export function operationalToManagerActivity(activity: OperationalActivity): ManagerActivityItem {

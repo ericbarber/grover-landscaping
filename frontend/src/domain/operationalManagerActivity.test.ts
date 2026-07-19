@@ -32,4 +32,31 @@ describe('persisted operational manager activity', () => {
       recommendedAction: 'Track the report until the crew resubmits the requested corrections.',
     });
   });
+
+  it('maps bid and photo audit events to their operational sources', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_bid_1001',
+      organizationId: 'org_1001',
+      eventKind: 'bid_approved',
+      targetId: 'bid_1001',
+      actorUserId: 'customer_1001',
+      occurredAt: '2026-07-19T17:10:00Z',
+    })).toMatchObject({
+      title: 'Project bid approved',
+      tone: 'success',
+      source: 'job',
+    });
+    expect(operationalToManagerActivity({
+      id: 'audit_photo_1001',
+      organizationId: 'org_1001',
+      eventKind: 'photo_processing_retried',
+      targetId: 'photo_1001',
+      actorUserId: 'manager_1001',
+      occurredAt: '2026-07-19T17:11:00Z',
+    })).toMatchObject({
+      title: 'Photo processing retried',
+      tone: 'info',
+      source: 'photo',
+    });
+  });
 });

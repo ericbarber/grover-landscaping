@@ -504,10 +504,11 @@ Current state:
 - Manager activity history includes persisted queued, sent, failed, skipped, and dead-letter customer notification events
 - Tenant-scoped operational activity combines persisted route state with completion-report lifecycle audit events
 - Manager activity refreshes persisted route and report events after schedule and report workflow changes
+- Manager activity includes persisted bid decisions/conversions and photo-processing/privacy recovery events
 
 Next implementation work:
 
-- Connect manager activity history to persisted bid and photo events
+- Replace browser-local manager activity seed records with persisted operational readiness events
 
 ## Planned
 
