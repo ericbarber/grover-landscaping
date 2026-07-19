@@ -6,6 +6,7 @@ import {
   filterTeamMemberships,
   teamMembershipActiveFilterCount,
   summarizeTeamMemberships,
+  sortTeamMemberships,
   teamMembershipsCsv,
 } from './ManagerTeamMembershipsPanel';
 
@@ -86,5 +87,19 @@ describe('team membership role controls', () => {
     }])).toContain(
       '"Grover, ""Jordan""","user_1","CrewLead","active","organization","org_1"',
     );
+  });
+
+  it('sorts a copy of the directory by readable name, role, or status', () => {
+    const members = [
+      { ...membership('Manager', 'suspended'), id: 'membership_2', displayName: 'Zoe' },
+      { ...membership('CrewLead'), displayName: 'Alex' },
+    ];
+    expect(sortTeamMemberships(members, 'name').map((item) => item.displayName))
+      .toEqual(['Alex', 'Zoe']);
+    expect(sortTeamMemberships(members, 'role').map((item) => item.role))
+      .toEqual(['CrewLead', 'Manager']);
+    expect(sortTeamMemberships(members, 'status').map((item) => item.status))
+      .toEqual(['active', 'suspended']);
+    expect(members[0].displayName).toBe('Zoe');
   });
 });

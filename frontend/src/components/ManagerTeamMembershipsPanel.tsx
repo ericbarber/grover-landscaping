@@ -34,6 +34,7 @@ export function canSuspendMembership(
 }
 
 export type MembershipStatusFilter = 'all' | 'active' | 'suspended';
+export type MembershipSort = 'name' | 'role' | 'status';
 
 export function filterTeamMemberships(
   memberships: OrganizationMembership[],
@@ -59,6 +60,21 @@ export function teamMembershipActiveFilterCount(
   status: MembershipStatusFilter,
 ): number {
   return Number(Boolean(query.trim())) + Number(role !== 'all') + Number(status !== 'all');
+}
+
+export function sortTeamMemberships(
+  memberships: OrganizationMembership[],
+  sort: MembershipSort,
+): OrganizationMembership[] {
+  const value = (membership: OrganizationMembership) => {
+    if (sort === 'role') return membership.role;
+    if (sort === 'status') return membership.status;
+    return membership.displayName ?? membership.userId;
+  };
+  return [...memberships].sort((left, right) => (
+    value(left).localeCompare(value(right), undefined, { sensitivity: 'base' })
+      || left.userId.localeCompare(right.userId)
+  ));
 }
 
 export function summarizeTeamMemberships(memberships: OrganizationMembership[]) {
@@ -102,17 +118,16 @@ export function ManagerTeamMembershipsPanel({
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AccessRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<MembershipStatusFilter>('all');
+  const [membershipSort, setMembershipSort] = useState<MembershipSort>('name');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const activeOwnerCount = memberships.filter(
     (membership) => membership.status === 'active'
       && membership.role === 'OrganizationOwner',
   ).length;
-  const filteredMemberships = filterTeamMemberships(
-    memberships,
-    searchQuery,
-    roleFilter,
-    statusFilter,
+  const filteredMemberships = sortTeamMemberships(
+    filterTeamMemberships(memberships, searchQuery, roleFilter, statusFilter),
+    membershipSort,
   );
   const activeFilterCount = teamMembershipActiveFilterCount(
     searchQuery,
@@ -268,7 +283,7 @@ export function ManagerTeamMembershipsPanel({
           </div>
         ))}
       </dl>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-4">
         <label className="text-xs font-semibold text-slate-700">
           Find member
           <input
@@ -302,6 +317,18 @@ export function ManagerTeamMembershipsPanel({
             <option value="all">All statuses</option>
             <option value="active">Active</option>
             <option value="suspended">Suspended</option>
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Sort
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setMembershipSort(event.target.value as MembershipSort)}
+            value={membershipSort}
+          >
+            <option value="name">Name</option>
+            <option value="role">Role</option>
+            <option value="status">Status</option>
           </select>
         </label>
       </div>

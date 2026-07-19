@@ -533,10 +533,11 @@ Current state:
 - Mobile owner activity summarizes loaded access, crew, and organization changes
 - Owners can export the currently filtered loaded team activity as quoted CSV with readable and immutable audit identities
 - Owners can export the currently filtered member directory as quoted CSV with identity, role, status, and scope
+- Mobile member administration sorts the visible and exported directory by readable name, role, or status
 
 Next implementation work:
 
-- Add readable name, role, and status sorting to the mobile member directory
+- Add newest/oldest sorting to the loaded owner team activity view
 
 ## Planned
 
