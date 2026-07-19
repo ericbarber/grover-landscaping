@@ -3,6 +3,7 @@ import type { OrganizationMembership } from '../api/client';
 import {
   canChangeMembershipRole,
   canSuspendMembership,
+  filterTeamMemberships,
 } from './ManagerTeamMembershipsPanel';
 
 const membership = (
@@ -36,5 +37,21 @@ describe('team membership role controls', () => {
     expect(canSuspendMembership(membership('OrganizationOwner'), 2)).toBe(true);
     expect(canSuspendMembership(membership('Manager'), 1)).toBe(true);
     expect(canSuspendMembership(membership('Manager', 'suspended'), 1)).toBe(false);
+  });
+
+  it('filters members by readable name, immutable identity, role, and status', () => {
+    const members = [
+      { ...membership('CrewLead'), displayName: 'Jordan Grover' },
+      {
+        ...membership('Manager', 'suspended'),
+        id: 'membership_2',
+        userId: 'manager-identity-2',
+        displayName: 'Alex Rivera',
+      },
+    ];
+    expect(filterTeamMemberships(members, 'jordan', 'all', 'all')).toEqual([members[0]]);
+    expect(filterTeamMemberships(members, 'identity-2', 'all', 'all')).toEqual([members[1]]);
+    expect(filterTeamMemberships(members, '', 'Manager', 'suspended')).toEqual([members[1]]);
+    expect(filterTeamMemberships(members, '', 'CrewLead', 'suspended')).toEqual([]);
   });
 });

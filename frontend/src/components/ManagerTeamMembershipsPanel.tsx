@@ -33,6 +33,26 @@ export function canSuspendMembership(
     && (membership.role !== 'OrganizationOwner' || activeOwnerCount > 1);
 }
 
+export type MembershipStatusFilter = 'all' | 'active' | 'suspended';
+
+export function filterTeamMemberships(
+  memberships: OrganizationMembership[],
+  query: string,
+  role: AccessRole | 'all',
+  status: MembershipStatusFilter,
+): OrganizationMembership[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return memberships.filter((membership) => {
+    const matchesQuery = !normalizedQuery || [
+      membership.displayName,
+      membership.userId,
+    ].some((value) => value?.toLocaleLowerCase().includes(normalizedQuery));
+    const matchesRole = role === 'all' || membership.role === role;
+    const matchesStatus = status === 'all' || membership.status === status;
+    return matchesQuery && matchesRole && matchesStatus;
+  });
+}
+
 export function ManagerTeamMembershipsPanel({
   organizationId,
   onTeamChanged,
@@ -45,12 +65,21 @@ export function ManagerTeamMembershipsPanel({
   const [draftNames, setDraftNames] = useState<Record<string, string>>({});
   const [confirmingMembershipId, setConfirmingMembershipId] = useState('');
   const [confirmingLifecycleId, setConfirmingLifecycleId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<AccessRole | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<MembershipStatusFilter>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const activeOwnerCount = memberships.filter(
     (membership) => membership.status === 'active'
       && membership.role === 'OrganizationOwner',
   ).length;
+  const filteredMemberships = filterTeamMemberships(
+    memberships,
+    searchQuery,
+    roleFilter,
+    statusFilter,
+  );
 
   async function refresh() {
     if (!organizationId) return;
@@ -163,8 +192,48 @@ export function ManagerTeamMembershipsPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <label className="text-xs font-semibold text-slate-700">
+          Find member
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Name or identity"
+            type="search"
+            value={searchQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Role
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setRoleFilter(event.target.value as AccessRole | 'all')}
+            value={roleFilter}
+          >
+            <option value="all">All roles</option>
+            {roles.map((role) => (
+              <option key={role.value} value={role.value}>{role.label}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Status
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setStatusFilter(event.target.value as MembershipStatusFilter)}
+            value={statusFilter}
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </label>
+      </div>
+      <p className="mt-3 text-xs text-slate-500" aria-live="polite">
+        Showing {filteredMemberships.length} of {memberships.length} members
+      </p>
       <ul className="mt-4 space-y-3">
-        {memberships.map((membership) => {
+        {filteredMemberships.map((membership) => {
           const canChange = canChangeMembershipRole(membership, activeOwnerCount);
           const canSuspend = canSuspendMembership(membership, activeOwnerCount);
           const draftRole = draftRoles[membership.id] ?? membership.role;
@@ -331,6 +400,11 @@ export function ManagerTeamMembershipsPanel({
           );
         })}
       </ul>
+      {!isLoading && memberships.length > 0 && filteredMemberships.length === 0 ? (
+        <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          No team members match these filters.
+        </p>
+      ) : null}
       {!isLoading && memberships.length === 0 ? (
         <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No active or suspended memberships found.

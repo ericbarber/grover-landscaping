@@ -522,10 +522,11 @@ Current state:
 - Membership display-name changes are tenant-scoped, validated, and included in owner team-administration history
 - Crew-lead selection uses readable member names with immutable membership IDs as option values
 - Owner team activity resolves readable actor and affected-resource labels while retaining immutable IDs in the API
+- Mobile team administration supports member-name or identity search plus role and status filters
 
 Next implementation work:
 
-- Add member-name search and role/status filters to mobile team administration
+- Add event and actor filters to owner team-administration activity
 
 ## Planned
 
