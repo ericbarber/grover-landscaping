@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { API_BASE_URL } from '../api/baseUrl';
-import { fetchPrincipalAccessSummary } from '../api/client';
+import { fetchPrincipalAccessSummary, type OrganizationMembership } from '../api/client';
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
 type AuthMode = 'disabled' | 'cognito';
@@ -26,8 +26,10 @@ interface AuthContextValue {
   authenticated: boolean;
   error: string | null;
   displayName: string;
+  userId: string | null;
   verifiedEmail: string | null;
   roles: string[];
+  memberships: OrganizationMembership[];
   refreshAccess: () => Promise<void>;
   authMode: AuthMode | null;
   retryInitialization: () => void;
@@ -130,6 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [initializationAttempt, setInitializationAttempt] = useState(0);
   const [membershipRoles, setMembershipRoles] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -240,9 +244,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAccess = useCallback(async () => {
     try {
       const access = await fetchPrincipalAccessSummary();
+      setUserId(access.userId);
+      setMemberships(access.memberships);
       setMembershipRoles(access.memberships.map((membership) => membership.role));
       setVerifiedEmail(access.verifiedEmail);
     } catch {
+      setUserId(null);
+      setMemberships([]);
       setMembershipRoles([]);
       setVerifiedEmail(null);
     }
@@ -252,7 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (authMode === 'disabled' || (user && !user.expired)) {
       void refreshAccess();
     } else {
+      setUserId(null);
+      setMemberships([]);
       setMembershipRoles([]);
+      setVerifiedEmail(null);
     }
   }, [authMode, refreshAccess, user]);
 
@@ -267,8 +278,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authenticated: authMode === 'disabled' || Boolean(user && !user.expired),
       error,
       displayName: authMode === 'disabled' ? 'Local development user' : displayNameFromUser(user),
+      userId,
       verifiedEmail,
       roles,
+      memberships,
       authMode,
       refreshAccess,
       retryInitialization,
@@ -276,7 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
     };
     },
-    [authMode, error, loading, membershipRoles, refreshAccess, retryInitialization, signIn, signOut, user, verifiedEmail],
+    [authMode, error, loading, membershipRoles, memberships, refreshAccess, retryInitialization, signIn, signOut, user, userId, verifiedEmail],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

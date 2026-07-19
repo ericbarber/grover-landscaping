@@ -8,6 +8,10 @@ import { updateStopProgress } from '../api/stopProgressClient';
 import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
+  enqueueStopProgressMutation,
+  listOfflineMutations,
+} from '../domain/offlineMutationQueue';
+import {
   amendmentRequiresBid,
   countResolvedFinishedStops,
   dayPlanAmendmentTypeLabel,
@@ -26,7 +30,9 @@ import {
 } from '../domain/stopProgress';
 
 type DayPlanPanelProps = {
+  actorId?: string | null;
   onSelectJob?: (jobId: string) => void;
+  organizationId?: string | null;
   refreshSignal?: number;
 };
 
@@ -85,13 +91,19 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
   return `$${(service.defaultPriceCents / 100).toFixed(2)}`;
 }
 
-export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelProps) {
+export function DayPlanPanel({
+  actorId,
+  onSelectJob,
+  organizationId,
+  refreshSignal = 0,
+}: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local'>('local');
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
   const [selectedExtraServices, setSelectedExtraServices] = useState<Record<string, string>>({});
+  const [pendingMutationCount, setPendingMutationCount] = useState(0);
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
 
@@ -157,15 +169,46 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
       });
   }
 
+  async function queueStopState(stopId: string, status: StopProgressStatus) {
+    if (!organizationId || !actorId) {
+      setSyncStatus('local');
+      return;
+    }
+    try {
+      await enqueueStopProgressMutation({
+        organizationId,
+        actorId,
+        dayPlanId: dayPlan.id,
+        stopId,
+        status,
+      });
+      setPendingMutationCount((current) => current + 1);
+    } catch {
+      // Browser-local progress remains available when durable storage is blocked.
+    } finally {
+      setSyncStatus('local');
+    }
+  }
+
   function persistStopState(stopId: string, next: StopStateMap) {
     saveStopStates(dayPlan.id, next);
+    if (pendingMutationCount > 0) {
+      void queueStopState(stopId, next[stopId]);
+      return;
+    }
     setSyncStatus('syncing');
 
     void updateStopProgress(dayPlan.id, stopId, next[stopId])
-      .then((progress) => setSyncStatus(syncStatusFromPersistence(progress.persisted)))
+      .then((progress) => {
+        if (progress.persisted) {
+          setSyncStatus(syncStatusFromPersistence(true));
+        } else {
+          void queueStopState(stopId, next[stopId]);
+        }
+      })
       .catch(() => {
         saveStopStates(dayPlan.id, next);
-        setSyncStatus('local');
+        void queueStopState(stopId, next[stopId]);
       });
   }
 
@@ -181,16 +224,29 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
   function resetRouteProgress() {
     clearStopStates(dayPlan.id);
     setStopStates(resetStopStates());
+    if (pendingMutationCount > 0) {
+      dayPlan.stops.forEach((stop) => void queueStopState(stop.id, 'pending'));
+      return;
+    }
     setSyncStatus('syncing');
 
-    void Promise.all(
+    void Promise.allSettled(
       dayPlan.stops.map((stop) => updateStopProgress(dayPlan.id, stop.id, 'pending')),
     )
       .then((progress) => {
-        const allPersisted = progress.every((item) => item.persisted);
-        setSyncStatus(syncStatusFromPersistence(allPersisted));
-      })
-      .catch(() => setSyncStatus('local'));
+        const allPersisted = progress.every(
+          (item) => item.status === 'fulfilled' && item.value.persisted,
+        );
+        if (allPersisted) {
+          setSyncStatus(syncStatusFromPersistence(true));
+        } else {
+          progress.forEach((item, index) => {
+            if (item.status === 'rejected' || !item.value.persisted) {
+              void queueStopState(dayPlan.stops[index].id, 'pending');
+            }
+          });
+        }
+      });
   }
 
   useEffect(() => {
@@ -233,6 +289,16 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
     };
   }, [dayPlan.id]);
 
+  useEffect(() => {
+    if (!organizationId) {
+      setPendingMutationCount(0);
+      return;
+    }
+    void listOfflineMutations(organizationId)
+      .then((mutations) => setPendingMutationCount(mutations.length))
+      .catch(() => setPendingMutationCount(0));
+  }, [organizationId]);
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
@@ -242,6 +308,11 @@ export function DayPlanPanel({ onSelectJob, refreshSignal = 0 }: DayPlanPanelPro
           <p className="mt-1 text-sm text-slate-600">{dayPlan.serviceDate}</p>
           <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
           <p className="mt-1 text-xs text-slate-500">Progress: {syncStatusLabel(syncStatus)}</p>
+          {pendingMutationCount > 0 && (
+            <p className="mt-1 text-xs font-semibold text-amber-800" role="status">
+              {pendingMutationCount} offline {pendingMutationCount === 1 ? 'change' : 'changes'} waiting to sync
+            </p>
+          )}
         </div>
         <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
           {dayPlan.routeStatus}

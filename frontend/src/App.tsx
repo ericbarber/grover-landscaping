@@ -1907,7 +1907,12 @@ export function App() {
       <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
           <div className="scroll-mt-16" id="today-route">
-            <DayPlanPanel onSelectJob={selectJobForReview} refreshSignal={dayPlanRefreshSignal} />
+            <DayPlanPanel
+              actorId={auth.userId}
+              onSelectJob={selectJobForReview}
+              organizationId={auth.memberships[0]?.organizationId ?? activeManagerOrganizationId}
+              refreshSignal={dayPlanRefreshSignal}
+            />
           </div>
           <div className="mb-4 mt-6 scroll-mt-16" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
