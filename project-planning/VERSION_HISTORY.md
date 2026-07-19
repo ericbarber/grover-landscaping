@@ -15,6 +15,7 @@ Current continuation work:
 - The mobile first-owner workspace now recommends the next incomplete launch action.
 - First-owner launch progress now refreshes automatically after related manager actions.
 - Organization owners can now create tenant-scoped crews from the mobile first-user workflow.
+- Manager day-plan creation now selects from authorized tenant crews instead of a free-form crew ID.
 - Provision and validate the first production Cognito owner identity.
 - Finish tenant-aware boundaries for remaining shared customer reads.
 - Configure and validate the production email/SMS provider.

@@ -5,6 +5,7 @@ import {
   draftPlanPersistenceDetail,
   draftPlanPersistenceLabel,
   localDraftDayPlanResponse,
+  preferredManagerCrewId,
 } from './managerDayPlans';
 
 describe('manager day plan helpers', () => {
@@ -28,6 +29,16 @@ describe('manager day plan helpers', () => {
       stopCapacity: 12,
       persisted: false,
     });
+  });
+
+  it('keeps a valid selected crew and otherwise selects the first tenant crew', () => {
+    const crews = [
+      { id: 'crew_1', name: 'North', organizationId: 'org_1', persisted: true },
+      { id: 'crew_2', name: 'South', organizationId: 'org_1', persisted: true },
+    ];
+    expect(preferredManagerCrewId('crew_2', crews)).toBe('crew_2');
+    expect(preferredManagerCrewId('crew_other', crews)).toBe('crew_1');
+    expect(preferredManagerCrewId('crew_1', [])).toBe('');
   });
 
   it('labels persisted and local draft plans', () => {

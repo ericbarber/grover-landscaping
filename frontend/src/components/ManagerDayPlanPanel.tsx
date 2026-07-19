@@ -1,11 +1,12 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { fetchCrews, type CrewRecord } from '../api/client';
 import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
 import type { YardCareJob } from '../domain/jobs';
 import {
   canCreateManagerDayPlanDraft,
   normalizeManagerDayPlanDraftTarget,
 } from '../domain/managerDayPlanDraftTarget';
-import { defaultManagerServiceDate } from '../domain/managerDayPlans';
+import { defaultManagerServiceDate, preferredManagerCrewId } from '../domain/managerDayPlans';
 import type { ManagerDraftRoutePublishGuard } from '../domain/managerDraftRoutePublishGuard';
 import { getManagerRoutePlanningSeedJobs } from '../domain/managerRoutePlanningSeedJobs';
 import { ManagerDraftDayPlanActions } from './ManagerDraftDayPlanActions';
@@ -15,6 +16,7 @@ import { ManagerAmendmentReviewPanel } from './ManagerAmendmentReviewPanel';
 type ManagerDayPlanPanelProps = {
   jobs: YardCareJob[];
   onDayPlanPublished?: (dayPlan: DayPlanMutationResponse) => void;
+  crewRefreshSignal?: number;
 };
 
 const emptyRoutePublishGuard: ManagerDraftRoutePublishGuard = {
@@ -22,8 +24,15 @@ const emptyRoutePublishGuard: ManagerDraftRoutePublishGuard = {
   disabledReason: 'Add at least one synced stop before publishing this route.',
 };
 
-export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlanPanelProps) {
-  const [crewId, setCrewId] = useState('crew_1001');
+export function ManagerDayPlanPanel({
+  jobs,
+  onDayPlanPublished,
+  crewRefreshSignal = 0,
+}: ManagerDayPlanPanelProps) {
+  const [crewId, setCrewId] = useState('');
+  const [crews, setCrews] = useState<CrewRecord[]>([]);
+  const [isLoadingCrews, setIsLoadingCrews] = useState(true);
+  const [crewLoadError, setCrewLoadError] = useState(false);
   const [serviceDate, setServiceDate] = useState(() => defaultManagerServiceDate());
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
   const [routePublishGuard, setRoutePublishGuard] = useState<ManagerDraftRoutePublishGuard>(emptyRoutePublishGuard);
@@ -38,6 +47,22 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
   );
   const canCreateDraft = canCreateManagerDayPlanDraft(draftTarget) && !isCreating && !isPublishedDraftTarget;
   const publishDisabledReason = routePublishGuard.disabledReason ?? 'Review this route before publishing.';
+
+  useEffect(() => {
+    setIsLoadingCrews(true);
+    setCrewLoadError(false);
+    void fetchCrews()
+      .then((nextCrews) => {
+        setCrews(nextCrews);
+        setCrewId((current) => preferredManagerCrewId(current, nextCrews));
+      })
+      .catch(() => {
+        setCrews([]);
+        setCrewId('');
+        setCrewLoadError(true);
+      })
+      .finally(() => setIsLoadingCrews(false));
+  }, [crewRefreshSignal]);
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,7 +81,7 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
       .finally(() => setIsCreating(false));
   }
 
-  function handleCrewIdChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleCrewIdChange(event: ChangeEvent<HTMLSelectElement>) {
     setCrewId(event.target.value);
     setDraftPlan(null);
     setRoutePublishGuard(emptyRoutePublishGuard);
@@ -86,15 +111,29 @@ export function ManagerDayPlanPanel({ jobs, onDayPlanPublished }: ManagerDayPlan
 
       <form className="mt-5 space-y-4" onSubmit={createDraft}>
         <label className="block text-sm font-semibold text-slate-700">
-          Crew ID
-          <input
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
-            disabled={isCreating}
+          Crew
+          <select
+            className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
+            disabled={isCreating || isLoadingCrews || crews.length === 0}
             required
             value={crewId}
             onChange={handleCrewIdChange}
-          />
+          >
+            <option value="">{isLoadingCrews ? 'Loading crews…' : 'Select a crew'}</option>
+            {crews.map((crew) => (
+              <option key={crew.id} value={crew.id}>{crew.name}</option>
+            ))}
+          </select>
         </label>
+        {crewLoadError ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+            Crew options could not be loaded. Refresh after confirming your organization access.
+          </p>
+        ) : !isLoadingCrews && crews.length === 0 ? (
+          <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">
+            Create the organization’s first crew before drafting a day plan.
+          </p>
+        ) : null}
 
         <label className="block text-sm font-semibold text-slate-700">
           Service date

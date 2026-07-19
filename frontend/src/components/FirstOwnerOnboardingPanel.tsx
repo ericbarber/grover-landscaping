@@ -8,12 +8,14 @@ import {
   updateOrganizationProfile,
   type PrincipalAccessSummary,
   type FirstOwnerSetupProgress,
+  type CrewRecord,
 } from '../api/client';
 
 type Props = {
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
   onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
   refreshSignal?: number;
+  onCrewCreated?: (crew: CrewRecord) => void;
 };
 
 export type FirstOwnerSetupTarget =
@@ -65,6 +67,7 @@ export function FirstOwnerOnboardingPanel({
   onOrganizationReady,
   onOpenSetupStep,
   refreshSignal = 0,
+  onCrewCreated,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -185,6 +188,7 @@ export function FirstOwnerOnboardingPanel({
     setIsCreatingCrew(true);
     try {
       const crew = await createOrganizationCrew(membership.organizationId, name);
+      onCrewCreated?.(crew);
       setCrewName('');
       setMessage(`${crew.name} created${crew.persisted ? '' : ' in local demo mode'}.`);
       await refresh();

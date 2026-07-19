@@ -1,4 +1,5 @@
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
+import type { CrewRecord } from '../api/client';
 
 export function defaultManagerServiceDate(referenceDate = new Date()): string {
   const year = referenceDate.getFullYear();
@@ -34,4 +35,8 @@ export function draftPlanPersistenceDetail(persisted: boolean): string {
   return persisted
     ? 'Route changes can sync to the backend and be published when ready.'
     : 'Backend draft was not created, so this route cannot be published to crews until draft creation succeeds.';
+}
+
+export function preferredManagerCrewId(currentCrewId: string, crews: CrewRecord[]): string {
+  return crews.some((crew) => crew.id === currentCrewId) ? currentCrewId : crews[0]?.id ?? '';
 }

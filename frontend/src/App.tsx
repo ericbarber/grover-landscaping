@@ -861,6 +861,7 @@ export function App() {
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
+  const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
   const [managerActivity, setManagerActivity] = useState<ManagerActivityItem[]>(() =>
@@ -1904,6 +1905,7 @@ export function App() {
           <FirstOwnerOnboardingPanel
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
+            onCrewCreated={() => setCrewRefreshSignal((current) => current + 1)}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
               setFirstOwnerProgressRefreshSignal((current) => current + 1);
@@ -1918,6 +1920,7 @@ export function App() {
           />
           <div className="scroll-mt-20" id="first-owner-day-plan">
             <ManagerDayPlanPanel
+              crewRefreshSignal={crewRefreshSignal}
               jobs={jobs}
               onDayPlanPublished={(dayPlan) => {
                 setDayPlanRefreshSignal((current) => current + 1);
