@@ -4,6 +4,7 @@ import {
   completionReportQueueGroup,
   completionReportQueueGroupLabel,
   completionReportQueueReadinessFilterLabel,
+  completionReportReadinessBlockerLabel,
   completionReportQueueStatusFilterLabel,
   filterCompletionReportQueue,
   summarizeCompletionReportQueue,
@@ -85,6 +86,16 @@ describe('completion report queue helpers', () => {
     expect(completionReportQueueGroupLabel('draft')).toBe('Draft');
     expect(completionReportQueueStatusFilterLabel('active')).toBe('Active');
     expect(completionReportQueueReadinessFilterLabel('local_only')).toBe('Local only');
+    expect(completionReportReadinessBlockerLabel('route_stop')).toBe('Finish route stop');
+  });
+
+  it('retains actionable readiness blockers on queue items', () => {
+    const [item] = buildCompletionReportQueue([
+      report('job_1', 'draft', 'Blocked', {
+        readinessBlockers: ['checklist', 'after_photos', 'route_stop'],
+      }),
+    ]);
+    expect(item.readinessBlockers).toEqual(['checklist', 'after_photos', 'route_stop']);
   });
 
   it('sorts attention items before drafts and delivered history', () => {

@@ -472,6 +472,7 @@ Current state:
 - Manager report queue summarizes applied persisted filters and restores the default active queue in one action
 - Manager report queue safely restores supported persisted filters after mobile browser reloads and reapplies them to server loading
 - Pixel 7 smoke coverage proves persisted report filtering and automatic restoration over the live Tailscale Docker stack
+- Blocked queue items name each required checklist, evidence, add-on, or route-stop recovery and open the affected job directly
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -612,7 +613,7 @@ Current state:
 
 Next implementation work:
 
-- Add manager recovery actions for completion-report readiness blockers
+- Add day-level dispatch workload views for moving scheduled jobs between crews or dates
 
 ## Planned
 

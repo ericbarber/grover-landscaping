@@ -22,6 +22,7 @@ export interface CompletionReportQueueItem {
   issuePhotos: number;
   readyForCustomer: boolean;
   persisted: boolean;
+  readinessBlockers: NonNullable<CompletionReportSnapshot['readinessBlockers']>;
   shareUrl: string | null;
 }
 
@@ -71,6 +72,18 @@ export function completionReportQueueReadinessFilterLabel(filter: CompletionRepo
   return 'All readiness';
 }
 
+export function completionReportReadinessBlockerLabel(
+  blocker: NonNullable<CompletionReportSnapshot['readinessBlockers']>[number],
+): string {
+  return {
+    checklist: 'Finish checklist',
+    before_photos: 'Capture before photo',
+    after_photos: 'Capture after photo',
+    add_ons: 'Finish add-on work',
+    route_stop: 'Finish route stop',
+  }[blocker];
+}
+
 export function toCompletionReportQueueItem(report: CompletionReportSnapshot): CompletionReportQueueItem {
   return {
     reportId: report.reportId,
@@ -85,6 +98,7 @@ export function toCompletionReportQueueItem(report: CompletionReportSnapshot): C
     issuePhotos: report.issuePhotos,
     readyForCustomer: report.readyForCustomer,
     persisted: report.persisted,
+    readinessBlockers: report.readinessBlockers ?? [],
     shareUrl: report.shareUrl,
   };
 }
