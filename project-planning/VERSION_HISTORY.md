@@ -18,6 +18,7 @@
 - 2026-07-19: Added audited owner-managed display names for organization members.
 - 2026-07-19: Used readable member names in crew leadership and owner activity views.
 - 2026-07-19: Added mobile team member search and role/status filters.
+- 2026-07-19: Added actor and event filters to mobile owner activity.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

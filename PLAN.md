@@ -523,10 +523,11 @@ Current state:
 - Crew-lead selection uses readable member names with immutable membership IDs as option values
 - Owner team activity resolves readable actor and affected-resource labels while retaining immutable IDs in the API
 - Mobile team administration supports member-name or identity search plus role and status filters
+- Owner team activity supports actor-name or identity search plus event-type filtering
 
 Next implementation work:
 
-- Add event and actor filters to owner team-administration activity
+- Add bounded server-side pagination to owner team-administration activity
 
 ## Planned
 

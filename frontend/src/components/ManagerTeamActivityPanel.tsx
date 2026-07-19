@@ -32,6 +32,35 @@ export function teamActivityLabel(eventKind: TeamAdministrationEventKind): strin
   }
 }
 
+const eventKinds: TeamAdministrationEventKind[] = [
+  'organization_profile_updated',
+  'invite_accepted',
+  'invitation_revoked',
+  'invitation_reissued',
+  'role_changed',
+  'membership_suspended',
+  'membership_reactivated',
+  'membership_profile_updated',
+  'crew_profile_updated',
+  'crew_deactivated',
+  'crew_reactivated',
+];
+
+export function filterTeamActivity(
+  activity: TeamAdministrationActivity[],
+  actorQuery: string,
+  eventKind: TeamAdministrationEventKind | 'all',
+): TeamAdministrationActivity[] {
+  const normalizedQuery = actorQuery.trim().toLocaleLowerCase();
+  return activity.filter((item) => {
+    const matchesActor = !normalizedQuery || [
+      item.actorLabel,
+      item.actorUserId,
+    ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery));
+    return matchesActor && (eventKind === 'all' || item.eventKind === eventKind);
+  });
+}
+
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
@@ -40,8 +69,11 @@ export function ManagerTeamActivityPanel({
   refreshSignal?: number;
 }) {
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
+  const [actorQuery, setActorQuery] = useState('');
+  const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const filteredActivity = filterTeamActivity(activity, actorQuery, eventFilter);
 
   async function refresh() {
     if (!organizationId) return;
@@ -79,8 +111,38 @@ export function ManagerTeamActivityPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <label className="text-xs font-semibold text-slate-700">
+          Find actor
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setActorQuery(event.target.value)}
+            placeholder="Name or identity"
+            type="search"
+            value={actorQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Event
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setEventFilter(
+              event.target.value as TeamAdministrationEventKind | 'all',
+            )}
+            value={eventFilter}
+          >
+            <option value="all">All events</option>
+            {eventKinds.map((eventKind) => (
+              <option key={eventKind} value={eventKind}>{teamActivityLabel(eventKind)}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="mt-3 text-xs text-slate-500" aria-live="polite">
+        Showing {filteredActivity.length} of {activity.length} events
+      </p>
       <ol className="mt-4 space-y-2">
-        {activity.map((item) => (
+        {filteredActivity.map((item) => (
           <li className="rounded-lg bg-slate-50 p-3 text-sm" key={item.id}>
             <div className="flex items-start justify-between gap-3">
               <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
@@ -97,6 +159,11 @@ export function ManagerTeamActivityPanel({
       {!isLoading && activity.length === 0 ? (
         <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No persisted team access activity yet.
+        </p>
+      ) : null}
+      {!isLoading && activity.length > 0 && filteredActivity.length === 0 ? (
+        <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+          No team activity matches these filters.
         </p>
       ) : null}
     </section>
