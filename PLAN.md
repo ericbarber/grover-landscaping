@@ -542,10 +542,11 @@ Current state:
 - Owners can reveal and copy immutable membership record IDs without cluttering the default roster
 - Member-directory CSV exports include immutable membership record IDs and user identities
 - Team-activity CSV exports include immutable audit event IDs
+- Owners can reveal and copy immutable audit event IDs from each mobile activity card
 
 Next implementation work:
 
-- Let owners reveal and copy audit event IDs in mobile team activity
+- Add audit event ID search to persisted owner team activity
 
 ## Planned
 

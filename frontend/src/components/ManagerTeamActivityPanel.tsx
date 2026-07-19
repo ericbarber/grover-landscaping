@@ -365,6 +365,17 @@ export function ManagerTeamActivityPanel({
               </summary>
               <dl className="space-y-1 rounded-lg border border-slate-200 bg-white p-2">
                 <div>
+                  <dt className="font-semibold">Audit event ID</dt>
+                  <dd className="break-all">{item.id}</dd>
+                  <button
+                    className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 font-semibold"
+                    onClick={() => void copyActivityId(item.id, 'Audit event ID')}
+                    type="button"
+                  >
+                    Copy audit event ID
+                  </button>
+                </div>
+                <div>
                   <dt className="font-semibold">Actor ID</dt>
                   <dd className="break-all">{item.actorUserId}</dd>
                   <button
