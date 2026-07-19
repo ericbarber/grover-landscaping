@@ -23,6 +23,10 @@ does not show an error.
 **Download support details** saves that summary as a dated text file when neither
 clipboard access nor native sharing is practical.
 
+Every warning includes a next action tailored to that capability, including
+reconnecting Tailscale, using the HTTPS origin, reloading after first production
+registration, or installing from the browser's home-screen flow.
+
 An inactive offline shell can be expected on local Vite development, in an
 insecure non-localhost browser context, or before the production service worker
 finishes its first registration. Reload the production page once after initial

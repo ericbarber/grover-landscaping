@@ -13,17 +13,22 @@ function DiagnosticRow({
   label,
   value,
   healthy,
+  guidance,
 }: {
   label: string;
   value: string;
   healthy: boolean;
+  guidance: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-200 py-3 last:border-0">
-      <dt className="font-semibold text-slate-700">{label}</dt>
-      <dd className={`text-right font-bold ${healthy ? 'text-emerald-700' : 'text-amber-800'}`}>
-        {value}
-      </dd>
+    <div className="border-b border-slate-200 py-3 last:border-0">
+      <div className="flex items-start justify-between gap-4">
+        <dt className="font-semibold text-slate-700">{label}</dt>
+        <dd className={`text-right font-bold ${healthy ? 'text-emerald-700' : 'text-amber-800'}`}>
+          {value}
+        </dd>
+      </div>
+      {!healthy && <dd className="mt-2 text-sm text-slate-600">{guidance}</dd>}
     </div>
   );
 }
@@ -152,31 +157,37 @@ export function MobileDiagnosticsPage() {
         <dl className="mt-6 rounded-2xl bg-white px-5 shadow-sm">
           <DiagnosticRow
             healthy={online}
+            guidance="Reconnect Wi-Fi or cellular data, then confirm Tailscale is connected."
             label="Browser network"
             value={online ? 'Online' : 'Offline'}
           />
           <DiagnosticRow
             healthy={apiReady}
+            guidance="Confirm Tailscale is connected and the Grover API container or hosted service is running."
             label="Grover API"
             value={apiCheck === 'checking' ? 'Checking…' : apiReady ? 'Ready' : 'Unavailable'}
           />
           <DiagnosticRow
             healthy={window.isSecureContext}
+            guidance="Open the HTTPS Tailscale URL; install and offline features require a secure connection."
             label="Secure connection"
             value={window.isSecureContext ? 'Available' : 'Not available'}
           />
           <DiagnosticRow
             healthy={workerSupported}
+            guidance="Update this browser or open Grover Field in Safari, Chrome, or Edge."
             label="Offline shell support"
             value={workerSupported ? 'Supported' : 'Not supported'}
           />
           <DiagnosticRow
             healthy={workerControlsPage}
+            guidance="On production, reload once after the first visit. Local Vite development intentionally leaves this inactive."
             label="Offline shell active"
             value={workerControlsPage ? 'Active' : 'Not active'}
           />
           <DiagnosticRow
             healthy={installedMode}
+            guidance="Install from the prompt, or in iPhone Safari use Share then Add to Home Screen."
             label="Home-screen app"
             value={installedMode ? 'Installed mode' : 'Browser mode'}
           />

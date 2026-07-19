@@ -56,6 +56,7 @@
 - 2026-07-19: Added live mobile diagnostics and token-safe support-detail copying.
 - 2026-07-19: Added native phone sharing for sanitized mobile diagnostics.
 - 2026-07-19: Added downloadable sanitized mobile diagnostic reports.
+- 2026-07-19: Added capability-specific mobile diagnostics recovery guidance.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
