@@ -4,6 +4,7 @@ import { sharedBidTokenFromPath } from './domain/sharedBidRoute';
 import { sharedReportTokenFromPath } from './domain/sharedReportRoute';
 import { organizationInvitationTokenFromPath } from './domain/organizationInvitationRoute';
 import { RouteLoadBoundary } from './components/RouteLoadBoundary';
+import { NetworkStatusBanner } from './components/NetworkStatusBanner';
 import './styles.css';
 
 const CustomerBidReviewPage = React.lazy(
@@ -25,6 +26,7 @@ const organizationInvitationToken = organizationInvitationTokenFromPath(window.l
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
+    <NetworkStatusBanner />
     <RouteLoadBoundary>
       <React.Suspense fallback={(
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
