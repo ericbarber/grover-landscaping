@@ -51,6 +51,7 @@
 - 2026-07-19: Added a manual mobile API readiness retry action.
 - 2026-07-19: Added a production service worker for resilient mobile shell loading.
 - 2026-07-19: Added controlled production service-worker update prompts.
+- 2026-07-19: Added Android installation prompts and iPhone home-screen guidance.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

@@ -557,10 +557,11 @@ Current state:
 - API readiness checks pause while the mobile tab is hidden and refresh immediately when it becomes visible
 - API downtime feedback includes a touch-safe immediate readiness retry action
 - Production shell updates are announced and applied only after a user-controlled reload
+- Android users receive the native install prompt while iPhone users receive Safari home-screen guidance
 
 Next implementation work:
 
-- Add installability guidance for iOS and Android mobile users
+- Add a mobile diagnostics view for connectivity, API, and installed-app state
 
 ## Planned
 
