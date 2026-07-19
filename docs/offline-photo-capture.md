@@ -64,4 +64,8 @@ atomic blob/metadata transaction using the loaded job tenant and current actor.
 Only a committed transaction receives durable-queue messaging and contributes to
 the mobile pending-photo count. Pending feedback distinguishes retryable failures
 from review-blocking conflicts and disables blind replay while a conflict is
-present.
+present. Crew review shows the job, photo category, file name, size, queued time,
+state, and attempt count without exposing internal errors or storage credentials.
+A two-step reviewed-conflict action warns that local image bytes will be deleted,
+removes the metadata and blob atomically, refreshes server photo counts, and then
+resumes the ordered queue.
