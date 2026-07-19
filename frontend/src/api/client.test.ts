@@ -60,6 +60,12 @@ describe('core API client mapping', () => {
       '/completion-reports?crew_id=crew_1001',
     );
     expect(completionReportsPath({
+      organizationId: 'org_demo_landscaping',
+      crewId: 'crew_1001',
+    })).toBe(
+      '/completion-reports?organization_id=org_demo_landscaping&crew_id=crew_1001',
+    );
+    expect(completionReportsPath({
       customer: 'Demo Owner',
       property: 'Maple',
       scheduledFrom: '2026-06-15',

@@ -134,6 +134,7 @@ export interface FetchCompletionReportsOptions {
   status?: CompletionReportListStatusFilter;
   readiness?: CompletionReportListReadinessFilter;
   readinessBlocker?: CompletionReportListReadinessBlockerFilter;
+  organizationId?: string;
   crewId?: string;
   customer?: string;
   property?: string;
@@ -1399,6 +1400,10 @@ export function completionReportsPath(options: FetchCompletionReportsOptions = {
 
   if (options.readinessBlocker && options.readinessBlocker !== 'all') {
     query.set('readiness_blocker', options.readinessBlocker);
+  }
+
+  if (options.organizationId) {
+    query.set('organization_id', options.organizationId);
   }
 
   if (options.crewId) {

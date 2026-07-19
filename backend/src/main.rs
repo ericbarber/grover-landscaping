@@ -223,6 +223,7 @@ struct CompletionReportListQuery {
     status: Option<String>,
     readiness: Option<String>,
     readiness_blocker: Option<String>,
+    organization_id: Option<String>,
     crew_id: Option<String>,
     customer: Option<String>,
     property: Option<String>,
@@ -2643,6 +2644,7 @@ fn validate_completion_report_list_query(query: &CompletionReportListQuery) -> R
     }
 
     validate_completion_report_text_filter(query.crew_id.as_deref(), "crew_id")?;
+    validate_completion_report_text_filter(query.organization_id.as_deref(), "organization_id")?;
     validate_completion_report_text_filter(query.customer.as_deref(), "customer")?;
     validate_completion_report_text_filter(query.property.as_deref(), "property")?;
     validate_completion_report_date_filter(query.scheduled_from.as_deref(), "scheduled_from")?;
@@ -2724,6 +2726,14 @@ fn completion_report_matches_operational_filters(
     report: &CompletionReportResponse,
     query: &CompletionReportListQuery,
 ) -> bool {
+    if let Some(organization_id) =
+        normalized_completion_report_exact_filter(query.organization_id.as_deref())
+    {
+        if report.job.organization_id != organization_id {
+            return false;
+        }
+    }
+
     if let Some(customer) = normalized_completion_report_text_filter(query.customer.as_deref()) {
         if !report
             .job
@@ -6385,6 +6395,31 @@ mod tests {
             .unwrap()
             .iter()
             .all(|report| report["job"]["assigned_crew_id"] == "crew_1001"));
+    }
+
+    #[tokio::test]
+    async fn completion_report_list_endpoint_filters_by_organization_and_crew() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri(
+                        "/completion-reports?organization_id=org_demo_landscaping&crew_id=crew_1001",
+                    )
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let reports: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(reports.as_array().unwrap().len(), 2);
+        assert!(reports.as_array().unwrap().iter().all(|report| {
+            report["job"]["organization_id"] == "org_demo_landscaping"
+                && report["job"]["assigned_crew_id"] == "crew_1001"
+        }));
     }
 
     #[tokio::test]

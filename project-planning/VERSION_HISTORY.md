@@ -94,6 +94,7 @@
 - 2026-07-19: Added ordered idempotent replay for offline day-plan amendments.
 - 2026-07-19: Added crew amendment queue review and reviewed-conflict recovery.
 - 2026-07-19: Extended the mobile recovery smoke to offline route amendments.
+- 2026-07-19: Added persisted organization and crew filtering to the manager completion-report API.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
