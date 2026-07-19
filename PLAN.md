@@ -578,10 +578,11 @@ Current state:
 - The offline mutation schema supports tenant/actor-scoped job start and completion records
 - Failed job start and completion actions queue only with resolved server tenancy and show durable mobile pending feedback
 - Queued job lifecycle actions replay ordered per tenant with transactional server idempotency, automatic recovery, manual retry, and conflict blocking
+- Crew job queue review exposes safe action details and two-step reviewed-conflict discard with server-state refresh
 
 Next implementation work:
 
-- Add crew-readable job lifecycle queue details and reviewed-conflict recovery
+- Extend the Phase 2 offline queue to checklist mutations
 
 ## Planned
 

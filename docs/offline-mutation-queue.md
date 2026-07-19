@@ -23,6 +23,10 @@ manual retry. Each action sends its UUID in `x-client-mutation-id`; PostgreSQL
 records the tenant, actor, job, and action transactionally with the job/checklist
 updates. Exact retries are accepted without reapplying work, while conflicting
 reuse becomes a durable conflict and blocks later actions for that tenant.
+The assigned-jobs queue review shows customer/job context, action, queued time,
+state, and attempt count without internal error text. After manager review, a
+two-step discard removes only the conflicted record, refreshes the job from the
+server when available, and resumes ordered replay.
 
 Access tokens, invitation tokens, customer share tokens, route URLs, and API
 responses must never be stored in this database. Sync code must use the current

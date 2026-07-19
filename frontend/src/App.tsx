@@ -881,6 +881,7 @@ export function App() {
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [isReplayingJobMutations, setIsReplayingJobMutations] = useState(false);
+  const [jobConflictDiscardId, setJobConflictDiscardId] = useState<string | null>(null);
   const jobReplayInProgress = useRef(false);
   const [requestedOperationalProfilePropertyId, setRequestedOperationalProfilePropertyId] = useState('');
   const [requestedServiceSetupPropertyId, setRequestedServiceSetupPropertyId] = useState('');
@@ -1435,6 +1436,25 @@ export function App() {
     } catch {
       return false;
     }
+  }
+
+  async function discardReviewedJobConflict(mutation: JobLifecycleOfflineMutation) {
+    try {
+      await removeOfflineMutation(mutation.id);
+    } catch {
+      setStatusMessage('The reviewed job conflict could not be removed from this phone. Try again.');
+      return;
+    }
+    setJobConflictDiscardId(null);
+    setOfflineJobMutations((current) => current.filter((item) => item.id !== mutation.id));
+    try {
+      const serverJob = await fetchJobDetail(mutation.jobId);
+      setJobs((current) => current.map((job) => job.id === serverJob.id ? serverJob : job));
+      setStatusMessage(`Discarded the reviewed ${mutation.action} conflict and restored server job state.`);
+    } catch {
+      setStatusMessage(`Discarded the reviewed ${mutation.action} conflict; refresh when the API is available.`);
+    }
+    await replayJobLifecycleMutations();
   }
 
   async function handleStartJob() {
@@ -2046,6 +2066,65 @@ export function App() {
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'failed').length} retry failed ·{' '}
                   {offlineJobMutations.filter((mutation) => mutation.syncState === 'conflict').length} conflicted
                 </p>
+                <details className="mt-2 rounded-lg border border-amber-300 bg-white p-2">
+                  <summary className="min-h-11 cursor-pointer py-3 font-bold">
+                    Review queued job changes
+                  </summary>
+                  <div className="space-y-2 border-t border-amber-200 pt-2">
+                    {offlineJobMutations.map((mutation) => {
+                      const job = jobs.find((item) => item.id === mutation.jobId);
+                      return (
+                        <article className="rounded-lg bg-amber-50 p-2 font-medium" key={mutation.id}>
+                          <p className="font-bold text-slate-900">
+                            {job?.customerName ?? mutation.jobId}
+                          </p>
+                          <p className="mt-1 text-slate-700">
+                            {mutation.action === 'start' ? 'Start job' : 'Complete job'} · {mutation.syncState}
+                          </p>
+                          <p className="mt-1 text-slate-600">
+                            Queued {new Date(mutation.createdAt).toLocaleString()}
+                            {mutation.attemptCount > 0
+                              ? ` · ${mutation.attemptCount} ${mutation.attemptCount === 1 ? 'attempt' : 'attempts'}`
+                              : ''}
+                          </p>
+                          {mutation.syncState === 'conflict' && (
+                            jobConflictDiscardId === mutation.id ? (
+                              <div className="mt-2 rounded-lg border border-red-300 bg-white p-2">
+                                <p className="text-red-900">
+                                  Confirm a manager reviewed this job action. Discarding restores server state.
+                                </p>
+                                <div className="mt-2 flex gap-2">
+                                  <button
+                                    className="min-h-11 flex-1 rounded-lg bg-red-800 px-3 font-bold text-white"
+                                    onClick={() => void discardReviewedJobConflict(mutation)}
+                                    type="button"
+                                  >
+                                    Discard conflict
+                                  </button>
+                                  <button
+                                    className="min-h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 font-bold"
+                                    onClick={() => setJobConflictDiscardId(null)}
+                                    type="button"
+                                  >
+                                    Keep change
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                className="mt-2 min-h-11 rounded-lg border border-red-300 bg-white px-3 font-bold text-red-900"
+                                onClick={() => setJobConflictDiscardId(mutation.id)}
+                                type="button"
+                              >
+                                Resolve after manager review
+                              </button>
+                            )
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </details>
                 <button
                   className="mt-2 min-h-11 rounded-lg border border-amber-400 bg-white px-4 font-bold disabled:opacity-60"
                   disabled={
