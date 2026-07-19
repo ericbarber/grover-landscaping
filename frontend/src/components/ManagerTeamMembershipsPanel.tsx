@@ -240,12 +240,12 @@ export function ManagerTeamMembershipsPanel({
     URL.revokeObjectURL(url);
   }
 
-  async function copyMemberIdentity(userId: string) {
+  async function copyMemberIdentifier(value: string, label: string) {
     try {
-      await navigator.clipboard.writeText(userId);
-      setMessage('Member identity copied.');
+      await navigator.clipboard.writeText(value);
+      setMessage(`${label} copied.`);
     } catch {
-      setMessage('Copy is unavailable. Select the member identity text instead.');
+      setMessage(`Copy is unavailable. Select the ${label.toLowerCase()} text instead.`);
     }
   }
 
@@ -376,11 +376,26 @@ export function ManagerTeamMembershipsPanel({
               <p className="mt-0.5 break-all text-xs text-slate-500">{membership.userId}</p>
               <button
                 className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
-                onClick={() => void copyMemberIdentity(membership.userId)}
+                onClick={() => void copyMemberIdentifier(membership.userId, 'Member identity')}
                 type="button"
               >
                 Copy member identity
               </button>
+              <details className="mt-1 text-xs text-slate-500">
+                <summary className="min-h-11 cursor-pointer content-center font-semibold">
+                  Show membership record ID
+                </summary>
+                <p className="break-all rounded-lg border border-slate-200 bg-white p-2">
+                  {membership.id}
+                </p>
+                <button
+                  className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 font-semibold"
+                  onClick={() => void copyMemberIdentifier(membership.id, 'Membership record ID')}
+                  type="button"
+                >
+                  Copy membership record ID
+                </button>
+              </details>
               <p className="mt-1 text-xs text-slate-500">
                 {membership.status} · {membership.scopeType}
               </p>

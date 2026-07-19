@@ -34,6 +34,7 @@
 - 2026-07-19: Added expandable immutable IDs to owner team activity.
 - 2026-07-19: Added mobile copy controls for team activity IDs.
 - 2026-07-19: Added mobile copy controls for member identities.
+- 2026-07-19: Added expandable membership record IDs to mobile team administration.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
