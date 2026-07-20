@@ -175,6 +175,15 @@ impl AccountRepository {
             .unwrap_or_default()
     }
 
+    pub async fn list_archived(&self, organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        list_accounts_by_relationship_status(pool, organization_ids, "archived")
+            .await
+            .unwrap_or_default()
+    }
+
     pub async fn create(
         &self,
         request: CreateCustomerAccountRequest,
@@ -219,6 +228,18 @@ impl AccountRepository {
             };
         };
         archive_account(pool, account_id, organization_ids, actor_user_id).await
+    }
+
+    pub async fn reactivate(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+    ) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
+        let Some(pool) = &self.pool else {
+            return Err(CustomerAccountArchiveError::NotFound);
+        };
+        reactivate_account(pool, account_id, organization_ids, actor_user_id).await
     }
 
     pub async fn list_properties(
@@ -780,6 +801,66 @@ async fn archive_account(
         .map_err(|_| CustomerAccountArchiveError::Persistence)
 }
 
+async fn reactivate_account(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let row = sqlx::query(
+        r#"UPDATE organization_customer_accounts relation
+        SET status = 'active', updated_at = NOW()
+        FROM customer_accounts account
+        WHERE relation.account_id = $1
+          AND relation.organization_id = ANY($2)
+          AND relation.status = 'archived'
+          AND account.id = relation.account_id
+        RETURNING account.id, relation.organization_id, account.customer_name,
+            account.billing_model, account.payment_status, account.service_approval_status,
+            account.contracted_services_per_period, account.completed_services_this_period,
+            COALESCE(account.billing_notes, '') AS billing_notes,
+            COALESCE(account.primary_contact_name, '') AS primary_contact_name,
+            COALESCE(account.contact_email, '') AS contact_email,
+            COALESCE(account.contact_phone, '') AS contact_phone,
+            account.email_notifications_enabled, account.sms_notifications_enabled,
+            COALESCE(TO_CHAR(account.quiet_hours_start, 'HH24:MI'), '') AS quiet_hours_start,
+            COALESCE(TO_CHAR(account.quiet_hours_end, 'HH24:MI'), '') AS quiet_hours_end"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let Some(row) = row else {
+        return Err(CustomerAccountArchiveError::NotFound);
+    };
+    let record = account_record_from_row(row, true);
+    sqlx::query(
+        r#"INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        ) VALUES ($1, $2, $3, 'account_reactivated', $4, NOW())"#,
+    )
+    .bind(format!(
+        "audit_account_reactivate_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(actor_user_id)
+    .bind(&record.organization_id)
+    .bind(account_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    Ok(record)
+}
+
 async fn create_property(
     pool: &PgPool,
     account_id: &str,
@@ -1242,6 +1323,14 @@ async fn list_accounts(
     pool: &PgPool,
     organization_ids: &[String],
 ) -> Result<Vec<CustomerAccountRecord>, sqlx::Error> {
+    list_accounts_by_relationship_status(pool, organization_ids, "active").await
+}
+
+async fn list_accounts_by_relationship_status(
+    pool: &PgPool,
+    organization_ids: &[String],
+    relationship_status: &str,
+) -> Result<Vec<CustomerAccountRecord>, sqlx::Error> {
     let rows = sqlx::query(
         r#"SELECT account.id, relation.organization_id, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
@@ -1255,36 +1344,39 @@ async fn list_accounts(
             COALESCE(TO_CHAR(account.quiet_hours_end, 'HH24:MI'), '') AS quiet_hours_end
         FROM organization_customer_accounts relation
         JOIN customer_accounts account ON account.id = relation.account_id
-        WHERE relation.organization_id = ANY($1) AND relation.status = 'active'
+        WHERE relation.organization_id = ANY($1) AND relation.status = $2
         ORDER BY account.customer_name"#,
     )
     .bind(organization_ids)
+    .bind(relationship_status)
     .fetch_all(pool)
     .await?;
     Ok(rows
         .into_iter()
-        .map(|row| CustomerAccountRecord {
-            account_id: row.get("id"),
-            organization_id: row.get("organization_id"),
-            customer_name: row.get("customer_name"),
-            billing_model: row.get("billing_model"),
-            payment_status: row.get("payment_status"),
-            service_approval_status: row.get("service_approval_status"),
-            contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period")
-                as u32,
-            completed_services_this_period: row.get::<i32, _>("completed_services_this_period")
-                as u32,
-            billing_notes: row.get("billing_notes"),
-            primary_contact_name: row.get("primary_contact_name"),
-            contact_email: row.get("contact_email"),
-            contact_phone: row.get("contact_phone"),
-            email_notifications_enabled: row.get("email_notifications_enabled"),
-            sms_notifications_enabled: row.get("sms_notifications_enabled"),
-            quiet_hours_start: row.get("quiet_hours_start"),
-            quiet_hours_end: row.get("quiet_hours_end"),
-            persisted: true,
-        })
+        .map(|row| account_record_from_row(row, true))
         .collect())
+}
+
+fn account_record_from_row(row: sqlx::postgres::PgRow, persisted: bool) -> CustomerAccountRecord {
+    CustomerAccountRecord {
+        account_id: row.get("id"),
+        organization_id: row.get("organization_id"),
+        customer_name: row.get("customer_name"),
+        billing_model: row.get("billing_model"),
+        payment_status: row.get("payment_status"),
+        service_approval_status: row.get("service_approval_status"),
+        contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period") as u32,
+        completed_services_this_period: row.get::<i32, _>("completed_services_this_period") as u32,
+        billing_notes: row.get("billing_notes"),
+        primary_contact_name: row.get("primary_contact_name"),
+        contact_email: row.get("contact_email"),
+        contact_phone: row.get("contact_phone"),
+        email_notifications_enabled: row.get("email_notifications_enabled"),
+        sms_notifications_enabled: row.get("sms_notifications_enabled"),
+        quiet_hours_start: row.get("quiet_hours_start"),
+        quiet_hours_end: row.get("quiet_hours_end"),
+        persisted,
+    }
 }
 
 fn record_from_request(

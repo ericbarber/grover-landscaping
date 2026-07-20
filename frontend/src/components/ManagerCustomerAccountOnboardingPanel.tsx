@@ -4,8 +4,10 @@ import {
   createCustomerAccount,
   createCustomerProperty,
   fetchCustomerAccountOnboardingProgress,
+  fetchArchivedCustomerAccounts,
   fetchCustomerAccounts,
   fetchCustomerProperties,
+  reactivateCustomerAccount,
   type CustomerAccountRecord,
   type CustomerAccountOnboardingProgress,
   type CustomerPropertyRecord,
@@ -47,6 +49,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   refreshSignal = 0,
 }: Props) {
   const [accounts, setAccounts] = useState<CustomerAccountRecord[]>([]);
+  const [archivedAccounts, setArchivedAccounts] = useState<CustomerAccountRecord[]>([]);
   const [properties, setProperties] = useState<Record<string, CustomerPropertyRecord[]>>({});
   const [progress, setProgress] = useState<Record<string, CustomerAccountOnboardingProgress>>({});
   const [propertyDrafts, setPropertyDrafts] = useState<Record<string, PropertyDraft>>({});
@@ -54,6 +57,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [duplicateAccount, setDuplicateAccount] = useState<CustomerAccountRecord | null>(null);
   const [archiveConfirmationId, setArchiveConfirmationId] = useState('');
+  const [reactivateConfirmationId, setReactivateConfirmationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
@@ -69,7 +73,9 @@ export function ManagerCustomerAccountOnboardingPanel({
     setIsLoading(true);
     try {
       const loadedAccounts = await fetchCustomerAccounts();
+      const loadedArchivedAccounts = await fetchArchivedCustomerAccounts().catch(() => []);
       setAccounts(loadedAccounts);
+      setArchivedAccounts(loadedArchivedAccounts);
       const loadedProperties = await Promise.all(
         loadedAccounts.map(async (account) => [
           account.accountId,
@@ -165,6 +171,8 @@ export function ManagerCustomerAccountOnboardingPanel({
     setIsLoading(true);
     try {
       await archiveCustomerAccount(account.accountId);
+      setArchivedAccounts((current) => [...current, account]
+        .sort((a, b) => a.customerName.localeCompare(b.customerName)));
       setAccounts((current) => current.filter((item) => item.accountId !== account.accountId));
       setProperties((current) => {
         const next = { ...current };
@@ -180,6 +188,28 @@ export function ManagerCustomerAccountOnboardingPanel({
       setMessage(`${account.customerName} account archived. Historical records remain available.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'The customer account could not be archived.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function reactivate(account: CustomerAccountRecord) {
+    setIsLoading(true);
+    try {
+      const reactivated = await reactivateCustomerAccount(account.accountId);
+      const accountProperties = await fetchCustomerProperties(account.accountId).catch(() => []);
+      const accountProgress = await fetchCustomerAccountOnboardingProgress(account.accountId).catch(
+        () => deriveAccountOnboardingProgress(reactivated, accountProperties),
+      );
+      setArchivedAccounts((current) => current.filter((item) => item.accountId !== account.accountId));
+      setAccounts((current) => [...current, reactivated]
+        .sort((a, b) => a.customerName.localeCompare(b.customerName)));
+      setProperties((current) => ({ ...current, [account.accountId]: accountProperties }));
+      setProgress((current) => ({ ...current, [account.accountId]: accountProgress }));
+      setReactivateConfirmationId('');
+      setMessage(`${account.customerName} account returned to active onboarding.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'The customer account could not be reactivated.');
     } finally {
       setIsLoading(false);
     }
@@ -463,6 +493,40 @@ export function ManagerCustomerAccountOnboardingPanel({
         ) : null}
         {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
       </div>
+      <details className="mt-4 rounded-lg border border-slate-200 px-3">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700 [&::-webkit-details-marker]:hidden">
+          <span>Archived accounts</span>
+          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs">{archivedAccounts.length}</span>
+        </summary>
+        <div className="space-y-2 border-t border-slate-100 py-3">
+          {archivedAccounts.map((account) => (
+            <div className="rounded-lg bg-slate-50 p-3" key={account.accountId}>
+              <p className="text-sm font-semibold text-slate-900">{account.customerName}</p>
+              <p className="mt-1 text-xs text-slate-600">
+                {account.primaryContactName || 'Contact not set'}
+                {account.contactEmail ? ` · ${account.contactEmail}` : ''}
+                {account.contactPhone ? ` · ${account.contactPhone}` : ''}
+              </p>
+              {reactivateConfirmationId === account.accountId ? (
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                  <p className="text-xs text-emerald-900">
+                    Return this account to active onboarding? Archived properties remain archived.
+                  </p>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" disabled={isLoading} onClick={() => setReactivateConfirmationId('')} type="button">Keep archived</button>
+                    <button className="min-h-11 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={isLoading} onClick={() => void reactivate(account)} type="button">Confirm reactivation</button>
+                  </div>
+                </div>
+              ) : (
+                <button className="mt-2 min-h-11 text-sm font-semibold text-emerald-700" onClick={() => setReactivateConfirmationId(account.accountId)} type="button">Reactivate account</button>
+              )}
+            </div>
+          ))}
+          {archivedAccounts.length === 0 ? (
+            <p className="text-sm text-slate-500">No archived customer accounts.</p>
+          ) : null}
+        </div>
+      </details>
     </section>
   );
 }

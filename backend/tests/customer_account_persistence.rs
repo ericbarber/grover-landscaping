@@ -18,7 +18,9 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
     let jobs = JobRepository::connect(&config)
         .await
         .expect("repository should connect and run migrations");
-    let pool = jobs.pool().expect("connected repository should expose its pool");
+    let pool = jobs
+        .pool()
+        .expect("connected repository should expose its pool");
     let accounts = AccountRepository::from_pool(pool.clone());
     let created = accounts
         .create(CreateCustomerAccountRequest {
@@ -63,14 +65,43 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         .await
         .iter()
         .any(|account| account.account_id == created.account_id));
-    let audit_kind: String = sqlx::query_scalar(
-        "SELECT event_kind FROM access_audit_events WHERE target_id = $1",
+    assert!(accounts
+        .list_archived(&["org_demo_landscaping".to_string()])
+        .await
+        .iter()
+        .any(|account| account.account_id == created.account_id));
+    assert_eq!(
+        accounts
+            .reactivate(
+                &created.account_id,
+                &["org_outside_tenant".to_string()],
+                "outside-user",
+            )
+            .await,
+        Err(CustomerAccountArchiveError::NotFound)
+    );
+    let reactivated = accounts
+        .reactivate(
+            &created.account_id,
+            &["org_demo_landscaping".to_string()],
+            "reactivate-test-user",
+        )
+        .await
+        .expect("tenant manager should reactivate an archived account");
+    assert_eq!(reactivated.account_id, created.account_id);
+    assert!(accounts
+        .list(&["org_demo_landscaping".to_string()])
+        .await
+        .iter()
+        .any(|account| account.account_id == created.account_id));
+    let audit_kinds: Vec<String> = sqlx::query_scalar(
+        "SELECT event_kind FROM access_audit_events WHERE target_id = $1 ORDER BY occurred_at",
     )
     .bind(&created.account_id)
-    .fetch_one(&pool)
+    .fetch_all(&pool)
     .await
-    .expect("account archive should be audited");
-    assert_eq!(audit_kind, "account_archived");
+    .expect("account lifecycle should be audited");
+    assert_eq!(audit_kinds, ["account_archived", "account_reactivated"]);
 
     sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
         .bind(&created.account_id)

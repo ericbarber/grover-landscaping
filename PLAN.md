@@ -225,6 +225,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Customer-account search matches customer, contact, email, phone, property name, and service address while composing with onboarding filters
 - New-account submission warns on exact normalized customer name, email, or phone matches and supports review or explicit separate creation
 - Tenant-scoped customer-account archival preserves records, rejects current properties or unfinished jobs, leaves active onboarding, and records an audit event
+- Archived customer accounts have a separate tenant-scoped review and can return to active onboarding through audited two-step reactivation
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -722,9 +723,9 @@ Current state:
 
 Next implementation work:
 
-- Add an archived customer-account review separate from active onboarding
-- Let authorized managers reactivate an archived organization/account relationship with audit history
-- Cover archived-list tenant boundaries and two-step mobile reactivation
+- Expose the organization/customer relationship type in account administration
+- Let managers distinguish direct owners, property managers, and service-provider relationships
+- Cover relationship persistence, tenant boundaries, and mobile account summaries
 
 ## Planned
 

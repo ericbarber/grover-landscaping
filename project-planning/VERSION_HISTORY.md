@@ -221,6 +221,8 @@ version and release date.
   explicit separate-account continuation.
 - Added audited tenant-scoped customer-account archival with current-property and
   unfinished-work safeguards.
+- Added a separate archived-account review with tenant-scoped, audited two-step
+  reactivation.
 
 Current continuation work:
 

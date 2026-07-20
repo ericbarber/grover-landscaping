@@ -2169,6 +2169,13 @@ export async function fetchCustomerAccounts(): Promise<CustomerAccountRecord[]> 
   return items.map(toCustomerAccountRecord);
 }
 
+export async function fetchArchivedCustomerAccounts(): Promise<CustomerAccountRecord[]> {
+  const items = await request<Parameters<typeof toCustomerAccountRecord>[0][]>(
+    '/customer-accounts/archived',
+  );
+  return items.map(toCustomerAccountRecord);
+}
+
 export function toCustomerAccountOnboardingProgress(item: {
   account_id: string;
   customer_details_ready: boolean;
@@ -2266,6 +2273,14 @@ export async function updateCustomerAccount(
 
 export async function archiveCustomerAccount(accountId: string): Promise<void> {
   await request<void>(customerAccountPath(accountId), { method: 'DELETE' });
+}
+
+export async function reactivateCustomerAccount(accountId: string): Promise<CustomerAccountRecord> {
+  const item = await request<Parameters<typeof toCustomerAccountRecord>[0]>(
+    `${customerAccountPath(accountId)}/reactivate`,
+    { method: 'POST' },
+  );
+  return toCustomerAccountRecord(item);
 }
 
 export function customerAccountPropertiesPath(accountId: string): string {

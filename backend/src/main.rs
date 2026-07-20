@@ -551,8 +551,16 @@ fn app_with_runtime(
             get(list_customer_accounts).post(create_customer_account),
         )
         .route(
+            "/customer-accounts/archived",
+            get(list_archived_customer_accounts),
+        )
+        .route(
             "/customer-accounts/{account_id}",
             put(update_customer_account).delete(archive_customer_account),
+        )
+        .route(
+            "/customer-accounts/{account_id}/reactivate",
+            post(reactivate_customer_account),
         )
         .route(
             "/customer-accounts/{account_id}/onboarding-progress",
@@ -1361,6 +1369,19 @@ async fn list_customer_accounts(
     Json(state.accounts.list(&organization_ids).await).into_response()
 }
 
+async fn list_archived_customer_accounts(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    Json(state.accounts.list_archived(&organization_ids).await).into_response()
+}
+
 async fn create_customer_account(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
@@ -1482,6 +1503,38 @@ async fn archive_customer_account(
             Json(ErrorResponse {
                 error: "customer_account_not_archived",
                 message: "The customer account could not be archived.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn reactivate_customer_account(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .reactivate(&account_id, &organization_ids, &principal.subject)
+        .await
+    {
+        Ok(account) => Json(account).into_response(),
+        Err(CustomerAccountArchiveError::NotFound) => resource_not_found_response(
+            "archived_customer_account_not_found",
+            "The requested archived customer account was not found.",
+        ),
+        Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_account_not_reactivated",
+                message: "The customer account could not be reactivated.".to_string(),
             }),
         )
             .into_response(),
