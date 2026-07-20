@@ -20,6 +20,8 @@ type Props = {
   requestedTerritoryId?: string;
   selectionSignal?: number;
   onReturnToHierarchy?: () => void;
+  inspectionReturnLabel?: string;
+  onReturnFromInspection?: () => void;
 };
 
 export function crewLeadOptionLabel(membership: OrganizationMembership): string {
@@ -36,6 +38,8 @@ export function OwnerCrewAdministrationPanel({
   requestedTerritoryId,
   selectionSignal = 0,
   onReturnToHierarchy,
+  inspectionReturnLabel,
+  onReturnFromInspection,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState('');
@@ -234,6 +238,15 @@ export function OwnerCrewAdministrationPanel({
     >
       <h3 className="font-bold text-slate-950">Crew administration</h3>
       <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
+      {inspectionReturnLabel && onReturnFromInspection ? (
+        <button
+          className="mt-3 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-800"
+          onClick={onReturnFromInspection}
+          type="button"
+        >
+          {inspectionReturnLabel}
+        </button>
+      ) : null}
       {message ? <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs font-medium text-slate-700" role="status">{message}</p> : null}
       {moveConfirmation ? (
         <div

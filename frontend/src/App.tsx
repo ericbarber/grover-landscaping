@@ -927,6 +927,9 @@ export function App() {
   const [crewAdministrationSelection, setCrewAdministrationSelection] = useState<string>();
   const [crewAdministrationBranch, setCrewAdministrationBranch] = useState<string>();
   const [crewAdministrationTerritory, setCrewAdministrationTerritory] = useState<string>();
+  const [crewAdministrationReturnTarget, setCrewAdministrationReturnTarget] = useState<
+    'team-activity' | undefined
+  >();
   const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
@@ -2658,6 +2661,11 @@ export function App() {
             crewSelectionRequest={crewAdministrationSelection}
             crewSelectionSignal={crewAdministrationSelectionSignal}
             crewTerritoryRequest={crewAdministrationTerritory}
+            crewInspectionReturnLabel={
+              crewAdministrationReturnTarget === 'team-activity'
+                ? 'Return to owner activity'
+                : undefined
+            }
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
@@ -2672,6 +2680,12 @@ export function App() {
             }}
             onReturnToDispatchHierarchy={() => {
               const target = document.getElementById('dispatch-hierarchy-administration');
+              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              target?.focus({ preventScroll: true });
+            }}
+            onReturnFromCrewInspection={() => {
+              setCrewAdministrationReturnTarget(undefined);
+              const target = document.getElementById('team-activity-review');
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
             }}
@@ -2767,6 +2781,7 @@ export function App() {
                 setCrewAdministrationSelection(crewId);
                 setCrewAdministrationBranch(undefined);
                 setCrewAdministrationTerritory(undefined);
+                setCrewAdministrationReturnTarget('team-activity');
                 setCrewAdministrationSelectionSignal((current) => current + 1);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2850,6 +2865,7 @@ export function App() {
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
                 onOpenCrewAdministration={(request) => {
+                  setCrewAdministrationReturnTarget(undefined);
                   setCrewAdministrationSelection(request?.crewId);
                   setCrewAdministrationBranch(request?.branchId);
                   setCrewAdministrationTerritory(request?.territoryId);

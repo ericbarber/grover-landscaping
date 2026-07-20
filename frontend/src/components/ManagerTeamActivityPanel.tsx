@@ -459,7 +459,11 @@ export function ManagerTeamActivityPanel({
   ]);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section
+      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      id="team-activity-review"
+      tabIndex={-1}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">

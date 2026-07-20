@@ -24,6 +24,8 @@ type Props = {
   onCrewCreated?: (crew: CrewRecord) => void;
   onCrewChanged?: (crew: CrewRecord) => void;
   onReturnToDispatchHierarchy?: () => void;
+  crewInspectionReturnLabel?: string;
+  onReturnFromCrewInspection?: () => void;
 };
 
 export type FirstOwnerSetupTarget =
@@ -83,6 +85,8 @@ export function FirstOwnerOnboardingPanel({
   onCrewCreated,
   onCrewChanged,
   onReturnToDispatchHierarchy,
+  crewInspectionReturnLabel,
+  onReturnFromCrewInspection,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -517,6 +521,8 @@ export function FirstOwnerOnboardingPanel({
             <OwnerCrewAdministrationPanel
               organizationId={membership.organizationId}
               onCrewChanged={onCrewChanged}
+              inspectionReturnLabel={crewInspectionReturnLabel}
+              onReturnFromInspection={onReturnFromCrewInspection}
               onReturnToHierarchy={onReturnToDispatchHierarchy}
               requestedBranchId={crewBranchRequest}
               requestedCrewId={crewSelectionRequest}

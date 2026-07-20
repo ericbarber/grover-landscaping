@@ -667,10 +667,11 @@ Current state:
 - Directional crew-move source and destination fields restore per organization across mobile reloads and clear with the review reset
 - Touch-safe source and destination chips expose active directional review and remove either filter independently
 - Crew hierarchy owner activity opens the affected crew directly in focused crew administration, with live mobile smoke coverage
+- Audit-launched crew inspection exposes a focused return action back to owner activity
 
 Next implementation work:
 
-- Return from an audit-launched crew inspection to owner activity
+- Keep the audited source and destination visible during crew inspection
 
 ## Planned
 
