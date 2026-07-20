@@ -479,6 +479,7 @@ function CustomerPortalPreviewPanel({
   isLoadingProjectBids: boolean;
   hasProjectBidHistoryError: boolean;
 }) {
+  const [selectedPortalPropertyId, setSelectedPortalPropertyId] = useState<string | null>(null);
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
@@ -531,12 +532,52 @@ function CustomerPortalPreviewPanel({
       </div>
 
       <div className="mt-5 space-y-3">
+        <div className={`${selectedPortalPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            Choose a property
+          </p>
+          {visibleProperties.map((property) => {
+            const propertyReports = completionReportsByProperty[property.id] ?? [];
+            const propertyWork = visibleWorkSummaries.filter(
+              (workSummary) => workSummary.propertyId === property.id,
+            );
+            return (
+              <button
+                className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
+                key={property.id}
+                onClick={() => setSelectedPortalPropertyId(property.id)}
+                type="button"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-slate-900">
+                    {property.displayName}
+                  </span>
+                  <span className="block truncate text-xs text-slate-600">{property.address}</span>
+                </span>
+                <span className="shrink-0 text-right text-xs text-slate-500">
+                  {propertyWork.length} work
+                  <span className="block">{propertyReports.length} reports</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
         {visibleProperties.map((property) => {
           const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
           const propertyReports = completionReportsByProperty[property.id] ?? [];
 
           return (
-            <article key={property.id} className="rounded-xl border border-slate-200 p-4">
+            <article
+              key={property.id}
+              className={`${selectedPortalPropertyId === property.id ? 'block' : 'hidden'} rounded-xl border border-slate-200 p-4 lg:block`}
+            >
+              <button
+                className="mb-3 min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 lg:hidden"
+                onClick={() => setSelectedPortalPropertyId(null)}
+                type="button"
+              >
+                ← All properties
+              </button>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-950">{property.displayName}</h3>

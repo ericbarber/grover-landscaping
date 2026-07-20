@@ -34,6 +34,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile job detail keeps customer context and Start/Complete actions visible while opening Checklist, Photos, Add-ons, and Report individually
 - Job workflow tabs show checklist progress, evidence counts, add-on counts, and report readiness without expanding each section
 - Selecting a different job resets the mobile workflow to its overview instead of retaining stale secondary context
+- Yard-owner and customer portal views start with compact property rows instead of every service timeline
+- Mobile customer history renders one selected property's work and reports at a time with a clear return to all properties
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -888,7 +890,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with shorter yard-owner property history and iPhone interaction validation
+- Continue the mobile navigation phase with compact bid/report history and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
