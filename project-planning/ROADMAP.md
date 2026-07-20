@@ -34,6 +34,8 @@ Its original Southwestern landscape hero adds persona-specific product promises
 and compact plan-care-proof brand cues without extending the workflow.
 Progress language now adapts to service visits, portfolio work, route stops,
 revenue readiness, or field delivery for the active persona.
+Desktop now shares the mobile Home's premium landscape imagery, persona promise,
+brand cues, and contextual progress instead of a generic field-work banner.
 Home also explains the highest-priority current state: unsynced changes, a clear
 schedule, remaining work, or a completed day.
 

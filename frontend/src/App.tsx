@@ -102,7 +102,13 @@ import {
   CustomerHistoryMenu,
   type CustomerHistoryView,
 } from './components/CustomerHistoryMenu';
-import { WorkspaceHomePanel } from './components/WorkspaceHomePanel';
+import {
+  homeGreeting,
+  personaHomeHeadline,
+  personaHomePromise,
+  personaProgressLanguage,
+  WorkspaceHomePanel,
+} from './components/WorkspaceHomePanel';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -2617,24 +2623,64 @@ export function App() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-100 pb-20 lg:pb-0">
-      <section className="hidden bg-slate-950 px-4 py-6 text-white sm:px-6 sm:py-8 lg:block">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300 sm:text-sm sm:tracking-[0.3em]">Grover Landscaping</p>
-          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <section className="relative hidden min-h-[25rem] overflow-hidden bg-emerald-950 px-6 py-10 text-white lg:block">
+        <img
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          src="/brand/grover-landscape-home-hero.webp"
+        />
+        <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
+        <span className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
+        <div className="relative mx-auto flex min-h-[20rem] max-w-6xl flex-col">
+          <div className="flex items-center justify-between gap-5">
+            <p className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.3em] text-emerald-200">
+              <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.16)]" />
+              Grover
+            </p>
+            <p className="rounded-full border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-sm">
+              {new Date().toLocaleDateString(undefined, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          </div>
+          <div className="mt-auto grid items-end gap-8 md:grid-cols-[minmax(0,1fr)_18rem]">
             <div>
-              <h1 className="text-2xl font-bold leading-tight sm:text-3xl md:text-5xl">Today&apos;s field work</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300 sm:mt-3 sm:text-base">
-                Follow the route, open a job, and capture completion evidence.
+              <p className="text-base font-bold text-emerald-200">
+                {homeGreeting(new Date().getHours())}, {auth.displayName?.split(/[\s@]/)[0] || 'there'}
               </p>
-              <div className="mt-4 rounded-xl bg-white/10 px-3 py-2 text-sm text-slate-200">
-                <p className="font-semibold text-emerald-300">{workspaceGuidance.label}</p>
-                <p className="mt-1 text-xs text-slate-300">{workspaceGuidance.description}</p>
+              <h1 className="mt-3 max-w-3xl text-5xl font-black leading-[0.98] tracking-tight xl:text-6xl">
+                {personaHomeHeadline(activePersona)}
+              </h1>
+              <p className="mt-4 max-w-xl text-lg font-medium leading-7 text-slate-100">
+                {personaHomePromise(activePersona)}
+              </p>
+              <div className="mt-6 flex items-center gap-3 text-xs font-black uppercase tracking-[0.16em]">
+                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm">
+                  {activePersona.label}
+                </span>
+                <span className="text-emerald-300">Plan</span>
+                <span aria-hidden="true" className="text-emerald-400">•</span>
+                <span className="text-emerald-300">Care</span>
+                <span aria-hidden="true" className="text-emerald-400">•</span>
+                <span className="text-emerald-300">Proof</span>
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-sm text-slate-200 md:block md:rounded-2xl md:p-4">
-              <p className="font-semibold text-white">Route status</p>
-              <p>{isLoadingJobs ? 'Loading...' : `${jobs.length} assigned jobs`}</p>
-            </div>
+            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-xl backdrop-blur-md">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+                {personaProgressLanguage(activePersona).eyebrow}
+              </p>
+              <p className="mt-3 text-4xl font-black">
+                {isLoadingJobs ? '…' : `${jobs.filter((job) => job.status === 'completed').length}/${jobs.length}`}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-200">
+                {personaProgressLanguage(activePersona).completed}
+              </p>
+              <div className="my-4 h-px bg-white/15" />
+              <p className="text-sm font-bold text-white">{workspaceGuidance.label}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-300">{workspaceGuidance.description}</p>
+            </aside>
           </div>
         </div>
       </section>

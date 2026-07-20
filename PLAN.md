@@ -21,6 +21,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Home uses a branded first-impression hero with a time-aware greeting, current date, and persona-specific headline
 - Home pairs an original Southwestern landscape hero with persona-specific product promises and concise plan-care-proof brand cues
 - Home translates progress into persona-relevant service, portfolio, route, revenue, or field-delivery language
+- Desktop now opens with the same premium landscape imagery, persona promise, brand cues, and contextual progress as mobile
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
 - Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones
