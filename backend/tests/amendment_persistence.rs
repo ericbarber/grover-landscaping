@@ -7,7 +7,7 @@ use grover_landscaping_api::{
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidDraftResult,
         ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository, ProjectBidSendResult,
-        SendProjectBidRequest,
+        SendProjectBidRequest, SharedProjectBidReadResult,
     },
 };
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -46,6 +46,17 @@ fn updated_bid(
         ProjectBidMutationResult::Updated(bid) => bid,
         ProjectBidMutationResult::Conflict => panic!("{context}: conflict"),
         ProjectBidMutationResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+fn shared_bid(
+    result: SharedProjectBidReadResult,
+    context: &str,
+) -> grover_landscaping_api::project_bids::ProjectBidResponse {
+    match result {
+        SharedProjectBidReadResult::Loaded(bid) => bid,
+        SharedProjectBidReadResult::NotFound => panic!("{context}: not found"),
+        SharedProjectBidReadResult::Unavailable => panic!("{context}: unavailable"),
     }
 }
 
@@ -211,6 +222,14 @@ async fn repository_reports_unavailable_persisted_project_bid_lists() {
             .await,
         ProjectBidMutationResult::Unavailable
     ));
+    assert!(matches!(
+        repository.shared_for_token("share_missing").await,
+        SharedProjectBidReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository.decide_shared("share_missing", "approve").await,
+        ProjectBidMutationResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -371,10 +390,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .and_then(|url| url.strip_prefix("/bid-review/"))
         .expect("sent bid should expose a customer share token");
 
-    let shared = bid_repository
-        .shared_for_token(share_token)
-        .await
-        .expect("sent bid should load from its share token");
+    let shared = shared_bid(
+        bid_repository.shared_for_token(share_token).await,
+        "sent bid should load from its share token",
+    );
     assert_eq!(shared.total_cents, 17_000);
 
     let revoked = updated_bid(
@@ -384,7 +403,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert!(revoked.share_revoked_at.is_some());
     assert!(revoked.share_url.is_none());
     assert_eq!(revoked.delivery_status.as_deref(), Some("skipped"));
-    assert!(bid_repository.shared_for_token(share_token).await.is_none());
+    assert!(matches!(
+        bid_repository.shared_for_token(share_token).await,
+        SharedProjectBidReadResult::NotFound
+    ));
 
     assert!(matches!(
         bid_repository
@@ -429,16 +451,20 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert_ne!(resent_share_token, share_token);
     assert_eq!(resent.delivery_channel.as_deref(), Some("sms"));
 
-    let approved = bid_repository
-        .decide_shared(resent_share_token, "approve")
-        .await
-        .expect("sent bid should accept one customer decision");
+    let approved = updated_bid(
+        bid_repository
+            .decide_shared(resent_share_token, "approve")
+            .await,
+        "sent bid should accept one customer decision",
+    );
     assert_eq!(approved.status, "approved");
     assert!(approved.responded_at.is_some());
-    assert!(bid_repository
-        .decide_shared(resent_share_token, "reject")
-        .await
-        .is_none());
+    assert!(matches!(
+        bid_repository
+            .decide_shared(resent_share_token, "reject")
+            .await,
+        ProjectBidMutationResult::Conflict
+    ));
 
     let source_stop_before_conversion = sqlx::query(
         "SELECT estimated_service_minutes FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2",

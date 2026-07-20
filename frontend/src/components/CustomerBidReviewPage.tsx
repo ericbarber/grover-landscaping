@@ -3,6 +3,7 @@ import {
   decideSharedProjectBid,
   fetchSharedProjectBid,
 } from '../api/projectBidsClient';
+import { isApiErrorCode } from '../api/apiError';
 import type { CustomerProjectBid } from '../domain/stopProgress';
 
 type CustomerBidReviewPageProps = {
@@ -25,8 +26,12 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
       .then((response) => {
         if (isMounted) setBid(response);
       })
-      .catch(() => {
-        if (isMounted) setError('This bid link is invalid or no longer available.');
+      .catch((error: unknown) => {
+        if (isMounted) setError(
+          isApiErrorCode(error, 'shared_bid_unavailable')
+            ? 'Bid storage is temporarily unavailable. Retry after service readiness recovers.'
+            : 'This bid link is invalid or no longer available.',
+        );
       });
 
     return () => {
@@ -44,7 +49,11 @@ export function CustomerBidReviewPage({ shareToken }: CustomerBidReviewPageProps
         setBid(response);
         setPendingDecision(null);
       })
-      .catch(() => setError('Your response could not be recorded. Reload the bid before trying again.'))
+      .catch((error: unknown) => setError(
+        isApiErrorCode(error, 'shared_bid_decision_unavailable')
+          ? 'Bid storage is temporarily unavailable. Your response was not recorded.'
+          : 'Your response could not be recorded. Reload the bid before trying again.',
+      ))
       .finally(() => setIsSubmitting(false));
   }
 

@@ -1,6 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('distinguishes unavailable shared-bid storage from an invalid customer link', async ({ page }) => {
+  await page.route('**/shared-bids/storage-unavailable', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'shared_bid_unavailable',
+      message: 'The shared bid could not be loaded from persisted storage.',
+    },
+  }));
+
+  await page.goto('/bid-review/storage-unavailable');
+  await expect(page.getByRole('heading', { name: 'Unable to open this proposal' })).toBeVisible();
+  await expect(page.getByText(
+    'Bid storage is temporarily unavailable. Retry after service readiness recovers.',
+  )).toBeVisible();
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

@@ -100,7 +100,7 @@ use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
     ProjectBidDraftResult, ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository,
-    ProjectBidSendResult, SendProjectBidRequest,
+    ProjectBidSendResult, SendProjectBidRequest, SharedProjectBidReadResult,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -5301,18 +5301,18 @@ async fn get_shared_project_bid(
     State(state): State<Arc<AppState>>,
     Path(share_token): Path<String>,
 ) -> Response {
-    let Some(bid) = state.project_bids.shared_for_token(&share_token).await else {
-        return (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: "shared_bid_not_found",
-                message: "Shared bid link was not found.".to_string(),
-            }),
-        )
-            .into_response();
-    };
-
-    Json(customer_project_bid_response(&bid)).into_response()
+    match state.project_bids.shared_for_token(&share_token).await {
+        SharedProjectBidReadResult::Loaded(bid) => {
+            Json(customer_project_bid_response(&bid)).into_response()
+        }
+        SharedProjectBidReadResult::NotFound => {
+            resource_not_found_response("shared_bid_not_found", "Shared bid link was not found.")
+        }
+        SharedProjectBidReadResult::Unavailable => persisted_resource_unavailable_response(
+            "shared_bid_unavailable",
+            "The shared bid could not be loaded from persisted storage.",
+        ),
+    }
 }
 
 async fn decide_shared_project_bid(
@@ -5331,15 +5331,20 @@ async fn decide_shared_project_bid(
             .into_response();
     }
 
-    let Some(current) = state.project_bids.shared_for_token(&share_token).await else {
-        return (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: "shared_bid_not_found",
-                message: "Shared bid link was not found.".to_string(),
-            }),
-        )
-            .into_response();
+    let current = match state.project_bids.shared_for_token(&share_token).await {
+        SharedProjectBidReadResult::Loaded(bid) => bid,
+        SharedProjectBidReadResult::NotFound => {
+            return resource_not_found_response(
+                "shared_bid_not_found",
+                "Shared bid link was not found.",
+            );
+        }
+        SharedProjectBidReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "shared_bid_unavailable",
+                "The shared bid could not be loaded from persisted storage.",
+            );
+        }
     };
 
     if current.status != "sent" {
@@ -5353,22 +5358,27 @@ async fn decide_shared_project_bid(
             .into_response();
     }
 
-    let Some(bid) = state
+    match state
         .project_bids
         .decide_shared(&share_token, &request.decision)
         .await
-    else {
-        return (
+    {
+        ProjectBidMutationResult::Updated(bid) => {
+            Json(customer_project_bid_response(&bid)).into_response()
+        }
+        ProjectBidMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "project_bid_decision_conflict",
                 message: "The bid changed before this response was recorded.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    Json(customer_project_bid_response(&bid)).into_response()
+            .into_response(),
+        ProjectBidMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "shared_bid_decision_unavailable",
+            "The bid decision could not be persisted.",
+        ),
+    }
 }
 
 async fn assign_day_plan_stop(

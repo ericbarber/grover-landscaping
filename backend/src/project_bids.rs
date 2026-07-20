@@ -77,6 +77,13 @@ pub enum ProjectBidMutationResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum SharedProjectBidReadResult {
+    Loaded(ProjectBidResponse),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct SendProjectBidRequest {
     pub channel: String,
@@ -244,24 +251,36 @@ impl ProjectBidRepository {
         }
     }
 
-    pub async fn shared_for_token(&self, share_token: &str) -> Option<ProjectBidResponse> {
-        let pool = self.pool.as_ref()?;
-        postgres_project_bids::shared_for_token(pool, share_token)
-            .await
-            .ok()
-            .flatten()
+    pub async fn shared_for_token(&self, share_token: &str) -> SharedProjectBidReadResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return SharedProjectBidReadResult::Unavailable;
+        };
+        match postgres_project_bids::shared_for_token(pool, share_token).await {
+            Ok(Some(bid)) => SharedProjectBidReadResult::Loaded(bid),
+            Ok(None) => SharedProjectBidReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, "persisted shared project bid read failed");
+                SharedProjectBidReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn decide_shared(
         &self,
         share_token: &str,
         decision: &str,
-    ) -> Option<ProjectBidResponse> {
-        let pool = self.pool.as_ref()?;
-        postgres_project_bids::decide_shared(pool, share_token, decision)
-            .await
-            .ok()
-            .flatten()
+    ) -> ProjectBidMutationResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return ProjectBidMutationResult::Unavailable;
+        };
+        match postgres_project_bids::decide_shared(pool, share_token, decision).await {
+            Ok(Some(bid)) => ProjectBidMutationResult::Updated(bid),
+            Ok(None) => ProjectBidMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, "persisted shared project bid decision failed");
+                ProjectBidMutationResult::Unavailable
+            }
+        }
     }
 }
 

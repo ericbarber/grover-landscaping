@@ -216,7 +216,7 @@ export async function convertProjectBid(dayPlanId: string, bidId: string): Promi
 export async function fetchSharedProjectBid(shareToken: string): Promise<CustomerProjectBid> {
   const response = await fetch(`${API_BASE_URL}/shared-bids/${encodeURIComponent(shareToken)}`);
   if (!response.ok) {
-    throw new Error(`Shared project bid request failed with status ${response.status}`);
+    throw await apiRequestError(response, `Shared project bid request failed with status ${response.status}`);
   }
 
   return toCustomerProjectBid((await response.json()) as ApiCustomerProjectBid);
@@ -235,7 +235,7 @@ export async function decideSharedProjectBid(
     },
   );
   if (!response.ok) {
-    throw new Error(`Project bid decision failed with status ${response.status}`);
+    throw await apiRequestError(response, `Project bid decision failed with status ${response.status}`);
   }
 
   return toCustomerProjectBid((await response.json()) as ApiCustomerProjectBid);
