@@ -23,6 +23,18 @@ const timeZones = [
   'America/New_York',
 ];
 
+export function summarizeDispatchHierarchy(
+  branches: OrganizationBranchRecord[],
+  territories: ServiceTerritoryRecord[],
+) {
+  return {
+    activeBranches: branches.filter((branch) => branch.status === 'active').length,
+    inactiveBranches: branches.filter((branch) => branch.status === 'inactive').length,
+    activeTerritories: territories.filter((territory) => territory.status === 'active').length,
+    inactiveTerritories: territories.filter((territory) => territory.status === 'inactive').length,
+  };
+}
+
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
@@ -38,6 +50,7 @@ export function ManagerDispatchHierarchyPanel({
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
+  const summary = summarizeDispatchHierarchy(branches, territories);
 
   async function refreshHierarchy() {
     const [branchItems, territoryItems] = await Promise.all([
@@ -171,6 +184,19 @@ export function ManagerDispatchHierarchyPanel({
       {status ? (
         <p className="mt-3 text-xs font-semibold text-slate-600" role="status">{status}</p>
       ) : null}
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
+        {[
+          ['Active branches', summary.activeBranches],
+          ['Inactive branches', summary.inactiveBranches],
+          ['Active territories', summary.activeTerritories],
+          ['Inactive territories', summary.inactiveTerritories],
+        ].map(([label, count]) => (
+          <div className="rounded-xl bg-slate-50 p-3" key={label}>
+            <p className="text-lg font-bold text-slate-950">{count}</p>
+            <p className="text-xs text-slate-600">{label}</p>
+          </div>
+        ))}
+      </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <form className="space-y-2 rounded-xl bg-slate-50 p-3" onSubmit={submitBranch}>
           <p className="text-sm font-bold text-slate-900">New branch</p>

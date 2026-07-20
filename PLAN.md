@@ -499,6 +499,7 @@ Current state:
 - Branch and territory lifecycle changes are tenant-guarded and actor-attributed in the audit trail
 - Pixel 7 smoke coverage verifies owner hierarchy visibility, persisted crew scope selections, assigned-territory lifecycle guards, invalid hierarchy rejection, and mobile overflow safety
 - Owner activity includes readable hierarchy creation, crew assignment, and lifecycle events with persisted filtering and export labels
+- Mobile owner hierarchy summarizes active and inactive branch and territory counts before lifecycle controls
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -639,7 +640,7 @@ Current state:
 
 Next implementation work:
 
-- Add branch and territory summary counts to the owner hierarchy panel
+- Add searchable branch and territory lifecycle lists for larger organizations
 
 ## Planned
 
