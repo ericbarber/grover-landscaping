@@ -337,6 +337,28 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
       });
     },
   );
+  await page.route(
+    '**/organizations/org_demo_landscaping/team-activity*',
+    async (route) => {
+      await route.fulfill({
+        json: crewMoved ? [{
+          id: 'audit_e2e_crew_hierarchy_move',
+          actor_user_id: 'local-dev-user',
+          actor_label: 'Local Owner',
+          organization_id: 'org_demo_landscaping',
+          event_kind: 'crew_hierarchy_updated',
+          target_id: originalCrew!.id,
+          target_label: originalCrew!.name,
+          source_branch_label: 'Main Branch',
+          source_territory_label: 'Primary Territory',
+          destination_branch_label: 'Main Branch',
+          destination_territory_label: territoryName,
+          cross_branch_move: false,
+          occurred_at: '2026-07-20T03:00:00Z',
+        }] : [],
+      });
+    },
+  );
 
   await page.goto('/');
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
@@ -369,6 +391,12 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   )).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Return to hierarchy review' }).click();
   await expect(hierarchy).toBeFocused();
+  const teamActivity = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await teamActivity.getByRole('button', { name: 'Open affected crew' }).click();
+  await expect(crewAdministration).toBeFocused();
+  await expect(crewAdministration.getByRole('combobox').first()).toHaveValue(originalCrew!.id);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });

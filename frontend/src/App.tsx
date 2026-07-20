@@ -2763,6 +2763,15 @@ export function App() {
               organizationId={activeManagerOrganizationId}
             />
             <ManagerTeamActivityPanel
+              onOpenCrew={(crewId) => {
+                setCrewAdministrationSelection(crewId);
+                setCrewAdministrationBranch(undefined);
+                setCrewAdministrationTerritory(undefined);
+                setCrewAdministrationSelectionSignal((current) => current + 1);
+                const target = document.getElementById('crew-administration');
+                target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target?.focus({ preventScroll: true });
+              }}
               organizationId={activeManagerOrganizationId}
               refreshSignal={teamActivityRefreshSignal}
             />

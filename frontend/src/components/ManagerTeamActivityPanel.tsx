@@ -279,9 +279,11 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
+  onOpenCrew,
 }: {
   organizationId: string;
   refreshSignal?: number;
+  onOpenCrew?: (crewId: string) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
@@ -704,6 +706,15 @@ export function ManagerTeamActivityPanel({
                   </span>
                 </p>
               ) : null}
+            {item.eventKind === 'crew_hierarchy_updated' && onOpenCrew ? (
+              <button
+                className="mt-2 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-800"
+                onClick={() => onOpenCrew(item.targetId)}
+                type="button"
+              >
+                Open affected crew
+              </button>
+            ) : null}
             <details className="mt-2 text-xs text-slate-500">
               <summary className="min-h-11 cursor-pointer content-center font-semibold">
                 Show immutable IDs

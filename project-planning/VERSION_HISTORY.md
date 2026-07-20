@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Linked crew hierarchy activity to affected crew administration.
 - 2026-07-19: Added removable mobile chips for directional crew-move review.
 - 2026-07-19: Restored directional crew-move review across mobile reloads.
 - 2026-07-19: Added directional source and destination crew-move filtering.

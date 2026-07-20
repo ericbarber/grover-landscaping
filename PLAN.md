@@ -666,10 +666,11 @@ Current state:
 - Owner activity filters crew moves by readable source and destination branch or territory across paginated server history
 - Directional crew-move source and destination fields restore per organization across mobile reloads and clear with the review reset
 - Touch-safe source and destination chips expose active directional review and remove either filter independently
+- Crew hierarchy owner activity opens the affected crew directly in focused crew administration, with live mobile smoke coverage
 
 Next implementation work:
 
-- Open the affected crew directly from a hierarchy-move owner activity record
+- Return from an audit-launched crew inspection to owner activity
 
 ## Planned
 
