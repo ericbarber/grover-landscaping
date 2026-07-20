@@ -884,6 +884,7 @@ export function App() {
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Loading jobs from local API...');
   const [uploadTickets, setUploadTickets] = useState<PhotoUploadTicket[]>([]);
@@ -1384,6 +1385,7 @@ export function App() {
 
   useEffect(() => {
     let isMounted = true;
+    setJobsUnavailable(false);
 
     fetchJobs()
       .then((apiJobs) => {
@@ -1395,20 +1397,27 @@ export function App() {
         setSelectedJobId((current) => current ?? apiJobs[0]?.id ?? null);
         setStatusMessage('Connected to the local API.');
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!isMounted) {
           return;
         }
 
-        setJobs(seedJobs);
-        setSelectedJobId((current) => current ?? seedJobs[0]?.id ?? null);
-        setStatusMessage('Using seed data because the local API is not reachable yet.');
-        recordManagerActivity({
-          title: 'Seed data fallback active',
-          message: 'The dashboard is using seed jobs because the API is not reachable.',
-          tone: 'warning',
-          source: 'sync',
-        });
+        if (error instanceof ApiRequestError) {
+          setJobs([]);
+          setSelectedJobId(null);
+          setJobsUnavailable(true);
+          setStatusMessage('Persisted field work is unavailable. Seed jobs were not substituted.');
+        } else {
+          setJobs(seedJobs);
+          setSelectedJobId((current) => current ?? seedJobs[0]?.id ?? null);
+          setStatusMessage('Using seed data because the local API is not reachable yet.');
+          recordManagerActivity({
+            title: 'Seed data fallback active',
+            message: 'The dashboard is using seed jobs because the API is not reachable.',
+            tone: 'warning',
+            source: 'sync',
+          });
+        }
       })
       .finally(() => {
         if (isMounted) {
@@ -2414,6 +2423,11 @@ export function App() {
           <div className="mb-4 mt-6 scroll-mt-16" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
+            {jobsUnavailable ? (
+              <p className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
+                Persisted field work could not be loaded. Assigned jobs remain hidden until API readiness recovers.
+              </p>
+            ) : null}
             {offlineJobMutations.length > 0 && (
               <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">
                 <p>

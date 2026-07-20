@@ -52,6 +52,13 @@ pub enum ResourceOwnershipResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ResourceReadResult<T> {
+    Loaded(T),
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PhotoProcessingJobRecord {
     pub id: String,
     pub photo_id: String,
@@ -411,14 +418,18 @@ impl JobRepository {
         .is_some()
     }
 
-    pub async fn list_jobs(&self) -> Vec<JobSummary> {
+    pub async fn list_jobs(&self) -> ResourceReadResult<Vec<JobSummary>> {
         if let Some(pool) = &self.pool {
-            if let Ok(jobs) = postgres_read::list_jobs(pool).await {
-                return jobs;
-            }
+            return match postgres_read::list_jobs(pool).await {
+                Ok(jobs) => ResourceReadResult::Loaded(jobs),
+                Err(error) => {
+                    tracing::error!(%error, "persisted job list failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        seed_job_summaries()
+        ResourceReadResult::Loaded(seed_job_summaries())
     }
 
     pub async fn update_dispatch_assignment(
@@ -615,14 +626,19 @@ impl JobRepository {
         }
     }
 
-    pub async fn get_job(&self, id: String) -> JobDetail {
+    pub async fn get_job(&self, id: String) -> ResourceReadResult<JobDetail> {
         if let Some(pool) = &self.pool {
-            if let Ok(Some(job)) = postgres_read::get_job(pool, &id).await {
-                return job;
-            }
+            return match postgres_read::get_job(pool, &id).await {
+                Ok(Some(job)) => ResourceReadResult::Loaded(job),
+                Ok(None) => ResourceReadResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, job_id = id, "persisted job detail failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        seed_job_detail(id)
+        ResourceReadResult::Loaded(seed_job_detail(id))
     }
 
     pub async fn list_job_add_ons(&self, job_id: &str) -> Vec<JobAddOn> {

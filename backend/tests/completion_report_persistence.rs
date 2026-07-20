@@ -5,7 +5,7 @@ use grover_landscaping_api::{
         build_completion_report, CompletionReportActionResult,
         CompletionReportDeliveryNotificationResult, COMPLETION_REPORT_SNAPSHOT_VERSION,
     },
-    db::JobRepository,
+    db::{JobRepository, ResourceReadResult},
 };
 use sqlx::Row;
 mod common;
@@ -48,7 +48,9 @@ async fn repository_persists_completion_report_state() {
         .execute(&pool)
         .await
         .expect("prior completion report should be removable");
-    let job = repository.get_job("job_1001".to_string()).await;
+    let ResourceReadResult::Loaded(job) = repository.get_job("job_1001".to_string()).await else {
+        panic!("persisted job detail should load");
+    };
     let account = CustomerAccountSummary {
         job_id: "job_1001".to_string(),
         account_id: "acct_1001".to_string(),
@@ -210,12 +212,13 @@ async fn repository_persists_completion_report_state() {
         .await;
     assert!(other_org_property_reports.is_empty());
 
-    let mut delivered_snapshot = build_completion_report(
-        repository.get_job("job_1001".to_string()).await,
-        account.clone(),
-        Vec::new(),
-        Vec::new(),
-    );
+    let ResourceReadResult::Loaded(delivered_job) =
+        repository.get_job("job_1001".to_string()).await
+    else {
+        panic!("persisted delivered job detail should load");
+    };
+    let mut delivered_snapshot =
+        build_completion_report(delivered_job, account.clone(), Vec::new(), Vec::new());
     apply_completion_report_persistence(&mut delivered_snapshot, delivered_persistence.clone());
     let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
     assert!(

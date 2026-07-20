@@ -1,4 +1,4 @@
-use grover_landscaping_api::db::{ChecklistWriteResult, JobRepository};
+use grover_landscaping_api::db::{ChecklistWriteResult, JobRepository, ResourceReadResult};
 mod common;
 
 #[tokio::test]
@@ -22,7 +22,10 @@ async fn repository_persists_checklist_item_state_and_summary_count() {
             .await,
         ChecklistWriteResult::Persisted,
     );
-    let unchecked = repository.get_job("job_1001".to_string()).await;
+    let ResourceReadResult::Loaded(unchecked) = repository.get_job("job_1001".to_string()).await
+    else {
+        panic!("persisted job detail should load");
+    };
     assert!(
         !unchecked
             .checklist

@@ -287,6 +287,25 @@ test('keeps persisted job details hidden when ownership cannot be verified', asy
   await expect(detail.getByText('Sample Customer')).toHaveCount(0);
 });
 
+test('does not substitute seed jobs when the persisted field schedule is unavailable', async ({ page }) => {
+  await page.route('**/jobs', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'jobs_unavailable',
+      message: 'The persisted field schedule could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  const assignedJobs = page.locator('#assigned-jobs');
+  await expect(assignedJobs.getByRole('alert')).toContainText(
+    'Persisted field work could not be loaded.',
+  );
+  await expect(assignedJobs.getByText('Sample Customer')).toHaveCount(0);
+  await expect(page.getByText('0 assigned jobs')).toBeVisible();
+});
+
 test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
   await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
     status: 404,

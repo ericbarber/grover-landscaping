@@ -1,4 +1,4 @@
-use grover_landscaping_api::db::JobRepository;
+use grover_landscaping_api::db::{JobRepository, ResourceReadResult};
 use sqlx::Row;
 mod common;
 
@@ -14,7 +14,9 @@ async fn repository_reads_migrated_seed_jobs_from_postgres() {
 
     assert!(repository.is_database_ready());
 
-    let jobs = repository.list_jobs().await;
+    let ResourceReadResult::Loaded(jobs) = repository.list_jobs().await else {
+        panic!("persisted jobs should load");
+    };
 
     assert!(jobs.iter().any(|job| job.id == "job_1001"));
     assert!(jobs.iter().any(|job| job.id == "job_1002"));

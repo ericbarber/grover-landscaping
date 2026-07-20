@@ -50,7 +50,7 @@ use db::{
     JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
     PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
     PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
-    ResourceOwnershipResult, StopProgressWriteResult,
+    ResourceOwnershipResult, ResourceReadResult, StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -968,10 +968,17 @@ async fn list_jobs(
         return Json(Vec::<JobSummary>::new()).into_response();
     }
 
-    let jobs: Vec<JobSummary> = state
-        .jobs
-        .list_jobs()
-        .await
+    let jobs = match state.jobs.list_jobs().await {
+        ResourceReadResult::Loaded(jobs) => jobs,
+        ResourceReadResult::NotFound => Vec::new(),
+        ResourceReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "jobs_unavailable",
+                "The persisted field schedule could not be loaded.",
+            );
+        }
+    };
+    let jobs: Vec<JobSummary> = jobs
         .into_iter()
         .filter(|job| {
             completion_report_job_is_visible_to_membership(
@@ -994,7 +1001,16 @@ async fn get_job(
     {
         return response;
     }
-    Json(state.jobs.get_job(id).await).into_response()
+    match state.jobs.get_job(id).await {
+        ResourceReadResult::Loaded(job) => Json(job).into_response(),
+        ResourceReadResult::NotFound => {
+            resource_not_found_response("job_not_found", "Job was not found.")
+        }
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "job_unavailable",
+            "The persisted job detail could not be loaded.",
+        ),
+    }
 }
 
 fn valid_service_date(value: &str) -> bool {
@@ -3289,7 +3305,10 @@ async fn get_completion_report(
         return response;
     }
 
-    Json(build_and_persist_completion_report(&state, &id).await).into_response()
+    match build_and_persist_completion_report(&state, &id).await {
+        Ok(report) => Json(report).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn list_completion_reports(
@@ -3315,7 +3334,16 @@ async fn list_completion_reports(
         return Json(Vec::<CompletionReportResponse>::new()).into_response();
     }
 
-    let jobs = state.jobs.list_jobs().await;
+    let jobs = match state.jobs.list_jobs().await {
+        ResourceReadResult::Loaded(jobs) => jobs,
+        ResourceReadResult::NotFound => Vec::new(),
+        ResourceReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "completion_report_jobs_unavailable",
+                "The persisted jobs for completion review could not be loaded.",
+            );
+        }
+    };
     let mut reports = Vec::with_capacity(jobs.len());
 
     for job in jobs {
@@ -3325,7 +3353,10 @@ async fn list_completion_reports(
         ) {
             continue;
         }
-        let report = build_and_persist_completion_report(&state, &job.id).await;
+        let report = match build_and_persist_completion_report(&state, &job.id).await {
+            Ok(report) => report,
+            Err(response) => return response,
+        };
         if completion_report_matches_list_query(&report, &query) {
             reports.push(report);
         }
@@ -4125,6 +4156,17 @@ fn persisted_ownership_unavailable_response(error: &'static str) -> Response {
         .into_response()
 }
 
+fn persisted_resource_unavailable_response(error: &'static str, message: &'static str) -> Response {
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(ErrorResponse {
+            error,
+            message: message.to_string(),
+        }),
+    )
+        .into_response()
+}
+
 async fn require_job_organization_access(
     state: &AppState,
     principal: &AuthPrincipal,
@@ -4371,7 +4413,10 @@ async fn deliver_completion_report(
     {
         CompletionReportActionResult::Updated(report) => {
             let delivered_snapshot =
-                build_and_persist_completion_report(&state, &report.job_id).await;
+                match build_and_persist_completion_report(&state, &report.job_id).await {
+                    Ok(report) => report,
+                    Err(response) => return response,
+                };
             let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
             if !state
                 .jobs
@@ -4651,14 +4696,31 @@ async fn get_shared_completion_report(
             .into_response();
     };
 
-    Json(build_and_persist_completion_report(&state, &job_id).await).into_response()
+    match build_and_persist_completion_report(&state, &job_id).await {
+        Ok(report) => Json(report).into_response(),
+        Err(response) => response,
+    }
 }
 
 async fn build_and_persist_completion_report(
     state: &AppState,
     id: &str,
-) -> completion_reports::CompletionReportResponse {
-    let job = state.jobs.get_job(id.to_string()).await;
+) -> Result<completion_reports::CompletionReportResponse, Response> {
+    let job = match state.jobs.get_job(id.to_string()).await {
+        ResourceReadResult::Loaded(job) => job,
+        ResourceReadResult::NotFound => {
+            return Err(resource_not_found_response(
+                "job_not_found",
+                "Job was not found.",
+            ));
+        }
+        ResourceReadResult::Unavailable => {
+            return Err(persisted_resource_unavailable_response(
+                "job_unavailable",
+                "The persisted job detail could not be loaded.",
+            ));
+        }
+    };
     let account = state.accounts.get_account_for_job(id).await;
     let photo_evidence = state.jobs.list_photo_evidence(id).await;
     let add_ons = state.jobs.list_job_add_ons(id).await;
@@ -4683,7 +4745,7 @@ async fn build_and_persist_completion_report(
     let persistence = state.jobs.persist_completion_report(&report).await;
     apply_completion_report_persistence(&mut report, persistence);
 
-    report
+    Ok(report)
 }
 
 async fn get_today_day_plan(
