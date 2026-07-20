@@ -34,6 +34,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Credibility section maps marketing claims to delivered capabilities and explicitly reserves customer quotes, logos, and metrics for verified approvals
 - First-party conversion events measure page views, persona selection, tour use, CTA engagement, form starts, submissions, and failures
 - Analytics uses a random per-tab identifier plus bounded persona, placement, path, and UTM context without third-party cookies or personal form data
+- Analytics session creation tolerates non-secure iPhone URLs, unavailable `randomUUID`, and storage-denied privacy modes without blocking the public page
 - Public analytics API rejects events outside the explicit funnel allowlist and persists production events for later manager reporting
 
 ### Mobile navigation and context
