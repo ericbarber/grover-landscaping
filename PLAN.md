@@ -671,10 +671,11 @@ Current state:
 - Audit-launched crew inspection keeps the readable move scope, source, and destination visible beside crew controls
 - Crew inspection context includes the immutable audit event ID and localized event timestamp
 - Crew inspection copies immutable audit IDs with explicit fallback on mobile origins without clipboard access
+- Crew inspection copies a concise readable move path, timestamp, and immutable audit identity for support handoff
 
 Next implementation work:
 
-- Copy a readable crew-move support summary from audit-launched inspection
+- Share the crew-move support summary through the native phone share sheet with copy fallback
 
 ## Planned
 

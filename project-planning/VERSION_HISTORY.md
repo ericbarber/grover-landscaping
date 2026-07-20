@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added readable crew-move support summary copy.
 - 2026-07-19: Added audit ID copy and mobile fallback to crew inspection.
 - 2026-07-19: Added audit identity and timestamp to crew inspection context.
 - 2026-07-19: Kept audited crew move context visible during crew inspection.

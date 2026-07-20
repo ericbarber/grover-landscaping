@@ -405,6 +405,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(crewAdministration.getByText(
     /Audit event ID copied|Copy is unavailable/,
   )).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Copy move support summary' }).click();
+  await expect(crewAdministration.getByText(
+    /Crew move support summary copied|Summary copy is unavailable/,
+  )).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))

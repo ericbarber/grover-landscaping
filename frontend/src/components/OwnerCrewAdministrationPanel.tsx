@@ -182,6 +182,16 @@ export function OwnerCrewAdministrationPanel({
     }
   }
 
+  async function copyInspectionSummary() {
+    if (!inspectionSummary || !inspectionAuditLabel) return;
+    try {
+      await navigator.clipboard.writeText(`${inspectionSummary}\n${inspectionAuditLabel}`);
+      setMessage('Crew move support summary copied.');
+    } catch {
+      setMessage('Summary copy is unavailable. Select the inspection context text instead.');
+    }
+  }
+
   async function save(nextStatus = selectedCrew?.status) {
     if (
       !selectedCrew
@@ -261,13 +271,22 @@ export function OwnerCrewAdministrationPanel({
             <p className="mt-2 break-all text-sky-800">{inspectionAuditLabel}</p>
           ) : null}
           {inspectionAuditId ? (
-            <button
-              className="mt-2 min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
-              onClick={() => void copyInspectionAuditId()}
-              type="button"
-            >
-              Copy audit event ID
-            </button>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
+                onClick={() => void copyInspectionAuditId()}
+                type="button"
+              >
+                Copy audit event ID
+              </button>
+              <button
+                className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
+                onClick={() => void copyInspectionSummary()}
+                type="button"
+              >
+                Copy move support summary
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}
