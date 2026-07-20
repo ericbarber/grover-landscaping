@@ -1144,13 +1144,6 @@ impl DayPlanRepository {
         TodayDayPlanResult::Found(seed_day_plan(crew_id))
     }
 
-    pub async fn today_summary_for_crew(&self, crew_id: &str) -> Option<DayPlanSummary> {
-        match self.today_for_crew(crew_id).await {
-            TodayDayPlanResult::Found(day_plan) => Some(day_plan),
-            TodayDayPlanResult::NotFound | TodayDayPlanResult::Unavailable => None,
-        }
-    }
-
     pub async fn create_amendment(
         &self,
         day_plan_id: &str,

@@ -5000,19 +5000,28 @@ async fn build_and_persist_completion_report(
     };
     let mut report = build_completion_report(job, account, photo_evidence, add_ons);
     if let Some(crew_id) = report.job.assigned_crew_id.as_deref() {
-        if let Some(day_plan) = state.day_plans.today_summary_for_crew(crew_id).await {
-            if let Some(stop) = day_plan.stops.iter().find(|stop| stop.job_id == id) {
-                completion_reports::attach_completion_report_route_stop(
-                    &mut report,
-                    completion_reports::CompletionReportRouteStopContext {
-                        day_plan_id: day_plan.id,
-                        crew_id: day_plan.crew_id,
-                        service_date: day_plan.service_date,
-                        stop_id: stop.id.clone(),
-                        stop_order: stop.stop_order,
-                        stop_status: stop.stop_status.clone(),
-                    },
-                );
+        match state.day_plans.today_for_crew(crew_id).await {
+            day_plans::TodayDayPlanResult::Found(day_plan) => {
+                if let Some(stop) = day_plan.stops.iter().find(|stop| stop.job_id == id) {
+                    completion_reports::attach_completion_report_route_stop(
+                        &mut report,
+                        completion_reports::CompletionReportRouteStopContext {
+                            day_plan_id: day_plan.id,
+                            crew_id: day_plan.crew_id,
+                            service_date: day_plan.service_date,
+                            stop_id: stop.id.clone(),
+                            stop_order: stop.stop_order,
+                            stop_status: stop.stop_status.clone(),
+                        },
+                    );
+                }
+            }
+            day_plans::TodayDayPlanResult::NotFound => {}
+            day_plans::TodayDayPlanResult::Unavailable => {
+                return Err(persisted_resource_unavailable_response(
+                    "completion_report_route_unavailable",
+                    "The persisted route context required for this completion report could not be loaded.",
+                ));
             }
         }
     }

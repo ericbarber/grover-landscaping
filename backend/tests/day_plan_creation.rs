@@ -45,6 +45,10 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
         PersistedReadResult::Unavailable
     ));
     assert!(matches!(
+        repository.today_for_crew("crew_1001").await,
+        TodayDayPlanResult::Unavailable
+    ));
+    assert!(matches!(
         repository
             .create_crew(
                 "org_demo_landscaping",

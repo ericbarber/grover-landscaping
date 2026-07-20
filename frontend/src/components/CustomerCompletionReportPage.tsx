@@ -46,7 +46,9 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
           setError(
             isApiErrorCode(requestError, 'shared_report_unavailable')
               ? 'Report storage is temporarily unavailable. Retry after service readiness recovers.'
-              : 'This completion report link is invalid or no longer available.',
+              : isApiErrorCode(requestError, 'completion_report_route_unavailable')
+                ? 'Route storage is temporarily unavailable, so this report cannot be safely assembled yet.'
+                : 'This completion report link is invalid or no longer available.',
           );
         }
       });

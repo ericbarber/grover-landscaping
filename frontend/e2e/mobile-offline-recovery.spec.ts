@@ -1,6 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('does not assemble a customer report without authoritative route context', async ({ page }) => {
+  await page.route('**/reports/route-unavailable', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'completion_report_route_unavailable',
+      message: 'The persisted route context required for this completion report could not be loaded.',
+    },
+  }));
+
+  await page.goto('/report-view/route-unavailable');
+  await expect(page.getByRole('heading', { name: 'Unable to open this completion report' })).toBeVisible();
+  await expect(page.getByText(
+    'Route storage is temporarily unavailable, so this report cannot be safely assembled yet.',
+  )).toBeVisible();
+});
+
 test('distinguishes unavailable crew updates from missing crews', async ({ page }) => {
   await page.route('**/organizations/*/crews/*', (route) => route.fulfill({
     status: 503,

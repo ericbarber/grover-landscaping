@@ -838,10 +838,12 @@ Current state:
 - Dispatch crew, branch, and territory collections distinguish unavailable persistence from valid empty setup
 - Manager dispatch hierarchy clears stale collections, warns about persistence outages, and blocks setup writes until authoritative scope data returns
 - Crew creation and updates distinguish unavailable persistence from duplicate or missing crews
+- Completion-report generation fails closed when authoritative assigned-route context is unavailable
+- Customer report links distinguish route-context outages from invalid or expired links
 
 Next implementation work:
 
-- Audit remaining day-plan and dispatch mutations for missing or conflict persistence fallbacks
+- Audit remaining amendment and day-plan mutations for missing or conflict persistence fallbacks
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
 - Harden and validate the next highest-impact persisted workflow
 
