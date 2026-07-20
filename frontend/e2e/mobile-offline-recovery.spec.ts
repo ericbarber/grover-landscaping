@@ -462,6 +462,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByRole('status').filter({
     hasText: `Crew ${originalCrew!.id} remains selected`,
   })).toBeVisible();
+  await expect(teamActivity.getByText('2 matching crew moves loaded.')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')

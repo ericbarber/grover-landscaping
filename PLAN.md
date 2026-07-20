@@ -686,10 +686,11 @@ Current state:
 - Owner activity confirms when a prior review has been restored after focused crew history
 - Owners can dismiss restored-review feedback without changing the restored filters or ordering
 - Focused latest-move entry is announced politely to assistive technology while activity-section focus is preserved
+- Focused latest-move context reports the number of matching crew moves currently loaded
 
 Next implementation work:
 
-- Include the number of matching crew moves in focused-review context
+- Identify when older matching crew moves remain available beyond the loaded focused history
 
 ## Planned
 

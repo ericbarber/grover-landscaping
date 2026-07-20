@@ -763,6 +763,11 @@ export function ManagerTeamActivityPanel({
             <p className="mt-1 break-all">
               Crew {requestedCrewId} remains selected when you inspect the latest move and return.
             </p>
+            <p className="mt-1 font-semibold">
+              {filteredActivity.length} matching crew move{
+                filteredActivity.length === 1 ? '' : 's'
+              } loaded.
+            </p>
           </div>
           <button
             className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
