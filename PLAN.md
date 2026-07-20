@@ -701,10 +701,12 @@ Current state:
 - Refresh clears stale restored-row context and explains when that audit event is no longer loaded
 - Missing restored events provide a one-tap immutable audit-ID search in the current owner review
 - Successful audit-ID recovery confirms the immutable event and restores its row marker and dismissal focus target
+- Failed audit-ID recovery explains owner-access and retry paths while retaining the immutable search action
+- Failed immutable-ID searches can retry the same audit directly after a transient history gap
 
 Next implementation work:
 
-- Explain when audit-ID recovery cannot find the missing event
+- Return from recovered audit-ID search to the full focused crew history
 
 ## Planned
 

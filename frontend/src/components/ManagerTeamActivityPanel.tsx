@@ -378,8 +378,9 @@ export function ManagerTeamActivityPanel({
     && latestFocusedCrewMove.destinationTerritoryId === requestedCrewTerritoryId,
   );
 
-  async function refresh() {
+  async function refresh(recoveryAuditId?: string) {
     if (!organizationId) return;
+    const activeRecoveryAuditId = recoveryAuditId ?? recoveringAuditId;
     setIsLoading(true);
     try {
       const loaded = await fetchTeamAdministrationActivity(organizationId, {
@@ -389,15 +390,15 @@ export function ManagerTeamActivityPanel({
         target: targetQuery.trim() || undefined,
         source: sourceQuery.trim() || undefined,
         destination: destinationQuery.trim() || undefined,
-        auditId: auditIdQuery.trim() || undefined,
+        auditId: recoveryAuditId ?? (auditIdQuery.trim() || undefined),
         limit: 25,
       });
       setActivity(loaded);
       setHasOlder(loaded.length === 25);
       setMessage(null);
-      if (recoveringAuditId) {
-        if (loaded.some((item) => item.id === recoveringAuditId)) {
-          setRestoredAuditId(recoveringAuditId);
+      if (activeRecoveryAuditId) {
+        if (loaded.some((item) => item.id === activeRecoveryAuditId)) {
+          setRestoredAuditId(activeRecoveryAuditId);
           restoredReviewFingerprintRef.current = JSON.stringify({
             actorQuery,
             targetQuery,
@@ -408,8 +409,14 @@ export function ManagerTeamActivityPanel({
             moveScope,
             activitySort,
           });
-          setReviewNotice(`Audit event ${recoveringAuditId} loaded by immutable ID.`);
-          setReviewNoticeAuditId(recoveringAuditId);
+          setReviewNotice(`Audit event ${activeRecoveryAuditId} loaded by immutable ID.`);
+          setReviewNoticeAuditId(activeRecoveryAuditId);
+        } else {
+          setReviewNotice(
+            `Audit event ${activeRecoveryAuditId} could not be loaded. Confirm owner access or retry the immutable-ID search.`,
+          );
+          setReviewNoticeAuditId(null);
+          setUnavailableRestoredAuditId(activeRecoveryAuditId);
         }
         setRecoveringAuditId(null);
       }
@@ -524,10 +531,14 @@ export function ManagerTeamActivityPanel({
 
   function findUnavailableRestoredAudit() {
     if (!unavailableRestoredAuditId) return;
-    setRecoveringAuditId(unavailableRestoredAuditId);
-    setAuditIdQuery(unavailableRestoredAuditId);
+    const auditId = unavailableRestoredAuditId;
+    setRecoveringAuditId(auditId);
+    setAuditIdQuery(auditId);
     setReviewNotice(null);
     setUnavailableRestoredAuditId(null);
+    if (auditIdQuery === auditId) {
+      void refresh(auditId);
+    }
   }
 
   function dismissReviewNotice() {

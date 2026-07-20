@@ -293,6 +293,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   const territoryName = 'Mobile Staffing Overlay';
   let crewMoved = false;
   let omitLatestFromFocusedReview = false;
+  let failAuditRecovery = false;
 
   await page.route('**/service-territories', async (route) => {
     const response = await route.fetch();
@@ -381,7 +382,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
       await route.fulfill({
         json: crewMoved
           ? requestedAuditId === 'audit_e2e_latest_crew_hierarchy_move'
-            ? [focusedCrewMoves[0]]
+            ? failAuditRecovery ? [] : [focusedCrewMoves[0]]
             : isOlderFocusedPage ? [
             focusedCrewMoves[focusedCrewMoves.length - 1],
             {
@@ -542,6 +543,20 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   )).toBeVisible();
   await expect(teamActivity.locator('ol > li').first())
     .toContainText('Restored after inspection');
+  failAuditRecovery = true;
+  await teamActivity.getByRole('button', { name: 'Refresh' }).click();
+  await teamActivity.getByRole('button', { name: 'Find audit event' }).click();
+  await expect(teamActivity.locator('ol > li')).toHaveCount(0);
+  await expect(teamActivity.getByText(
+    'Audit event audit_e2e_latest_crew_hierarchy_move could not be loaded. Confirm owner access or retry the immutable-ID search.',
+  )).toBeVisible();
+  await expect(teamActivity.getByRole('button', { name: 'Find audit event' })).toBeVisible();
+  failAuditRecovery = false;
+  await teamActivity.getByRole('button', { name: 'Find audit event' }).click();
+  await expect(teamActivity.getByText(
+    'Audit event audit_e2e_latest_crew_hierarchy_move loaded by immutable ID.',
+  )).toBeVisible();
+  await expect(teamActivity.locator('ol > li')).toHaveCount(1);
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
