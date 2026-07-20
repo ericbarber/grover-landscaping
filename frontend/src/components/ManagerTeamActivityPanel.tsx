@@ -585,9 +585,19 @@ export function ManagerTeamActivityPanel({
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
       {reviewNotice ? (
-        <p className="mt-3 rounded-lg bg-sky-50 p-3 text-sm font-semibold text-sky-950" role="status">
-          {reviewNotice}
-        </p>
+        <div
+          className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-sky-50 p-3 text-sm font-semibold text-sky-950"
+          role="status"
+        >
+          <p>{reviewNotice}</p>
+          <button
+            className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold"
+            onClick={() => setReviewNotice(null)}
+            type="button"
+          >
+            Dismiss restored-review message
+          </button>
+        </div>
       ) : null}
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
         {[
