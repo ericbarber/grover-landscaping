@@ -38,6 +38,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile customer history renders one selected property's work and reports at a time with a clear return to all properties
 - Customer mobile history separates Properties and Bids into counted views instead of stacking both timelines
 - Customer bid history provides an explicit empty state and resets property drill-down when changing history areas
+- Selected properties preview the two newest completion reports on mobile and disclose the older-report count
+- Customers can expand or collapse older property reports without lengthening every property view
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -892,7 +894,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with compact completion-report history and iPhone interaction validation
+- Continue the mobile navigation phase with compact service-work history and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention

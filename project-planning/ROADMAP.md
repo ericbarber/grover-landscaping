@@ -15,7 +15,7 @@ navigation now separates yard owners, property managers, field crews, yard-care
 company operators, dispatch, billing, and support. Mobile managers now enter a
 compact task-category home and load only one category at a time; the next slices
 now use a second-level task picker so only one manager tool renders at a time.
-The next slices will shorten customer completion-report history content.
+The next slices will shorten customer service-work history content.
 Crew routes now focus on the current and next stop by default while retaining an
 explicit full-route view.
 Mobile job detail now keeps primary actions visible and opens checklist, photo,
@@ -24,6 +24,8 @@ Yard-owner history now begins with compact property selection and renders one
 property timeline at a time on mobile.
 Customer mobile history now separates property/service history from bid history
 instead of stacking both areas on one screen.
+Selected properties preview the two newest reports on mobile and expand older
+completion-report history only when requested.
 
 ## Immediate Continuation Work
 

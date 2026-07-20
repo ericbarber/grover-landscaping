@@ -486,6 +486,7 @@ function CustomerPortalPreviewPanel({
   const [selectedPortalPropertyId, setSelectedPortalPropertyId] = useState<string | null>(null);
   const [activeCustomerHistory, setActiveCustomerHistory] =
     useState<CustomerHistoryView>('properties');
+  const [expandedReportPropertyId, setExpandedReportPropertyId] = useState<string | null>(null);
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
@@ -543,6 +544,7 @@ function CustomerPortalPreviewPanel({
         onChange={(view) => {
           setActiveCustomerHistory(view);
           setSelectedPortalPropertyId(null);
+          setExpandedReportPropertyId(null);
         }}
         propertyCount={visibleProperties.length}
       />
@@ -561,7 +563,10 @@ function CustomerPortalPreviewPanel({
               <button
                 className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left"
                 key={property.id}
-                onClick={() => setSelectedPortalPropertyId(property.id)}
+                onClick={() => {
+                  setSelectedPortalPropertyId(property.id);
+                  setExpandedReportPropertyId(null);
+                }}
                 type="button"
               >
                 <span className="min-w-0">
@@ -581,6 +586,9 @@ function CustomerPortalPreviewPanel({
         {visibleProperties.map((property) => {
           const propertyWork = visibleWorkSummaries.filter((workSummary) => workSummary.propertyId === property.id);
           const propertyReports = completionReportsByProperty[property.id] ?? [];
+          const mobilePropertyReports = expandedReportPropertyId === property.id
+            ? propertyReports
+            : propertyReports.slice(0, 2);
 
           return (
             <article
@@ -589,7 +597,10 @@ function CustomerPortalPreviewPanel({
             >
               <button
                 className="mb-3 min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 lg:hidden"
-                onClick={() => setSelectedPortalPropertyId(null)}
+                onClick={() => {
+                  setSelectedPortalPropertyId(null);
+                  setExpandedReportPropertyId(null);
+                }}
                 type="button"
               >
                 ← All properties
@@ -617,7 +628,7 @@ function CustomerPortalPreviewPanel({
               </div>
               {propertyReports.length > 0 && (
                 <div className="mt-3 space-y-2">
-                  {propertyReports.map((report) => (
+                  {mobilePropertyReports.map((report) => (
                     <a
                       key={report.reportId}
                       className="block rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 hover:border-emerald-300"
@@ -629,6 +640,36 @@ function CustomerPortalPreviewPanel({
                       </span>
                     </a>
                   ))}
+                  {propertyReports.length > 2 ? (
+                    <button
+                      className="min-h-11 w-full rounded-lg border border-emerald-200 bg-white px-3 text-sm font-bold text-emerald-900 lg:hidden"
+                      onClick={() => setExpandedReportPropertyId((current) =>
+                        current === property.id ? null : property.id
+                      )}
+                      type="button"
+                    >
+                      {expandedReportPropertyId === property.id
+                        ? 'Show recent reports'
+                        : `Show ${propertyReports.length - 2} older reports`}
+                    </button>
+                  ) : null}
+                  <div className="hidden space-y-2 lg:block">
+                    {(expandedReportPropertyId === property.id
+                      ? []
+                      : propertyReports.slice(2)
+                    ).map((report) => (
+                      <a
+                        key={report.reportId}
+                        className="block rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900 hover:border-emerald-300"
+                        href={report.shareUrl}
+                      >
+                        <span className="font-semibold">{report.customerName}</span>
+                        <span className="ml-2 text-xs uppercase tracking-wide text-emerald-700">
+                          Delivered {report.deliveredAt}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
               {propertyWork.length > 0 && (
