@@ -6,6 +6,8 @@ pub enum StopProgressWriteResult {
     Replayed,
     NotFound,
     IdempotencyConflict,
+    LocalFallback,
+    Unavailable,
 }
 
 pub async fn update_stop_progress(

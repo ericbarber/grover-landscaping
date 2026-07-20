@@ -719,7 +719,7 @@ impl JobRepository {
         actor_id: &str,
     ) -> StopProgressWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(result) = postgres_stop_progress::update_stop_progress(
+            return match postgres_stop_progress::update_stop_progress(
                 pool,
                 day_plan_id,
                 stop_id,
@@ -729,11 +729,15 @@ impl JobRepository {
             )
             .await
             {
-                return result;
-            }
+                Ok(result) => result,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, stop_id, "persisted stop progress write failed");
+                    StopProgressWriteResult::Unavailable
+                }
+            };
         }
 
-        StopProgressWriteResult::NotFound
+        StopProgressWriteResult::LocalFallback
     }
 
     pub async fn list_photo_evidence(&self, job_id: &str) -> Vec<PhotoEvidence> {

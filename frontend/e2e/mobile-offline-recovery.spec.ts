@@ -250,6 +250,26 @@ test('shows persisted route absence without substituting seeded stops', async ({
   await expect(route.getByText('Source: persisted route status')).toBeVisible();
 });
 
+test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
+  await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
+    status: 404,
+    contentType: 'application/json',
+    json: {
+      error: 'stop_progress_not_found',
+      message: 'The persisted route stop is no longer available.',
+    },
+  }));
+
+  await page.goto('/');
+  const routeAction = page.getByRole('button', { name: /Start stop|Finish stop/ }).first();
+  await expect(routeAction).toBeEnabled();
+  await routeAction.click();
+
+  await expect(page.getByText('1 offline change waiting to sync')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/0 pending · 0 retry failed · 1 conflicted/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Manager review needed' })).toBeDisabled();
+});
+
 test('keeps the manager route unchanged when a persisted stop mutation is rejected', async ({ page }) => {
   await page.route('**/day-plans', async (route) => {
     const request = route.request();

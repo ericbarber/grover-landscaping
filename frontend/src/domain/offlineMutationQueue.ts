@@ -465,17 +465,17 @@ export async function listOfflineMutations(
   }
 }
 
-export function withOfflineMutationFailure(
-  mutation: OfflineMutation,
+export function withOfflineMutationFailure<T extends OfflineMutation>(
+  mutation: T,
   lastError: string,
   syncState: Extract<OfflineMutation['syncState'], 'failed' | 'conflict'> = 'failed',
-): OfflineMutation {
+): T {
   return {
     ...mutation,
     attemptCount: mutation.attemptCount + 1,
     syncState,
     lastError,
-  };
+  } as T;
 }
 
 export async function markOfflineMutationFailed(

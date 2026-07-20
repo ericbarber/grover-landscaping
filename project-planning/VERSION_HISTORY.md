@@ -243,6 +243,9 @@ Current continuation work:
 - PostgreSQL-backed draft creation and publication now return explicit failure
   responses; rejected creates no longer manufacture local drafts, failed publishes
   retain their synced draft, and new route stops receive publish-ready estimates.
+- PostgreSQL-backed stop-progress writes now distinguish missing and unavailable
+  persisted targets from no-database demo fallback, and first-attempt conflicts
+  enter the durable manager-review queue immediately.
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
 - First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.

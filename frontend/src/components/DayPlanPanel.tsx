@@ -18,6 +18,7 @@ import {
   removeOfflineMutation,
   requestPersistentOfflineStorage,
   summarizeOfflineMutations,
+  withOfflineMutationFailure,
   type OfflineStoragePersistence,
   type DayPlanAmendmentOfflineMutation,
   type StopProgressOfflineMutation,
@@ -222,7 +223,11 @@ export function DayPlanPanel({
       });
   }
 
-  async function queueStopState(stopId: string, status: StopProgressStatus) {
+  async function queueStopState(
+    stopId: string,
+    status: StopProgressStatus,
+    failure?: unknown,
+  ) {
     if (!dayPlan.organizationId || !actorId) {
       setSyncStatus('local');
       return;
@@ -235,7 +240,21 @@ export function DayPlanPanel({
         stopId,
         status,
       });
-      setOfflineMutations((current) => [...current, mutation].sort(
+      const queuedMutation = failure && isOfflineMutationConflict(failure)
+        ? withOfflineMutationFailure(
+            mutation,
+            failure instanceof Error ? failure.message : 'Persisted route progress conflict',
+            'conflict',
+          )
+        : mutation;
+      if (queuedMutation.syncState === 'conflict') {
+        await markOfflineMutationFailed(
+          mutation,
+          queuedMutation.lastError ?? 'Persisted route progress conflict',
+          'conflict',
+        );
+      }
+      setOfflineMutations((current) => [...current, queuedMutation].sort(
         (left, right) => left.createdAt.localeCompare(right.createdAt),
       ));
       setQueueStorageUnavailable(false);
@@ -264,9 +283,9 @@ export function DayPlanPanel({
           void queueStopState(stopId, next[stopId]);
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         saveStopStates(dayPlan.id, next);
-        void queueStopState(stopId, next[stopId]);
+        void queueStopState(stopId, next[stopId], error);
       });
   }
 

@@ -77,6 +77,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend stop-progress validation
 - Backend stop-progress persistence helper for PostgreSQL
 - Stop-progress route attempts database persistence and reports whether it persisted
+- PostgreSQL-backed stop-progress writes return explicit not-found or unavailable responses instead of local-success payloads
+- No-database demo mode retains local stop-progress responses
+- First-attempt persisted progress conflicts enter the durable manager-review queue immediately
 - Day-plan API response includes stop status
 - Backend day-plan read helper for PostgreSQL-backed crew routes
 - PostgreSQL-backed day-plan reads return explicit missing or unavailable results instead of substituting seeded routes
@@ -323,9 +326,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed crew stop-progress writes from returning local-success payloads when persistence rejects them
-- Preserve offline queue behavior for genuine connectivity interruptions while surfacing server conflicts explicitly
-- Cover persisted progress conflicts across repository, API, replay, and phone behavior
+- Stop PostgreSQL-backed route-amendment creation and review from returning local-success payloads when persistence rejects them
+- Preserve offline amendment queuing for genuine connectivity interruptions while surfacing server conflicts explicitly
+- Cover persisted amendment conflicts across repository, API, replay, and phone behavior
 
 ### Manager scheduling workflow
 
@@ -736,9 +739,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed crew stop-progress writes from returning local-success payloads when persistence rejects them
-- Preserve offline queue behavior for genuine connectivity interruptions while surfacing server conflicts explicitly
-- Render persisted progress conflicts honestly and cover repository, API, replay, and phone behavior
+- Stop PostgreSQL-backed route-amendment creation and review from returning local-success payloads when persistence rejects them
+- Preserve offline amendment queuing for genuine connectivity interruptions while surfacing server conflicts explicitly
+- Render persisted amendment conflicts honestly and cover repository, API, replay, and phone behavior
 
 ## Planned
 

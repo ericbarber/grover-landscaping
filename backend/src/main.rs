@@ -5274,7 +5274,19 @@ async fn update_stop_progress(
             }),
         )
             .into_response(),
-        StopProgressWriteResult::NotFound => Json(local_stop_progress_response(
+        StopProgressWriteResult::NotFound => resource_not_found_response(
+            "stop_progress_not_found",
+            "The persisted route stop is no longer available.",
+        ),
+        StopProgressWriteResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "stop_progress_unavailable",
+                message: "The route progress change could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+        StopProgressWriteResult::LocalFallback => Json(local_stop_progress_response(
             &day_plan_id,
             &stop_id,
             &request.status,

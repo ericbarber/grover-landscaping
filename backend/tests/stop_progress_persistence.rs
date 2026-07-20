@@ -69,3 +69,25 @@ async fn repository_deduplicates_offline_stop_progress_mutations() {
         StopProgressWriteResult::IdempotencyConflict
     );
 }
+
+#[tokio::test]
+async fn repository_reports_missing_persisted_stop_progress_target() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let repository = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+
+    let result = repository
+        .update_stop_progress(
+            "day_plan_missing",
+            "stop_missing",
+            "in_progress",
+            None,
+            "integration_user",
+        )
+        .await;
+
+    assert_eq!(result, StopProgressWriteResult::NotFound);
+}
