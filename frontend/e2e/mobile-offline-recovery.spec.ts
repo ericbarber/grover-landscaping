@@ -648,6 +648,8 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(undoneReview.getByText(
     'Restored 2 saved owner activity review settings for this organization.',
   )).toBeVisible();
+  await expect(undoneReview.getByRole('button', { name: 'Undo saved review clear' }))
+    .toBeHidden();
   await undoneReview.getByRole('button', { name: 'Clear saved review settings' }).click();
   await expect(undoneReview.getByLabel('Find move source')).toHaveValue('');
   await expect(undoneReview.getByLabel('Crew move scope')).toHaveValue('all');

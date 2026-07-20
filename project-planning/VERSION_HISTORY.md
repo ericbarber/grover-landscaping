@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Scoped saved-review undo controls to the active session.
 - 2026-07-19: Persisted undone saved activity reviews across reload.
 - 2026-07-19: Added session undo for cleared saved activity reviews.
 - 2026-07-19: Cleared saved activity reviews directly from restoration feedback.
