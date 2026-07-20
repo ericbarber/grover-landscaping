@@ -925,6 +925,8 @@ export function App() {
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
   const [crewAdministrationSelection, setCrewAdministrationSelection] = useState<string>();
+  const [crewAdministrationBranch, setCrewAdministrationBranch] = useState<string>();
+  const [crewAdministrationTerritory, setCrewAdministrationTerritory] = useState<string>();
   const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
@@ -2652,8 +2654,10 @@ export function App() {
             </summary>
             <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
+            crewBranchRequest={crewAdministrationBranch}
             crewSelectionRequest={crewAdministrationSelection}
             crewSelectionSignal={crewAdministrationSelectionSignal}
+            crewTerritoryRequest={crewAdministrationTerritory}
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
@@ -2831,8 +2835,10 @@ export function App() {
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
-                onOpenCrewAdministration={(crewId) => {
-                  if (crewId) setCrewAdministrationSelection(crewId);
+                onOpenCrewAdministration={(request) => {
+                  setCrewAdministrationSelection(request?.crewId);
+                  setCrewAdministrationBranch(request?.branchId);
+                  setCrewAdministrationTerritory(request?.territoryId);
                   setCrewAdministrationSelectionSignal((current) => current + 1);
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });

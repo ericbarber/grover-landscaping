@@ -15,7 +15,11 @@ import {
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
   onChanged: () => void;
-  onOpenCrewAdministration?: (crewId?: string) => void;
+  onOpenCrewAdministration?: (request?: {
+    crewId?: string;
+    branchId?: string;
+    territoryId?: string;
+  }) => void;
   refreshSignal?: number;
 };
 
@@ -543,7 +547,7 @@ export function ManagerDispatchHierarchyPanel({
                     <button
                       className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-left text-xs"
                       key={crew.id}
-                      onClick={() => onOpenCrewAdministration?.(crew.id)}
+                      onClick={() => onOpenCrewAdministration?.({ crewId: crew.id })}
                       type="button"
                     >
                       <span className="block font-bold text-slate-900">{crew.name}</span>
@@ -632,6 +636,20 @@ export function ManagerDispatchHierarchyPanel({
                       ? `Confirm ${nextStatus}`
                       : nextStatus === 'active' ? 'Reactivate' : 'Deactivate'}
                   </button>
+                  {territory.status === 'active'
+                    && (crewAssignments.territoryCounts[territory.id]?.active ?? 0) === 0
+                    && onOpenCrewAdministration ? (
+                      <button
+                        className="min-h-11 rounded-lg bg-amber-100 px-3 text-xs font-bold text-amber-950"
+                        onClick={() => onOpenCrewAdministration({
+                          branchId: territory.branchId,
+                          territoryId: territory.id,
+                        })}
+                        type="button"
+                      >
+                        Staff territory
+                      </button>
+                    ) : null}
                 </div>
               );
             })}

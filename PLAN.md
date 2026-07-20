@@ -646,10 +646,11 @@ Current state:
 - Queued day-plan amendments replay oldest-first with deterministic server IDs, PostgreSQL deduplication, automatic recovery, manual retry, and conflict blocking
 - Crew amendment queue review exposes safe route-request details and two-step reviewed-conflict recovery
 - The Tailscale mobile smoke test proves both stop-progress and unplanned-stop amendment queueing and confirmed recovery
+- Active unstaffed territories can open crew administration with their branch and territory already prepared for review
 
 Next implementation work:
 
-- Carry the selected unstaffed branch or territory into crew administration
+- Make the prepared hierarchy destination explicit in crew administration and allow resetting it before save
 
 ## Planned
 

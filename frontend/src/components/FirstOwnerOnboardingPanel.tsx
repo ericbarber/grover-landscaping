@@ -18,6 +18,8 @@ type Props = {
   refreshSignal?: number;
   hierarchyRefreshSignal?: number;
   crewSelectionRequest?: string;
+  crewBranchRequest?: string;
+  crewTerritoryRequest?: string;
   crewSelectionSignal?: number;
   onCrewCreated?: (crew: CrewRecord) => void;
   onCrewChanged?: (crew: CrewRecord) => void;
@@ -74,6 +76,8 @@ export function FirstOwnerOnboardingPanel({
   refreshSignal = 0,
   hierarchyRefreshSignal = 0,
   crewSelectionRequest,
+  crewBranchRequest,
+  crewTerritoryRequest,
   crewSelectionSignal = 0,
   onCrewCreated,
   onCrewChanged,
@@ -511,7 +515,9 @@ export function FirstOwnerOnboardingPanel({
             <OwnerCrewAdministrationPanel
               organizationId={membership.organizationId}
               onCrewChanged={onCrewChanged}
+              requestedBranchId={crewBranchRequest}
               requestedCrewId={crewSelectionRequest}
+              requestedTerritoryId={crewTerritoryRequest}
               refreshSignal={refreshSignal + hierarchyRefreshSignal}
               selectionSignal={crewSelectionSignal}
             />

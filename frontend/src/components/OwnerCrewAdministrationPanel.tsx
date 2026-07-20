@@ -16,6 +16,8 @@ type Props = {
   refreshSignal?: number;
   onCrewChanged?: (crew: CrewRecord) => void;
   requestedCrewId?: string;
+  requestedBranchId?: string;
+  requestedTerritoryId?: string;
   selectionSignal?: number;
 };
 
@@ -29,6 +31,8 @@ export function OwnerCrewAdministrationPanel({
   refreshSignal = 0,
   onCrewChanged,
   requestedCrewId,
+  requestedBranchId,
+  requestedTerritoryId,
   selectionSignal = 0,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -101,6 +105,29 @@ export function OwnerCrewAdministrationPanel({
     selectedCrew?.leadMembershipId,
     selectedCrew?.branchId,
     selectedCrew?.territoryId,
+  ]);
+
+  useEffect(() => {
+    if (
+      selectionSignal > 0
+      && requestedBranchId
+      && requestedTerritoryId
+      && branches.some((branch) => branch.id === requestedBranchId)
+      && territories.some((territory) => (
+        territory.id === requestedTerritoryId && territory.branchId === requestedBranchId
+      ))
+    ) {
+      setBranchId(requestedBranchId);
+      setTerritoryId(requestedTerritoryId);
+      setMessage('Destination hierarchy prepared. Review the selected crew before saving.');
+    }
+  }, [
+    selectionSignal,
+    selectedCrewId,
+    requestedBranchId,
+    requestedTerritoryId,
+    branches,
+    territories,
   ]);
 
   const branchTerritories = territories.filter((territory) => territory.branchId === branchId);
