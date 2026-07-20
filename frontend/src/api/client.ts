@@ -494,6 +494,8 @@ interface ApiTeamAdministrationActivity {
   source_territory_label?: string | null;
   destination_branch_label?: string | null;
   destination_territory_label?: string | null;
+  destination_branch_id?: string | null;
+  destination_territory_id?: string | null;
   cross_branch_move?: boolean;
   occurred_at: string;
 }
@@ -510,6 +512,8 @@ export interface TeamAdministrationActivity {
   sourceTerritoryLabel?: string;
   destinationBranchLabel?: string;
   destinationTerritoryLabel?: string;
+  destinationBranchId?: string;
+  destinationTerritoryId?: string;
   crossBranchMove?: boolean;
   occurredAt: string;
 }
@@ -1794,6 +1798,8 @@ export function toTeamAdministrationActivity(
     sourceTerritoryLabel: item.source_territory_label ?? undefined,
     destinationBranchLabel: item.destination_branch_label ?? undefined,
     destinationTerritoryLabel: item.destination_territory_label ?? undefined,
+    destinationBranchId: item.destination_branch_id ?? undefined,
+    destinationTerritoryId: item.destination_territory_id ?? undefined,
     crossBranchMove: item.cross_branch_move ?? false,
     occurredAt: item.occurred_at,
   };

@@ -352,7 +352,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
           source_branch_label: 'Main Branch',
           source_territory_label: 'Primary Territory',
           destination_branch_label: 'Main Branch',
-          destination_territory_label: territoryName,
+          destination_territory_label: 'Primary Territory',
+          destination_branch_id: branch!.id,
+          destination_territory_id: originalCrew!.territory_id,
           cross_branch_move: false,
           occurred_at: '2026-07-20T03:00:00Z',
         }] : [],
@@ -398,7 +400,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(crewAdministration).toBeFocused();
   await expect(crewAdministration.getByRole('combobox').first()).toHaveValue(originalCrew!.id);
   await expect(crewAdministration.getByText(
-    `Within-branch audited move: Main Branch · Primary Territory → Main Branch · ${territoryName}`,
+    'Within-branch audited move: Main Branch · Primary Territory → Main Branch · Primary Territory',
+  )).toBeVisible();
+  await expect(crewAdministration.getByText(
+    'Current crew assignment differs. This crew moved again after the audited event.',
   )).toBeVisible();
   await expect(crewAdministration.getByText(/Audit audit_e2e_crew_hierarchy_move/)).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Copy audit event ID' }).click();

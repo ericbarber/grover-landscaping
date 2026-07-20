@@ -385,6 +385,9 @@ async fn repository_bootstraps_first_owner_once() {
                 None,
                 None,
                 None,
+                None,
+                None,
+                None,
                 1,
             )
             .await
@@ -399,6 +402,9 @@ async fn repository_bootstraps_first_owner_once() {
             None,
             None,
             None,
+            None,
+            None,
+            None,
             25,
         )
         .await
@@ -408,7 +414,10 @@ async fn repository_bootstraps_first_owner_once() {
         .list_team_administration_activity_page(
             &created.organization_id,
             None,
+            None,
             Some("jordan"),
+            None,
+            None,
             None,
             None,
             None,
@@ -422,7 +431,10 @@ async fn repository_bootstraps_first_owner_once() {
             &created.organization_id,
             None,
             None,
+            None,
             Some("jordan"),
+            None,
+            None,
             None,
             None,
             25,
@@ -433,6 +445,9 @@ async fn repository_bootstraps_first_owner_once() {
     assert!(organizations
         .list_team_administration_activity_page(
             &created.organization_id,
+            None,
+            None,
+            None,
             None,
             None,
             None,

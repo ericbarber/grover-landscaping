@@ -190,6 +190,8 @@ pub struct TeamAdministrationActivity {
     pub source_territory_label: Option<String>,
     pub destination_branch_label: Option<String>,
     pub destination_territory_label: Option<String>,
+    pub destination_branch_id: Option<String>,
+    pub destination_territory_id: Option<String>,
     pub cross_branch_move: bool,
     pub occurred_at: String,
 }
@@ -1114,6 +1116,8 @@ async fn list_team_administration_activity(
             old_territory.name AS source_territory_label,
             new_branch.name AS destination_branch_label,
             new_territory.name AS destination_territory_label,
+            NULLIF(audit.metadata->>'new_branch_id', '') AS destination_branch_id,
+            NULLIF(audit.metadata->>'new_territory_id', '') AS destination_territory_id,
             COALESCE(
                 audit.event_kind = 'crew_hierarchy_updated'
                 AND NULLIF(audit.metadata->>'old_branch_id', '')
@@ -1263,6 +1267,8 @@ async fn list_team_administration_activity(
             source_territory_label: row.get("source_territory_label"),
             destination_branch_label: row.get("destination_branch_label"),
             destination_territory_label: row.get("destination_territory_label"),
+            destination_branch_id: row.get("destination_branch_id"),
+            destination_territory_id: row.get("destination_territory_id"),
             cross_branch_move: row.get("cross_branch_move"),
             occurred_at: row.get("occurred_at"),
         })

@@ -24,6 +24,8 @@ type Props = {
   inspectionSummary?: string;
   inspectionAuditLabel?: string;
   inspectionAuditId?: string;
+  inspectedDestinationBranchId?: string;
+  inspectedDestinationTerritoryId?: string;
   onReturnFromInspection?: () => void;
 };
 
@@ -45,6 +47,8 @@ export function OwnerCrewAdministrationPanel({
   inspectionSummary,
   inspectionAuditLabel,
   inspectionAuditId,
+  inspectedDestinationBranchId,
+  inspectedDestinationTerritoryId,
   onReturnFromInspection,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -63,6 +67,13 @@ export function OwnerCrewAdministrationPanel({
   const [moveConfirmation, setMoveConfirmation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const selectedCrew = crews.find((crew) => crew.id === selectedCrewId);
+  const inspectionMatchesCurrentAssignment = Boolean(
+    selectedCrew
+    && inspectedDestinationBranchId
+    && inspectedDestinationTerritoryId
+    && selectedCrew.branchId === inspectedDestinationBranchId
+    && selectedCrew.territoryId === inspectedDestinationTerritoryId,
+  );
 
   async function refresh() {
     setIsLoading(true);
@@ -306,6 +317,17 @@ export function OwnerCrewAdministrationPanel({
           <p className="font-medium">{inspectionSummary}</p>
           {inspectionAuditLabel ? (
             <p className="mt-2 break-all text-sky-800">{inspectionAuditLabel}</p>
+          ) : null}
+          {inspectedDestinationBranchId && inspectedDestinationTerritoryId ? (
+            <p className={`mt-2 rounded-lg p-2 font-bold ${
+              inspectionMatchesCurrentAssignment
+                ? 'bg-emerald-100 text-emerald-950'
+                : 'bg-amber-100 text-amber-950'
+            }`}>
+              {inspectionMatchesCurrentAssignment
+                ? 'Current crew assignment matches this audited destination.'
+                : 'Current crew assignment differs. This crew moved again after the audited event.'}
+            </p>
           ) : null}
           {inspectionAuditId ? (
             <div className="mt-2 flex flex-wrap gap-2">

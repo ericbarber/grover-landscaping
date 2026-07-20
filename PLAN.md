@@ -674,10 +674,11 @@ Current state:
 - Crew inspection copies a concise readable move path, timestamp, and immutable audit identity for support handoff
 - Crew inspection shares the support summary through the native phone share sheet and falls back to copy when sharing is unavailable
 - Crew inspection downloads the move support summary as an audit-ID-named text file when share and clipboard capabilities are restricted
+- Crew inspection compares the audited destination IDs with the crew's current assignment and flags crews that moved again after the selected event
 
 Next implementation work:
 
-- Flag when an inspected crew has moved again since the audited hierarchy event
+- Show the crew's current hierarchy beside the audited destination when a subsequent move is detected
 
 ## Planned
 

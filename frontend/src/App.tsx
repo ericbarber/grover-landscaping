@@ -936,6 +936,14 @@ export function App() {
     useState<string>();
   const [crewAdministrationInspectionAuditId, setCrewAdministrationInspectionAuditId] =
     useState<string>();
+  const [
+    crewAdministrationInspectedDestinationBranchId,
+    setCrewAdministrationInspectedDestinationBranchId,
+  ] = useState<string>();
+  const [
+    crewAdministrationInspectedDestinationTerritoryId,
+    setCrewAdministrationInspectedDestinationTerritoryId,
+  ] = useState<string>();
   const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
@@ -2675,6 +2683,12 @@ export function App() {
             crewInspectionSummary={crewAdministrationInspectionSummary}
             crewInspectionAuditLabel={crewAdministrationInspectionAuditLabel}
             crewInspectionAuditId={crewAdministrationInspectionAuditId}
+            crewInspectedDestinationBranchId={
+              crewAdministrationInspectedDestinationBranchId
+            }
+            crewInspectedDestinationTerritoryId={
+              crewAdministrationInspectedDestinationTerritoryId
+            }
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
@@ -2697,6 +2711,8 @@ export function App() {
               setCrewAdministrationInspectionSummary(undefined);
               setCrewAdministrationInspectionAuditLabel(undefined);
               setCrewAdministrationInspectionAuditId(undefined);
+              setCrewAdministrationInspectedDestinationBranchId(undefined);
+              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
               const target = document.getElementById('team-activity-review');
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
@@ -2811,6 +2827,12 @@ export function App() {
                   `Audit ${activity.id} · ${new Date(activity.occurredAt).toLocaleString()}`,
                 );
                 setCrewAdministrationInspectionAuditId(activity.id);
+                setCrewAdministrationInspectedDestinationBranchId(
+                  activity.destinationBranchId,
+                );
+                setCrewAdministrationInspectedDestinationTerritoryId(
+                  activity.destinationTerritoryId,
+                );
                 setCrewAdministrationSelectionSignal((current) => current + 1);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2898,6 +2920,8 @@ export function App() {
                   setCrewAdministrationInspectionSummary(undefined);
                   setCrewAdministrationInspectionAuditLabel(undefined);
                   setCrewAdministrationInspectionAuditId(undefined);
+                  setCrewAdministrationInspectedDestinationBranchId(undefined);
+                  setCrewAdministrationInspectedDestinationTerritoryId(undefined);
                   setCrewAdministrationSelection(request?.crewId);
                   setCrewAdministrationBranch(request?.branchId);
                   setCrewAdministrationTerritory(request?.territoryId);

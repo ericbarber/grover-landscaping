@@ -228,6 +228,8 @@ describe('core API client mapping', () => {
       source_territory_label: 'Desert Ridge',
       destination_branch_label: 'South Branch',
       destination_territory_label: 'Tempe',
+      destination_branch_id: 'branch_south',
+      destination_territory_id: 'territory_tempe',
       cross_branch_move: true,
       occurred_at: '2026-07-18T12:00:00Z',
     })).toEqual({
@@ -242,6 +244,8 @@ describe('core API client mapping', () => {
       sourceTerritoryLabel: 'Desert Ridge',
       destinationBranchLabel: 'South Branch',
       destinationTerritoryLabel: 'Tempe',
+      destinationBranchId: 'branch_south',
+      destinationTerritoryId: 'territory_tempe',
       crossBranchMove: true,
       occurredAt: '2026-07-18T12:00:00Z',
     });
