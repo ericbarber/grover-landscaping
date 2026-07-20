@@ -727,7 +727,9 @@ Current state:
 
 Next implementation work:
 
-- Review the completed customer-account administration flow and select the next pilot-readiness persistence slice
+- Stop PostgreSQL-backed crew route reads from substituting seeded day plans on missing or failed persistence
+- Return explicit not-found and unavailable route responses while keeping no-database demo seeding
+- Render persisted route absence honestly on mobile and cover repository, API, and phone behavior
 
 ## Planned
 
