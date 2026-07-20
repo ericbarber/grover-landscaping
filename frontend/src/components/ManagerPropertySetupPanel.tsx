@@ -47,6 +47,7 @@ export function ManagerPropertySetupPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [portfolioSetupAvailable, setPortfolioSetupAvailable] = useState(true);
   const [crewSetupAvailable, setCrewSetupAvailable] = useState(true);
+  const [activationReadinessAvailable, setActivationReadinessAvailable] = useState(true);
   const [message, setMessage] = useState('Choose a property to finish service setup.');
   const [pendingLifecycleStatus, setPendingLifecycleStatus] = useState<'onboarding' | 'active' | 'archived' | null>(null);
   const [identityName, setIdentityName] = useState('');
@@ -110,8 +111,10 @@ export function ManagerPropertySetupPanel({
         if (!active) return;
         const crewAvailable = crewResult.status === 'fulfilled';
         const portfolioAvailable = portfolioResult.status === 'fulfilled';
+        const readinessAvailable = readinessResult.status === 'fulfilled';
         setCrewSetupAvailable(crewAvailable);
         setPortfolioSetupAvailable(portfolioAvailable);
+        setActivationReadinessAvailable(readinessAvailable);
         if (crewAvailable) {
           setCrews(crewResult.value[0]);
           setAssignments(Object.fromEntries(crewResult.value[1]));
@@ -338,6 +341,11 @@ export function ManagerPropertySetupPanel({
         </select>
       </label>
       <p className="mt-2 text-xs text-slate-500" role="status">{isLoading ? 'Working…' : message}</p>
+      {!activationReadinessAvailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted property activation readiness could not be loaded. Activation controls remain blocked until API readiness recovers.
+        </p>
+      ) : null}
 
       {selectedProperty ? (
         <>

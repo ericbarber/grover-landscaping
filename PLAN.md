@@ -350,12 +350,14 @@ Delivered:
 - Manager onboarding clears stale account collections and distinguishes unavailable lists from valid empty lists
 - Customer-property collections return explicit unavailable responses instead of empty persisted lists
 - Manager onboarding warns when persisted property counts and readiness inputs are incomplete
+- Account onboarding progress and property activation readiness distinguish not-found from unavailable persistence
+- Manager setup warns when persisted progress or readiness cannot be trusted
 
 Next implementation work:
 
-- Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
-- Add repository and phone-flow coverage for onboarding and readiness availability states
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
+- Make customer-account update and creation persistence failures explicit instead of returning ambiguous missing results
+- Add API and phone-flow coverage for persisted account mutation availability
 
 ### Manager scheduling workflow
 
@@ -766,12 +768,13 @@ Current state:
 - Active and archived customer-account lists distinguish persisted-storage failures from valid empty collections
 - Manager account onboarding hides stale collection data and surfaces active and archived availability warnings
 - Customer-property lists distinguish unavailable persistence from a valid account with no properties
+- Onboarding progress and activation readiness return explicit unavailable persistence states
 
 Next implementation work:
 
-- Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
-- Add repository and phone-flow coverage for onboarding and readiness availability states
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
+- Make customer-account update and creation persistence failures explicit instead of returning ambiguous missing results
+- Add API and phone-flow coverage for persisted account mutation availability
 
 ## Planned
 

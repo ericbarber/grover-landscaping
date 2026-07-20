@@ -34,6 +34,13 @@ pub enum CustomerPropertyListResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerContextReadResult<T> {
+    Loaded(T),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateCustomerAccountRequest {
     pub organization_id: String,
@@ -399,28 +406,46 @@ impl AccountRepository {
         account_id: &str,
         property_id: &str,
         organization_ids: &[String],
-    ) -> Option<CustomerPropertyActivationReadiness> {
+    ) -> CustomerContextReadResult<CustomerPropertyActivationReadiness> {
         let Some(pool) = &self.pool else {
-            return local_property_activation_readiness(account_id, property_id, organization_ids);
+            return match local_property_activation_readiness(
+                account_id,
+                property_id,
+                organization_ids,
+            ) {
+                Some(readiness) => CustomerContextReadResult::Loaded(readiness),
+                None => CustomerContextReadResult::NotFound,
+            };
         };
-        property_activation_readiness(pool, account_id, property_id, organization_ids)
-            .await
-            .ok()
-            .flatten()
+        match property_activation_readiness(pool, account_id, property_id, organization_ids).await {
+            Ok(Some(readiness)) => CustomerContextReadResult::Loaded(readiness),
+            Ok(None) => CustomerContextReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, account_id, property_id, "persisted property readiness failed");
+                CustomerContextReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn account_onboarding_progress(
         &self,
         account_id: &str,
         organization_ids: &[String],
-    ) -> Option<CustomerAccountOnboardingProgress> {
+    ) -> CustomerContextReadResult<CustomerAccountOnboardingProgress> {
         let Some(pool) = &self.pool else {
-            return local_account_onboarding_progress(account_id, organization_ids);
+            return match local_account_onboarding_progress(account_id, organization_ids) {
+                Some(progress) => CustomerContextReadResult::Loaded(progress),
+                None => CustomerContextReadResult::NotFound,
+            };
         };
-        account_onboarding_progress(pool, account_id, organization_ids)
-            .await
-            .ok()
-            .flatten()
+        match account_onboarding_progress(pool, account_id, organization_ids).await {
+            Ok(Some(progress)) => CustomerContextReadResult::Loaded(progress),
+            Ok(None) => CustomerContextReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, account_id, "persisted account onboarding progress failed");
+                CustomerContextReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummaryResult {

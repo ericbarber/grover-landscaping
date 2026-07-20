@@ -1,14 +1,23 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-        CustomerAccountArchiveError, CustomerAccountListResult, CustomerPropertyListResult,
-        CustomerPropertyMutationError, CustomerPropertyStatusError, UpdateCustomerAccountRequest,
-        UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
+        CustomerAccountArchiveError, CustomerAccountListResult, CustomerContextReadResult,
+        CustomerPropertyListResult, CustomerPropertyMutationError, CustomerPropertyStatusError,
+        UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+        UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
     property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
 };
 mod common;
+
+fn loaded_context<T>(result: CustomerContextReadResult<T>, message: &str) -> T {
+    match result {
+        CustomerContextReadResult::Loaded(value) => value,
+        CustomerContextReadResult::NotFound => panic!("{message}: not found"),
+        CustomerContextReadResult::Unavailable => panic!("{message}: unavailable"),
+    }
+}
 
 #[tokio::test]
 async fn customer_account_archival_is_tenant_scoped_and_audited() {
@@ -337,21 +346,25 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             .await,
         Err(CustomerPropertyStatusError::NotReady)
     );
-    let initial_readiness = accounts
-        .property_activation_readiness(
-            &created.account_id,
-            &property.property_id,
-            &["org_demo_landscaping".to_string()],
-        )
-        .await
-        .expect("tenant member should read activation readiness");
+    let initial_readiness = loaded_context(
+        accounts
+            .property_activation_readiness(
+                &created.account_id,
+                &property.property_id,
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        "tenant member should read activation readiness",
+    );
     assert!(!initial_readiness.profile_ready);
     assert!(!initial_readiness.crew_ready);
     assert!(!initial_readiness.ready);
-    let initial_progress = accounts
-        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
-        .await
-        .expect("tenant member should read account onboarding progress");
+    let initial_progress = loaded_context(
+        accounts
+            .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+            .await,
+        "tenant member should read account onboarding progress",
+    );
     assert!(initial_progress.customer_details_ready);
     assert_eq!(initial_progress.property_count, 1);
     assert_eq!(initial_progress.service_ready_property_count, 0);
@@ -392,21 +405,25 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("active property should accept a crew assignment");
     assert!(assignment.active);
-    let ready = accounts
-        .property_activation_readiness(
-            &created.account_id,
-            &property.property_id,
-            &["org_demo_landscaping".to_string()],
-        )
-        .await
-        .expect("tenant member should read completed activation readiness");
+    let ready = loaded_context(
+        accounts
+            .property_activation_readiness(
+                &created.account_id,
+                &property.property_id,
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        "tenant member should read completed activation readiness",
+    );
     assert!(ready.profile_ready);
     assert!(ready.crew_ready);
     assert!(ready.ready);
-    let service_ready_progress = accounts
-        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
-        .await
-        .expect("tenant member should read service-ready account progress");
+    let service_ready_progress = loaded_context(
+        accounts
+            .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+            .await,
+        "tenant member should read service-ready account progress",
+    );
     assert_eq!(service_ready_progress.service_ready_property_count, 1);
     assert_eq!(service_ready_progress.active_property_count, 0);
     assert_eq!(
@@ -428,10 +445,12 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("ready onboarding property should activate");
     assert_eq!(activated.status, "active");
-    let complete_progress = accounts
-        .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
-        .await
-        .expect("tenant member should read completed account progress");
+    let complete_progress = loaded_context(
+        accounts
+            .account_onboarding_progress(&created.account_id, &["org_demo_landscaping".to_string()])
+            .await,
+        "tenant member should read completed account progress",
+    );
     assert_eq!(complete_progress.active_property_count, 1);
     assert!(complete_progress.properties_needing_attention.is_empty());
     assert!(complete_progress.complete);

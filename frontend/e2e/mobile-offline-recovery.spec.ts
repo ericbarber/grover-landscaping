@@ -297,6 +297,46 @@ test('distinguishes unavailable customer properties from accounts with no proper
   );
 });
 
+test('surfaces unavailable persisted customer onboarding progress', async ({ page }) => {
+  await page.route('**/customer-accounts/*/onboarding-progress', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'customer_account_onboarding_unavailable',
+      message: 'The persisted customer account onboarding progress could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'Persisted onboarding progress could not be loaded.',
+  );
+});
+
+test('blocks property activation context when persisted readiness is unavailable', async ({ page }) => {
+  await page.route('**/customer-accounts/*/properties/*/activation-readiness', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'customer_property_readiness_unavailable',
+      message: 'The persisted customer property activation readiness could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const setup = page
+    .getByRole('heading', { name: 'Portfolio and crew' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(setup.getByRole('alert')).toContainText(
+    'Persisted property activation readiness could not be loaded.',
+  );
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

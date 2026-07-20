@@ -70,6 +70,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [accountsUnavailable, setAccountsUnavailable] = useState(false);
   const [archivedAccountsUnavailable, setArchivedAccountsUnavailable] = useState(false);
   const [propertyListsUnavailable, setPropertyListsUnavailable] = useState(false);
+  const [onboardingProgressUnavailable, setOnboardingProgressUnavailable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
   const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
@@ -90,6 +91,7 @@ export function ManagerCustomerAccountOnboardingPanel({
     setAccountsUnavailable(false);
     setArchivedAccountsUnavailable(false);
     setPropertyListsUnavailable(false);
+    setOnboardingProgressUnavailable(false);
     try {
       const loadedAccounts = await fetchCustomerAccounts();
       const loadedArchivedAccounts = await fetchArchivedCustomerAccounts().catch(() => {
@@ -113,10 +115,15 @@ export function ManagerCustomerAccountOnboardingPanel({
       const loadedProgress = await Promise.all(loadedAccounts.map(async (account) => [
         account.accountId,
         await fetchCustomerAccountOnboardingProgress(account.accountId).catch(
-          () => deriveAccountOnboardingProgress(
+          (error: unknown) => {
+            if (error instanceof ApiRequestError) {
+              setOnboardingProgressUnavailable(true);
+            }
+            return deriveAccountOnboardingProgress(
             account,
             loadedProperties.find(([accountId]) => accountId === account.accountId)?.[1] ?? [],
-          ),
+            );
+          },
         ),
       ] as const));
       setProgress(Object.fromEntries(loadedProgress));
@@ -384,6 +391,11 @@ export function ManagerCustomerAccountOnboardingPanel({
       {propertyListsUnavailable ? (
         <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
           Persisted customer properties could not be loaded. Property counts and onboarding readiness may be incomplete.
+        </p>
+      ) : null}
+      {onboardingProgressUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted onboarding progress could not be loaded. Completion counts are unavailable until API readiness recovers.
         </p>
       ) : null}
       <label className="mt-4 block text-sm font-semibold text-slate-700">Find customer account

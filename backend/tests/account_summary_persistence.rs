@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CustomerAccountListResult, CustomerAccountSummaryResult,
-        CustomerPropertyListResult,
+        CustomerContextReadResult, CustomerPropertyListResult,
     },
     db::JobRepository,
 };
@@ -81,6 +81,22 @@ async fn repository_distinguishes_unavailable_and_demo_customer_account_lists() 
             .list_properties("acct_1001", &["org_demo_landscaping".to_string()],)
             .await,
         CustomerPropertyListResult::Unavailable
+    ));
+    assert!(matches!(
+        unavailable_repository
+            .account_onboarding_progress("acct_1001", &["org_demo_landscaping".to_string()],)
+            .await,
+        CustomerContextReadResult::Unavailable
+    ));
+    assert!(matches!(
+        unavailable_repository
+            .property_activation_readiness(
+                "acct_1001",
+                "property_1001",
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        CustomerContextReadResult::Unavailable
     ));
 
     let demo_repository = AccountRepository::default();

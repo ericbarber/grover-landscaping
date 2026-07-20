@@ -15,9 +15,10 @@ use accounts::{
     validate_create_customer_property_request, validate_update_customer_account_request,
     AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
     CustomerAccountArchiveError, CustomerAccountListResult, CustomerAccountSummaryResult,
-    CustomerPropertyListResult, CustomerPropertyMutationError, CustomerPropertyStatusError,
-    UpdateCustomerAccountRelationshipRequest, UpdateCustomerAccountRequest,
-    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
+    CustomerContextReadResult, CustomerPropertyListResult, CustomerPropertyMutationError,
+    CustomerPropertyStatusError, UpdateCustomerAccountRelationshipRequest,
+    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+    UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -1678,10 +1679,14 @@ async fn get_customer_account_onboarding_progress(
         .account_onboarding_progress(&account_id, &organization_ids)
         .await
     {
-        Some(progress) => Json(progress).into_response(),
-        None => resource_not_found_response(
+        CustomerContextReadResult::Loaded(progress) => Json(progress).into_response(),
+        CustomerContextReadResult::NotFound => resource_not_found_response(
             "customer_account_not_found",
             "The requested customer account was not found.",
+        ),
+        CustomerContextReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_account_onboarding_unavailable",
+            "The persisted customer account onboarding progress could not be loaded.",
         ),
     }
 }
@@ -1878,10 +1883,14 @@ async fn get_customer_property_activation_readiness(
         .property_activation_readiness(&account_id, &property_id, &organization_ids)
         .await
     {
-        Some(readiness) => Json(readiness).into_response(),
-        None => resource_not_found_response(
+        CustomerContextReadResult::Loaded(readiness) => Json(readiness).into_response(),
+        CustomerContextReadResult::NotFound => resource_not_found_response(
             "customer_property_not_found",
             "The requested customer property was not found.",
+        ),
+        CustomerContextReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_property_readiness_unavailable",
+            "The persisted customer property activation readiness could not be loaded.",
         ),
     }
 }
