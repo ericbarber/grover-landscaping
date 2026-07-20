@@ -902,13 +902,24 @@ export function ManagerTeamActivityPanel({
           {activitySort === 'oldest' ? ' · oldest first' : ''}
         </p>
         {hasCustomReviewView ? (
-          <button
-            className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
-            onClick={resetReviewView}
-            type="button"
-          >
-            Reset review view
-          </button>
+          <div className="flex flex-wrap justify-end gap-2">
+            {activitySort === 'oldest' ? (
+              <button
+                className="min-h-11 shrink-0 rounded-lg border border-sky-300 bg-sky-50 px-3 text-xs font-semibold text-sky-950"
+                onClick={() => setActivitySort('newest')}
+                type="button"
+              >
+                Use newest-first ordering
+              </button>
+            ) : null}
+            <button
+              className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
+              onClick={resetReviewView}
+              type="button"
+            >
+              Reset review view
+            </button>
+          </div>
         ) : null}
       </div>
       {isFocusedCrewMoveReview ? (

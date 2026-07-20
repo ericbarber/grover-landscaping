@@ -707,10 +707,11 @@ Current state:
 - Exiting recovered crew history restores prior transient actor and audit-ID searches with persisted review settings
 - Restored recovered-review summaries count all active actor, audit-ID, source, and move-scope filters
 - Activity review summaries identify oldest-first ordering beside the active-filter count
+- Oldest-first review summaries provide a touch-safe newest-first reset that preserves every active filter
 
 Next implementation work:
 
-- Restore newest-first ordering directly from the activity review summary
+- Persist the summary-driven newest-first change across mobile reloads
 
 ## Planned
 
