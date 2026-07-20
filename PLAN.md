@@ -300,6 +300,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 - Docker Compose local stack
 - Tailscale mobile-review command for phone testing without Docker or PostgreSQL
+- Mobile-review startup reuses an already healthy no-login phone environment and reports partial port conflicts clearly
 - Mobile-first dashboard flow prioritizing route, assigned jobs, and field actions
 - Collapsible mobile manager workspace separated from the crew workflow
 - Phone-safe gutters, form sizing, overflow handling, and touch targets

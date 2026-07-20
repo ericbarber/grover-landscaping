@@ -14,6 +14,40 @@ if [[ -z "$tailscale_ip" ]]; then
   exit 1
 fi
 
+frontend_url="http://${tailscale_ip}:5173"
+api_url="http://${tailscale_ip}:8080"
+backend_pid=""
+frontend_pid=""
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "Required command is unavailable: curl"
+  exit 1
+fi
+
+frontend_ready() {
+  curl --fail --silent --show-error --max-time 3 "${frontend_url}/" >/dev/null 2>&1
+}
+
+disabled_api_ready() {
+  local auth_config
+  auth_config="$(curl --fail --silent --show-error --max-time 3 "${api_url}/auth/config" 2>/dev/null)" || return 1
+  [[ "$auth_config" == *'"mode":"disabled"'* ]]
+}
+
+if frontend_ready && disabled_api_ready; then
+  echo "Grover Landscaping mobile review is already running."
+  echo "Phone URL: ${frontend_url}/"
+  echo "API URL:   ${api_url}/health"
+  echo "Authentication is disabled for this local review environment."
+  exit 0
+fi
+
+if frontend_ready || disabled_api_ready; then
+  echo "Only part of the Grover Landscaping mobile review environment is available."
+  echo "Stop the process using port 5173 or 8080, then run this command again."
+  exit 1
+fi
+
 if ! command -v npm >/dev/null 2>&1 && [[ -d "$HOME/.nvm/versions/node" ]]; then
   node_bin="$(find "$HOME/.nvm/versions/node" -mindepth 2 -maxdepth 2 -type d -name bin | sort -V | tail -n 1)"
   if [[ -n "$node_bin" ]]; then
@@ -28,11 +62,8 @@ for command_name in cargo npm; do
   fi
 done
 
-frontend_url="http://${tailscale_ip}:5173"
-api_url="http://${tailscale_ip}:8080"
-backend_pid=""
-frontend_pid=""
-
+# Invoked by the EXIT, INT, and TERM traps below.
+# shellcheck disable=SC2329
 cleanup() {
   trap - EXIT INT TERM
   [[ -z "$frontend_pid" ]] || kill "$frontend_pid" 2>/dev/null || true
@@ -45,6 +76,7 @@ echo "Starting Grover Landscaping mobile review..."
 echo "Phone URL: ${frontend_url}/"
 echo "API URL:   ${api_url}/health"
 echo "The phone must be connected to the same Tailscale network."
+echo "Authentication is disabled for this local review environment."
 echo
 
 (

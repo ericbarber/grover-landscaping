@@ -120,13 +120,14 @@ Database: localhost:5432
 Connect the workstation and phone to the same Tailscale network, then run:
 
 ```bash
-just mobile-review
+bash scripts/mobile-review.sh
 ```
 
 The command detects the workstation's Tailscale IPv4 address, starts the Rust API
 with local authentication and seeded persistence fallbacks, starts Vite on all
-network interfaces, and prints the URL to open on the phone. Docker and PostgreSQL
-are not required for this review mode.
+network interfaces, and prints the URL to open on the phone. If both services are
+already healthy, it prints the same review details and exits successfully. Docker,
+PostgreSQL, and an application login are not required for this review mode.
 
 For this workstation, the expected URL is:
 
@@ -138,7 +139,7 @@ Keep the command running while reviewing. Press `Ctrl+C` to stop both services.
 If Tailscale detection is unavailable, specify a reachable address explicitly:
 
 ```bash
-MOBILE_REVIEW_HOST=192.168.1.20 just mobile-review
+MOBILE_REVIEW_HOST=192.168.1.20 bash scripts/mobile-review.sh
 ```
 
 If the frontend opens before the API is ready, the authentication error screen can retry runtime configuration without a full page refresh.
