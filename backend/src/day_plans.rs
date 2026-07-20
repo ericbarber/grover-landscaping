@@ -94,6 +94,27 @@ pub enum CreateServiceTerritoryResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateHierarchyStatusRequest {
+    pub status: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateBranchStatusResult {
+    Updated(OrganizationBranchSummary),
+    OperationalConflict,
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateTerritoryStatusResult {
+    Updated(ServiceTerritorySummary),
+    OperationalConflict,
+    NotFound,
+    Unavailable,
+}
+
 pub fn validate_create_service_territory_request(
     request: &CreateServiceTerritoryRequest,
 ) -> Result<(), &'static str> {
@@ -521,6 +542,192 @@ impl DayPlanRepository {
             return CreateServiceTerritoryResult::Unavailable;
         }
         CreateServiceTerritoryResult::Created(ServiceTerritorySummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            branch_id: row.get("branch_id"),
+            name: row.get("name"),
+            status: row.get("status"),
+        })
+    }
+
+    pub async fn update_organization_branch_status(
+        &self,
+        organization_id: &str,
+        branch_id: &str,
+        actor_user_id: &str,
+        status: &str,
+    ) -> UpdateBranchStatusResult {
+        let Some(pool) = &self.pool else {
+            return UpdateBranchStatusResult::Unavailable;
+        };
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return UpdateBranchStatusResult::Unavailable,
+        };
+        if status == "inactive" {
+            let has_active_scope: bool = match sqlx::query_scalar(
+                r#"
+                SELECT EXISTS (
+                    SELECT 1 FROM crews
+                    WHERE organization_id = $1 AND branch_id = $2 AND status = 'active'
+                ) OR EXISTS (
+                    SELECT 1 FROM service_territories
+                    WHERE organization_id = $1 AND branch_id = $2 AND status = 'active'
+                )
+                "#,
+            )
+            .bind(organization_id)
+            .bind(branch_id)
+            .fetch_one(&mut *tx)
+            .await
+            {
+                Ok(value) => value,
+                Err(_) => return UpdateBranchStatusResult::Unavailable,
+            };
+            if has_active_scope {
+                return UpdateBranchStatusResult::OperationalConflict;
+            }
+        }
+        let row = match sqlx::query(
+            r#"
+            UPDATE organization_branches
+            SET status = $3, updated_at = NOW()
+            WHERE id = $1 AND organization_id = $2
+            RETURNING id, organization_id, name, code, time_zone, service_area_label, status
+            "#,
+        )
+        .bind(branch_id)
+        .bind(organization_id)
+        .bind(status)
+        .fetch_optional(&mut *tx)
+        .await
+        {
+            Ok(Some(row)) => row,
+            Ok(None) => return UpdateBranchStatusResult::NotFound,
+            Err(_) => return UpdateBranchStatusResult::Unavailable,
+        };
+        if sqlx::query(
+            r#"
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            ) VALUES (
+                $1, $2, $3, 'branch_status_updated', $4, NOW(),
+                jsonb_build_object('status', $5::text)
+            )
+            "#,
+        )
+        .bind(format!(
+            "audit_branch_status_updated_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(actor_user_id)
+        .bind(organization_id)
+        .bind(branch_id)
+        .bind(status)
+        .execute(&mut *tx)
+        .await
+        .is_err()
+            || tx.commit().await.is_err()
+        {
+            return UpdateBranchStatusResult::Unavailable;
+        }
+        UpdateBranchStatusResult::Updated(OrganizationBranchSummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            name: row.get("name"),
+            code: row.get("code"),
+            time_zone: row.get("time_zone"),
+            service_area_label: row.get("service_area_label"),
+            status: row.get("status"),
+        })
+    }
+
+    pub async fn update_service_territory_status(
+        &self,
+        organization_id: &str,
+        territory_id: &str,
+        actor_user_id: &str,
+        status: &str,
+    ) -> UpdateTerritoryStatusResult {
+        let Some(pool) = &self.pool else {
+            return UpdateTerritoryStatusResult::Unavailable;
+        };
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return UpdateTerritoryStatusResult::Unavailable,
+        };
+        if status == "inactive" {
+            let has_active_crews: bool = match sqlx::query_scalar(
+                r#"
+                SELECT EXISTS (
+                    SELECT 1 FROM crews
+                    WHERE organization_id = $1 AND territory_id = $2 AND status = 'active'
+                )
+                "#,
+            )
+            .bind(organization_id)
+            .bind(territory_id)
+            .fetch_one(&mut *tx)
+            .await
+            {
+                Ok(value) => value,
+                Err(_) => return UpdateTerritoryStatusResult::Unavailable,
+            };
+            if has_active_crews {
+                return UpdateTerritoryStatusResult::OperationalConflict;
+            }
+        }
+        let row = match sqlx::query(
+            r#"
+            UPDATE service_territories territory
+            SET status = $3, updated_at = NOW()
+            FROM organization_branches branch
+            WHERE territory.id = $1
+              AND territory.organization_id = $2
+              AND branch.id = territory.branch_id
+              AND branch.organization_id = territory.organization_id
+              AND ($3 <> 'active' OR branch.status = 'active')
+            RETURNING territory.id, territory.organization_id, territory.branch_id,
+                      territory.name, territory.status
+            "#,
+        )
+        .bind(territory_id)
+        .bind(organization_id)
+        .bind(status)
+        .fetch_optional(&mut *tx)
+        .await
+        {
+            Ok(Some(row)) => row,
+            Ok(None) => return UpdateTerritoryStatusResult::NotFound,
+            Err(_) => return UpdateTerritoryStatusResult::Unavailable,
+        };
+        if sqlx::query(
+            r#"
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            ) VALUES (
+                $1, $2, $3, 'territory_status_updated', $4, NOW(),
+                jsonb_build_object('status', $5::text, 'branch_id', $6::text)
+            )
+            "#,
+        )
+        .bind(format!(
+            "audit_territory_status_updated_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(actor_user_id)
+        .bind(organization_id)
+        .bind(territory_id)
+        .bind(status)
+        .bind(row.get::<String, _>("branch_id"))
+        .execute(&mut *tx)
+        .await
+        .is_err()
+            || tx.commit().await.is_err()
+        {
+            return UpdateTerritoryStatusResult::Unavailable;
+        }
+        UpdateTerritoryStatusResult::Updated(ServiceTerritorySummary {
             id: row.get("id"),
             organization_id: row.get("organization_id"),
             branch_id: row.get("branch_id"),

@@ -494,6 +494,9 @@ Current state:
 - Organization owners can create branches and nested territories from a mobile hierarchy panel, with new scopes immediately available to dispatch filters
 - Organization owners can assign existing crews to active same-tenant branch/territory pairs from mobile crew administration
 - Persisted crew hierarchy changes validate the branch/territory relationship transactionally and write actor-attributed audit context
+- Organization owners can deactivate and reactivate branches and territories from mobile with two-step confirmation
+- Territory deactivation is blocked while active crews remain assigned; branch deactivation also requires every nested territory to be inactive
+- Branch and territory lifecycle changes are tenant-guarded and actor-attributed in the audit trail
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -634,7 +637,7 @@ Current state:
 
 Next implementation work:
 
-- Add branch and territory lifecycle controls with guards for assigned crews
+- Add hierarchy lifecycle and crew-assignment coverage to the live mobile smoke suite
 
 ## Planned
 

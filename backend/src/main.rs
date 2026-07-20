@@ -40,7 +40,8 @@ use day_plans::{
     AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
     CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
     CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
-    ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
+    ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult,
+    UpdateCrewRequest, UpdateCrewResult, UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
@@ -713,8 +714,16 @@ fn app_with_runtime(
             post(create_organization_branch),
         )
         .route(
+            "/organizations/{organization_id}/branches/{branch_id}",
+            put(update_organization_branch_status),
+        )
+        .route(
             "/organizations/{organization_id}/territories",
             post(create_service_territory),
+        )
+        .route(
+            "/organizations/{organization_id}/territories/{territory_id}",
+            put(update_service_territory_status),
         )
         .route(
             "/organizations/{organization_id}/crews",
@@ -2650,6 +2659,130 @@ async fn create_service_territory(
             Json(ErrorResponse {
                 error: "territory_creation_unavailable",
                 message: "The service territory could not be created.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn update_organization_branch_status(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, branch_id)): Path<(String, String)>,
+    Json(request): Json<UpdateHierarchyStatusRequest>,
+) -> Response {
+    let status = request.status.trim();
+    if !matches!(status, "active" | "inactive") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_branch_status",
+                message: "Branch status must be active or inactive.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .day_plans
+        .update_organization_branch_status(
+            &organization_id,
+            &branch_id,
+            &principal.subject,
+            status,
+        )
+        .await
+    {
+        UpdateBranchStatusResult::Updated(branch) => Json(branch).into_response(),
+        UpdateBranchStatusResult::OperationalConflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "branch_has_active_scopes",
+                message:
+                    "Move active crews and deactivate every territory before deactivating this branch."
+                        .to_string(),
+            }),
+        )
+            .into_response(),
+        UpdateBranchStatusResult::NotFound => resource_not_found_response(
+            "branch_not_found",
+            "The branch was not found in this organization.",
+        ),
+        UpdateBranchStatusResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "branch_update_unavailable",
+                message: "The branch status could not be updated.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn update_service_territory_status(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((organization_id, territory_id)): Path<(String, String)>,
+    Json(request): Json<UpdateHierarchyStatusRequest>,
+) -> Response {
+    let status = request.status.trim();
+    if !matches!(status, "active" | "inactive") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_territory_status",
+                message: "Territory status must be active or inactive.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    match state
+        .day_plans
+        .update_service_territory_status(
+            &organization_id,
+            &territory_id,
+            &principal.subject,
+            status,
+        )
+        .await
+    {
+        UpdateTerritoryStatusResult::Updated(territory) => Json(territory).into_response(),
+        UpdateTerritoryStatusResult::OperationalConflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "territory_has_active_crews",
+                message: "Move active crews before deactivating this territory.".to_string(),
+            }),
+        )
+            .into_response(),
+        UpdateTerritoryStatusResult::NotFound => resource_not_found_response(
+            "territory_not_found",
+            "The territory was not found or its branch is inactive.",
+        ),
+        UpdateTerritoryStatusResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "territory_update_unavailable",
+                message: "The territory status could not be updated.".to_string(),
             }),
         )
             .into_response(),

@@ -3,7 +3,11 @@ import {
   createOrganizationBranch,
   createServiceTerritory,
   fetchOrganizationBranches,
+  fetchServiceTerritories,
+  updateOrganizationBranchStatus,
+  updateServiceTerritoryStatus,
   type OrganizationBranchRecord,
+  type ServiceTerritoryRecord,
 } from '../api/client';
 
 type ManagerDispatchHierarchyPanelProps = {
@@ -24,6 +28,7 @@ export function ManagerDispatchHierarchyPanel({
   onChanged,
 }: ManagerDispatchHierarchyPanelProps) {
   const [branches, setBranches] = useState<OrganizationBranchRecord[]>([]);
+  const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
   const [branchName, setBranchName] = useState('');
   const [branchCode, setBranchCode] = useState('');
   const [timeZone, setTimeZone] = useState('America/Phoenix');
@@ -32,18 +37,28 @@ export function ManagerDispatchHierarchyPanel({
   const [territoryName, setTerritoryName] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
 
-  async function refreshBranches() {
-    const items = await fetchOrganizationBranches();
-    const active = items.filter(
-      (branch) => branch.organizationId === organizationId && branch.status === 'active',
+  async function refreshHierarchy() {
+    const [branchItems, territoryItems] = await Promise.all([
+      fetchOrganizationBranches(),
+      fetchServiceTerritories(),
+    ]);
+    const scopedBranches = branchItems.filter(
+      (branch) => branch.organizationId === organizationId,
     );
-    setBranches(active);
-    setTerritoryBranchId((current) => current || active[0]?.id || '');
+    const active = scopedBranches.filter((branch) => branch.status === 'active');
+    setBranches(scopedBranches);
+    setTerritories(territoryItems.filter(
+      (territory) => territory.organizationId === organizationId,
+    ));
+    setTerritoryBranchId((current) => (
+      active.some((branch) => branch.id === current) ? current : active[0]?.id || ''
+    ));
   }
 
   useEffect(() => {
-    void refreshBranches().catch(() => setStatus('Branch choices could not be loaded.'));
+    void refreshHierarchy().catch(() => setStatus('Hierarchy choices could not be loaded.'));
   }, [organizationId]);
 
   async function submitBranch(event: FormEvent<HTMLFormElement>) {
@@ -61,10 +76,66 @@ export function ManagerDispatchHierarchyPanel({
       setBranchCode('');
       setServiceArea('');
       setStatus(`${branch.name} created.`);
-      await refreshBranches();
+      await refreshHierarchy();
       onChanged();
     } catch {
       setStatus('Branch could not be created. Check its code and organization scope.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function changeBranchStatus(branch: OrganizationBranchRecord) {
+    const nextStatus = branch.status === 'active' ? 'inactive' : 'active';
+    const actionId = `branch:${branch.id}:${nextStatus}`;
+    if (pendingLifecycleAction !== actionId) {
+      setPendingLifecycleAction(actionId);
+      setStatus(
+        `Confirm ${nextStatus === 'active' ? 'reactivation' : 'deactivation'} for ${branch.name}.`,
+      );
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateOrganizationBranchStatus(organizationId, branch.id, nextStatus);
+      setStatus(`${branch.name} is now ${nextStatus}.`);
+      setPendingLifecycleAction(null);
+      await refreshHierarchy();
+      onChanged();
+    } catch {
+      setStatus(
+        nextStatus === 'inactive'
+          ? 'Move active crews and deactivate this branch’s territories first.'
+          : 'The branch could not be reactivated.',
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function changeTerritoryStatus(territory: ServiceTerritoryRecord) {
+    const nextStatus = territory.status === 'active' ? 'inactive' : 'active';
+    const actionId = `territory:${territory.id}:${nextStatus}`;
+    if (pendingLifecycleAction !== actionId) {
+      setPendingLifecycleAction(actionId);
+      setStatus(
+        `Confirm ${nextStatus === 'active' ? 'reactivation' : 'deactivation'} for ${territory.name}.`,
+      );
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateServiceTerritoryStatus(organizationId, territory.id, nextStatus);
+      setStatus(`${territory.name} is now ${nextStatus}.`);
+      setPendingLifecycleAction(null);
+      await refreshHierarchy();
+      onChanged();
+    } catch {
+      setStatus(
+        nextStatus === 'inactive'
+          ? 'Move active crews out of this territory first.'
+          : 'Reactivate the parent branch before this territory.',
+      );
     } finally {
       setIsSaving(false);
     }
@@ -81,6 +152,7 @@ export function ManagerDispatchHierarchyPanel({
       });
       setTerritoryName('');
       setStatus(`${territory.name} created.`);
+      await refreshHierarchy();
       onChanged();
     } catch {
       setStatus('Territory could not be created. Check the selected branch and name.');
@@ -96,7 +168,9 @@ export function ManagerDispatchHierarchyPanel({
       <p className="mt-1 text-sm text-slate-600">
         Create dispatch scopes before assigning crews across operating areas.
       </p>
-      {status ? <p className="mt-3 text-xs font-semibold text-slate-600">{status}</p> : null}
+      {status ? (
+        <p className="mt-3 text-xs font-semibold text-slate-600" role="status">{status}</p>
+      ) : null}
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <form className="space-y-2 rounded-xl bg-slate-50 p-3" onSubmit={submitBranch}>
           <p className="text-sm font-bold text-slate-900">New branch</p>
@@ -155,7 +229,7 @@ export function ManagerDispatchHierarchyPanel({
             value={territoryBranchId}
           >
             <option value="">Select branch</option>
-            {branches.map((branch) => (
+            {branches.filter((branch) => branch.status === 'active').map((branch) => (
               <option key={branch.id} value={branch.id}>{branch.name}</option>
             ))}
           </select>
@@ -176,6 +250,71 @@ export function ManagerDispatchHierarchyPanel({
             Create territory
           </button>
         </form>
+      </div>
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 p-3">
+          <p className="text-sm font-bold text-slate-900">Branch lifecycle</p>
+          <div className="mt-2 space-y-2">
+            {branches.map((branch) => {
+              const nextStatus = branch.status === 'active' ? 'inactive' : 'active';
+              const actionId = `branch:${branch.id}:${nextStatus}`;
+              return (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
+                  key={branch.id}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{branch.name}</p>
+                    <p className="text-xs text-slate-500">{branch.code} · {branch.status}</p>
+                  </div>
+                  <button
+                    className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
+                    disabled={isSaving}
+                    onClick={() => void changeBranchStatus(branch)}
+                    type="button"
+                  >
+                    {pendingLifecycleAction === actionId
+                      ? `Confirm ${nextStatus}`
+                      : nextStatus === 'active' ? 'Reactivate' : 'Deactivate'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 p-3">
+          <p className="text-sm font-bold text-slate-900">Territory lifecycle</p>
+          <div className="mt-2 space-y-2">
+            {territories.map((territory) => {
+              const nextStatus = territory.status === 'active' ? 'inactive' : 'active';
+              const actionId = `territory:${territory.id}:${nextStatus}`;
+              const branch = branches.find((item) => item.id === territory.branchId);
+              return (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
+                  key={territory.id}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{territory.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {branch?.name ?? 'Unknown branch'} · {territory.status}
+                    </p>
+                  </div>
+                  <button
+                    className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
+                    disabled={isSaving}
+                    onClick={() => void changeTerritoryStatus(territory)}
+                    type="button"
+                  >
+                    {pendingLifecycleAction === actionId
+                      ? `Confirm ${nextStatus}`
+                      : nextStatus === 'active' ? 'Reactivate' : 'Deactivate'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -2447,6 +2447,58 @@ export async function createServiceTerritory(
   };
 }
 
+export async function updateOrganizationBranchStatus(
+  organizationId: string,
+  branchId: string,
+  status: OrganizationBranchRecord['status'],
+): Promise<OrganizationBranchRecord> {
+  const item = await request<{
+    id: string;
+    organization_id: string;
+    name: string;
+    code: string;
+    time_zone: string;
+    service_area_label?: string | null;
+    status: OrganizationBranchRecord['status'];
+  }>(
+    `/organizations/${encodeURIComponent(organizationId)}/branches/${encodeURIComponent(branchId)}`,
+    { method: 'PUT', body: JSON.stringify({ status }) },
+  );
+  return {
+    id: item.id,
+    organizationId: item.organization_id,
+    name: item.name,
+    code: item.code,
+    timeZone: item.time_zone,
+    serviceAreaLabel: item.service_area_label ?? null,
+    status: item.status,
+  };
+}
+
+export async function updateServiceTerritoryStatus(
+  organizationId: string,
+  territoryId: string,
+  status: ServiceTerritoryRecord['status'],
+): Promise<ServiceTerritoryRecord> {
+  const item = await request<{
+    id: string;
+    organization_id: string;
+    branch_id: string;
+    name: string;
+    status: ServiceTerritoryRecord['status'];
+  }>(
+    `/organizations/${encodeURIComponent(organizationId)}/territories/${encodeURIComponent(territoryId)}`,
+    { method: 'PUT', body: JSON.stringify({ status }) },
+  );
+  return {
+    id: item.id,
+    organizationId: item.organization_id,
+    branchId: item.branch_id,
+    name: item.name,
+    status: item.status,
+  };
+}
+
 export async function createOrganizationCrew(
   organizationId: string,
   name: string,

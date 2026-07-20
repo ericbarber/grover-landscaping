@@ -102,6 +102,13 @@ nested together, then updates the crew and writes a `crew_hierarchy_updated`
 audit event containing the old and new scope IDs. Omitting both fields preserves
 the existing assignment for backward-compatible profile updates.
 
+Owners update branch and territory lifecycle through their tenant-nested `PUT`
+routes. An active territory cannot be deactivated while it has active crews. A
+branch cannot be deactivated until active crews have moved and every nested
+territory is inactive; territory reactivation also requires an active parent
+branch. Successful lifecycle writes emit `branch_status_updated` or
+`territory_status_updated` audit events.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan
