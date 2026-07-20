@@ -725,6 +725,7 @@ export type OrganizationInvitationSummary = Omit<OrganizationInvitation, 'token'
 export interface CustomerAccountRecord {
   accountId: string;
   organizationId: string;
+  relationshipType?: 'service_provider' | 'property_manager' | 'owner';
   customerName: string;
   billingModel: 'per_job' | 'monthly_plan' | 'prepaid_package' | 'manual_account';
   paymentStatus: 'not_required' | 'pending' | 'paid' | 'past_due' | 'waived' | 'manager_review';
@@ -2134,6 +2135,7 @@ export async function acceptOrganizationInvitation(
 
 function toCustomerAccountRecord(item: {
   account_id: string; organization_id: string; customer_name: string;
+  relationship_type?: CustomerAccountRecord['relationshipType'];
   billing_model: CustomerAccountRecord['billingModel'];
   payment_status: CustomerAccountRecord['paymentStatus'];
   service_approval_status: CustomerAccountRecord['serviceApprovalStatus'];
@@ -2146,6 +2148,7 @@ function toCustomerAccountRecord(item: {
   return {
     accountId: item.account_id,
     organizationId: item.organization_id,
+    relationshipType: item.relationship_type ?? 'service_provider',
     customerName: item.customer_name,
     billingModel: item.billing_model,
     paymentStatus: item.payment_status,
@@ -2224,6 +2227,7 @@ export async function createCustomerAccount(
     method: 'POST',
     body: JSON.stringify({
       organization_id: input.organizationId,
+      relationship_type: input.relationshipType ?? 'service_provider',
       customer_name: input.customerName,
       billing_model: input.billingModel,
       payment_status: input.paymentStatus,

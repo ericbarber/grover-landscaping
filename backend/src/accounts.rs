@@ -18,6 +18,7 @@ pub struct CustomerAccountSummary {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateCustomerAccountRequest {
     pub organization_id: String,
+    pub relationship_type: String,
     pub customer_name: String,
     pub billing_model: String,
     pub payment_status: String,
@@ -54,6 +55,7 @@ pub struct UpdateCustomerAccountRequest {
 pub struct CustomerAccountRecord {
     pub account_id: String,
     pub organization_id: String,
+    pub relationship_type: String,
     pub customer_name: String,
     pub billing_model: String,
     pub payment_status: String,
@@ -366,6 +368,12 @@ pub fn validate_create_customer_account_request(
     if request.organization_id.trim().is_empty() {
         return Err("organization_id_required");
     }
+    if !matches!(
+        request.relationship_type.trim(),
+        "service_provider" | "property_manager" | "owner"
+    ) {
+        return Err("relationship_type_invalid");
+    }
     if request.customer_name.trim().len() < 2 || request.customer_name.trim().len() > 160 {
         return Err("customer_name_invalid");
     }
@@ -459,6 +467,7 @@ pub fn validate_update_customer_account_request(
 ) -> Result<(), &'static str> {
     let create_request = CreateCustomerAccountRequest {
         organization_id: "validation".to_string(),
+        relationship_type: "service_provider".to_string(),
         customer_name: request.customer_name.clone(),
         billing_model: request.billing_model.clone(),
         payment_status: request.payment_status.clone(),
@@ -513,6 +522,7 @@ pub fn validate_update_customer_property_identity_request(
 
 fn normalize_request(mut request: CreateCustomerAccountRequest) -> CreateCustomerAccountRequest {
     request.organization_id = request.organization_id.trim().to_string();
+    request.relationship_type = request.relationship_type.trim().to_string();
     request.customer_name = request.customer_name.trim().to_string();
     request.billing_model = request.billing_model.trim().to_string();
     request.payment_status = request.payment_status.trim().to_string();
@@ -640,10 +650,11 @@ async fn create_account(
     .execute(&mut *tx)
     .await?;
     sqlx::query(
-        "INSERT INTO organization_customer_accounts (organization_id, account_id) VALUES ($1,$2)",
+        "INSERT INTO organization_customer_accounts (organization_id, account_id, relationship_type) VALUES ($1,$2,$3)",
     )
     .bind(&request.organization_id)
     .bind(&account_id)
+    .bind(&request.relationship_type)
     .execute(&mut *tx)
     .await?;
     tx.commit().await?;
@@ -669,7 +680,7 @@ async fn update_account(
           AND relation.account_id = account.id
           AND relation.organization_id = ANY($2)
           AND relation.status = 'active'
-        RETURNING account.id, relation.organization_id, account.customer_name,
+        RETURNING account.id, relation.organization_id, relation.relationship_type, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
             account.contracted_services_per_period, account.completed_services_this_period,
             COALESCE(account.billing_notes, '') AS billing_notes,
@@ -697,25 +708,7 @@ async fn update_account(
     .bind(&request.quiet_hours_end)
     .fetch_optional(pool)
     .await?;
-    Ok(row.map(|row| CustomerAccountRecord {
-        account_id: row.get("id"),
-        organization_id: row.get("organization_id"),
-        customer_name: row.get("customer_name"),
-        billing_model: row.get("billing_model"),
-        payment_status: row.get("payment_status"),
-        service_approval_status: row.get("service_approval_status"),
-        contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period") as u32,
-        completed_services_this_period: row.get::<i32, _>("completed_services_this_period") as u32,
-        billing_notes: row.get("billing_notes"),
-        primary_contact_name: row.get("primary_contact_name"),
-        contact_email: row.get("contact_email"),
-        contact_phone: row.get("contact_phone"),
-        email_notifications_enabled: row.get("email_notifications_enabled"),
-        sms_notifications_enabled: row.get("sms_notifications_enabled"),
-        quiet_hours_start: row.get("quiet_hours_start"),
-        quiet_hours_end: row.get("quiet_hours_end"),
-        persisted: true,
-    }))
+    Ok(row.map(|row| account_record_from_row(row, true)))
 }
 
 async fn archive_account(
@@ -819,7 +812,7 @@ async fn reactivate_account(
           AND relation.organization_id = ANY($2)
           AND relation.status = 'archived'
           AND account.id = relation.account_id
-        RETURNING account.id, relation.organization_id, account.customer_name,
+        RETURNING account.id, relation.organization_id, relation.relationship_type, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
             account.contracted_services_per_period, account.completed_services_this_period,
             COALESCE(account.billing_notes, '') AS billing_notes,
@@ -1332,7 +1325,7 @@ async fn list_accounts_by_relationship_status(
     relationship_status: &str,
 ) -> Result<Vec<CustomerAccountRecord>, sqlx::Error> {
     let rows = sqlx::query(
-        r#"SELECT account.id, relation.organization_id, account.customer_name,
+        r#"SELECT account.id, relation.organization_id, relation.relationship_type, account.customer_name,
             account.billing_model, account.payment_status, account.service_approval_status,
             account.contracted_services_per_period, account.completed_services_this_period,
             COALESCE(account.billing_notes, '') AS billing_notes,
@@ -1361,6 +1354,7 @@ fn account_record_from_row(row: sqlx::postgres::PgRow, persisted: bool) -> Custo
     CustomerAccountRecord {
         account_id: row.get("id"),
         organization_id: row.get("organization_id"),
+        relationship_type: row.get("relationship_type"),
         customer_name: row.get("customer_name"),
         billing_model: row.get("billing_model"),
         payment_status: row.get("payment_status"),
@@ -1387,6 +1381,7 @@ fn record_from_request(
     CustomerAccountRecord {
         account_id,
         organization_id: request.organization_id.clone(),
+        relationship_type: request.relationship_type.clone(),
         customer_name: request.customer_name.clone(),
         billing_model: request.billing_model.clone(),
         payment_status: request.payment_status.clone(),
@@ -1424,6 +1419,7 @@ fn local_update_record(
     Some(CustomerAccountRecord {
         account_id: account_id.to_string(),
         organization_id: "org_demo_landscaping".to_string(),
+        relationship_type: "service_provider".to_string(),
         customer_name: request.customer_name.clone(),
         billing_model: request.billing_model.clone(),
         payment_status: request.payment_status.clone(),
@@ -1580,6 +1576,7 @@ fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
         "acct_1001".to_string(),
         &CreateCustomerAccountRequest {
             organization_id: "org_demo_landscaping".to_string(),
+            relationship_type: "owner".to_string(),
             customer_name: "Sample Customer".to_string(),
             billing_model: "per_job".to_string(),
             payment_status: "pending".to_string(),

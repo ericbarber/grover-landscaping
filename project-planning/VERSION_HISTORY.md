@@ -223,6 +223,8 @@ version and release date.
   unfinished-work safeguards.
 - Added a separate archived-account review with tenant-scoped, audited two-step
   reactivation.
+- Added persisted direct-owner, property-manager, and service-provider relationship
+  types to customer-account creation and mobile summaries.
 
 Current continuation work:
 

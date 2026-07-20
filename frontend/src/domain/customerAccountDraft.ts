@@ -1,5 +1,6 @@
 export type CustomerAccountDraft = {
   customerName: string;
+  relationshipType: 'service_provider' | 'property_manager' | 'owner';
   primaryContactName: string;
   contactEmail: string;
   contactPhone: string;
@@ -9,6 +10,7 @@ export type CustomerAccountDraft = {
 
 export const emptyCustomerAccountDraft: CustomerAccountDraft = {
   customerName: '',
+  relationshipType: 'owner',
   primaryContactName: '',
   contactEmail: '',
   contactPhone: '',

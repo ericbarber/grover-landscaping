@@ -25,6 +25,7 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
     let created = accounts
         .create(CreateCustomerAccountRequest {
             organization_id: "org_demo_landscaping".to_string(),
+            relationship_type: "owner".to_string(),
             customer_name: "Account Archive Test".to_string(),
             billing_model: "per_job".to_string(),
             payment_status: "not_required".to_string(),
@@ -41,6 +42,7 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         })
         .await
         .expect("test account should be created");
+    assert_eq!(created.relationship_type, "owner");
 
     assert_eq!(
         accounts
@@ -136,6 +138,7 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     let created = accounts
         .create(CreateCustomerAccountRequest {
             organization_id: "org_demo_landscaping".to_string(),
+            relationship_type: "service_provider".to_string(),
             customer_name: "Account Update Test".to_string(),
             billing_model: "per_job".to_string(),
             payment_status: "pending".to_string(),

@@ -15,6 +15,7 @@ test('creates a service-ready customer account in one mobile workflow', async ({
         json: {
           account_id: `acct_mobile_smoke_${accountCreateCount}`,
           organization_id: submittedAccount.organization_id,
+          relationship_type: submittedAccount.relationship_type,
           customer_name: submittedAccount.customer_name,
           billing_model: submittedAccount.billing_model,
           payment_status: submittedAccount.payment_status,
@@ -110,12 +111,15 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await onboarding.getByRole('button', { name: 'Add customer account' }).click();
   await onboarding.getByLabel('Customer or company name').fill('Mobile Smoke HOA');
   await onboarding.getByLabel('Primary contact').fill('Sam Lee');
+  await onboarding.getByLabel('Customer relationship').selectOption('property_manager');
   await onboarding.getByLabel('Contact email').fill('sam@example.com');
   await onboarding.getByLabel('Mobile phone').fill('+14805550123');
   await onboarding.getByLabel('Customer opted into email updates').check();
   await onboarding.getByRole('button', { name: 'Create account' }).click();
 
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
+  expect(submittedAccount).toMatchObject({ relationship_type: 'property_manager' });
+  await expect(onboarding.getByText('Property manager')).toBeVisible();
   await onboarding.getByLabel('Find customer account').fill('sam@example.com');
   await onboarding.getByRole('button', { name: /Needs setup/ }).click();
   await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
@@ -152,6 +156,7 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   expect(reactivatedAccountId).toBe('acct_mobile_smoke_2');
   expect(submittedAccount).toMatchObject({
     customer_name: 'Mobile Smoke HOA',
+    relationship_type: 'owner',
     primary_contact_name: 'Separate Contact',
     contact_email: 'separate@example.com',
     contact_phone: null,

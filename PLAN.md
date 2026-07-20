@@ -226,6 +226,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - New-account submission warns on exact normalized customer name, email, or phone matches and supports review or explicit separate creation
 - Tenant-scoped customer-account archival preserves records, rejects current properties or unfinished jobs, leaves active onboarding, and records an audit event
 - Archived customer accounts have a separate tenant-scoped review and can return to active onboarding through audited two-step reactivation
+- Account creation persists direct-owner, property-manager, or service-provider relationship type and shows it in mobile account summaries
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -723,9 +724,9 @@ Current state:
 
 Next implementation work:
 
-- Expose the organization/customer relationship type in account administration
-- Let managers distinguish direct owners, property managers, and service-provider relationships
-- Cover relationship persistence, tenant boundaries, and mobile account summaries
+- Let authorized managers change an active customer relationship type with audit history
+- Add a two-step mobile relationship change that explains portal and portfolio impact
+- Cover relationship updates, tenant rejection, and refresh persistence
 
 ## Planned
 

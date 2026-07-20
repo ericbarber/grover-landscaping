@@ -118,6 +118,7 @@ export function ManagerCustomerAccountOnboardingPanel({
     try {
       const account = await createCustomerAccount({
         organizationId,
+        relationshipType: createDraft.relationshipType,
         customerName: createDraft.customerName.trim(),
         billingModel: 'per_job',
         paymentStatus: 'pending',
@@ -356,6 +357,9 @@ export function ManagerCustomerAccountOnboardingPanel({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-950">{account.customerName}</p>
+                    <p className="text-xs font-medium text-emerald-700">
+                      {accountRelationshipLabel(account.relationshipType)}
+                    </p>
                     <p className="text-xs text-slate-500">{account.billingModel.replace('_', ' ')} · {account.paymentStatus.replace('_', ' ')}</p>
                     <p className="mt-1 text-xs text-slate-500">
                       {account.primaryContactName || 'Contact not set'}
@@ -562,6 +566,13 @@ function CustomerAccountCreateForm({
       <label className="text-sm font-semibold text-slate-700">Primary contact
         <input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" maxLength={160} onChange={(event) => update('primaryContactName', event.target.value)} value={draft.primaryContactName} />
       </label>
+      <label className="text-sm font-semibold text-slate-700">Customer relationship
+        <select className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" onChange={(event) => update('relationshipType', event.target.value as CustomerAccountDraft['relationshipType'])} value={draft.relationshipType}>
+          <option value="owner">Direct property owner</option>
+          <option value="property_manager">Property manager</option>
+          <option value="service_provider">Service-provider partner</option>
+        </select>
+      </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm font-semibold text-slate-700">Contact email
           <input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" maxLength={254} onChange={(event) => update('contactEmail', event.target.value)} type="email" value={draft.contactEmail} />
@@ -600,6 +611,19 @@ function CustomerAccountCreateForm({
       </div>
     </div>
   );
+}
+
+function accountRelationshipLabel(
+  relationshipType: CustomerAccountRecord['relationshipType'],
+): string {
+  switch (relationshipType) {
+    case 'owner':
+      return 'Direct property owner';
+    case 'property_manager':
+      return 'Property manager';
+    default:
+      return 'Service-provider partner';
+  }
 }
 
 function AccountProgress({
