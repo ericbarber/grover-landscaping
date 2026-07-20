@@ -66,6 +66,56 @@ pub struct ServiceTerritorySummary {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+pub struct CreateOrganizationBranchRequest {
+    pub name: String,
+    pub code: String,
+    pub time_zone: String,
+    pub service_area_label: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CreateOrganizationBranchResult {
+    Created(OrganizationBranchSummary),
+    DuplicateCode,
+    Unavailable,
+}
+
+pub fn validate_create_organization_branch_request(
+    request: &CreateOrganizationBranchRequest,
+) -> Result<(), &'static str> {
+    let name = request.name.trim();
+    let code = request.code.trim();
+    if name.is_empty() || name.chars().count() > 120 {
+        return Err("branch_name_invalid");
+    }
+    if code.is_empty()
+        || code.chars().count() > 20
+        || !code
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '_')
+    {
+        return Err("branch_code_invalid");
+    }
+    if !matches!(
+        request.time_zone.trim(),
+        "America/Phoenix"
+            | "America/Los_Angeles"
+            | "America/Denver"
+            | "America/Chicago"
+            | "America/New_York"
+    ) {
+        return Err("branch_time_zone_invalid");
+    }
+    if request.service_area_label.as_deref().is_some_and(|label| {
+        let label = label.trim();
+        label.is_empty() || label.chars().count() > 120
+    }) {
+        return Err("branch_service_area_invalid");
+    }
+    Ok(())
+}
+
+#[derive(Clone, Debug, Deserialize)]
 pub struct CreateCrewRequest {
     pub name: String,
 }
@@ -289,6 +339,79 @@ impl DayPlanRepository {
             status: row.get("status"),
         })
         .collect()
+    }
+
+    pub async fn create_organization_branch(
+        &self,
+        organization_id: &str,
+        actor_user_id: &str,
+        request: &CreateOrganizationBranchRequest,
+    ) -> CreateOrganizationBranchResult {
+        let Some(pool) = &self.pool else {
+            return CreateOrganizationBranchResult::Unavailable;
+        };
+        let id = format!("branch_{}", Uuid::new_v4().simple());
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return CreateOrganizationBranchResult::Unavailable,
+        };
+        let row = sqlx::query(
+            r#"
+            INSERT INTO organization_branches (
+                id, organization_id, name, code, time_zone, service_area_label
+            )
+            SELECT $1, organization.id, $3, $4, $5, $6
+            FROM organizations organization
+            WHERE organization.id = $2 AND organization.status = 'active'
+            ON CONFLICT (organization_id, code) DO NOTHING
+            RETURNING id, organization_id, name, code, time_zone, service_area_label, status
+            "#,
+        )
+        .bind(&id)
+        .bind(organization_id)
+        .bind(request.name.trim())
+        .bind(request.code.trim().to_ascii_uppercase())
+        .bind(request.time_zone.trim())
+        .bind(request.service_area_label.as_deref().map(str::trim))
+        .fetch_optional(&mut *tx)
+        .await;
+        let row = match row {
+            Ok(Some(row)) => row,
+            Ok(None) => return CreateOrganizationBranchResult::DuplicateCode,
+            Err(_) => return CreateOrganizationBranchResult::Unavailable,
+        };
+        if sqlx::query(
+            r#"
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            ) VALUES (
+                $1, $2, $3, 'branch_created', $4, NOW(),
+                jsonb_build_object('code', $5::text, 'time_zone', $6::text)
+            )
+            "#,
+        )
+        .bind(format!("audit_branch_created_{}", Uuid::new_v4().simple()))
+        .bind(actor_user_id)
+        .bind(organization_id)
+        .bind(&id)
+        .bind(request.code.trim().to_ascii_uppercase())
+        .bind(request.time_zone.trim())
+        .execute(&mut *tx)
+        .await
+        .is_err()
+            || tx.commit().await.is_err()
+        {
+            return CreateOrganizationBranchResult::Unavailable;
+        }
+        CreateOrganizationBranchResult::Created(OrganizationBranchSummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            name: row.get("name"),
+            code: row.get("code"),
+            time_zone: row.get("time_zone"),
+            service_area_label: row.get("service_area_label"),
+            status: row.get("status"),
+        })
     }
 
     pub async fn list_service_territories(
@@ -985,10 +1108,33 @@ mod tests {
         draft_day_plan_id, draft_stop_id, local_draft_day_plan_response,
         local_published_day_plan_response, normalize_create_day_plan_request, seed_day_plan,
         validate_amendment_request, validate_amendment_review, validate_create_crew_name,
-        validate_create_day_plan_request, AmendmentService, AssignDayPlanStopRequest,
-        CreateCrewRequest, CreateDayPlanAmendmentRequest, CreateDayPlanRequest, DayPlanRepository,
-        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+        validate_create_day_plan_request, validate_create_organization_branch_request,
+        AmendmentService, AssignDayPlanStopRequest, CreateCrewRequest,
+        CreateDayPlanAmendmentRequest, CreateDayPlanRequest, CreateOrganizationBranchRequest,
+        DayPlanRepository, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
     };
+
+    #[test]
+    fn branch_creation_validation_accepts_supported_owner_inputs() {
+        assert!(
+            validate_create_organization_branch_request(&CreateOrganizationBranchRequest {
+                name: "East Valley".to_string(),
+                code: "east_1".to_string(),
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: Some("Mesa and Tempe".to_string()),
+            },)
+            .is_ok()
+        );
+        assert_eq!(
+            validate_create_organization_branch_request(&CreateOrganizationBranchRequest {
+                name: "East Valley".to_string(),
+                code: "east valley!".to_string(),
+                time_zone: "UTC".to_string(),
+                service_area_label: None,
+            },),
+            Err("branch_code_invalid")
+        );
+    }
 
     #[test]
     fn seeded_day_plan_keeps_ordered_stops() {

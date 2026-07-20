@@ -524,6 +524,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return *method == Method::GET && can_admin_organization;
     }
 
+    if path.starts_with("/organizations/") && path.ends_with("/branches") {
+        return *method == Method::POST && can_admin_organization;
+    }
+
     if path == "/operational-activity" {
         return *method == Method::GET && can_manage_routes;
     }

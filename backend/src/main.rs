@@ -36,8 +36,9 @@ use completion_reports::{
 };
 use day_plans::{
     validate_amendment_request, validate_amendment_review, validate_create_crew_name,
-    AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
-    CreateDayPlanRequest, DayPlanRepository, ReorderDayPlanStopsRequest,
+    validate_create_organization_branch_request, AssignDayPlanStopRequest, CreateCrewRequest,
+    CreateDayPlanAmendmentRequest, CreateDayPlanRequest, CreateOrganizationBranchRequest,
+    CreateOrganizationBranchResult, DayPlanRepository, ReorderDayPlanStopsRequest,
     ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
 };
 use db::{
@@ -706,6 +707,10 @@ fn app_with_runtime(
         .route("/crews", get(list_crews))
         .route("/organization-branches", get(list_organization_branches))
         .route("/service-territories", get(list_service_territories))
+        .route(
+            "/organizations/{organization_id}/branches",
+            post(create_organization_branch),
+        )
         .route(
             "/organizations/{organization_id}/crews",
             get(list_organization_crews).post(create_organization_crew),
@@ -2529,6 +2534,60 @@ async fn list_service_territories(
             .await,
     )
     .into_response()
+}
+
+async fn create_organization_branch(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+    Json(request): Json<CreateOrganizationBranchRequest>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    if let Err(error) = validate_create_organization_branch_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error,
+                message: "Provide a valid branch name, code, supported timezone, and optional service area."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .day_plans
+        .create_organization_branch(&organization_id, &principal.subject, &request)
+        .await
+    {
+        CreateOrganizationBranchResult::Created(branch) => {
+            (StatusCode::CREATED, Json(branch)).into_response()
+        }
+        CreateOrganizationBranchResult::DuplicateCode => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "branch_code_exists",
+                message: "Branch codes must be unique within the organization.".to_string(),
+            }),
+        )
+            .into_response(),
+        CreateOrganizationBranchResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "branch_creation_unavailable",
+                message: "The branch could not be created.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn create_organization_crew(

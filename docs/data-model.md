@@ -79,6 +79,12 @@ The manager dispatch workload loads these discovery records alongside crews,
 shows readable branch and territory names, and filters day workload by either
 scope while preserving the existing service-date filter.
 
+Organization owners create branches through
+`POST /organizations/{organization_id}/branches`. Names, tenant-unique
+alphanumeric/underscore codes, the supported organization timezone set, and
+optional service-area labels are validated before a transactional branch insert
+and `branch_created` audit event.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan
