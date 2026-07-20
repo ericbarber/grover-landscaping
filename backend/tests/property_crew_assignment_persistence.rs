@@ -1,9 +1,32 @@
 use grover_landscaping_api::property_crew_assignments::{
-    AssignPropertyCrewRequest, PropertyCrewAssignmentRepository,
+    AssignPropertyCrewRequest, PropertyCrewAssignmentListResult, PropertyCrewAssignmentRepository,
 };
 use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 
 mod common;
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_assignment_lists_from_empty_results() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = PropertyCrewAssignmentRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository
+            .list_for_property("property_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyCrewAssignmentListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_active_for_crew("crew_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyCrewAssignmentListResult::Unavailable
+    ));
+}
 
 #[tokio::test]
 async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
@@ -88,9 +111,12 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
     assert_ne!(first.id, second.id);
     assert!(second.active);
 
-    let history = repository
+    let PropertyCrewAssignmentListResult::Loaded(history) = repository
         .list_for_property(property_id, &[organization_id.to_string()])
-        .await;
+        .await
+    else {
+        panic!("persisted property assignment history should load");
+    };
 
     assert_eq!(history.len(), 2);
     assert_eq!(history[0].id, second.id);
@@ -99,9 +125,12 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
     assert!(!history[1].active);
     assert!(history[1].ended_at.is_some());
 
-    let active = repository
+    let PropertyCrewAssignmentListResult::Loaded(active) = repository
         .list_active_for_crew(crew_id, &[organization_id.to_string()])
-        .await;
+        .await
+    else {
+        panic!("persisted active crew assignments should load");
+    };
 
     assert!(active
         .iter()

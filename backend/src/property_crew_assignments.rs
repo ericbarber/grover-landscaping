@@ -22,6 +22,12 @@ pub struct PropertyCrewAssignmentResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyCrewAssignmentListResult {
+    Loaded(Vec<PropertyCrewAssignmentResponse>),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct PropertyCrewAssignmentRepository {
     pool: Option<PgPool>,
@@ -75,36 +81,53 @@ impl PropertyCrewAssignmentRepository {
         &self,
         property_id: &str,
         organization_ids: &[String],
-    ) -> Vec<PropertyCrewAssignmentResponse> {
+    ) -> PropertyCrewAssignmentListResult {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PropertyCrewAssignmentListResult::Loaded(Vec::new());
         }
 
         if let Some(pool) = &self.pool {
-            return list_property_crew_assignments(pool, property_id, organization_ids)
-                .await
-                .unwrap_or_default();
+            return match list_property_crew_assignments(pool, property_id, organization_ids).await {
+                Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
+                Err(error) => {
+                    tracing::error!(%error, property_id, "persisted property assignment list failed");
+                    PropertyCrewAssignmentListResult::Unavailable
+                }
+            };
         }
 
-        seed_property_assignments(property_id, organization_ids, false)
+        PropertyCrewAssignmentListResult::Loaded(seed_property_assignments(
+            property_id,
+            organization_ids,
+            false,
+        ))
     }
 
     pub async fn list_active_for_crew(
         &self,
         crew_id: &str,
         organization_ids: &[String],
-    ) -> Vec<PropertyCrewAssignmentResponse> {
+    ) -> PropertyCrewAssignmentListResult {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PropertyCrewAssignmentListResult::Loaded(Vec::new());
         }
 
         if let Some(pool) = &self.pool {
-            return list_active_property_crew_assignments(pool, crew_id, organization_ids)
+            return match list_active_property_crew_assignments(pool, crew_id, organization_ids)
                 .await
-                .unwrap_or_default();
+            {
+                Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
+                Err(error) => {
+                    tracing::error!(%error, crew_id, "persisted crew property assignment list failed");
+                    PropertyCrewAssignmentListResult::Unavailable
+                }
+            };
         }
 
-        seed_property_assignments_for_crew(crew_id, organization_ids)
+        PropertyCrewAssignmentListResult::Loaded(seed_property_assignments_for_crew(
+            crew_id,
+            organization_ids,
+        ))
     }
 }
 

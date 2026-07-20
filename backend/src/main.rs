@@ -74,7 +74,8 @@ use grover_landscaping_api::{
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
-        PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
+        PropertyCrewAssignmentListResult, PropertyCrewAssignmentRepository,
+        PropertyCrewAssignmentResponse,
     },
     property_onboarding::{
         validate_property_onboarding_request, PropertyOnboardingRepository,
@@ -3227,12 +3228,17 @@ async fn list_property_crew_assignments(
     let organization_ids =
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
             .await;
-    let assignments = state
+    match state
         .property_crew_assignments
         .list_for_property(&property_id, &organization_ids)
-        .await;
-
-    Json(assignments).into_response()
+        .await
+    {
+        PropertyCrewAssignmentListResult::Loaded(assignments) => Json(assignments).into_response(),
+        PropertyCrewAssignmentListResult::Unavailable => persisted_resource_unavailable_response(
+            "property_crew_assignments_unavailable",
+            "The persisted property crew assignments could not be loaded.",
+        ),
+    }
 }
 
 async fn list_active_crew_property_assignments(
@@ -3272,12 +3278,17 @@ async fn list_active_crew_property_assignments(
             .into_response();
     }
 
-    let assignments = state
+    match state
         .property_crew_assignments
         .list_active_for_crew(&crew_id, &organization_ids)
-        .await;
-
-    Json(assignments).into_response()
+        .await
+    {
+        PropertyCrewAssignmentListResult::Loaded(assignments) => Json(assignments).into_response(),
+        PropertyCrewAssignmentListResult::Unavailable => persisted_resource_unavailable_response(
+            "crew_property_assignments_unavailable",
+            "The persisted active property assignments could not be loaded.",
+        ),
+    }
 }
 
 async fn get_property_onboarding(

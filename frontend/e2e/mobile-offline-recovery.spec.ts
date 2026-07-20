@@ -389,6 +389,27 @@ test('blocks portfolio grouping when persisted customer portfolios are unavailab
   await expect(setup.getByRole('button', { name: 'Group property' })).toBeDisabled();
 });
 
+test('blocks crew assignment when persisted assignment history is unavailable', async ({ page }) => {
+  await page.route('**/properties/*/crew-assignments', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'property_crew_assignments_unavailable',
+      message: 'The persisted property crew assignments could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const setup = page
+    .getByRole('heading', { name: 'Portfolio and crew' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(setup.getByRole('alert')).toContainText(
+    'Persisted crew assignment context could not be loaded.',
+  );
+  await expect(setup.getByRole('button', { name: 'Assign crew' })).toBeDisabled();
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

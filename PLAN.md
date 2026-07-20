@@ -356,12 +356,14 @@ Delivered:
 - Mobile onboarding explains when create or update attempts were not saved
 - Manager and customer portfolio reads distinguish unavailable persistence from valid empty grouping
 - Property setup blocks grouping controls when persisted portfolio context cannot be loaded
+- Property and crew assignment lists distinguish unavailable persistence from valid unassigned state
+- Property setup blocks assignment controls when persisted assignment history cannot be loaded
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable property-crew assignment lists from valid unassigned properties
-- Add repository and phone-flow coverage for assignment availability
+- Distinguish unavailable project-bid lists from valid empty day-plan and customer bid history
+- Add repository and phone-flow coverage for bid-list availability
 
 ### Manager scheduling workflow
 
@@ -775,12 +777,13 @@ Current state:
 - Onboarding progress and activation readiness return explicit unavailable persistence states
 - Customer-account create and update paths return explicit unavailable persistence states
 - Property portfolio lists and customer grouping reads return explicit unavailable persistence states
+- Property and active-crew assignment lists return explicit unavailable persistence states
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable property-crew assignment lists from valid unassigned properties
-- Add repository and phone-flow coverage for assignment availability
+- Distinguish unavailable project-bid lists from valid empty day-plan and customer bid history
+- Add repository and phone-flow coverage for bid-list availability
 
 ## Planned
 

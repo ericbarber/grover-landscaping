@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable property-crew assignment lists from valid unassigned state.
 - 2026-07-20: Distinguished unavailable property-portfolio reads from valid empty grouping.
 - 2026-07-20: Distinguished unavailable customer-account creates and updates from missing records.
 - 2026-07-19: Distinguished unavailable onboarding progress and property readiness from missing customer data.

@@ -466,8 +466,8 @@ export function ManagerPropertySetupPanel({
           <div className="rounded-xl border border-slate-200 p-3">
             <p className="text-sm font-semibold text-slate-900">Service crew</p>
             {!crewSetupAvailable ? (
-              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
-                Crew assignment is limited to organization owners and managers.
+              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900" role="alert">
+                Persisted crew assignment context could not be loaded. Assignment controls remain blocked until API readiness recovers.
               </p>
             ) : null}
             <p className="mt-1 text-xs text-slate-500">
