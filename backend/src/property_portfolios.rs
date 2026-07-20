@@ -46,6 +46,13 @@ pub enum CustomerPropertyPortfolioReadResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyPortfolioMutationResult<T> {
+    Saved(T),
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PortfolioPropertyLinkResponse {
     pub id: String,
@@ -101,7 +108,7 @@ impl PropertyPortfolioRepository {
         &self,
         request: CreatePropertyPortfolioRequest,
         actor_user_id: &str,
-    ) -> Option<PropertyPortfolioResponse> {
+    ) -> PropertyPortfolioMutationResult<PropertyPortfolioResponse> {
         let request = normalize_create_portfolio_request(request);
         let id = portfolio_id(
             &request.account_id,
@@ -110,13 +117,17 @@ impl PropertyPortfolioRepository {
         );
 
         if let Some(pool) = &self.pool {
-            return insert_property_portfolio(pool, &id, &request, actor_user_id)
-                .await
-                .ok()
-                .flatten();
+            return match insert_property_portfolio(pool, &id, &request, actor_user_id).await {
+                Ok(Some(portfolio)) => PropertyPortfolioMutationResult::Saved(portfolio),
+                Ok(None) => PropertyPortfolioMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, "persisted property portfolio creation failed");
+                    PropertyPortfolioMutationResult::Unavailable
+                }
+            };
         }
 
-        Some(PropertyPortfolioResponse {
+        PropertyPortfolioMutationResult::Saved(PropertyPortfolioResponse {
             id,
             account_id: request.account_id,
             organization_id: request.organization_id,
@@ -132,12 +143,12 @@ impl PropertyPortfolioRepository {
         portfolio_id: &str,
         request: AddPropertyToPortfolioRequest,
         actor_user_id: &str,
-    ) -> Option<PortfolioPropertyLinkResponse> {
+    ) -> PropertyPortfolioMutationResult<PortfolioPropertyLinkResponse> {
         let request = normalize_add_property_request(request);
         let id = portfolio_property_link_id(portfolio_id, &request.property_id);
 
         if let Some(pool) = &self.pool {
-            return insert_portfolio_property_link(
+            return match insert_portfolio_property_link(
                 pool,
                 &id,
                 portfolio_id,
@@ -145,11 +156,17 @@ impl PropertyPortfolioRepository {
                 actor_user_id,
             )
             .await
-            .ok()
-            .flatten();
+            {
+                Ok(Some(link)) => PropertyPortfolioMutationResult::Saved(link),
+                Ok(None) => PropertyPortfolioMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, portfolio_id, "persisted portfolio property link failed");
+                    PropertyPortfolioMutationResult::Unavailable
+                }
+            };
         }
 
-        Some(PortfolioPropertyLinkResponse {
+        PropertyPortfolioMutationResult::Saved(PortfolioPropertyLinkResponse {
             id,
             portfolio_id: portfolio_id.to_string(),
             property_id: request.property_id,
@@ -784,7 +801,7 @@ mod tests {
     async fn repository_returns_local_portfolio_when_database_is_unavailable() {
         let repository = PropertyPortfolioRepository::default();
 
-        let response = repository
+        let PropertyPortfolioMutationResult::Saved(response) = repository
             .create_portfolio(
                 CreatePropertyPortfolioRequest {
                     account_id: " acct_1001 ".to_string(),
@@ -795,7 +812,9 @@ mod tests {
                 "actor_1001",
             )
             .await
-            .expect("local portfolio response should be returned");
+        else {
+            panic!("local portfolio response should be returned");
+        };
 
         assert_eq!(
             response.id,
@@ -809,7 +828,7 @@ mod tests {
     async fn repository_returns_local_property_link_when_database_is_unavailable() {
         let repository = PropertyPortfolioRepository::default();
 
-        let response = repository
+        let PropertyPortfolioMutationResult::Saved(response) = repository
             .add_property(
                 "portfolio_1001",
                 AddPropertyToPortfolioRequest {
@@ -819,7 +838,9 @@ mod tests {
                 "actor_1001",
             )
             .await
-            .expect("local link response should be returned");
+        else {
+            panic!("local link response should be returned");
+        };
 
         assert_eq!(response.portfolio_id, "portfolio_1001");
         assert_eq!(response.property_id, "property_1001");

@@ -251,8 +251,12 @@ export function ManagerPropertySetupPanel({
       setSelectedPortfolioId(portfolio.id);
       setPortfolioName('');
       setMessage(`${portfolio.displayName} portfolio created.`);
-    } catch {
-      setMessage('The portfolio could not be created.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'property_portfolio_creation_unavailable')
+          ? 'Portfolio storage is unavailable. No portfolio was created.'
+          : 'The portfolio could not be created.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -286,8 +290,12 @@ export function ManagerPropertySetupPanel({
         ),
       }));
       setMessage(`${selectedProperty.displayName} grouped into the selected portfolio.`);
-    } catch {
-      setMessage('The property could not be grouped into that portfolio.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'portfolio_property_link_unavailable')
+          ? 'Portfolio storage is unavailable. The property grouping was not changed.'
+          : 'The property could not be grouped into that portfolio.',
+      );
     } finally {
       setIsLoading(false);
     }

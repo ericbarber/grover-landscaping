@@ -406,6 +406,30 @@ test('blocks portfolio grouping when persisted customer portfolios are unavailab
   await expect(setup.getByRole('button', { name: 'Group property' })).toBeDisabled();
 });
 
+test('explains that unavailable portfolio storage created nothing', async ({ page }) => {
+  await page.route('**/property-portfolios', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'property_portfolio_creation_unavailable',
+      message: 'The property portfolio could not be persisted.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const setup = page
+    .getByRole('heading', { name: 'Portfolio and crew' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(setup.getByRole('status')).toContainText('Loaded persisted portfolio and crew setup.');
+  await setup.locator('summary').filter({ hasText: 'Create portfolio' }).click();
+  await setup.getByPlaceholder('Portfolio name').fill('Unavailable Portfolio');
+  await setup.getByRole('button', { name: 'Create portfolio' }).click();
+  await expect(setup.getByRole('status')).toContainText(
+    'No portfolio was created.',
+  );
+});
+
 test('blocks crew assignment when persisted assignment history is unavailable', async ({ page }) => {
   await page.route('**/properties/*/crew-assignments', (route) => route.fulfill({
     status: 503,

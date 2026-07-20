@@ -2,13 +2,21 @@ use grover_landscaping_api::{
     property_portfolio_requests::{AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest},
     property_portfolios::{
         CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
-        PropertyPortfolioRepository,
+        PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
 };
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
 
 mod common;
+
+fn saved<T>(result: PropertyPortfolioMutationResult<T>, context: &str) -> T {
+    match result {
+        PropertyPortfolioMutationResult::Saved(value) => value,
+        PropertyPortfolioMutationResult::Conflict => panic!("{context}: conflict"),
+        PropertyPortfolioMutationResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_portfolio_reads_from_empty_results() {
@@ -29,6 +37,33 @@ async fn repository_distinguishes_unavailable_portfolio_reads_from_empty_results
             .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
             .await,
         CustomerPropertyPortfolioReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .create_portfolio(
+                CreatePropertyPortfolioRequest {
+                    account_id: "acct_1001".to_string(),
+                    organization_id: "org_demo_landscaping".to_string(),
+                    display_name: "Unavailable Portfolio".to_string(),
+                    portfolio_type: "individual_owner".to_string(),
+                },
+                "manager_test",
+            )
+            .await,
+        PropertyPortfolioMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .add_property(
+                "portfolio_1001",
+                AddPropertyToPortfolioRequest {
+                    property_id: "property_1001".to_string(),
+                    organization_id: "org_demo_landscaping".to_string(),
+                },
+                "manager_test",
+            )
+            .await,
+        PropertyPortfolioMutationResult::Unavailable
     ));
 }
 
@@ -201,34 +236,38 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     }
 
     let repository = PropertyPortfolioRepository::from_pool(pool.clone());
-    let portfolio = repository
-        .create_portfolio(
-            CreatePropertyPortfolioRequest {
-                account_id: account_id.to_string(),
-                organization_id: organization_id.to_string(),
-                display_name: display_name.to_string(),
-                portfolio_type: "individual_owner".to_string(),
-            },
-            actor_user_id,
-        )
-        .await
-        .expect("portfolio should be created");
+    let portfolio = saved(
+        repository
+            .create_portfolio(
+                CreatePropertyPortfolioRequest {
+                    account_id: account_id.to_string(),
+                    organization_id: organization_id.to_string(),
+                    display_name: display_name.to_string(),
+                    portfolio_type: "individual_owner".to_string(),
+                },
+                actor_user_id,
+            )
+            .await,
+        "portfolio should be created",
+    );
 
     assert_eq!(portfolio.id, portfolio_id);
     assert!(portfolio.persisted);
     assert_eq!(portfolio.property_count, 0);
 
-    let link = repository
-        .add_property(
-            &portfolio.id,
-            AddPropertyToPortfolioRequest {
-                property_id: property_id.to_string(),
-                organization_id: organization_id.to_string(),
-            },
-            actor_user_id,
-        )
-        .await
-        .expect("property should be linked");
+    let link = saved(
+        repository
+            .add_property(
+                &portfolio.id,
+                AddPropertyToPortfolioRequest {
+                    property_id: property_id.to_string(),
+                    organization_id: organization_id.to_string(),
+                },
+                actor_user_id,
+            )
+            .await,
+        "property should be linked",
+    );
 
     assert_eq!(link.portfolio_id, portfolio.id);
     assert_eq!(link.property_id, property_id);
@@ -244,7 +283,10 @@ async fn repository_persists_lists_and_links_property_portfolios() {
             actor_user_id,
         )
         .await;
-    assert!(cross_account_link.is_none());
+    assert!(matches!(
+        cross_account_link,
+        PropertyPortfolioMutationResult::Conflict
+    ));
 
     let PropertyPortfolioListResult::Loaded(portfolios) = repository
         .list_for_account(account_id, &[organization_id.to_string()])

@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable property-portfolio writes from business conflicts.
 - 2026-07-20: Distinguished unavailable property-crew assignment writes from invalid targets.
 - 2026-07-20: Distinguished unavailable shared-bid storage from missing links and customer decision conflicts.
 - 2026-07-20: Distinguished unavailable bid revocation and conversion from lifecycle conflicts.

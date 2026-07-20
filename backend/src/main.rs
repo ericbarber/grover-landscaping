@@ -87,7 +87,7 @@ use grover_landscaping_api::{
     },
     property_portfolios::{
         CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
-        PropertyPortfolioRepository,
+        PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
 };
 use notifications::{
@@ -2685,22 +2685,27 @@ async fn create_property_portfolio(
         return response;
     }
 
-    let Some(portfolio) = state
+    match state
         .property_portfolios
         .create_portfolio(request, &principal.subject)
         .await
-    else {
-        return (
+    {
+        PropertyPortfolioMutationResult::Saved(portfolio) => {
+            (StatusCode::CREATED, Json(portfolio)).into_response()
+        }
+        PropertyPortfolioMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "property_portfolio_not_created",
                 message: "The property portfolio could not be created.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    (StatusCode::CREATED, Json(portfolio)).into_response()
+            .into_response(),
+        PropertyPortfolioMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "property_portfolio_creation_unavailable",
+            "The property portfolio could not be persisted.",
+        ),
+    }
 }
 
 async fn add_property_to_portfolio(
@@ -2731,22 +2736,27 @@ async fn add_property_to_portfolio(
         return response;
     }
 
-    let Some(link) = state
+    match state
         .property_portfolios
         .add_property(&portfolio_id, request, &principal.subject)
         .await
-    else {
-        return (
+    {
+        PropertyPortfolioMutationResult::Saved(link) => {
+            (StatusCode::CREATED, Json(link)).into_response()
+        }
+        PropertyPortfolioMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "portfolio_property_not_linkable",
                 message: "The property could not be linked to that portfolio.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    (StatusCode::CREATED, Json(link)).into_response()
+            .into_response(),
+        PropertyPortfolioMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "portfolio_property_link_unavailable",
+            "The property portfolio link could not be persisted.",
+        ),
+    }
 }
 
 async fn assign_property_crew(

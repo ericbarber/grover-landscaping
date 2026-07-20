@@ -368,12 +368,14 @@ Delivered:
 - Customer bid decisions return explicit conflict and unavailable outcomes, with browser-safe retry guidance
 - Property-crew assignment writes distinguish invalid targets from unavailable persistence
 - Property setup confirms that no assignment changed when persisted storage is unavailable
+- Property-portfolio creation and linking distinguish business conflicts from unavailable persistence
+- Property setup confirms that unavailable portfolio storage created or changed nothing
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make property-portfolio create and link writes distinguish conflicts from unavailable persistence
-- Add repository and phone-flow coverage for portfolio write availability
+- Distinguish unavailable organization and membership collections from valid empty administration lists
+- Add repository and phone-flow coverage for organization read availability
 
 ### Manager scheduling workflow
 
@@ -793,12 +795,13 @@ Current state:
 - Project-bid revoke and conversion writes return explicit conflict and unavailable outcomes
 - Shared-bid reads and customer decisions return explicit missing, conflict, and unavailable outcomes
 - Property-crew assignment writes return explicit conflict and unavailable outcomes
+- Property-portfolio create and link writes return explicit conflict and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make property-portfolio create and link writes distinguish conflicts from unavailable persistence
-- Add repository and phone-flow coverage for portfolio write availability
+- Distinguish unavailable organization and membership collections from valid empty administration lists
+- Add repository and phone-flow coverage for organization read availability
 
 ## Planned
 
