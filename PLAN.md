@@ -394,12 +394,14 @@ Delivered:
 - Persisted photo writes no longer return accepted upload messages after database failures
 - Photo-processing and erasure-deletion worker claims distinguish unavailable persistence from empty queues
 - Worker cycles log unavailable claim storage instead of reporting an idle successful cycle
+- Photo-processing and erasure-deletion completion/failure writes distinguish unavailable persistence from unchanged jobs
+- Worker cycles report unavailable when claimed work cannot be durably completed or failed
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit photo-processing and deletion completion/failure writes for swallowed persistence errors
-- Add explicit worker mutation outcomes and validation coverage
+- Audit remaining notification, report, and job repository methods for boolean or empty fallbacks
+- Harden and validate the next highest-impact persisted workflow
 
 ### Manager scheduling workflow
 
@@ -832,12 +834,13 @@ Current state:
 - Completion-report persistence and snapshot writes return explicit unavailable outcomes
 - Photo-upload creation and completion return explicit missing and unavailable outcomes
 - Photo worker claims return explicit loaded and unavailable outcomes
+- Photo worker completion and failure writes return explicit loaded and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit photo-processing and deletion completion/failure writes for swallowed persistence errors
-- Add explicit worker mutation outcomes and validation coverage
+- Audit remaining notification, report, and job repository methods for boolean or empty fallbacks
+- Harden and validate the next highest-impact persisted workflow
 
 ## Planned
 

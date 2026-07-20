@@ -109,17 +109,21 @@ pub async fn process_photo_processing_once(
         return ResourceReadResult::Unavailable;
     };
     let processed = claims.len() + deletion_claims.len();
+    let mut mutation_unavailable = false;
 
     for claim in claims {
         if claim.task_type != "thumbnail_generation" {
-            let _ = repository
-                .mark_photo_processing_failed(
-                    &claim.id,
-                    claim.attempt_count,
-                    max_attempts,
-                    "unsupported_photo_processing_task",
-                )
-                .await;
+            mutation_unavailable |= matches!(
+                repository
+                    .mark_photo_processing_failed(
+                        &claim.id,
+                        claim.attempt_count,
+                        max_attempts,
+                        "unsupported_photo_processing_task",
+                    )
+                    .await,
+                ResourceReadResult::Unavailable
+            );
             continue;
         }
 
@@ -131,16 +135,22 @@ pub async fn process_photo_processing_once(
             )
             .await;
         if generated {
-            let _ = repository.mark_photo_processing_completed(&claim.id).await;
+            mutation_unavailable |= matches!(
+                repository.mark_photo_processing_completed(&claim.id).await,
+                ResourceReadResult::Unavailable
+            );
         } else {
-            let _ = repository
-                .mark_photo_processing_failed(
-                    &claim.id,
-                    claim.attempt_count,
-                    max_attempts,
-                    "thumbnail_generation_failed",
-                )
-                .await;
+            mutation_unavailable |= matches!(
+                repository
+                    .mark_photo_processing_failed(
+                        &claim.id,
+                        claim.attempt_count,
+                        max_attempts,
+                        "thumbnail_generation_failed",
+                    )
+                    .await,
+                ResourceReadResult::Unavailable
+            );
         }
     }
 
@@ -149,22 +159,32 @@ pub async fn process_photo_processing_once(
             .delete_objects(std::slice::from_ref(&claim.object_key))
             .await;
         if deletion.failed_object_keys.is_empty() {
-            let _ = repository
-                .mark_photo_erasure_deletion_completed(&claim.id)
-                .await;
+            mutation_unavailable |= matches!(
+                repository
+                    .mark_photo_erasure_deletion_completed(&claim.id)
+                    .await,
+                ResourceReadResult::Unavailable
+            );
         } else {
-            let _ = repository
-                .mark_photo_erasure_deletion_failed(
-                    &claim.id,
-                    claim.attempt_count,
-                    max_attempts,
-                    "photo_object_deletion_failed",
-                )
-                .await;
+            mutation_unavailable |= matches!(
+                repository
+                    .mark_photo_erasure_deletion_failed(
+                        &claim.id,
+                        claim.attempt_count,
+                        max_attempts,
+                        "photo_object_deletion_failed",
+                    )
+                    .await,
+                ResourceReadResult::Unavailable
+            );
         }
     }
 
-    ResourceReadResult::Loaded(processed)
+    if mutation_unavailable {
+        ResourceReadResult::Unavailable
+    } else {
+        ResourceReadResult::Loaded(processed)
+    }
 }
 
 fn parse_positive_env(name: &str, default: u64) -> Result<u64, String> {

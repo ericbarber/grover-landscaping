@@ -1197,14 +1197,21 @@ impl JobRepository {
     }
 
     #[allow(dead_code)]
-    pub async fn mark_photo_processing_completed(&self, processing_job_id: &str) -> bool {
+    pub async fn mark_photo_processing_completed(
+        &self,
+        processing_job_id: &str,
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::mark_photo_processing_completed(pool, processing_job_id)
-            .await
-            .unwrap_or(false)
+        match postgres_write::mark_photo_processing_completed(pool, processing_job_id).await {
+            Ok(updated) => ResourceReadResult::Loaded(updated),
+            Err(error) => {
+                tracing::error!(%error, processing_job_id, "photo-processing completion write failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -1214,12 +1221,12 @@ impl JobRepository {
         attempt_count: i32,
         max_attempts: i32,
         error: &str,
-    ) -> bool {
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::mark_photo_processing_failed(
+        match postgres_write::mark_photo_processing_failed(
             pool,
             processing_job_id,
             attempt_count,
@@ -1227,7 +1234,13 @@ impl JobRepository {
             error,
         )
         .await
-        .unwrap_or(false)
+        {
+            Ok(updated) => ResourceReadResult::Loaded(updated),
+            Err(write_error) => {
+                tracing::error!(%write_error, processing_job_id, "photo-processing failure write failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -1366,13 +1379,20 @@ impl JobRepository {
         }
     }
 
-    pub async fn mark_photo_erasure_deletion_completed(&self, id: &str) -> bool {
+    pub async fn mark_photo_erasure_deletion_completed(
+        &self,
+        id: &str,
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Unavailable;
         };
-        postgres_privacy::mark_photo_erasure_deletion_completed(pool, id)
-            .await
-            .unwrap_or(false)
+        match postgres_privacy::mark_photo_erasure_deletion_completed(pool, id).await {
+            Ok(updated) => ResourceReadResult::Loaded(updated),
+            Err(error) => {
+                tracing::error!(%error, id, "photo-erasure deletion completion write failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn mark_photo_erasure_deletion_failed(
@@ -1381,11 +1401,11 @@ impl JobRepository {
         attempt_count: i32,
         max_attempts: i32,
         error: &str,
-    ) -> bool {
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Unavailable;
         };
-        postgres_privacy::mark_photo_erasure_deletion_failed(
+        match postgres_privacy::mark_photo_erasure_deletion_failed(
             pool,
             id,
             attempt_count,
@@ -1393,7 +1413,13 @@ impl JobRepository {
             error,
         )
         .await
-        .unwrap_or(false)
+        {
+            Ok(updated) => ResourceReadResult::Loaded(updated),
+            Err(write_error) => {
+                tracing::error!(%write_error, id, "photo-erasure deletion failure write failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn list_photo_erasure_deletion_history(

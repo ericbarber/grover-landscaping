@@ -76,6 +76,30 @@ async fn repository_distinguishes_unavailable_photo_writes() {
         repository.claim_photo_erasure_deletion_batch(10, 3).await,
         ResourceReadResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .mark_photo_processing_completed("processing_outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .mark_photo_processing_failed("processing_outage", 1, 3, "outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .mark_photo_erasure_deletion_completed("deletion_outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .mark_photo_erasure_deletion_failed("deletion_outage", 1, 3, "outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -416,11 +440,12 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
     );
     assert_eq!(claim.attempt_count, 1);
 
-    assert!(
+    assert!(loaded(
         repository
-            .mark_photo_processing_failed(&claim.id, claim.attempt_count, 3, "temporary failure")
-            .await
-    );
+            .mark_photo_processing_failed(&claim.id, claim.attempt_count, 3, "temporary failure",)
+            .await,
+        "photo processing failure should persist",
+    ));
     assert!(
         loaded(
             repository.claim_photo_processing_batch(10, 3).await,
@@ -444,20 +469,24 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
     assert_eq!(retry_claimed[0].id, queued.id);
     assert_eq!(retry_claimed[0].attempt_count, 2);
 
-    assert!(
+    assert!(loaded(
         repository
             .mark_photo_processing_completed(&retry_claimed[0].id)
-            .await
-    );
-    assert!(
-        !repository
-            .mark_photo_processing_failed(
-                &retry_claimed[0].id,
-                retry_claimed[0].attempt_count,
-                3,
-                "late failure"
-            )
             .await,
+        "photo processing completion should persist",
+    ));
+    assert!(
+        !loaded(
+            repository
+                .mark_photo_processing_failed(
+                    &retry_claimed[0].id,
+                    retry_claimed[0].attempt_count,
+                    3,
+                    "late failure",
+                )
+                .await,
+            "late photo processing failure should be checked",
+        ),
         "completed processing jobs should not be failed afterward"
     );
 
