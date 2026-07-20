@@ -670,10 +670,11 @@ Current state:
 - Audit-launched crew inspection exposes a focused return action back to owner activity
 - Audit-launched crew inspection keeps the readable move scope, source, and destination visible beside crew controls
 - Crew inspection context includes the immutable audit event ID and localized event timestamp
+- Crew inspection copies immutable audit IDs with explicit fallback on mobile origins without clipboard access
 
 Next implementation work:
 
-- Copy the immutable audit event ID from crew inspection
+- Copy a readable crew-move support summary from audit-launched inspection
 
 ## Planned
 

@@ -27,6 +27,7 @@ type Props = {
   crewInspectionReturnLabel?: string;
   crewInspectionSummary?: string;
   crewInspectionAuditLabel?: string;
+  crewInspectionAuditId?: string;
   onReturnFromCrewInspection?: () => void;
 };
 
@@ -90,6 +91,7 @@ export function FirstOwnerOnboardingPanel({
   crewInspectionReturnLabel,
   crewInspectionSummary,
   crewInspectionAuditLabel,
+  crewInspectionAuditId,
   onReturnFromCrewInspection,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
@@ -528,6 +530,7 @@ export function FirstOwnerOnboardingPanel({
               inspectionReturnLabel={crewInspectionReturnLabel}
               inspectionSummary={crewInspectionSummary}
               inspectionAuditLabel={crewInspectionAuditLabel}
+              inspectionAuditId={crewInspectionAuditId}
               onReturnFromInspection={onReturnFromCrewInspection}
               onReturnToHierarchy={onReturnToDispatchHierarchy}
               requestedBranchId={crewBranchRequest}

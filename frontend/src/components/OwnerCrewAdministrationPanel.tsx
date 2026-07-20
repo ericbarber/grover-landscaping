@@ -23,6 +23,7 @@ type Props = {
   inspectionReturnLabel?: string;
   inspectionSummary?: string;
   inspectionAuditLabel?: string;
+  inspectionAuditId?: string;
   onReturnFromInspection?: () => void;
 };
 
@@ -43,6 +44,7 @@ export function OwnerCrewAdministrationPanel({
   inspectionReturnLabel,
   inspectionSummary,
   inspectionAuditLabel,
+  inspectionAuditId,
   onReturnFromInspection,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -170,6 +172,16 @@ export function OwnerCrewAdministrationPanel({
     setMessage('Prepared destination cleared. The crew’s saved hierarchy assignment is restored.');
   }
 
+  async function copyInspectionAuditId() {
+    if (!inspectionAuditId) return;
+    try {
+      await navigator.clipboard.writeText(inspectionAuditId);
+      setMessage('Audit event ID copied.');
+    } catch {
+      setMessage('Copy is unavailable. Select the audit event ID text instead.');
+    }
+  }
+
   async function save(nextStatus = selectedCrew?.status) {
     if (
       !selectedCrew
@@ -247,6 +259,15 @@ export function OwnerCrewAdministrationPanel({
           <p className="font-medium">{inspectionSummary}</p>
           {inspectionAuditLabel ? (
             <p className="mt-2 break-all text-sky-800">{inspectionAuditLabel}</p>
+          ) : null}
+          {inspectionAuditId ? (
+            <button
+              className="mt-2 min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
+              onClick={() => void copyInspectionAuditId()}
+              type="button"
+            >
+              Copy audit event ID
+            </button>
           ) : null}
         </div>
       ) : null}

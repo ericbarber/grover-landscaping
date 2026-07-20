@@ -401,6 +401,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
     `Within-branch audited move: Main Branch · Primary Territory → Main Branch · ${territoryName}`,
   )).toBeVisible();
   await expect(crewAdministration.getByText(/Audit audit_e2e_crew_hierarchy_move/)).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Copy audit event ID' }).click();
+  await expect(crewAdministration.getByText(
+    /Audit event ID copied|Copy is unavailable/,
+  )).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
