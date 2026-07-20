@@ -98,6 +98,10 @@ import {
   JobWorkflowMenu,
   type JobWorkflowSection,
 } from './components/JobWorkflowMenu';
+import {
+  CustomerHistoryMenu,
+  type CustomerHistoryView,
+} from './components/CustomerHistoryMenu';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -480,6 +484,8 @@ function CustomerPortalPreviewPanel({
   hasProjectBidHistoryError: boolean;
 }) {
   const [selectedPortalPropertyId, setSelectedPortalPropertyId] = useState<string | null>(null);
+  const [activeCustomerHistory, setActiveCustomerHistory] =
+    useState<CustomerHistoryView>('properties');
   const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
   const visibleWorkSummaries = filterWorkSummariesForCustomerPortal(workSummaries, customer);
   const deliveredReportCount = Object.values(completionReportsByProperty).reduce(
@@ -531,7 +537,17 @@ function CustomerPortalPreviewPanel({
         </div>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <CustomerHistoryMenu
+        activeView={activeCustomerHistory}
+        bidCount={projectBids.length}
+        onChange={(view) => {
+          setActiveCustomerHistory(view);
+          setSelectedPortalPropertyId(null);
+        }}
+        propertyCount={visibleProperties.length}
+      />
+
+      <div className={`${activeCustomerHistory === 'properties' ? 'block' : 'hidden'} mt-5 space-y-3 lg:block`}>
         <div className={`${selectedPortalPropertyId ? 'hidden' : 'grid'} gap-2 lg:hidden`}>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Choose a property
@@ -631,8 +647,8 @@ function CustomerPortalPreviewPanel({
           );
         })}
       </div>
-      {projectBids.length > 0 && (
-        <div className="mt-5 space-y-2">
+      {projectBids.length > 0 ? (
+        <div className={`${activeCustomerHistory === 'bids' ? 'block' : 'hidden'} mt-5 space-y-2 lg:block`}>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Bid history</p>
           {projectBids.map((bid) => {
             const bidTotal = currencyLabel(projectBidTotalCents(bid));
@@ -660,7 +676,11 @@ function CustomerPortalPreviewPanel({
             );
           })}
         </div>
-      )}
+      ) : activeCustomerHistory === 'bids' ? (
+        <p className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
+          No bids are currently available for this customer.
+        </p>
+      ) : null}
     </section>
   );
 }
