@@ -1,6 +1,10 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { fetchCrews, type CrewRecord } from '../api/client';
-import { createDraftDayPlanWithFallback, type DayPlanMutationResponse } from '../api/dayPlansClient';
+import {
+  createDraftDayPlanWithFallback,
+  DayPlanRequestError,
+  type DayPlanMutationResponse,
+} from '../api/dayPlansClient';
 import type { YardCareJob } from '../domain/jobs';
 import {
   canCreateManagerDayPlanDraft,
@@ -86,8 +90,10 @@ export function ManagerDayPlanPanel({
         setDraftPlan(dayPlan);
         setRoutePublishGuard(emptyRoutePublishGuard);
       })
-      .catch(() => setDraftError(
-        'Draft was not saved, so scheduling stayed unchanged. Refresh the crew schedule and try again.',
+      .catch((error) => setDraftError(
+        error instanceof DayPlanRequestError && error.code === 'day_plan_draft_not_found'
+          ? 'The selected crew is no longer available. Refresh the crew list before scheduling.'
+          : 'Draft was not saved, so scheduling stayed unchanged. Refresh the crew schedule and try again.',
       ))
       .finally(() => setIsCreating(false));
   }

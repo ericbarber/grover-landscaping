@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { DayPlanMutationResponse } from '../api/dayPlansClient';
 import { publishDayPlan } from '../api/dayPlanPublishingClient';
+import { isApiErrorCode } from '../api/apiError';
 
 type ManagerPublishDayPlanButtonProps = {
   draftPlan: DayPlanMutationResponse;
@@ -30,7 +31,11 @@ export function ManagerPublishDayPlanButton({
 
     void publishDayPlan(draftPlan.id)
       .then(onPublished)
-      .catch(() => setPublishError('Publish failed. Confirm this draft has synced stops and try again before sending the route to crews.'))
+      .catch((error) => setPublishError(
+        isApiErrorCode(error, 'day_plan_publish_not_found')
+          ? 'This route draft is no longer available. Refresh scheduling before publishing.'
+          : 'Publish failed. Confirm this draft has synced stops and try again before sending the route to crews.',
+      ))
       .finally(() => setIsPublishing(false));
   }
 

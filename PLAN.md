@@ -846,10 +846,12 @@ Current state:
 - S3 photo completion fails closed when required thumbnail or inspection recovery work cannot be queued
 - Amendment reviews distinguish missing requests from requests that changed before a manager decision
 - Manager amendment feedback distinguishes missing, conflicting, and unavailable review writes
+- Day-plan draft creation and publication distinguish missing crews or drafts from lifecycle conflicts
+- Manager scheduling feedback directs missing route targets back to authoritative crew and schedule refreshes
 
 Next implementation work:
 
-- Audit remaining day-plan mutations for missing or conflict persistence fallbacks
+- Audit remaining route-stop mutations for missing or conflict persistence fallbacks
 - Audit notification delivery and recovery paths for remaining lossy provider fallbacks
 - Harden and validate the next highest-impact persisted workflow
 

@@ -576,8 +576,8 @@ async fn repository_reports_rejected_persisted_route_stop_mutations() {
         )
         .await;
 
-    assert!(matches!(draft_creation, PersistedMutationResult::Conflict));
-    assert!(matches!(publication, PersistedMutationResult::Conflict));
+    assert!(matches!(draft_creation, PersistedMutationResult::NotFound));
+    assert!(matches!(publication, PersistedMutationResult::NotFound));
     assert!(matches!(assignment, PersistedMutationResult::Conflict));
     assert!(matches!(removal, PersistedMutationResult::Conflict));
     assert!(matches!(reorder, PersistedMutationResult::NotFound));

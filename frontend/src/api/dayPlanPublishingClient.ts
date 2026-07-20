@@ -1,6 +1,7 @@
 import type { DayPlanMutationResponse } from './dayPlansClient';
 import { API_BASE_URL } from './baseUrl';
 import { authenticatedFetch } from './authenticatedFetch';
+import { apiRequestError } from './apiError';
 
 interface ApiDayPlanMutationResponse {
   id: string;
@@ -55,7 +56,7 @@ export async function publishDayPlan(dayPlanId: string): Promise<DayPlanMutation
   });
 
   if (!response.ok) {
-    throw new Error(`Publish day plan request failed with status ${response.status}`);
+    throw await apiRequestError(response);
   }
 
   return assertPublishedDayPlan(

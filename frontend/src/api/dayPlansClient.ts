@@ -363,7 +363,14 @@ export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise
   });
 
   if (!response.ok) {
-    throw new DayPlanRequestError(response.status);
+    let code: string | undefined;
+    try {
+      const payload = await response.json() as { error?: unknown };
+      if (typeof payload.error === 'string') code = payload.error;
+    } catch {
+      // Upstream failures may not include a JSON response body.
+    }
+    throw new DayPlanRequestError(response.status, code);
   }
 
   const dayPlan = (await response.json()) as ApiDayPlanMutationResponse;

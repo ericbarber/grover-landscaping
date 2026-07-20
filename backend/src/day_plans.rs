@@ -967,7 +967,20 @@ impl DayPlanRepository {
             .await
             {
                 Ok(Some(day_plan)) => PersistedMutationResult::Applied(day_plan),
-                Ok(None) => PersistedMutationResult::Conflict,
+                Ok(None) => match sqlx::query_scalar::<_, bool>(
+                    "SELECT EXISTS(SELECT 1 FROM crews WHERE id = $1 AND status = 'active')",
+                )
+                .bind(&request.crew_id)
+                .fetch_one(pool)
+                .await
+                {
+                    Ok(true) => PersistedMutationResult::Conflict,
+                    Ok(false) => PersistedMutationResult::NotFound,
+                    Err(error) => {
+                        tracing::error!(%error, crew_id = request.crew_id, "persisted route draft recovery failed");
+                        PersistedMutationResult::Unavailable
+                    }
+                },
                 Err(error) => {
                     tracing::error!(%error, crew_id = request.crew_id, "persisted route draft creation failed");
                     PersistedMutationResult::Unavailable
@@ -993,7 +1006,16 @@ impl DayPlanRepository {
         if let Some(pool) = &self.pool {
             return match postgres_day_plans::publish_day_plan(pool, id, actor_user_id).await {
                 Ok(Some(day_plan)) => PersistedMutationResult::Applied(day_plan),
-                Ok(None) => PersistedMutationResult::Conflict,
+                Ok(None) => {
+                    match postgres_day_plans::organization_id_for_day_plan(pool, id).await {
+                        Ok(Some(_)) => PersistedMutationResult::Conflict,
+                        Ok(None) => PersistedMutationResult::NotFound,
+                        Err(error) => {
+                            tracing::error!(%error, day_plan_id = id, "persisted route publication recovery failed");
+                            PersistedMutationResult::Unavailable
+                        }
+                    }
+                }
                 Err(error) => {
                     tracing::error!(%error, day_plan_id = id, "persisted route publication failed");
                     PersistedMutationResult::Unavailable
