@@ -54,6 +54,7 @@ describe('team administration activity labels', () => {
         sourceTerritoryLabel: 'Desert Ridge',
         destinationBranchLabel: 'South Branch',
         destinationTerritoryLabel: 'Tempe',
+        crossBranchMove: true,
         occurredAt: '2026-07-19T13:00:00Z',
       },
     ];
@@ -124,12 +125,14 @@ describe('team administration activity labels', () => {
       sourceTerritoryLabel: 'Desert Ridge',
       destinationBranchLabel: 'South Branch',
       destinationTerritoryLabel: 'Tempe',
+      crossBranchMove: true,
       occurredAt: '2026-07-19T12:00:00Z',
     };
 
     expect(teamActivityCsv([item])).toContain(
       '"North Branch","Desert Ridge","South Branch","Tempe"',
     );
+    expect(teamActivityCsv([item])).toContain('"cross_branch"');
   });
 
   it('sorts a copy of loaded activity newest or oldest first', () => {

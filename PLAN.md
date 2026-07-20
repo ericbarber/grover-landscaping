@@ -656,10 +656,11 @@ Current state:
 - Completed crew moves can return directly to the refreshed, focusable hierarchy review on mobile
 - Pixel 7 smoke coverage proves territory staffing preparation, reset, direct crew selection, save confirmation, and hierarchy return without mutating shared fixture data
 - Owner activity resolves crew hierarchy audit metadata to readable source and destination names, searches those names server-side, and includes them in CSV exports
+- Owner activity and CSV exports classify crew hierarchy changes as cross-branch or within-branch moves
 
 Next implementation work:
 
-- Distinguish cross-branch crew moves from within-branch territory moves in owner activity
+- Filter owner activity by crew move scope
 
 ## Planned
 

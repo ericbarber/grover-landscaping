@@ -159,6 +159,7 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
     'source_territory',
     'destination_branch',
     'destination_territory',
+    'move_scope',
   ];
   const rows = activity.map((item) => [
     item.occurredAt,
@@ -172,6 +173,9 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
     item.sourceTerritoryLabel ?? '',
     item.destinationBranchLabel ?? '',
     item.destinationTerritoryLabel ?? '',
+    item.eventKind === 'crew_hierarchy_updated'
+      ? item.crossBranchMove ? 'cross_branch' : 'within_branch'
+      : '',
   ]);
   return [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\n');
 }
@@ -418,10 +422,19 @@ export function ManagerTeamActivityPanel({
               && item.destinationBranchLabel
               && item.destinationTerritoryLabel ? (
                 <p className="mt-2 rounded-lg bg-white p-2 text-xs text-slate-700">
+                  <span className={`mr-2 inline-block rounded-full px-2 py-1 font-bold ${
+                    item.crossBranchMove
+                      ? 'bg-amber-100 text-amber-950'
+                      : 'bg-sky-100 text-sky-950'
+                  }`}>
+                    {item.crossBranchMove ? 'Cross-branch move' : 'Within-branch move'}
+                  </span>
+                  <span className="block pt-2">
                   From {item.sourceBranchLabel} · {item.sourceTerritoryLabel}
                   <span aria-hidden="true"> → </span>
                   <span className="sr-only"> to </span>
                   {item.destinationBranchLabel} · {item.destinationTerritoryLabel}
+                  </span>
                 </p>
               ) : null}
             <details className="mt-2 text-xs text-slate-500">
