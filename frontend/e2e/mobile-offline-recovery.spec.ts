@@ -485,6 +485,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText('All matching crew moves are loaded.')).toBeVisible();
   await expect(teamActivity.getByText('26 matching crew moves loaded.')).toBeVisible();
   await expect(teamActivity.locator('ol > li')).toHaveCount(26);
+  await expect(teamActivity.locator('ol > li[aria-current="true"]')).toHaveCount(1);
+  await expect(teamActivity.locator('ol > li[aria-current="true"]'))
+    .toContainText('audit_e2e_latest_crew_hierarchy_move');
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')

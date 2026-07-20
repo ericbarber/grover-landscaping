@@ -690,10 +690,11 @@ Current state:
 - Full focused-history pages identify when older matching crew moves may remain available
 - Focused crew history confirms when pagination has loaded all matching moves
 - Focused crew pagination deduplicates overlapping cursor-boundary audit events by immutable event ID
+- The latest crew-move row remains the single semantic current item after older history is appended
 
 Next implementation work:
 
-- Keep the latest crew-move marker stable after older history is appended
+- Keep the latest move in view after older focused history loads
 
 ## Planned
 

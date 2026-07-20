@@ -813,11 +813,15 @@ export function ManagerTeamActivityPanel({
       ) : null}
       <ol className="mt-4 space-y-2">
         {filteredActivity.map((item) => (
-          <li className={`rounded-lg p-3 text-sm ${
+          <li
+            aria-current={item.id === latestFocusedCrewMoveId ? 'true' : undefined}
+            className={`rounded-lg p-3 text-sm ${
             item.id === latestFocusedCrewMoveId
               ? 'border-2 border-emerald-300 bg-emerald-50'
               : 'bg-slate-50'
-          }`} key={item.id}>
+            }`}
+            key={item.id}
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
                 {item.id === latestFocusedCrewMoveId ? (
