@@ -341,24 +341,37 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await page.route(
     '**/organizations/org_demo_landscaping/team-activity*',
     async (route) => {
+      const isFocusedCrewReview = new URL(route.request().url()).searchParams.get('target')
+        === originalCrew!.id;
+      const auditedMove = {
+        id: 'audit_e2e_crew_hierarchy_move',
+        actor_user_id: 'local-dev-user',
+        actor_label: 'Local Owner',
+        organization_id: 'org_demo_landscaping',
+        event_kind: 'crew_hierarchy_updated',
+        target_id: originalCrew!.id,
+        target_label: originalCrew!.name,
+        source_branch_label: 'Main Branch',
+        source_territory_label: 'Primary Territory',
+        destination_branch_label: 'Main Branch',
+        destination_territory_label: 'Primary Territory',
+        destination_branch_id: branch!.id,
+        destination_territory_id: originalCrew!.territory_id,
+        cross_branch_move: false,
+        occurred_at: '2026-07-20T03:00:00Z',
+      };
       await route.fulfill({
-        json: crewMoved ? [{
-          id: 'audit_e2e_crew_hierarchy_move',
-          actor_user_id: 'local-dev-user',
-          actor_label: 'Local Owner',
-          organization_id: 'org_demo_landscaping',
-          event_kind: 'crew_hierarchy_updated',
-          target_id: originalCrew!.id,
-          target_label: originalCrew!.name,
-          source_branch_label: 'Main Branch',
-          source_territory_label: 'Primary Territory',
-          destination_branch_label: 'Main Branch',
-          destination_territory_label: 'Primary Territory',
-          destination_branch_id: branch!.id,
-          destination_territory_id: originalCrew!.territory_id,
-          cross_branch_move: false,
-          occurred_at: '2026-07-20T03:00:00Z',
-        }] : [],
+        json: crewMoved ? [
+          ...(isFocusedCrewReview ? [{
+            ...auditedMove,
+            id: 'audit_e2e_latest_crew_hierarchy_move',
+            source_territory_label: 'Primary Territory',
+            destination_territory_label: territoryName,
+            destination_territory_id: territoryId,
+            occurred_at: '2026-07-20T04:00:00Z',
+          }] : []),
+          auditedMove,
+        ] : [],
       });
     },
   );
@@ -443,7 +456,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
-  await teamActivity.getByRole('button', { name: 'Open affected crew' }).click();
+  await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
+  await teamActivity.getByText('Latest crew move')
+    .locator('xpath=ancestor::li[1]')
+    .getByRole('button', { name: 'Open affected crew' })
+    .click();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))

@@ -27,7 +27,7 @@ type Props = {
   inspectedDestinationBranchId?: string;
   inspectedDestinationTerritoryId?: string;
   onReturnFromInspection?: () => void;
-  onFindLatestHierarchyMove?: (crewId: string) => void;
+  onFindLatestHierarchyMove?: (crew: CrewRecord) => void;
 };
 
 export function crewLeadOptionLabel(membership: OrganizationMembership): string {
@@ -359,7 +359,7 @@ export function OwnerCrewAdministrationPanel({
                   {onFindLatestHierarchyMove ? (
                     <button
                       className="mt-2 min-h-11 rounded-lg border border-amber-300 bg-white px-3 text-xs font-bold text-amber-950"
-                      onClick={() => onFindLatestHierarchyMove(selectedCrew.id)}
+                      onClick={() => onFindLatestHierarchyMove(selectedCrew)}
                       type="button"
                     >
                       Find latest crew move

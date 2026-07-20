@@ -281,12 +281,16 @@ export function ManagerTeamActivityPanel({
   refreshSignal = 0,
   requestedCrewId,
   requestedCrewSignal = 0,
+  requestedCrewBranchId,
+  requestedCrewTerritoryId,
   onOpenCrew,
 }: {
   organizationId: string;
   refreshSignal?: number;
   requestedCrewId?: string;
   requestedCrewSignal?: number;
+  requestedCrewBranchId?: string;
+  requestedCrewTerritoryId?: string;
   onOpenCrew?: (activity: TeamAdministrationActivity) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
@@ -345,6 +349,16 @@ export function ManagerTeamActivityPanel({
   const latestFocusedCrewMoveId = isFocusedCrewMoveReview
     ? filteredActivity[0]?.id
     : undefined;
+  const latestFocusedCrewMove = latestFocusedCrewMoveId
+    ? filteredActivity.find((item) => item.id === latestFocusedCrewMoveId)
+    : undefined;
+  const latestMoveMatchesCurrentAssignment = Boolean(
+    latestFocusedCrewMove
+    && requestedCrewBranchId
+    && requestedCrewTerritoryId
+    && latestFocusedCrewMove.destinationBranchId === requestedCrewBranchId
+    && latestFocusedCrewMove.destinationTerritoryId === requestedCrewTerritoryId,
+  );
 
   async function refresh() {
     if (!organizationId) return;
@@ -714,9 +728,22 @@ export function ManagerTeamActivityPanel({
             <div className="flex items-start justify-between gap-3">
               <div>
                 {item.id === latestFocusedCrewMoveId ? (
-                  <p className="mb-1 inline-block rounded-full bg-emerald-200 px-2 py-1 text-xs font-bold text-emerald-950">
-                    Latest crew move
-                  </p>
+                  <div className="mb-1 flex flex-wrap gap-1">
+                    <p className="inline-block rounded-full bg-emerald-200 px-2 py-1 text-xs font-bold text-emerald-950">
+                      Latest crew move
+                    </p>
+                    {requestedCrewBranchId && requestedCrewTerritoryId ? (
+                      <p className={`inline-block rounded-full px-2 py-1 text-xs font-bold ${
+                        latestMoveMatchesCurrentAssignment
+                          ? 'bg-sky-200 text-sky-950'
+                          : 'bg-amber-200 text-amber-950'
+                      }`}>
+                        {latestMoveMatchesCurrentAssignment
+                          ? 'Destination matches current assignment'
+                          : 'Destination differs from current assignment'}
+                      </p>
+                    ) : null}
+                  </div>
                 ) : null}
                 <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
               </div>

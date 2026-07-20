@@ -922,6 +922,10 @@ export function App() {
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
   const [teamActivityRequestedCrewId, setTeamActivityRequestedCrewId] = useState<string>();
+  const [teamActivityRequestedCrewBranchId, setTeamActivityRequestedCrewBranchId] =
+    useState<string>();
+  const [teamActivityRequestedCrewTerritoryId, setTeamActivityRequestedCrewTerritoryId] =
+    useState<string>();
   const [teamActivityRequestedCrewSignal, setTeamActivityRequestedCrewSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
@@ -2719,14 +2723,16 @@ export function App() {
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
             }}
-            onFindLatestCrewHierarchyMove={(crewId) => {
+            onFindLatestCrewHierarchyMove={(crew) => {
               setCrewAdministrationReturnTarget(undefined);
               setCrewAdministrationInspectionSummary(undefined);
               setCrewAdministrationInspectionAuditLabel(undefined);
               setCrewAdministrationInspectionAuditId(undefined);
               setCrewAdministrationInspectedDestinationBranchId(undefined);
               setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              setTeamActivityRequestedCrewId(crewId);
+              setTeamActivityRequestedCrewId(crew.id);
+              setTeamActivityRequestedCrewBranchId(crew.branchId ?? undefined);
+              setTeamActivityRequestedCrewTerritoryId(crew.territoryId ?? undefined);
               setTeamActivityRequestedCrewSignal((current) => current + 1);
               const target = document.getElementById('team-activity-review');
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2855,7 +2861,9 @@ export function App() {
               }}
               organizationId={activeManagerOrganizationId}
               requestedCrewId={teamActivityRequestedCrewId}
+              requestedCrewBranchId={teamActivityRequestedCrewBranchId}
               requestedCrewSignal={teamActivityRequestedCrewSignal}
+              requestedCrewTerritoryId={teamActivityRequestedCrewTerritoryId}
               refreshSignal={teamActivityRefreshSignal}
             />
           </div>

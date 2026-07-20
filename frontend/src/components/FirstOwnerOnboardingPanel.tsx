@@ -31,7 +31,7 @@ type Props = {
   crewInspectedDestinationBranchId?: string;
   crewInspectedDestinationTerritoryId?: string;
   onReturnFromCrewInspection?: () => void;
-  onFindLatestCrewHierarchyMove?: (crewId: string) => void;
+  onFindLatestCrewHierarchyMove?: (crew: CrewRecord) => void;
 };
 
 export type FirstOwnerSetupTarget =

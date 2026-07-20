@@ -679,10 +679,11 @@ Current state:
 - Copied, shared, and downloaded support summaries include the current hierarchy when it differs from the audited destination
 - Stale crew inspections open a newest-first hierarchy activity view filtered to the inspected crew
 - Focused crew history highlights the newest matching hierarchy event as the latest crew move
+- Focused crew history compares the latest move destination with the current assignment captured during inspection
 
 Next implementation work:
 
-- Show whether the latest crew move now matches the inspected crew's current hierarchy
+- Preserve focused latest-move context when reopening and returning from crew inspection
 
 ## Planned
 
