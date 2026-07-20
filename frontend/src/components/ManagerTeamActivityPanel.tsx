@@ -850,6 +850,10 @@ export function ManagerTeamActivityPanel({
             item.id === latestFocusedCrewMoveId
               ? 'border-2 border-emerald-300 bg-emerald-50'
               : 'bg-slate-50'
+            } ${
+              returnedAuditSignal > 0 && item.id === returnedAuditId
+                ? 'ring-4 ring-sky-300'
+                : ''
             }`}
             id={`team-activity-${item.id}`}
             key={item.id}
@@ -874,6 +878,11 @@ export function ManagerTeamActivityPanel({
                       </p>
                     ) : null}
                   </div>
+                ) : null}
+                {returnedAuditSignal > 0 && item.id === returnedAuditId ? (
+                  <p className="mb-1 inline-block rounded-full bg-sky-200 px-2 py-1 text-xs font-bold text-sky-950">
+                    Restored after inspection
+                  </p>
                 ) : null}
                 <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
               </div>
