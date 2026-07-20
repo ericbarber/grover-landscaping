@@ -52,4 +52,29 @@ describe('dispatch hierarchy summaries', () => {
     expect(filterDispatchHierarchy(branches, territories, 'south').territories)
       .toEqual([territories[1]]);
   });
+
+  it('applies lifecycle status with search and clears through all-status inputs', () => {
+    const branches = [
+      { id: 'branch_1', name: 'North', code: 'N', status: 'active' },
+      { id: 'branch_2', name: 'North Archive', code: 'NA', status: 'inactive' },
+    ] as OrganizationBranchRecord[];
+    const territories = [
+      { id: 'territory_1', branchId: 'branch_1', name: 'North', status: 'active' },
+      {
+        id: 'territory_2',
+        branchId: 'branch_2',
+        name: 'North Archive',
+        status: 'inactive',
+      },
+    ] as ServiceTerritoryRecord[];
+
+    expect(filterDispatchHierarchy(branches, territories, 'north', 'inactive')).toEqual({
+      branches: [branches[1]],
+      territories: [territories[1]],
+    });
+    expect(filterDispatchHierarchy(branches, territories, '', 'all')).toEqual({
+      branches,
+      territories,
+    });
+  });
 });

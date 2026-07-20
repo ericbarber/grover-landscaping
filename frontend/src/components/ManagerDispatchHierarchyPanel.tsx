@@ -39,16 +39,23 @@ export function filterDispatchHierarchy(
   branches: OrganizationBranchRecord[],
   territories: ServiceTerritoryRecord[],
   query: string,
+  status: 'all' | 'active' | 'inactive' = 'all',
 ) {
+  const statusBranches = status === 'all'
+    ? branches
+    : branches.filter((branch) => branch.status === status);
+  const statusTerritories = status === 'all'
+    ? territories
+    : territories.filter((territory) => territory.status === status);
   const normalized = query.trim().toLocaleLowerCase();
-  if (!normalized) return { branches, territories };
+  if (!normalized) return { branches: statusBranches, territories: statusTerritories };
   return {
-    branches: branches.filter((branch) => (
+    branches: statusBranches.filter((branch) => (
       branch.name.toLocaleLowerCase().includes(normalized)
       || branch.code.toLocaleLowerCase().includes(normalized)
       || branch.serviceAreaLabel?.toLocaleLowerCase().includes(normalized)
     )),
-    territories: territories.filter((territory) => {
+    territories: statusTerritories.filter((territory) => {
       const branch = branches.find((item) => item.id === territory.branchId);
       return territory.name.toLocaleLowerCase().includes(normalized)
         || branch?.name.toLocaleLowerCase().includes(normalized)
@@ -73,8 +80,15 @@ export function ManagerDispatchHierarchyPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
   const [hierarchyQuery, setHierarchyQuery] = useState('');
+  const [hierarchyStatus, setHierarchyStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const summary = summarizeDispatchHierarchy(branches, territories);
-  const visibleHierarchy = filterDispatchHierarchy(branches, territories, hierarchyQuery);
+  const visibleHierarchy = filterDispatchHierarchy(
+    branches,
+    territories,
+    hierarchyQuery,
+    hierarchyStatus,
+  );
+  const hasHierarchyFilters = Boolean(hierarchyQuery.trim()) || hierarchyStatus !== 'all';
 
   async function refreshHierarchy() {
     const [branchItems, territoryItems] = await Promise.all([
@@ -314,7 +328,33 @@ export function ManagerDispatchHierarchyPanel({
               value={hierarchyQuery}
             />
           </label>
-          {hierarchyQuery ? (
+          <label className="mt-2 block text-xs font-semibold text-slate-700">
+            Lifecycle status
+            <select
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal"
+              onChange={(event) => setHierarchyStatus(
+                event.target.value as 'all' | 'active' | 'inactive',
+              )}
+              value={hierarchyStatus}
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+          {hasHierarchyFilters ? (
+            <button
+              className="mt-2 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
+              onClick={() => {
+                setHierarchyQuery('');
+                setHierarchyStatus('all');
+              }}
+              type="button"
+            >
+              Clear hierarchy filters
+            </button>
+          ) : null}
+          {hasHierarchyFilters ? (
             <p className="mt-2 text-xs text-slate-500">
               Showing {visibleHierarchy.branches.length} of {branches.length} branches and{' '}
               {visibleHierarchy.territories.length} of {territories.length} territories.
