@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
+import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import {
   marketingPathForPersona,
   type MarketingPersonaId,
@@ -88,6 +89,15 @@ export function PublicLandingPage({
     setCanonicalUrl(canonicalUrl);
   }, [activePersona]);
 
+  useEffect(() => {
+    trackMarketingEvent('page_view', marketingPersonaFor(initialPersonaId));
+  }, [initialPersonaId]);
+
+  function openLeadDialog(persona: MarketingPersona, placement: string) {
+    trackMarketingEvent('cta_clicked', persona, placement);
+    setLeadDialogPersona(persona);
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f6f7f2] text-slate-950">
       <header className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-slate-950/80 text-white backdrop-blur-xl">
@@ -123,7 +133,7 @@ export function PublicLandingPage({
               {activePersona.description} Grover connects the people, properties, and proof behind exceptional landscape care.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona(activeMarketingPersona)} type="button">
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'hero')} type="button">
                 {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
               </button>
               <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 font-black text-white backdrop-blur-sm transition hover:bg-white/15" href="#who-its-for">
@@ -195,6 +205,7 @@ export function PublicLandingPage({
                 key={persona.id}
                 onClick={() => {
                   setActivePersonaId(persona.id);
+                  trackMarketingEvent('persona_selected', marketingPersonaFor(persona.id), 'audience_tabs');
                   window.history.replaceState(
                     null,
                     '',
@@ -215,7 +226,7 @@ export function PublicLandingPage({
               <p className="mt-4 text-base leading-7 text-slate-300">{activePersona.description}</p>
               <button
                 className="mt-7 rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
-                onClick={() => setLeadDialogPersona(activeMarketingPersona)}
+                onClick={() => openLeadDialog(activeMarketingPersona, 'persona_panel')}
                 type="button"
               >
                 {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
@@ -308,7 +319,7 @@ export function PublicLandingPage({
           <h2 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-6xl">A better property experience starts with a clearer day.</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">Step into Grover and explore the role-aware workspace already taking shape.</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona(activeMarketingPersona)} type="button">
+            <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
               {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
             </button>
             <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" href="/app">

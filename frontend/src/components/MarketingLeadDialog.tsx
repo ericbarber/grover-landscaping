@@ -5,6 +5,7 @@ import {
   type MarketingIntent,
   type MarketingPersona,
 } from '../api/marketingLeadsClient';
+import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 
 const personaLabels: Record<MarketingPersona, string> = {
   yard_owner: 'Yard owner',
@@ -57,6 +58,7 @@ export function MarketingLeadDialog({
   const [website, setWebsite] = useState('');
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'preview' | 'error'>('idle');
+  const [startTracked, setStartTracked] = useState(false);
   const callToAction = marketingCallToAction(persona);
 
   useEffect(() => {
@@ -84,8 +86,10 @@ export function MarketingLeadDialog({
         website,
         ...marketingAttributionFromSearch(window.location.search),
       });
+      trackMarketingEvent('form_submitted', persona, callToAction.intent);
       setStatus(receipt.persisted ? 'success' : 'preview');
     } catch {
+      trackMarketingEvent('form_failed', persona, callToAction.intent);
       setStatus('error');
     }
   }
@@ -149,7 +153,15 @@ export function MarketingLeadDialog({
               </div>
             </div>
           ) : (
-            <form className="p-7 sm:p-10" onSubmit={submit}>
+            <form
+              className="p-7 sm:p-10"
+              onFocusCapture={() => {
+                if (startTracked) return;
+                setStartTracked(true);
+                trackMarketingEvent('form_started', persona, callToAction.intent);
+              }}
+              onSubmit={submit}
+            >
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="text-sm font-bold text-slate-700">
                   I’m exploring Grover as

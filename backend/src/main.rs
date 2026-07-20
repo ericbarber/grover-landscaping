@@ -4,6 +4,7 @@ mod completion_reports;
 #[allow(dead_code)]
 mod day_plans;
 mod db;
+mod marketing_events;
 mod marketing_leads;
 mod notifications;
 mod photo_processing;
@@ -94,6 +95,9 @@ use grover_landscaping_api::{
         PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
 };
+use marketing_events::{
+    validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
+};
 use marketing_leads::{
     is_marketing_lead_spam, validate_marketing_lead_request, CreateMarketingLeadRequest,
     MarketingLeadRepository, MarketingLeadResponse, MarketingLeadWriteResult,
@@ -139,6 +143,7 @@ struct AppState {
     property_crew_assignments: PropertyCrewAssignmentRepository,
     property_onboarding: PropertyOnboardingRepository,
     marketing_leads: MarketingLeadRepository,
+    marketing_events: MarketingEventRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -423,6 +428,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         property_crew_assignments,
         property_onboarding,
         marketing_leads,
+        marketing_events,
         accounts,
         persistence,
     ) = match DatabaseConfig::from_env() {
@@ -440,7 +446,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let property_crew_assignments =
                 PropertyCrewAssignmentRepository::from_pool(pool.clone());
             let property_onboarding = PropertyOnboardingRepository::from_pool(pool.clone());
-            let marketing_leads = MarketingLeadRepository::from_pool(pool);
+            let marketing_leads = MarketingLeadRepository::from_pool(pool.clone());
+            let marketing_events = MarketingEventRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
                     .expect("connected jobs repository should expose a pool"),
@@ -455,6 +462,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 property_crew_assignments,
                 property_onboarding,
                 marketing_leads,
+                marketing_events,
                 accounts,
                 "postgres",
             )
@@ -474,6 +482,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             PropertyCrewAssignmentRepository::default(),
             PropertyOnboardingRepository::default(),
             MarketingLeadRepository::default(),
+            MarketingEventRepository::default(),
             AccountRepository::new(),
             "seed-local",
         ),
@@ -515,6 +524,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             property_crew_assignments,
             property_onboarding,
             marketing_leads,
+            marketing_events,
         }),
         persistence,
         persistence == "postgres",
@@ -568,6 +578,7 @@ fn app_with_runtime(
             }),
         )
         .route("/marketing-leads", post(create_marketing_lead))
+        .route("/marketing-events", post(create_marketing_event))
         .route("/me/access", get(get_my_access))
         .route(
             "/customer-accounts",
@@ -926,6 +937,25 @@ async fn create_marketing_lead(
             "Your request could not be saved. Please try again.",
         ),
     }
+}
+
+async fn create_marketing_event(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<CreateMarketingEventRequest>,
+) -> Response {
+    if !validate_marketing_event(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "marketing_event_invalid",
+                message: "Marketing event details are invalid.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let response = state.marketing_events.record(request).await;
+    (StatusCode::ACCEPTED, Json(response)).into_response()
 }
 
 async fn readiness(
@@ -6266,6 +6296,7 @@ mod tests {
             property_crew_assignments: PropertyCrewAssignmentRepository::default(),
             property_onboarding: PropertyOnboardingRepository::default(),
             marketing_leads: MarketingLeadRepository::default(),
+            marketing_events: MarketingEventRepository::default(),
         })
     }
 
@@ -6554,6 +6585,49 @@ mod tests {
             .unwrap();
 
         assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn marketing_event_endpoint_accepts_only_bounded_funnel_events() {
+        let event = serde_json::json!({
+            "session_id": "ms_123456789",
+            "event_name": "tour_step_selected",
+            "persona": "property_manager",
+            "detail": "care",
+            "source": "newsletter",
+            "landing_path": "/for-property-managers"
+        });
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/marketing-events")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(event.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::ACCEPTED);
+
+        let invalid = serde_json::json!({
+            "session_id": "ms_123456789",
+            "event_name": "fingerprint",
+            "persona": "property_manager",
+            "landing_path": "/"
+        });
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/marketing-events")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(invalid.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

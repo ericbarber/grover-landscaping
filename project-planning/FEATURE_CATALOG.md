@@ -12,7 +12,9 @@
 - Shareable persona campaign paths with tailored hero copy, calls to action, canonical metadata, and crawler controls
 - Interactive persona-aware Plan-Care-Proof product tour
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
-- Planned extensions: verified customer proof, production screenshots, lead notifications, and conversion analytics
+- First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
+- Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
+- Planned extensions: manager funnel reporting, verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces
 

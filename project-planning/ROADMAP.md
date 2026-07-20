@@ -22,6 +22,10 @@ The static workflow explanation has been replaced with a compact interactive
 Plan-Care-Proof tour. Persona-specific outcomes connect the same working product
 capabilities to each audience, while a capability-backed credibility section
 avoids unverified testimonials, logos, and performance claims.
+Privacy-limited first-party conversion measurement now records the marketing
+funnel from page view through lead submission. It uses a random per-tab session,
+bounded campaign and placement context, no third-party tracker, and no personal
+form data. Manager funnel reporting remains the next delivery slice.
 
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,

@@ -32,6 +32,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Interactive Plan-Care-Proof tour lets visitors inspect shipped route, field, offline, evidence, reporting, and recommendation workflows
 - Tour outcomes adapt to the active marketing persona while retaining a single connected product narrative
 - Credibility section maps marketing claims to delivered capabilities and explicitly reserves customer quotes, logos, and metrics for verified approvals
+- First-party conversion events measure page views, persona selection, tour use, CTA engagement, form starts, submissions, and failures
+- Analytics uses a random per-tab identifier plus bounded persona, placement, path, and UTM context without third-party cookies or personal form data
+- Public analytics API rejects events outside the explicit funnel allowlist and persists production events for later manager reporting
 
 ### Mobile navigation and context
 

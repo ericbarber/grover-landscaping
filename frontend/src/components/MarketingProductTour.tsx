@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { MarketingPersonaId } from '../domain/marketingRoute';
+import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
+import type { MarketingPersona } from '../api/marketingLeadsClient';
 
 type TourStepId = 'plan' | 'care' | 'prove';
 
@@ -56,6 +58,7 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
   const [activeStepId, setActiveStepId] = useState<TourStepId>('plan');
   const activeIndex = tourSteps.findIndex((step) => step.id === activeStepId);
   const activeStep = tourSteps[activeIndex];
+  const analyticsPersona = marketingPersonaForTour(persona);
 
   return (
     <section className="bg-slate-950 px-4 py-20 text-white sm:px-6 lg:px-8" id="tour">
@@ -82,7 +85,10 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
                       : 'text-slate-300 hover:bg-white/10 hover:text-white'
                   }`}
                   key={step.id}
-                  onClick={() => setActiveStepId(step.id)}
+                  onClick={() => {
+                    setActiveStepId(step.id);
+                    trackMarketingEvent('tour_step_selected', analyticsPersona, step.id);
+                  }}
                   role="tab"
                   type="button"
                 >
@@ -122,6 +128,13 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
       </div>
     </section>
   );
+}
+
+function marketingPersonaForTour(persona: MarketingPersonaId): MarketingPersona {
+  if (persona === 'owner') return 'yard_owner';
+  if (persona === 'property-manager') return 'property_manager';
+  if (persona === 'crew') return 'crew_lead';
+  return 'landscaping_company';
 }
 
 function TourPreview({ step }: { step: TourStepId }) {

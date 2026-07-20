@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Added privacy-limited first-party marketing funnel measurement with durable event capture and no third-party tracker.
 - 2026-07-20: Added an interactive persona-aware product tour and capability-backed credibility section without unverified customer claims.
 - 2026-07-20: Added persona campaign landing paths with first-screen personalization, canonical search/social metadata, and crawler controls.
 - 2026-07-20: Added persona-specific marketing conversion flows with consent, attribution, spam filtering, and durable production lead capture.
