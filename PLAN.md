@@ -649,10 +649,11 @@ Current state:
 - Active unstaffed territories can open crew administration with their branch and territory already prepared for review
 - Crew administration identifies prepared hierarchy destinations as unsaved and can restore the crew's saved assignment before submission
 - Each active unstaffed territory offers direct active-crew choices with current hierarchy and daily capacity context
+- Territory staffing candidate lists search crew and hierarchy names, cap initial results, and guide refinement when matches exceed the mobile list
 
 Next implementation work:
 
-- Add candidate search and result limits for large territory staffing lists
+- Prioritize same-branch staffing candidates before cross-branch crew moves
 
 ## Planned
 

@@ -7,6 +7,7 @@ import type {
 import {
   countActiveUnstaffedHierarchy,
   filterDispatchHierarchy,
+  filterStaffingCrewCandidates,
   parseDispatchHierarchyFilters,
   summarizeHierarchyCrewAssignments,
   summarizeDispatchHierarchy,
@@ -173,6 +174,49 @@ describe('dispatch hierarchy summaries', () => {
       branches: 1,
       territories: 1,
       total: 2,
+    });
+  });
+
+  it('searches active staffing candidates by crew and hierarchy context with a result limit', () => {
+    const branches = [
+      { id: 'branch_1', name: 'North Branch' },
+      { id: 'branch_2', name: 'South Branch' },
+    ] as OrganizationBranchRecord[];
+    const territories = [
+      { id: 'territory_1', branchId: 'branch_1', name: 'Desert Ridge' },
+      { id: 'territory_2', branchId: 'branch_2', name: 'Tempe' },
+    ] as ServiceTerritoryRecord[];
+    const crews = [
+      {
+        id: 'crew_1',
+        name: 'Bravo Crew',
+        branchId: 'branch_1',
+        territoryId: 'territory_1',
+        status: 'active',
+      },
+      {
+        id: 'crew_2',
+        name: 'Alpha Crew',
+        branchId: 'branch_1',
+        territoryId: 'territory_1',
+        status: 'active',
+      },
+      {
+        id: 'crew_3',
+        name: 'Archived South',
+        branchId: 'branch_2',
+        territoryId: 'territory_2',
+        status: 'inactive',
+      },
+    ] as CrewRecord[];
+
+    expect(filterStaffingCrewCandidates(crews, branches, territories, 'desert', 1)).toEqual({
+      crews: [crews[1]],
+      total: 2,
+    });
+    expect(filterStaffingCrewCandidates(crews, branches, territories, 'south')).toEqual({
+      crews: [],
+      total: 0,
     });
   });
 });

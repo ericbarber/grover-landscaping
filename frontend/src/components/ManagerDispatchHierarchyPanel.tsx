@@ -170,6 +170,30 @@ export function countActiveUnstaffedHierarchy(
   };
 }
 
+export function filterStaffingCrewCandidates(
+  crews: CrewRecord[],
+  branches: OrganizationBranchRecord[],
+  territories: ServiceTerritoryRecord[],
+  query: string,
+  limit = 6,
+) {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const matching = crews
+    .filter((crew) => crew.status === 'active')
+    .filter((crew) => {
+      if (!normalizedQuery) return true;
+      const branch = branches.find((item) => item.id === crew.branchId);
+      const territory = territories.find((item) => item.id === crew.territoryId);
+      return [crew.name, branch?.name, territory?.name]
+        .some((value) => value?.toLocaleLowerCase().includes(normalizedQuery));
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    crews: matching.slice(0, Math.max(0, limit)),
+    total: matching.length,
+  };
+}
+
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
@@ -192,6 +216,7 @@ export function ManagerDispatchHierarchyPanel({
   const [hierarchyQuery, setHierarchyQuery] = useState(initialFilters.query);
   const [hierarchyStatus, setHierarchyStatus] = useState(initialFilters.status);
   const [hierarchyAssignment, setHierarchyAssignment] = useState(initialFilters.assignment);
+  const [staffingCrewQueries, setStaffingCrewQueries] = useState<Record<string, string>>({});
   const filterOrganizationRef = useRef(organizationId);
   const summary = summarizeDispatchHierarchy(branches, territories);
   const visibleHierarchy = filterDispatchHierarchy(
@@ -614,6 +639,13 @@ export function ManagerDispatchHierarchyPanel({
               const canStaffTerritory = territory.status === 'active'
                 && (crewAssignments.territoryCounts[territory.id]?.active ?? 0) === 0
                 && Boolean(onOpenCrewAdministration);
+              const staffingCrewQuery = staffingCrewQueries[territory.id] ?? '';
+              const staffingCandidates = filterStaffingCrewCandidates(
+                crews,
+                branches,
+                territories,
+                staffingCrewQuery,
+              );
               return (
                 <div
                   className="rounded-lg bg-slate-50 p-3"
@@ -658,8 +690,22 @@ export function ManagerDispatchHierarchyPanel({
                           <summary className="min-h-11 cursor-pointer py-3 text-xs font-bold text-amber-950">
                             Choose an active crew
                           </summary>
+                          <label className="mb-2 block text-xs font-semibold text-slate-700">
+                            Search candidates
+                            <input
+                              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+                              maxLength={120}
+                              onChange={(event) => setStaffingCrewQueries((current) => ({
+                                ...current,
+                                [territory.id]: event.target.value,
+                              }))}
+                              placeholder="Crew, branch, or territory"
+                              type="search"
+                              value={staffingCrewQuery}
+                            />
+                          </label>
                           <div className="space-y-2">
-                            {crews.filter((crew) => crew.status === 'active').map((crew) => {
+                            {staffingCandidates.crews.map((crew) => {
                               const crewBranch = branches.find(
                                 (item) => item.id === crew.branchId,
                               );
@@ -686,7 +732,18 @@ export function ManagerDispatchHierarchyPanel({
                                 </button>
                               );
                             })}
+                            {staffingCandidates.total === 0 ? (
+                              <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                                No active crews match this search.
+                              </p>
+                            ) : null}
                           </div>
+                          {staffingCandidates.total > staffingCandidates.crews.length ? (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Showing {staffingCandidates.crews.length} of{' '}
+                              {staffingCandidates.total} matches. Refine the search to see more.
+                            </p>
+                          ) : null}
                         </details>
                       ) : (
                         <p className="mt-2 text-xs text-amber-800">
