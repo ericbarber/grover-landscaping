@@ -192,6 +192,27 @@ export function OwnerCrewAdministrationPanel({
     }
   }
 
+  async function shareInspectionSummary() {
+    if (!inspectionSummary || !inspectionAuditLabel) return;
+    if (!navigator.share) {
+      await copyInspectionSummary();
+      return;
+    }
+    try {
+      await navigator.share({
+        title: 'Crew move audit',
+        text: `${inspectionSummary}\n${inspectionAuditLabel}`,
+      });
+      setMessage('Crew move support summary shared.');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setMessage('Crew move support sharing canceled.');
+        return;
+      }
+      await copyInspectionSummary();
+    }
+  }
+
   async function save(nextStatus = selectedCrew?.status) {
     if (
       !selectedCrew
@@ -285,6 +306,13 @@ export function OwnerCrewAdministrationPanel({
                 type="button"
               >
                 Copy move support summary
+              </button>
+              <button
+                className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
+                onClick={() => void shareInspectionSummary()}
+                type="button"
+              >
+                Share move support summary
               </button>
             </div>
           ) : null}

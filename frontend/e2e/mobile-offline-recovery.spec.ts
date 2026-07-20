@@ -409,6 +409,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(crewAdministration.getByText(
     /Crew move support summary copied|Summary copy is unavailable/,
   )).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Share move support summary' }).click();
+  await expect(crewAdministration.getByText(
+    /Crew move support summary (shared|copied)|Summary copy is unavailable|sharing canceled/,
+  )).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))

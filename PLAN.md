@@ -672,10 +672,11 @@ Current state:
 - Crew inspection context includes the immutable audit event ID and localized event timestamp
 - Crew inspection copies immutable audit IDs with explicit fallback on mobile origins without clipboard access
 - Crew inspection copies a concise readable move path, timestamp, and immutable audit identity for support handoff
+- Crew inspection shares the support summary through the native phone share sheet and falls back to copy when sharing is unavailable
 
 Next implementation work:
 
-- Share the crew-move support summary through the native phone share sheet with copy fallback
+- Download the crew-move support summary as text when mobile sharing and clipboard are unavailable
 
 ## Planned
 
