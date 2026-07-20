@@ -94,7 +94,26 @@ describe('team administration activity labels', () => {
       { ...base, id: 'audit_2', eventKind: 'crew_profile_updated' },
       { ...base, id: 'audit_3', eventKind: 'organization_profile_updated' },
       { ...base, id: 'audit_4', eventKind: 'territory_status_updated' },
-    ])).toEqual({ total: 4, access: 1, crew: 1, organization: 2 });
+      {
+        ...base,
+        id: 'audit_5',
+        eventKind: 'crew_hierarchy_updated',
+        crossBranchMove: true,
+      },
+      {
+        ...base,
+        id: 'audit_6',
+        eventKind: 'crew_hierarchy_updated',
+        crossBranchMove: false,
+      },
+    ])).toEqual({
+      total: 6,
+      access: 1,
+      crew: 3,
+      organization: 2,
+      crossBranchMoves: 1,
+      withinBranchMoves: 1,
+    });
   });
 
   it('exports quoted CSV with readable and immutable audit identities', () => {

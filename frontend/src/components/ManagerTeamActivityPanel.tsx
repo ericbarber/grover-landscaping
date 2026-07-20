@@ -139,7 +139,13 @@ export function teamActivityTimestampLabel(occurredAt: string): string {
 export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
   return activity.reduce(
     (summary, item) => {
-      if (item.eventKind.startsWith('crew_')) summary.crew += 1;
+      if (item.eventKind.startsWith('crew_')) {
+        summary.crew += 1;
+        if (item.eventKind === 'crew_hierarchy_updated') {
+          if (item.crossBranchMove) summary.crossBranchMoves += 1;
+          else summary.withinBranchMoves += 1;
+        }
+      }
       else if (
         item.eventKind === 'organization_profile_updated'
         || item.eventKind.startsWith('branch_')
@@ -149,7 +155,14 @@ export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
       summary.total += 1;
       return summary;
     },
-    { total: 0, access: 0, crew: 0, organization: 0 },
+    {
+      total: 0,
+      access: 0,
+      crew: 0,
+      organization: 0,
+      crossBranchMoves: 0,
+      withinBranchMoves: 0,
+    },
   );
 }
 
@@ -336,12 +349,14 @@ export function ManagerTeamActivityPanel({
         </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
-      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
         {[
           ['Loaded', summary.total],
           ['Access', summary.access],
           ['Crew', summary.crew],
           ['Organization', summary.organization],
+          ['Cross-branch moves', summary.crossBranchMoves],
+          ['Within-branch moves', summary.withinBranchMoves],
         ].map(([label, value]) => (
           <div className="rounded-lg bg-slate-50 px-2 py-3" key={label}>
             <dt className="text-xs text-slate-500">{label}</dt>

@@ -658,10 +658,11 @@ Current state:
 - Owner activity resolves crew hierarchy audit metadata to readable source and destination names, searches those names server-side, and includes them in CSV exports
 - Owner activity and CSV exports classify crew hierarchy changes as cross-branch or within-branch moves
 - Owner activity filters cross-branch and within-branch crew moves server-side across paginated history
+- Owner activity summarizes loaded cross-branch and within-branch crew move counts separately
 
 Next implementation work:
 
-- Summarize loaded cross-branch and within-branch move counts for owner review
+- Turn crew move scope summaries into one-tap paginated review filters
 
 ## Planned
 
