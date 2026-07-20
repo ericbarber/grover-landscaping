@@ -26,6 +26,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Mobile managers land on a compact six-category home instead of every office tool in one continuous page
 - Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render one task group at a time on mobile
+- Each manager category has a compact task picker and renders only one selected tool on mobile
+- Customer, team, report, schedule, and recovery panels no longer stack together inside their category views
+- Active manager tools collapse the picker into a compact context bar with a clear return to the category tools
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -880,7 +883,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with compact route/job summaries, shorter customer and team sub-workspaces, and iPhone interaction validation
+- Continue the mobile navigation phase with compact route/job summaries, shorter yard-owner property history, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention

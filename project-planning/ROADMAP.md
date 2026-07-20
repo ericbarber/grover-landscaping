@@ -14,7 +14,8 @@ position, and validate the complete interaction model on iPhone. Persona-aware
 navigation now separates yard owners, property managers, field crews, yard-care
 company operators, dispatch, billing, and support. Mobile managers now enter a
 compact task-category home and load only one category at a time; the next slices
-will shorten the customer, team, route, and job content within those workspaces.
+now use a second-level task picker so only one manager tool renders at a time.
+The next slices will shorten route, job, and yard-owner property history content.
 
 ## Immediate Continuation Work
 
