@@ -249,6 +249,9 @@ Current continuation work:
 - PostgreSQL-backed route-request creation and manager review now return explicit
   failure responses, while idempotent replay still recovers saved requests and
   first-attempt conflicts enter durable review immediately.
+- PostgreSQL-backed amendment-list failures now return an unavailable response
+  instead of presenting an empty manager review queue; demo mode retains its
+  intentionally empty queue.
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
 - First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.

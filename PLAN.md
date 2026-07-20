@@ -152,6 +152,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend create and list amendment endpoints
 - PostgreSQL-backed route-amendment creation and review return explicit conflict or unavailable responses instead of local-success payloads
 - First-attempt amendment conflicts enter the durable manager-review queue immediately
+- PostgreSQL-backed amendment-list failures return an unavailable response instead of an empty review queue
+- No-database demo mode retains an intentionally empty amendment queue
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -328,9 +330,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed amendment-list reads from translating persistence failures into an empty review queue
-- Return explicit unavailable results while retaining an empty no-database demo queue
-- Render unavailable amendment review separately from a genuinely empty queue
+- Stop PostgreSQL-backed crew and day-plan ownership lookups from falling back to seeded tenant IDs
+- Return explicit missing and unavailable ownership results while retaining no-database demo ownership
+- Prove route authorization fails closed when persisted ownership cannot be resolved
 
 ### Manager scheduling workflow
 
@@ -741,9 +743,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed amendment-list reads from translating persistence failures into an empty review queue
-- Return explicit unavailable results while retaining an empty no-database demo queue
-- Render unavailable amendment review separately from a genuinely empty queue
+- Stop PostgreSQL-backed crew and day-plan ownership lookups from falling back to seeded tenant IDs
+- Return explicit missing and unavailable ownership results while retaining no-database demo ownership
+- Prove route authorization fails closed when persisted ownership cannot be resolved
 
 ## Planned
 

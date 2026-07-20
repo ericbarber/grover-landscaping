@@ -47,6 +47,12 @@ pub enum PersistedMutationResult<T> {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum PersistedReadResult<T> {
+    Loaded(T),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct CrewSummary {
     pub id: String,
@@ -1125,14 +1131,21 @@ impl DayPlanRepository {
         PersistedMutationResult::Applied(response)
     }
 
-    pub async fn list_amendments(&self, day_plan_id: &str) -> Vec<DayPlanAmendmentResponse> {
+    pub async fn list_amendments(
+        &self,
+        day_plan_id: &str,
+    ) -> PersistedReadResult<Vec<DayPlanAmendmentResponse>> {
         if let Some(pool) = &self.pool {
-            if let Ok(amendments) = postgres_day_plans::list_amendments(pool, day_plan_id).await {
-                return amendments;
-            }
+            return match postgres_day_plans::list_amendments(pool, day_plan_id).await {
+                Ok(amendments) => PersistedReadResult::Loaded(amendments),
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted route amendment list failed");
+                    PersistedReadResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        PersistedReadResult::Loaded(Vec::new())
     }
 
     pub async fn review_amendment(

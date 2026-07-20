@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
-        PersistedMutationResult, ReviewDayPlanAmendmentRequest,
+        PersistedMutationResult, PersistedReadResult, ReviewDayPlanAmendmentRequest,
     },
     db::{JobAddOnStatusUpdate, JobRepository},
     project_bids::{
@@ -9,12 +9,20 @@ use grover_landscaping_api::{
         ProjectBidSendResult, SendProjectBidRequest,
     },
 };
-use sqlx::Row;
+use sqlx::{postgres::PgPoolOptions, Row};
+use std::time::Duration;
 mod common;
 
 fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
     match result {
         PersistedMutationResult::Applied(value) => value,
+        other => panic!("{context}, got {other:?}"),
+    }
+}
+
+fn loaded<T: std::fmt::Debug>(result: PersistedReadResult<T>, context: &str) -> T {
+    match result {
+        PersistedReadResult::Loaded(value) => value,
         other => panic!("{context}, got {other:?}"),
     }
 }
@@ -111,6 +119,21 @@ async fn repository_reports_rejected_persisted_amendment_writes() {
 }
 
 #[tokio::test]
+async fn repository_reports_unavailable_persisted_amendment_reads() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = DayPlanRepository::from_pool(pool);
+
+    let result = repository
+        .list_amendments("day_plan_2026_06_15_crew_1001")
+        .await;
+
+    assert!(matches!(result, PersistedReadResult::Unavailable));
+}
+
+#[tokio::test]
 async fn repository_persists_and_lists_day_plan_amendments() {
     let Some(config) = common::database_config() else {
         return;
@@ -166,7 +189,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert!(created.persisted);
     assert!(created.requires_bid);
 
-    let amendments = repository.list_amendments(day_plan_id).await;
+    let amendments = loaded(
+        repository.list_amendments(day_plan_id).await,
+        "persisted amendments should load",
+    );
     let persisted = amendments
         .iter()
         .find(|amendment| amendment.id == created.id)

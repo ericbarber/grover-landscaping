@@ -297,6 +297,27 @@ test('marks a rejected persisted route request as a conflict without waiting for
   await expect(page.getByText('Route-level request · conflict')).toBeVisible();
 });
 
+test('distinguishes an unavailable persisted amendment queue from an empty queue', async ({ page }) => {
+  await page.route('**/day-plans/*/amendments', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'day_plan_amendments_unavailable',
+      message: 'The persisted route request queue could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const scheduling = page.getByRole('heading', { name: 'Create day plan' })
+    .locator('xpath=ancestor::section[1]');
+
+  await expect(scheduling.getByText(
+    'Amendment review is unavailable until the API reconnects.',
+  )).toBeVisible();
+  await expect(scheduling.getByText('No amendment requests for this route.')).toHaveCount(0);
+});
+
 test('keeps the manager route unchanged when a persisted stop mutation is rejected', async ({ page }) => {
   await page.route('**/day-plans', async (route) => {
     const request = route.request();

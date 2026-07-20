@@ -4821,7 +4821,17 @@ async fn list_day_plan_amendments(
         return response;
     }
 
-    Json(state.day_plans.list_amendments(&day_plan_id).await).into_response()
+    match state.day_plans.list_amendments(&day_plan_id).await {
+        day_plans::PersistedReadResult::Loaded(amendments) => Json(amendments).into_response(),
+        day_plans::PersistedReadResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_amendments_unavailable",
+                message: "The persisted route request queue could not be loaded.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn review_day_plan_amendment(
