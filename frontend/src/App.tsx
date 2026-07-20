@@ -2827,6 +2827,11 @@ export function App() {
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
+                onOpenCrewAdministration={() => {
+                  const target = document.getElementById('crew-administration');
+                  target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  target?.focus({ preventScroll: true });
+                }}
                 refreshSignal={dispatchHierarchyRefreshSignal}
                 onChanged={() => {
                   setDispatchHierarchyRefreshSignal((current) => current + 1);

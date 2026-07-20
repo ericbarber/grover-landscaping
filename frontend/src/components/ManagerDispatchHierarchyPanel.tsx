@@ -15,6 +15,7 @@ import {
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
   onChanged: () => void;
+  onOpenCrewAdministration?: () => void;
   refreshSignal?: number;
 };
 
@@ -168,6 +169,7 @@ export function countActiveUnstaffedHierarchy(
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
+  onOpenCrewAdministration,
   refreshSignal = 0,
 }: ManagerDispatchHierarchyPanelProps) {
   const initialFilters = loadDispatchHierarchyFilters(organizationId);
@@ -519,6 +521,17 @@ export function ManagerDispatchHierarchyPanel({
               Clear hierarchy filters
             </button>
           ) : null}
+          {hierarchyAssignment === 'unstaffed'
+            && visibleHierarchy.branches.length + visibleHierarchy.territories.length > 0
+            && onOpenCrewAdministration ? (
+              <button
+                className="mt-2 min-h-11 rounded-lg bg-slate-900 px-3 text-xs font-bold text-white"
+                onClick={onOpenCrewAdministration}
+                type="button"
+              >
+                Open crew administration
+              </button>
+            ) : null}
           {hasHierarchyFilters ? (
             <p className="mt-2 text-xs text-slate-500">
               Showing {visibleHierarchy.branches.length} of {branches.length} branches and{' '}

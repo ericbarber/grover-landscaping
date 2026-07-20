@@ -146,7 +146,11 @@ export function OwnerCrewAdministrationPanel({
   if (crews.length === 0 && !isLoading && !message) return null;
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 p-4">
+    <div
+      className="mt-4 scroll-mt-20 rounded-xl border border-slate-200 p-4"
+      id="crew-administration"
+      tabIndex={-1}
+    >
       <h3 className="font-bold text-slate-950">Crew administration</h3>
       <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
       {message ? <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs font-medium text-slate-700" role="status">{message}</p> : null}
