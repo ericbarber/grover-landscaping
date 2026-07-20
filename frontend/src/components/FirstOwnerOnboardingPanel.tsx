@@ -31,6 +31,7 @@ type Props = {
   crewInspectedDestinationBranchId?: string;
   crewInspectedDestinationTerritoryId?: string;
   onReturnFromCrewInspection?: () => void;
+  onFindLatestCrewHierarchyMove?: (crewId: string) => void;
 };
 
 export type FirstOwnerSetupTarget =
@@ -97,6 +98,7 @@ export function FirstOwnerOnboardingPanel({
   crewInspectedDestinationBranchId,
   crewInspectedDestinationTerritoryId,
   onReturnFromCrewInspection,
+  onFindLatestCrewHierarchyMove,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -538,6 +540,7 @@ export function FirstOwnerOnboardingPanel({
               inspectedDestinationBranchId={crewInspectedDestinationBranchId}
               inspectedDestinationTerritoryId={crewInspectedDestinationTerritoryId}
               onReturnFromInspection={onReturnFromCrewInspection}
+              onFindLatestHierarchyMove={onFindLatestCrewHierarchyMove}
               onReturnToHierarchy={onReturnToDispatchHierarchy}
               requestedBranchId={crewBranchRequest}
               requestedCrewId={crewSelectionRequest}

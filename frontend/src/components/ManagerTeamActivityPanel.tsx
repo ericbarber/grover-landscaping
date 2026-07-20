@@ -279,10 +279,14 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
 export function ManagerTeamActivityPanel({
   organizationId,
   refreshSignal = 0,
+  requestedCrewId,
+  requestedCrewSignal = 0,
   onOpenCrew,
 }: {
   organizationId: string;
   refreshSignal?: number;
+  requestedCrewId?: string;
+  requestedCrewSignal?: number;
   onOpenCrew?: (activity: TeamAdministrationActivity) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
@@ -423,6 +427,19 @@ export function ManagerTeamActivityPanel({
     destinationQuery,
     auditIdQuery,
   ]);
+
+  useEffect(() => {
+    if (requestedCrewSignal <= 0 || !requestedCrewId) return;
+    setActorQuery('');
+    setTargetQuery(requestedCrewId);
+    setAuditIdQuery('');
+    setSourceQuery('');
+    setDestinationQuery('');
+    setEventFilter('crew_hierarchy_updated');
+    setMoveScope('all');
+    setActivitySort('newest');
+    setMessage('Showing the latest hierarchy activity for the inspected crew.');
+  }, [requestedCrewId, requestedCrewSignal]);
 
   useEffect(() => {
     if (filterOrganizationRef.current !== organizationId) {

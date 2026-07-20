@@ -27,6 +27,7 @@ type Props = {
   inspectedDestinationBranchId?: string;
   inspectedDestinationTerritoryId?: string;
   onReturnFromInspection?: () => void;
+  onFindLatestHierarchyMove?: (crewId: string) => void;
 };
 
 export function crewLeadOptionLabel(membership: OrganizationMembership): string {
@@ -50,6 +51,7 @@ export function OwnerCrewAdministrationPanel({
   inspectedDestinationBranchId,
   inspectedDestinationTerritoryId,
   onReturnFromInspection,
+  onFindLatestHierarchyMove,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState('');
@@ -350,9 +352,20 @@ export function OwnerCrewAdministrationPanel({
                   : 'Current crew assignment differs. This crew moved again after the audited event.'}
               </p>
               {!inspectionMatchesCurrentAssignment ? (
-                <p className="mt-1 font-medium">
-                  {currentInspectionAssignment}
-                </p>
+                <>
+                  <p className="mt-1 font-medium">
+                    {currentInspectionAssignment}
+                  </p>
+                  {onFindLatestHierarchyMove ? (
+                    <button
+                      className="mt-2 min-h-11 rounded-lg border border-amber-300 bg-white px-3 text-xs font-bold text-amber-950"
+                      onClick={() => onFindLatestHierarchyMove(selectedCrew.id)}
+                      type="button"
+                    >
+                      Find latest crew move
+                    </button>
+                  ) : null}
+                </>
               ) : null}
             </div>
           ) : null}

@@ -438,6 +438,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(crewAdministration.getByText(
     'Crew move support summary downloaded.',
   )).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Find latest crew move' }).click();
+  await expect(teamActivity).toBeFocused();
+  await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
+  await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
+  await teamActivity.getByRole('button', { name: 'Open affected crew' }).click();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))

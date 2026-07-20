@@ -921,6 +921,8 @@ export function App() {
   const [propertyOnboardingRefreshSignal, setPropertyOnboardingRefreshSignal] = useState(0);
   const [customerAccountRefreshSignal, setCustomerAccountRefreshSignal] = useState(0);
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
+  const [teamActivityRequestedCrewId, setTeamActivityRequestedCrewId] = useState<string>();
+  const [teamActivityRequestedCrewSignal, setTeamActivityRequestedCrewSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
@@ -2717,6 +2719,19 @@ export function App() {
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
             }}
+            onFindLatestCrewHierarchyMove={(crewId) => {
+              setCrewAdministrationReturnTarget(undefined);
+              setCrewAdministrationInspectionSummary(undefined);
+              setCrewAdministrationInspectionAuditLabel(undefined);
+              setCrewAdministrationInspectionAuditId(undefined);
+              setCrewAdministrationInspectedDestinationBranchId(undefined);
+              setCrewAdministrationInspectedDestinationTerritoryId(undefined);
+              setTeamActivityRequestedCrewId(crewId);
+              setTeamActivityRequestedCrewSignal((current) => current + 1);
+              const target = document.getElementById('team-activity-review');
+              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              target?.focus({ preventScroll: true });
+            }}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
               setFirstOwnerProgressRefreshSignal((current) => current + 1);
@@ -2839,6 +2854,8 @@ export function App() {
                 target?.focus({ preventScroll: true });
               }}
               organizationId={activeManagerOrganizationId}
+              requestedCrewId={teamActivityRequestedCrewId}
+              requestedCrewSignal={teamActivityRequestedCrewSignal}
               refreshSignal={teamActivityRefreshSignal}
             />
           </div>
