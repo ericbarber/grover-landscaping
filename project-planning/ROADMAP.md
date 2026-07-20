@@ -36,6 +36,8 @@ Progress language now adapts to service visits, portfolio work, route stops,
 revenue readiness, or field delivery for the active persona.
 Desktop now shares the mobile Home's premium landscape imagery, persona promise,
 brand cues, and contextual progress instead of a generic field-work banner.
+Authentication and session-loading screens now carry the same premium brand,
+outcome-led value proposition, trust cues, and workspace call to action.
 Home also explains the highest-priority current state: unsynced changes, a clear
 schedule, remaining work, or a completed day.
 

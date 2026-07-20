@@ -22,6 +22,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Home pairs an original Southwestern landscape hero with persona-specific product promises and concise plan-care-proof brand cues
 - Home translates progress into persona-relevant service, portfolio, route, revenue, or field-delivery language
 - Desktop now opens with the same premium landscape imagery, persona promise, brand cues, and contextual progress as mobile
+- Authentication and session-loading screens now introduce Grover with premium imagery, an outcome-led value proposition, trust cues, and a clearer workspace call to action
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
 - Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones
