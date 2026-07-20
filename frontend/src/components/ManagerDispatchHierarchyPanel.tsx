@@ -611,37 +611,41 @@ export function ManagerDispatchHierarchyPanel({
               const nextStatus = territory.status === 'active' ? 'inactive' : 'active';
               const actionId = `territory:${territory.id}:${nextStatus}`;
               const branch = branches.find((item) => item.id === territory.branchId);
+              const canStaffTerritory = territory.status === 'active'
+                && (crewAssignments.territoryCounts[territory.id]?.active ?? 0) === 0
+                && Boolean(onOpenCrewAdministration);
               return (
                 <div
-                  className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3"
+                  className="rounded-lg bg-slate-50 p-3"
                   key={territory.id}
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{territory.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {branch?.name ?? 'Unknown branch'} · {territory.status}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {crewAssignments.territoryCounts[territory.id]?.active ?? 0} active ·{' '}
-                      {crewAssignments.territoryCounts[territory.id]?.total ?? 0} total crews
-                    </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{territory.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {branch?.name ?? 'Unknown branch'} · {territory.status}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {crewAssignments.territoryCounts[territory.id]?.active ?? 0} active ·{' '}
+                        {crewAssignments.territoryCounts[territory.id]?.total ?? 0} total crews
+                      </p>
+                    </div>
+                    <button
+                      className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
+                      disabled={isSaving}
+                      onClick={() => void changeTerritoryStatus(territory)}
+                      type="button"
+                    >
+                      {pendingLifecycleAction === actionId
+                        ? `Confirm ${nextStatus}`
+                        : nextStatus === 'active' ? 'Reactivate' : 'Deactivate'}
+                    </button>
                   </div>
-                  <button
-                    className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
-                    disabled={isSaving}
-                    onClick={() => void changeTerritoryStatus(territory)}
-                    type="button"
-                  >
-                    {pendingLifecycleAction === actionId
-                      ? `Confirm ${nextStatus}`
-                      : nextStatus === 'active' ? 'Reactivate' : 'Deactivate'}
-                  </button>
-                  {territory.status === 'active'
-                    && (crewAssignments.territoryCounts[territory.id]?.active ?? 0) === 0
-                    && onOpenCrewAdministration ? (
+                  {canStaffTerritory ? (
+                    <div className="mt-2">
                       <button
-                        className="min-h-11 rounded-lg bg-amber-100 px-3 text-xs font-bold text-amber-950"
-                        onClick={() => onOpenCrewAdministration({
+                        className="min-h-11 w-full rounded-lg bg-amber-100 px-3 text-xs font-bold text-amber-950"
+                        onClick={() => onOpenCrewAdministration?.({
                           branchId: territory.branchId,
                           territoryId: territory.id,
                         })}
@@ -649,7 +653,48 @@ export function ManagerDispatchHierarchyPanel({
                       >
                         Staff territory
                       </button>
-                    ) : null}
+                      {crews.some((crew) => crew.status === 'active') ? (
+                        <details className="mt-2 rounded-lg border border-amber-200 bg-white p-2">
+                          <summary className="min-h-11 cursor-pointer py-3 text-xs font-bold text-amber-950">
+                            Choose an active crew
+                          </summary>
+                          <div className="space-y-2">
+                            {crews.filter((crew) => crew.status === 'active').map((crew) => {
+                              const crewBranch = branches.find(
+                                (item) => item.id === crew.branchId,
+                              );
+                              const crewTerritory = territories.find(
+                                (item) => item.id === crew.territoryId,
+                              );
+                              return (
+                                <button
+                                  className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-left text-xs"
+                                  key={crew.id}
+                                  onClick={() => onOpenCrewAdministration?.({
+                                    crewId: crew.id,
+                                    branchId: territory.branchId,
+                                    territoryId: territory.id,
+                                  })}
+                                  type="button"
+                                >
+                                  <span className="block font-bold text-slate-900">{crew.name}</span>
+                                  <span className="text-slate-500">
+                                    From {crewBranch?.name ?? 'unknown branch'} ·{' '}
+                                    {crewTerritory?.name ?? 'unknown territory'} ·{' '}
+                                    {crew.dailyStopCapacity} stops/day
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      ) : (
+                        <p className="mt-2 text-xs text-amber-800">
+                          Create or reactivate a crew before staffing this territory.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               );
             })}

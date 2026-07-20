@@ -648,10 +648,11 @@ Current state:
 - The Tailscale mobile smoke test proves both stop-progress and unplanned-stop amendment queueing and confirmed recovery
 - Active unstaffed territories can open crew administration with their branch and territory already prepared for review
 - Crew administration identifies prepared hierarchy destinations as unsaved and can restore the crew's saved assignment before submission
+- Each active unstaffed territory offers direct active-crew choices with current hierarchy and daily capacity context
 
 Next implementation work:
 
-- Offer active crew choices directly from each unstaffed territory
+- Add candidate search and result limits for large territory staffing lists
 
 ## Planned
 
