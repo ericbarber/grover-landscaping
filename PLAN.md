@@ -502,6 +502,7 @@ Current state:
 - Mobile owner hierarchy summarizes active and inactive branch and territory counts before lifecycle controls
 - Owner hierarchy lifecycle lists share mobile search across branch names, codes, service areas, territory names, and parent branch context
 - Hierarchy lists combine active/inactive status with search, applied-result counts, and one-action filter clearing
+- Owner hierarchy search and lifecycle status restore per organization across mobile reloads with malformed-storage fallback
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -642,7 +643,7 @@ Current state:
 
 Next implementation work:
 
-- Persist owner hierarchy search and lifecycle status across mobile reloads
+- Extend the live mobile hierarchy smoke through filter restoration and clearing
 
 ## Planned
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { OrganizationBranchRecord, ServiceTerritoryRecord } from '../api/client';
 import {
   filterDispatchHierarchy,
+  parseDispatchHierarchyFilters,
   summarizeDispatchHierarchy,
 } from './ManagerDispatchHierarchyPanel';
 
@@ -76,5 +77,17 @@ describe('dispatch hierarchy summaries', () => {
       branches,
       territories,
     });
+  });
+
+  it('restores bounded supported filters and rejects malformed storage', () => {
+    expect(parseDispatchHierarchyFilters(JSON.stringify({
+      query: 'North',
+      status: 'inactive',
+    }))).toEqual({ query: 'North', status: 'inactive' });
+    expect(parseDispatchHierarchyFilters(JSON.stringify({
+      query: 'x'.repeat(200),
+      status: 'unknown',
+    }))).toEqual({ query: 'x'.repeat(120), status: 'all' });
+    expect(parseDispatchHierarchyFilters('{bad json')).toEqual({ query: '', status: 'all' });
   });
 });

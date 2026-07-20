@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import {
   createOrganizationBranch,
   createServiceTerritory,
@@ -22,6 +22,43 @@ const timeZones = [
   'America/Chicago',
   'America/New_York',
 ];
+
+type DispatchHierarchyFilters = {
+  query: string;
+  status: 'all' | 'active' | 'inactive';
+};
+
+const defaultDispatchHierarchyFilters: DispatchHierarchyFilters = {
+  query: '',
+  status: 'all',
+};
+
+export function parseDispatchHierarchyFilters(value: string | null): DispatchHierarchyFilters {
+  if (!value) return defaultDispatchHierarchyFilters;
+  try {
+    const parsed = JSON.parse(value) as Partial<DispatchHierarchyFilters>;
+    return {
+      query: typeof parsed.query === 'string' ? parsed.query.slice(0, 120) : '',
+      status: parsed.status === 'active' || parsed.status === 'inactive' ? parsed.status : 'all',
+    };
+  } catch {
+    return defaultDispatchHierarchyFilters;
+  }
+}
+
+function dispatchHierarchyFilterStorageKey(organizationId: string) {
+  return `grover.dispatch-hierarchy-filters.v1.${organizationId}`;
+}
+
+function loadDispatchHierarchyFilters(organizationId: string): DispatchHierarchyFilters {
+  try {
+    return parseDispatchHierarchyFilters(
+      window.localStorage.getItem(dispatchHierarchyFilterStorageKey(organizationId)),
+    );
+  } catch {
+    return defaultDispatchHierarchyFilters;
+  }
+}
 
 export function summarizeDispatchHierarchy(
   branches: OrganizationBranchRecord[],
@@ -68,6 +105,7 @@ export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
 }: ManagerDispatchHierarchyPanelProps) {
+  const initialFilters = loadDispatchHierarchyFilters(organizationId);
   const [branches, setBranches] = useState<OrganizationBranchRecord[]>([]);
   const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
   const [branchName, setBranchName] = useState('');
@@ -79,8 +117,9 @@ export function ManagerDispatchHierarchyPanel({
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
-  const [hierarchyQuery, setHierarchyQuery] = useState('');
-  const [hierarchyStatus, setHierarchyStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [hierarchyQuery, setHierarchyQuery] = useState(initialFilters.query);
+  const [hierarchyStatus, setHierarchyStatus] = useState(initialFilters.status);
+  const filterOrganizationRef = useRef(organizationId);
   const summary = summarizeDispatchHierarchy(branches, territories);
   const visibleHierarchy = filterDispatchHierarchy(
     branches,
@@ -111,6 +150,24 @@ export function ManagerDispatchHierarchyPanel({
   useEffect(() => {
     void refreshHierarchy().catch(() => setStatus('Hierarchy choices could not be loaded.'));
   }, [organizationId]);
+
+  useEffect(() => {
+    if (filterOrganizationRef.current !== organizationId) {
+      filterOrganizationRef.current = organizationId;
+      const loaded = loadDispatchHierarchyFilters(organizationId);
+      setHierarchyQuery(loaded.query);
+      setHierarchyStatus(loaded.status);
+      return;
+    }
+    try {
+      window.localStorage.setItem(
+        dispatchHierarchyFilterStorageKey(organizationId),
+        JSON.stringify({ query: hierarchyQuery, status: hierarchyStatus }),
+      );
+    } catch {
+      // Hierarchy filtering remains usable when browser storage is unavailable.
+    }
+  }, [organizationId, hierarchyQuery, hierarchyStatus]);
 
   async function submitBranch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

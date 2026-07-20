@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Restored owner hierarchy filters across mobile reloads.
 - 2026-07-19: Added lifecycle status filters and clearing to hierarchy search.
 - 2026-07-19: Added mobile search across branch and territory lifecycle lists.
 - 2026-07-19: Added active and inactive dispatch hierarchy summary counts.
