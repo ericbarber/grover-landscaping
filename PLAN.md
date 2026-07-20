@@ -699,10 +699,11 @@ Current state:
 - Restored-row markers clear automatically when the owner changes or exits the activity review
 - Restored-row markers persist through same-review refreshes and older-page loading
 - Refresh clears stale restored-row context and explains when that audit event is no longer loaded
+- Missing restored events provide a one-tap immutable audit-ID search in the current owner review
 
 Next implementation work:
 
-- Offer an audit-ID search when a restored event leaves the loaded review window
+- Confirm when audit-ID recovery loads the missing event
 
 ## Planned
 

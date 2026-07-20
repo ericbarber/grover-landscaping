@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added audit-ID recovery for restored events outside loaded history.
 - 2026-07-19: Cleared restored audit markers when refreshed results omit them.
 - 2026-07-19: Preserved restored audit markers across same-review reloads.
 - 2026-07-19: Scoped restored audit-row markers to their activity review.

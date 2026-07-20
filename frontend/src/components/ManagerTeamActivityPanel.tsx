@@ -329,6 +329,8 @@ export function ManagerTeamActivityPanel({
   const [reviewNotice, setReviewNotice] = useState<string | null>(null);
   const [reviewNoticeAuditId, setReviewNoticeAuditId] = useState<string | null>(null);
   const [restoredAuditId, setRestoredAuditId] = useState<string | null>(null);
+  const [unavailableRestoredAuditId, setUnavailableRestoredAuditId] =
+    useState<string | null>(null);
   const restoredReviewFingerprintRef = useRef<string | null>(null);
   const filteredActivity = sortTeamActivity(
     filterTeamActivity(
@@ -399,6 +401,7 @@ export function ManagerTeamActivityPanel({
           `Restored audit event ${restoredAuditId} is no longer in the loaded results.`,
         );
         setReviewNoticeAuditId(null);
+        setUnavailableRestoredAuditId(restoredAuditId);
       }
     } catch {
       setMessage('Team activity requires organization-owner access.');
@@ -461,6 +464,7 @@ export function ManagerTeamActivityPanel({
     focusedReviewRestoreRef.current = null;
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
+    setUnavailableRestoredAuditId(null);
     setActorQuery('');
     setTargetQuery('');
     setSourceQuery('');
@@ -488,12 +492,21 @@ export function ManagerTeamActivityPanel({
     setActivitySort(prior.activitySort);
     setReviewNotice('Your prior owner activity review was restored.');
     setReviewNoticeAuditId(null);
+    setUnavailableRestoredAuditId(null);
+  }
+
+  function findUnavailableRestoredAudit() {
+    if (!unavailableRestoredAuditId) return;
+    setAuditIdQuery(unavailableRestoredAuditId);
+    setReviewNotice(null);
+    setUnavailableRestoredAuditId(null);
   }
 
   function dismissReviewNotice() {
     const auditId = reviewNoticeAuditId;
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
+    setUnavailableRestoredAuditId(null);
     if (!auditId) return;
     window.requestAnimationFrame(() => {
       document.getElementById(`team-activity-${auditId}`)?.focus({ preventScroll: true });
@@ -559,6 +572,7 @@ export function ManagerTeamActivityPanel({
     setReviewNotice(`Returned to audit event ${returnedAuditId}.`);
     setReviewNoticeAuditId(returnedAuditId);
     setRestoredAuditId(returnedAuditId);
+    setUnavailableRestoredAuditId(null);
     restoredReviewFingerprintRef.current = JSON.stringify({
       actorQuery,
       targetQuery,
@@ -672,13 +686,24 @@ export function ManagerTeamActivityPanel({
           role="status"
         >
           <p>{reviewNotice}</p>
-          <button
-            className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold"
-            onClick={dismissReviewNotice}
-            type="button"
-          >
-            Dismiss activity review message
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {unavailableRestoredAuditId ? (
+              <button
+                className="min-h-11 rounded-lg border border-sky-300 bg-white px-3 text-xs font-bold"
+                onClick={findUnavailableRestoredAudit}
+                type="button"
+              >
+                Find audit event
+              </button>
+            ) : null}
+            <button
+              className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold"
+              onClick={dismissReviewNotice}
+              type="button"
+            >
+              Dismiss activity review message
+            </button>
+          </div>
         </div>
       ) : null}
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">

@@ -342,10 +342,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await page.route(
     '**/organizations/org_demo_landscaping/team-activity*',
     async (route) => {
-      const isFocusedCrewReview = new URL(route.request().url()).searchParams.get('target')
-        === originalCrew!.id;
+      const requestUrl = new URL(route.request().url());
+      const isFocusedCrewReview = requestUrl.searchParams.get('target') === originalCrew!.id;
       const isOlderFocusedPage = isFocusedCrewReview
-        && new URL(route.request().url()).searchParams.has('before');
+        && requestUrl.searchParams.has('before');
+      const requestedAuditId = requestUrl.searchParams.get('audit_id');
       const auditedMove = {
         id: 'audit_e2e_crew_hierarchy_move',
         actor_user_id: 'local-dev-user',
@@ -379,7 +380,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
       ];
       await route.fulfill({
         json: crewMoved
-          ? isOlderFocusedPage ? [
+          ? requestedAuditId === 'audit_e2e_latest_crew_hierarchy_move'
+            ? [focusedCrewMoves[0]]
+            : isOlderFocusedPage ? [
             focusedCrewMoves[focusedCrewMoves.length - 1],
             {
               ...auditedMove,
@@ -527,6 +530,13 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText(
     'Restored audit event audit_e2e_latest_crew_hierarchy_move is no longer in the loaded results.',
   )).toBeVisible();
+  await teamActivity.getByRole('button', { name: 'Find audit event' }).click();
+  await expect(teamActivity.getByLabel('Find audit ID')).toHaveValue(
+    'audit_e2e_latest_crew_hierarchy_move',
+  );
+  await expect(teamActivity.locator('ol > li')).toHaveCount(1);
+  await expect(teamActivity.locator('ol > li').first())
+    .toContainText('audit_e2e_latest_crew_hierarchy_move');
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
