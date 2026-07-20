@@ -633,9 +633,24 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(savedReview.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(savedReview.getByLabel('Sort')).toHaveValue('newest');
-  await savedReview.getByRole('button', { name: 'Clear saved review settings' }).click();
-  await expect(savedReview.getByLabel('Find move source')).toHaveValue('');
-  await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('all');
+  await expect.poll(() => page.evaluate(() => (
+    window.localStorage.getItem(
+      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+    )
+  ))).toContain('"sourceQuery":"Main Branch"');
+  await page.reload();
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const undoneReview = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(undoneReview.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(undoneReview.getByLabel('Crew move scope')).toHaveValue('within_branch');
+  await expect(undoneReview.getByText(
+    'Restored 2 saved owner activity review settings for this organization.',
+  )).toBeVisible();
+  await undoneReview.getByRole('button', { name: 'Clear saved review settings' }).click();
+  await expect(undoneReview.getByLabel('Find move source')).toHaveValue('');
+  await expect(undoneReview.getByLabel('Crew move scope')).toHaveValue('all');
   await expect.poll(() => page.evaluate(() => (
     window.localStorage.getItem(
       'grover.team-activity-review-filters.v1.org_demo_landscaping',

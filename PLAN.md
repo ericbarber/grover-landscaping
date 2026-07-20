@@ -713,10 +713,11 @@ Current state:
 - Dismissing saved-review restoration feedback leaves every restored setting applied
 - Saved-review feedback can clear persisted settings directly, and defaults remain after the next mobile reload
 - Saved-review clearing provides a current-session undo that restores the exact prior review
+- An undone saved review is persisted again and restores after a subsequent mobile reload
 
 Next implementation work:
 
-- Persist an undone saved review across a mobile reload
+- Ensure the session-only undo action does not survive navigation after persistence completes
 
 ## Planned
 
