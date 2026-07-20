@@ -2670,6 +2670,11 @@ export function App() {
               setDispatchHierarchyRefreshSignal((current) => current + 1);
               setTeamActivityRefreshSignal((current) => current + 1);
             }}
+            onReturnToDispatchHierarchy={() => {
+              const target = document.getElementById('dispatch-hierarchy-administration');
+              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              target?.focus({ preventScroll: true });
+            }}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
               setFirstOwnerProgressRefreshSignal((current) => current + 1);

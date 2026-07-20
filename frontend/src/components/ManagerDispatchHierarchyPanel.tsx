@@ -389,7 +389,11 @@ export function ManagerDispatchHierarchyPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section
+      className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      id="dispatch-hierarchy-administration"
+      tabIndex={-1}
+    >
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Owner hierarchy</p>
       <h2 className="mt-1 text-xl font-bold text-slate-950">Branches and territories</h2>
       <p className="mt-1 text-sm text-slate-600">

@@ -23,6 +23,7 @@ type Props = {
   crewSelectionSignal?: number;
   onCrewCreated?: (crew: CrewRecord) => void;
   onCrewChanged?: (crew: CrewRecord) => void;
+  onReturnToDispatchHierarchy?: () => void;
 };
 
 export type FirstOwnerSetupTarget =
@@ -81,6 +82,7 @@ export function FirstOwnerOnboardingPanel({
   crewSelectionSignal = 0,
   onCrewCreated,
   onCrewChanged,
+  onReturnToDispatchHierarchy,
 }: Props) {
   const [access, setAccess] = useState<PrincipalAccessSummary | null>(null);
   const [setupProgress, setSetupProgress] = useState<FirstOwnerSetupProgress | null>(null);
@@ -515,6 +517,7 @@ export function FirstOwnerOnboardingPanel({
             <OwnerCrewAdministrationPanel
               organizationId={membership.organizationId}
               onCrewChanged={onCrewChanged}
+              onReturnToHierarchy={onReturnToDispatchHierarchy}
               requestedBranchId={crewBranchRequest}
               requestedCrewId={crewSelectionRequest}
               requestedTerritoryId={crewTerritoryRequest}

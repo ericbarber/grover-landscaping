@@ -653,10 +653,11 @@ Current state:
 - Territory staffing choices prioritize crews already assigned to the destination branch before cross-branch candidates
 - Prepared crew moves show their saved source and intended destination, with an explicit cross-branch scheduling and reporting warning
 - Successful prepared moves close the unsaved handoff and retain a source-to-destination completion summary across hierarchy refresh
+- Completed crew moves can return directly to the refreshed, focusable hierarchy review on mobile
 
 Next implementation work:
 
-- Add a direct return from crew move confirmation to the refreshed hierarchy review
+- Add mobile smoke coverage for the territory-to-crew staffing handoff and reset path
 
 ## Planned
 

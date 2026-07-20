@@ -19,6 +19,7 @@ type Props = {
   requestedBranchId?: string;
   requestedTerritoryId?: string;
   selectionSignal?: number;
+  onReturnToHierarchy?: () => void;
 };
 
 export function crewLeadOptionLabel(membership: OrganizationMembership): string {
@@ -34,6 +35,7 @@ export function OwnerCrewAdministrationPanel({
   requestedBranchId,
   requestedTerritoryId,
   selectionSignal = 0,
+  onReturnToHierarchy,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState('');
@@ -234,12 +236,21 @@ export function OwnerCrewAdministrationPanel({
       <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
       {message ? <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs font-medium text-slate-700" role="status">{message}</p> : null}
       {moveConfirmation ? (
-        <p
+        <div
           className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs font-bold text-emerald-900"
           role="status"
         >
-          {moveConfirmation}
-        </p>
+          <p>{moveConfirmation}</p>
+          {onReturnToHierarchy ? (
+            <button
+              className="mt-2 min-h-11 rounded-lg border border-emerald-300 bg-white px-3 text-xs font-bold text-emerald-950"
+              onClick={onReturnToHierarchy}
+              type="button"
+            >
+              Return to hierarchy review
+            </button>
+          ) : null}
+        </div>
       ) : null}
       {crews.length > 0 ? (
         <div className="mt-3 space-y-3">
