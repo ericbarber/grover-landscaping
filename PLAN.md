@@ -19,6 +19,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Fixed bottom navigation preserves a stable thumb-reachable location and iPhone safe-area spacing
 - Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count
 - Selecting a job opens its dedicated mobile view with a clear return to assigned jobs
+- Returning between mobile workspaces restores each view's prior scroll position while newly selected jobs open at the top
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation

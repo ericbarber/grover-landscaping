@@ -16,6 +16,15 @@ export interface MobileWorkspaceContext {
   detail: string;
 }
 
+export function mobileWorkspaceScrollTop(
+  savedPositions: Partial<Record<MobileWorkspaceView, number>>,
+  destination: MobileWorkspaceView,
+  resetDestination = false,
+): number {
+  if (resetDestination) return 0;
+  return Math.max(0, savedPositions[destination] ?? 0);
+}
+
 export function mobileWorkspaceContext(
   input: MobileWorkspaceContextInput,
 ): MobileWorkspaceContext {

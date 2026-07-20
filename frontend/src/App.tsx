@@ -81,6 +81,7 @@ import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import {
   MobileWorkspaceHeader,
   MobileWorkspaceNavigation,
+  mobileWorkspaceScrollTop,
   type MobileWorkspaceView,
 } from './components/MobileWorkspaceShell';
 import { CompletionReport } from './components/CompletionReport';
@@ -984,6 +985,30 @@ export function App() {
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
   const jobDetailRef = useRef<HTMLDivElement>(null);
+  const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
+
+  function changeMobileView(
+    destination: MobileWorkspaceView,
+    resetDestination = false,
+  ) {
+    if (window.innerWidth >= 1024) {
+      setMobileView(destination);
+      return;
+    }
+
+    mobileScrollPositions.current[mobileView] = window.scrollY;
+    setMobileView(destination);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: mobileWorkspaceScrollTop(
+          mobileScrollPositions.current,
+          destination,
+          resetDestination,
+        ),
+        behavior: 'auto',
+      });
+    });
+  }
 
   function registerManagerProperties(properties: CustomerPropertyRecord[]) {
     setManagerCustomerProperties((current) => {
@@ -1013,8 +1038,7 @@ export function App() {
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
     if (window.innerWidth < 1024) {
-      setMobileView('job');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      changeMobileView('job', jobId !== selectedJobId);
     }
   }
 
@@ -2437,7 +2461,7 @@ export function App() {
       <MobileWorkspaceHeader
         assignedJobCount={jobs.length}
         managerOrganizationId={activeManagerOrganizationId}
-        onBackToJobs={() => setMobileView('jobs')}
+        onBackToJobs={() => changeMobileView('jobs')}
         pendingChangeCount={
           offlineJobMutations.length
           + offlineChecklistMutations.length
@@ -3095,10 +3119,7 @@ export function App() {
         activeView={mobileView}
         canUseManagerTools={canUseManagerTools}
         hasSelectedJob={Boolean(selectedJobId)}
-        onChange={(view) => {
-          setMobileView(view);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        onChange={(view) => changeMobileView(view)}
       />
     </main>
   );

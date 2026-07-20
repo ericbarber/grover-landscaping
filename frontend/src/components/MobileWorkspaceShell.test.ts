@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { mobileWorkspaceContext } from './MobileWorkspaceShell';
+import {
+  mobileWorkspaceContext,
+  mobileWorkspaceScrollTop,
+} from './MobileWorkspaceShell';
 
 const baseInput = {
   assignedJobCount: 3,
@@ -41,5 +44,12 @@ describe('mobileWorkspaceContext', () => {
       title: 'Operations',
       detail: 'Organization org_demo',
     });
+  });
+
+  it('restores a saved view position and resets a newly selected job', () => {
+    const positions = { jobs: 640, route: 120 };
+    expect(mobileWorkspaceScrollTop(positions, 'jobs')).toBe(640);
+    expect(mobileWorkspaceScrollTop(positions, 'job', true)).toBe(0);
+    expect(mobileWorkspaceScrollTop({ jobs: -20 }, 'jobs')).toBe(0);
   });
 });
