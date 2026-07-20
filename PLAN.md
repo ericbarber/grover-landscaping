@@ -705,10 +705,11 @@ Current state:
 - Failed immutable-ID searches can retry the same audit directly after a transient history gap
 - Recovered audit searches return to full focused crew history without losing the inspected crew context
 - Exiting recovered crew history restores prior transient actor and audit-ID searches with persisted review settings
+- Restored recovered-review summaries count all active actor, audit-ID, source, and move-scope filters
 
 Next implementation work:
 
-- Report the correct active-filter count after restoring a recovered owner review
+- Identify non-default ordering beside the restored active-filter count
 
 ## Planned
 

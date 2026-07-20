@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Verified restored recovery-review filter counts.
 - 2026-07-19: Preserved complete owner review state after audit recovery.
 - 2026-07-19: Returned recovered audits to full focused crew history.
 - 2026-07-19: Added same-ID retry after transient audit recovery failure.
