@@ -1399,15 +1399,6 @@ impl JobRepository {
         summary.deleted_object_key_count = deletion.deleted_object_key_count;
         summary.failed_object_key_count = deletion.failed_object_keys.len() as i64;
         summary.object_keys_pending_deletion = deletion.failed_object_keys;
-        if !summary.object_keys_pending_deletion.is_empty() {
-            let _ = postgres_privacy::queue_photo_erasure_deletion_jobs(
-                pool,
-                account_id,
-                &summary.object_keys_pending_deletion,
-                organization_ids,
-            )
-            .await;
-        }
 
         CustomerPhotoErasureResult::Erased(summary)
     }

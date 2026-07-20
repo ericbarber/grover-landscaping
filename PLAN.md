@@ -853,12 +853,14 @@ Current state:
 - Sensitive job-account reads fail closed when their required persisted account-view audit cannot be written
 - Docker services expose health status, tolerate bounded cold starts, and restart automatically after repeated runtime readiness failures
 - Controlled Vite-process failure testing proves automatic frontend recovery and restored Tailscale HTTP access
+- Customer photo erasure transactionally persists object-deletion recovery before redacted evidence becomes committed
+- Privacy exports decode delivered-snapshot photo counts with a stable PostgreSQL bigint contract
 
 Next implementation work:
 
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
-- Harden the remaining ignored photo-erasure recovery write before pilot use
 - Continue application-readiness hardening from observed runtime failure modes
+- Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

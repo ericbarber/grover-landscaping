@@ -768,9 +768,9 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
     sqlx::query(
         r#"
         INSERT INTO photo_erasure_deletion_jobs (
-            id, account_id, organization_id, object_key
+            id, account_id, organization_id, object_key, available_at
         )
-        VALUES ($1, 'acct_1001', 'org_demo_landscaping', $2)
+        VALUES ($1, 'acct_1001', 'org_demo_landscaping', $2, '2000-01-01')
         "#,
     )
     .bind(&deletion_id)
@@ -779,10 +779,10 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
     .await
     .unwrap();
 
-    assert_eq!(
+    assert!(matches!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 3).await,
-        ResourceReadResult::Loaded(1)
-    );
+        ResourceReadResult::Loaded(count) if count >= 1
+    ));
 
     let row = sqlx::query(
         r#"
@@ -905,6 +905,9 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     let repository = JobRepository::connect(&config)
         .await
         .expect("repository should connect and run migrations");
+    let pool = repository
+        .pool()
+        .expect("photo privacy test should have a PostgreSQL pool");
 
     let ticket = repository
         .create_photo_upload(
@@ -972,6 +975,22 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     );
     assert_eq!(erasure.failed_object_key_count, 0);
     assert!(erasure.object_keys_pending_deletion.is_empty());
+    let deletion_recovery_status: String = sqlx::query_scalar(
+        r#"
+        SELECT status
+        FROM photo_erasure_deletion_jobs
+        WHERE organization_id = 'org_demo_landscaping'
+          AND object_key = $1
+        "#,
+    )
+    .bind(&ticket.object_key)
+    .fetch_one(&pool)
+    .await
+    .expect("photo erasure should durably queue original object deletion");
+    assert!(matches!(
+        deletion_recovery_status.as_str(),
+        "queued" | "completed"
+    ));
 
     let visible_photos = loaded(
         repository.list_photo_evidence("job_1001").await,
@@ -1004,9 +1023,6 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
         Some("Customer requested removal of retained photo evidence.")
     );
 
-    let pool = repository
-        .pool()
-        .expect("photo privacy test should have a PostgreSQL pool");
     let audit_events: i64 = sqlx::query_scalar(
         r#"
         SELECT COUNT(*)

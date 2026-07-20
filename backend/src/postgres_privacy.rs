@@ -184,19 +184,6 @@ pub async fn erase_customer_photo_evidence(
     .fetch_all(&mut *transaction)
     .await?;
 
-    for organization_id in &account.organization_ids {
-        insert_account_privacy_audit_event_in_transaction(
-            &mut transaction,
-            actor_user_id,
-            organization_id,
-            "customer_photo_evidence_erased",
-            account_id,
-        )
-        .await?;
-    }
-
-    transaction.commit().await?;
-
     let mut affected_jobs = HashSet::new();
     let mut object_keys = Vec::new();
     for row in &erased_rows {
@@ -213,30 +200,11 @@ pub async fn erase_customer_photo_evidence(
     object_keys.sort();
     object_keys.dedup();
 
-    Ok(CustomerPhotoErasureResult::Erased(
-        CustomerPhotoErasureSummary {
-            account_id: account_id.to_string(),
-            status: "erased",
-            erased_photo_count: erased_rows.len() as i64,
-            affected_job_count: affected_jobs.len() as i64,
-            redacted_completion_report_count: report_rows.len() as i64,
-            deleted_object_key_count: 0,
-            failed_object_key_count: object_keys.len() as i64,
-            object_keys_pending_deletion: object_keys,
-        },
-    ))
-}
-
-pub async fn queue_photo_erasure_deletion_jobs(
-    pool: &PgPool,
-    account_id: &str,
-    object_keys: &[String],
-    organization_ids: &[String],
-) -> Result<(), sqlx::Error> {
-    let Some(organization_id) = organization_ids.first() else {
-        return Ok(());
+    let Some(deletion_organization_id) = account.organization_ids.first() else {
+        transaction.rollback().await?;
+        return Ok(CustomerPhotoErasureResult::NotFound);
     };
-    for object_key in object_keys {
+    for object_key in &object_keys {
         sqlx::query(
             r#"
             INSERT INTO photo_erasure_deletion_jobs (
@@ -263,12 +231,37 @@ pub async fn queue_photo_erasure_deletion_jobs(
             Uuid::new_v4().simple()
         ))
         .bind(account_id)
-        .bind(organization_id)
+        .bind(deletion_organization_id)
         .bind(object_key)
-        .execute(pool)
+        .execute(&mut *transaction)
         .await?;
     }
-    Ok(())
+
+    for organization_id in &account.organization_ids {
+        insert_account_privacy_audit_event_in_transaction(
+            &mut transaction,
+            actor_user_id,
+            organization_id,
+            "customer_photo_evidence_erased",
+            account_id,
+        )
+        .await?;
+    }
+
+    transaction.commit().await?;
+
+    Ok(CustomerPhotoErasureResult::Erased(
+        CustomerPhotoErasureSummary {
+            account_id: account_id.to_string(),
+            status: "erased",
+            erased_photo_count: erased_rows.len() as i64,
+            affected_job_count: affected_jobs.len() as i64,
+            redacted_completion_report_count: report_rows.len() as i64,
+            deleted_object_key_count: 0,
+            failed_object_key_count: object_keys.len() as i64,
+            object_keys_pending_deletion: object_keys,
+        },
+    ))
 }
 
 pub async fn claim_photo_erasure_deletion_jobs(
@@ -736,7 +729,7 @@ async fn customer_privacy_completion_reports(
                 WHEN jsonb_typeof(report.delivered_snapshot -> 'photo_evidence') = 'array'
                     THEN jsonb_array_length(report.delivered_snapshot -> 'photo_evidence')
                 ELSE 0
-            END AS delivered_snapshot_photo_count,
+            END::bigint AS delivered_snapshot_photo_count,
             report.created_at::text AS created_at,
             report.updated_at::text AS updated_at
         FROM job_completion_reports report
