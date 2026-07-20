@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Added SupportAdmin conversion reporting with funnel, persona, campaign, failure, low-volume, and overdue-follow-up signals.
 - 2026-07-20: Redesigned persona outcomes as a cohesive benefit narrative with contextual explanations instead of placeholder numbered blocks.
 - 2026-07-20: Added a SupportAdmin-only platform lead inbox with assignment, follow-up scheduling, qualification states, and durable workflow history.
 - 2026-07-20: Hardened marketing analytics startup for iPhone HTTP access and storage-restricted privacy modes so measurement cannot block page rendering.

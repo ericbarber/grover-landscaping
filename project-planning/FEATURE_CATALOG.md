@@ -16,7 +16,9 @@
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
 - Support-admin platform lead inbox with contact, intent, attribution, status filtering, ownership, and follow-up scheduling
 - Durable lead workflow history recording operator, status transition, assignment, next action, note, and timestamp
-- Planned extensions: funnel dashboard, verified customer proof, production screenshots, and lead notifications
+- SupportAdmin 30-day conversion dashboard with unique-session stages, persona and campaign segments, failure counts, and low-volume interpretation
+- Overdue lead counts, priority sorting, and visual attention states
+- Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces
 

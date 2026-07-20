@@ -41,6 +41,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Lead workflow supports ownership, next-action scheduling, qualification status, and bounded follow-up notes
 - Every workflow update records the platform operator, previous and new status, assignment, next action, note, and timestamp
 - Public POST submission remains unauthenticated while all lead reads and mutations require the SupportAdmin role; auth-disabled local review receives that role
+- SupportAdmin conversion dashboard reports a 30-day unique-session funnel, failures, and persona and campaign segments
+- Low-volume messaging keeps early conversion rates explicitly directional until at least 100 measured visits
+- Open leads with past next-action dates are counted, promoted above other leads, and visually marked overdue
 
 ### Mobile navigation and context
 

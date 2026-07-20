@@ -584,6 +584,7 @@ fn app_with_runtime(
         )
         .route("/marketing-leads/{lead_id}", put(update_marketing_lead))
         .route("/marketing-events", post(create_marketing_event))
+        .route("/marketing-dashboard", get(get_marketing_dashboard))
         .route("/me/access", get(get_my_access))
         .route(
             "/customer-accounts",
@@ -1014,6 +1015,19 @@ async fn create_marketing_event(
 
     let response = state.marketing_events.record(request).await;
     (StatusCode::ACCEPTED, Json(response)).into_response()
+}
+
+async fn get_marketing_dashboard(State(state): State<Arc<AppState>>) -> Response {
+    match state.marketing_events.dashboard().await {
+        Ok(dashboard) => (StatusCode::OK, Json(dashboard)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "marketing conversion dashboard query failed");
+            persisted_resource_unavailable_response(
+                "marketing_dashboard_unavailable",
+                "Conversion reporting is temporarily unavailable.",
+            )
+        }
+    }
 }
 
 async fn readiness(
@@ -6686,6 +6700,25 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn marketing_dashboard_returns_an_empty_local_funnel() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::GET)
+                    .uri("/marketing-dashboard")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["window_days"], 30);
+        assert_eq!(json["totals"]["page_views"], 0);
     }
 
     #[tokio::test]

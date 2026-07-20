@@ -116,6 +116,7 @@ import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPane
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerMarketingLeadInboxPanel } from './components/ManagerMarketingLeadInboxPanel';
+import { ManagerMarketingConversionDashboard } from './components/ManagerMarketingConversionDashboard';
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
 import { ManagerDispatchHierarchyPanel } from './components/ManagerDispatchHierarchyPanel';
 import {
@@ -3317,6 +3318,11 @@ export function App() {
               onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
             />
           </div>
+          {canReviewMarketingLeads ? (
+            <div className={`${managerWorkspaceTool === 'conversion-dashboard' ? 'block' : 'hidden'} mt-6 lg:block`}>
+              <ManagerMarketingConversionDashboard />
+            </div>
+          ) : null}
           {canReviewMarketingLeads ? (
             <div className={`${managerWorkspaceTool === 'marketing-leads' ? 'block' : 'hidden'} mt-6 lg:block`}>
               <ManagerMarketingLeadInboxPanel />

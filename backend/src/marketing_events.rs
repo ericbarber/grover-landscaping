@@ -20,6 +20,32 @@ pub struct MarketingEventResponse {
     pub accepted: bool,
 }
 
+#[derive(Clone, Debug, Serialize, sqlx::FromRow)]
+pub struct MarketingFunnelCounts {
+    pub page_views: i64,
+    pub cta_clicks: i64,
+    pub form_starts: i64,
+    pub submissions: i64,
+    pub failures: i64,
+}
+
+#[derive(Clone, Debug, Serialize, sqlx::FromRow)]
+pub struct MarketingFunnelSegment {
+    pub segment: String,
+    pub page_views: i64,
+    pub cta_clicks: i64,
+    pub form_starts: i64,
+    pub submissions: i64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct MarketingDashboardResponse {
+    pub window_days: i32,
+    pub totals: MarketingFunnelCounts,
+    pub by_persona: Vec<MarketingFunnelSegment>,
+    pub by_campaign: Vec<MarketingFunnelSegment>,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct MarketingEventRepository {
     pool: Option<PgPool>,
@@ -56,6 +82,45 @@ impl MarketingEventRepository {
             id,
             accepted: result.is_ok(),
         }
+    }
+
+    pub async fn dashboard(&self) -> Result<MarketingDashboardResponse, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(MarketingDashboardResponse {
+                window_days: 30,
+                totals: MarketingFunnelCounts {
+                    page_views: 0,
+                    cta_clicks: 0,
+                    form_starts: 0,
+                    submissions: 0,
+                    failures: 0,
+                },
+                by_persona: Vec::new(),
+                by_campaign: Vec::new(),
+            });
+        };
+        let totals = sqlx::query_as::<_, MarketingFunnelCounts>(
+            "SELECT COUNT(DISTINCT session_id) FILTER (WHERE event_name='page_view')::bigint AS page_views, COUNT(DISTINCT session_id) FILTER (WHERE event_name='cta_clicked')::bigint AS cta_clicks, COUNT(DISTINCT session_id) FILTER (WHERE event_name='form_started')::bigint AS form_starts, COUNT(DISTINCT session_id) FILTER (WHERE event_name='form_submitted')::bigint AS submissions, COUNT(*) FILTER (WHERE event_name='form_failed')::bigint AS failures FROM marketing_conversion_events WHERE occurred_at >= NOW() - INTERVAL '30 days'",
+        ).fetch_one(pool).await?;
+        let segment_query = |field: &str| {
+            format!(
+            "SELECT {field} AS segment, COUNT(DISTINCT session_id) FILTER (WHERE event_name='page_view')::bigint AS page_views, COUNT(DISTINCT session_id) FILTER (WHERE event_name='cta_clicked')::bigint AS cta_clicks, COUNT(DISTINCT session_id) FILTER (WHERE event_name='form_started')::bigint AS form_starts, COUNT(DISTINCT session_id) FILTER (WHERE event_name='form_submitted')::bigint AS submissions FROM marketing_conversion_events WHERE occurred_at >= NOW() - INTERVAL '30 days' GROUP BY {field} ORDER BY submissions DESC, page_views DESC LIMIT 12"
+        )
+        };
+        let by_persona = sqlx::query_as::<_, MarketingFunnelSegment>(&segment_query("persona"))
+            .fetch_all(pool)
+            .await?;
+        let by_campaign = sqlx::query_as::<_, MarketingFunnelSegment>(&segment_query(
+            "COALESCE(NULLIF(campaign, ''), 'Direct / untagged')",
+        ))
+        .fetch_all(pool)
+        .await?;
+        Ok(MarketingDashboardResponse {
+            window_days: 30,
+            totals,
+            by_persona,
+            by_campaign,
+        })
     }
 }
 

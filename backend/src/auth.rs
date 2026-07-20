@@ -429,7 +429,8 @@ pub async fn require_api_auth(
 }
 
 fn is_protected_api_path(path: &str) -> bool {
-    path == "/marketing-leads"
+    path == "/marketing-dashboard"
+        || path == "/marketing-leads"
         || path.starts_with("/marketing-leads/")
         || path == "/marketing-events"
         || path == "/me/access"
@@ -472,6 +473,9 @@ fn is_public_path(path: &str, method: &Method) -> bool {
 }
 
 fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool {
+    if path == "/marketing-dashboard" {
+        return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::GET;
+    }
     if path == "/marketing-leads" || path.starts_with("/marketing-leads/") {
         return principal.roles.contains(&AccessRole::SupportAdmin)
             && (*method == Method::GET || *method == Method::PUT);
@@ -1499,6 +1503,17 @@ mod tests {
             &principal(AccessRole::SupportAdmin),
             &Method::PUT,
             "/marketing-leads/lead_1"
+        ));
+        assert!(is_protected_api_path("/marketing-dashboard"));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::GET,
+            "/marketing-dashboard"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::GET,
+            "/marketing-dashboard"
         ));
     }
 

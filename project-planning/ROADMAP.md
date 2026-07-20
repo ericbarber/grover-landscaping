@@ -30,6 +30,10 @@ The first platform marketing-operations slice adds a SupportAdmin-only lead inbo
 with status filtering, assignment, next-action scheduling, notes, and durable
 workflow history. Public lead submission remains anonymous while all lead reads
 and mutations are protected; organization managers cannot access platform leads.
+SupportAdmin reporting now summarizes the 30-day visit-to-request funnel with
+persona and campaign segments, operational failure counts, and explicit
+low-volume guidance. Overdue next actions are counted, prioritized, and visibly
+distinguished in the lead inbox.
 
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,

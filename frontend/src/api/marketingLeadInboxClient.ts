@@ -13,6 +13,27 @@ export interface MarketingLeadHistoryItem {
   assigned_to?: string; next_action_at?: string; note?: string; occurred_at: string;
 }
 
+export interface MarketingFunnelSegment {
+  segment: string; page_views: number; cta_clicks: number; form_starts: number; submissions: number;
+}
+
+export interface MarketingFunnelCounts {
+  page_views: number; cta_clicks: number; form_starts: number; submissions: number; failures: number;
+}
+
+export interface MarketingDashboard {
+  window_days: number;
+  totals: MarketingFunnelCounts;
+  by_persona: MarketingFunnelSegment[];
+  by_campaign: MarketingFunnelSegment[];
+}
+
+export async function getMarketingDashboard(): Promise<MarketingDashboard> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/marketing-dashboard`);
+  if (!response.ok) throw new Error(`Conversion dashboard failed with status ${response.status}.`);
+  return response.json() as Promise<MarketingDashboard>;
+}
+
 export async function listMarketingLeads(): Promise<MarketingLeadInboxItem[]> {
   const response = await authenticatedFetch(`${API_BASE_URL}/marketing-leads`);
   if (!response.ok) throw new Error(`Lead inbox failed with status ${response.status}.`);
