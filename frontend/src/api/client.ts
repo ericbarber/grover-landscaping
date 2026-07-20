@@ -1727,6 +1727,8 @@ export function organizationTeamActivityPath(
     moveScope?: TeamActivityMoveScope;
     actor?: string;
     target?: string;
+    source?: string;
+    destination?: string;
     auditId?: string;
     before?: string;
     limit?: number;
@@ -1738,6 +1740,8 @@ export function organizationTeamActivityPath(
   if (options.moveScope) params.set('move_scope', options.moveScope);
   if (options.actor) params.set('actor', options.actor);
   if (options.target) params.set('target', options.target);
+  if (options.source) params.set('source', options.source);
+  if (options.destination) params.set('destination', options.destination);
   if (options.auditId) params.set('audit_id', options.auditId);
   if (options.before) params.set('before', options.before);
   if (options.limit !== undefined) params.set('limit', String(options.limit));
@@ -1802,6 +1806,8 @@ export async function fetchTeamAdministrationActivity(
     moveScope?: TeamActivityMoveScope;
     actor?: string;
     target?: string;
+    source?: string;
+    destination?: string;
     auditId?: string;
     before?: string;
     limit?: number;

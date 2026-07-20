@@ -273,6 +273,8 @@ impl OrganizationRepository {
             None,
             None,
             None,
+            None,
+            None,
             25,
         )
         .await
@@ -285,6 +287,8 @@ impl OrganizationRepository {
         move_scope: Option<&str>,
         actor_query: Option<&str>,
         target_query: Option<&str>,
+        source_query: Option<&str>,
+        destination_query: Option<&str>,
         audit_id_query: Option<&str>,
         before: Option<&str>,
         limit: i64,
@@ -299,6 +303,8 @@ impl OrganizationRepository {
             move_scope,
             actor_query,
             target_query,
+            source_query,
+            destination_query,
             audit_id_query,
             before,
             limit,
@@ -1078,6 +1084,8 @@ async fn list_team_administration_activity(
     move_scope: Option<&str>,
     actor_query: Option<&str>,
     target_query: Option<&str>,
+    source_query: Option<&str>,
+    destination_query: Option<&str>,
     audit_id_query: Option<&str>,
     before: Option<&str>,
     limit: i64,
@@ -1191,6 +1199,20 @@ async fn list_team_administration_activity(
                   AND organization.display_name ILIKE '%' || $5 || '%'
               )
           )
+          AND (
+              $9::text IS NULL
+              OR COALESCE(old_branch.name, '') ILIKE '%' || $9 || '%'
+              OR COALESCE(old_territory.name, '') ILIKE '%' || $9 || '%'
+              OR COALESCE(audit.metadata->>'old_branch_id', '') ILIKE '%' || $9 || '%'
+              OR COALESCE(audit.metadata->>'old_territory_id', '') ILIKE '%' || $9 || '%'
+          )
+          AND (
+              $10::text IS NULL
+              OR COALESCE(new_branch.name, '') ILIKE '%' || $10 || '%'
+              OR COALESCE(new_territory.name, '') ILIKE '%' || $10 || '%'
+              OR COALESCE(audit.metadata->>'new_branch_id', '') ILIKE '%' || $10 || '%'
+              OR COALESCE(audit.metadata->>'new_territory_id', '') ILIKE '%' || $10 || '%'
+          )
           AND ($6::text IS NULL OR audit.id ILIKE '%' || $6 || '%')
           AND ($7::timestamptz IS NULL OR audit.occurred_at < $7::timestamptz)
           AND audit.event_kind IN (
@@ -1223,6 +1245,8 @@ async fn list_team_administration_activity(
     .bind(audit_id_query)
     .bind(before)
     .bind(limit)
+    .bind(source_query)
+    .bind(destination_query)
     .fetch_all(pool)
     .await?;
     Ok(rows

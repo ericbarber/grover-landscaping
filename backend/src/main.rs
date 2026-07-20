@@ -268,6 +268,8 @@ struct TeamActivityQuery {
     move_scope: Option<String>,
     actor: Option<String>,
     target: Option<String>,
+    source: Option<String>,
+    destination: Option<String>,
     audit_id: Option<String>,
     before: Option<String>,
     limit: Option<i64>,
@@ -2112,6 +2114,30 @@ async fn list_team_administration_activity(
         )
             .into_response();
     }
+    let source_query = query.source.as_deref().map(str::trim);
+    if source_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "source must be a non-empty search no longer than 120 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let destination_query = query.destination.as_deref().map(str::trim);
+    if destination_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "destination must be a non-empty search no longer than 120 characters."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
     let audit_id_query = query.audit_id.as_deref().map(str::trim);
     if audit_id_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
         return (
@@ -2156,6 +2182,8 @@ async fn list_team_administration_activity(
                 move_scope,
                 actor_query,
                 target_query,
+                source_query,
+                destination_query,
                 audit_id_query,
                 before,
                 limit,
@@ -6084,6 +6112,25 @@ mod tests {
                 Request::builder()
                     .method("GET")
                     .uri("/organizations/org_demo_landscaping/team-activity?move_scope=interstate")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_team_activity_filter");
+    }
+
+    #[tokio::test]
+    async fn organization_team_activity_endpoint_rejects_blank_directional_searches() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/team-activity?source=%20")
                     .body(Body::empty())
                     .unwrap(),
             )

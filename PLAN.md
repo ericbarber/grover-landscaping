@@ -663,10 +663,11 @@ Current state:
 - Owner hierarchy-event and move-scope filters restore per organization across mobile reloads with safe storage fallback
 - Owner activity newest/oldest ordering restores with the per-organization crew-move review state
 - A single reset restores persisted owner activity filters and ordering to the default newest/all review view
+- Owner activity filters crew moves by readable source and destination branch or territory across paginated server history
 
 Next implementation work:
 
-- Filter crew move activity by readable source or destination hierarchy names
+- Restore directional crew-move review fields across mobile reloads
 
 ## Planned
 

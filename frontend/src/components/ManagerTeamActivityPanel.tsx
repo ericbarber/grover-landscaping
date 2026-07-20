@@ -111,10 +111,14 @@ export function filterTeamActivity(
   auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
   moveScope: TeamActivityMoveScope | 'all' = 'all',
+  sourceQuery = '',
+  destinationQuery = '',
 ): TeamAdministrationActivity[] {
   const normalizedQuery = actorQuery.trim().toLocaleLowerCase();
   const normalizedTarget = targetQuery.trim().toLocaleLowerCase();
   const normalizedAuditId = auditIdQuery.trim().toLocaleLowerCase();
+  const normalizedSource = sourceQuery.trim().toLocaleLowerCase();
+  const normalizedDestination = destinationQuery.trim().toLocaleLowerCase();
   return activity.filter((item) => {
     const matchesActor = !normalizedQuery || [
       item.actorLabel,
@@ -130,9 +134,19 @@ export function filterTeamActivity(
     ].some((value) => value?.toLocaleLowerCase().includes(normalizedTarget));
     const matchesAuditId = !normalizedAuditId
       || item.id.toLocaleLowerCase().includes(normalizedAuditId);
+    const matchesSource = !normalizedSource || [
+      item.sourceBranchLabel,
+      item.sourceTerritoryLabel,
+    ].some((value) => value?.toLocaleLowerCase().includes(normalizedSource));
+    const matchesDestination = !normalizedDestination || [
+      item.destinationBranchLabel,
+      item.destinationTerritoryLabel,
+    ].some((value) => value?.toLocaleLowerCase().includes(normalizedDestination));
     return matchesActor
       && matchesTarget
       && matchesAuditId
+      && matchesSource
+      && matchesDestination
       && (eventKind === 'all' || item.eventKind === eventKind)
       && (
         moveScope === 'all'
@@ -150,12 +164,16 @@ export function teamActivityActiveFilterCount(
   auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
   moveScope: TeamActivityMoveScope | 'all' = 'all',
+  sourceQuery = '',
+  destinationQuery = '',
 ): number {
   return Number(Boolean(actorQuery.trim()))
     + Number(Boolean(targetQuery.trim()))
     + Number(Boolean(auditIdQuery.trim()))
     + Number(eventKind !== 'all')
-    + Number(moveScope !== 'all');
+    + Number(moveScope !== 'all')
+    + Number(Boolean(sourceQuery.trim()))
+    + Number(Boolean(destinationQuery.trim()));
 }
 
 export function sortTeamActivity(
@@ -256,6 +274,8 @@ export function ManagerTeamActivityPanel({
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
   const [auditIdQuery, setAuditIdQuery] = useState('');
+  const [sourceQuery, setSourceQuery] = useState('');
+  const [destinationQuery, setDestinationQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>(
     initialReviewFilters.current.eventFilter,
   );
@@ -270,7 +290,16 @@ export function ManagerTeamActivityPanel({
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const filteredActivity = sortTeamActivity(
-    filterTeamActivity(activity, actorQuery, targetQuery, auditIdQuery, eventFilter, moveScope),
+    filterTeamActivity(
+      activity,
+      actorQuery,
+      targetQuery,
+      auditIdQuery,
+      eventFilter,
+      moveScope,
+      sourceQuery,
+      destinationQuery,
+    ),
     activitySort,
   );
   const activeFilterCount = teamActivityActiveFilterCount(
@@ -279,6 +308,8 @@ export function ManagerTeamActivityPanel({
     auditIdQuery,
     eventFilter,
     moveScope,
+    sourceQuery,
+    destinationQuery,
   );
   const hasCustomReviewView = activeFilterCount > 0 || activitySort !== 'newest';
   const summary = summarizeTeamActivity(activity);
@@ -292,6 +323,8 @@ export function ManagerTeamActivityPanel({
         moveScope: moveScope === 'all' ? undefined : moveScope,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
+        source: sourceQuery.trim() || undefined,
+        destination: destinationQuery.trim() || undefined,
         auditId: auditIdQuery.trim() || undefined,
         limit: 25,
       });
@@ -316,6 +349,8 @@ export function ManagerTeamActivityPanel({
         moveScope: moveScope === 'all' ? undefined : moveScope,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
+        source: sourceQuery.trim() || undefined,
+        destination: destinationQuery.trim() || undefined,
         auditId: auditIdQuery.trim() || undefined,
         limit: 25,
       });
@@ -356,7 +391,7 @@ export function ManagerTeamActivityPanel({
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
-      actorQuery || targetQuery || auditIdQuery ? 300 : 0,
+      actorQuery || targetQuery || sourceQuery || destinationQuery || auditIdQuery ? 300 : 0,
     );
     return () => window.clearTimeout(timeout);
   }, [
@@ -366,6 +401,8 @@ export function ManagerTeamActivityPanel({
     moveScope,
     actorQuery,
     targetQuery,
+    sourceQuery,
+    destinationQuery,
     auditIdQuery,
   ]);
 
@@ -463,7 +500,7 @@ export function ManagerTeamActivityPanel({
           )
         ))}
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
           <input
@@ -482,6 +519,26 @@ export function ManagerTeamActivityPanel({
             placeholder="Member, crew, or ID"
             type="search"
             value={targetQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Find move source
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setSourceQuery(event.target.value)}
+            placeholder="Source branch or territory"
+            type="search"
+            value={sourceQuery}
+          />
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
+          Find move destination
+          <input
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-normal"
+            onChange={(event) => setDestinationQuery(event.target.value)}
+            placeholder="Destination branch or territory"
+            type="search"
+            value={destinationQuery}
           />
         </label>
         <label className="text-xs font-semibold text-slate-700">
@@ -546,6 +603,8 @@ export function ManagerTeamActivityPanel({
             onClick={() => {
               setActorQuery('');
               setTargetQuery('');
+              setSourceQuery('');
+              setDestinationQuery('');
               setAuditIdQuery('');
               setEventFilter('all');
               setMoveScope('all');

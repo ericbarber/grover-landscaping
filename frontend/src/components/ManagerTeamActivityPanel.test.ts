@@ -68,6 +68,26 @@ describe('team administration activity labels', () => {
     expect(filterTeamActivity(activity, '', '', '', 'role_changed')).toEqual([activity[0]]);
     expect(filterTeamActivity(activity, '', '', '', 'all', 'cross_branch'))
       .toEqual([activity[1]]);
+    expect(filterTeamActivity(
+      activity,
+      '',
+      '',
+      '',
+      'all',
+      'all',
+      'desert',
+      'tempe',
+    )).toEqual([activity[1]]);
+    expect(filterTeamActivity(
+      activity,
+      '',
+      '',
+      '',
+      'all',
+      'all',
+      'tempe',
+      'desert',
+    )).toEqual([]);
     expect(filterTeamActivity(activity, '', '', '', 'all', 'within_branch')).toEqual([]);
     expect(filterTeamActivity(activity, 'sam', '', '', 'role_changed')).toEqual([]);
   });
@@ -77,6 +97,8 @@ describe('team administration activity labels', () => {
     expect(teamActivityActiveFilterCount('Jordan', 'North', 'audit', 'crew_profile_updated'))
       .toBe(4);
     expect(teamActivityActiveFilterCount('', '', '', 'all', 'cross_branch')).toBe(1);
+    expect(teamActivityActiveFilterCount('', '', '', 'all', 'all', 'North', 'South'))
+      .toBe(2);
   });
 
   it('restores supported move review filters and rejects malformed storage', () => {
