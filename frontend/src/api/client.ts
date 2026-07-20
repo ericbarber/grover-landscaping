@@ -775,6 +775,24 @@ export interface CrewRecord {
   persisted: boolean;
 }
 
+export interface OrganizationBranchRecord {
+  id: string;
+  organizationId: string;
+  name: string;
+  code: string;
+  timeZone: string;
+  serviceAreaLabel: string | null;
+  status: 'active' | 'inactive';
+}
+
+export interface ServiceTerritoryRecord {
+  id: string;
+  organizationId: string;
+  branchId: string;
+  name: string;
+  status: 'active' | 'inactive';
+}
+
 export interface PropertyPortfolioRecord {
   id: string;
   accountId: string;
@@ -2328,6 +2346,44 @@ export async function fetchCrews(): Promise<CrewRecord[]> {
     dailyStopCapacity: item.daily_stop_capacity,
     leadMembershipId: item.lead_membership_id ?? null,
     persisted: item.persisted,
+  }));
+}
+
+export async function fetchOrganizationBranches(): Promise<OrganizationBranchRecord[]> {
+  const items = await request<Array<{
+    id: string;
+    organization_id: string;
+    name: string;
+    code: string;
+    time_zone: string;
+    service_area_label?: string | null;
+    status: OrganizationBranchRecord['status'];
+  }>>('/organization-branches');
+  return items.map((item) => ({
+    id: item.id,
+    organizationId: item.organization_id,
+    name: item.name,
+    code: item.code,
+    timeZone: item.time_zone,
+    serviceAreaLabel: item.service_area_label ?? null,
+    status: item.status,
+  }));
+}
+
+export async function fetchServiceTerritories(): Promise<ServiceTerritoryRecord[]> {
+  const items = await request<Array<{
+    id: string;
+    organization_id: string;
+    branch_id: string;
+    name: string;
+    status: ServiceTerritoryRecord['status'];
+  }>>('/service-territories');
+  return items.map((item) => ({
+    id: item.id,
+    organizationId: item.organization_id,
+    branchId: item.branch_id,
+    name: item.name,
+    status: item.status,
   }));
 }
 

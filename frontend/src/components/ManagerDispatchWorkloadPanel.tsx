@@ -1,5 +1,12 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
-import { fetchCrews, type CrewRecord } from '../api/client';
+import {
+  fetchCrews,
+  fetchOrganizationBranches,
+  fetchServiceTerritories,
+  type CrewRecord,
+  type OrganizationBranchRecord,
+  type ServiceTerritoryRecord,
+} from '../api/client';
 import type { YardCareJob } from '../domain/jobs';
 import {
   buildDispatchWorkload,
@@ -28,6 +35,10 @@ export function ManagerDispatchWorkloadPanel({
   );
   const [scheduledDate, setScheduledDate] = useState('');
   const [crews, setCrews] = useState<CrewRecord[]>([]);
+  const [branches, setBranches] = useState<OrganizationBranchRecord[]>([]);
+  const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
+  const [branchId, setBranchId] = useState('');
+  const [territoryId, setTerritoryId] = useState('');
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [targetCrewId, setTargetCrewId] = useState('');
   const [targetDate, setTargetDate] = useState('');
@@ -35,10 +46,13 @@ export function ManagerDispatchWorkloadPanel({
   const [customerNotificationRequired, setCustomerNotificationRequired] = useState<boolean | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const groups = useMemo(
-    () => buildDispatchWorkload(jobs).filter(
-      (group) => !scheduledDate || group.scheduledDate === scheduledDate,
-    ),
-    [jobs, scheduledDate],
+    () => buildDispatchWorkload(jobs).filter((group) => {
+      const crew = crews.find((item) => item.id === group.crewId);
+      return (!scheduledDate || group.scheduledDate === scheduledDate)
+        && (!branchId || crew?.branchId === branchId)
+        && (!territoryId || crew?.territoryId === territoryId);
+    }),
+    [branchId, crews, jobs, scheduledDate, territoryId],
   );
   const editingJob = jobs.find((job) => job.id === editingJobId);
   const targetCrew = crews.find((crew) => crew.id === targetCrewId);
@@ -61,8 +75,16 @@ export function ManagerDispatchWorkloadPanel({
     || customerNotificationRequired !== null;
 
   useEffect(() => {
-    void fetchCrews()
-      .then((items) => setCrews(items.filter((crew) => crew.status === 'active')))
+    void Promise.all([
+      fetchCrews(),
+      fetchOrganizationBranches(),
+      fetchServiceTerritories(),
+    ])
+      .then(([crewItems, branchItems, territoryItems]) => {
+        setCrews(crewItems.filter((crew) => crew.status === 'active'));
+        setBranches(branchItems.filter((branch) => branch.status === 'active'));
+        setTerritories(territoryItems.filter((territory) => territory.status === 'active'));
+      })
       .catch(() => setActionStatus('Crew choices could not be loaded.'));
   }, []);
 
@@ -112,17 +134,46 @@ export function ManagerDispatchWorkloadPanel({
             Compare crew assignments and open scheduled work before changing a route.
           </p>
         </div>
-        <label className="text-xs font-semibold text-slate-600">
-          Service date
-          <select
-            className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
-            onChange={(event) => setScheduledDate(event.target.value)}
-            value={scheduledDate}
-          >
-            <option value="">All loaded dates</option>
-            {dates.map((date) => <option key={date} value={date}>{date}</option>)}
-          </select>
-        </label>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <label className="text-xs font-semibold text-slate-600">
+            Branch
+            <select
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+              onChange={(event) => {
+                setBranchId(event.target.value);
+                setTerritoryId('');
+              }}
+              value={branchId}
+            >
+              <option value="">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-slate-600">
+            Territory
+            <select
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+              onChange={(event) => setTerritoryId(event.target.value)}
+              value={territoryId}
+            >
+              <option value="">All territories</option>
+              {territories
+                .filter((territory) => !branchId || territory.branchId === branchId)
+                .map((territory) => <option key={territory.id} value={territory.id}>{territory.name}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-slate-600">
+            Service date
+            <select
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm font-normal text-slate-900"
+              onChange={(event) => setScheduledDate(event.target.value)}
+              value={scheduledDate}
+            >
+              <option value="">All loaded dates</option>
+              {dates.map((date) => <option key={date} value={date}>{date}</option>)}
+            </select>
+          </label>
+        </div>
       </div>
       {actionStatus ? <p className="mt-3 text-xs font-semibold text-slate-600">{actionStatus}</p> : null}
 
@@ -134,6 +185,8 @@ export function ManagerDispatchWorkloadPanel({
         <div className="mt-4 space-y-3">
           {groups.map((group) => {
             const groupCrew = crews.find((crew) => crew.id === group.crewId);
+            const groupBranch = branches.find((branch) => branch.id === groupCrew?.branchId);
+            const groupTerritory = territories.find((territory) => territory.id === groupCrew?.territoryId);
             return (
             <article
               className={`rounded-xl border p-3 ${
@@ -151,7 +204,8 @@ export function ManagerDispatchWorkloadPanel({
                   <p className="mt-1 text-xs text-slate-600">{group.scheduledDate}</p>
                   {groupCrew?.branchId || groupCrew?.territoryId ? (
                     <p className="mt-1 text-[11px] font-medium text-slate-500">
-                      {groupCrew.branchId ?? 'No branch'} · {groupCrew.territoryId ?? 'No territory'}
+                      {groupBranch?.name ?? groupCrew.branchId ?? 'No branch'} ·{' '}
+                      {groupTerritory?.name ?? groupCrew.territoryId ?? 'No territory'}
                     </p>
                   ) : null}
                 </div>

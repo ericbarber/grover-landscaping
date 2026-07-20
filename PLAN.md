@@ -488,6 +488,7 @@ Current state:
 - Tenant-owned branch and territory tables enforce same-organization hierarchy and backfill existing crews into default operational scopes
 - Crew APIs expose branch/territory scope, new crews inherit tenant defaults, and dispatch workload cards show their operational hierarchy
 - Protected branch and territory list endpoints derive tenant scopes exclusively from active manager memberships
+- Manager dispatch workload resolves readable branch/territory names and filters loaded day work by hierarchy scope
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -628,7 +629,7 @@ Current state:
 
 Next implementation work:
 
-- Use branch and territory names and filters in the manager dispatch workload
+- Add owner-managed branch creation with tenant-safe code and timezone validation
 
 ## Planned
 
