@@ -94,6 +94,10 @@ import {
   type ManagerWorkspaceSection,
   type ManagerWorkspaceTool,
 } from './components/ManagerWorkspaceMenu';
+import {
+  JobWorkflowMenu,
+  type JobWorkflowSection,
+} from './components/JobWorkflowMenu';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -660,6 +664,11 @@ function JobDetailPanel({
   reportActionStatus: string | null;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
+  const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>('overview');
+
+  useEffect(() => {
+    setActiveWorkflow('overview');
+  }, [job?.id]);
 
   if (isLoading) {
     return (
@@ -704,7 +713,17 @@ function JobDetailPanel({
           </button>
         </div>
 
-        <details className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-3">
+        <JobWorkflowMenu
+          activeSection={activeWorkflow}
+          addOnCount={addOns.length}
+          checklistComplete={job.checklist.filter((item) => item.completed).length}
+          checklistTotal={job.checklist.length}
+          onChange={setActiveWorkflow}
+          photoCount={uploadTickets.length}
+          reportReady={Boolean(reportSnapshot?.readyForCustomer)}
+        />
+
+        <details className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-slate-50 px-3 lg:block`}>
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600 [&::-webkit-details-marker]:hidden">
             Checklist
             <span className="rounded-full bg-white px-2 py-1 text-xs tracking-normal text-slate-600">
@@ -731,7 +750,7 @@ function JobDetailPanel({
         </details>
 
         {addOns.length > 0 ? (
-          <div className="mt-6">
+          <div className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-6 lg:block`}>
             <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-700">Approved add-on work</h3>
             <div className="mt-3 space-y-2">
               {addOns.map((addOn) => (
@@ -765,9 +784,13 @@ function JobDetailPanel({
               ))}
             </div>
           </div>
+        ) : activeWorkflow === 'addons' ? (
+          <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
+            No approved add-on work is attached to this job.
+          </div>
         ) : null}
 
-        <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+        <div className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-6 rounded-2xl bg-slate-50 p-4 lg:block`}>
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
           <p className="mt-2 text-sm text-slate-600">
             Use a previewable JPEG, PNG, GIF, or WebP image at least 640×480. Duplicate files are blocked, and both before and after evidence are required to complete the job.
@@ -824,6 +847,7 @@ function JobDetailPanel({
         </div>
       </aside>
 
+      <div className={`${activeWorkflow === 'report' ? 'block' : 'hidden'} lg:block`}>
       <CompletionReport
         job={job}
         uploadTickets={uploadTickets}
@@ -835,6 +859,7 @@ function JobDetailPanel({
         onQueueDeliveryNotification={onQueueReportDeliveryNotification}
         actionStatus={reportActionStatus}
       />
+      </div>
     </div>
   );
 }
