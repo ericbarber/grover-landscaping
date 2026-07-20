@@ -11,6 +11,7 @@ import { ServiceWorkerUpdateBanner } from './components/ServiceWorkerUpdateBanne
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { isDiagnosticsPath } from './domain/diagnosticsRoute';
 import { isApplicationPath } from './domain/applicationRoute';
+import { marketingPersonaFromPath } from './domain/marketingRoute';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -41,6 +42,7 @@ const applicationRoute = isApplicationPath(window.location.pathname);
 const sharedBidToken = sharedBidTokenFromPath(window.location.pathname);
 const sharedReportToken = sharedReportTokenFromPath(window.location.pathname);
 const organizationInvitationToken = organizationInvitationTokenFromPath(window.location.pathname);
+const marketingPersona = marketingPersonaFromPath(window.location.pathname);
 const showOperationalBanners = diagnosticsRoute
   || applicationRoute
   || Boolean(sharedBidToken)
@@ -74,7 +76,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         ) : applicationRoute || organizationInvitationToken ? (
           <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
         ) : (
-          <PublicLandingPage />
+          <PublicLandingPage initialPersonaId={marketingPersona} />
         )}
       </React.Suspense>
     </RouteLoadBoundary>

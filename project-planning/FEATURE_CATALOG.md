@@ -9,7 +9,8 @@
 - Persona-specific demo, portfolio-discussion, and early-access conversion paths
 - Consent-based PostgreSQL lead capture with landing-page and UTM attribution
 - Honeypot spam filtering and honest local-preview confirmation
-- Planned extensions: customer proof, production screenshots, campaign paths, lead notifications, and conversion analytics
+- Shareable persona campaign paths with tailored hero copy, calls to action, canonical metadata, and crawler controls
+- Planned extensions: customer proof, production screenshots, lead notifications, and conversion analytics
 
 ## Persona Workspaces
 

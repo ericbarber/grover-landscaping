@@ -14,6 +14,10 @@ Persona-specific conversion actions now open a consent-based request flow for
 demos, portfolio discussions, or early access. Production requests persist with
 audience, intent, landing path, and UTM attribution; local preview mode reports
 that it does not retain the submission.
+Dedicated audience paths now tailor the hero, metadata, and conversion action for
+yard owners, property managers, landscaping companies, and crew leads while
+preserving campaign attribution. Public crawler rules exclude operational and
+customer-share routes from indexing.
 
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,

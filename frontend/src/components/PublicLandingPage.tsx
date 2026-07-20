@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
+import {
+  marketingPathForPersona,
+  type MarketingPersonaId,
+} from '../domain/marketingRoute';
 import {
   marketingCallToAction,
   MarketingLeadDialog,
 } from './MarketingLeadDialog';
-
-type MarketingPersonaId = 'owner' | 'property-manager' | 'company' | 'crew';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -77,13 +79,34 @@ function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
   return 'landscaping_company';
 }
 
-export function PublicLandingPage() {
-  const [activePersonaId, setActivePersonaId] = useState<MarketingPersonaId>('company');
+export function PublicLandingPage({
+  initialPersonaId = 'company',
+}: {
+  initialPersonaId?: MarketingPersonaId;
+}) {
+  const [activePersonaId, setActivePersonaId] = useState<MarketingPersonaId>(initialPersonaId);
   const [leadDialogPersona, setLeadDialogPersona] = useState<MarketingPersona | null>(null);
   const activePersona = marketingPersonas.find((persona) => persona.id === activePersonaId)
     ?? marketingPersonas[0];
   const activeMarketingPersona = marketingPersonaFor(activePersona.id);
   const activeCallToAction = marketingCallToAction(activeMarketingPersona);
+
+  useEffect(() => {
+    const title = `${activePersona.label} landscaping software | Grover`;
+    const description = activePersona.description;
+    const canonicalUrl = new URL(marketingPathForPersona(activePersona.id), window.location.origin)
+      .toString();
+    document.title = title;
+    setMetadata('description', description);
+    setMetadata('og:title', title, 'property');
+    setMetadata('og:description', description, 'property');
+    setMetadata('og:type', 'website', 'property');
+    setMetadata('og:url', canonicalUrl, 'property');
+    setMetadata('twitter:card', 'summary_large_image');
+    setMetadata('twitter:title', title);
+    setMetadata('twitter:description', description);
+    setCanonicalUrl(canonicalUrl);
+  }, [activePersona]);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f6f7f2] text-slate-950">
@@ -111,17 +134,17 @@ export function PublicLandingPage() {
         <div className="relative mx-auto grid min-h-[36rem] max-w-7xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-3xl">
             <p className="text-xs font-black uppercase tracking-[0.25em] text-emerald-300 sm:text-sm">
-              Landscaping work, beautifully organized
+              {activePersona.eyebrow}
             </p>
             <h1 className="mt-6 text-5xl font-black leading-[0.92] tracking-[-0.045em] sm:text-6xl lg:text-7xl xl:text-8xl">
-              From the plan to the proof.
+              {activePersona.headline}
             </h1>
             <p className="mt-7 max-w-2xl text-lg font-medium leading-8 text-slate-200 sm:text-xl">
-              Grover connects the people, properties, and promises behind exceptional landscape care—so every day runs clearer and every customer sees the difference.
+              {activePersona.description} Grover connects the people, properties, and proof behind exceptional landscape care.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona('landscaping_company')} type="button">
-                Request a demo <span className="ml-2" aria-hidden="true">→</span>
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona(activeMarketingPersona)} type="button">
+                {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
               </button>
               <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 font-black text-white backdrop-blur-sm transition hover:bg-white/15" href="#who-its-for">
                 See who it’s for
@@ -190,7 +213,14 @@ export function PublicLandingPage() {
                     : 'border border-slate-300 bg-white text-slate-700 hover:border-emerald-500'
                 }`}
                 key={persona.id}
-                onClick={() => setActivePersonaId(persona.id)}
+                onClick={() => {
+                  setActivePersonaId(persona.id);
+                  window.history.replaceState(
+                    null,
+                    '',
+                    `${marketingPathForPersona(persona.id)}${window.location.search}`,
+                  );
+                }}
                 role="tab"
                 type="button"
               >
@@ -299,4 +329,24 @@ export function PublicLandingPage() {
       ) : null}
     </main>
   );
+}
+
+function setMetadata(name: string, content: string, attribute = 'name') {
+  let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${name}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attribute, name);
+    document.head.appendChild(element);
+  }
+  element.content = content;
+}
+
+function setCanonicalUrl(url: string) {
+  let element = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!element) {
+    element = document.createElement('link');
+    element.rel = 'canonical';
+    document.head.appendChild(element);
+  }
+  element.href = url;
 }

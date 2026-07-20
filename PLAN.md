@@ -26,6 +26,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Conversion form captures contact consent, audience, team or portfolio size, goals, landing path, and UTM attribution with a hidden spam honeypot
 - Public marketing-lead API validates requests and persists production submissions to PostgreSQL without requiring authentication
 - Confirmation clearly distinguishes durably recorded production requests from non-persisted local preview submissions
+- Shareable campaign paths tailor the first-screen story and conversion action for yard owners, property managers, landscaping companies, and crew leads
+- Persona selection keeps UTM attribution while updating the browser URL, canonical metadata, and search/social descriptions without a page reload
+- Public crawler guidance keeps workspace, authentication, invitation, diagnostics, and customer-share routes out of search results
 
 ### Mobile navigation and context
 

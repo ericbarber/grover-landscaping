@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /app
+Disallow: /auth/
+Disallow: /diagnostics
+Disallow: /organization-invitations/
+Disallow: /bid-review/
+Disallow: /report-view/
