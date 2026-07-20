@@ -849,11 +849,12 @@ Current state:
 - Day-plan draft creation and publication distinguish missing crews or drafts from lifecycle conflicts
 - Manager scheduling feedback directs missing route targets back to authoritative crew and schedule refreshes
 - Route-stop assignment, removal, and reorder distinguish missing plans, jobs, or stops from capacity and lifecycle conflicts
+- Principal access summaries fail closed when their required persisted login audit cannot be written
 
 Next implementation work:
 
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
-- Audit notification delivery and recovery paths for remaining lossy provider fallbacks
+- Audit remaining ignored audit and recovery writes before pilot use
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

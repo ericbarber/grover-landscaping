@@ -113,6 +113,60 @@ async fn repository_reads_seeded_local_owner_membership_from_postgres() {
             && membership.role == AccessRole::OrganizationOwner
     }));
 
+    sqlx::query(
+        r#"
+        CREATE OR REPLACE FUNCTION reject_test_login_audit()
+        RETURNS trigger AS $$
+        BEGIN
+            IF NEW.event_kind = 'login'
+               AND NEW.actor_user_id = 'local-development-user'
+            THEN
+                RAISE EXCEPTION 'test login audit rejection';
+            END IF;
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("test login audit rejection function should install");
+    sqlx::query("DROP TRIGGER IF EXISTS reject_test_login_audit_trigger ON access_audit_events")
+        .execute(&pool)
+        .await
+        .expect("stale test login audit rejection trigger should be removed");
+    sqlx::query(
+        r#"
+        CREATE TRIGGER reject_test_login_audit_trigger
+        BEFORE INSERT ON access_audit_events
+        FOR EACH ROW EXECUTE FUNCTION reject_test_login_audit()
+        "#,
+    )
+    .execute(&pool)
+    .await
+    .expect("test login audit rejection trigger should install");
+
+    assert!(matches!(
+        organizations
+            .principal_access_summary(
+                "local-development-user",
+                "local.development@example.com",
+                Some("local.development@example.com".to_string()),
+                vec![AccessRole::OrganizationOwner],
+            )
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
+
+    sqlx::query("DROP TRIGGER IF EXISTS reject_test_login_audit_trigger ON access_audit_events")
+        .execute(&pool)
+        .await
+        .expect("test login audit rejection trigger should be removed");
+    sqlx::query("DROP FUNCTION IF EXISTS reject_test_login_audit()")
+        .execute(&pool)
+        .await
+        .expect("test login audit rejection function should be removed");
+
     let login_audit = sqlx::query(
         r#"
         SELECT actor_user_id, organization_id, event_kind, target_id

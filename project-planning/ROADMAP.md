@@ -9,6 +9,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
    - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.
    - Expand account onboarding and first-user administration.
+   - Keep access-summary reads fail-closed when required login auditing is unavailable.
 2. **Notifications and persisted activity**
    - Configure and validate the production email/SMS gateway.
    - Process provider delivery receipts and manual resolutions.

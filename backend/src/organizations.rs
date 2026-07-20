@@ -263,7 +263,10 @@ impl OrganizationRepository {
         else {
             return OrganizationResourceResult::Unavailable;
         };
-        let _ = self.record_login_audit_events(user_id, &memberships).await;
+        if let Err(error) = self.record_login_audit_events(user_id, &memberships).await {
+            tracing::error!(%error, user_id, "persisted login audit write failed");
+            return OrganizationResourceResult::Unavailable;
+        }
 
         OrganizationResourceResult::Found(PrincipalAccessSummary {
             user_id: user_id.to_string(),
