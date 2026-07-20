@@ -68,9 +68,10 @@ use grover_landscaping_api::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
         CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
         MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
-        OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
-        UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
-        UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
+        OrganizationProfileUpdateResult, OrganizationRepository, OrganizationResourceResult,
+        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipProfileRequest,
+        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+        UpdateOrganizationProfileRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -1398,10 +1399,22 @@ async fn update_organization_profile(
         .update_organization_profile(&organization_id, &principal.subject, request)
         .await
     {
-        Some(profile) => Json(profile).into_response(),
-        None => resource_not_found_response(
+        OrganizationProfileUpdateResult::Updated(profile) => Json(profile).into_response(),
+        OrganizationProfileUpdateResult::NotFound => resource_not_found_response(
             "organization_not_found",
             "The requested active organization was not found.",
+        ),
+        OrganizationProfileUpdateResult::Invalid => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_profile",
+                message: "The normalized organization profile is invalid.".to_string(),
+            }),
+        )
+            .into_response(),
+        OrganizationProfileUpdateResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_profile_update_unavailable",
+            "The persisted organization profile could not be updated.",
         ),
     }
 }

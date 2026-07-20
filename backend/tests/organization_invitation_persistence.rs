@@ -1,8 +1,9 @@
 use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
-    OrganizationCollectionResult, OrganizationRepository, OrganizationResourceResult,
-    ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
-    UpdateOrganizationMembershipStatusRequest,
+    OrganizationCollectionResult, OrganizationProfileUpdateResult, OrganizationRepository,
+    OrganizationResourceResult, ReissueOrganizationInvitationRequest,
+    UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+    UpdateOrganizationProfileRequest,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
@@ -57,6 +58,25 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .first_owner_setup_progress("org_demo_landscaping")
             .await,
         OrganizationResourceResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_organization_profile(
+                "org_demo_landscaping",
+                "local-development-user",
+                UpdateOrganizationProfileRequest {
+                    display_name: "Grover Landscaping".to_string(),
+                    organization_type: "yard_care_company".to_string(),
+                    contact_email: Some("office@example.com".to_string()),
+                    contact_phone: None,
+                    website_url: None,
+                    time_zone: "America/Phoenix".to_string(),
+                    service_area_label: Some("Phoenix".to_string()),
+                    default_daily_stop_capacity: 12,
+                },
+            )
+            .await,
+        OrganizationProfileUpdateResult::Unavailable
     ));
 }
 

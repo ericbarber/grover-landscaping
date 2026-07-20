@@ -22,6 +22,14 @@ pub enum OrganizationResourceResult<T> {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OrganizationProfileUpdateResult {
+    Updated(OrganizationProfile),
+    NotFound,
+    Invalid,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationMembership {
     pub id: String,
@@ -479,22 +487,31 @@ impl OrganizationRepository {
         organization_id: &str,
         actor_user_id: &str,
         request: UpdateOrganizationProfileRequest,
-    ) -> Option<OrganizationProfile> {
+    ) -> OrganizationProfileUpdateResult {
         let request = normalize_update_organization_profile_request(request);
         if validate_update_organization_profile_request(&request).is_err() {
-            return None;
+            return OrganizationProfileUpdateResult::Invalid;
         }
         if let Some(pool) = &self.pool {
-            return update_organization_profile(pool, organization_id, actor_user_id, &request)
+            return match update_organization_profile(pool, organization_id, actor_user_id, &request)
                 .await
-                .ok()
-                .flatten();
+            {
+                Ok(Some(profile)) => OrganizationProfileUpdateResult::Updated(profile),
+                Ok(None) => OrganizationProfileUpdateResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted organization profile update failed");
+                    OrganizationProfileUpdateResult::Unavailable
+                }
+            };
         }
-        local_organization_profile(organization_id).map(|profile| OrganizationProfile {
-            display_name: request.display_name,
-            organization_type: request.organization_type,
-            ..profile
-        })
+        local_organization_profile(organization_id)
+            .map(|profile| OrganizationProfile {
+                display_name: request.display_name,
+                organization_type: request.organization_type,
+                ..profile
+            })
+            .map(OrganizationProfileUpdateResult::Updated)
+            .unwrap_or(OrganizationProfileUpdateResult::NotFound)
     }
 
     pub async fn create_invitation(

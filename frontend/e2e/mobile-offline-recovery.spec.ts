@@ -116,6 +116,32 @@ test('does not infer organization setup state during persisted profile outages',
   );
 });
 
+test('confirms organization profile changes were not saved during storage outages', async ({ page }) => {
+  await page.route(/\/organizations\/[^/]+$/, (route) => {
+    if (route.request().method() !== 'PUT') return route.continue();
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      json: {
+        error: 'organization_profile_update_unavailable',
+        message: 'The persisted organization profile could not be updated.',
+      },
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByText('First-user setup', { exact: true })
+    .locator('xpath=ancestor::section[1]');
+  await onboarding.getByRole('button', { name: 'Edit profile' }).click();
+  await onboarding.getByRole('button', { name: 'Save organization profile' }).click();
+  await expect(onboarding.getByRole('status')).toContainText(
+    'No organization profile changes were saved',
+  );
+  await expect(onboarding.getByRole('button', { name: 'Save organization profile' })).toBeVisible();
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

@@ -215,8 +215,12 @@ export function FirstOwnerOnboardingPanel({
       setIsEditingProfile(false);
       onOrganizationReady?.(profile.displayName, profile.id);
       await refresh();
-    } catch {
-      setMessage('The organization profile could not be saved. Confirm owner access and try again.');
+    } catch (error) {
+      if (isApiErrorCode(error, 'organization_profile_update_unavailable')) {
+        setMessage('Persisted profile storage is unavailable. No organization profile changes were saved.');
+      } else {
+        setMessage('The organization profile could not be saved. Confirm owner access and try again.');
+      }
     } finally {
       setIsLoading(false);
     }

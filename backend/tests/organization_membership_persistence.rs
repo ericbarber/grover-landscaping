@@ -8,8 +8,9 @@ use grover_landscaping_api::{
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, MembershipProfileUpdateResult,
-        OrganizationCollectionResult, OrganizationRepository, OrganizationResourceResult,
-        UpdateOrganizationMembershipProfileRequest, UpdateOrganizationProfileRequest,
+        OrganizationCollectionResult, OrganizationProfileUpdateResult, OrganizationRepository,
+        OrganizationResourceResult, UpdateOrganizationMembershipProfileRequest,
+        UpdateOrganizationProfileRequest,
     },
 };
 use sqlx::Row;
@@ -187,7 +188,7 @@ async fn repository_bootstraps_first_owner_once() {
         membership.id == created.membership.id && membership.display_name == "Jordan Grover"
     }));
 
-    let updated_profile = organizations
+    let OrganizationProfileUpdateResult::Updated(updated_profile) = organizations
         .update_organization_profile(
             &created.organization_id,
             &user_id,
@@ -203,7 +204,9 @@ async fn repository_bootstraps_first_owner_once() {
             },
         )
         .await
-        .expect("owner should update organization profile");
+    else {
+        panic!("owner should update organization profile");
+    };
     assert_eq!(
         updated_profile.display_name,
         "First Owner Property Services"
