@@ -16,11 +16,14 @@ import {
 } from '../api/client';
 import {
   deriveAccountOnboardingProgress,
+  customerRelationshipCounts,
   filterAccountsByOnboardingProgress,
+  filterAccountsByRelationship,
   propertyAttentionReasonLabel,
   propertyAttentionWorkspace,
   searchCustomerAccounts,
   type AccountOnboardingFilter,
+  type CustomerRelationshipFilter,
 } from '../domain/accountOnboardingProgress';
 import {
   customerAccountDraftError,
@@ -66,9 +69,14 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
   const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
   const [filter, setFilter] = useState<AccountOnboardingFilter>('all');
+  const [relationshipFilter, setRelationshipFilter] = useState<CustomerRelationshipFilter>(
+    () => loadRelationshipFilter(organizationId),
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const statusFilteredAccounts = filterAccountsByOnboardingProgress(accounts, progress, filter);
-  const filteredAccounts = searchCustomerAccounts(statusFilteredAccounts, properties, searchQuery);
+  const relationshipFilteredAccounts = filterAccountsByRelationship(statusFilteredAccounts, relationshipFilter);
+  const filteredAccounts = searchCustomerAccounts(relationshipFilteredAccounts, properties, searchQuery);
+  const relationshipCounts = customerRelationshipCounts(accounts);
   const completeCount = accounts.filter((account) => progress[account.accountId]?.complete).length;
   const incompleteCount = accounts.length - completeCount;
 
@@ -105,6 +113,9 @@ export function ManagerCustomerAccountOnboardingPanel({
   }
 
   useEffect(() => { void refresh(); }, [refreshSignal]);
+  useEffect(() => {
+    setRelationshipFilter(loadRelationshipFilter(organizationId));
+  }, [organizationId]);
 
   async function create(allowDuplicate = false) {
     const validationError = customerAccountDraftError(createDraft);
@@ -339,6 +350,22 @@ export function ManagerCustomerAccountOnboardingPanel({
           type="search"
           value={searchQuery}
         />
+      </label>
+      <label className="mt-3 block text-sm font-semibold text-slate-700">Customer relationship filter
+        <select
+          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+          onChange={(event) => {
+            const nextFilter = event.target.value as CustomerRelationshipFilter;
+            setRelationshipFilter(nextFilter);
+            window.localStorage.setItem(relationshipFilterStorageKey(organizationId), nextFilter);
+          }}
+          value={relationshipFilter}
+        >
+          <option value="all">All relationships ({relationshipCounts.all})</option>
+          <option value="owner">Direct property owners ({relationshipCounts.owner})</option>
+          <option value="property_manager">Property managers ({relationshipCounts.property_manager})</option>
+          <option value="service_provider">Service-provider partners ({relationshipCounts.service_provider})</option>
+        </select>
       </label>
       <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Account onboarding filters">
         {([
@@ -681,6 +708,17 @@ function accountRelationshipLabel(
     default:
       return 'Service-provider partner';
   }
+}
+
+function relationshipFilterStorageKey(organizationId: string): string {
+  return `grover.customer-account-relationship-filter.v1.${organizationId}`;
+}
+
+function loadRelationshipFilter(organizationId: string): CustomerRelationshipFilter {
+  const value = window.localStorage.getItem(relationshipFilterStorageKey(organizationId));
+  return value === 'owner' || value === 'property_manager' || value === 'service_provider'
+    ? value
+    : 'all';
 }
 
 function AccountProgress({

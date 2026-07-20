@@ -2,6 +2,15 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {
+      localStorage.setItem(
+        'grover.customer-account-relationship-filter.v1.org_demo_landscaping',
+        'all',
+      );
+      sessionStorage.setItem('customer-relationship-filter-initialized', 'true');
+    }
+  });
   let submittedAccount: Record<string, unknown> | null = null;
   let accountCreateCount = 0;
   let archivedAccountId = '';
@@ -137,9 +146,10 @@ test('creates a service-ready customer account in one mobile workflow', async ({
     .getByRole('heading', { name: 'Customer accounts' })
     .locator('xpath=ancestor::section[1]');
   await onboarding.getByRole('button', { name: 'Add customer account' }).click();
+  const createForm = onboarding.getByText('New customer details').locator('xpath=..');
   await onboarding.getByLabel('Customer or company name').fill('Mobile Smoke HOA');
   await onboarding.getByLabel('Primary contact').fill('Sam Lee');
-  await onboarding.getByLabel('Customer relationship').selectOption('property_manager');
+  await createForm.getByLabel('Customer relationship').selectOption('property_manager');
   await onboarding.getByLabel('Contact email').fill('sam@example.com');
   await onboarding.getByLabel('Mobile phone').fill('+14805550123');
   await onboarding.getByLabel('Customer opted into email updates').check();
@@ -148,12 +158,18 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
   expect(submittedAccount).toMatchObject({ relationship_type: 'property_manager' });
   await expect(onboarding.getByRole('paragraph').filter({ hasText: /^Property manager$/ })).toBeVisible();
-  await onboarding.getByLabel('Customer relationship').selectOption('owner');
-  await onboarding.getByRole('button', { name: 'Change relationship' }).click();
+  const firstAccountCard = onboarding.getByText('Mobile Smoke HOA', { exact: true }).first()
+    .locator('xpath=ancestor::div[contains(@class,"scroll-mt-20")][1]');
+  await firstAccountCard.getByLabel('Customer relationship').selectOption('owner');
+  await firstAccountCard.getByRole('button', { name: 'Change relationship' }).click();
   await expect(onboarding.getByText('Existing properties and history stay linked.')).toBeVisible();
   await onboarding.getByRole('button', { name: 'Confirm relationship change' }).click();
   await expect(onboarding.getByText(/relationship updated to Direct property owner/)).toBeVisible();
   expect(updatedRelationship).toBe('owner');
+  await onboarding.getByLabel('Customer relationship filter').selectOption('property_manager');
+  await expect(onboarding.getByText('No accounts match this search and onboarding filter.')).toBeVisible();
+  await onboarding.getByLabel('Customer relationship filter').selectOption('owner');
+  await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
   await onboarding.getByLabel('Find customer account').fill('sam@example.com');
   await onboarding.getByRole('button', { name: /Needs setup/ }).click();
   await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
@@ -198,6 +214,20 @@ test('creates a service-ready customer account in one mobile workflow', async ({
     sms_notifications_enabled: false,
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('restores the saved customer relationship filter on mobile', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem(
+    'grover.customer-account-relationship-filter.v1.org_demo_landscaping',
+    'property_manager',
+  ));
+  await page.route('**/customer-accounts', (route) =>
+    route.fulfill({ contentType: 'application/json', json: [] }));
+  await page.route('**/customer-accounts/archived', (route) =>
+    route.fulfill({ contentType: 'application/json', json: [] }));
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  await expect(page.getByLabel('Customer relationship filter')).toHaveValue('property_manager');
 });
 
 test('queues route progress during interruption and replays after recovery', async ({

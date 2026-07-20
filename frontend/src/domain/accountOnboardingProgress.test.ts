@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { CustomerAccountRecord, CustomerPropertyRecord } from '../api/client';
 import {
   deriveAccountOnboardingProgress,
+  customerRelationshipCounts,
+  filterAccountsByRelationship,
   filterAccountsByOnboardingProgress,
   propertyAttentionReasonLabel,
   propertyAttentionWorkspace,
@@ -118,6 +120,21 @@ describe('account onboarding progress', () => {
     expect(searchCustomerAccounts(accounts, properties, 'sam@')).toEqual([otherAccount]);
     expect(searchCustomerAccounts(accounts, properties, 'Cactus')).toEqual([otherAccount]);
     expect(searchCustomerAccounts(accounts, properties, '  ')).toEqual(accounts);
+  });
+
+  it('filters and counts customer relationship types with legacy service-provider fallback', () => {
+    const owner = { ...account, relationshipType: 'owner' as const };
+    const manager = { ...account, accountId: 'acct_2', relationshipType: 'property_manager' as const };
+    const legacy = { ...account, accountId: 'acct_3', relationshipType: undefined };
+    const accounts = [owner, manager, legacy];
+    expect(filterAccountsByRelationship(accounts, 'property_manager')).toEqual([manager]);
+    expect(filterAccountsByRelationship(accounts, 'service_provider')).toEqual([legacy]);
+    expect(customerRelationshipCounts(accounts)).toEqual({
+      all: 3,
+      owner: 1,
+      property_manager: 1,
+      service_provider: 1,
+    });
   });
 
   it('routes property attention to the relevant setup workspace', () => {

@@ -68,6 +68,7 @@ export function propertyAttentionWorkspace(
 }
 
 export type AccountOnboardingFilter = 'all' | 'incomplete' | 'complete';
+export type CustomerRelationshipFilter = 'all' | 'owner' | 'property_manager' | 'service_provider';
 
 export function filterAccountsByOnboardingProgress(
   accounts: CustomerAccountRecord[],
@@ -79,6 +80,24 @@ export function filterAccountsByOnboardingProgress(
     const complete = progress[account.accountId]?.complete ?? false;
     return filter === 'complete' ? complete : !complete;
   });
+}
+
+export function filterAccountsByRelationship(
+  accounts: CustomerAccountRecord[],
+  filter: CustomerRelationshipFilter,
+): CustomerAccountRecord[] {
+  if (filter === 'all') return accounts;
+  return accounts.filter((account) =>
+    (account.relationshipType ?? 'service_provider') === filter
+  );
+}
+
+export function customerRelationshipCounts(accounts: CustomerAccountRecord[]): Record<CustomerRelationshipFilter, number> {
+  return accounts.reduce<Record<CustomerRelationshipFilter, number>>((counts, account) => {
+    counts.all += 1;
+    counts[account.relationshipType ?? 'service_provider'] += 1;
+    return counts;
+  }, { all: 0, owner: 0, property_manager: 0, service_provider: 0 });
 }
 
 export function searchCustomerAccounts(

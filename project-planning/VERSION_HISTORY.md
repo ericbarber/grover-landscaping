@@ -227,6 +227,8 @@ version and release date.
   types to customer-account creation and mobile summaries.
 - Added tenant-scoped, audited relationship changes with two-step mobile impact
   confirmation and persisted classification across account lifecycle changes.
+- Added organization-scoped customer relationship filters with active counts,
+  composable onboarding search, and mobile reload persistence.
 
 Current continuation work:
 
