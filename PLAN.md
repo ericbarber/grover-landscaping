@@ -688,10 +688,11 @@ Current state:
 - Focused latest-move entry is announced politely to assistive technology while activity-section focus is preserved
 - Focused latest-move context reports the number of matching crew moves currently loaded
 - Full focused-history pages identify when older matching crew moves may remain available
+- Focused crew history confirms when pagination has loaded all matching moves
 
 Next implementation work:
 
-- Confirm when the currently loaded focused crew history is complete
+- Verify focused crew pagination never duplicates already loaded audit events
 
 ## Planned
 

@@ -343,6 +343,8 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
     async (route) => {
       const isFocusedCrewReview = new URL(route.request().url()).searchParams.get('target')
         === originalCrew!.id;
+      const isOlderFocusedPage = isFocusedCrewReview
+        && new URL(route.request().url()).searchParams.has('before');
       const auditedMove = {
         id: 'audit_e2e_crew_hierarchy_move',
         actor_user_id: 'local-dev-user',
@@ -376,7 +378,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
       ];
       await route.fulfill({
         json: crewMoved
-          ? isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
+          ? isOlderFocusedPage ? [] : isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
           : [],
       });
     },
@@ -472,6 +474,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText(
     'Older matching crew moves may still be available.',
   )).toBeVisible();
+  await teamActivity.getByRole('button', { name: 'Load older activity' }).click();
+  await expect(teamActivity.getByText('All matching crew moves are loaded.')).toBeVisible();
+  await expect(teamActivity.getByText('25 matching crew moves loaded.')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')

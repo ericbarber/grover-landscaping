@@ -772,7 +772,11 @@ export function ManagerTeamActivityPanel({
               <p className="mt-1 font-semibold">
                 Older matching crew moves may still be available.
               </p>
-            ) : null}
+            ) : (
+              <p className="mt-1 font-semibold">
+                All matching crew moves are loaded.
+              </p>
+            )}
           </div>
           <button
             className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
