@@ -698,10 +698,11 @@ Current state:
 - Returned audit rows remain visually identified after inspection feedback is dismissed
 - Restored-row markers clear automatically when the owner changes or exits the activity review
 - Restored-row markers persist through same-review refreshes and older-page loading
+- Refresh clears stale restored-row context and explains when that audit event is no longer loaded
 
 Next implementation work:
 
-- Clear restored-row context when a refreshed review no longer contains that audit event
+- Offer an audit-ID search when a restored event leaves the loaded review window
 
 ## Planned
 

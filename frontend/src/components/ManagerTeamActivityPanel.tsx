@@ -392,6 +392,14 @@ export function ManagerTeamActivityPanel({
       setActivity(loaded);
       setHasOlder(loaded.length === 25);
       setMessage(null);
+      if (restoredAuditId && !loaded.some((item) => item.id === restoredAuditId)) {
+        setRestoredAuditId(null);
+        restoredReviewFingerprintRef.current = null;
+        setReviewNotice(
+          `Restored audit event ${restoredAuditId} is no longer in the loaded results.`,
+        );
+        setReviewNoticeAuditId(null);
+      }
     } catch {
       setMessage('Team activity requires organization-owner access.');
     } finally {

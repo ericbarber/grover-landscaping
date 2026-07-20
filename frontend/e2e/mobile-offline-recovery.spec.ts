@@ -292,6 +292,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   const territoryId = 'territory_e2e_unstaffed_overlay';
   const territoryName = 'Mobile Staffing Overlay';
   let crewMoved = false;
+  let omitLatestFromFocusedReview = false;
 
   await page.route('**/service-territories', async (route) => {
     const response = await route.fetch();
@@ -385,7 +386,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
               id: 'audit_e2e_oldest_unique_crew_hierarchy_move',
               occurred_at: '2026-07-18T23:00:00Z',
             },
-          ] : isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
+          ] : isFocusedCrewReview
+            ? omitLatestFromFocusedReview ? focusedCrewMoves.slice(1) : focusedCrewMoves
+            : [auditedMove]
           : [],
       });
     },
@@ -518,6 +521,12 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText('26 matching crew moves loaded.')).toBeVisible();
   await expect(teamActivity.locator('ol > li[aria-current="true"]'))
     .toContainText('Restored after inspection');
+  omitLatestFromFocusedReview = true;
+  await teamActivity.getByRole('button', { name: 'Refresh' }).click();
+  await expect(teamActivity.getByText('Restored after inspection')).toBeHidden();
+  await expect(teamActivity.getByText(
+    'Restored audit event audit_e2e_latest_crew_hierarchy_move is no longer in the loaded results.',
+  )).toBeVisible();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
