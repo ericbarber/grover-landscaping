@@ -31,26 +31,28 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         .pool()
         .expect("connected repository should expose its pool");
     let accounts = AccountRepository::from_pool(pool.clone());
-    let created = accounts
-        .create(CreateCustomerAccountRequest {
-            organization_id: "org_demo_landscaping".to_string(),
-            relationship_type: "owner".to_string(),
-            customer_name: "Account Archive Test".to_string(),
-            billing_model: "per_job".to_string(),
-            payment_status: "not_required".to_string(),
-            service_approval_status: "approved".to_string(),
-            contracted_services_per_period: 1,
-            billing_notes: None,
-            primary_contact_name: Some("Archive Contact".to_string()),
-            contact_email: Some("archive@example.com".to_string()),
-            contact_phone: None,
-            email_notifications_enabled: false,
-            sms_notifications_enabled: false,
-            quiet_hours_start: None,
-            quiet_hours_end: None,
-        })
-        .await
-        .expect("test account should be created");
+    let created = loaded_context(
+        accounts
+            .create(CreateCustomerAccountRequest {
+                organization_id: "org_demo_landscaping".to_string(),
+                relationship_type: "owner".to_string(),
+                customer_name: "Account Archive Test".to_string(),
+                billing_model: "per_job".to_string(),
+                payment_status: "not_required".to_string(),
+                service_approval_status: "approved".to_string(),
+                contracted_services_per_period: 1,
+                billing_notes: None,
+                primary_contact_name: Some("Archive Contact".to_string()),
+                contact_email: Some("archive@example.com".to_string()),
+                contact_phone: None,
+                email_notifications_enabled: false,
+                sms_notifications_enabled: false,
+                quiet_hours_start: None,
+                quiet_hours_end: None,
+            })
+            .await,
+        "test account should be created",
+    );
     assert_eq!(created.relationship_type, "owner");
     assert_eq!(
         accounts
@@ -183,49 +185,53 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     .await
     .expect("prior account test fixtures should reset");
     let accounts = AccountRepository::from_pool(pool.clone());
-    let created = accounts
-        .create(CreateCustomerAccountRequest {
-            organization_id: "org_demo_landscaping".to_string(),
-            relationship_type: "service_provider".to_string(),
-            customer_name: "Account Update Test".to_string(),
-            billing_model: "per_job".to_string(),
-            payment_status: "pending".to_string(),
-            service_approval_status: "manager_review".to_string(),
-            contracted_services_per_period: 1,
-            billing_notes: None,
-            primary_contact_name: None,
-            contact_email: None,
-            contact_phone: None,
-            email_notifications_enabled: false,
-            sms_notifications_enabled: false,
-            quiet_hours_start: None,
-            quiet_hours_end: None,
-        })
-        .await
-        .expect("test account should be created");
-
-    let updated = accounts
-        .update(
-            &created.account_id,
-            &["org_demo_landscaping".to_string()],
-            UpdateCustomerAccountRequest {
-                customer_name: "Updated Account Test".to_string(),
-                billing_model: "monthly_plan".to_string(),
-                payment_status: "paid".to_string(),
-                service_approval_status: "approved".to_string(),
-                contracted_services_per_period: 4,
-                billing_notes: Some("  Billing is current.  ".to_string()),
-                primary_contact_name: Some("  Pat Customer  ".to_string()),
-                contact_email: Some("  PAT@EXAMPLE.COM  ".to_string()),
+    let created = loaded_context(
+        accounts
+            .create(CreateCustomerAccountRequest {
+                organization_id: "org_demo_landscaping".to_string(),
+                relationship_type: "service_provider".to_string(),
+                customer_name: "Account Update Test".to_string(),
+                billing_model: "per_job".to_string(),
+                payment_status: "pending".to_string(),
+                service_approval_status: "manager_review".to_string(),
+                contracted_services_per_period: 1,
+                billing_notes: None,
+                primary_contact_name: None,
+                contact_email: None,
                 contact_phone: None,
-                email_notifications_enabled: true,
+                email_notifications_enabled: false,
                 sms_notifications_enabled: false,
-                quiet_hours_start: Some("20:00".to_string()),
-                quiet_hours_end: Some("07:00".to_string()),
-            },
-        )
-        .await
-        .expect("tenant member should update the account");
+                quiet_hours_start: None,
+                quiet_hours_end: None,
+            })
+            .await,
+        "test account should be created",
+    );
+
+    let updated = loaded_context(
+        accounts
+            .update(
+                &created.account_id,
+                &["org_demo_landscaping".to_string()],
+                UpdateCustomerAccountRequest {
+                    customer_name: "Updated Account Test".to_string(),
+                    billing_model: "monthly_plan".to_string(),
+                    payment_status: "paid".to_string(),
+                    service_approval_status: "approved".to_string(),
+                    contracted_services_per_period: 4,
+                    billing_notes: Some("  Billing is current.  ".to_string()),
+                    primary_contact_name: Some("  Pat Customer  ".to_string()),
+                    contact_email: Some("  PAT@EXAMPLE.COM  ".to_string()),
+                    contact_phone: None,
+                    email_notifications_enabled: true,
+                    sms_notifications_enabled: false,
+                    quiet_hours_start: Some("20:00".to_string()),
+                    quiet_hours_end: Some("07:00".to_string()),
+                },
+            )
+            .await,
+        "tenant member should update the account",
+    );
     assert!(updated.persisted);
     assert_eq!(updated.customer_name, "Updated Account Test");
     assert_eq!(updated.billing_notes, "Billing is current.");
@@ -235,28 +241,30 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert_eq!(updated.quiet_hours_start, "20:00");
     assert_eq!(updated.quiet_hours_end, "07:00");
 
-    assert!(accounts
-        .update(
-            &created.account_id,
-            &["org_outside_tenant".to_string()],
-            UpdateCustomerAccountRequest {
-                customer_name: "Cross Tenant Change".to_string(),
-                billing_model: "per_job".to_string(),
-                payment_status: "pending".to_string(),
-                service_approval_status: "blocked".to_string(),
-                contracted_services_per_period: 0,
-                billing_notes: None,
-                primary_contact_name: None,
-                contact_email: None,
-                contact_phone: None,
-                email_notifications_enabled: false,
-                sms_notifications_enabled: false,
-                quiet_hours_start: None,
-                quiet_hours_end: None,
-            },
-        )
-        .await
-        .is_none());
+    assert!(matches!(
+        accounts
+            .update(
+                &created.account_id,
+                &["org_outside_tenant".to_string()],
+                UpdateCustomerAccountRequest {
+                    customer_name: "Cross Tenant Change".to_string(),
+                    billing_model: "per_job".to_string(),
+                    payment_status: "pending".to_string(),
+                    service_approval_status: "blocked".to_string(),
+                    contracted_services_per_period: 0,
+                    billing_notes: None,
+                    primary_contact_name: None,
+                    contact_email: None,
+                    contact_phone: None,
+                    email_notifications_enabled: false,
+                    sms_notifications_enabled: false,
+                    quiet_hours_start: None,
+                    quiet_hours_end: None,
+                },
+            )
+            .await,
+        CustomerContextReadResult::NotFound
+    ));
 
     let property = accounts
         .create_property(

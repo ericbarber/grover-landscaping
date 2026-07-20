@@ -184,8 +184,12 @@ export function ManagerCustomerAccountOnboardingPanel({
       setShowCreateForm(false);
       setDuplicateAccount(null);
       setMessage(`${account.customerName} account created.`);
-    } catch {
-      setMessage('The customer account could not be created.');
+    } catch (error) {
+      setMessage(
+        error instanceof ApiRequestError && error.code === 'customer_account_creation_unavailable'
+          ? 'Customer account storage is unavailable. Nothing was created; retry after API readiness recovers.'
+          : 'The customer account could not be created.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -216,8 +220,12 @@ export function ManagerCustomerAccountOnboardingPanel({
       setProgress((current) => ({ ...current, [updated.accountId]: accountProgress }));
       setEditingAccount(null);
       setMessage(`${updated.customerName} account updated.`);
-    } catch {
-      setMessage('The customer account could not be updated.');
+    } catch (error) {
+      setMessage(
+        error instanceof ApiRequestError && error.code === 'customer_account_update_unavailable'
+          ? 'Customer account storage is unavailable. Changes were not saved; retry after API readiness recovers.'
+          : 'The customer account could not be updated.',
+      );
     } finally {
       setIsLoading(false);
     }

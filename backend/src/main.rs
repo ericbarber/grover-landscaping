@@ -1457,15 +1457,17 @@ async fn create_customer_account(
         return response;
     }
     match state.accounts.create(request).await {
-        Some(account) => (StatusCode::CREATED, Json(account)).into_response(),
-        None => (
-            StatusCode::SERVICE_UNAVAILABLE,
-            Json(ErrorResponse {
-                error: "customer_account_not_created",
-                message: "The customer account could not be created.".to_string(),
-            }),
-        )
-            .into_response(),
+        CustomerContextReadResult::Loaded(account) => {
+            (StatusCode::CREATED, Json(account)).into_response()
+        }
+        CustomerContextReadResult::NotFound => resource_not_found_response(
+            "customer_account_organization_not_found",
+            "The requested organization was not found.",
+        ),
+        CustomerContextReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_account_creation_unavailable",
+            "The customer account could not be persisted.",
+        ),
     }
 }
 
@@ -1496,15 +1498,15 @@ async fn update_customer_account(
         .update(&account_id, &organization_ids, request)
         .await
     {
-        Some(account) => Json(account).into_response(),
-        None => (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: "customer_account_not_found",
-                message: "The requested customer account was not found.".to_string(),
-            }),
-        )
-            .into_response(),
+        CustomerContextReadResult::Loaded(account) => Json(account).into_response(),
+        CustomerContextReadResult::NotFound => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested customer account was not found.",
+        ),
+        CustomerContextReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_account_update_unavailable",
+            "The customer account update could not be persisted.",
+        ),
     }
 }
 

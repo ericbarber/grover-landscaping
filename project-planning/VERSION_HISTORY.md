@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable customer-account creates and updates from missing records.
 - 2026-07-19: Distinguished unavailable onboarding progress and property readiness from missing customer data.
 - 2026-07-19: Distinguished unavailable customer-property lists from valid accounts with no properties.
 - 2026-07-19: Distinguished unavailable active and archived customer-account lists from valid empty onboarding data.

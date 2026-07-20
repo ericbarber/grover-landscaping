@@ -235,12 +235,18 @@ impl AccountRepository {
     pub async fn create(
         &self,
         request: CreateCustomerAccountRequest,
-    ) -> Option<CustomerAccountRecord> {
+    ) -> CustomerContextReadResult<CustomerAccountRecord> {
         let request = normalize_request(request);
         let Some(pool) = &self.pool else {
-            return Some(local_record(request));
+            return CustomerContextReadResult::Loaded(local_record(request));
         };
-        create_account(pool, &request).await.ok()
+        match create_account(pool, &request).await {
+            Ok(account) => CustomerContextReadResult::Loaded(account),
+            Err(error) => {
+                tracing::error!(%error, "persisted customer-account creation failed");
+                CustomerContextReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn update(
@@ -248,15 +254,22 @@ impl AccountRepository {
         account_id: &str,
         organization_ids: &[String],
         request: UpdateCustomerAccountRequest,
-    ) -> Option<CustomerAccountRecord> {
+    ) -> CustomerContextReadResult<CustomerAccountRecord> {
         let request = normalize_update_request(request);
         let Some(pool) = &self.pool else {
-            return local_update_record(account_id, organization_ids, &request);
+            return match local_update_record(account_id, organization_ids, &request) {
+                Some(account) => CustomerContextReadResult::Loaded(account),
+                None => CustomerContextReadResult::NotFound,
+            };
         };
-        update_account(pool, account_id, organization_ids, &request)
-            .await
-            .ok()
-            .flatten()
+        match update_account(pool, account_id, organization_ids, &request).await {
+            Ok(Some(account)) => CustomerContextReadResult::Loaded(account),
+            Ok(None) => CustomerContextReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, account_id, "persisted customer-account update failed");
+                CustomerContextReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn archive(

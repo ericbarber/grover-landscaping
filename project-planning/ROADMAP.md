@@ -20,7 +20,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.
-   - Make remaining customer-account mutations fail explicitly when persisted storage is unavailable.
+   - Make remaining customer-property mutations fail explicitly when persisted storage is unavailable.
 5. **Customer bid history**
    - Complete authenticated, tenant-scoped customer bid history.
 

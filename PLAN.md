@@ -352,12 +352,14 @@ Delivered:
 - Manager onboarding warns when persisted property counts and readiness inputs are incomplete
 - Account onboarding progress and property activation readiness distinguish not-found from unavailable persistence
 - Manager setup warns when persisted progress or readiness cannot be trusted
+- Customer-account creation and updates distinguish unavailable persistence from missing tenant-scoped records
+- Mobile onboarding explains when create or update attempts were not saved
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make customer-account update and creation persistence failures explicit instead of returning ambiguous missing results
-- Add API and phone-flow coverage for persisted account mutation availability
+- Make remaining customer-property reads and mutations return explicit persistence outcomes
+- Add API and phone-flow coverage for persisted property mutation availability
 
 ### Manager scheduling workflow
 
@@ -769,12 +771,13 @@ Current state:
 - Manager account onboarding hides stale collection data and surfaces active and archived availability warnings
 - Customer-property lists distinguish unavailable persistence from a valid account with no properties
 - Onboarding progress and activation readiness return explicit unavailable persistence states
+- Customer-account create and update paths return explicit unavailable persistence states
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make customer-account update and creation persistence failures explicit instead of returning ambiguous missing results
-- Add API and phone-flow coverage for persisted account mutation availability
+- Make remaining customer-property reads and mutations return explicit persistence outcomes
+- Add API and phone-flow coverage for persisted property mutation availability
 
 ## Planned
 

@@ -220,6 +220,37 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('explains that an unavailable persisted account create saved nothing', async ({ page }) => {
+  await page.route('**/customer-accounts', async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        json: {
+          error: 'customer_account_creation_unavailable',
+          message: 'The customer account could not be persisted.',
+        },
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await onboarding.getByRole('button', { name: 'Add customer account' }).click();
+  await onboarding.getByLabel('Customer or company name').fill('Unavailable Storage Customer');
+  await onboarding.getByLabel('Primary contact').fill('Pat Customer');
+  await onboarding.getByLabel('Contact email').fill('pat@example.com');
+  await onboarding.getByRole('button', { name: 'Create account' }).click();
+  await expect(onboarding.getByRole('status')).toContainText(
+    'Nothing was created; retry after API readiness recovers.',
+  );
+});
+
 test('restores the saved customer relationship filter on mobile', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem(
     'grover.customer-account-relationship-filter.v1.org_demo_landscaping',
