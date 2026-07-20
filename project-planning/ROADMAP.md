@@ -32,6 +32,8 @@ Home now provides a branded, time-aware first impression with persona messaging,
 daily progress, sync health, and a prominent recommended next action.
 Its original Southwestern landscape hero adds persona-specific product promises
 and compact plan-care-proof brand cues without extending the workflow.
+Progress language now adapts to service visits, portfolio work, route stops,
+revenue readiness, or field delivery for the active persona.
 Home also explains the highest-priority current state: unsynced changes, a clear
 schedule, remaining work, or a completed day.
 

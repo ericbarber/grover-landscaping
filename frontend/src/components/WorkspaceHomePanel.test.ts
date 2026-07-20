@@ -5,6 +5,7 @@ import {
   homePriorityStatus,
   personaHomeHeadline,
   personaHomePromise,
+  personaProgressLanguage,
   workspaceHomeActions,
 } from './WorkspaceHomePanel';
 
@@ -55,6 +56,15 @@ describe('workspace home actions', () => {
       .toContain('every stop');
     expect(personaHomePromise(workspacePersonasForRoles(['OrganizationOwner'])[0]))
       .toContain('business customers trust');
+  });
+
+  it('describes progress in language that matches the active persona', () => {
+    expect(personaProgressLanguage(workspacePersonasForRoles(['PropertyOwner'])[0]))
+      .toEqual({ eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled' });
+    expect(personaProgressLanguage(workspacePersonasForRoles(['CrewLead'])[0]).eyebrow)
+      .toBe('Route progress');
+    expect(personaProgressLanguage(workspacePersonasForRoles(['OrganizationOwner'])[0]).eyebrow)
+      .toBe('Field delivery');
   });
 
   it('prioritizes unsynced changes over routine progress', () => {

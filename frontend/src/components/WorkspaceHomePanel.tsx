@@ -56,6 +56,26 @@ export function personaHomePromise(persona: WorkspacePersona): string {
   return 'Bring every property, person, and promise into one clear view.';
 }
 
+export function personaProgressLanguage(persona: WorkspacePersona): {
+  eyebrow: string;
+  completed: string;
+  total: string;
+} {
+  if (persona.id === 'yard-owner') {
+    return { eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled' };
+  }
+  if (persona.id === 'property-manager') {
+    return { eyebrow: 'Portfolio progress', completed: 'services complete', total: 'scheduled' };
+  }
+  if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
+    return { eyebrow: 'Route progress', completed: 'stops finished', total: 'assigned' };
+  }
+  if (persona.id === 'billing-admin') {
+    return { eyebrow: 'Revenue readiness', completed: 'jobs complete', total: 'to review' };
+  }
+  return { eyebrow: 'Field delivery', completed: 'jobs complete', total: 'assigned' };
+}
+
 export function homePriorityStatus({
   assignedJobCount,
   completedJobCount,
@@ -124,6 +144,7 @@ export function WorkspaceHomePanel({
     completedJobCount,
     pendingChangeCount,
   });
+  const progressLanguage = personaProgressLanguage(persona);
 
   return (
     <section className="space-y-4 lg:hidden">
@@ -174,10 +195,13 @@ export function WorkspaceHomePanel({
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-              Today’s progress
+              {progressLanguage.eyebrow}
             </p>
             <p className="mt-1 text-2xl font-black text-slate-950">
               {completedJobCount} of {assignedJobCount}
+            </p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-500">
+              {progressLanguage.completed}
             </p>
           </div>
           <p className="text-lg font-black text-emerald-800">{progress}%</p>
@@ -189,7 +213,9 @@ export function WorkspaceHomePanel({
           />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs">
-          <span className="font-semibold text-slate-600">{assignedJobCount} assigned</span>
+          <span className="font-semibold text-slate-600">
+            {assignedJobCount} {progressLanguage.total}
+          </span>
           <span className={`rounded-full px-2 py-1 font-bold ${
             pendingChangeCount > 0
               ? 'bg-amber-100 text-amber-900'
