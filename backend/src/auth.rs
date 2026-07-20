@@ -4,7 +4,9 @@ use crate::access_control::{
     can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
     AccessRole,
 };
-use crate::organizations::{OrganizationMembership, OrganizationRepository};
+use crate::organizations::{
+    OrganizationCollectionResult, OrganizationMembership, OrganizationRepository,
+};
 use axum::{
     extract::{Request, State},
     http::{header::AUTHORIZATION, HeaderMap, Method, StatusCode},
@@ -222,10 +224,15 @@ impl AuthService {
             }
         }?;
         if let Some(organizations) = &self.organizations {
-            let memberships = organizations
+            principal.roles = match organizations
                 .list_active_memberships(&principal.subject)
-                .await;
-            principal.roles = merge_effective_roles(&principal.claim_roles, &memberships);
+                .await
+            {
+                OrganizationCollectionResult::Loaded(memberships) => {
+                    merge_effective_roles(&principal.claim_roles, &memberships)
+                }
+                OrganizationCollectionResult::Unavailable => principal.claim_roles.clone(),
+            };
         }
         Ok(principal)
     }

@@ -71,9 +71,12 @@ async fn repository_reads_seeded_local_owner_membership_from_postgres() {
     .await
     .expect("login audit rows should reset");
 
-    let memberships = organizations
-        .list_active_memberships("local-development-user")
-        .await;
+    let memberships = loaded(
+        organizations
+            .list_active_memberships("local-development-user")
+            .await,
+        "active memberships should load",
+    );
 
     assert!(memberships.iter().any(|membership| {
         membership.organization_id == "org_demo_landscaping"
@@ -90,14 +93,17 @@ async fn repository_reads_seeded_local_owner_membership_from_postgres() {
             .await
     );
 
-    let summary = organizations
-        .principal_access_summary(
-            "local-development-user",
-            "local.development@example.com",
-            Some("local.development@example.com".to_string()),
-            vec![AccessRole::OrganizationOwner],
-        )
-        .await;
+    let summary = found(
+        organizations
+            .principal_access_summary(
+                "local-development-user",
+                "local.development@example.com",
+                Some("local.development@example.com".to_string()),
+                vec![AccessRole::OrganizationOwner],
+            )
+            .await,
+        "principal access summary should load",
+    );
     assert_eq!(
         summary.verified_email.as_deref(),
         Some("local.development@example.com")

@@ -53,6 +53,21 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
         OrganizationCollectionResult::Unavailable
     ));
     assert!(matches!(
+        repository.list_active_memberships("user_outage").await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .principal_access_summary(
+                "user_outage",
+                "outage@example.com",
+                Some("outage@example.com".to_string()),
+                Vec::new(),
+            )
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
+    assert!(matches!(
         repository
             .list_organization_memberships("org_demo_landscaping")
             .await,

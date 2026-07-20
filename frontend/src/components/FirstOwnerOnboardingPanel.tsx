@@ -147,12 +147,14 @@ export function FirstOwnerOnboardingPanel({
       setMessage(null);
     } catch (error) {
       if (
+        isApiErrorCode(error, 'principal_access_unavailable')
+        ||
         isApiErrorCode(error, 'organization_profile_unavailable')
         || isApiErrorCode(error, 'organization_setup_progress_unavailable')
       ) {
         setSetupProgress(null);
         setSetupReadsUnavailable(true);
-        setMessage('Persisted organization setup could not be loaded. Retry after API readiness recovers.');
+        setMessage('Persisted organization access and setup could not be loaded. Retry after API readiness recovers.');
       } else {
         setMessage('Your access summary could not be loaded. Check authentication and try again.');
       }
@@ -257,10 +259,16 @@ export function FirstOwnerOnboardingPanel({
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">First-user setup</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">
-            {membership ? `Welcome, ${membership.organizationName}` : 'Create your organization'}
+            {setupReadsUnavailable
+              ? 'Organization access unavailable'
+              : membership
+                ? `Welcome, ${membership.organizationName}`
+                : 'Create your organization'}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            {membership
+            {setupReadsUnavailable
+              ? 'Persisted access must recover before setup state or owner actions can be shown.'
+              : membership
               ? 'Your owner membership is active. Use this checklist to prepare the first live route.'
               : 'The first signed-in organization owner creates the tenant boundary for all future crews, customers, and properties.'}
           </p>

@@ -257,27 +257,38 @@ impl OrganizationRepository {
         username: &str,
         verified_email: Option<String>,
         claim_roles: Vec<AccessRole>,
-    ) -> PrincipalAccessSummary {
-        let memberships = self.list_active_memberships(user_id).await;
+    ) -> OrganizationResourceResult<PrincipalAccessSummary> {
+        let OrganizationCollectionResult::Loaded(memberships) =
+            self.list_active_memberships(user_id).await
+        else {
+            return OrganizationResourceResult::Unavailable;
+        };
         let _ = self.record_login_audit_events(user_id, &memberships).await;
 
-        PrincipalAccessSummary {
+        OrganizationResourceResult::Found(PrincipalAccessSummary {
             user_id: user_id.to_string(),
             username: username.to_string(),
             verified_email,
             claim_roles,
             memberships,
-        }
+        })
     }
 
-    pub async fn list_active_memberships(&self, user_id: &str) -> Vec<OrganizationMembership> {
+    pub async fn list_active_memberships(
+        &self,
+        user_id: &str,
+    ) -> OrganizationCollectionResult<OrganizationMembership> {
         if let Some(pool) = &self.pool {
-            if let Ok(memberships) = list_active_memberships(pool, user_id).await {
-                return memberships;
-            }
+            return match list_active_memberships(pool, user_id).await {
+                Ok(memberships) => OrganizationCollectionResult::Loaded(memberships),
+                Err(error) => {
+                    tracing::error!(%error, user_id, "persisted active membership list failed");
+                    OrganizationCollectionResult::Unavailable
+                }
+            };
         }
 
-        seed_memberships(user_id)
+        OrganizationCollectionResult::Loaded(seed_memberships(user_id))
     }
 
     pub async fn list_organization_memberships(
@@ -422,12 +433,14 @@ impl OrganizationRepository {
         organization_id: &str,
         required_role: fn(&AccessRole) -> bool,
     ) -> bool {
-        self.list_active_memberships(user_id)
-            .await
-            .iter()
-            .any(|membership| {
-                membership.organization_id == organization_id && required_role(&membership.role)
-            })
+        match self.list_active_memberships(user_id).await {
+            OrganizationCollectionResult::Loaded(memberships) => {
+                memberships.iter().any(|membership| {
+                    membership.organization_id == organization_id && required_role(&membership.role)
+                })
+            }
+            OrganizationCollectionResult::Unavailable => false,
+        }
     }
 
     pub async fn bootstrap_organization(
@@ -436,8 +449,14 @@ impl OrganizationRepository {
         request: BootstrapOrganizationRequest,
     ) -> Result<BootstrapOrganizationResult, sqlx::Error> {
         let request = normalize_bootstrap_organization_request(request);
-        if !self.list_active_memberships(user_id).await.is_empty() {
-            return Ok(BootstrapOrganizationResult::AlreadyMember);
+        match self.list_active_memberships(user_id).await {
+            OrganizationCollectionResult::Loaded(memberships) if !memberships.is_empty() => {
+                return Ok(BootstrapOrganizationResult::AlreadyMember);
+            }
+            OrganizationCollectionResult::Unavailable => {
+                return Ok(BootstrapOrganizationResult::Unavailable);
+            }
+            OrganizationCollectionResult::Loaded(_) => {}
         }
         let Some(pool) = &self.pool else {
             return Ok(BootstrapOrganizationResult::Unavailable);

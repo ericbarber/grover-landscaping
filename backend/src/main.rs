@@ -904,18 +904,24 @@ async fn readiness(
 async fn get_my_access(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
-) -> impl IntoResponse {
-    Json(
-        state
-            .organizations
-            .principal_access_summary(
-                &principal.subject,
-                &principal.username,
-                principal.verified_email.clone(),
-                principal.claim_roles.clone(),
-            )
-            .await,
-    )
+) -> Response {
+    match state
+        .organizations
+        .principal_access_summary(
+            &principal.subject,
+            &principal.username,
+            principal.verified_email.clone(),
+            principal.claim_roles.clone(),
+        )
+        .await
+    {
+        OrganizationResourceResult::Found(summary) => Json(summary).into_response(),
+        OrganizationResourceResult::Unavailable => persisted_resource_unavailable_response(
+            "principal_access_unavailable",
+            "Persisted organization access could not be loaded.",
+        ),
+        OrganizationResourceResult::NotFound => unreachable!("access summaries are never missing"),
+    }
 }
 
 fn cors_layer(production: bool) -> Result<Option<CorsLayer>, DynError> {
@@ -4245,20 +4251,24 @@ async fn principal_active_organization_ids_for_role(
     required_role: fn(&AccessRole) -> bool,
 ) -> Vec<String> {
     let mut seen = HashSet::new();
-    state
+    match state
         .organizations
         .list_active_memberships(&principal.subject)
         .await
-        .into_iter()
-        .filter(|membership| required_role(&membership.role))
-        .filter_map(|membership| {
-            if seen.insert(membership.organization_id.clone()) {
-                Some(membership.organization_id)
-            } else {
-                None
-            }
-        })
-        .collect()
+    {
+        OrganizationCollectionResult::Loaded(memberships) => memberships
+            .into_iter()
+            .filter(|membership| required_role(&membership.role))
+            .filter_map(|membership| {
+                if seen.insert(membership.organization_id.clone()) {
+                    Some(membership.organization_id)
+                } else {
+                    None
+                }
+            })
+            .collect(),
+        OrganizationCollectionResult::Unavailable => Vec::new(),
+    }
 }
 
 async fn require_crew_organization_access(

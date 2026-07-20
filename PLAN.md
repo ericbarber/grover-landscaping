@@ -382,12 +382,14 @@ Delivered:
 - Invitation workflows confirm that no invitation or access change occurred during persisted write outages
 - Membership role, status, and profile writes distinguish persistence outages from membership conflicts
 - Membership administration confirms that no team access or identity change occurred during persisted write outages
+- Active membership and principal-access reads distinguish persistence outages from valid users with no memberships
+- Authentication and onboarding fail closed instead of substituting seeded owner access during database outages
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit remaining organization repository methods for swallowed persistence errors
-- Add explicit availability outcomes and phone-flow coverage for the next affected organization workflow
+- Audit repository modules outside organization administration for remaining swallowed persistence errors
+- Harden and validate the next highest-impact persisted workflow
 
 ### Manager scheduling workflow
 
@@ -814,12 +816,13 @@ Current state:
 - Organization profile updates return explicit invalid, missing, and unavailable outcomes
 - Invitation lifecycle writes return explicit applied, conflict, invalid, and unavailable outcomes
 - Membership role, status, and profile writes return explicit unavailable outcomes
+- Principal access reads fail closed and report explicit unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit remaining organization repository methods for swallowed persistence errors
-- Add explicit availability outcomes and phone-flow coverage for the next affected organization workflow
+- Audit repository modules outside organization administration for remaining swallowed persistence errors
+- Harden and validate the next highest-impact persisted workflow
 
 ## Planned
 

@@ -116,6 +116,27 @@ test('does not infer organization setup state during persisted profile outages',
   );
 });
 
+test('does not substitute seeded owner access during persisted access outages', async ({ page }) => {
+  await page.route(/\/me\/access$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'principal_access_unavailable',
+      message: 'Persisted organization access could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByText('First-user setup', { exact: true })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'missing or completed setup is not being assumed',
+  );
+  await expect(onboarding.getByText('Create your organization')).not.toBeVisible();
+});
+
 test('confirms organization profile changes were not saved during storage outages', async ({ page }) => {
   await page.route(/\/organizations\/[^/]+$/, (route) => {
     if (route.request().method() !== 'PUT') return route.continue();
