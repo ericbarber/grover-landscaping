@@ -213,6 +213,22 @@ export function OwnerCrewAdministrationPanel({
     }
   }
 
+  function downloadInspectionSummary() {
+    if (!inspectionSummary || !inspectionAuditLabel || !inspectionAuditId) return;
+    const url = URL.createObjectURL(new Blob(
+      [`${inspectionSummary}\n${inspectionAuditLabel}\n`],
+      { type: 'text/plain;charset=utf-8' },
+    ));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `crew-move-audit-${
+      inspectionAuditId.replace(/[^a-zA-Z0-9._-]/g, '-')
+    }.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setMessage('Crew move support summary downloaded.');
+  }
+
   async function save(nextStatus = selectedCrew?.status) {
     if (
       !selectedCrew
@@ -313,6 +329,13 @@ export function OwnerCrewAdministrationPanel({
                 type="button"
               >
                 Share move support summary
+              </button>
+              <button
+                className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold text-sky-950"
+                onClick={downloadInspectionSummary}
+                type="button"
+              >
+                Download move support summary
               </button>
             </div>
           ) : null}

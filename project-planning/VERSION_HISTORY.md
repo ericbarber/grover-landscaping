@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added downloadable crew-move support summaries.
 - 2026-07-19: Added native sharing with copy fallback for crew-move support.
 - 2026-07-19: Added readable crew-move support summary copy.
 - 2026-07-19: Added audit ID copy and mobile fallback to crew inspection.
