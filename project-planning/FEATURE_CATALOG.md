@@ -10,7 +10,9 @@
 - Consent-based PostgreSQL lead capture with landing-page and UTM attribution
 - Honeypot spam filtering and honest local-preview confirmation
 - Shareable persona campaign paths with tailored hero copy, calls to action, canonical metadata, and crawler controls
-- Planned extensions: customer proof, production screenshots, lead notifications, and conversion analytics
+- Interactive persona-aware Plan-Care-Proof product tour
+- Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
+- Planned extensions: verified customer proof, production screenshots, lead notifications, and conversion analytics
 
 ## Persona Workspaces
 

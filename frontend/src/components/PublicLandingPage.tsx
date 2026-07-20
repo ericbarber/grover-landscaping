@@ -8,6 +8,7 @@ import {
   marketingCallToAction,
   MarketingLeadDialog,
 } from './MarketingLeadDialog';
+import { MarketingProductTour } from './MarketingProductTour';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -48,27 +49,6 @@ const marketingPersonas: Array<{
     headline: 'Know the next stop—and what done looks like.',
     description: 'Give crews the route, service details, and evidence requirements they need without the office back-and-forth.',
     outcomes: ['Field-ready routes', 'Offline work capture', 'Clean handoffs'],
-  },
-];
-
-const productSteps = [
-  {
-    number: '01',
-    label: 'Plan',
-    title: 'Give every day a clear shape.',
-    description: 'Coordinate properties, crews, routes, service details, and customer expectations before work begins.',
-  },
-  {
-    number: '02',
-    label: 'Care',
-    title: 'Keep the field focused.',
-    description: 'Put the next stop, required work, property context, and offline-ready tools directly in the crew’s hands.',
-  },
-  {
-    number: '03',
-    label: 'Proof',
-    title: 'Make excellent work visible.',
-    description: 'Turn photos, checklists, notes, and recommendations into customer confidence and revenue-ready records.',
   },
 ];
 
@@ -117,9 +97,9 @@ export function PublicLandingPage({
             Grover
           </a>
           <div className="hidden items-center gap-7 text-sm font-bold text-slate-200 md:flex">
-            <a className="transition hover:text-white" href="#how-it-works">How it works</a>
+            <a className="transition hover:text-white" href="#tour">How it works</a>
             <a className="transition hover:text-white" href="#who-its-for">Who it’s for</a>
-            <a className="transition hover:text-white" href="#product">Product</a>
+            <a className="transition hover:text-white" href="#proof">Why Grover</a>
           </div>
           <a className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-emerald-950 transition hover:bg-emerald-300" href="/app">
             Open Grover
@@ -253,23 +233,46 @@ export function PublicLandingPage({
         </div>
       </section>
 
-      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8" id="how-it-works">
+      <MarketingProductTour persona={activePersona.id} />
+
+      <section className="bg-white px-4 py-20 sm:px-6 lg:px-8" id="proof">
         <div className="mx-auto max-w-7xl">
-          <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">The Grover difference</p>
-            <h2 className="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">Great care becomes a visible system.</h2>
+          <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Credibility by design</p>
+              <h2 className="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+                Built around the moments that usually fall through the cracks.
+              </h2>
+            </div>
+            <p className="max-w-2xl text-lg leading-8 text-slate-600">
+              Grover’s proof is in the workflow: durable planning, field-safe capture, traceable decisions, and customer-ready handoffs. Every claim below maps to a working product capability.
+            </p>
           </div>
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
-            {productSteps.map((step) => (
-              <article className="rounded-[1.75rem] border border-slate-200 bg-[#f6f7f2] p-7" key={step.label}>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-emerald-700">{step.label}</p>
-                  <span className="text-sm font-black text-slate-300">{step.number}</span>
-                </div>
-                <h3 className="mt-12 text-2xl font-black tracking-tight">{step.title}</h3>
-                <p className="mt-3 leading-7 text-slate-600">{step.description}</p>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Works beyond the signal', 'Offline mutations queue locally and recover when connectivity returns.', 'Field resilience'],
+              ['Keeps decisions traceable', 'Route changes, access updates, and recovery actions retain an operational record.', 'Accountability'],
+              ['Protects every perspective', 'Organization roles and persona-aware workspaces keep the right tools in view.', 'Role-aware access'],
+              ['Turns work into evidence', 'Photos, notes, checklists, reports, bids, and recommendations stay connected.', 'Visible outcomes'],
+            ].map(([title, description, label]) => (
+              <article className="flex min-h-64 flex-col rounded-[1.75rem] border border-slate-200 bg-[#f6f7f2] p-6" key={title}>
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-800 text-lg font-black text-white" aria-hidden="true">✓</span>
+                <h3 className="mt-8 text-xl font-black tracking-tight">{title}</h3>
+                <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{description}</p>
+                <p className="mt-6 border-t border-slate-200 pt-4 text-xs font-black uppercase tracking-[0.15em] text-emerald-700">{label}</p>
               </article>
             ))}
+          </div>
+          <div className="mt-6 rounded-[1.75rem] bg-emerald-50 p-6 sm:flex sm:items-center sm:justify-between sm:gap-8 sm:p-8">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.17em] text-emerald-700">Our evidence standard</p>
+              <p className="mt-2 max-w-3xl text-lg font-bold leading-7 text-emerald-950">
+                Customer results will appear here only when they are verified and approved—not as placeholder logos, invented quotes, or speculative percentages.
+              </p>
+            </div>
+            <a className="mt-5 inline-flex shrink-0 items-center font-black text-emerald-800 sm:mt-0" href="#tour">
+              Inspect the workflow <span className="ml-2" aria-hidden="true">↑</span>
+            </a>
           </div>
         </div>
       </section>

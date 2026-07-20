@@ -18,6 +18,10 @@ Dedicated audience paths now tailor the hero, metadata, and conversion action fo
 yard owners, property managers, landscaping companies, and crew leads while
 preserving campaign attribution. Public crawler rules exclude operational and
 customer-share routes from indexing.
+The static workflow explanation has been replaced with a compact interactive
+Plan-Care-Proof tour. Persona-specific outcomes connect the same working product
+capabilities to each audience, while a capability-backed credibility section
+avoids unverified testimonials, logos, and performance claims.
 
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,

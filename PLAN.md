@@ -29,6 +29,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Shareable campaign paths tailor the first-screen story and conversion action for yard owners, property managers, landscaping companies, and crew leads
 - Persona selection keeps UTM attribution while updating the browser URL, canonical metadata, and search/social descriptions without a page reload
 - Public crawler guidance keeps workspace, authentication, invitation, diagnostics, and customer-share routes out of search results
+- Interactive Plan-Care-Proof tour lets visitors inspect shipped route, field, offline, evidence, reporting, and recommendation workflows
+- Tour outcomes adapt to the active marketing persona while retaining a single connected product narrative
+- Credibility section maps marketing claims to delivered capabilities and explicitly reserves customer quotes, logos, and metrics for verified approvals
 
 ### Mobile navigation and context
 
