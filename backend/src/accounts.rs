@@ -22,6 +22,12 @@ pub enum CustomerAccountSummaryResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerAccountListResult {
+    Loaded(Vec<CustomerAccountRecord>),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateCustomerAccountRequest {
     pub organization_id: String,
@@ -187,22 +193,30 @@ impl AccountRepository {
         Self { pool: Some(pool) }
     }
 
-    pub async fn list(&self, organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
+    pub async fn list(&self, organization_ids: &[String]) -> CustomerAccountListResult {
         let Some(pool) = &self.pool else {
-            return seed_accounts(organization_ids);
+            return CustomerAccountListResult::Loaded(seed_accounts(organization_ids));
         };
-        list_accounts(pool, organization_ids)
-            .await
-            .unwrap_or_default()
+        match list_accounts(pool, organization_ids).await {
+            Ok(accounts) => CustomerAccountListResult::Loaded(accounts),
+            Err(error) => {
+                tracing::error!(%error, "persisted customer-account list failed");
+                CustomerAccountListResult::Unavailable
+            }
+        }
     }
 
-    pub async fn list_archived(&self, organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
+    pub async fn list_archived(&self, organization_ids: &[String]) -> CustomerAccountListResult {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return CustomerAccountListResult::Loaded(Vec::new());
         };
-        list_accounts_by_relationship_status(pool, organization_ids, "archived")
-            .await
-            .unwrap_or_default()
+        match list_accounts_by_relationship_status(pool, organization_ids, "archived").await {
+            Ok(accounts) => CustomerAccountListResult::Loaded(accounts),
+            Err(error) => {
+                tracing::error!(%error, "persisted archived customer-account list failed");
+                CustomerAccountListResult::Unavailable
+            }
+        }
     }
 
     pub async fn create(

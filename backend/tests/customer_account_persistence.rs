@@ -1,9 +1,9 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-        CustomerAccountArchiveError, CustomerPropertyMutationError, CustomerPropertyStatusError,
-        UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
-        UpdateCustomerPropertyStatusRequest,
+        CustomerAccountArchiveError, CustomerAccountListResult, CustomerPropertyMutationError,
+        CustomerPropertyStatusError, UpdateCustomerAccountRequest,
+        UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
     property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
@@ -83,14 +83,21 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         )
         .await
         .expect("tenant manager should archive an unused account");
-    assert!(!accounts
-        .list(&["org_demo_landscaping".to_string()])
-        .await
+    let CustomerAccountListResult::Loaded(active_accounts) =
+        accounts.list(&["org_demo_landscaping".to_string()]).await
+    else {
+        panic!("active account list should load");
+    };
+    assert!(!active_accounts
         .iter()
         .any(|account| account.account_id == created.account_id));
-    assert!(accounts
+    let CustomerAccountListResult::Loaded(archived_accounts) = accounts
         .list_archived(&["org_demo_landscaping".to_string()])
         .await
+    else {
+        panic!("archived account list should load");
+    };
+    assert!(archived_accounts
         .iter()
         .any(|account| account.account_id == created.account_id));
     assert_eq!(
@@ -113,9 +120,12 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         .expect("tenant manager should reactivate an archived account");
     assert_eq!(reactivated.account_id, created.account_id);
     assert_eq!(reactivated.relationship_type, "property_manager");
-    assert!(accounts
-        .list(&["org_demo_landscaping".to_string()])
-        .await
+    let CustomerAccountListResult::Loaded(active_accounts) =
+        accounts.list(&["org_demo_landscaping".to_string()]).await
+    else {
+        panic!("reactivated account list should load");
+    };
+    assert!(active_accounts
         .iter()
         .any(|account| account.account_id == created.account_id));
     let audit_kinds: Vec<String> = sqlx::query_scalar(

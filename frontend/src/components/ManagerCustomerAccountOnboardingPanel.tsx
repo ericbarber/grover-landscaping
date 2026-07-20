@@ -66,6 +66,8 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [relationshipDrafts, setRelationshipDrafts] = useState<Record<string, NonNullable<CustomerAccountRecord['relationshipType']>>>({});
   const [relationshipConfirmationId, setRelationshipConfirmationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [accountsUnavailable, setAccountsUnavailable] = useState(false);
+  const [archivedAccountsUnavailable, setArchivedAccountsUnavailable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
   const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
@@ -83,9 +85,14 @@ export function ManagerCustomerAccountOnboardingPanel({
 
   async function refresh() {
     setIsLoading(true);
+    setAccountsUnavailable(false);
+    setArchivedAccountsUnavailable(false);
     try {
       const loadedAccounts = await fetchCustomerAccounts();
-      const loadedArchivedAccounts = await fetchArchivedCustomerAccounts().catch(() => []);
+      const loadedArchivedAccounts = await fetchArchivedCustomerAccounts().catch(() => {
+        setArchivedAccountsUnavailable(true);
+        return [];
+      });
       setAccounts(loadedAccounts);
       setArchivedAccounts(loadedArchivedAccounts);
       const loadedProperties = await Promise.all(
@@ -107,6 +114,11 @@ export function ManagerCustomerAccountOnboardingPanel({
       setProgress(Object.fromEntries(loadedProgress));
       onPropertiesLoaded?.(loadedProperties.flatMap(([, accountProperties]) => accountProperties));
     } catch {
+      setAccounts([]);
+      setArchivedAccounts([]);
+      setProperties({});
+      setProgress({});
+      setAccountsUnavailable(true);
       setMessage('Customer accounts could not be loaded.');
     } finally {
       setIsLoading(false);
@@ -356,6 +368,11 @@ export function ManagerCustomerAccountOnboardingPanel({
         />
       )}
       {message ? <p className="mt-2 text-sm text-slate-600" role="status">{message}</p> : null}
+      {accountsUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted customer accounts could not be loaded. Account administration is unavailable until API readiness recovers.
+        </p>
+      ) : null}
       <label className="mt-4 block text-sm font-semibold text-slate-700">Find customer account
         <input
           className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
@@ -601,7 +618,7 @@ export function ManagerCustomerAccountOnboardingPanel({
             No accounts match this search and onboarding filter.
           </p>
         ) : null}
-        {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
+        {!isLoading && !accountsUnavailable && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
       </div>
       <details className="mt-4 rounded-lg border border-slate-200 px-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700 [&::-webkit-details-marker]:hidden">
@@ -609,6 +626,11 @@ export function ManagerCustomerAccountOnboardingPanel({
           <span className="rounded-full bg-slate-100 px-2 py-1 text-xs">{archivedAccounts.length}</span>
         </summary>
         <div className="space-y-2 border-t border-slate-100 py-3">
+          {archivedAccountsUnavailable ? (
+            <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+              Persisted archived accounts could not be loaded. Retry after API readiness recovers.
+            </p>
+          ) : null}
           {archivedAccounts.map((account) => (
             <div className="rounded-lg bg-slate-50 p-3" key={account.accountId}>
               <p className="text-sm font-semibold text-slate-900">{account.customerName}</p>
@@ -632,7 +654,7 @@ export function ManagerCustomerAccountOnboardingPanel({
               )}
             </div>
           ))}
-          {archivedAccounts.length === 0 ? (
+          {!archivedAccountsUnavailable && archivedAccounts.length === 0 ? (
             <p className="text-sm text-slate-500">No archived customer accounts.</p>
           ) : null}
         </div>

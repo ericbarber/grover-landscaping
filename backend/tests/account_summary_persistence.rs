@@ -1,5 +1,5 @@
 use grover_landscaping_api::{
-    accounts::{AccountRepository, CustomerAccountSummaryResult},
+    accounts::{AccountRepository, CustomerAccountListResult, CustomerAccountSummaryResult},
     db::JobRepository,
 };
 use sqlx::postgres::PgPoolOptions;
@@ -52,4 +52,34 @@ async fn repository_distinguishes_unavailable_and_demo_job_account_summaries() {
         panic!("no-database demo account summary should remain available");
     };
     assert_eq!(summary.account_id, "acct_1001");
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_and_demo_customer_account_lists() {
+    let unavailable_pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let unavailable_repository = AccountRepository::from_pool(unavailable_pool);
+    assert!(matches!(
+        unavailable_repository
+            .list(&["org_demo_landscaping".to_string()])
+            .await,
+        CustomerAccountListResult::Unavailable
+    ));
+    assert!(matches!(
+        unavailable_repository
+            .list_archived(&["org_demo_landscaping".to_string()])
+            .await,
+        CustomerAccountListResult::Unavailable
+    ));
+
+    let demo_repository = AccountRepository::default();
+    let CustomerAccountListResult::Loaded(accounts) = demo_repository
+        .list(&["org_demo_landscaping".to_string()])
+        .await
+    else {
+        panic!("no-database demo account list should remain available");
+    };
+    assert!(!accounts.is_empty());
 }

@@ -346,12 +346,14 @@ Delivered:
 - Persisted job-account reads distinguish missing data from unavailable storage while retaining no-database demo summaries
 - Completion report generation fails closed instead of presenting seeded billing or approval context in persisted mode
 - Phone completion reports hide seeded account figures and explain when persisted account context is unavailable
+- Active and archived customer-account lists return explicit persisted-storage unavailable responses
+- Manager onboarding clears stale account collections and distinguishes unavailable lists from valid empty lists
 
 Next implementation work:
 
-- Distinguish unavailable persisted customer-account collections from valid empty onboarding lists
-- Keep persisted account administration from presenting empty or seeded data after storage failures
-- Add repository and phone-flow coverage for account-list availability states
+- Distinguish unavailable persisted customer-property collections from valid empty property lists
+- Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
+- Add repository and phone-flow coverage for property and onboarding availability states
 
 ### Manager scheduling workflow
 
@@ -759,12 +761,14 @@ Current state:
 - Saved-review clearing provides a current-session undo that restores the exact prior review
 - An undone saved review is persisted again and restores after a subsequent mobile reload
 - Saved settings survive navigation after undo, but the session-only undo action does not
+- Active and archived customer-account lists distinguish persisted-storage failures from valid empty collections
+- Manager account onboarding hides stale collection data and surfaces active and archived availability warnings
 
 Next implementation work:
 
-- Distinguish unavailable persisted customer-account collections from valid empty onboarding lists
-- Keep persisted account administration from presenting empty or seeded data after storage failures
-- Add repository and phone-flow coverage for account-list availability states
+- Distinguish unavailable persisted customer-property collections from valid empty property lists
+- Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
+- Add repository and phone-flow coverage for property and onboarding availability states
 
 ## Planned
 

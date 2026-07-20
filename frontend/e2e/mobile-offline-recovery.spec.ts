@@ -234,6 +234,49 @@ test('restores the saved customer relationship filter on mobile', async ({ page 
   await expect(page.getByLabel('Customer relationship filter')).toHaveValue('property_manager');
 });
 
+test('does not present empty onboarding when persisted customer accounts are unavailable', async ({ page }) => {
+  await page.route('**/customer-accounts', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'customer_accounts_unavailable',
+      message: 'The persisted customer accounts could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'Persisted customer accounts could not be loaded.',
+  );
+  await expect(onboarding.getByText('No customer accounts yet.')).toHaveCount(0);
+  await expect(onboarding.getByText('Sample Customer', { exact: true })).toHaveCount(0);
+});
+
+test('distinguishes unavailable archived accounts from an empty archive', async ({ page }) => {
+  await page.route('**/customer-accounts/archived', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'archived_customer_accounts_unavailable',
+      message: 'The persisted archived customer accounts could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await onboarding.locator('summary').filter({ hasText: 'Archived accounts' }).click();
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'Persisted archived accounts could not be loaded.',
+  );
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

@@ -14,10 +14,10 @@ use accounts::{
     valid_customer_account_relationship, validate_create_customer_account_request,
     validate_create_customer_property_request, validate_update_customer_account_request,
     AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-    CustomerAccountArchiveError, CustomerAccountSummaryResult, CustomerPropertyMutationError,
-    CustomerPropertyStatusError, UpdateCustomerAccountRelationshipRequest,
-    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
-    UpdateCustomerPropertyStatusRequest,
+    CustomerAccountArchiveError, CustomerAccountListResult, CustomerAccountSummaryResult,
+    CustomerPropertyMutationError, CustomerPropertyStatusError,
+    UpdateCustomerAccountRelationshipRequest, UpdateCustomerAccountRequest,
+    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -1402,7 +1402,13 @@ async fn list_customer_accounts(
         can_manage_property_portfolios,
     )
     .await;
-    Json(state.accounts.list(&organization_ids).await).into_response()
+    match state.accounts.list(&organization_ids).await {
+        CustomerAccountListResult::Loaded(accounts) => Json(accounts).into_response(),
+        CustomerAccountListResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_accounts_unavailable",
+            "The persisted customer accounts could not be loaded.",
+        ),
+    }
 }
 
 async fn list_archived_customer_accounts(
@@ -1415,7 +1421,13 @@ async fn list_archived_customer_accounts(
         can_manage_property_portfolios,
     )
     .await;
-    Json(state.accounts.list_archived(&organization_ids).await).into_response()
+    match state.accounts.list_archived(&organization_ids).await {
+        CustomerAccountListResult::Loaded(accounts) => Json(accounts).into_response(),
+        CustomerAccountListResult::Unavailable => persisted_resource_unavailable_response(
+            "archived_customer_accounts_unavailable",
+            "The persisted archived customer accounts could not be loaded.",
+        ),
+    }
 }
 
 async fn create_customer_account(
