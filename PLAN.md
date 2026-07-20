@@ -348,12 +348,14 @@ Delivered:
 - Phone completion reports hide seeded account figures and explain when persisted account context is unavailable
 - Active and archived customer-account lists return explicit persisted-storage unavailable responses
 - Manager onboarding clears stale account collections and distinguishes unavailable lists from valid empty lists
+- Customer-property collections return explicit unavailable responses instead of empty persisted lists
+- Manager onboarding warns when persisted property counts and readiness inputs are incomplete
 
 Next implementation work:
 
-- Distinguish unavailable persisted customer-property collections from valid empty property lists
 - Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
-- Add repository and phone-flow coverage for property and onboarding availability states
+- Add repository and phone-flow coverage for onboarding and readiness availability states
+- Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
 
 ### Manager scheduling workflow
 
@@ -763,12 +765,13 @@ Current state:
 - Saved settings survive navigation after undo, but the session-only undo action does not
 - Active and archived customer-account lists distinguish persisted-storage failures from valid empty collections
 - Manager account onboarding hides stale collection data and surfaces active and archived availability warnings
+- Customer-property lists distinguish unavailable persistence from a valid account with no properties
 
 Next implementation work:
 
-- Distinguish unavailable persisted customer-property collections from valid empty property lists
 - Keep onboarding progress and property readiness reads from collapsing storage failures into missing data
-- Add repository and phone-flow coverage for property and onboarding availability states
+- Add repository and phone-flow coverage for onboarding and readiness availability states
+- Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
 
 ## Planned
 

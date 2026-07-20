@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ApiRequestError } from '../api/apiError';
 import {
   archiveCustomerAccount,
   createCustomerAccount,
@@ -68,6 +69,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [accountsUnavailable, setAccountsUnavailable] = useState(false);
   const [archivedAccountsUnavailable, setArchivedAccountsUnavailable] = useState(false);
+  const [propertyListsUnavailable, setPropertyListsUnavailable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
   const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
@@ -87,6 +89,7 @@ export function ManagerCustomerAccountOnboardingPanel({
     setIsLoading(true);
     setAccountsUnavailable(false);
     setArchivedAccountsUnavailable(false);
+    setPropertyListsUnavailable(false);
     try {
       const loadedAccounts = await fetchCustomerAccounts();
       const loadedArchivedAccounts = await fetchArchivedCustomerAccounts().catch(() => {
@@ -98,7 +101,12 @@ export function ManagerCustomerAccountOnboardingPanel({
       const loadedProperties = await Promise.all(
         loadedAccounts.map(async (account) => [
           account.accountId,
-          await fetchCustomerProperties(account.accountId).catch(() => []),
+          await fetchCustomerProperties(account.accountId).catch((error: unknown) => {
+            if (error instanceof ApiRequestError) {
+              setPropertyListsUnavailable(true);
+            }
+            return [];
+          }),
         ] as const),
       );
       setProperties(Object.fromEntries(loadedProperties));
@@ -371,6 +379,11 @@ export function ManagerCustomerAccountOnboardingPanel({
       {accountsUnavailable ? (
         <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
           Persisted customer accounts could not be loaded. Account administration is unavailable until API readiness recovers.
+        </p>
+      ) : null}
+      {propertyListsUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted customer properties could not be loaded. Property counts and onboarding readiness may be incomplete.
         </p>
       ) : null}
       <label className="mt-4 block text-sm font-semibold text-slate-700">Find customer account

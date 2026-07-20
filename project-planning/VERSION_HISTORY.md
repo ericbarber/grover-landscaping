@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Distinguished unavailable customer-property lists from valid accounts with no properties.
 - 2026-07-19: Distinguished unavailable active and archived customer-account lists from valid empty onboarding data.
 - 2026-07-19: Loaded job billing and approval summaries from PostgreSQL and failed persisted completion reports closed.
 - 2026-07-19: Scoped saved-review undo controls to the active session.

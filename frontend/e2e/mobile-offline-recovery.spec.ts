@@ -277,6 +277,26 @@ test('distinguishes unavailable archived accounts from an empty archive', async 
   );
 });
 
+test('distinguishes unavailable customer properties from accounts with no properties', async ({ page }) => {
+  await page.route('**/customer-accounts/*/properties', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'customer_properties_unavailable',
+      message: 'The persisted customer properties could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'Persisted customer properties could not be loaded.',
+  );
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

@@ -15,7 +15,7 @@ use accounts::{
     validate_create_customer_property_request, validate_update_customer_account_request,
     AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
     CustomerAccountArchiveError, CustomerAccountListResult, CustomerAccountSummaryResult,
-    CustomerPropertyMutationError, CustomerPropertyStatusError,
+    CustomerPropertyListResult, CustomerPropertyMutationError, CustomerPropertyStatusError,
     UpdateCustomerAccountRelationshipRequest, UpdateCustomerAccountRequest,
     UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
 };
@@ -1649,13 +1649,17 @@ async fn list_customer_properties(
         can_manage_property_portfolios,
     )
     .await;
-    Json(
-        state
-            .accounts
-            .list_properties(&account_id, &organization_ids)
-            .await,
-    )
-    .into_response()
+    match state
+        .accounts
+        .list_properties(&account_id, &organization_ids)
+        .await
+    {
+        CustomerPropertyListResult::Loaded(properties) => Json(properties).into_response(),
+        CustomerPropertyListResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_properties_unavailable",
+            "The persisted customer properties could not be loaded.",
+        ),
+    }
 }
 
 async fn get_customer_account_onboarding_progress(

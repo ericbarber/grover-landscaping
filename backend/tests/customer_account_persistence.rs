@@ -1,8 +1,8 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-        CustomerAccountArchiveError, CustomerAccountListResult, CustomerPropertyMutationError,
-        CustomerPropertyStatusError, UpdateCustomerAccountRequest,
+        CustomerAccountArchiveError, CustomerAccountListResult, CustomerPropertyListResult,
+        CustomerPropertyMutationError, CustomerPropertyStatusError, UpdateCustomerAccountRequest,
         UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
@@ -263,15 +263,21 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     assert!(property.persisted);
     assert_eq!(property.account_id, created.account_id);
 
-    let properties = accounts
+    let CustomerPropertyListResult::Loaded(properties) = accounts
         .list_properties(&created.account_id, &["org_demo_landscaping".to_string()])
-        .await;
+        .await
+    else {
+        panic!("tenant property list should load");
+    };
     assert_eq!(properties.len(), 1);
     assert_eq!(properties[0].property_id, property.property_id);
-    assert!(accounts
+    let CustomerPropertyListResult::Loaded(outside_properties) = accounts
         .list_properties(&created.account_id, &["org_outside_tenant".to_string()])
         .await
-        .is_empty());
+    else {
+        panic!("outside-tenant property list should load");
+    };
+    assert!(outside_properties.is_empty());
 
     let updated_property = accounts
         .update_property_identity(

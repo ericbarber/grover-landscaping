@@ -1,5 +1,8 @@
 use grover_landscaping_api::{
-    accounts::{AccountRepository, CustomerAccountListResult, CustomerAccountSummaryResult},
+    accounts::{
+        AccountRepository, CustomerAccountListResult, CustomerAccountSummaryResult,
+        CustomerPropertyListResult,
+    },
     db::JobRepository,
 };
 use sqlx::postgres::PgPoolOptions;
@@ -72,6 +75,12 @@ async fn repository_distinguishes_unavailable_and_demo_customer_account_lists() 
             .list_archived(&["org_demo_landscaping".to_string()])
             .await,
         CustomerAccountListResult::Unavailable
+    ));
+    assert!(matches!(
+        unavailable_repository
+            .list_properties("acct_1001", &["org_demo_landscaping".to_string()],)
+            .await,
+        CustomerPropertyListResult::Unavailable
     ));
 
     let demo_repository = AccountRepository::default();

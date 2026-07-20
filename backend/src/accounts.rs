@@ -28,6 +28,12 @@ pub enum CustomerAccountListResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerPropertyListResult {
+    Loaded(Vec<CustomerPropertyRecord>),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateCustomerAccountRequest {
     pub organization_id: String,
@@ -301,13 +307,20 @@ impl AccountRepository {
         &self,
         account_id: &str,
         organization_ids: &[String],
-    ) -> Vec<CustomerPropertyRecord> {
+    ) -> CustomerPropertyListResult {
         let Some(pool) = &self.pool else {
-            return seed_properties(account_id, organization_ids);
+            return CustomerPropertyListResult::Loaded(seed_properties(
+                account_id,
+                organization_ids,
+            ));
         };
-        list_properties(pool, account_id, organization_ids)
-            .await
-            .unwrap_or_default()
+        match list_properties(pool, account_id, organization_ids).await {
+            Ok(properties) => CustomerPropertyListResult::Loaded(properties),
+            Err(error) => {
+                tracing::error!(%error, account_id, "persisted customer-property list failed");
+                CustomerPropertyListResult::Unavailable
+            }
+        }
     }
 
     pub async fn create_property(
