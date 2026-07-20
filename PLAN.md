@@ -697,10 +697,11 @@ Current state:
 - Dismissing audit-row return feedback restores focus to that exact event without scrolling away
 - Returned audit rows remain visually identified after inspection feedback is dismissed
 - Restored-row markers clear automatically when the owner changes or exits the activity review
+- Restored-row markers persist through same-review refreshes and older-page loading
 
 Next implementation work:
 
-- Preserve restored-row context while loading older pages in the same review
+- Clear restored-row context when a refreshed review no longer contains that audit event
 
 ## Planned
 

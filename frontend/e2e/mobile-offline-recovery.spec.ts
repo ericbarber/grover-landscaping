@@ -510,6 +510,14 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.locator('ol > li[aria-current="true"]')).toBeFocused();
   await expect(teamActivity.locator('ol > li[aria-current="true"]'))
     .toContainText('Restored after inspection');
+  await teamActivity.getByRole('button', { name: 'Refresh' }).click();
+  await expect(teamActivity.getByText('25 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.locator('ol > li[aria-current="true"]'))
+    .toContainText('Restored after inspection');
+  await teamActivity.getByRole('button', { name: 'Load older activity' }).click();
+  await expect(teamActivity.getByText('26 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.locator('ol > li[aria-current="true"]'))
+    .toContainText('Restored after inspection');
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
