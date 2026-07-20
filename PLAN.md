@@ -840,6 +840,7 @@ Current state:
 - Manager dispatch hierarchy clears stale collections, warns about persistence outages, and blocks setup writes until authoritative scope data returns
 - Crew creation and updates distinguish unavailable persistence from duplicate or missing crews
 - Completion-report generation fails closed when authoritative assigned-route context is unavailable
+- Corrupt delivered completion-report snapshots surface as persistence decode failures instead of missing customer reports
 - Customer report links distinguish route-context outages from invalid or expired links
 - Property-onboarding reads and writes distinguish unavailable persistence from missing profiles and business conflicts
 - Manager property onboarding refuses to substitute an empty editable profile during storage outages

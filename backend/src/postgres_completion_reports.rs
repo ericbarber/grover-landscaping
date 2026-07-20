@@ -573,7 +573,17 @@ pub async fn delivered_snapshot_for_share_token(
     .fetch_optional(pool)
     .await?;
 
-    Ok(snapshot.and_then(|value| serde_json::from_str(&value).ok()))
+    decode_delivered_snapshot(snapshot)
+}
+
+fn decode_delivered_snapshot(
+    snapshot: Option<String>,
+) -> Result<Option<serde_json::Value>, sqlx::Error> {
+    snapshot
+        .map(|value| {
+            serde_json::from_str(&value).map_err(|error| sqlx::Error::Decode(Box::new(error)))
+        })
+        .transpose()
 }
 
 pub async fn list_delivered_for_property(
@@ -880,7 +890,7 @@ async fn insert_status_history(
 mod tests {
     use super::{
         completion_report_share_token_should_be_proposed,
-        completion_report_share_token_should_be_returned,
+        completion_report_share_token_should_be_returned, decode_delivered_snapshot,
     };
 
     #[test]
@@ -917,6 +927,19 @@ mod tests {
         assert!(!completion_report_share_token_should_be_returned(
             "in_review",
             true,
+        ));
+    }
+
+    #[test]
+    fn delivered_snapshot_decode_distinguishes_missing_valid_and_corrupt_values() {
+        assert_eq!(decode_delivered_snapshot(None).unwrap(), None);
+        assert_eq!(
+            decode_delivered_snapshot(Some(r#"{"report_id":"report_1"}"#.to_string())).unwrap(),
+            Some(serde_json::json!({ "report_id": "report_1" })),
+        );
+        assert!(matches!(
+            decode_delivered_snapshot(Some("{invalid".to_string())),
+            Err(sqlx::Error::Decode(_)),
         ));
     }
 }
