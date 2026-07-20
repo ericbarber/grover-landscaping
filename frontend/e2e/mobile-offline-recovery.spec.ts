@@ -360,18 +360,24 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
         cross_branch_move: false,
         occurred_at: '2026-07-20T03:00:00Z',
       };
+      const focusedCrewMoves = [
+        {
+          ...auditedMove,
+          id: 'audit_e2e_latest_crew_hierarchy_move',
+          destination_territory_label: territoryName,
+          destination_territory_id: territoryId,
+          occurred_at: '2026-07-20T04:00:00Z',
+        },
+        ...Array.from({ length: 24 }, (_, index) => ({
+          ...auditedMove,
+          id: `audit_e2e_older_crew_hierarchy_move_${index + 1}`,
+          occurred_at: `2026-07-19T${String(23 - index).padStart(2, '0')}:00:00Z`,
+        })),
+      ];
       await route.fulfill({
-        json: crewMoved ? [
-          ...(isFocusedCrewReview ? [{
-            ...auditedMove,
-            id: 'audit_e2e_latest_crew_hierarchy_move',
-            source_territory_label: 'Primary Territory',
-            destination_territory_label: territoryName,
-            destination_territory_id: territoryId,
-            occurred_at: '2026-07-20T04:00:00Z',
-          }] : []),
-          auditedMove,
-        ] : [],
+        json: crewMoved
+          ? isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
+          : [],
       });
     },
   );
@@ -462,7 +468,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByRole('status').filter({
     hasText: `Crew ${originalCrew!.id} remains selected`,
   })).toBeVisible();
-  await expect(teamActivity.getByText('2 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.getByText('25 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.getByText(
+    'Older matching crew moves may still be available.',
+  )).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')

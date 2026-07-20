@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Flagged potentially older moves in focused crew history.
 - 2026-07-19: Counted loaded moves in focused crew history.
 - 2026-07-19: Announced focused latest-move review to assistive technology.
 - 2026-07-19: Added non-destructive dismissal for restored-review feedback.
