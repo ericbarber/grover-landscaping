@@ -83,17 +83,20 @@ describe('team administration activity labels', () => {
     expect(parseTeamActivityReviewFilters(JSON.stringify({
       eventFilter: 'crew_hierarchy_updated',
       moveScope: 'cross_branch',
+      activitySort: 'oldest',
     }))).toEqual({
       eventFilter: 'crew_hierarchy_updated',
       moveScope: 'cross_branch',
+      activitySort: 'oldest',
     });
     expect(parseTeamActivityReviewFilters(JSON.stringify({
       eventFilter: 'unknown',
       moveScope: 'interstate',
-    }))).toEqual({ eventFilter: 'all', moveScope: 'all' });
+    }))).toEqual({ eventFilter: 'all', moveScope: 'all', activitySort: 'newest' });
     expect(parseTeamActivityReviewFilters('{bad json')).toEqual({
       eventFilter: 'all',
       moveScope: 'all',
+      activitySort: 'newest',
     });
   });
 

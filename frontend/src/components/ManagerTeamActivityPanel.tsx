@@ -62,9 +62,12 @@ const eventKinds: TeamAdministrationEventKind[] = [
   'crew_reactivated',
 ];
 
+export type TeamActivitySort = 'newest' | 'oldest';
+
 type TeamActivityReviewFilters = {
   eventFilter: TeamAdministrationEventKind | 'all';
   moveScope: TeamActivityMoveScope | 'all';
+  activitySort: TeamActivitySort;
 };
 
 export function parseTeamActivityReviewFilters(raw: string | null): TeamActivityReviewFilters {
@@ -79,9 +82,10 @@ export function parseTeamActivityReviewFilters(raw: string | null): TeamActivity
       moveScope: value.moveScope === 'cross_branch' || value.moveScope === 'within_branch'
         ? value.moveScope
         : 'all',
+      activitySort: value.activitySort === 'oldest' ? 'oldest' : 'newest',
     };
   } catch {
-    return { eventFilter: 'all', moveScope: 'all' };
+    return { eventFilter: 'all', moveScope: 'all', activitySort: 'newest' };
   }
 }
 
@@ -153,8 +157,6 @@ export function teamActivityActiveFilterCount(
     + Number(eventKind !== 'all')
     + Number(moveScope !== 'all');
 }
-
-export type TeamActivitySort = 'newest' | 'oldest';
 
 export function sortTeamActivity(
   activity: TeamAdministrationActivity[],
@@ -261,7 +263,9 @@ export function ManagerTeamActivityPanel({
     initialReviewFilters.current.moveScope,
   );
   const filterOrganizationRef = useRef(organizationId);
-  const [activitySort, setActivitySort] = useState<TeamActivitySort>('newest');
+  const [activitySort, setActivitySort] = useState<TeamActivitySort>(
+    initialReviewFilters.current.activitySort,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -370,17 +374,18 @@ export function ManagerTeamActivityPanel({
       const loaded = loadTeamActivityReviewFilters(organizationId);
       setEventFilter(loaded.eventFilter);
       setMoveScope(loaded.moveScope);
+      setActivitySort(loaded.activitySort);
       return;
     }
     try {
       window.localStorage.setItem(
         teamActivityReviewStorageKey(organizationId),
-        JSON.stringify({ eventFilter, moveScope }),
+        JSON.stringify({ eventFilter, moveScope, activitySort }),
       );
     } catch {
       // Activity review remains usable when browser storage is unavailable.
     }
-  }, [organizationId, eventFilter, moveScope]);
+  }, [organizationId, eventFilter, moveScope, activitySort]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
