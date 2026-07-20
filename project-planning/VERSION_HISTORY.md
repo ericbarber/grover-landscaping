@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable membership role, status, and profile writes from membership conflicts.
 - 2026-07-20: Distinguished unavailable invitation lifecycle writes from invalid and conflicting invitations.
 - 2026-07-20: Distinguished unavailable organization profile updates from invalid or missing organizations.
 - 2026-07-20: Distinguished unavailable organization profile and first-owner setup reads from missing organizations.

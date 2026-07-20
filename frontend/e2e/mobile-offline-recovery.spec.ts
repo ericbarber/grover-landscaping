@@ -167,6 +167,29 @@ test('confirms no invitation was created during persisted write outages', async 
   );
 });
 
+test('confirms membership profile was not changed during persisted write outages', async ({ page }) => {
+  await page.route(/\/organizations\/[^/]+\/memberships\/[^/]+\/profile$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'membership_profile_update_unavailable',
+      message: 'The persisted membership profile could not be updated.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const memberships = page
+    .getByRole('heading', { name: 'Active memberships' })
+    .locator('xpath=ancestor::section[1]');
+  const displayName = memberships.getByLabel('Display name').first();
+  await displayName.fill('Write Outage User');
+  await memberships.getByRole('button', { name: 'Save display name' }).first().click();
+  await expect(memberships.getByRole('status')).toContainText(
+    'The display name was not changed',
+  );
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

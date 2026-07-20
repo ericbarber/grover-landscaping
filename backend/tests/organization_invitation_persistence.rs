@@ -2,8 +2,8 @@ use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
     OrganizationCollectionResult, OrganizationMutationResult, OrganizationProfileUpdateResult,
     OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
-    UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
-    UpdateOrganizationProfileRequest,
+    UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
+    UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
@@ -145,6 +145,45 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .accept_invitation("invite_outage", "user_outage", Some("outage@example.com"),)
             .await,
         OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_membership_role(
+                "org_demo_landscaping",
+                "membership_outage",
+                "local-development-user",
+                UpdateOrganizationMembershipRoleRequest {
+                    role: "manager".to_string(),
+                },
+            )
+            .await,
+        MembershipRoleUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_membership_profile(
+                "org_demo_landscaping",
+                "membership_outage",
+                "local-development-user",
+                UpdateOrganizationMembershipProfileRequest {
+                    display_name: "Outage User".to_string(),
+                },
+            )
+            .await,
+        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_membership_status(
+                "org_demo_landscaping",
+                "membership_outage",
+                "local-development-user",
+                UpdateOrganizationMembershipStatusRequest {
+                    status: "suspended".to_string(),
+                },
+            )
+            .await,
+        MembershipStatusUpdateResult::Unavailable
     ));
 }
 

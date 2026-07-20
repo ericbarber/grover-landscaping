@@ -192,8 +192,12 @@ export function ManagerTeamMembershipsPanel({
       setConfirmingMembershipId('');
       setMessage(`Role updated for ${updated.userId}.`);
       onTeamChanged?.();
-    } catch {
-      setMessage('The role could not be changed. Keep at least one active organization owner.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'membership_role_update_unavailable')
+          ? 'Persisted membership storage is unavailable. The role was not changed.'
+          : 'The role could not be changed. Keep at least one active organization owner.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -215,8 +219,12 @@ export function ManagerTeamMembershipsPanel({
       setDraftNames((current) => ({ ...current, [updated.id]: updated.displayName ?? updated.userId }));
       setMessage(`Display name updated for ${updated.userId}.`);
       onTeamChanged?.();
-    } catch {
-      setMessage('The team member display name could not be updated.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'membership_profile_update_unavailable')
+          ? 'Persisted membership storage is unavailable. The display name was not changed.'
+          : 'The team member display name could not be updated.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -239,8 +247,12 @@ export function ManagerTeamMembershipsPanel({
       setConfirmingLifecycleId('');
       setMessage(`${updated.userId} membership ${status === 'active' ? 'reactivated' : 'suspended'}.`);
       onTeamChanged?.();
-    } catch {
-      setMessage('The membership status could not be changed. Keep at least one active owner.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'membership_status_update_unavailable')
+          ? 'Persisted membership storage is unavailable. The status was not changed.'
+          : 'The membership status could not be changed. Keep at least one active owner.',
+      );
     } finally {
       setIsLoading(false);
     }

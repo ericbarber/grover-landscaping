@@ -127,6 +127,7 @@ pub enum MembershipRoleUpdateResult {
     Updated(OrganizationMembership),
     LastActiveOwner,
     NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -135,12 +136,14 @@ pub enum MembershipStatusUpdateResult {
     LastActiveOwner,
     NotManageable,
     NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MembershipProfileUpdateResult {
     Updated(OrganizationMembership),
     NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -667,7 +670,7 @@ impl OrganizationRepository {
         };
 
         if let Some(pool) = &self.pool {
-            if let Ok(updated) = update_membership_role(
+            return match update_membership_role(
                 pool,
                 organization_id,
                 membership_id,
@@ -676,8 +679,12 @@ impl OrganizationRepository {
             )
             .await
             {
-                return updated;
-            }
+                Ok(updated) => updated,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, membership_id, "persisted membership role update failed");
+                    MembershipRoleUpdateResult::Unavailable
+                }
+            };
         }
 
         let Some(membership) = local_membership_role_update(
@@ -709,7 +716,7 @@ impl OrganizationRepository {
             return MembershipProfileUpdateResult::NotFound;
         }
         if let Some(pool) = &self.pool {
-            if let Ok(updated) = update_membership_profile(
+            return match update_membership_profile(
                 pool,
                 organization_id,
                 membership_id,
@@ -718,8 +725,12 @@ impl OrganizationRepository {
             )
             .await
             {
-                return updated;
-            }
+                Ok(updated) => updated,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, membership_id, "persisted membership profile update failed");
+                    MembershipProfileUpdateResult::Unavailable
+                }
+            };
         }
         let Some(mut membership) =
             seed_memberships("local-development-user")
@@ -746,7 +757,7 @@ impl OrganizationRepository {
             return MembershipStatusUpdateResult::NotManageable;
         }
         if let Some(pool) = &self.pool {
-            if let Ok(updated) = update_membership_status(
+            return match update_membership_status(
                 pool,
                 organization_id,
                 membership_id,
@@ -755,8 +766,12 @@ impl OrganizationRepository {
             )
             .await
             {
-                return updated;
-            }
+                Ok(updated) => updated,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, membership_id, "persisted membership status update failed");
+                    MembershipStatusUpdateResult::Unavailable
+                }
+            };
         }
         let Some(membership) =
             seed_memberships("local-development-user")

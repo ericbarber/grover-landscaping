@@ -2172,6 +2172,10 @@ async fn update_organization_membership_role(
             "organization_membership_not_found",
             "The organization membership was not found.",
         ),
+        MembershipRoleUpdateResult::Unavailable => persisted_resource_unavailable_response(
+            "membership_role_update_unavailable",
+            "The persisted membership role could not be updated.",
+        ),
     }
 }
 
@@ -2216,6 +2220,10 @@ async fn update_organization_membership_profile(
         MembershipProfileUpdateResult::NotFound => resource_not_found_response(
             "organization_membership_not_found",
             "The organization membership was not found.",
+        ),
+        MembershipProfileUpdateResult::Unavailable => persisted_resource_unavailable_response(
+            "membership_profile_update_unavailable",
+            "The persisted membership profile could not be updated.",
         ),
     }
 }
@@ -2307,6 +2315,10 @@ async fn update_organization_membership_status(
         MembershipStatusUpdateResult::NotFound => resource_not_found_response(
             "organization_membership_not_found",
             "The organization membership was not found.",
+        ),
+        MembershipStatusUpdateResult::Unavailable => persisted_resource_unavailable_response(
+            "membership_status_update_unavailable",
+            "The persisted membership status could not be updated.",
         ),
     }
 }
