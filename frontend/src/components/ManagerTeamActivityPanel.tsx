@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   fetchTeamAdministrationActivity,
   type TeamAdministrationActivity,
@@ -61,6 +61,44 @@ const eventKinds: TeamAdministrationEventKind[] = [
   'crew_deactivated',
   'crew_reactivated',
 ];
+
+type TeamActivityReviewFilters = {
+  eventFilter: TeamAdministrationEventKind | 'all';
+  moveScope: TeamActivityMoveScope | 'all';
+};
+
+export function parseTeamActivityReviewFilters(raw: string | null): TeamActivityReviewFilters {
+  try {
+    const value = raw ? JSON.parse(raw) as Record<string, unknown> : {};
+    return {
+      eventFilter: typeof value.eventFilter === 'string'
+        && (value.eventFilter === 'all'
+          || eventKinds.includes(value.eventFilter as TeamAdministrationEventKind))
+        ? value.eventFilter as TeamAdministrationEventKind | 'all'
+        : 'all',
+      moveScope: value.moveScope === 'cross_branch' || value.moveScope === 'within_branch'
+        ? value.moveScope
+        : 'all',
+    };
+  } catch {
+    return { eventFilter: 'all', moveScope: 'all' };
+  }
+}
+
+function teamActivityReviewStorageKey(organizationId: string): string {
+  return `grover.team-activity-review-filters.v1.${organizationId}`;
+}
+
+function loadTeamActivityReviewFilters(organizationId: string): TeamActivityReviewFilters {
+  if (typeof window === 'undefined') return parseTeamActivityReviewFilters(null);
+  try {
+    return parseTeamActivityReviewFilters(
+      window.localStorage.getItem(teamActivityReviewStorageKey(organizationId)),
+    );
+  } catch {
+    return parseTeamActivityReviewFilters(null);
+  }
+}
 
 export function filterTeamActivity(
   activity: TeamAdministrationActivity[],
@@ -211,12 +249,18 @@ export function ManagerTeamActivityPanel({
   organizationId: string;
   refreshSignal?: number;
 }) {
+  const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
   const [auditIdQuery, setAuditIdQuery] = useState('');
-  const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
-  const [moveScope, setMoveScope] = useState<TeamActivityMoveScope | 'all'>('all');
+  const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>(
+    initialReviewFilters.current.eventFilter,
+  );
+  const [moveScope, setMoveScope] = useState<TeamActivityMoveScope | 'all'>(
+    initialReviewFilters.current.moveScope,
+  );
+  const filterOrganizationRef = useRef(organizationId);
   const [activitySort, setActivitySort] = useState<TeamActivitySort>('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
@@ -319,6 +363,24 @@ export function ManagerTeamActivityPanel({
     targetQuery,
     auditIdQuery,
   ]);
+
+  useEffect(() => {
+    if (filterOrganizationRef.current !== organizationId) {
+      filterOrganizationRef.current = organizationId;
+      const loaded = loadTeamActivityReviewFilters(organizationId);
+      setEventFilter(loaded.eventFilter);
+      setMoveScope(loaded.moveScope);
+      return;
+    }
+    try {
+      window.localStorage.setItem(
+        teamActivityReviewStorageKey(organizationId),
+        JSON.stringify({ eventFilter, moveScope }),
+      );
+    } catch {
+      // Activity review remains usable when browser storage is unavailable.
+    }
+  }, [organizationId, eventFilter, moveScope]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

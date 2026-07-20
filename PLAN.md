@@ -660,10 +660,11 @@ Current state:
 - Owner activity filters cross-branch and within-branch crew moves server-side across paginated history
 - Owner activity summarizes loaded cross-branch and within-branch crew move counts separately
 - Crew move scope summary cards apply the paginated hierarchy-event and scope filters together, with mobile smoke coverage for selection and clearing
+- Owner hierarchy-event and move-scope filters restore per organization across mobile reloads with safe storage fallback
 
 Next implementation work:
 
-- Restore owner activity move-scope filters across mobile reloads
+- Restore owner activity sort order alongside move-scope review filters
 
 ## Planned
 

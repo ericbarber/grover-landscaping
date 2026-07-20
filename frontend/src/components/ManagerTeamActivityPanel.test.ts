@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TeamAdministrationActivity } from '../api/client';
 import {
   filterTeamActivity,
+  parseTeamActivityReviewFilters,
   summarizeTeamActivity,
   sortTeamActivity,
   teamActivityCsv,
@@ -76,6 +77,24 @@ describe('team administration activity labels', () => {
     expect(teamActivityActiveFilterCount('Jordan', 'North', 'audit', 'crew_profile_updated'))
       .toBe(4);
     expect(teamActivityActiveFilterCount('', '', '', 'all', 'cross_branch')).toBe(1);
+  });
+
+  it('restores supported move review filters and rejects malformed storage', () => {
+    expect(parseTeamActivityReviewFilters(JSON.stringify({
+      eventFilter: 'crew_hierarchy_updated',
+      moveScope: 'cross_branch',
+    }))).toEqual({
+      eventFilter: 'crew_hierarchy_updated',
+      moveScope: 'cross_branch',
+    });
+    expect(parseTeamActivityReviewFilters(JSON.stringify({
+      eventFilter: 'unknown',
+      moveScope: 'interstate',
+    }))).toEqual({ eventFilter: 'all', moveScope: 'all' });
+    expect(parseTeamActivityReviewFilters('{bad json')).toEqual({
+      eventFilter: 'all',
+      moveScope: 'all',
+    });
   });
 
   it('summarizes loaded access, crew, and organization changes', () => {
