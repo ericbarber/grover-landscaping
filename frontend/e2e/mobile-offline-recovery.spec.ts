@@ -250,6 +250,53 @@ test('shows persisted route absence without substituting seeded stops', async ({
   await expect(route.getByText('Source: persisted route status')).toBeVisible();
 });
 
+test('keeps the manager route unchanged when a persisted stop mutation is rejected', async ({ page }) => {
+  await page.route('**/day-plans', async (route) => {
+    const request = route.request();
+    if (request.method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    const input = request.postDataJSON() as { crew_id: string; service_date: string };
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      json: {
+        id: `day_plan_${input.service_date.replaceAll('-', '_')}_${input.crew_id}`,
+        crew_id: input.crew_id,
+        service_date: input.service_date,
+        status: 'draft',
+        route_status: 'manual',
+        time_zone: 'America/Phoenix',
+        service_area_label: 'Phoenix metro',
+        stop_capacity: 10,
+        persisted: true,
+      },
+    });
+  });
+  await page.route('**/day-plans/*/stops', (route) => route.fulfill({
+    status: 409,
+    contentType: 'application/json',
+    json: {
+      error: 'day_plan_stop_assignment_conflict',
+      message: 'The stop could not be added.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const scheduling = page.getByRole('heading', { name: 'Create day plan' })
+    .locator('xpath=ancestor::section[1]');
+  await scheduling.getByRole('button', { name: 'Create draft day plan' }).click();
+  await scheduling.getByRole('button', { name: 'Add', exact: true }).first().click();
+
+  await expect(scheduling.getByText(
+    'Backend sync failed, so the synced route was not changed. Try again before publishing.',
+  )).toBeVisible();
+  await expect(scheduling.getByRole('button', { name: 'Retry backend sync' })).toBeVisible();
+  await expect(scheduling.getByText('Route capacity: 0/10 stops')).toBeVisible();
+});
+
 test('queues route progress during interruption and replays after recovery', async ({
   context,
   page,

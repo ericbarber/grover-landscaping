@@ -39,6 +39,14 @@ pub enum TodayDayPlanResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum PersistedMutationResult<T> {
+    Applied(T),
+    NotFound,
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct CrewSummary {
     pub id: String,
@@ -932,7 +940,7 @@ impl DayPlanRepository {
         &self,
         day_plan_id: &str,
         request: AssignDayPlanStopRequest,
-    ) -> DayPlanStopMutationResponse {
+    ) -> PersistedMutationResult<DayPlanStopMutationResponse> {
         self.assign_stop_as(day_plan_id, request, "system").await
     }
 
@@ -941,11 +949,11 @@ impl DayPlanRepository {
         day_plan_id: &str,
         request: AssignDayPlanStopRequest,
         actor_user_id: &str,
-    ) -> DayPlanStopMutationResponse {
+    ) -> PersistedMutationResult<DayPlanStopMutationResponse> {
         let stop_id = draft_stop_id(day_plan_id, &request.job_id);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(response)) = postgres_day_plans::assign_stop(
+            return match postgres_day_plans::assign_stop(
                 pool,
                 day_plan_id,
                 &stop_id,
@@ -954,24 +962,29 @@ impl DayPlanRepository {
             )
             .await
             {
-                return response;
-            }
+                Ok(Some(response)) => PersistedMutationResult::Applied(response),
+                Ok(None) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted route stop assignment failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        DayPlanStopMutationResponse {
+        PersistedMutationResult::Applied(DayPlanStopMutationResponse {
             day_plan_id: day_plan_id.to_string(),
             stop_id,
             job_id: request.job_id,
             stop_order: 0,
             persisted: false,
-        }
+        })
     }
 
     pub async fn remove_stop(
         &self,
         day_plan_id: &str,
         stop_id: &str,
-    ) -> DayPlanStopRemovalResponse {
+    ) -> PersistedMutationResult<DayPlanStopRemovalResponse> {
         self.remove_stop_as(day_plan_id, stop_id, "system").await
     }
 
@@ -980,31 +993,36 @@ impl DayPlanRepository {
         day_plan_id: &str,
         stop_id: &str,
         actor_user_id: &str,
-    ) -> DayPlanStopRemovalResponse {
+    ) -> PersistedMutationResult<DayPlanStopRemovalResponse> {
         if let Some(pool) = &self.pool {
-            if let Ok(true) =
-                postgres_day_plans::remove_stop(pool, day_plan_id, stop_id, actor_user_id).await
+            return match postgres_day_plans::remove_stop(pool, day_plan_id, stop_id, actor_user_id)
+                .await
             {
-                return DayPlanStopRemovalResponse {
+                Ok(true) => PersistedMutationResult::Applied(DayPlanStopRemovalResponse {
                     day_plan_id: day_plan_id.to_string(),
                     stop_id: stop_id.to_string(),
                     persisted: true,
-                };
-            }
+                }),
+                Ok(false) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, stop_id, "persisted route stop removal failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        DayPlanStopRemovalResponse {
+        PersistedMutationResult::Applied(DayPlanStopRemovalResponse {
             day_plan_id: day_plan_id.to_string(),
             stop_id: stop_id.to_string(),
             persisted: false,
-        }
+        })
     }
 
     pub async fn reorder_stops(
         &self,
         day_plan_id: &str,
         request: ReorderDayPlanStopsRequest,
-    ) -> DayPlanStopReorderResponse {
+    ) -> PersistedMutationResult<DayPlanStopReorderResponse> {
         self.reorder_stops_as(day_plan_id, request, "system").await
     }
 
@@ -1013,9 +1031,9 @@ impl DayPlanRepository {
         day_plan_id: &str,
         request: ReorderDayPlanStopsRequest,
         actor_user_id: &str,
-    ) -> DayPlanStopReorderResponse {
+    ) -> PersistedMutationResult<DayPlanStopReorderResponse> {
         if let Some(pool) = &self.pool {
-            if let Ok(true) = postgres_day_plans::reorder_stops(
+            return match postgres_day_plans::reorder_stops(
                 pool,
                 day_plan_id,
                 &request.stop_ids,
@@ -1023,19 +1041,24 @@ impl DayPlanRepository {
             )
             .await
             {
-                return DayPlanStopReorderResponse {
+                Ok(true) => PersistedMutationResult::Applied(DayPlanStopReorderResponse {
                     day_plan_id: day_plan_id.to_string(),
                     stop_ids: request.stop_ids,
                     persisted: true,
-                };
-            }
+                }),
+                Ok(false) => PersistedMutationResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted route stop reorder failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        DayPlanStopReorderResponse {
+        PersistedMutationResult::Applied(DayPlanStopReorderResponse {
             day_plan_id: day_plan_id.to_string(),
             stop_ids: request.stop_ids,
             persisted: false,
-        }
+        })
     }
 
     pub async fn today_for_crew(&self, crew_id: &str) -> TodayDayPlanResult {
@@ -1459,7 +1482,8 @@ mod tests {
         validate_create_service_territory_request, AmendmentService, AssignDayPlanStopRequest,
         CreateCrewRequest, CreateDayPlanAmendmentRequest, CreateDayPlanRequest,
         CreateOrganizationBranchRequest, CreateServiceTerritoryRequest, DayPlanRepository,
-        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+        PersistedMutationResult, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+        TodayDayPlanResult,
     };
 
     #[test]
@@ -1772,9 +1796,12 @@ mod tests {
             estimated_service_minutes: Some(45),
         };
 
-        let response = repository
+        let PersistedMutationResult::Applied(response) = repository
             .assign_stop("day_plan_2026_06_16_crew_1001", request)
-            .await;
+            .await
+        else {
+            panic!("no-database assignment should retain demo behavior");
+        };
 
         assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
         assert_eq!(
@@ -1790,9 +1817,12 @@ mod tests {
     async fn repository_remove_stop_falls_back_without_database_pool() {
         let repository = DayPlanRepository::default();
 
-        let response = repository
+        let PersistedMutationResult::Applied(response) = repository
             .remove_stop("day_plan_2026_06_16_crew_1001", "stop_1001")
-            .await;
+            .await
+        else {
+            panic!("no-database removal should retain demo behavior");
+        };
 
         assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
         assert_eq!(response.stop_id, "stop_1001");
@@ -1806,9 +1836,12 @@ mod tests {
             stop_ids: vec!["stop_1002".to_string(), "stop_1001".to_string()],
         };
 
-        let response = repository
+        let PersistedMutationResult::Applied(response) = repository
             .reorder_stops("day_plan_2026_06_16_crew_1001", request)
-            .await;
+            .await
+        else {
+            panic!("no-database reorder should retain demo behavior");
+        };
 
         assert_eq!(response.day_plan_id, "day_plan_2026_06_16_crew_1001");
         assert_eq!(

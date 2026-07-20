@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
-        ReorderDayPlanStopsRequest, TodayDayPlanResult,
+        PersistedMutationResult, ReorderDayPlanStopsRequest, TodayDayPlanResult,
     },
     db::JobRepository,
 };
@@ -99,7 +99,7 @@ async fn repository_publishes_draft_day_plan() {
             actor_user_id,
         )
         .await;
-    let assigned_stop = day_plans
+    let PersistedMutationResult::Applied(assigned_stop) = day_plans
         .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -109,7 +109,10 @@ async fn repository_publishes_draft_day_plan() {
             },
             actor_user_id,
         )
-        .await;
+        .await
+    else {
+        panic!("draft stop assignment should persist");
+    };
 
     assert!(assigned_stop.persisted);
 
@@ -177,7 +180,7 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
             service_date,
         })
         .await;
-    let assigned_stop = day_plans
+    let PersistedMutationResult::Applied(assigned_stop) = day_plans
         .assign_stop(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -186,7 +189,10 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
                 estimated_service_minutes: Some(45),
             },
         )
-        .await;
+        .await
+    else {
+        panic!("draft stop assignment should persist");
+    };
 
     assert!(assigned_stop.persisted);
 
@@ -238,7 +244,7 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
         )
         .await;
 
-    let first_stop = day_plans
+    let PersistedMutationResult::Applied(first_stop) = day_plans
         .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -248,8 +254,11 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
             },
             actor_user_id,
         )
-        .await;
-    let second_stop = day_plans
+        .await
+    else {
+        panic!("first draft stop assignment should persist");
+    };
+    let PersistedMutationResult::Applied(second_stop) = day_plans
         .assign_stop_as(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -259,14 +268,17 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
             },
             actor_user_id,
         )
-        .await;
+        .await
+    else {
+        panic!("second draft stop assignment should persist");
+    };
 
     assert!(first_stop.persisted);
     assert!(second_stop.persisted);
     assert_eq!(first_stop.stop_order, 1);
     assert_eq!(second_stop.stop_order, 2);
 
-    let reorder = day_plans
+    let PersistedMutationResult::Applied(reorder) = day_plans
         .reorder_stops_as(
             &draft.id,
             ReorderDayPlanStopsRequest {
@@ -274,13 +286,19 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
             },
             actor_user_id,
         )
-        .await;
+        .await
+    else {
+        panic!("draft stop reorder should persist");
+    };
 
     assert!(reorder.persisted);
 
-    let removal = day_plans
+    let PersistedMutationResult::Applied(removal) = day_plans
         .remove_stop_as(&draft.id, &second_stop.stop_id, actor_user_id)
-        .await;
+        .await
+    else {
+        panic!("draft stop removal should persist");
+    };
 
     assert!(removal.persisted);
 
@@ -294,9 +312,12 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
 
     assert_eq!(remaining_stop.get::<i32, _>("stop_order"), 1);
 
-    let final_removal = day_plans
+    let PersistedMutationResult::Applied(final_removal) = day_plans
         .remove_stop_as(&draft.id, &first_stop.stop_id, actor_user_id)
-        .await;
+        .await
+    else {
+        panic!("final draft stop removal should persist");
+    };
     assert!(final_removal.persisted);
 
     let audit_events = sqlx::query(
@@ -377,7 +398,7 @@ async fn repository_blocks_stop_assignments_beyond_draft_capacity() {
         .await
         .expect("test draft capacity should update");
 
-    let first = day_plans
+    let PersistedMutationResult::Applied(first) = day_plans
         .assign_stop(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -386,7 +407,10 @@ async fn repository_blocks_stop_assignments_beyond_draft_capacity() {
                 estimated_service_minutes: Some(45),
             },
         )
-        .await;
+        .await
+    else {
+        panic!("first stop should fit within draft capacity");
+    };
     let second = day_plans
         .assign_stop(
             &draft.id,
@@ -405,6 +429,50 @@ async fn repository_blocks_stop_assignments_beyond_draft_capacity() {
             .expect("test draft stops should be countable");
 
     assert!(first.persisted);
-    assert!(!second.persisted);
+    assert!(matches!(second, PersistedMutationResult::Conflict));
     assert_eq!(stop_count, 1);
+}
+
+#[tokio::test]
+async fn repository_reports_rejected_persisted_route_stop_mutations() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+
+    let _jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&config.database_url)
+        .await
+        .expect("test pool should connect");
+    let day_plans = DayPlanRepository::from_pool(pool);
+    let missing_day_plan_id = "day_plan_2099_01_01_crew_missing";
+
+    let assignment = day_plans
+        .assign_stop(
+            missing_day_plan_id,
+            AssignDayPlanStopRequest {
+                job_id: "job_1001".to_string(),
+                estimated_drive_minutes: Some(10),
+                estimated_service_minutes: Some(45),
+            },
+        )
+        .await;
+    let removal = day_plans
+        .remove_stop(missing_day_plan_id, "stop_missing")
+        .await;
+    let reorder = day_plans
+        .reorder_stops(
+            missing_day_plan_id,
+            ReorderDayPlanStopsRequest {
+                stop_ids: vec!["stop_missing".to_string()],
+            },
+        )
+        .await;
+
+    assert!(matches!(assignment, PersistedMutationResult::Conflict));
+    assert!(matches!(removal, PersistedMutationResult::Conflict));
+    assert!(matches!(reorder, PersistedMutationResult::NotFound));
 }

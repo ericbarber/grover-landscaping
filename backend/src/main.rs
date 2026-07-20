@@ -5050,16 +5050,35 @@ async fn assign_day_plan_stop(
         return response;
     }
 
-    (
-        StatusCode::CREATED,
-        Json(
-            state
-                .day_plans
-                .assign_stop_as(&day_plan_id, request, &principal.subject)
-                .await,
+    match state
+        .day_plans
+        .assign_stop_as(&day_plan_id, request, &principal.subject)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => {
+            (StatusCode::CREATED, Json(response)).into_response()
+        }
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_stop_assignment_not_found",
+            "The draft day plan or service job is no longer available.",
         ),
-    )
-        .into_response()
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_stop_assignment_conflict",
+                message: "The stop could not be added. Refresh the draft and confirm its capacity and job availability.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_stop_assignment_unavailable",
+                message: "The route stop could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn remove_day_plan_stop(
@@ -5074,13 +5093,33 @@ async fn remove_day_plan_stop(
         return response;
     }
 
-    Json(
-        state
-            .day_plans
-            .remove_stop_as(&day_plan_id, &stop_id, &principal.subject)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .remove_stop_as(&day_plan_id, &stop_id, &principal.subject)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => Json(response).into_response(),
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_stop_removal_not_found",
+            "The draft route stop is no longer available.",
+        ),
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_stop_removal_conflict",
+                message: "The route stop could not be removed from the current draft.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_stop_removal_unavailable",
+                message: "The route stop could not be removed.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn reorder_day_plan_stops(
@@ -5096,13 +5135,33 @@ async fn reorder_day_plan_stops(
         return response;
     }
 
-    Json(
-        state
-            .day_plans
-            .reorder_stops_as(&day_plan_id, request, &principal.subject)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .reorder_stops_as(&day_plan_id, request, &principal.subject)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => Json(response).into_response(),
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_stop_reorder_not_found",
+            "The draft route or one of its stops is no longer available.",
+        ),
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_stop_reorder_conflict",
+                message: "The route order changed before it could be saved. Refresh the draft and try again.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_stop_reorder_unavailable",
+                message: "The route order could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn update_stop_progress(
