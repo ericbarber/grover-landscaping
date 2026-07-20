@@ -349,14 +349,17 @@ impl DayPlanRepository {
         PersistedReadResult::Loaded(seed_organization_id_for_crew(crew_id))
     }
 
-    pub async fn list_crews(&self, organization_ids: &[String]) -> Vec<CrewSummary> {
+    pub async fn list_crews(
+        &self,
+        organization_ids: &[String],
+    ) -> PersistedReadResult<Vec<CrewSummary>> {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PersistedReadResult::Loaded(Vec::new());
         }
         let Some(pool) = &self.pool else {
-            return seed_crews(organization_ids);
+            return PersistedReadResult::Loaded(seed_crews(organization_ids));
         };
-        let rows = sqlx::query(
+        let rows = match sqlx::query(
             r#"SELECT id, name, organization_id, branch_id, territory_id, status, daily_stop_capacity, lead_membership_id
             FROM crews
             WHERE organization_id = ANY($1)
@@ -366,33 +369,41 @@ impl DayPlanRepository {
         .bind(organization_ids)
         .fetch_all(pool)
         .await
-        .unwrap_or_default();
-        rows.into_iter()
-            .map(|row| CrewSummary {
-                id: row.get("id"),
-                name: row.get("name"),
-                organization_id: row.get("organization_id"),
-                branch_id: row.get("branch_id"),
-                territory_id: row.get("territory_id"),
-                status: row.get("status"),
-                daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
-                lead_membership_id: row.get("lead_membership_id"),
-                persisted: true,
-            })
-            .collect()
+        {
+            Ok(rows) => rows,
+            Err(error) => {
+                tracing::error!(%error, "persisted crew list failed");
+                return PersistedReadResult::Unavailable;
+            }
+        };
+        PersistedReadResult::Loaded(
+            rows.into_iter()
+                .map(|row| CrewSummary {
+                    id: row.get("id"),
+                    name: row.get("name"),
+                    organization_id: row.get("organization_id"),
+                    branch_id: row.get("branch_id"),
+                    territory_id: row.get("territory_id"),
+                    status: row.get("status"),
+                    daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
+                    lead_membership_id: row.get("lead_membership_id"),
+                    persisted: true,
+                })
+                .collect(),
+        )
     }
 
     pub async fn list_organization_branches(
         &self,
         organization_ids: &[String],
-    ) -> Vec<OrganizationBranchSummary> {
+    ) -> PersistedReadResult<Vec<OrganizationBranchSummary>> {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PersistedReadResult::Loaded(Vec::new());
         }
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return PersistedReadResult::Loaded(Vec::new());
         };
-        sqlx::query(
+        match sqlx::query(
             r#"
             SELECT id, organization_id, name, code, time_zone, service_area_label, status
             FROM organization_branches
@@ -403,18 +414,25 @@ impl DayPlanRepository {
         .bind(organization_ids)
         .fetch_all(pool)
         .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| OrganizationBranchSummary {
-            id: row.get("id"),
-            organization_id: row.get("organization_id"),
-            name: row.get("name"),
-            code: row.get("code"),
-            time_zone: row.get("time_zone"),
-            service_area_label: row.get("service_area_label"),
-            status: row.get("status"),
-        })
-        .collect()
+        {
+            Ok(rows) => PersistedReadResult::Loaded(
+                rows.into_iter()
+                    .map(|row| OrganizationBranchSummary {
+                        id: row.get("id"),
+                        organization_id: row.get("organization_id"),
+                        name: row.get("name"),
+                        code: row.get("code"),
+                        time_zone: row.get("time_zone"),
+                        service_area_label: row.get("service_area_label"),
+                        status: row.get("status"),
+                    })
+                    .collect(),
+            ),
+            Err(error) => {
+                tracing::error!(%error, "persisted organization branch list failed");
+                PersistedReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn create_organization_branch(
@@ -765,14 +783,14 @@ impl DayPlanRepository {
     pub async fn list_service_territories(
         &self,
         organization_ids: &[String],
-    ) -> Vec<ServiceTerritorySummary> {
+    ) -> PersistedReadResult<Vec<ServiceTerritorySummary>> {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PersistedReadResult::Loaded(Vec::new());
         }
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return PersistedReadResult::Loaded(Vec::new());
         };
-        sqlx::query(
+        match sqlx::query(
             r#"
             SELECT id, organization_id, branch_id, name, status
             FROM service_territories
@@ -783,16 +801,23 @@ impl DayPlanRepository {
         .bind(organization_ids)
         .fetch_all(pool)
         .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| ServiceTerritorySummary {
-            id: row.get("id"),
-            organization_id: row.get("organization_id"),
-            branch_id: row.get("branch_id"),
-            name: row.get("name"),
-            status: row.get("status"),
-        })
-        .collect()
+        {
+            Ok(rows) => PersistedReadResult::Loaded(
+                rows.into_iter()
+                    .map(|row| ServiceTerritorySummary {
+                        id: row.get("id"),
+                        organization_id: row.get("organization_id"),
+                        branch_id: row.get("branch_id"),
+                        name: row.get("name"),
+                        status: row.get("status"),
+                    })
+                    .collect(),
+            ),
+            Err(error) => {
+                tracing::error!(%error, "persisted service territory list failed");
+                PersistedReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn create_crew(
@@ -824,13 +849,20 @@ impl DayPlanRepository {
         })
     }
 
-    pub async fn list_organization_crews(&self, organization_id: &str) -> Vec<CrewSummary> {
+    pub async fn list_organization_crews(
+        &self,
+        organization_id: &str,
+    ) -> PersistedReadResult<Vec<CrewSummary>> {
         if let Some(pool) = &self.pool {
-            return postgres_day_plans::list_organization_crews(pool, organization_id)
-                .await
-                .unwrap_or_default();
+            return match postgres_day_plans::list_organization_crews(pool, organization_id).await {
+                Ok(crews) => PersistedReadResult::Loaded(crews),
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted organization crew list failed");
+                    PersistedReadResult::Unavailable
+                }
+            };
         }
-        seed_crews(&[organization_id.to_string()])
+        PersistedReadResult::Loaded(seed_crews(&[organization_id.to_string()]))
     }
 
     pub async fn update_crew(

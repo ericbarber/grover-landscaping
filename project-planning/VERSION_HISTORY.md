@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable dispatch crew, branch, and territory collections from valid empty setup.
 - 2026-07-20: Made photo worker completion and failure writes report persistence outages explicitly.
 - 2026-07-20: Distinguished unavailable photo worker claims from valid empty processing queues.
 - 2026-07-20: Distinguished unavailable photo-upload creation and completion from accepted or missing uploads.

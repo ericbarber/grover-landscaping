@@ -17,6 +17,35 @@ fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str
     }
 }
 
+#[tokio::test]
+async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = DayPlanRepository::from_pool(pool);
+    let organizations = vec!["org_demo_landscaping".to_string()];
+
+    assert!(matches!(
+        repository.list_crews(&organizations).await,
+        PersistedReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository.list_organization_branches(&organizations).await,
+        PersistedReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository.list_service_territories(&organizations).await,
+        PersistedReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_organization_crews("org_demo_landscaping")
+            .await,
+        PersistedReadResult::Unavailable
+    ));
+}
+
 async fn reset_day_plan_fixture(pool: &PgPool, day_plan_id: &str) {
     sqlx::query("DELETE FROM stop_progress_mutations WHERE day_plan_id = $1")
         .bind(day_plan_id)

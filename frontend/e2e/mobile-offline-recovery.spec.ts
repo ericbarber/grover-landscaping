@@ -1,6 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('does not present an empty dispatch hierarchy during persisted collection outages', async ({
+  page,
+}) => {
+  await page.route('**/organization-branches', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'organization_branches_unavailable',
+      message: 'Persisted organization branches could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const hierarchy = page
+    .getByRole('heading', { name: 'Branches and territories' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(hierarchy.getByRole('alert')).toContainText(
+    'empty branches, territories, or crews are not being shown',
+  );
+  await expect(hierarchy.getByRole('button', { name: 'Create branch' })).toBeDisabled();
+});
+
 test('distinguishes unavailable shared-bid storage from an invalid customer link', async ({ page }) => {
   await page.route('**/shared-bids/storage-unavailable', (route) => route.fulfill({
     status: 503,

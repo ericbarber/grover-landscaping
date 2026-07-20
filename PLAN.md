@@ -835,11 +835,13 @@ Current state:
 - Photo-upload creation and completion return explicit missing and unavailable outcomes
 - Photo worker claims return explicit loaded and unavailable outcomes
 - Photo worker completion and failure writes return explicit loaded and unavailable outcomes
+- Dispatch crew, branch, and territory collections distinguish unavailable persistence from valid empty setup
+- Manager dispatch hierarchy clears stale collections, warns about persistence outages, and blocks setup writes until authoritative scope data returns
 
 Next implementation work:
 
+- Audit remaining dispatch setup mutations for boolean, missing, or empty persistence fallbacks
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit remaining notification, report, and job repository methods for boolean or empty fallbacks
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

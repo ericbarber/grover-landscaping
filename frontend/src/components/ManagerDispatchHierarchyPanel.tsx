@@ -11,6 +11,7 @@ import {
   type CrewRecord,
   type ServiceTerritoryRecord,
 } from '../api/client';
+import { isApiErrorCode } from '../api/apiError';
 
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
@@ -217,6 +218,7 @@ export function ManagerDispatchHierarchyPanel({
   const [territoryBranchId, setTerritoryBranchId] = useState('');
   const [territoryName, setTerritoryName] = useState('');
   const [status, setStatus] = useState<string | null>(null);
+  const [hierarchyUnavailable, setHierarchyUnavailable] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
   const [hierarchyQuery, setHierarchyQuery] = useState(initialFilters.query);
@@ -242,27 +244,49 @@ export function ManagerDispatchHierarchyPanel({
     && visibleHierarchy.branches.length + visibleHierarchy.territories.length > 0;
 
   async function refreshHierarchy() {
-    const [branchItems, territoryItems, crewItems] = await Promise.all([
-      fetchOrganizationBranches(),
-      fetchServiceTerritories(),
-      fetchOrganizationCrews(organizationId),
-    ]);
-    const scopedBranches = branchItems.filter(
-      (branch) => branch.organizationId === organizationId,
-    );
-    const active = scopedBranches.filter((branch) => branch.status === 'active');
-    setBranches(scopedBranches);
-    setTerritories(territoryItems.filter(
-      (territory) => territory.organizationId === organizationId,
-    ));
-    setCrews(crewItems);
-    setTerritoryBranchId((current) => (
-      active.some((branch) => branch.id === current) ? current : active[0]?.id || ''
-    ));
+    try {
+      const [branchItems, territoryItems, crewItems] = await Promise.all([
+        fetchOrganizationBranches(),
+        fetchServiceTerritories(),
+        fetchOrganizationCrews(organizationId),
+      ]);
+      const scopedBranches = branchItems.filter(
+        (branch) => branch.organizationId === organizationId,
+      );
+      const active = scopedBranches.filter((branch) => branch.status === 'active');
+      setBranches(scopedBranches);
+      setTerritories(territoryItems.filter(
+        (territory) => territory.organizationId === organizationId,
+      ));
+      setCrews(crewItems);
+      setHierarchyUnavailable(false);
+      setTerritoryBranchId((current) => (
+        active.some((branch) => branch.id === current) ? current : active[0]?.id || ''
+      ));
+    } catch (error) {
+      setBranches([]);
+      setTerritories([]);
+      setCrews([]);
+      setTerritoryBranchId('');
+      const unavailableCodes = [
+        'crews_unavailable',
+        'organization_branches_unavailable',
+        'service_territories_unavailable',
+        'organization_crews_unavailable',
+      ];
+      if (unavailableCodes.some((code) => isApiErrorCode(error, code))) {
+        setHierarchyUnavailable(true);
+        setStatus(null);
+      } else {
+        setHierarchyUnavailable(false);
+        setStatus('Hierarchy choices could not be loaded.');
+      }
+      throw error;
+    }
   }
 
   useEffect(() => {
-    void refreshHierarchy().catch(() => setStatus('Hierarchy choices could not be loaded.'));
+    void refreshHierarchy().catch(() => undefined);
   }, [organizationId, refreshSignal]);
 
   useEffect(() => {
@@ -402,6 +426,12 @@ export function ManagerDispatchHierarchyPanel({
       {status ? (
         <p className="mt-3 text-xs font-semibold text-slate-600" role="status">{status}</p>
       ) : null}
+      {hierarchyUnavailable ? (
+        <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs font-semibold text-amber-950" role="alert">
+          Persisted dispatch hierarchy is temporarily unavailable; empty branches,
+          territories, or crews are not being shown.
+        </p>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
         {[
           ['Active branches', summary.activeBranches],
@@ -457,7 +487,7 @@ export function ManagerDispatchHierarchyPanel({
           />
           <button
             className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
-            disabled={isSaving}
+            disabled={isSaving || hierarchyUnavailable}
             type="submit"
           >
             Create branch
@@ -488,7 +518,7 @@ export function ManagerDispatchHierarchyPanel({
           />
           <button
             className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
-            disabled={isSaving || !territoryBranchId}
+            disabled={isSaving || hierarchyUnavailable || !territoryBranchId}
             type="submit"
           >
             Create territory

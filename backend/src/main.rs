@@ -43,8 +43,9 @@ use day_plans::{
     AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
     CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
     CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
-    ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult,
-    UpdateCrewRequest, UpdateCrewResult, UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
+    PersistedReadResult, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+    UpdateBranchStatusResult, UpdateCrewRequest, UpdateCrewResult, UpdateHierarchyStatusRequest,
+    UpdateTerritoryStatusResult,
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
@@ -2910,7 +2911,13 @@ async fn list_crews(
     let organization_ids =
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
             .await;
-    Json(state.day_plans.list_crews(&organization_ids).await).into_response()
+    match state.day_plans.list_crews(&organization_ids).await {
+        PersistedReadResult::Loaded(crews) => Json(crews).into_response(),
+        PersistedReadResult::Unavailable => persisted_resource_unavailable_response(
+            "crews_unavailable",
+            "Persisted crews could not be loaded.",
+        ),
+    }
 }
 
 async fn list_organization_branches(
@@ -2918,13 +2925,17 @@ async fn list_organization_branches(
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
     let organization_ids = principal_active_organization_ids(&state, &principal).await;
-    Json(
-        state
-            .day_plans
-            .list_organization_branches(&organization_ids)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .list_organization_branches(&organization_ids)
+        .await
+    {
+        PersistedReadResult::Loaded(branches) => Json(branches).into_response(),
+        PersistedReadResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_branches_unavailable",
+            "Persisted organization branches could not be loaded.",
+        ),
+    }
 }
 
 async fn list_service_territories(
@@ -2932,13 +2943,17 @@ async fn list_service_territories(
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
     let organization_ids = principal_active_organization_ids(&state, &principal).await;
-    Json(
-        state
-            .day_plans
-            .list_service_territories(&organization_ids)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .list_service_territories(&organization_ids)
+        .await
+    {
+        PersistedReadResult::Loaded(territories) => Json(territories).into_response(),
+        PersistedReadResult::Unavailable => persisted_resource_unavailable_response(
+            "service_territories_unavailable",
+            "Persisted service territories could not be loaded.",
+        ),
+    }
 }
 
 async fn create_organization_branch(
@@ -3234,13 +3249,17 @@ async fn list_organization_crews(
     {
         return response;
     }
-    Json(
-        state
-            .day_plans
-            .list_organization_crews(&organization_id)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .list_organization_crews(&organization_id)
+        .await
+    {
+        PersistedReadResult::Loaded(crews) => Json(crews).into_response(),
+        PersistedReadResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_crews_unavailable",
+            "Persisted organization crews could not be loaded.",
+        ),
+    }
 }
 
 async fn update_organization_crew(
