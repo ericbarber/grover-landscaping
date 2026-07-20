@@ -696,10 +696,11 @@ Current state:
 - Returning from crew inspection announces the exact immutable audit event restored in owner activity
 - Dismissing audit-row return feedback restores focus to that exact event without scrolling away
 - Returned audit rows remain visually identified after inspection feedback is dismissed
+- Restored-row markers clear automatically when the owner changes or exits the activity review
 
 Next implementation work:
 
-- Clear the restored-row marker when the owner starts a different activity review
+- Preserve restored-row context while loading older pages in the same review
 
 ## Planned
 

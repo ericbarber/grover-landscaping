@@ -328,6 +328,8 @@ export function ManagerTeamActivityPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [reviewNotice, setReviewNotice] = useState<string | null>(null);
   const [reviewNoticeAuditId, setReviewNoticeAuditId] = useState<string | null>(null);
+  const [restoredAuditId, setRestoredAuditId] = useState<string | null>(null);
+  const restoredReviewFingerprintRef = useRef<string | null>(null);
   const filteredActivity = sortTeamActivity(
     filterTeamActivity(
       activity,
@@ -519,6 +521,8 @@ export function ManagerTeamActivityPanel({
     if (requestedCrewSignal <= 0 || !requestedCrewId) return;
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
+    setRestoredAuditId(null);
+    restoredReviewFingerprintRef.current = null;
     if (!focusedReviewRestoreRef.current) {
       focusedReviewRestoreRef.current = {
         actorQuery,
@@ -546,7 +550,46 @@ export function ManagerTeamActivityPanel({
     if (returnedAuditSignal <= 0 || !returnedAuditId) return;
     setReviewNotice(`Returned to audit event ${returnedAuditId}.`);
     setReviewNoticeAuditId(returnedAuditId);
+    setRestoredAuditId(returnedAuditId);
+    restoredReviewFingerprintRef.current = JSON.stringify({
+      actorQuery,
+      targetQuery,
+      sourceQuery,
+      destinationQuery,
+      auditIdQuery,
+      eventFilter,
+      moveScope,
+      activitySort,
+    });
   }, [returnedAuditId, returnedAuditSignal]);
+
+  useEffect(() => {
+    if (!restoredAuditId || !restoredReviewFingerprintRef.current) return;
+    const currentFingerprint = JSON.stringify({
+      actorQuery,
+      targetQuery,
+      sourceQuery,
+      destinationQuery,
+      auditIdQuery,
+      eventFilter,
+      moveScope,
+      activitySort,
+    });
+    if (currentFingerprint !== restoredReviewFingerprintRef.current) {
+      setRestoredAuditId(null);
+      restoredReviewFingerprintRef.current = null;
+    }
+  }, [
+    actorQuery,
+    targetQuery,
+    sourceQuery,
+    destinationQuery,
+    auditIdQuery,
+    eventFilter,
+    moveScope,
+    activitySort,
+    restoredAuditId,
+  ]);
 
   useEffect(() => {
     if (filterOrganizationRef.current !== organizationId) {
@@ -851,7 +894,7 @@ export function ManagerTeamActivityPanel({
               ? 'border-2 border-emerald-300 bg-emerald-50'
               : 'bg-slate-50'
             } ${
-              returnedAuditSignal > 0 && item.id === returnedAuditId
+              item.id === restoredAuditId
                 ? 'ring-4 ring-sky-300'
                 : ''
             }`}
@@ -879,7 +922,7 @@ export function ManagerTeamActivityPanel({
                     ) : null}
                   </div>
                 ) : null}
-                {returnedAuditSignal > 0 && item.id === returnedAuditId ? (
+                {item.id === restoredAuditId ? (
                   <p className="mb-1 inline-block rounded-full bg-sky-200 px-2 py-1 text-xs font-bold text-sky-950">
                     Restored after inspection
                   </p>

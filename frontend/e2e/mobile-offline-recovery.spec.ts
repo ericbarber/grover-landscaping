@@ -515,6 +515,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
   await teamActivity.getByRole('button', { name: 'Exit focused review' }).click();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeHidden();
+  await expect(teamActivity.getByText('Restored after inspection')).toBeHidden();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue('');
   await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');

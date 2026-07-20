@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Scoped restored audit-row markers to their activity review.
 - 2026-07-19: Visually identified audit rows restored after crew inspection.
 - 2026-07-19: Returned focus to restored audit rows after message dismissal.
 - 2026-07-19: Announced exact audit-row restoration after crew inspection.
