@@ -1053,7 +1053,24 @@ impl DayPlanRepository {
             .await
             {
                 Ok(Some(response)) => PersistedMutationResult::Applied(response),
-                Ok(None) => PersistedMutationResult::Conflict,
+                Ok(None) => match sqlx::query_scalar::<_, bool>(
+                    r#"
+                    SELECT EXISTS(SELECT 1 FROM day_plans WHERE id = $1)
+                       AND EXISTS(SELECT 1 FROM service_jobs WHERE id = $2)
+                    "#,
+                )
+                .bind(day_plan_id)
+                .bind(&request.job_id)
+                .fetch_one(pool)
+                .await
+                {
+                    Ok(true) => PersistedMutationResult::Conflict,
+                    Ok(false) => PersistedMutationResult::NotFound,
+                    Err(error) => {
+                        tracing::error!(%error, day_plan_id, job_id = request.job_id, "persisted route stop assignment recovery failed");
+                        PersistedMutationResult::Unavailable
+                    }
+                },
                 Err(error) => {
                     tracing::error!(%error, day_plan_id, "persisted route stop assignment failed");
                     PersistedMutationResult::Unavailable
@@ -1093,7 +1110,21 @@ impl DayPlanRepository {
                     stop_id: stop_id.to_string(),
                     persisted: true,
                 }),
-                Ok(false) => PersistedMutationResult::Conflict,
+                Ok(false) => match sqlx::query_scalar::<_, bool>(
+                    "SELECT EXISTS(SELECT 1 FROM day_plan_stops WHERE day_plan_id = $1 AND id = $2)",
+                )
+                .bind(day_plan_id)
+                .bind(stop_id)
+                .fetch_one(pool)
+                .await
+                {
+                    Ok(true) => PersistedMutationResult::Conflict,
+                    Ok(false) => PersistedMutationResult::NotFound,
+                    Err(error) => {
+                        tracing::error!(%error, day_plan_id, stop_id, "persisted route stop removal recovery failed");
+                        PersistedMutationResult::Unavailable
+                    }
+                },
                 Err(error) => {
                     tracing::error!(%error, day_plan_id, stop_id, "persisted route stop removal failed");
                     PersistedMutationResult::Unavailable
@@ -1136,7 +1167,17 @@ impl DayPlanRepository {
                     stop_ids: request.stop_ids,
                     persisted: true,
                 }),
-                Ok(false) => PersistedMutationResult::NotFound,
+                Ok(false) => {
+                    match postgres_day_plans::organization_id_for_day_plan(pool, day_plan_id).await
+                    {
+                        Ok(Some(_)) => PersistedMutationResult::Conflict,
+                        Ok(None) => PersistedMutationResult::NotFound,
+                        Err(error) => {
+                            tracing::error!(%error, day_plan_id, "persisted route stop reorder recovery failed");
+                            PersistedMutationResult::Unavailable
+                        }
+                    }
+                }
                 Err(error) => {
                     tracing::error!(%error, day_plan_id, "persisted route stop reorder failed");
                     PersistedMutationResult::Unavailable

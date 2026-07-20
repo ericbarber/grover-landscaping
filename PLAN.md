@@ -848,10 +848,11 @@ Current state:
 - Manager amendment feedback distinguishes missing, conflicting, and unavailable review writes
 - Day-plan draft creation and publication distinguish missing crews or drafts from lifecycle conflicts
 - Manager scheduling feedback directs missing route targets back to authoritative crew and schedule refreshes
+- Route-stop assignment, removal, and reorder distinguish missing plans, jobs, or stops from capacity and lifecycle conflicts
 
 Next implementation work:
 
-- Audit remaining route-stop mutations for missing or conflict persistence fallbacks
+- Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Audit notification delivery and recovery paths for remaining lossy provider fallbacks
 - Harden and validate the next highest-impact persisted workflow
 
