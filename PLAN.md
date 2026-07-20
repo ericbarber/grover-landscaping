@@ -693,10 +693,11 @@ Current state:
 - The latest crew-move row remains the single semantic current item after older history is appended
 - Paginated focused history offers a touch-safe return that scrolls to and focuses the latest crew move
 - Returning from crew inspection scrolls to and focuses the exact audit row that opened the inspection
+- Returning from crew inspection announces the exact immutable audit event restored in owner activity
 
 Next implementation work:
 
-- Announce the exact audit row restored after crew inspection
+- Dismiss audit-row return feedback without moving focus from the restored event
 
 ## Planned
 

@@ -289,6 +289,8 @@ export function ManagerTeamActivityPanel({
   requestedCrewSignal = 0,
   requestedCrewBranchId,
   requestedCrewTerritoryId,
+  returnedAuditId,
+  returnedAuditSignal = 0,
   onOpenCrew,
 }: {
   organizationId: string;
@@ -297,6 +299,8 @@ export function ManagerTeamActivityPanel({
   requestedCrewSignal?: number;
   requestedCrewBranchId?: string;
   requestedCrewTerritoryId?: string;
+  returnedAuditId?: string;
+  returnedAuditSignal?: number;
   onOpenCrew?: (activity: TeamAdministrationActivity) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
@@ -525,6 +529,11 @@ export function ManagerTeamActivityPanel({
   }, [requestedCrewId, requestedCrewSignal]);
 
   useEffect(() => {
+    if (returnedAuditSignal <= 0 || !returnedAuditId) return;
+    setReviewNotice(`Returned to audit event ${returnedAuditId}.`);
+  }, [returnedAuditId, returnedAuditSignal]);
+
+  useEffect(() => {
     if (filterOrganizationRef.current !== organizationId) {
       filterOrganizationRef.current = organizationId;
       const loaded = loadTeamActivityReviewFilters(organizationId);
@@ -602,7 +611,7 @@ export function ManagerTeamActivityPanel({
             onClick={() => setReviewNotice(null)}
             type="button"
           >
-            Dismiss restored-review message
+            Dismiss activity review message
           </button>
         </div>
       ) : null}

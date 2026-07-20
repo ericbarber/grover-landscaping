@@ -498,6 +498,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
     .click();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity.locator('ol > li[aria-current="true"]')).toBeFocused();
+  await expect(teamActivity.getByText(
+    'Returned to audit event audit_e2e_latest_crew_hierarchy_move.',
+  )).toBeVisible();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
@@ -510,7 +513,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
   await expect(teamActivity.getByText('Your prior owner activity review was restored.'))
     .toBeVisible();
-  await teamActivity.getByRole('button', { name: 'Dismiss restored-review message' }).click();
+  await teamActivity.getByRole('button', { name: 'Dismiss activity review message' }).click();
   await expect(teamActivity.getByText('Your prior owner activity review was restored.'))
     .toBeHidden();
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');

@@ -927,6 +927,8 @@ export function App() {
   const [teamActivityRequestedCrewTerritoryId, setTeamActivityRequestedCrewTerritoryId] =
     useState<string>();
   const [teamActivityRequestedCrewSignal, setTeamActivityRequestedCrewSignal] = useState(0);
+  const [teamActivityReturnedAuditId, setTeamActivityReturnedAuditId] = useState<string>();
+  const [teamActivityReturnedAuditSignal, setTeamActivityReturnedAuditSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
@@ -2720,6 +2722,8 @@ export function App() {
               setCrewAdministrationInspectionAuditId(undefined);
               setCrewAdministrationInspectedDestinationBranchId(undefined);
               setCrewAdministrationInspectedDestinationTerritoryId(undefined);
+              setTeamActivityReturnedAuditId(inspectedAuditId);
+              setTeamActivityReturnedAuditSignal((current) => current + 1);
               const target = inspectedAuditId
                 ? document.getElementById(`team-activity-${inspectedAuditId}`)
                 : document.getElementById('team-activity-review');
@@ -2867,6 +2871,8 @@ export function App() {
               requestedCrewBranchId={teamActivityRequestedCrewBranchId}
               requestedCrewSignal={teamActivityRequestedCrewSignal}
               requestedCrewTerritoryId={teamActivityRequestedCrewTerritoryId}
+              returnedAuditId={teamActivityReturnedAuditId}
+              returnedAuditSignal={teamActivityReturnedAuditSignal}
               refreshSignal={teamActivityRefreshSignal}
             />
           </div>
