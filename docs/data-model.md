@@ -57,7 +57,19 @@ created_at
 updated_at
 ```
 
-Crews belong to a service-company organization. Day plans inherit their tenant boundary through the assigned crew, and manager/crew route APIs resolve that organization before returning or mutating day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan outside the signed-in principal's active organization memberships are rejected before local fallback responses are used.
+Crews belong to a service-company organization. They can also reference a
+same-organization branch and service territory. Branches retain local timezone,
+service-area, lifecycle, and human-readable code context; territories nest
+within one same-tenant branch. Existing organizations receive a Main Branch and
+Primary Territory during migration so single-branch operations keep working
+without setup interruption. Composite foreign keys prevent a crew or territory
+from crossing organization boundaries.
+
+Day plans inherit their tenant boundary through the assigned crew, and
+manager/crew route APIs resolve that organization before returning or mutating
+day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan
+outside the signed-in principal's active organization memberships are rejected
+before local fallback responses are used.
 Crew names are case-insensitively unique within their organization, allowing separate tenants to use the same operational labels while preventing ambiguous route selection inside one tenant.
 Crews have an `active` or `inactive` lifecycle status. Inactive crews are excluded from new property assignments and day-plan creation. Deactivation is rejected while a crew owns an active property assignment or a current draft/published route, preventing lifecycle administration from orphaning operational work.
 

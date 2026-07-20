@@ -115,6 +115,7 @@
 - 2026-07-19: Added audited completion for dispatch customer-notification follow-up.
 - 2026-07-19: Connected dispatch notification completion to manager operational activity.
 - 2026-07-19: Extended live mobile dispatch coverage through customer follow-up completion.
+- 2026-07-19: Added tenant-safe branch and service-territory hierarchy foundations.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's
