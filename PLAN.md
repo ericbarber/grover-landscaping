@@ -647,10 +647,11 @@ Current state:
 - Crew amendment queue review exposes safe route-request details and two-step reviewed-conflict recovery
 - The Tailscale mobile smoke test proves both stop-progress and unplanned-stop amendment queueing and confirmed recovery
 - Active unstaffed territories can open crew administration with their branch and territory already prepared for review
+- Crew administration identifies prepared hierarchy destinations as unsaved and can restore the crew's saved assignment before submission
 
 Next implementation work:
 
-- Make the prepared hierarchy destination explicit in crew administration and allow resetting it before save
+- Offer active crew choices directly from each unstaffed territory
 
 ## Planned
 

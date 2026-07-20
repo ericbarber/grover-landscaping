@@ -45,6 +45,7 @@ export function OwnerCrewAdministrationPanel({
   const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
   const [branchId, setBranchId] = useState('');
   const [territoryId, setTerritoryId] = useState('');
+  const [dismissedDestinationSignal, setDismissedDestinationSignal] = useState(0);
   const [pendingStatus, setPendingStatus] = useState<CrewRecord['status'] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +113,7 @@ export function OwnerCrewAdministrationPanel({
       selectionSignal > 0
       && requestedBranchId
       && requestedTerritoryId
+      && selectionSignal !== dismissedDestinationSignal
       && branches.some((branch) => branch.id === requestedBranchId)
       && territories.some((territory) => (
         territory.id === requestedTerritoryId && territory.branchId === requestedBranchId
@@ -119,10 +121,10 @@ export function OwnerCrewAdministrationPanel({
     ) {
       setBranchId(requestedBranchId);
       setTerritoryId(requestedTerritoryId);
-      setMessage('Destination hierarchy prepared. Review the selected crew before saving.');
     }
   }, [
     selectionSignal,
+    dismissedDestinationSignal,
     selectedCrewId,
     requestedBranchId,
     requestedTerritoryId,
@@ -131,6 +133,25 @@ export function OwnerCrewAdministrationPanel({
   ]);
 
   const branchTerritories = territories.filter((territory) => territory.branchId === branchId);
+  const preparedBranch = branches.find((branch) => branch.id === requestedBranchId);
+  const preparedTerritory = territories.find((territory) => (
+    territory.id === requestedTerritoryId && territory.branchId === requestedBranchId
+  ));
+  const hasPreparedDestination = Boolean(
+    selectionSignal > 0
+    && selectionSignal !== dismissedDestinationSignal
+    && preparedBranch
+    && preparedTerritory
+    && branchId === requestedBranchId
+    && territoryId === requestedTerritoryId,
+  );
+
+  function resetPreparedDestination() {
+    setBranchId(selectedCrew?.branchId ?? '');
+    setTerritoryId(selectedCrew?.territoryId ?? '');
+    setDismissedDestinationSignal(selectionSignal);
+    setMessage('Prepared destination cleared. The crew’s saved hierarchy assignment is restored.');
+  }
 
   async function save(nextStatus = selectedCrew?.status) {
     if (
@@ -208,6 +229,26 @@ export function OwnerCrewAdministrationPanel({
               ))}
             </select>
           </label>
+          {hasPreparedDestination ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs font-bold text-amber-950">Prepared hierarchy destination</p>
+              <p className="mt-1 text-sm text-amber-950">
+                {selectedCrew?.name ?? 'Selected crew'} → {preparedBranch?.name} ·{' '}
+                {preparedTerritory?.name}
+              </p>
+              <p className="mt-1 text-xs text-amber-800">
+                This assignment is not saved yet. Review the crew, then save its profile.
+              </p>
+              <button
+                className="mt-2 min-h-11 rounded-lg border border-amber-300 bg-white px-3 text-xs font-bold text-amber-950"
+                disabled={isLoading}
+                onClick={resetPreparedDestination}
+                type="button"
+              >
+                Reset destination
+              </button>
+            </div>
+          ) : null}
           <label className="block text-sm font-semibold text-slate-700">
             Crew name
             <input
