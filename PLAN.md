@@ -668,10 +668,11 @@ Current state:
 - Touch-safe source and destination chips expose active directional review and remove either filter independently
 - Crew hierarchy owner activity opens the affected crew directly in focused crew administration, with live mobile smoke coverage
 - Audit-launched crew inspection exposes a focused return action back to owner activity
+- Audit-launched crew inspection keeps the readable move scope, source, and destination visible beside crew controls
 
 Next implementation work:
 
-- Keep the audited source and destination visible during crew inspection
+- Include audit timestamp and immutable event ID in crew inspection context
 
 ## Planned
 

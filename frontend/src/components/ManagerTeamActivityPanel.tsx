@@ -283,7 +283,7 @@ export function ManagerTeamActivityPanel({
 }: {
   organizationId: string;
   refreshSignal?: number;
-  onOpenCrew?: (crewId: string) => void;
+  onOpenCrew?: (activity: TeamAdministrationActivity) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
@@ -713,7 +713,7 @@ export function ManagerTeamActivityPanel({
             {item.eventKind === 'crew_hierarchy_updated' && onOpenCrew ? (
               <button
                 className="mt-2 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-800"
-                onClick={() => onOpenCrew(item.targetId)}
+                onClick={() => onOpenCrew(item)}
                 type="button"
               >
                 Open affected crew

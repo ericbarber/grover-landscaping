@@ -21,6 +21,7 @@ type Props = {
   selectionSignal?: number;
   onReturnToHierarchy?: () => void;
   inspectionReturnLabel?: string;
+  inspectionSummary?: string;
   onReturnFromInspection?: () => void;
 };
 
@@ -39,6 +40,7 @@ export function OwnerCrewAdministrationPanel({
   selectionSignal = 0,
   onReturnToHierarchy,
   inspectionReturnLabel,
+  inspectionSummary,
   onReturnFromInspection,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
@@ -238,6 +240,11 @@ export function OwnerCrewAdministrationPanel({
     >
       <h3 className="font-bold text-slate-950">Crew administration</h3>
       <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
+      {inspectionSummary ? (
+        <p className="mt-3 rounded-lg bg-sky-50 p-3 text-xs font-medium text-sky-950">
+          {inspectionSummary}
+        </p>
+      ) : null}
       {inspectionReturnLabel && onReturnFromInspection ? (
         <button
           className="mt-3 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-800"

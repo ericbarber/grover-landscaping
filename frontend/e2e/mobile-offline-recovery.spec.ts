@@ -397,6 +397,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await teamActivity.getByRole('button', { name: 'Open affected crew' }).click();
   await expect(crewAdministration).toBeFocused();
   await expect(crewAdministration.getByRole('combobox').first()).toHaveValue(originalCrew!.id);
+  await expect(crewAdministration.getByText(
+    `Within-branch audited move: Main Branch · Primary Territory → Main Branch · ${territoryName}`,
+  )).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
