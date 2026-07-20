@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added source, destination, and cross-branch impact to crew move review.
 - 2026-07-19: Prioritized same-branch crews in territory staffing choices.
 - 2026-07-19: Added bounded hierarchy-aware search to territory crew choices.
 - 2026-07-19: Added contextual active crew choices to each unstaffed territory.

@@ -137,6 +137,8 @@ export function OwnerCrewAdministrationPanel({
   const preparedTerritory = territories.find((territory) => (
     territory.id === requestedTerritoryId && territory.branchId === requestedBranchId
   ));
+  const savedBranch = branches.find((branch) => branch.id === selectedCrew?.branchId);
+  const savedTerritory = territories.find((territory) => territory.id === selectedCrew?.territoryId);
   const hasPreparedDestination = Boolean(
     selectionSignal > 0
     && selectionSignal !== dismissedDestinationSignal
@@ -232,10 +234,21 @@ export function OwnerCrewAdministrationPanel({
           {hasPreparedDestination ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
               <p className="text-xs font-bold text-amber-950">Prepared hierarchy destination</p>
-              <p className="mt-1 text-sm text-amber-950">
-                {selectedCrew?.name ?? 'Selected crew'} → {preparedBranch?.name} ·{' '}
-                {preparedTerritory?.name}
+              <p className="mt-1 text-sm font-semibold text-amber-950">
+                {selectedCrew?.name ?? 'Selected crew'}
               </p>
+              <p className="mt-1 text-xs text-amber-900">
+                From {savedBranch?.name ?? 'unassigned branch'} ·{' '}
+                {savedTerritory?.name ?? 'unassigned territory'}
+              </p>
+              <p className="text-xs text-amber-900">
+                To {preparedBranch?.name} · {preparedTerritory?.name}
+              </p>
+              {selectedCrew?.branchId !== requestedBranchId ? (
+                <p className="mt-2 rounded-lg bg-amber-100 p-2 text-xs font-bold text-amber-950">
+                  Cross-branch move: future scheduling and hierarchy reporting will use the new branch.
+                </p>
+              ) : null}
               <p className="mt-1 text-xs text-amber-800">
                 This assignment is not saved yet. Review the crew, then save its profile.
               </p>

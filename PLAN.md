@@ -651,10 +651,11 @@ Current state:
 - Each active unstaffed territory offers direct active-crew choices with current hierarchy and daily capacity context
 - Territory staffing candidate lists search crew and hierarchy names, cap initial results, and guide refinement when matches exceed the mobile list
 - Territory staffing choices prioritize crews already assigned to the destination branch before cross-branch candidates
+- Prepared crew moves show their saved source and intended destination, with an explicit cross-branch scheduling and reporting warning
 
 Next implementation work:
 
-- Show source-to-destination impact and a cross-branch warning before saving a prepared crew move
+- Clear the prepared handoff after save and confirm the completed hierarchy move
 
 ## Planned
 
