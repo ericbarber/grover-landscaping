@@ -23,6 +23,7 @@ export type ManagerWorkspaceTool =
   | 'operations-activity'
   | 'notifications'
   | 'completion-reports'
+  | 'marketing-leads'
   | 'photo-processing'
   | 'customer-privacy'
   | 'photo-erasure';
@@ -70,6 +71,7 @@ export const managerWorkspaceTools: Record<
     { id: 'team-activity', label: 'Team activity', description: 'Audited access and crew changes' },
   ],
   reports: [
+    { id: 'marketing-leads', label: 'Marketing leads', description: 'Platform inquiries and follow-up' },
     { id: 'operations-activity', label: 'Operations activity', description: 'Route, job, photo, and sync events' },
     { id: 'notifications', label: 'Notifications', description: 'Delivery status and retries' },
     { id: 'completion-reports', label: 'Completion reports', description: 'Quality review and delivery' },

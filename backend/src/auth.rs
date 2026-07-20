@@ -210,8 +210,8 @@ impl AuthService {
                 subject: "local-development-user".to_string(),
                 username: "Local Developer".to_string(),
                 verified_email: Some("invited@example.com".to_string()),
-                claim_roles: vec![AccessRole::OrganizationOwner],
-                roles: vec![AccessRole::OrganizationOwner],
+                claim_roles: vec![AccessRole::OrganizationOwner, AccessRole::SupportAdmin],
+                roles: vec![AccessRole::OrganizationOwner, AccessRole::SupportAdmin],
             }),
             AuthBackend::Cognito(verifier) => {
                 let token = bearer_token(headers)?;
@@ -429,7 +429,10 @@ pub async fn require_api_auth(
 }
 
 fn is_protected_api_path(path: &str) -> bool {
-    path == "/me/access"
+    path == "/marketing-leads"
+        || path.starts_with("/marketing-leads/")
+        || path == "/marketing-events"
+        || path == "/me/access"
         || path == "/operational-activity"
         || path == "/jobs"
         || path.starts_with("/jobs/")
@@ -462,12 +465,17 @@ fn is_public_path(path: &str, method: &Method) -> bool {
     matches!(
         path,
         "/health" | "/health/live" | "/health/ready" | "/auth/config"
-    ) || (*method == Method::GET && path.starts_with("/reports/"))
+    ) || (*method == Method::POST && matches!(path, "/marketing-leads" | "/marketing-events"))
+        || (*method == Method::GET && path.starts_with("/reports/"))
         || (path.starts_with("/shared-bids/")
             && (*method == Method::GET || *method == Method::POST))
 }
 
 fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool {
+    if path == "/marketing-leads" || path.starts_with("/marketing-leads/") {
+        return principal.roles.contains(&AccessRole::SupportAdmin)
+            && (*method == Method::GET || *method == Method::PUT);
+    }
     if path.starts_with("/organization-invitations/") && path.ends_with("/accept") {
         return *method == Method::POST;
     }
@@ -1469,6 +1477,28 @@ mod tests {
         assert!(is_public_path(
             "/shared-bids/token-1/decision",
             &Method::POST
+        ));
+    }
+
+    #[test]
+    fn marketing_submission_is_public_but_inbox_is_support_admin_only() {
+        assert!(is_protected_api_path("/marketing-leads"));
+        assert!(is_public_path("/marketing-leads", &Method::POST));
+        assert!(!is_public_path("/marketing-leads", &Method::GET));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::GET,
+            "/marketing-leads"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::OrganizationOwner),
+            &Method::GET,
+            "/marketing-leads"
+        ));
+        assert!(is_authorized(
+            &principal(AccessRole::SupportAdmin),
+            &Method::PUT,
+            "/marketing-leads/lead_1"
         ));
     }
 

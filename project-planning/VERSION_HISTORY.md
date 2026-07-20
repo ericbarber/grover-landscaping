@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Added a SupportAdmin-only platform lead inbox with assignment, follow-up scheduling, qualification states, and durable workflow history.
 - 2026-07-20: Hardened marketing analytics startup for iPhone HTTP access and storage-restricted privacy modes so measurement cannot block page rendering.
 - 2026-07-20: Added privacy-limited first-party marketing funnel measurement with durable event capture and no third-party tracker.
 - 2026-07-20: Added an interactive persona-aware product tour and capability-backed credibility section without unverified customer claims.

@@ -99,8 +99,9 @@ use marketing_events::{
     validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
 };
 use marketing_leads::{
-    is_marketing_lead_spam, validate_marketing_lead_request, CreateMarketingLeadRequest,
-    MarketingLeadRepository, MarketingLeadResponse, MarketingLeadWriteResult,
+    is_marketing_lead_spam, validate_marketing_lead_request, validate_marketing_lead_workflow,
+    CreateMarketingLeadRequest, MarketingLeadRepository, MarketingLeadResponse,
+    MarketingLeadWriteResult, UpdateMarketingLeadRequest,
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
@@ -577,7 +578,11 @@ fn app_with_runtime(
                 async move { Json(config) }
             }),
         )
-        .route("/marketing-leads", post(create_marketing_lead))
+        .route(
+            "/marketing-leads",
+            get(list_marketing_leads).post(create_marketing_lead),
+        )
+        .route("/marketing-leads/{lead_id}", put(update_marketing_lead))
         .route("/marketing-events", post(create_marketing_event))
         .route("/me/access", get(get_my_access))
         .route(
@@ -936,6 +941,59 @@ async fn create_marketing_lead(
             "marketing_lead_unavailable",
             "Your request could not be saved. Please try again.",
         ),
+    }
+}
+
+async fn list_marketing_leads(State(state): State<Arc<AppState>>) -> Response {
+    match state.marketing_leads.list().await {
+        Ok(leads) => (StatusCode::OK, Json(leads)).into_response(),
+        Err(error) => {
+            tracing::error!(%error, "marketing lead inbox query failed");
+            persisted_resource_unavailable_response(
+                "marketing_leads_unavailable",
+                "The marketing lead inbox is temporarily unavailable.",
+            )
+        }
+    }
+}
+
+async fn update_marketing_lead(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(lead_id): Path<String>,
+    Json(request): Json<UpdateMarketingLeadRequest>,
+) -> Response {
+    if !validate_marketing_lead_workflow(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "marketing_lead_workflow_invalid",
+                message: "Lead status, owner, follow-up date, or note is invalid.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .marketing_leads
+        .update_workflow(&lead_id, &principal.subject, request)
+        .await
+    {
+        Ok(Some(detail)) => (StatusCode::OK, Json(detail)).into_response(),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "marketing_lead_not_found",
+                message: "Marketing lead was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+        Err(error) => {
+            tracing::error!(%error, %lead_id, "marketing lead workflow update failed");
+            persisted_resource_unavailable_response(
+                "marketing_lead_update_unavailable",
+                "The marketing lead could not be updated.",
+            )
+        }
     }
 }
 

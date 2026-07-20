@@ -26,6 +26,10 @@ Privacy-limited first-party conversion measurement now records the marketing
 funnel from page view through lead submission. It uses a random per-tab session,
 bounded campaign and placement context, no third-party tracker, and no personal
 form data. Manager funnel reporting remains the next delivery slice.
+The first platform marketing-operations slice adds a SupportAdmin-only lead inbox
+with status filtering, assignment, next-action scheduling, notes, and durable
+workflow history. Public lead submission remains anonymous while all lead reads
+and mutations are protected; organization managers cannot access platform leads.
 
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,

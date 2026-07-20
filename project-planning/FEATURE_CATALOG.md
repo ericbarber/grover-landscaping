@@ -14,7 +14,9 @@
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
-- Planned extensions: manager funnel reporting, verified customer proof, production screenshots, and lead notifications
+- Support-admin platform lead inbox with contact, intent, attribution, status filtering, ownership, and follow-up scheduling
+- Durable lead workflow history recording operator, status transition, assignment, next action, note, and timestamp
+- Planned extensions: funnel dashboard, verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces
 

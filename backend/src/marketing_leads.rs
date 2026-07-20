@@ -26,6 +26,52 @@ pub struct MarketingLeadResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub struct MarketingLeadRecord {
+    pub id: String,
+    pub full_name: String,
+    pub email: String,
+    pub company_name: Option<String>,
+    pub persona: String,
+    pub team_size: Option<String>,
+    pub intent: String,
+    pub message: Option<String>,
+    pub source: Option<String>,
+    pub medium: Option<String>,
+    pub campaign: Option<String>,
+    pub landing_path: String,
+    pub status: String,
+    pub assigned_to: Option<String>,
+    pub next_action_at: Option<String>,
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateMarketingLeadRequest {
+    pub status: String,
+    pub assigned_to: Option<String>,
+    pub next_action_at: Option<String>,
+    pub note: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct MarketingLeadHistoryRecord {
+    pub id: String,
+    pub actor_user_id: String,
+    pub previous_status: String,
+    pub new_status: String,
+    pub assigned_to: Option<String>,
+    pub next_action_at: Option<String>,
+    pub note: Option<String>,
+    pub occurred_at: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct MarketingLeadDetailResponse {
+    pub lead: MarketingLeadRecord,
+    pub history: Vec<MarketingLeadHistoryRecord>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MarketingLeadWriteResult {
     Saved(MarketingLeadResponse),
@@ -102,6 +148,158 @@ impl MarketingLeadRepository {
             persisted: false,
         })
     }
+
+    pub async fn list(&self) -> Result<Vec<MarketingLeadRecord>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(Vec::new());
+        };
+        sqlx::query_as::<_, MarketingLeadRow>(
+            "SELECT id, full_name, email, company_name, persona, team_size, intent, message, source, medium, campaign, landing_path, status, assigned_to, next_action_at::text, created_at::text FROM marketing_leads ORDER BY created_at DESC LIMIT 250",
+        )
+        .fetch_all(pool).await.map(|rows| rows.into_iter().map(Into::into).collect())
+    }
+
+    pub async fn update_workflow(
+        &self,
+        lead_id: &str,
+        actor_user_id: &str,
+        request: UpdateMarketingLeadRequest,
+    ) -> Result<Option<MarketingLeadDetailResponse>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(None);
+        };
+        let mut transaction = pool.begin().await?;
+        let previous_status = sqlx::query_scalar::<_, String>(
+            "SELECT status FROM marketing_leads WHERE id = $1 FOR UPDATE",
+        )
+        .bind(lead_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        let Some(previous_status) = previous_status else {
+            return Ok(None);
+        };
+        let row = sqlx::query_as::<_, MarketingLeadRow>(
+            "UPDATE marketing_leads SET status=$2, assigned_to=$3, next_action_at=$4::timestamptz, updated_at=NOW() WHERE id=$1 RETURNING id, full_name, email, company_name, persona, team_size, intent, message, source, medium, campaign, landing_path, status, assigned_to, next_action_at::text, created_at::text",
+        )
+        .bind(lead_id).bind(request.status.trim()).bind(optional_trimmed(request.assigned_to.clone()))
+        .bind(optional_trimmed(request.next_action_at.clone()))
+        .fetch_one(&mut *transaction).await?;
+        let history_id = format!("mlh_{}", Uuid::new_v4());
+        sqlx::query("INSERT INTO marketing_lead_history (id, lead_id, actor_user_id, previous_status, new_status, assigned_to, next_action_at, note) VALUES ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8)")
+            .bind(&history_id).bind(lead_id).bind(actor_user_id).bind(&previous_status)
+            .bind(request.status.trim()).bind(optional_trimmed(request.assigned_to))
+            .bind(optional_trimmed(request.next_action_at)).bind(optional_trimmed(request.note))
+            .execute(&mut *transaction).await?;
+        transaction.commit().await?;
+        let history = self.history(lead_id).await?;
+        Ok(Some(MarketingLeadDetailResponse {
+            lead: row.into(),
+            history,
+        }))
+    }
+
+    pub async fn history(
+        &self,
+        lead_id: &str,
+    ) -> Result<Vec<MarketingLeadHistoryRecord>, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(Vec::new());
+        };
+        sqlx::query_as::<_, MarketingLeadHistoryRow>("SELECT id, actor_user_id, previous_status, new_status, assigned_to, next_action_at::text, note, occurred_at::text FROM marketing_lead_history WHERE lead_id=$1 ORDER BY occurred_at DESC")
+            .bind(lead_id).fetch_all(pool).await
+            .map(|rows| rows.into_iter().map(Into::into).collect())
+    }
+}
+
+#[derive(sqlx::FromRow)]
+struct MarketingLeadRow {
+    id: String,
+    full_name: String,
+    email: String,
+    company_name: Option<String>,
+    persona: String,
+    team_size: Option<String>,
+    intent: String,
+    message: Option<String>,
+    source: Option<String>,
+    medium: Option<String>,
+    campaign: Option<String>,
+    landing_path: String,
+    status: String,
+    assigned_to: Option<String>,
+    next_action_at: Option<String>,
+    created_at: String,
+}
+
+impl From<MarketingLeadRow> for MarketingLeadRecord {
+    fn from(row: MarketingLeadRow) -> Self {
+        Self {
+            id: row.id,
+            full_name: row.full_name,
+            email: row.email,
+            company_name: row.company_name,
+            persona: row.persona,
+            team_size: row.team_size,
+            intent: row.intent,
+            message: row.message,
+            source: row.source,
+            medium: row.medium,
+            campaign: row.campaign,
+            landing_path: row.landing_path,
+            status: row.status,
+            assigned_to: row.assigned_to,
+            next_action_at: row.next_action_at,
+            created_at: row.created_at,
+        }
+    }
+}
+
+#[derive(sqlx::FromRow)]
+struct MarketingLeadHistoryRow {
+    id: String,
+    actor_user_id: String,
+    previous_status: String,
+    new_status: String,
+    assigned_to: Option<String>,
+    next_action_at: Option<String>,
+    note: Option<String>,
+    occurred_at: String,
+}
+
+impl From<MarketingLeadHistoryRow> for MarketingLeadHistoryRecord {
+    fn from(row: MarketingLeadHistoryRow) -> Self {
+        Self {
+            id: row.id,
+            actor_user_id: row.actor_user_id,
+            previous_status: row.previous_status,
+            new_status: row.new_status,
+            assigned_to: row.assigned_to,
+            next_action_at: row.next_action_at,
+            note: row.note,
+            occurred_at: row.occurred_at,
+        }
+    }
+}
+
+pub fn validate_marketing_lead_workflow(request: &UpdateMarketingLeadRequest) -> bool {
+    matches!(
+        request.status.trim(),
+        "new" | "contacted" | "qualified" | "closed"
+    ) && request
+        .assigned_to
+        .as_deref()
+        .map(|v| v.trim().len() <= 160)
+        .unwrap_or(true)
+        && request
+            .next_action_at
+            .as_deref()
+            .map(|v| v.trim().len() <= 40)
+            .unwrap_or(true)
+        && request
+            .note
+            .as_deref()
+            .map(|v| v.trim().len() <= 2000)
+            .unwrap_or(true)
 }
 
 pub fn validate_marketing_lead_request(
@@ -279,5 +477,18 @@ mod tests {
         assert!(!is_marketing_lead_spam(&request));
         request.website = Some("https://spam.example".to_string());
         assert!(is_marketing_lead_spam(&request));
+    }
+
+    #[test]
+    fn validates_bounded_lead_workflow_updates() {
+        let mut request = UpdateMarketingLeadRequest {
+            status: "contacted".to_string(),
+            assigned_to: Some("Alex Morgan".to_string()),
+            next_action_at: Some("2026-07-21T16:00:00Z".to_string()),
+            note: Some("Discovery call scheduled.".to_string()),
+        };
+        assert!(validate_marketing_lead_workflow(&request));
+        request.status = "deleted".to_string();
+        assert!(!validate_marketing_lead_workflow(&request));
     }
 }

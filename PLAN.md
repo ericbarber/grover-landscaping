@@ -36,6 +36,10 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Analytics uses a random per-tab identifier plus bounded persona, placement, path, and UTM context without third-party cookies or personal form data
 - Analytics session creation tolerates non-secure iPhone URLs, unavailable `randomUUID`, and storage-denied privacy modes without blocking the public page
 - Public analytics API rejects events outside the explicit funnel allowlist and persists production events for later manager reporting
+- Support-admin marketing inbox lists up to 250 recent leads with contact, persona, intent, campaign, and request context
+- Lead workflow supports ownership, next-action scheduling, qualification status, and bounded follow-up notes
+- Every workflow update records the platform operator, previous and new status, assignment, next action, note, and timestamp
+- Public POST submission remains unauthenticated while all lead reads and mutations require the SupportAdmin role; auth-disabled local review receives that role
 
 ### Mobile navigation and context
 

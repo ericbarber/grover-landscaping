@@ -115,6 +115,7 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
+import { ManagerMarketingLeadInboxPanel } from './components/ManagerMarketingLeadInboxPanel';
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
 import { ManagerDispatchHierarchyPanel } from './components/ManagerDispatchHierarchyPanel';
 import {
@@ -1034,6 +1035,7 @@ export function App() {
   const canUseManagerTools = workspaceGuidance.managerTools;
   const canManageDispatchHierarchy = auth.roles.includes('OrganizationOwner')
     || auth.roles.includes('SupportAdmin');
+  const canReviewMarketingLeads = auth.roles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [activePersonaId, setActivePersonaId] = useState<WorkspacePersonaId>(
@@ -3315,6 +3317,11 @@ export function App() {
               onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
             />
           </div>
+          {canReviewMarketingLeads ? (
+            <div className={`${managerWorkspaceTool === 'marketing-leads' ? 'block' : 'hidden'} mt-6 lg:block`}>
+              <ManagerMarketingLeadInboxPanel />
+            </div>
+          ) : null}
           <div className={`${managerWorkspaceTool === 'notifications' ? 'block' : 'hidden'} mt-6 lg:block`}>
             <ManagerNotificationHistoryPanel
               notifications={notificationHistory}
