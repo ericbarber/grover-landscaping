@@ -694,6 +694,14 @@ export function ManagerTeamActivityPanel({
           </button>
         ) : null}
       </div>
+      {isFocusedCrewMoveReview ? (
+        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
+          <p className="font-bold">Focused latest-move review</p>
+          <p className="mt-1 break-all">
+            Crew {requestedCrewId} remains selected when you inspect the latest move and return.
+          </p>
+        </div>
+      ) : null}
       {sourceQuery || destinationQuery ? (
         <div className="mt-2 flex flex-wrap gap-2" aria-label="Directional move filters">
           {sourceQuery ? (

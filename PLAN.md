@@ -680,10 +680,11 @@ Current state:
 - Stale crew inspections open a newest-first hierarchy activity view filtered to the inspected crew
 - Focused crew history highlights the newest matching hierarchy event as the latest crew move
 - Focused crew history compares the latest move destination with the current assignment captured during inspection
+- Focused latest-move context remains visible and selected after inspecting the newest event and returning to owner activity
 
 Next implementation work:
 
-- Preserve focused latest-move context when reopening and returning from crew inspection
+- Add a dedicated one-tap exit from focused crew history
 
 ## Planned
 

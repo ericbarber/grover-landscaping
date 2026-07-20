@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Preserved focused latest-move review across crew inspection.
 - 2026-07-19: Compared latest crew moves with current hierarchy assignments.
 - 2026-07-19: Highlighted the latest move in focused crew activity review.
 - 2026-07-19: Linked stale crew inspections to their latest hierarchy activity.
