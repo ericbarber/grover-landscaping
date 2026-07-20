@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Announced saved activity review restoration after reload.
 - 2026-07-19: Persisted summary-driven newest-first activity ordering.
 - 2026-07-19: Added one-tap newest-first restoration to activity summaries.
 - 2026-07-19: Identified oldest-first ordering in activity review summaries.

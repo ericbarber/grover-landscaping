@@ -124,6 +124,19 @@ function loadTeamActivityReviewFilters(organizationId: string): TeamActivityRevi
   }
 }
 
+function restoredReviewNotice(filters: TeamActivityReviewFilters): string | null {
+  const settingCount = Number(filters.eventFilter !== 'all')
+    + Number(filters.moveScope !== 'all')
+    + Number(filters.activitySort !== 'newest')
+    + Number(Boolean(filters.sourceQuery))
+    + Number(Boolean(filters.destinationQuery));
+  return settingCount
+    ? `Restored ${settingCount} saved owner activity review setting${
+      settingCount === 1 ? '' : 's'
+    } for this organization.`
+    : null;
+}
+
 export function filterTeamActivity(
   activity: TeamAdministrationActivity[],
   actorQuery: string,
@@ -326,7 +339,9 @@ export function ManagerTeamActivityPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [reviewNotice, setReviewNotice] = useState<string | null>(null);
+  const [reviewNotice, setReviewNotice] = useState<string | null>(
+    () => restoredReviewNotice(initialReviewFilters.current),
+  );
   const [reviewNoticeAuditId, setReviewNoticeAuditId] = useState<string | null>(null);
   const [restoredAuditId, setRestoredAuditId] = useState<string | null>(null);
   const [unavailableRestoredAuditId, setUnavailableRestoredAuditId] =
@@ -673,6 +688,7 @@ export function ManagerTeamActivityPanel({
       setActivitySort(loaded.activitySort);
       setSourceQuery(loaded.sourceQuery);
       setDestinationQuery(loaded.destinationQuery);
+      setReviewNotice(restoredReviewNotice(loaded));
       return;
     }
     try {

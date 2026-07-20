@@ -603,6 +603,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(reloadedTeamActivity.getByLabel('Sort')).toHaveValue('newest');
   await expect(reloadedTeamActivity.getByLabel('Find actor')).toHaveValue('');
   await expect(reloadedTeamActivity.getByLabel('Find audit ID')).toHaveValue('');
+  await expect(reloadedTeamActivity.getByText(
+    'Restored 2 saved owner activity review settings for this organization.',
+  )).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });
