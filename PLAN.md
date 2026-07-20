@@ -708,10 +708,11 @@ Current state:
 - Restored recovered-review summaries count all active actor, audit-ID, source, and move-scope filters
 - Activity review summaries identify oldest-first ordering beside the active-filter count
 - Oldest-first review summaries provide a touch-safe newest-first reset that preserves every active filter
+- Summary-driven newest-first ordering persists per organization across mobile reloads while actor and audit-ID searches remain transient
 
 Next implementation work:
 
-- Persist the summary-driven newest-first change across mobile reloads
+- Identify persisted review restoration after a mobile reload
 
 ## Planned
 

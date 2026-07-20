@@ -593,6 +593,16 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('newest');
+  await page.reload();
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const reloadedTeamActivity = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(reloadedTeamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(reloadedTeamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
+  await expect(reloadedTeamActivity.getByLabel('Sort')).toHaveValue('newest');
+  await expect(reloadedTeamActivity.getByLabel('Find actor')).toHaveValue('');
+  await expect(reloadedTeamActivity.getByLabel('Find audit ID')).toHaveValue('');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });
