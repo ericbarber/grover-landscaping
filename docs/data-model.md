@@ -91,6 +91,11 @@ be active in the same organization, territory names are unique within that
 branch, and creation writes a linked `territory_created` audit event in the
 same transaction.
 
+The mobile owner hierarchy panel uses these creation endpoints directly and
+refreshes the manager dispatch hierarchy after a successful write. The panel is
+only mounted for organization owners and support administrators; API membership
+and role checks remain authoritative.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan

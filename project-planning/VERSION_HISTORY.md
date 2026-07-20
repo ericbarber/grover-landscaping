@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added mobile owner controls for creating dispatch branches and territories.
 - 2026-07-19: Added tenant-scoped crew daily capacity and eligible crew-lead assignment controls.
 - 2026-07-19: Applied crew-specific daily capacity snapshots to new draft route guards.
 - 2026-07-19: Added crew capacity and leadership readiness to manager route selection.

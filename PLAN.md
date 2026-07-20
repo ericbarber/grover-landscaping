@@ -491,6 +491,7 @@ Current state:
 - Manager dispatch workload resolves readable branch/territory names and filters loaded day work by hierarchy scope
 - Organization owners can create validated tenant branches with unique normalized codes and transactional audit records
 - Organization owners can create uniquely named service territories only inside active same-tenant branches with transactional audit
+- Organization owners can create branches and nested territories from a mobile hierarchy panel, with new scopes immediately available to dispatch filters
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -631,7 +632,7 @@ Current state:
 
 Next implementation work:
 
-- Add mobile owner controls for creating branches and territories
+- Add tenant-guarded owner controls for assigning crews to branches and territories
 
 ## Planned
 

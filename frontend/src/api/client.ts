@@ -2387,6 +2387,66 @@ export async function fetchServiceTerritories(): Promise<ServiceTerritoryRecord[
   }));
 }
 
+export async function createOrganizationBranch(
+  organizationId: string,
+  input: {
+    name: string;
+    code: string;
+    timeZone: string;
+    serviceAreaLabel?: string;
+  },
+): Promise<OrganizationBranchRecord> {
+  const item = await request<{
+    id: string;
+    organization_id: string;
+    name: string;
+    code: string;
+    time_zone: string;
+    service_area_label?: string | null;
+    status: OrganizationBranchRecord['status'];
+  }>(`/organizations/${encodeURIComponent(organizationId)}/branches`, {
+    method: 'POST',
+    body: JSON.stringify({
+      name: input.name,
+      code: input.code,
+      time_zone: input.timeZone,
+      service_area_label: input.serviceAreaLabel || null,
+    }),
+  });
+  return {
+    id: item.id,
+    organizationId: item.organization_id,
+    name: item.name,
+    code: item.code,
+    timeZone: item.time_zone,
+    serviceAreaLabel: item.service_area_label ?? null,
+    status: item.status,
+  };
+}
+
+export async function createServiceTerritory(
+  organizationId: string,
+  input: { branchId: string; name: string },
+): Promise<ServiceTerritoryRecord> {
+  const item = await request<{
+    id: string;
+    organization_id: string;
+    branch_id: string;
+    name: string;
+    status: ServiceTerritoryRecord['status'];
+  }>(`/organizations/${encodeURIComponent(organizationId)}/territories`, {
+    method: 'POST',
+    body: JSON.stringify({ branch_id: input.branchId, name: input.name }),
+  });
+  return {
+    id: item.id,
+    organizationId: item.organization_id,
+    branchId: item.branch_id,
+    name: item.name,
+    status: item.status,
+  };
+}
+
 export async function createOrganizationCrew(
   organizationId: string,
   name: string,

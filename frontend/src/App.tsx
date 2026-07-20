@@ -84,6 +84,7 @@ import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPane
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
+import { ManagerDispatchHierarchyPanel } from './components/ManagerDispatchHierarchyPanel';
 import {
   matchesCompletionReportOperationalFilters,
   type CompletionReportOperationalFilters,
@@ -875,6 +876,8 @@ export function App() {
   const auth = useAuth();
   const workspaceGuidance = workspaceGuidanceForRoles(auth.roles);
   const canUseManagerTools = workspaceGuidance.managerTools;
+  const canManageDispatchHierarchy = auth.roles.includes('organization_owner')
+    || auth.roles.includes('support_admin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
@@ -920,6 +923,7 @@ export function App() {
   const [teamActivityRefreshSignal, setTeamActivityRefreshSignal] = useState(0);
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
+  const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
@@ -2815,7 +2819,16 @@ export function App() {
             />
           </div>
           <div className="mt-6">
+            {canManageDispatchHierarchy ? (
+              <ManagerDispatchHierarchyPanel
+                organizationId={activeManagerOrganizationId}
+                onChanged={() => setDispatchHierarchyRefreshSignal((current) => current + 1)}
+              />
+            ) : null}
+          </div>
+          <div className="mt-6">
             <ManagerDispatchWorkloadPanel
+              hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
               jobs={jobs}
               onReassign={handleJobDispatchAssignment}
               onSelectJob={selectJobForReview}

@@ -15,6 +15,7 @@ import {
 
 type ManagerDispatchWorkloadPanelProps = {
   jobs: YardCareJob[];
+  hierarchyRefreshSignal?: number;
   onSelectJob: (jobId: string) => void;
   onReassign: (
     jobId: string,
@@ -26,6 +27,7 @@ type ManagerDispatchWorkloadPanelProps = {
 
 export function ManagerDispatchWorkloadPanel({
   jobs,
+  hierarchyRefreshSignal = 0,
   onSelectJob,
   onReassign,
 }: ManagerDispatchWorkloadPanelProps) {
@@ -86,7 +88,7 @@ export function ManagerDispatchWorkloadPanel({
         setTerritories(territoryItems.filter((territory) => territory.status === 'active'));
       })
       .catch(() => setActionStatus('Crew choices could not be loaded.'));
-  }, []);
+  }, [hierarchyRefreshSignal]);
 
   function beginMove(job: YardCareJob) {
     setEditingJobId(job.id);
