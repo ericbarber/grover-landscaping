@@ -6,8 +6,9 @@ import {
 
 const baseInput = {
   assignedJobCount: 3,
-  managerOrganizationId: 'org_demo',
   pendingChangeCount: 0,
+  personaDescription: 'Today’s route and field work',
+  personaLabel: 'Crew lead',
 };
 
 describe('mobileWorkspaceContext', () => {
@@ -40,10 +41,25 @@ describe('mobileWorkspaceContext', () => {
 
   it('provides manager organization context', () => {
     expect(mobileWorkspaceContext({ ...baseInput, view: 'manager' })).toEqual({
-      eyebrow: 'Manager workspace',
+      eyebrow: 'Crew lead',
       title: 'Operations',
-      detail: 'Organization org_demo',
+      detail: 'Today’s route and field work',
     });
+  });
+
+  it('provides customer context for yard owners and property managers', () => {
+    expect(mobileWorkspaceContext({
+      ...baseInput,
+      view: 'customer',
+      personaDescription: 'My properties and service',
+      personaLabel: 'Yard owner',
+    }).title).toBe('My yard');
+    expect(mobileWorkspaceContext({
+      ...baseInput,
+      view: 'customer',
+      personaDescription: 'Portfolio service and approvals',
+      personaLabel: 'Property manager',
+    }).title).toBe('Property portfolio');
   });
 
   it('restores a saved view position and resets a newly selected job', () => {

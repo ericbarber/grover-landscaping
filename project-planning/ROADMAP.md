@@ -10,7 +10,10 @@ remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,
 and Manager into explicit mobile workspace views with stable bottom navigation
 and a contextual header. Follow-up slices will group manager capabilities into a
 manager home, make route and job summaries more compact, preserve per-view scroll
-position, and validate the complete interaction model on iPhone.
+position, and validate the complete interaction model on iPhone. Persona-aware
+navigation now separates yard owners, property managers, field crews, yard-care
+company operators, dispatch, billing, and support; the next slices will deepen
+the content and actions shown inside each persona workspace.
 
 ## Immediate Continuation Work
 

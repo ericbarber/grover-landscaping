@@ -1,5 +1,17 @@
 # Feature Catalog
 
+## Persona Workspaces
+
+- Yard owner: properties, upcoming service, reports, photos, bids, and service history
+- Property manager: portfolio service, vendor work, reports, and approvals
+- Crew lead: route execution, crew progress, field exceptions, and completion evidence
+- Crew member: assigned work, job steps, photos, and completion evidence
+- Yard-care company owner: company operations, customers, teams, routes, and recovery
+- Yard-care company manager: dispatch, schedules, customers, reports, and daily operations
+- Dispatcher: route risk, crew workload, assignments, and schedule changes
+- Billing administrator: accounts, bids, approvals, and billing readiness
+- Support administrator: tenant access, recovery, diagnostics, and audited support
+
 This catalog connects each major product track to its detailed specification and
 roadmap phases. A feature specification describes the desired product; inclusion
 here does not mean every capability has been delivered.

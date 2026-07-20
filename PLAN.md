@@ -20,6 +20,10 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count
 - Selecting a job opens its dedicated mobile view with a clear return to assigned jobs
 - Returning between mobile workspaces restores each view's prior scroll position while newly selected jobs open at the top
+- Signed-in roles map to yard owner, property manager, crew lead/member, yard-care company owner/manager, dispatcher, billing, and support personas
+- Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
+- Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
+- Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation

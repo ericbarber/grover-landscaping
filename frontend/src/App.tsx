@@ -79,6 +79,10 @@ import {
 } from './domain/photoQuality';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import {
+  workspacePersonasForRoles,
+  type WorkspacePersonaId,
+} from './domain/workspacePersona';
+import {
   MobileWorkspaceHeader,
   MobileWorkspaceNavigation,
   mobileWorkspaceScrollTop,
@@ -882,12 +886,22 @@ function mergePhotoEvidence(
 export function App() {
   const auth = useAuth();
   const workspaceGuidance = workspaceGuidanceForRoles(auth.roles);
+  const availablePersonas = useMemo(
+    () => workspacePersonasForRoles(auth.roles),
+    [auth.roles],
+  );
+  const initialPersona = availablePersonas[0];
   const canUseManagerTools = workspaceGuidance.managerTools;
   const canManageDispatchHierarchy = auth.roles.includes('OrganizationOwner')
     || auth.roles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
-  const [mobileView, setMobileView] = useState<MobileWorkspaceView>('route');
+  const [activePersonaId, setActivePersonaId] = useState<WorkspacePersonaId>(
+    initialPersona.id,
+  );
+  const [mobileView, setMobileView] = useState<MobileWorkspaceView>(
+    initialPersona.defaultView,
+  );
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
@@ -986,6 +1000,15 @@ export function App() {
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
+  const activePersona = availablePersonas.find(
+    (persona) => persona.id === activePersonaId,
+  ) ?? initialPersona;
+
+  useEffect(() => {
+    if (availablePersonas.some((persona) => persona.id === activePersonaId)) return;
+    setActivePersonaId(initialPersona.id);
+    setMobileView(initialPersona.defaultView);
+  }, [activePersonaId, availablePersonas, initialPersona]);
 
   function changeMobileView(
     destination: MobileWorkspaceView,
@@ -2459,14 +2482,24 @@ export function App() {
       </section>
 
       <MobileWorkspaceHeader
+        activePersonaId={activePersona.id}
         assignedJobCount={jobs.length}
-        managerOrganizationId={activeManagerOrganizationId}
+        availablePersonas={availablePersonas}
         onBackToJobs={() => changeMobileView('jobs')}
+        onPersonaChange={(personaId) => {
+          const persona = availablePersonas.find((item) => item.id === personaId);
+          if (!persona) return;
+          setActivePersonaId(persona.id);
+          changeMobileView(persona.defaultView, true);
+        }}
         pendingChangeCount={
           offlineJobMutations.length
           + offlineChecklistMutations.length
           + offlinePhotoMutations.length
         }
+        personaDescription={activePersona.description}
+        personaLabel={activePersona.label}
+        signedInName={auth.displayName || 'Signed-in user'}
         selectedCustomerName={selectedJob?.customerName}
         selectedJobStatus={selectedJob?.status}
         selectedPropertyAddress={selectedJob?.propertyAddress}
@@ -2755,6 +2788,26 @@ export function App() {
             ))}
           </div>
           </section>
+
+          <div className={`${mobileView === 'customer' ? 'space-y-6' : 'hidden'} lg:hidden`}>
+            <CustomerPortalPreviewPanel
+              customer={customerPortalPreviewCustomer}
+              properties={customerPortalPreviewProperties}
+              workSummaries={customerPortalPreviewWorkSummaries}
+              completionReportsByProperty={propertyCompletionReports}
+              isLoadingReportHistory={isLoadingPropertyCompletionReports}
+              hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+              projectBids={customerProjectBids}
+              isLoadingProjectBids={isLoadingCustomerProjectBids}
+              hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
+            />
+            <CustomerPortfolioSummaryPanel
+              customer={customerPortalPreviewCustomer}
+              portfolios={customerPortalPreviewPortfolios}
+              properties={customerPortalPreviewProperties}
+              links={customerPortalPreviewPortfolioLinks}
+            />
+          </div>
 
           {canUseManagerTools ? (
           <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:mt-6 lg:block lg:open:bg-transparent`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
@@ -3117,8 +3170,8 @@ export function App() {
       </section>
       <MobileWorkspaceNavigation
         activeView={mobileView}
-        canUseManagerTools={canUseManagerTools}
         hasSelectedJob={Boolean(selectedJobId)}
+        navigationItems={activePersona.navigation}
         onChange={(view) => changeMobileView(view)}
       />
     </main>

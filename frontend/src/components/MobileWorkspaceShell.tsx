@@ -1,4 +1,6 @@
-export type MobileWorkspaceView = 'route' | 'jobs' | 'job' | 'manager';
+import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
+
+export type MobileWorkspaceView = 'route' | 'jobs' | 'job' | 'manager' | 'customer';
 
 interface MobileWorkspaceContextInput {
   view: MobileWorkspaceView;
@@ -6,8 +8,9 @@ interface MobileWorkspaceContextInput {
   selectedCustomerName?: string;
   selectedPropertyAddress?: string;
   selectedJobStatus?: string;
-  managerOrganizationId: string;
   pendingChangeCount: number;
+  personaDescription: string;
+  personaLabel: string;
 }
 
 export interface MobileWorkspaceContext {
@@ -51,19 +54,33 @@ export function mobileWorkspaceContext(
       };
     case 'manager':
       return {
-        eyebrow: 'Manager workspace',
+        eyebrow: input.personaLabel,
         title: 'Operations',
-        detail: `Organization ${input.managerOrganizationId}`,
+        detail: input.personaDescription,
+      };
+    case 'customer':
+      return {
+        eyebrow: input.personaLabel,
+        title: input.personaLabel === 'Property manager' ? 'Property portfolio' : 'My yard',
+        detail: input.personaDescription,
       };
   }
 }
 
 interface MobileWorkspaceHeaderProps extends MobileWorkspaceContextInput {
+  activePersonaId: WorkspacePersonaId;
+  availablePersonas: WorkspacePersona[];
   onBackToJobs: () => void;
+  onPersonaChange: (personaId: WorkspacePersonaId) => void;
+  signedInName: string;
 }
 
 export function MobileWorkspaceHeader({
+  activePersonaId,
+  availablePersonas,
   onBackToJobs,
+  onPersonaChange,
+  signedInName,
   ...input
 }: MobileWorkspaceHeaderProps) {
   const context = mobileWorkspaceContext(input);
@@ -88,6 +105,28 @@ export function MobileWorkspaceHeader({
           <h1 className="truncate text-lg font-black text-slate-950">{context.title}</h1>
           <p className="truncate text-xs text-slate-600">{context.detail}</p>
         </div>
+        {availablePersonas.length > 1 ? (
+          <label className="max-w-28 shrink-0 text-right text-[0.65rem] font-bold uppercase tracking-wide text-slate-500">
+            <span className="block truncate normal-case tracking-normal text-slate-700">
+              {signedInName}
+            </span>
+            <select
+              aria-label="Active workspace persona"
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-slate-800"
+              onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
+              value={activePersonaId}
+            >
+              {availablePersonas.map((persona) => (
+                <option key={persona.id} value={persona.id}>{persona.label}</option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <span className="max-w-28 shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-right text-[0.65rem] text-slate-600">
+            <span className="block truncate font-bold text-slate-800">{signedInName}</span>
+            <span className="block truncate">{input.personaLabel}</span>
+          </span>
+        )}
       </div>
     </header>
   );
@@ -95,26 +134,15 @@ export function MobileWorkspaceHeader({
 
 interface MobileWorkspaceNavigationProps {
   activeView: MobileWorkspaceView;
-  canUseManagerTools: boolean;
   hasSelectedJob: boolean;
+  navigationItems: WorkspacePersona['navigation'];
   onChange: (view: MobileWorkspaceView) => void;
 }
 
-const navigationItems: Array<{
-  view: MobileWorkspaceView;
-  label: string;
-  symbol: string;
-}> = [
-  { view: 'route', label: 'Route', symbol: '↗' },
-  { view: 'jobs', label: 'Jobs', symbol: '☷' },
-  { view: 'job', label: 'Job', symbol: '✓' },
-  { view: 'manager', label: 'Manager', symbol: '▦' },
-];
-
 export function MobileWorkspaceNavigation({
   activeView,
-  canUseManagerTools,
   hasSelectedJob,
+  navigationItems,
   onChange,
 }: MobileWorkspaceNavigationProps) {
   return (
@@ -122,10 +150,12 @@ export function MobileWorkspaceNavigation({
       aria-label="Mobile workspace"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-300 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden"
     >
-      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
+      <div
+        className="mx-auto grid max-w-lg gap-1"
+        style={{ gridTemplateColumns: `repeat(${navigationItems.length}, minmax(0, 1fr))` }}
+      >
         {navigationItems.map((item) => {
-          const disabled = (item.view === 'manager' && !canUseManagerTools)
-            || (item.view === 'job' && !hasSelectedJob);
+          const disabled = item.view === 'job' && !hasSelectedJob;
           const active = activeView === item.view;
 
           return (
