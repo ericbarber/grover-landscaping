@@ -3,13 +3,15 @@ import { readFile } from 'node:fs/promises';
 
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   let submittedAccount: Record<string, unknown> | null = null;
+  let accountCreateCount = 0;
   await page.route('**/customer-accounts', async (route) => {
     if (route.request().method() === 'POST') {
+      accountCreateCount += 1;
       submittedAccount = route.request().postDataJSON() as Record<string, unknown>;
       await route.fulfill({
         contentType: 'application/json',
         json: {
-          account_id: 'acct_mobile_smoke',
+          account_id: `acct_mobile_smoke_${accountCreateCount}`,
           organization_id: submittedAccount.organization_id,
           customer_name: submittedAccount.customer_name,
           billing_model: submittedAccount.billing_model,
@@ -52,12 +54,30 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
   await onboarding.getByLabel('Find customer account').fill('missing customer');
   await expect(onboarding.getByText('No accounts match this search and onboarding filter.')).toBeVisible();
+  await onboarding.getByLabel('Find customer account').fill('');
+  await onboarding.getByRole('button', { name: 'Add customer account' }).click();
+  await onboarding.getByLabel('Customer or company name').fill('Mobile Smoke HOA');
+  await onboarding.getByLabel('Primary contact').fill('Another Contact');
+  await onboarding.getByLabel('Contact email').fill('another@example.com');
+  await onboarding.getByRole('button', { name: 'Create account' }).click();
+  await expect(onboarding.getByText('Possible duplicate account')).toBeVisible();
+  await onboarding.getByRole('button', { name: 'Review existing account' }).click();
+  await expect(onboarding.getByLabel('Customer name')).toHaveValue('Mobile Smoke HOA');
+  await onboarding.getByRole('button', { name: 'Cancel' }).click();
+  await onboarding.getByRole('button', { name: 'Add customer account' }).click();
+  await onboarding.getByLabel('Customer or company name').fill('Mobile Smoke HOA');
+  await onboarding.getByLabel('Primary contact').fill('Separate Contact');
+  await onboarding.getByLabel('Contact email').fill('separate@example.com');
+  await onboarding.getByRole('button', { name: 'Create account' }).click();
+  await onboarding.getByRole('button', { name: 'Create separate account' }).click();
+  await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
+  expect(accountCreateCount).toBe(2);
   expect(submittedAccount).toMatchObject({
     customer_name: 'Mobile Smoke HOA',
-    primary_contact_name: 'Sam Lee',
-    contact_email: 'sam@example.com',
-    contact_phone: '+14805550123',
-    email_notifications_enabled: true,
+    primary_contact_name: 'Separate Contact',
+    contact_email: 'separate@example.com',
+    contact_phone: null,
+    email_notifications_enabled: false,
     sms_notifications_enabled: false,
   });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

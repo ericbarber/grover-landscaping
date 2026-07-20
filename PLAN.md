@@ -223,6 +223,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Manager account onboarding filters separate incomplete work from completed accounts
 - Managers can create a service-ready account with primary contact, email or mobile destination, and explicit channel consent in one mobile workflow
 - Customer-account search matches customer, contact, email, phone, property name, and service address while composing with onboarding filters
+- New-account submission warns on exact normalized customer name, email, or phone matches and supports review or explicit separate creation
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -720,9 +721,9 @@ Current state:
 
 Next implementation work:
 
-- Warn managers when a new account matches an existing customer name, email, or phone
-- Let managers review the matching account before intentionally continuing
-- Cover duplicate-risk detection and explicit continuation with focused mobile tests
+- Add tenant-scoped customer-account archival without deleting account history
+- Prevent archival while current properties or active customer work still depend on the account
+- Exclude archived accounts from active onboarding and cover lifecycle authorization, persistence, and mobile confirmation
 
 ## Planned
 

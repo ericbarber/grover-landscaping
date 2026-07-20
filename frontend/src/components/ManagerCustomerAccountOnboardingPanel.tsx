@@ -21,6 +21,7 @@ import {
 import {
   customerAccountDraftError,
   emptyCustomerAccountDraft,
+  findMatchingCustomerAccount,
   type CustomerAccountDraft,
 } from '../domain/customerAccountDraft';
 
@@ -50,6 +51,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [propertyDrafts, setPropertyDrafts] = useState<Record<string, PropertyDraft>>({});
   const [createDraft, setCreateDraft] = useState<CustomerAccountDraft>(emptyCustomerAccountDraft);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState<CustomerAccountRecord | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
@@ -93,10 +95,15 @@ export function ManagerCustomerAccountOnboardingPanel({
 
   useEffect(() => { void refresh(); }, [refreshSignal]);
 
-  async function create() {
+  async function create(allowDuplicate = false) {
     const validationError = customerAccountDraftError(createDraft);
     if (validationError) {
       setMessage(validationError);
+      return;
+    }
+    const matchingAccount = findMatchingCustomerAccount(accounts, createDraft);
+    if (matchingAccount && !allowDuplicate) {
+      setDuplicateAccount(matchingAccount);
       return;
     }
     setIsLoading(true);
@@ -124,6 +131,7 @@ export function ManagerCustomerAccountOnboardingPanel({
       }));
       setCreateDraft(emptyCustomerAccountDraft);
       setShowCreateForm(false);
+      setDuplicateAccount(null);
       setMessage(`${account.customerName} account created.`);
     } catch {
       setMessage('The customer account could not be created.');
@@ -227,9 +235,24 @@ export function ManagerCustomerAccountOnboardingPanel({
           onCancel={() => {
             setCreateDraft(emptyCustomerAccountDraft);
             setShowCreateForm(false);
+            setDuplicateAccount(null);
           }}
-          onChange={setCreateDraft}
+          onChange={(draft) => {
+            setCreateDraft(draft);
+            setDuplicateAccount(null);
+          }}
           onCreate={() => void create()}
+          onCreateAnyway={() => void create(true)}
+          onReviewDuplicate={() => {
+            if (!duplicateAccount) return;
+            setFilter('all');
+            setSearchQuery('');
+            setShowCreateForm(false);
+            setCreateDraft(emptyCustomerAccountDraft);
+            setDuplicateAccount(null);
+            openAccountDetails(duplicateAccount);
+          }}
+          duplicateAccount={duplicateAccount}
         />
       )}
       {message ? <p className="mt-2 text-sm text-slate-600" role="status">{message}</p> : null}
@@ -394,12 +417,18 @@ function CustomerAccountCreateForm({
   onCancel,
   onChange,
   onCreate,
+  onCreateAnyway,
+  onReviewDuplicate,
+  duplicateAccount,
 }: {
   draft: CustomerAccountDraft;
   disabled: boolean;
   onCancel: () => void;
   onChange: (draft: CustomerAccountDraft) => void;
   onCreate: () => void;
+  onCreateAnyway: () => void;
+  onReviewDuplicate: () => void;
+  duplicateAccount: CustomerAccountRecord | null;
 }) {
   const update = <K extends keyof CustomerAccountDraft>(key: K, value: CustomerAccountDraft[K]) =>
     onChange({ ...draft, [key]: value });
@@ -433,6 +462,18 @@ function CustomerAccountCreateForm({
         </label>
       </fieldset>
       {validationError ? <p className="text-xs font-medium text-amber-800">{validationError}</p> : null}
+      {duplicateAccount ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3" role="alert">
+          <p className="text-sm font-bold text-amber-950">Possible duplicate account</p>
+          <p className="mt-1 text-xs text-amber-900">
+            {duplicateAccount.customerName} already uses this customer name, email, or phone.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <button className="min-h-11 rounded-lg bg-amber-900 px-3 py-2 text-sm font-bold text-white" onClick={onReviewDuplicate} type="button">Review existing account</button>
+            <button className="min-h-11 rounded-lg border border-amber-400 bg-white px-3 py-2 text-sm font-semibold text-amber-950" onClick={onCreateAnyway} type="button">Create separate account</button>
+          </div>
+        </div>
+      ) : null}
       <div className="flex justify-end gap-2">
         <button className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" disabled={disabled} onClick={onCancel} type="button">Cancel</button>
         <button className="min-h-11 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={disabled || Boolean(validationError)} onClick={onCreate} type="button">Create account</button>

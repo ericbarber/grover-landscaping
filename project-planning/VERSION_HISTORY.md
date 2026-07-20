@@ -217,6 +217,8 @@ version and release date.
   communication destination, and explicit notification consent.
 - Added customer-account search across customer, contact, and property details,
   composed with onboarding status filters.
+- Added duplicate-account warnings with direct existing-account review and an
+  explicit separate-account continuation.
 
 Current continuation work:
 

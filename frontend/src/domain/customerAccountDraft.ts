@@ -42,3 +42,18 @@ export function customerAccountDraftError(draft: CustomerAccountDraft): string |
   }
   return null;
 }
+
+export function findMatchingCustomerAccount(
+  accounts: CustomerAccountRecord[],
+  draft: CustomerAccountDraft,
+): CustomerAccountRecord | undefined {
+  const name = draft.customerName.trim().toLocaleLowerCase();
+  const email = draft.contactEmail.trim().toLocaleLowerCase();
+  const phone = draft.contactPhone.trim();
+  return accounts.find((account) =>
+    account.customerName.trim().toLocaleLowerCase() === name
+    || Boolean(email && account.contactEmail.trim().toLocaleLowerCase() === email)
+    || Boolean(phone && account.contactPhone.trim() === phone)
+  );
+}
+import type { CustomerAccountRecord } from '../api/client';
