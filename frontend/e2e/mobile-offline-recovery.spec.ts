@@ -1,6 +1,25 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('does not show local billing context when account view auditing is unavailable', async ({
+  page,
+}) => {
+  await page.route('**/jobs/*/account', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'account_view_audit_unavailable',
+      message: 'The customer account view could not be recorded in the persisted audit trail.',
+    },
+  }));
+
+  await page.goto('/');
+  await expect(page.getByText('Account status unavailable')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('alert').filter({
+    hasText: 'Persisted billing and service-approval context could not be loaded',
+  })).toBeVisible();
+});
+
 test('does not present empty property onboarding during persisted storage outages', async ({
   page,
 }) => {

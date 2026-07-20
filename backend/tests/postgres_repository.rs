@@ -1,5 +1,7 @@
 use grover_landscaping_api::db::{JobRepository, ResourceReadResult};
+use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
+use std::time::Duration;
 mod common;
 
 #[tokio::test]
@@ -42,15 +44,17 @@ async fn repository_audits_account_views_for_persisted_jobs() {
         .await
         .expect("account view audit rows should reset");
 
-    assert!(
+    assert_eq!(
         repository
             .record_account_view("job_1001", actor_user_id)
-            .await
+            .await,
+        ResourceReadResult::Loaded(true)
     );
-    assert!(
-        !repository
+    assert_eq!(
+        repository
             .record_account_view("job_missing_for_audit", actor_user_id)
-            .await
+            .await,
+        ResourceReadResult::NotFound
     );
 
     let audit_row = sqlx::query(
@@ -73,4 +77,20 @@ async fn repository_audits_account_views_for_persisted_jobs() {
     );
     assert_eq!(audit_row.get::<String, _>("event_kind"), "account_viewed");
     assert_eq!(audit_row.get::<String, _>("target_id"), "job_1001");
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_account_view_auditing() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = JobRepository::from_pool(pool);
+
+    assert_eq!(
+        repository
+            .record_account_view("job_1001", "user_account_view_outage")
+            .await,
+        ResourceReadResult::Unavailable
+    );
 }

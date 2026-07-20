@@ -1245,10 +1245,25 @@ async fn get_account_for_job(
             );
         }
     };
-    let _ = state
+    match state
         .jobs
         .record_account_view(&id, &principal.subject)
-        .await;
+        .await
+    {
+        ResourceReadResult::Loaded(_) => {}
+        ResourceReadResult::NotFound => {
+            return resource_not_found_response(
+                "job_account_not_found",
+                "Customer account context was no longer available for this job.",
+            );
+        }
+        ResourceReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "account_view_audit_unavailable",
+                "The customer account view could not be recorded in the persisted audit trail.",
+            );
+        }
+    }
 
     Json(account).into_response()
 }

@@ -386,13 +386,17 @@ impl JobRepository {
         ResourceOwnershipResult::Loaded(organization_id)
     }
 
-    pub async fn record_account_view(&self, job_id: &str, actor_user_id: &str) -> bool {
+    pub async fn record_account_view(
+        &self,
+        job_id: &str,
+        actor_user_id: &str,
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Loaded(false);
         };
 
         let audit_id = format!("audit_account_viewed_{}", Uuid::new_v4().simple());
-        sqlx::query_scalar::<_, String>(
+        match sqlx::query_scalar::<_, String>(
             r#"
             INSERT INTO access_audit_events (
                 id,
@@ -413,9 +417,14 @@ impl JobRepository {
         .bind(job_id)
         .fetch_optional(pool)
         .await
-        .ok()
-        .flatten()
-        .is_some()
+        {
+            Ok(Some(_)) => ResourceReadResult::Loaded(true),
+            Ok(None) => ResourceReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, job_id, actor_user_id, "persisted account view audit failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn list_jobs(&self) -> ResourceReadResult<Vec<JobSummary>> {
