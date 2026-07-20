@@ -17,6 +17,11 @@ import {
   propertyAttentionWorkspace,
   type AccountOnboardingFilter,
 } from '../domain/accountOnboardingProgress';
+import {
+  customerAccountDraftError,
+  emptyCustomerAccountDraft,
+  type CustomerAccountDraft,
+} from '../domain/customerAccountDraft';
 
 type Props = {
   organizationId: string;
@@ -42,7 +47,8 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [properties, setProperties] = useState<Record<string, CustomerPropertyRecord[]>>({});
   const [progress, setProgress] = useState<Record<string, CustomerAccountOnboardingProgress>>({});
   const [propertyDrafts, setPropertyDrafts] = useState<Record<string, PropertyDraft>>({});
-  const [name, setName] = useState('');
+  const [createDraft, setCreateDraft] = useState<CustomerAccountDraft>(emptyCustomerAccountDraft);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
@@ -85,25 +91,26 @@ export function ManagerCustomerAccountOnboardingPanel({
   useEffect(() => { void refresh(); }, [refreshSignal]);
 
   async function create() {
-    if (name.trim().length < 2) {
-      setMessage('Enter a customer name with at least two characters.');
+    const validationError = customerAccountDraftError(createDraft);
+    if (validationError) {
+      setMessage(validationError);
       return;
     }
     setIsLoading(true);
     try {
       const account = await createCustomerAccount({
         organizationId,
-        customerName: name.trim(),
+        customerName: createDraft.customerName.trim(),
         billingModel: 'per_job',
         paymentStatus: 'pending',
         serviceApprovalStatus: 'approved',
         contractedServicesPerPeriod: 1,
         billingNotes: '',
-        primaryContactName: '',
-        contactEmail: '',
-        contactPhone: '',
-        emailNotificationsEnabled: false,
-        smsNotificationsEnabled: false,
+        primaryContactName: createDraft.primaryContactName.trim(),
+        contactEmail: createDraft.contactEmail.trim(),
+        contactPhone: createDraft.contactPhone.trim(),
+        emailNotificationsEnabled: createDraft.emailNotificationsEnabled,
+        smsNotificationsEnabled: createDraft.smsNotificationsEnabled,
         quietHoursStart: '',
         quietHoursEnd: '',
       });
@@ -112,7 +119,8 @@ export function ManagerCustomerAccountOnboardingPanel({
         ...current,
         [account.accountId]: deriveAccountOnboardingProgress(account, []),
       }));
-      setName('');
+      setCreateDraft(emptyCustomerAccountDraft);
+      setShowCreateForm(false);
       setMessage(`${account.customerName} account created.`);
     } catch {
       setMessage('The customer account could not be created.');
@@ -205,10 +213,22 @@ export function ManagerCustomerAccountOnboardingPanel({
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Customer onboarding</p>
       <h2 className="mt-1 text-xl font-bold text-slate-950">Customer accounts</h2>
-      <div className="mt-4 flex gap-2">
-        <input className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2" placeholder="Customer or company name" value={name} onChange={(event) => setName(event.target.value)} />
-        <button className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={isLoading} onClick={() => void create()} type="button">Add account</button>
-      </div>
+      {!showCreateForm ? (
+        <button className="mt-4 min-h-11 w-full rounded-lg bg-slate-950 px-4 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={isLoading} onClick={() => setShowCreateForm(true)} type="button">
+          Add customer account
+        </button>
+      ) : (
+        <CustomerAccountCreateForm
+          disabled={isLoading}
+          draft={createDraft}
+          onCancel={() => {
+            setCreateDraft(emptyCustomerAccountDraft);
+            setShowCreateForm(false);
+          }}
+          onChange={setCreateDraft}
+          onCreate={() => void create()}
+        />
+      )}
       {message ? <p className="mt-2 text-sm text-slate-600" role="status">{message}</p> : null}
       <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Account onboarding filters">
         {([
@@ -353,6 +373,59 @@ export function ManagerCustomerAccountOnboardingPanel({
         {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}
       </div>
     </section>
+  );
+}
+
+function CustomerAccountCreateForm({
+  draft,
+  disabled,
+  onCancel,
+  onChange,
+  onCreate,
+}: {
+  draft: CustomerAccountDraft;
+  disabled: boolean;
+  onCancel: () => void;
+  onChange: (draft: CustomerAccountDraft) => void;
+  onCreate: () => void;
+}) {
+  const update = <K extends keyof CustomerAccountDraft>(key: K, value: CustomerAccountDraft[K]) =>
+    onChange({ ...draft, [key]: value });
+  const validationError = customerAccountDraftError(draft);
+  return (
+    <div className="mt-4 grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3">
+      <p className="text-sm font-bold text-slate-900">New customer details</p>
+      <label className="text-sm font-semibold text-slate-700">Customer or company name
+        <input autoFocus className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" maxLength={160} onChange={(event) => update('customerName', event.target.value)} value={draft.customerName} />
+      </label>
+      <label className="text-sm font-semibold text-slate-700">Primary contact
+        <input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" maxLength={160} onChange={(event) => update('primaryContactName', event.target.value)} value={draft.primaryContactName} />
+      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-sm font-semibold text-slate-700">Contact email
+          <input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" maxLength={254} onChange={(event) => update('contactEmail', event.target.value)} type="email" value={draft.contactEmail} />
+        </label>
+        <label className="text-sm font-semibold text-slate-700">Mobile phone
+          <input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal" inputMode="tel" onChange={(event) => update('contactPhone', event.target.value)} placeholder="+14805550123" value={draft.contactPhone} />
+        </label>
+      </div>
+      <fieldset className="rounded-lg border border-emerald-200 bg-white p-3">
+        <legend className="px-1 text-sm font-semibold text-slate-700">Customer updates</legend>
+        <label className="flex min-h-11 items-center gap-2 text-sm text-slate-700">
+          <input checked={draft.emailNotificationsEnabled} disabled={!draft.contactEmail.trim()} onChange={(event) => update('emailNotificationsEnabled', event.target.checked)} type="checkbox" />
+          Customer opted into email updates
+        </label>
+        <label className="flex min-h-11 items-center gap-2 text-sm text-slate-700">
+          <input checked={draft.smsNotificationsEnabled} disabled={!draft.contactPhone.trim()} onChange={(event) => update('smsNotificationsEnabled', event.target.checked)} type="checkbox" />
+          Customer opted into SMS updates
+        </label>
+      </fieldset>
+      {validationError ? <p className="text-xs font-medium text-amber-800">{validationError}</p> : null}
+      <div className="flex justify-end gap-2">
+        <button className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" disabled={disabled} onClick={onCancel} type="button">Cancel</button>
+        <button className="min-h-11 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={disabled || Boolean(validationError)} onClick={onCreate} type="button">Create account</button>
+      </div>
+    </div>
   );
 }
 

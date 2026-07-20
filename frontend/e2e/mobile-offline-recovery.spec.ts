@@ -1,6 +1,63 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
+  let submittedAccount: Record<string, unknown> | null = null;
+  await page.route('**/customer-accounts', async (route) => {
+    if (route.request().method() === 'POST') {
+      submittedAccount = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({
+        contentType: 'application/json',
+        json: {
+          account_id: 'acct_mobile_smoke',
+          organization_id: submittedAccount.organization_id,
+          customer_name: submittedAccount.customer_name,
+          billing_model: submittedAccount.billing_model,
+          payment_status: submittedAccount.payment_status,
+          service_approval_status: submittedAccount.service_approval_status,
+          contracted_services_per_period: submittedAccount.contracted_services_per_period,
+          completed_services_this_period: 0,
+          billing_notes: '',
+          primary_contact_name: submittedAccount.primary_contact_name,
+          contact_email: submittedAccount.contact_email,
+          contact_phone: submittedAccount.contact_phone,
+          email_notifications_enabled: submittedAccount.email_notifications_enabled,
+          sms_notifications_enabled: submittedAccount.sms_notifications_enabled,
+          quiet_hours_start: '',
+          quiet_hours_end: '',
+          persisted: true,
+        },
+      });
+      return;
+    }
+    await route.fulfill({ contentType: 'application/json', json: [] });
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Customer accounts' })
+    .locator('xpath=ancestor::section[1]');
+  await onboarding.getByRole('button', { name: 'Add customer account' }).click();
+  await onboarding.getByLabel('Customer or company name').fill('Mobile Smoke HOA');
+  await onboarding.getByLabel('Primary contact').fill('Sam Lee');
+  await onboarding.getByLabel('Contact email').fill('sam@example.com');
+  await onboarding.getByLabel('Mobile phone').fill('+14805550123');
+  await onboarding.getByLabel('Customer opted into email updates').check();
+  await onboarding.getByRole('button', { name: 'Create account' }).click();
+
+  await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
+  expect(submittedAccount).toMatchObject({
+    customer_name: 'Mobile Smoke HOA',
+    primary_contact_name: 'Sam Lee',
+    contact_email: 'sam@example.com',
+    contact_phone: '+14805550123',
+    email_notifications_enabled: true,
+    sms_notifications_enabled: false,
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('queues route progress during interruption and replays after recovery', async ({
   context,
   page,

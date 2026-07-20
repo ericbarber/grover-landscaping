@@ -213,6 +213,9 @@ version and release date.
 
 ## Unreleased — Pilot Readiness
 
+- Added one-step mobile customer-account creation with validated primary contact,
+  communication destination, and explicit notification consent.
+
 Current continuation work:
 
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.

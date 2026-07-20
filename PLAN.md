@@ -221,6 +221,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Account onboarding progress combines customer details, property coverage, service readiness, and activation
 - Mobile customer account cards refresh progress after profile, crew, and lifecycle changes
 - Manager account onboarding filters separate incomplete work from completed accounts
+- Managers can create a service-ready account with primary contact, email or mobile destination, and explicit channel consent in one mobile workflow
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -718,9 +719,9 @@ Current state:
 
 Next implementation work:
 
-- Let managers create a customer account with its primary contact and communication destination in one mobile workflow
-- Validate the new-account contact draft before submission and preserve explicit notification opt-in
-- Cover the complete account-creation path with focused component and mobile smoke tests
+- Add customer-account search across customer, contact, email, phone, and property details
+- Keep onboarding status filters composable with account search on mobile
+- Cover account discovery and empty-result guidance with focused tests
 
 ## Planned
 
