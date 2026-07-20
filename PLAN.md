@@ -22,6 +22,10 @@ This file tracks what has been delivered, what is actively being built, what is 
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`
 - Public marketing remains independent of API, network, update, and installation banners so backend readiness cannot make the homepage appear unavailable
+- Persona-specific conversion actions distinguish demo requests, portfolio discussions, and yard-owner early access
+- Conversion form captures contact consent, audience, team or portfolio size, goals, landing path, and UTM attribution with a hidden spam honeypot
+- Public marketing-lead API validates requests and persists production submissions to PostgreSQL without requiring authentication
+- Confirmation clearly distinguishes durably recorded production requests from non-persisted local preview submissions
 
 ### Mobile navigation and context
 

@@ -4,6 +4,7 @@ mod completion_reports;
 #[allow(dead_code)]
 mod day_plans;
 mod db;
+mod marketing_leads;
 mod notifications;
 mod photo_processing;
 mod photo_storage;
@@ -93,6 +94,10 @@ use grover_landscaping_api::{
         PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
 };
+use marketing_leads::{
+    is_marketing_lead_spam, validate_marketing_lead_request, CreateMarketingLeadRequest,
+    MarketingLeadRepository, MarketingLeadResponse, MarketingLeadWriteResult,
+};
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
     NotificationHistoryFilter, NotificationOutboxRepository, NotificationResolveResult,
@@ -133,6 +138,7 @@ struct AppState {
     property_portfolios: PropertyPortfolioRepository,
     property_crew_assignments: PropertyCrewAssignmentRepository,
     property_onboarding: PropertyOnboardingRepository,
+    marketing_leads: MarketingLeadRepository,
 }
 
 #[derive(Debug, Serialize)]
@@ -416,6 +422,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         property_portfolios,
         property_crew_assignments,
         property_onboarding,
+        marketing_leads,
         accounts,
         persistence,
     ) = match DatabaseConfig::from_env() {
@@ -432,7 +439,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let property_portfolios = PropertyPortfolioRepository::from_pool(pool.clone());
             let property_crew_assignments =
                 PropertyCrewAssignmentRepository::from_pool(pool.clone());
-            let property_onboarding = PropertyOnboardingRepository::from_pool(pool);
+            let property_onboarding = PropertyOnboardingRepository::from_pool(pool.clone());
+            let marketing_leads = MarketingLeadRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
                     .expect("connected jobs repository should expose a pool"),
@@ -446,6 +454,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 property_portfolios,
                 property_crew_assignments,
                 property_onboarding,
+                marketing_leads,
                 accounts,
                 "postgres",
             )
@@ -464,6 +473,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             PropertyPortfolioRepository::default(),
             PropertyCrewAssignmentRepository::default(),
             PropertyOnboardingRepository::default(),
+            MarketingLeadRepository::default(),
             AccountRepository::new(),
             "seed-local",
         ),
@@ -504,6 +514,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             property_portfolios,
             property_crew_assignments,
             property_onboarding,
+            marketing_leads,
         }),
         persistence,
         persistence == "postgres",
@@ -556,6 +567,7 @@ fn app_with_runtime(
                 async move { Json(config) }
             }),
         )
+        .route("/marketing-leads", post(create_marketing_lead))
         .route("/me/access", get(get_my_access))
         .route(
             "/customer-accounts",
@@ -876,6 +888,44 @@ async fn health(persistence: &'static str) -> impl IntoResponse {
         service: "grover-landscaping-api",
         persistence,
     })
+}
+
+async fn create_marketing_lead(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<CreateMarketingLeadRequest>,
+) -> Response {
+    if let Err(code) = validate_marketing_lead_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: code,
+                message: "Marketing inquiry details are invalid.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    if is_marketing_lead_spam(&request) {
+        return (
+            StatusCode::CREATED,
+            Json(MarketingLeadResponse {
+                id: format!("lead_{}", Uuid::new_v4()),
+                status: "received",
+                persisted: false,
+            }),
+        )
+            .into_response();
+    }
+
+    match state.marketing_leads.create(request).await {
+        MarketingLeadWriteResult::Saved(response) => {
+            (StatusCode::CREATED, Json(response)).into_response()
+        }
+        MarketingLeadWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "marketing_lead_unavailable",
+            "Your request could not be saved. Please try again.",
+        ),
+    }
 }
 
 async fn readiness(
@@ -6215,6 +6265,7 @@ mod tests {
             property_portfolios: PropertyPortfolioRepository::default(),
             property_crew_assignments: PropertyCrewAssignmentRepository::default(),
             property_onboarding: PropertyOnboardingRepository::default(),
+            marketing_leads: MarketingLeadRepository::default(),
         })
     }
 
@@ -6440,6 +6491,69 @@ mod tests {
 
         assert_eq!(json["status"], "ok");
         assert_eq!(json["service"], "grover-landscaping-api");
+    }
+
+    #[tokio::test]
+    async fn marketing_lead_endpoint_validates_and_accepts_public_requests() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/marketing-leads")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "full_name": "Jordan Rivera",
+                            "email": "jordan@example.com",
+                            "company_name": "Rivera Landscape",
+                            "persona": "landscaping_company",
+                            "team_size": "6-20",
+                            "intent": "demo",
+                            "message": "We manage three crews.",
+                            "source": "google",
+                            "medium": "cpc",
+                            "campaign": "phoenix_launch",
+                            "landing_path": "/?utm_source=google",
+                            "consent_to_contact": true,
+                            "website": ""
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["status"], "received");
+        assert_eq!(json["persisted"], false);
+        assert!(json["id"].as_str().unwrap().starts_with("lead_"));
+
+        let invalid_response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/marketing-leads")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "full_name": "J",
+                            "email": "invalid",
+                            "persona": "unknown",
+                            "intent": "demo",
+                            "landing_path": "/",
+                            "consent_to_contact": false
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

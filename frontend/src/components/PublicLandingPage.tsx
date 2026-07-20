@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import type { MarketingPersona } from '../api/marketingLeadsClient';
+import {
+  marketingCallToAction,
+  MarketingLeadDialog,
+} from './MarketingLeadDialog';
 
 type MarketingPersonaId = 'owner' | 'property-manager' | 'company' | 'crew';
 
@@ -65,10 +70,20 @@ const productSteps = [
   },
 ];
 
+function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
+  if (id === 'owner') return 'yard_owner';
+  if (id === 'property-manager') return 'property_manager';
+  if (id === 'crew') return 'crew_lead';
+  return 'landscaping_company';
+}
+
 export function PublicLandingPage() {
   const [activePersonaId, setActivePersonaId] = useState<MarketingPersonaId>('company');
+  const [leadDialogPersona, setLeadDialogPersona] = useState<MarketingPersona | null>(null);
   const activePersona = marketingPersonas.find((persona) => persona.id === activePersonaId)
     ?? marketingPersonas[0];
+  const activeMarketingPersona = marketingPersonaFor(activePersona.id);
+  const activeCallToAction = marketingCallToAction(activeMarketingPersona);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f6f7f2] text-slate-950">
@@ -105,9 +120,9 @@ export function PublicLandingPage() {
               Grover connects the people, properties, and promises behind exceptional landscape care—so every day runs clearer and every customer sees the difference.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href="/app">
-                Explore the workspace <span className="ml-2" aria-hidden="true">→</span>
-              </a>
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona('landscaping_company')} type="button">
+                Request a demo <span className="ml-2" aria-hidden="true">→</span>
+              </button>
               <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 font-black text-white backdrop-blur-sm transition hover:bg-white/15" href="#who-its-for">
                 See who it’s for
               </a>
@@ -188,6 +203,13 @@ export function PublicLandingPage() {
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">{activePersona.eyebrow}</p>
               <h3 className="mt-4 text-4xl font-black leading-tight tracking-tight">{activePersona.headline}</h3>
               <p className="mt-4 text-base leading-7 text-slate-300">{activePersona.description}</p>
+              <button
+                className="mt-7 rounded-full bg-emerald-400 px-5 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
+                onClick={() => setLeadDialogPersona(activeMarketingPersona)}
+                type="button"
+              >
+                {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
+              </button>
             </div>
             <div className="grid gap-px bg-white/10 sm:grid-cols-3">
               {activePersona.outcomes.map((outcome, index) => (
@@ -252,9 +274,14 @@ export function PublicLandingPage() {
           <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Make the work visible</p>
           <h2 className="mt-5 text-4xl font-black leading-tight tracking-tight sm:text-6xl">A better property experience starts with a clearer day.</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">Step into Grover and explore the role-aware workspace already taking shape.</p>
-          <a className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href="/app">
-            Open Grover <span className="ml-2" aria-hidden="true">→</span>
-          </a>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => setLeadDialogPersona(activeMarketingPersona)} type="button">
+              {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
+            </button>
+            <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" href="/app">
+              Existing user sign in
+            </a>
+          </div>
         </div>
       </section>
 
@@ -264,6 +291,12 @@ export function PublicLandingPage() {
           <p>Plan the work. Care for the property. Prove the difference.</p>
         </div>
       </footer>
+      {leadDialogPersona ? (
+        <MarketingLeadDialog
+          initialPersona={leadDialogPersona}
+          onClose={() => setLeadDialogPersona(null)}
+        />
+      ) : null}
     </main>
   );
 }

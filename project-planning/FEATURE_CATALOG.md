@@ -6,7 +6,10 @@
 - Interactive benefit stories for yard owners, property managers, landscaping companies, and crew leads
 - Plan-Care-Proof product narrative and representative workspace preview
 - Responsive product capability and trust sections
-- Planned extensions: customer proof, production screenshots, campaign paths, demo capture, and attribution
+- Persona-specific demo, portfolio-discussion, and early-access conversion paths
+- Consent-based PostgreSQL lead capture with landing-page and UTM attribution
+- Honeypot spam filtering and honest local-preview confirmation
+- Planned extensions: customer proof, production screenshots, campaign paths, lead notifications, and conversion analytics
 
 ## Persona Workspaces
 
