@@ -665,10 +665,11 @@ Current state:
 - A single reset restores persisted owner activity filters and ordering to the default newest/all review view
 - Owner activity filters crew moves by readable source and destination branch or territory across paginated server history
 - Directional crew-move source and destination fields restore per organization across mobile reloads and clear with the review reset
+- Touch-safe source and destination chips expose active directional review and remove either filter independently
 
 Next implementation work:
 
-- Show removable source and destination review chips on mobile
+- Open the affected crew directly from a hierarchy-move owner activity record
 
 ## Planned
 

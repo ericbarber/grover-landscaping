@@ -647,6 +647,30 @@ export function ManagerTeamActivityPanel({
           </button>
         ) : null}
       </div>
+      {sourceQuery || destinationQuery ? (
+        <div className="mt-2 flex flex-wrap gap-2" aria-label="Directional move filters">
+          {sourceQuery ? (
+            <button
+              aria-label={`Remove source filter ${sourceQuery}`}
+              className="min-h-11 max-w-full rounded-full bg-sky-100 px-3 text-left text-xs font-bold text-sky-950"
+              onClick={() => setSourceQuery('')}
+              type="button"
+            >
+              <span className="block truncate">Source: {sourceQuery} ×</span>
+            </button>
+          ) : null}
+          {destinationQuery ? (
+            <button
+              aria-label={`Remove destination filter ${destinationQuery}`}
+              className="min-h-11 max-w-full rounded-full bg-emerald-100 px-3 text-left text-xs font-bold text-emerald-950"
+              onClick={() => setDestinationQuery('')}
+              type="button"
+            >
+              <span className="block truncate">Destination: {destinationQuery} ×</span>
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <ol className="mt-4 space-y-2">
         {filteredActivity.map((item) => (
           <li className="rounded-lg bg-slate-50 p-3 text-sm" key={item.id}>

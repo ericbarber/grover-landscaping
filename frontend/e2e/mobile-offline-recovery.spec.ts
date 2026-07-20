@@ -236,6 +236,13 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
   await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('cross_branch');
+  await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
+  await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(teamActivity.getByLabel('Find move destination')).toHaveValue('Primary Territory');
+  await teamActivity.getByRole('button', {
+    name: 'Remove source filter Main Branch',
+  }).click();
+  await expect(teamActivity.getByLabel('Find move source')).toHaveValue('');
   await teamActivity.getByRole('button', { name: 'Reset review view' }).click();
   await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('all');
