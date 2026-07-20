@@ -175,6 +175,7 @@ export function filterStaffingCrewCandidates(
   branches: OrganizationBranchRecord[],
   territories: ServiceTerritoryRecord[],
   query: string,
+  targetBranchId?: string,
   limit = 6,
 ) {
   const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -187,7 +188,12 @@ export function filterStaffingCrewCandidates(
       return [crew.name, branch?.name, territory?.name]
         .some((value) => value?.toLocaleLowerCase().includes(normalizedQuery));
     })
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .sort((left, right) => {
+      const leftSameBranch = left.branchId === targetBranchId;
+      const rightSameBranch = right.branchId === targetBranchId;
+      if (leftSameBranch !== rightSameBranch) return leftSameBranch ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    });
   return {
     crews: matching.slice(0, Math.max(0, limit)),
     total: matching.length,
@@ -645,6 +651,7 @@ export function ManagerDispatchHierarchyPanel({
                 branches,
                 territories,
                 staffingCrewQuery,
+                territory.branchId,
               );
               return (
                 <div

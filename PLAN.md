@@ -650,10 +650,11 @@ Current state:
 - Crew administration identifies prepared hierarchy destinations as unsaved and can restore the crew's saved assignment before submission
 - Each active unstaffed territory offers direct active-crew choices with current hierarchy and daily capacity context
 - Territory staffing candidate lists search crew and hierarchy names, cap initial results, and guide refinement when matches exceed the mobile list
+- Territory staffing choices prioritize crews already assigned to the destination branch before cross-branch candidates
 
 Next implementation work:
 
-- Prioritize same-branch staffing candidates before cross-branch crew moves
+- Show source-to-destination impact and a cross-branch warning before saving a prepared crew move
 
 ## Planned
 

@@ -208,15 +208,27 @@ describe('dispatch hierarchy summaries', () => {
         territoryId: 'territory_2',
         status: 'inactive',
       },
+      {
+        id: 'crew_4',
+        name: 'Aardvark South Crew',
+        branchId: 'branch_2',
+        territoryId: 'territory_2',
+        status: 'active',
+      },
     ] as CrewRecord[];
 
-    expect(filterStaffingCrewCandidates(crews, branches, territories, 'desert', 1)).toEqual({
+    expect(filterStaffingCrewCandidates(crews, branches, territories, 'desert', undefined, 1))
+      .toEqual({
       crews: [crews[1]],
       total: 2,
     });
     expect(filterStaffingCrewCandidates(crews, branches, territories, 'south')).toEqual({
-      crews: [],
-      total: 0,
+      crews: [crews[3]],
+      total: 1,
+    });
+    expect(filterStaffingCrewCandidates(crews, branches, territories, '', 'branch_1', 2)).toEqual({
+      crews: [crews[1], crews[0]],
+      total: 3,
     });
   });
 });
