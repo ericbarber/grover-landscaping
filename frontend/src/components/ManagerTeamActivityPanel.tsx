@@ -322,6 +322,7 @@ export function ManagerTeamActivityPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [reviewNotice, setReviewNotice] = useState<string | null>(null);
   const filteredActivity = sortTeamActivity(
     filterTeamActivity(
       activity,
@@ -443,6 +444,7 @@ export function ManagerTeamActivityPanel({
 
   function resetReviewView() {
     focusedReviewRestoreRef.current = null;
+    setReviewNotice(null);
     setActorQuery('');
     setTargetQuery('');
     setSourceQuery('');
@@ -468,6 +470,7 @@ export function ManagerTeamActivityPanel({
     setEventFilter(prior.eventFilter);
     setMoveScope(prior.moveScope);
     setActivitySort(prior.activitySort);
+    setReviewNotice('Your prior owner activity review was restored.');
   }
 
   useEffect(() => {
@@ -490,6 +493,7 @@ export function ManagerTeamActivityPanel({
 
   useEffect(() => {
     if (requestedCrewSignal <= 0 || !requestedCrewId) return;
+    setReviewNotice(null);
     if (!focusedReviewRestoreRef.current) {
       focusedReviewRestoreRef.current = {
         actorQuery,
@@ -580,6 +584,11 @@ export function ManagerTeamActivityPanel({
         </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      {reviewNotice ? (
+        <p className="mt-3 rounded-lg bg-sky-50 p-3 text-sm font-semibold text-sky-950" role="status">
+          {reviewNotice}
+        </p>
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
         {[
           { label: 'Loaded', value: summary.total },

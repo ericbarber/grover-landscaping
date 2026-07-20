@@ -683,10 +683,11 @@ Current state:
 - Focused latest-move context remains visible and selected after inspecting the newest event and returning to owner activity
 - Focused crew history provides a dedicated touch-safe exit from the specialized activity review
 - Exiting focused crew history restores the owner's prior transient and persisted activity filters and ordering
+- Owner activity confirms when a prior review has been restored after focused crew history
 
 Next implementation work:
 
-- Identify the restored owner activity review after leaving focused crew history
+- Let owners dismiss restored-review feedback without changing their filters
 
 ## Planned
 

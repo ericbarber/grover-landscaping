@@ -477,6 +477,8 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
+  await expect(teamActivity.getByText('Your prior owner activity review was restored.'))
+    .toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });
