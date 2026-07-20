@@ -43,9 +43,9 @@ use day_plans::{
     AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
     CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
     CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
-    PersistedReadResult, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
-    UpdateBranchStatusResult, UpdateCrewRequest, UpdateCrewResult, UpdateHierarchyStatusRequest,
-    UpdateTerritoryStatusResult,
+    PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
+    ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult, UpdateCrewRequest, UpdateCrewResult,
+    UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
@@ -3222,8 +3222,8 @@ async fn create_organization_crew(
         return response;
     }
     match state.day_plans.create_crew(&organization_id, request).await {
-        Some(crew) => (StatusCode::CREATED, Json(crew)).into_response(),
-        None => (
+        PersistedMutationResult::Applied(crew) => (StatusCode::CREATED, Json(crew)).into_response(),
+        PersistedMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "crew_already_exists",
@@ -3231,6 +3231,11 @@ async fn create_organization_crew(
             }),
         )
             .into_response(),
+        PersistedMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "crew_creation_unavailable",
+            "The crew could not be created in persisted storage.",
+        ),
+        PersistedMutationResult::NotFound => unreachable!("crew creation has no missing target"),
     }
 }
 
@@ -3349,6 +3354,10 @@ async fn update_organization_crew(
         UpdateCrewResult::NotFound => resource_not_found_response(
             "crew_not_found",
             "The requested crew was not found in this organization.",
+        ),
+        UpdateCrewResult::Unavailable => persisted_resource_unavailable_response(
+            "crew_update_unavailable",
+            "The crew could not be updated in persisted storage.",
         ),
     }
 }

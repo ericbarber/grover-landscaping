@@ -204,6 +204,7 @@ pub enum UpdateCrewResult {
     OperationalConflict,
     InvalidHierarchy,
     NotFound,
+    Unavailable,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -824,19 +825,23 @@ impl DayPlanRepository {
         &self,
         organization_id: &str,
         request: CreateCrewRequest,
-    ) -> Option<CrewSummary> {
+    ) -> PersistedMutationResult<CrewSummary> {
         let name = request.name.trim();
         if validate_create_crew_name(name).is_err() {
-            return None;
+            return PersistedMutationResult::Conflict;
         }
         let id = format!("crew_{}", Uuid::new_v4().simple());
         if let Some(pool) = &self.pool {
-            return postgres_day_plans::create_crew(pool, &id, organization_id, name)
-                .await
-                .ok()
-                .flatten();
+            return match postgres_day_plans::create_crew(pool, &id, organization_id, name).await {
+                Ok(Some(crew)) => PersistedMutationResult::Applied(crew),
+                Ok(None) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted crew creation failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
-        Some(CrewSummary {
+        PersistedMutationResult::Applied(CrewSummary {
             id,
             name: name.to_string(),
             organization_id: organization_id.to_string(),
@@ -895,7 +900,10 @@ impl DayPlanRepository {
                 request.territory_id.as_deref(),
             )
             .await
-            .unwrap_or(UpdateCrewResult::NotFound);
+            .unwrap_or_else(|error| {
+                tracing::error!(%error, organization_id, crew_id, "persisted crew update failed");
+                UpdateCrewResult::Unavailable
+            });
         }
         let Some(mut crew) = seed_crews(&[organization_id.to_string()])
             .into_iter()
@@ -1786,7 +1794,7 @@ mod tests {
 
     #[tokio::test]
     async fn repository_creates_trimmed_local_crew_without_database_pool() {
-        let crew = DayPlanRepository::default()
+        let PersistedMutationResult::Applied(crew) = DayPlanRepository::default()
             .create_crew(
                 "org_demo_landscaping",
                 CreateCrewRequest {
@@ -1794,7 +1802,9 @@ mod tests {
                 },
             )
             .await
-            .expect("local crew should be created");
+        else {
+            panic!("local crew should be created");
+        };
 
         assert_eq!(crew.name, "North Route");
         assert_eq!(crew.organization_id, "org_demo_landscaping");

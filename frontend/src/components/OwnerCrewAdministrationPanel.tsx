@@ -10,6 +10,7 @@ import {
   type OrganizationMembership,
   type ServiceTerritoryRecord,
 } from '../api/client';
+import { isApiErrorCode } from '../api/apiError';
 
 type Props = {
   organizationId: string;
@@ -313,9 +314,11 @@ export function OwnerCrewAdministrationPanel({
         );
       }
       onCrewChanged?.(updated);
-    } catch {
+    } catch (error) {
       setMessage(
-        nextStatus === 'inactive'
+        isApiErrorCode(error, 'crew_update_unavailable')
+          ? 'Crew storage is temporarily unavailable. The crew was not reported as missing.'
+          : nextStatus === 'inactive'
           ? 'This crew cannot be deactivated while it has active properties or current routes.'
           : 'The crew could not be updated. Use a unique name and try again.',
       );

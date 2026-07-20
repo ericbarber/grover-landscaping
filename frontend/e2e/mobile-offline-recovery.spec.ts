@@ -1,6 +1,28 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('distinguishes unavailable crew updates from missing crews', async ({ page }) => {
+  await page.route('**/organizations/*/crews/*', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'crew_update_unavailable',
+      message: 'The crew could not be updated in persisted storage.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const administration = page
+    .getByRole('heading', { name: 'Crew administration' })
+    .locator('xpath=ancestor::div[1]');
+  await administration.getByLabel('Crew name').fill('Unavailable update check');
+  await administration.getByRole('button', { name: 'Save crew profile' }).click();
+  await expect(administration.getByText(
+    'Crew storage is temporarily unavailable. The crew was not reported as missing.',
+  )).toBeVisible();
+});
+
 test('does not present an empty dispatch hierarchy during persisted collection outages', async ({
   page,
 }) => {

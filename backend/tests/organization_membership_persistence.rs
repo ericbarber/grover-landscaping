@@ -274,7 +274,7 @@ async fn repository_bootstraps_first_owner_once() {
     else {
         panic!("owner should create the default territory");
     };
-    let crew = day_plans
+    let PersistedMutationResult::Applied(crew) = day_plans
         .create_crew(
             &created.organization_id,
             CreateCrewRequest {
@@ -282,7 +282,9 @@ async fn repository_bootstraps_first_owner_once() {
             },
         )
         .await
-        .expect("owner should create the first crew");
+    else {
+        panic!("owner should create the first crew");
+    };
     assert!(crew.persisted);
     assert_eq!(crew.organization_id, created.organization_id);
     assert!(

@@ -241,8 +241,12 @@ export function FirstOwnerOnboardingPanel({
       setCrewName('');
       setMessage(`${crew.name} created${crew.persisted ? '' : ' in local demo mode'}.`);
       await refresh();
-    } catch {
-      setMessage('The crew could not be created. Use a unique name and try again.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'crew_creation_unavailable')
+          ? 'Crew storage is temporarily unavailable. No duplicate crew is being reported.'
+          : 'The crew could not be created. Use a unique name and try again.',
+      );
     } finally {
       setIsCreatingCrew(false);
     }

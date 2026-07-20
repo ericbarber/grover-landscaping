@@ -44,6 +44,35 @@ async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
             .await,
         PersistedReadResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .create_crew(
+                "org_demo_landscaping",
+                grover_landscaping_api::day_plans::CreateCrewRequest {
+                    name: "Unavailable Crew".to_string(),
+                },
+            )
+            .await,
+        PersistedMutationResult::Unavailable
+    ));
+    assert_eq!(
+        repository
+            .update_crew(
+                "org_demo_landscaping",
+                "crew_1001",
+                "integration_user",
+                grover_landscaping_api::day_plans::UpdateCrewRequest {
+                    name: "Unavailable Crew".to_string(),
+                    status: "active".to_string(),
+                    daily_stop_capacity: Some(10),
+                    lead_membership_id: None,
+                    branch_id: None,
+                    territory_id: None,
+                },
+            )
+            .await,
+        grover_landscaping_api::day_plans::UpdateCrewResult::Unavailable
+    );
 }
 
 async fn reset_day_plan_fixture(pool: &PgPool, day_plan_id: &str) {
