@@ -388,12 +388,14 @@ Delivered:
 - Phone job actions queue durable offline mutations instead of reporting persisted success during write outages
 - Shared completion-report and property report-history reads distinguish unavailable persistence from missing or empty results
 - Customer report links explain storage outages separately from invalid links
+- Completion-report persistence and immutable delivered-snapshot writes return explicit unavailable outcomes
+- Report construction and delivery refuse to report success when required persisted artifacts cannot be stored
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable completion-report persistence and delivered-snapshot writes from unsaved reports
-- Add repository and phone-flow coverage for completion-report write availability
+- Distinguish unavailable photo-upload creation and completion writes from accepted uploads
+- Add repository and phone-flow coverage for photo write availability
 
 ### Manager scheduling workflow
 
@@ -823,12 +825,13 @@ Current state:
 - Principal access reads fail closed and report explicit unavailable outcomes
 - Job lifecycle and checklist writes return explicit missing, conflict, and unavailable outcomes
 - Completion-report share and property-history reads return explicit missing and unavailable outcomes
+- Completion-report persistence and snapshot writes return explicit unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable completion-report persistence and delivered-snapshot writes from unsaved reports
-- Add repository and phone-flow coverage for completion-report write availability
+- Distinguish unavailable photo-upload creation and completion writes from accepted uploads
+- Add repository and phone-flow coverage for photo write availability
 
 ## Planned
 

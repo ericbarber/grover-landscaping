@@ -115,7 +115,28 @@ async fn repository_persists_completion_report_state() {
     };
     let report = build_completion_report(job, account.clone(), Vec::new(), Vec::new());
 
-    let persistence = repository.persist_completion_report(&report).await;
+    let unavailable_pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable write test pool URL should be valid");
+    let unavailable_repository = JobRepository::from_pool(unavailable_pool);
+    assert!(matches!(
+        unavailable_repository
+            .persist_completion_report(&report)
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        unavailable_repository
+            .store_delivered_completion_report_snapshot("report_job_1001", &report)
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+
+    let persistence = loaded(
+        repository.persist_completion_report(&report).await,
+        "completion report should persist",
+    );
     assert!(persistence.persisted);
     assert_eq!(persistence.report_status.as_deref(), Some("draft"));
     assert_eq!(persistence.share_token, None);
@@ -158,7 +179,10 @@ async fn repository_persists_completion_report_state() {
         CompletionReportActionResult::Updated(ref response)
             if response.report_status == "in_review" && response.persisted
     ));
-    let second_persistence = repository.persist_completion_report(&report).await;
+    let second_persistence = loaded(
+        repository.persist_completion_report(&report).await,
+        "second completion report write should persist",
+    );
     assert_eq!(
         second_persistence.report_status.as_deref(),
         Some("in_review")
@@ -196,7 +220,10 @@ async fn repository_persists_completion_report_state() {
             if response.report_status == "submitted" && response.share_url.is_none()
     ));
 
-    let after_resubmit = repository.persist_completion_report(&report).await;
+    let after_resubmit = loaded(
+        repository.persist_completion_report(&report).await,
+        "resubmitted completion report should persist",
+    );
     assert_eq!(after_resubmit.report_status.as_deref(), Some("submitted"));
 
     let second_review = repository
@@ -234,7 +261,10 @@ async fn repository_persists_completion_report_state() {
             if response.report_status == "delivered" && response.share_url.is_some()
     ));
 
-    let delivered_persistence = repository.persist_completion_report(&report).await;
+    let delivered_persistence = loaded(
+        repository.persist_completion_report(&report).await,
+        "delivered completion report should persist",
+    );
     assert_eq!(
         delivered_persistence.report_status.as_deref(),
         Some("delivered")
@@ -281,11 +311,12 @@ async fn repository_persists_completion_report_state() {
         build_completion_report(delivered_job, account.clone(), Vec::new(), Vec::new());
     apply_completion_report_persistence(&mut delivered_snapshot, delivered_persistence.clone());
     let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
-    assert!(
+    assert!(matches!(
         repository
             .store_delivered_completion_report_snapshot("report_job_1001", &delivered_snapshot)
-            .await
-    );
+            .await,
+        ResourceReadResult::Loaded(())
+    ));
 
     sqlx::query("UPDATE service_jobs SET customer_name = 'Changed Customer' WHERE id = 'job_1001'")
         .execute(&pool)

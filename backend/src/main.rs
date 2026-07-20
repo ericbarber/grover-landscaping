@@ -4604,14 +4604,19 @@ async fn deliver_completion_report(
                     Err(response) => return response,
                 };
             let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
-            if !state
-                .jobs
-                .store_delivered_completion_report_snapshot(&report.report_id, &delivered_snapshot)
-                .await
-            {
-                tracing::warn!(
-                    report_id = report.report_id,
-                    "delivered completion report snapshot was not stored"
+            if !matches!(
+                state
+                    .jobs
+                    .store_delivered_completion_report_snapshot(
+                        &report.report_id,
+                        &delivered_snapshot
+                    )
+                    .await,
+                ResourceReadResult::Loaded(())
+            ) {
+                return persisted_resource_unavailable_response(
+                    "completion_report_snapshot_unavailable",
+                    "The report was delivered, but its immutable customer snapshot could not be stored.",
                 );
             }
 
@@ -4983,7 +4988,18 @@ async fn build_and_persist_completion_report(
             }
         }
     }
-    let persistence = state.jobs.persist_completion_report(&report).await;
+    let persistence = match state.jobs.persist_completion_report(&report).await {
+        ResourceReadResult::Loaded(persistence) => persistence,
+        ResourceReadResult::Unavailable => {
+            return Err(persisted_resource_unavailable_response(
+                "completion_report_persistence_unavailable",
+                "The completion report could not be saved to persisted storage.",
+            ));
+        }
+        ResourceReadResult::NotFound => {
+            unreachable!("completion report persistence is never a read miss")
+        }
+    };
     apply_completion_report_persistence(&mut report, persistence);
 
     Ok(report)

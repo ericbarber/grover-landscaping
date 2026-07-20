@@ -802,16 +802,19 @@ impl JobRepository {
     pub async fn persist_completion_report(
         &self,
         report: &CompletionReportResponse,
-    ) -> CompletionReportPersistence {
+    ) -> ResourceReadResult<CompletionReportPersistence> {
         if let Some(pool) = &self.pool {
-            if let Ok(persistence) =
-                postgres_completion_reports::persist_completion_report(pool, report).await
+            return match postgres_completion_reports::persist_completion_report(pool, report).await
             {
-                return persistence;
-            }
+                Ok(persistence) => ResourceReadResult::Loaded(persistence),
+                Err(error) => {
+                    tracing::error!(%error, report_id = report.report_id, "persisted completion report write failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        CompletionReportPersistence::default()
+        ResourceReadResult::Loaded(CompletionReportPersistence::default())
     }
 
     pub async fn job_id_for_report_share_token(
@@ -889,14 +892,22 @@ impl JobRepository {
         &self,
         report_id: &str,
         report: &CompletionReportResponse,
-    ) -> bool {
+    ) -> ResourceReadResult<()> {
         if let Some(pool) = &self.pool {
-            return postgres_completion_reports::store_delivered_snapshot(pool, report_id, report)
-                .await
-                .is_ok();
+            return match postgres_completion_reports::store_delivered_snapshot(
+                pool, report_id, report,
+            )
+            .await
+            {
+                Ok(()) => ResourceReadResult::Loaded(()),
+                Err(error) => {
+                    tracing::error!(%error, report_id, "persisted delivered report snapshot write failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        false
+        ResourceReadResult::Unavailable
     }
 
     pub async fn queue_completion_report_delivery_notification(
