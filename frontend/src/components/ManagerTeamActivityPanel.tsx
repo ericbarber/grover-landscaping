@@ -3,6 +3,7 @@ import {
   fetchTeamAdministrationActivity,
   type TeamAdministrationActivity,
   type TeamAdministrationEventKind,
+  type TeamActivityMoveScope,
 } from '../api/client';
 
 export function teamActivityLabel(eventKind: TeamAdministrationEventKind): string {
@@ -67,6 +68,7 @@ export function filterTeamActivity(
   targetQuery: string,
   auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
+  moveScope: TeamActivityMoveScope | 'all' = 'all',
 ): TeamAdministrationActivity[] {
   const normalizedQuery = actorQuery.trim().toLocaleLowerCase();
   const normalizedTarget = targetQuery.trim().toLocaleLowerCase();
@@ -89,7 +91,14 @@ export function filterTeamActivity(
     return matchesActor
       && matchesTarget
       && matchesAuditId
-      && (eventKind === 'all' || item.eventKind === eventKind);
+      && (eventKind === 'all' || item.eventKind === eventKind)
+      && (
+        moveScope === 'all'
+        || (
+          item.eventKind === 'crew_hierarchy_updated'
+          && item.crossBranchMove === (moveScope === 'cross_branch')
+        )
+      );
   });
 }
 
@@ -98,11 +107,13 @@ export function teamActivityActiveFilterCount(
   targetQuery: string,
   auditIdQuery: string,
   eventKind: TeamAdministrationEventKind | 'all',
+  moveScope: TeamActivityMoveScope | 'all' = 'all',
 ): number {
   return Number(Boolean(actorQuery.trim()))
     + Number(Boolean(targetQuery.trim()))
     + Number(Boolean(auditIdQuery.trim()))
-    + Number(eventKind !== 'all');
+    + Number(eventKind !== 'all')
+    + Number(moveScope !== 'all');
 }
 
 export type TeamActivitySort = 'newest' | 'oldest';
@@ -192,12 +203,13 @@ export function ManagerTeamActivityPanel({
   const [targetQuery, setTargetQuery] = useState('');
   const [auditIdQuery, setAuditIdQuery] = useState('');
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>('all');
+  const [moveScope, setMoveScope] = useState<TeamActivityMoveScope | 'all'>('all');
   const [activitySort, setActivitySort] = useState<TeamActivitySort>('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const filteredActivity = sortTeamActivity(
-    filterTeamActivity(activity, actorQuery, targetQuery, auditIdQuery, eventFilter),
+    filterTeamActivity(activity, actorQuery, targetQuery, auditIdQuery, eventFilter, moveScope),
     activitySort,
   );
   const activeFilterCount = teamActivityActiveFilterCount(
@@ -205,6 +217,7 @@ export function ManagerTeamActivityPanel({
     targetQuery,
     auditIdQuery,
     eventFilter,
+    moveScope,
   );
   const summary = summarizeTeamActivity(activity);
 
@@ -214,6 +227,7 @@ export function ManagerTeamActivityPanel({
     try {
       const loaded = await fetchTeamAdministrationActivity(organizationId, {
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
+        moveScope: moveScope === 'all' ? undefined : moveScope,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
         auditId: auditIdQuery.trim() || undefined,
@@ -237,6 +251,7 @@ export function ManagerTeamActivityPanel({
       const older = await fetchTeamAdministrationActivity(organizationId, {
         before,
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
+        moveScope: moveScope === 'all' ? undefined : moveScope,
         actor: actorQuery.trim() || undefined,
         target: targetQuery.trim() || undefined,
         auditId: auditIdQuery.trim() || undefined,
@@ -282,7 +297,15 @@ export function ManagerTeamActivityPanel({
       actorQuery || targetQuery || auditIdQuery ? 300 : 0,
     );
     return () => window.clearTimeout(timeout);
-  }, [organizationId, refreshSignal, eventFilter, actorQuery, targetQuery, auditIdQuery]);
+  }, [
+    organizationId,
+    refreshSignal,
+    eventFilter,
+    moveScope,
+    actorQuery,
+    targetQuery,
+    auditIdQuery,
+  ]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -326,7 +349,7 @@ export function ManagerTeamActivityPanel({
           </div>
         ))}
       </dl>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
           <input
@@ -373,6 +396,20 @@ export function ManagerTeamActivityPanel({
           </select>
         </label>
         <label className="text-xs font-semibold text-slate-700">
+          Crew move scope
+          <select
+            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
+            onChange={(event) => setMoveScope(
+              event.target.value as TeamActivityMoveScope | 'all',
+            )}
+            value={moveScope}
+          >
+            <option value="all">All move scopes</option>
+            <option value="cross_branch">Cross-branch moves</option>
+            <option value="within_branch">Within-branch moves</option>
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-slate-700">
           Sort
           <select
             className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-normal"
@@ -397,6 +434,7 @@ export function ManagerTeamActivityPanel({
               setTargetQuery('');
               setAuditIdQuery('');
               setEventFilter('all');
+              setMoveScope('all');
             }}
             type="button"
           >

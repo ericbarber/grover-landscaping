@@ -514,6 +514,8 @@ export interface TeamAdministrationActivity {
   occurredAt: string;
 }
 
+export type TeamActivityMoveScope = 'cross_branch' | 'within_branch';
+
 export type OperationalActivityEventKind =
   | 'route_draft_saved'
   | 'route_published'
@@ -1722,6 +1724,7 @@ export function organizationTeamActivityPath(
   organizationId: string,
   options: {
     eventKind?: TeamAdministrationEventKind;
+    moveScope?: TeamActivityMoveScope;
     actor?: string;
     target?: string;
     auditId?: string;
@@ -1732,6 +1735,7 @@ export function organizationTeamActivityPath(
   const path = `/organizations/${encodeURIComponent(organizationId)}/team-activity`;
   const params = new URLSearchParams();
   if (options.eventKind) params.set('event_kind', options.eventKind);
+  if (options.moveScope) params.set('move_scope', options.moveScope);
   if (options.actor) params.set('actor', options.actor);
   if (options.target) params.set('target', options.target);
   if (options.auditId) params.set('audit_id', options.auditId);
@@ -1795,6 +1799,7 @@ export async function fetchTeamAdministrationActivity(
   organizationId: string,
   options: {
     eventKind?: TeamAdministrationEventKind;
+    moveScope?: TeamActivityMoveScope;
     actor?: string;
     target?: string;
     auditId?: string;

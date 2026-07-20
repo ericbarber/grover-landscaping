@@ -272,6 +272,7 @@ impl OrganizationRepository {
             None,
             None,
             None,
+            None,
             25,
         )
         .await
@@ -281,6 +282,7 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
         event_kind: Option<&str>,
+        move_scope: Option<&str>,
         actor_query: Option<&str>,
         target_query: Option<&str>,
         audit_id_query: Option<&str>,
@@ -294,6 +296,7 @@ impl OrganizationRepository {
             pool,
             organization_id,
             event_kind,
+            move_scope,
             actor_query,
             target_query,
             audit_id_query,
@@ -1072,6 +1075,7 @@ async fn list_team_administration_activity(
     pool: &PgPool,
     organization_id: &str,
     event_kind: Option<&str>,
+    move_scope: Option<&str>,
     actor_query: Option<&str>,
     target_query: Option<&str>,
     audit_id_query: Option<&str>,
@@ -1150,27 +1154,45 @@ async fn list_team_administration_activity(
           AND ($2::text IS NULL OR audit.event_kind = $2)
           AND (
               $3::text IS NULL
-              OR audit.actor_user_id ILIKE '%' || $3 || '%'
-              OR COALESCE(actor.display_name, '') ILIKE '%' || $3 || '%'
+              OR (
+                  audit.event_kind = 'crew_hierarchy_updated'
+                  AND (
+                      (
+                          $3 = 'cross_branch'
+                          AND NULLIF(audit.metadata->>'old_branch_id', '')
+                              IS DISTINCT FROM NULLIF(audit.metadata->>'new_branch_id', '')
+                      )
+                      OR (
+                          $3 = 'within_branch'
+                          AND NULLIF(audit.metadata->>'old_branch_id', '')
+                              IS NOT DISTINCT FROM NULLIF(audit.metadata->>'new_branch_id', '')
+                      )
+                  )
+              )
           )
           AND (
               $4::text IS NULL
-              OR audit.target_id ILIKE '%' || $4 || '%'
-              OR COALESCE(target_member.display_name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(target_crew.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(target_branch.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(target_territory.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(old_branch.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(old_territory.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(new_branch.name, '') ILIKE '%' || $4 || '%'
-              OR COALESCE(new_territory.name, '') ILIKE '%' || $4 || '%'
+              OR audit.actor_user_id ILIKE '%' || $4 || '%'
+              OR COALESCE(actor.display_name, '') ILIKE '%' || $4 || '%'
+          )
+          AND (
+              $5::text IS NULL
+              OR audit.target_id ILIKE '%' || $5 || '%'
+              OR COALESCE(target_member.display_name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(target_crew.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(target_branch.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(target_territory.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(old_branch.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(old_territory.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(new_branch.name, '') ILIKE '%' || $5 || '%'
+              OR COALESCE(new_territory.name, '') ILIKE '%' || $5 || '%'
               OR (
                   organization.id = audit.target_id
-                  AND organization.display_name ILIKE '%' || $4 || '%'
+                  AND organization.display_name ILIKE '%' || $5 || '%'
               )
           )
-          AND ($5::text IS NULL OR audit.id ILIKE '%' || $5 || '%')
-          AND ($6::timestamptz IS NULL OR audit.occurred_at < $6::timestamptz)
+          AND ($6::text IS NULL OR audit.id ILIKE '%' || $6 || '%')
+          AND ($7::timestamptz IS NULL OR audit.occurred_at < $7::timestamptz)
           AND audit.event_kind IN (
             'organization_profile_updated',
             'invite_accepted',
@@ -1190,11 +1212,12 @@ async fn list_team_administration_activity(
             'crew_reactivated'
         )
         ORDER BY occurred_at DESC, id DESC
-        LIMIT $7
+        LIMIT $8
         "#,
     )
     .bind(organization_id)
     .bind(event_kind)
+    .bind(move_scope)
     .bind(actor_query)
     .bind(target_query)
     .bind(audit_id_query)

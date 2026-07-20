@@ -265,6 +265,7 @@ struct OperationalActivityQuery {
 #[derive(Debug, Default, Deserialize)]
 struct TeamActivityQuery {
     event_kind: Option<String>,
+    move_scope: Option<String>,
     actor: Option<String>,
     target: Option<String>,
     audit_id: Option<String>,
@@ -2076,6 +2077,17 @@ async fn list_team_administration_activity(
         )
             .into_response();
     }
+    let move_scope = query.move_scope.as_deref().map(str::trim);
+    if move_scope.is_some_and(|value| !matches!(value, "cross_branch" | "within_branch")) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_team_activity_filter",
+                message: "move_scope must be cross_branch or within_branch.".to_string(),
+            }),
+        )
+            .into_response();
+    }
     let actor_query = query.actor.as_deref().map(str::trim);
     if actor_query.is_some_and(|value| value.is_empty() || value.chars().count() > 120) {
         return (
@@ -2141,6 +2153,7 @@ async fn list_team_administration_activity(
             .list_team_administration_activity_page(
                 &organization_id,
                 event_kind,
+                move_scope,
                 actor_query,
                 target_query,
                 audit_id_query,
@@ -6052,6 +6065,25 @@ mod tests {
                 Request::builder()
                     .method("GET")
                     .uri("/organizations/org_demo_landscaping/team-activity?limit=101")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "invalid_team_activity_filter");
+    }
+
+    #[tokio::test]
+    async fn organization_team_activity_endpoint_rejects_unknown_move_scopes() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/organizations/org_demo_landscaping/team-activity?move_scope=interstate")
                     .body(Body::empty())
                     .unwrap(),
             )

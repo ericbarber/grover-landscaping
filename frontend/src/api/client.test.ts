@@ -205,13 +205,14 @@ describe('core API client mapping', () => {
     );
     expect(organizationTeamActivityPath('org/demo', {
       eventKind: 'role_changed',
+      moveScope: 'cross_branch',
       actor: 'Jordan Grover',
       target: 'Alex Rivera',
       auditId: 'audit_1',
       before: '2026-07-19T12:00:00Z',
       limit: 25,
     })).toBe(
-      '/organizations/org%2Fdemo/team-activity?event_kind=role_changed&actor=Jordan+Grover&target=Alex+Rivera&audit_id=audit_1&before=2026-07-19T12%3A00%3A00Z&limit=25',
+      '/organizations/org%2Fdemo/team-activity?event_kind=role_changed&move_scope=cross_branch&actor=Jordan+Grover&target=Alex+Rivera&audit_id=audit_1&before=2026-07-19T12%3A00%3A00Z&limit=25',
     );
     expect(toTeamAdministrationActivity({
       id: 'audit_1',
