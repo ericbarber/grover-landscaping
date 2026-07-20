@@ -229,6 +229,8 @@ version and release date.
   confirmation and persisted classification across account lifecycle changes.
 - Added organization-scoped customer relationship filters with active counts,
   composable onboarding search, and mobile reload persistence.
+- Added filtered customer-onboarding CSV reviews with relationship, contact,
+  property, activation, and attention readiness fields.
 
 Current continuation work:
 

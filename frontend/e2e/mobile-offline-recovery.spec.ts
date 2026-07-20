@@ -158,6 +158,9 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
   expect(submittedAccount).toMatchObject({ relationship_type: 'property_manager' });
   await expect(onboarding.getByRole('paragraph').filter({ hasText: /^Property manager$/ })).toBeVisible();
+  const onboardingDownload = page.waitForEvent('download');
+  await onboarding.getByRole('button', { name: 'Download onboarding review (1)' }).click();
+  expect((await onboardingDownload).suggestedFilename()).toMatch(/^customer-onboarding-\d{4}-\d{2}-\d{2}\.csv$/);
   const firstAccountCard = onboarding.getByText('Mobile Smoke HOA', { exact: true }).first()
     .locator('xpath=ancestor::div[contains(@class,"scroll-mt-20")][1]');
   await firstAccountCard.getByLabel('Customer relationship').selectOption('owner');
@@ -168,6 +171,7 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   expect(updatedRelationship).toBe('owner');
   await onboarding.getByLabel('Customer relationship filter').selectOption('property_manager');
   await expect(onboarding.getByText('No accounts match this search and onboarding filter.')).toBeVisible();
+  await expect(onboarding.getByRole('button', { name: 'Download onboarding review (0)' })).toBeDisabled();
   await onboarding.getByLabel('Customer relationship filter').selectOption('owner');
   await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
   await onboarding.getByLabel('Find customer account').fill('sam@example.com');

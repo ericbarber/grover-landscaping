@@ -229,6 +229,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Account creation persists direct-owner, property-manager, or service-provider relationship type and shows it in mobile account summaries
 - Authorized managers can change active customer relationship types through a tenant-scoped, audited two-step mobile workflow that preserves linked properties and history
 - Customer relationship filters compose with onboarding status and search, show active type counts, and persist per organization across mobile reloads
+- Managers can download the current filtered customer-onboarding review with relationship, contact readiness, property coverage, activation, and attention counts
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -726,9 +727,7 @@ Current state:
 
 Next implementation work:
 
-- Add a downloadable customer-onboarding review for the current search and filters
-- Include relationship, contact readiness, property coverage, activation, and attention counts
-- Cover CSV escaping, filtered scope, and mobile download availability
+- Review the completed customer-account administration flow and select the next pilot-readiness persistence slice
 
 ## Planned
 

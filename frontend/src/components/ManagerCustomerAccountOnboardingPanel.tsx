@@ -31,6 +31,7 @@ import {
   findMatchingCustomerAccount,
   type CustomerAccountDraft,
 } from '../domain/customerAccountDraft';
+import { customerOnboardingCsv } from '../domain/customerOnboardingExport';
 
 type Props = {
   organizationId: string;
@@ -161,6 +162,19 @@ export function ManagerCustomerAccountOnboardingPanel({
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function downloadOnboardingReview() {
+    const url = URL.createObjectURL(new Blob(
+      [customerOnboardingCsv(filteredAccounts, progress)],
+      { type: 'text/csv;charset=utf-8' },
+    ));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `customer-onboarding-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setMessage(`Downloaded ${filteredAccounts.length} customer onboarding record${filteredAccounts.length === 1 ? '' : 's'}.`);
   }
 
   async function save(account: CustomerAccountRecord) {
@@ -388,6 +402,14 @@ export function ManagerCustomerAccountOnboardingPanel({
           </button>
         ))}
       </div>
+      <button
+        className="mt-3 min-h-11 w-full rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-50"
+        disabled={filteredAccounts.length === 0}
+        onClick={downloadOnboardingReview}
+        type="button"
+      >
+        Download onboarding review ({filteredAccounts.length})
+      </button>
       <div className="mt-4 space-y-2">
         {filteredAccounts.map((account) => (
           <div
