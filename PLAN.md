@@ -19,6 +19,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Home identifies the signed-in person and active persona, summarizes assigned, finished, and pending-sync work, and provides relevant quick actions
 - Yard owners, property managers, field crews, company operators, dispatch, billing, and support receive different Home shortcuts
 - Home uses a branded first-impression hero with a time-aware greeting, current date, and persona-specific headline
+- Home pairs an original Southwestern landscape hero with persona-specific product promises and concise plan-care-proof brand cues
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
 - Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones

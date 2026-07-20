@@ -30,6 +30,8 @@ The authenticated application now opens on a persona-aware Home with signed-in
 identity, work and sync summaries, and role-relevant shortcuts.
 Home now provides a branded, time-aware first impression with persona messaging,
 daily progress, sync health, and a prominent recommended next action.
+Its original Southwestern landscape hero adds persona-specific product promises
+and compact plan-care-proof brand cues without extending the workflow.
 Home also explains the highest-priority current state: unsynced changes, a clear
 schedule, remaining work, or a completed day.
 

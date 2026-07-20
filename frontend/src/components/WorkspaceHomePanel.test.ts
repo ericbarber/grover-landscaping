@@ -4,6 +4,7 @@ import {
   homeGreeting,
   homePriorityStatus,
   personaHomeHeadline,
+  personaHomePromise,
   workspaceHomeActions,
 } from './WorkspaceHomePanel';
 
@@ -45,6 +46,15 @@ describe('workspace home actions', () => {
       .toBe('A clear plan for the work ahead.');
     expect(personaHomeHeadline(workspacePersonasForRoles(['OrganizationOwner'])[0]))
       .toBe('Run today with confidence.');
+  });
+
+  it('connects each major audience to a relevant product promise', () => {
+    expect(personaHomePromise(workspacePersonasForRoles(['PropertyOwner'])[0]))
+      .toContain('care behind every visit');
+    expect(personaHomePromise(workspacePersonasForRoles(['CrewLead'])[0]))
+      .toContain('every stop');
+    expect(personaHomePromise(workspacePersonasForRoles(['OrganizationOwner'])[0]))
+      .toContain('business customers trust');
   });
 
   it('prioritizes unsynced changes over routine progress', () => {

@@ -41,6 +41,21 @@ export function personaHomeHeadline(persona: WorkspacePersona): string {
   return 'Everything you need for today.';
 }
 
+export function personaHomePromise(persona: WorkspacePersona): string {
+  if (persona.id === 'yard-owner') return 'See the care behind every visit—and the difference it makes.';
+  if (persona.id === 'property-manager') return 'One clear view from service plans to property-ready proof.';
+  if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
+    return 'The right details at every stop, from arrival to finished work.';
+  }
+  if (persona.id === 'company-owner' || persona.id === 'company-manager') {
+    return 'Turn great field work into a business customers trust.';
+  }
+  if (persona.id === 'dispatcher') return 'Give every crew a clear route and every customer a reliable day.';
+  if (persona.id === 'billing-admin') return 'Move verified work from the field to revenue with confidence.';
+  if (persona.id === 'support') return 'Find the full story quickly and keep every relationship strong.';
+  return 'Bring every property, person, and promise into one clear view.';
+}
+
 export function homePriorityStatus({
   assignedJobCount,
   completedJobCount,
@@ -112,26 +127,45 @@ export function WorkspaceHomePanel({
 
   return (
     <section className="space-y-4 lg:hidden">
-      <article className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-emerald-950 via-slate-950 to-slate-900 p-5 text-white shadow-xl">
-        <span className="absolute -right-12 -top-16 h-40 w-40 rounded-full border border-emerald-400/20 bg-emerald-400/10" />
-        <span className="absolute -bottom-16 right-12 h-32 w-32 rounded-full border border-white/10" />
-        <div className="relative">
+      <article className="relative min-h-[19rem] overflow-hidden rounded-[1.75rem] bg-emerald-950 p-5 text-white shadow-xl shadow-emerald-950/20">
+        <img
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          src="/brand/grover-landscape-home-hero.webp"
+        />
+        <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-emerald-950/10" />
+        <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
+        <div className="relative flex min-h-[16.5rem] flex-col">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
+            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.16)]" />
               Grover
             </p>
-            <p className="text-xs font-semibold text-slate-300">
+            <p className="rounded-full border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
               {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>
           </div>
-          <p className="mt-8 text-sm font-semibold text-emerald-200">
-            {homeGreeting(now.getHours())}, {firstName}
-          </p>
-          <h2 className="mt-2 max-w-xs text-3xl font-black leading-[1.05] tracking-tight">
-            {personaHomeHeadline(persona)}
-          </h2>
-          <div className="mt-5 inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-bold text-slate-100 backdrop-blur">
-            {persona.label}
+          <div className="mt-auto max-w-sm">
+            <p className="text-sm font-semibold text-emerald-200">
+              {homeGreeting(now.getHours())}, {firstName}
+            </p>
+            <h2 className="mt-2 max-w-xs text-3xl font-black leading-[1.02] tracking-tight">
+              {personaHomeHeadline(persona)}
+            </h2>
+            <p className="mt-3 max-w-xs text-sm font-medium leading-5 text-slate-100">
+              {personaHomePromise(persona)}
+            </p>
+            <div className="mt-4 flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white">
+              <span className="rounded-full border border-white/15 bg-white/10 px-2.5 py-1.5 backdrop-blur-sm">
+                {persona.label}
+              </span>
+              <span className="text-emerald-300" aria-hidden="true">•</span>
+              <span>Plan</span>
+              <span className="text-emerald-300" aria-hidden="true">•</span>
+              <span>Care</span>
+              <span className="text-emerald-300" aria-hidden="true">•</span>
+              <span>Proof</span>
+            </div>
           </div>
         </div>
       </article>
