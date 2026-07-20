@@ -43,6 +43,27 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         .await
         .expect("test account should be created");
     assert_eq!(created.relationship_type, "owner");
+    assert_eq!(
+        accounts
+            .update_relationship(
+                &created.account_id,
+                &["org_outside_tenant".to_string()],
+                "property_manager",
+                "outside-user",
+            )
+            .await,
+        Err(CustomerAccountArchiveError::NotFound)
+    );
+    let relationship_updated = accounts
+        .update_relationship(
+            &created.account_id,
+            &["org_demo_landscaping".to_string()],
+            "property_manager",
+            "relationship-test-user",
+        )
+        .await
+        .expect("tenant manager should update the customer relationship");
+    assert_eq!(relationship_updated.relationship_type, "property_manager");
 
     assert_eq!(
         accounts
@@ -91,6 +112,7 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
         .await
         .expect("tenant manager should reactivate an archived account");
     assert_eq!(reactivated.account_id, created.account_id);
+    assert_eq!(reactivated.relationship_type, "property_manager");
     assert!(accounts
         .list(&["org_demo_landscaping".to_string()])
         .await
@@ -103,7 +125,14 @@ async fn customer_account_archival_is_tenant_scoped_and_audited() {
     .fetch_all(&pool)
     .await
     .expect("account lifecycle should be audited");
-    assert_eq!(audit_kinds, ["account_archived", "account_reactivated"]);
+    assert_eq!(
+        audit_kinds,
+        [
+            "account_relationship_updated",
+            "account_archived",
+            "account_reactivated",
+        ]
+    );
 
     sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
         .bind(&created.account_id)

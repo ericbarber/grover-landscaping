@@ -52,6 +52,11 @@ pub struct UpdateCustomerAccountRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct UpdateCustomerAccountRelationshipRequest {
+    pub relationship_type: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerAccountRecord {
     pub account_id: String,
     pub organization_id: String,
@@ -112,6 +117,13 @@ pub enum CustomerAccountArchiveError {
     HasCurrentProperties,
     HasActiveJobs,
     Persistence,
+}
+
+pub fn valid_customer_account_relationship(relationship_type: &str) -> bool {
+    matches!(
+        relationship_type.trim(),
+        "service_provider" | "property_manager" | "owner"
+    )
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -244,6 +256,26 @@ impl AccountRepository {
         reactivate_account(pool, account_id, organization_ids, actor_user_id).await
     }
 
+    pub async fn update_relationship(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        relationship_type: &str,
+        actor_user_id: &str,
+    ) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
+        let Some(pool) = &self.pool else {
+            return Err(CustomerAccountArchiveError::NotFound);
+        };
+        update_account_relationship(
+            pool,
+            account_id,
+            organization_ids,
+            relationship_type,
+            actor_user_id,
+        )
+        .await
+    }
+
     pub async fn list_properties(
         &self,
         account_id: &str,
@@ -368,10 +400,7 @@ pub fn validate_create_customer_account_request(
     if request.organization_id.trim().is_empty() {
         return Err("organization_id_required");
     }
-    if !matches!(
-        request.relationship_type.trim(),
-        "service_provider" | "property_manager" | "owner"
-    ) {
+    if !valid_customer_account_relationship(&request.relationship_type) {
         return Err("relationship_type_invalid");
     }
     if request.customer_name.trim().len() < 2 || request.customer_name.trim().len() > 160 {
@@ -839,6 +868,68 @@ async fn reactivate_account(
     )
     .bind(format!(
         "audit_account_reactivate_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(actor_user_id)
+    .bind(&record.organization_id)
+    .bind(account_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    Ok(record)
+}
+
+async fn update_account_relationship(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+    relationship_type: &str,
+    actor_user_id: &str,
+) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let row = sqlx::query(
+        r#"UPDATE organization_customer_accounts relation
+        SET relationship_type = $3, updated_at = NOW()
+        FROM customer_accounts account
+        WHERE relation.account_id = $1
+          AND relation.organization_id = ANY($2)
+          AND relation.status = 'active'
+          AND account.id = relation.account_id
+        RETURNING account.id, relation.organization_id, relation.relationship_type, account.customer_name,
+            account.billing_model, account.payment_status, account.service_approval_status,
+            account.contracted_services_per_period, account.completed_services_this_period,
+            COALESCE(account.billing_notes, '') AS billing_notes,
+            COALESCE(account.primary_contact_name, '') AS primary_contact_name,
+            COALESCE(account.contact_email, '') AS contact_email,
+            COALESCE(account.contact_phone, '') AS contact_phone,
+            account.email_notifications_enabled, account.sms_notifications_enabled,
+            COALESCE(TO_CHAR(account.quiet_hours_start, 'HH24:MI'), '') AS quiet_hours_start,
+            COALESCE(TO_CHAR(account.quiet_hours_end, 'HH24:MI'), '') AS quiet_hours_end"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .bind(relationship_type)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let Some(row) = row else {
+        return Err(CustomerAccountArchiveError::NotFound);
+    };
+    let record = account_record_from_row(row, true);
+    sqlx::query(
+        r#"INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        ) VALUES ($1, $2, $3, 'account_relationship_updated', $4, NOW())"#,
+    )
+    .bind(format!(
+        "audit_account_relationship_{}",
         Uuid::new_v4().simple()
     ))
     .bind(actor_user_id)

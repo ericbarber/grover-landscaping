@@ -225,6 +225,8 @@ version and release date.
   reactivation.
 - Added persisted direct-owner, property-manager, and service-provider relationship
   types to customer-account creation and mobile summaries.
+- Added tenant-scoped, audited relationship changes with two-step mobile impact
+  confirmation and persisted classification across account lifecycle changes.
 
 Current continuation work:
 

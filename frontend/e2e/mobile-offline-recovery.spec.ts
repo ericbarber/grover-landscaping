@@ -6,6 +6,7 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   let accountCreateCount = 0;
   let archivedAccountId = '';
   let reactivatedAccountId = '';
+  let updatedRelationship = '';
   await page.route('**/customer-accounts', async (route) => {
     if (route.request().method() === 'POST') {
       accountCreateCount += 1;
@@ -102,6 +103,33 @@ test('creates a service-ready customer account in one mobile workflow', async ({
       },
     });
   });
+  await page.route('**/customer-accounts/*/relationship', async (route) => {
+    const payload = route.request().postDataJSON() as { relationship_type: string };
+    updatedRelationship = payload.relationship_type;
+    await route.fulfill({
+      contentType: 'application/json',
+      json: {
+        account_id: new URL(route.request().url()).pathname.split('/').at(-2),
+        organization_id: submittedAccount?.organization_id,
+        relationship_type: payload.relationship_type,
+        customer_name: submittedAccount?.customer_name,
+        billing_model: submittedAccount?.billing_model,
+        payment_status: submittedAccount?.payment_status,
+        service_approval_status: submittedAccount?.service_approval_status,
+        contracted_services_per_period: submittedAccount?.contracted_services_per_period,
+        completed_services_this_period: 0,
+        billing_notes: '',
+        primary_contact_name: submittedAccount?.primary_contact_name,
+        contact_email: submittedAccount?.contact_email,
+        contact_phone: submittedAccount?.contact_phone,
+        email_notifications_enabled: submittedAccount?.email_notifications_enabled,
+        sms_notifications_enabled: submittedAccount?.sms_notifications_enabled,
+        quiet_hours_start: '',
+        quiet_hours_end: '',
+        persisted: true,
+      },
+    });
+  });
 
   await page.goto('/');
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
@@ -119,7 +147,13 @@ test('creates a service-ready customer account in one mobile workflow', async ({
 
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
   expect(submittedAccount).toMatchObject({ relationship_type: 'property_manager' });
-  await expect(onboarding.getByText('Property manager')).toBeVisible();
+  await expect(onboarding.getByRole('paragraph').filter({ hasText: /^Property manager$/ })).toBeVisible();
+  await onboarding.getByLabel('Customer relationship').selectOption('owner');
+  await onboarding.getByRole('button', { name: 'Change relationship' }).click();
+  await expect(onboarding.getByText('Existing properties and history stay linked.')).toBeVisible();
+  await onboarding.getByRole('button', { name: 'Confirm relationship change' }).click();
+  await expect(onboarding.getByText(/relationship updated to Direct property owner/)).toBeVisible();
+  expect(updatedRelationship).toBe('owner');
   await onboarding.getByLabel('Find customer account').fill('sam@example.com');
   await onboarding.getByRole('button', { name: /Needs setup/ }).click();
   await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();

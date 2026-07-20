@@ -2287,6 +2287,20 @@ export async function reactivateCustomerAccount(accountId: string): Promise<Cust
   return toCustomerAccountRecord(item);
 }
 
+export async function updateCustomerAccountRelationship(
+  accountId: string,
+  relationshipType: NonNullable<CustomerAccountRecord['relationshipType']>,
+): Promise<CustomerAccountRecord> {
+  const item = await request<Parameters<typeof toCustomerAccountRecord>[0]>(
+    `${customerAccountPath(accountId)}/relationship`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ relationship_type: relationshipType }),
+    },
+  );
+  return toCustomerAccountRecord(item);
+}
+
 export function customerAccountPropertiesPath(accountId: string): string {
   return `/customer-accounts/${encodeURIComponent(accountId)}/properties`;
 }

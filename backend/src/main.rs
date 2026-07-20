@@ -11,10 +11,11 @@ mod project_bids;
 mod stop_progress;
 
 use accounts::{
-    validate_create_customer_account_request, validate_create_customer_property_request,
-    validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
-    CreateCustomerPropertyRequest, CustomerAccountArchiveError, CustomerPropertyMutationError,
-    CustomerPropertyStatusError, UpdateCustomerAccountRequest,
+    valid_customer_account_relationship, validate_create_customer_account_request,
+    validate_create_customer_property_request, validate_update_customer_account_request,
+    AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
+    CustomerAccountArchiveError, CustomerPropertyMutationError, CustomerPropertyStatusError,
+    UpdateCustomerAccountRelationshipRequest, UpdateCustomerAccountRequest,
     UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
@@ -561,6 +562,10 @@ fn app_with_runtime(
         .route(
             "/customer-accounts/{account_id}/reactivate",
             post(reactivate_customer_account),
+        )
+        .route(
+            "/customer-accounts/{account_id}/relationship",
+            put(update_customer_account_relationship),
         )
         .route(
             "/customer-accounts/{account_id}/onboarding-progress",
@@ -1535,6 +1540,55 @@ async fn reactivate_customer_account(
             Json(ErrorResponse {
                 error: "customer_account_not_reactivated",
                 message: "The customer account could not be reactivated.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn update_customer_account_relationship(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+    Json(request): Json<UpdateCustomerAccountRelationshipRequest>,
+) -> Response {
+    if !valid_customer_account_relationship(&request.relationship_type) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "customer_account_relationship_invalid",
+                message: "Choose a direct owner, property manager, or service-provider partner."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .update_relationship(
+            &account_id,
+            &organization_ids,
+            request.relationship_type.trim(),
+            &principal.subject,
+        )
+        .await
+    {
+        Ok(account) => Json(account).into_response(),
+        Err(CustomerAccountArchiveError::NotFound) => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested active customer account was not found.",
+        ),
+        Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_account_relationship_not_updated",
+                message: "The customer relationship could not be updated.".to_string(),
             }),
         )
             .into_response(),

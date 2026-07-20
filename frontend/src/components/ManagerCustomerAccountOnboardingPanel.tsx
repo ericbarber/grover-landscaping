@@ -12,6 +12,7 @@ import {
   type CustomerAccountOnboardingProgress,
   type CustomerPropertyRecord,
   updateCustomerAccount,
+  updateCustomerAccountRelationship,
 } from '../api/client';
 import {
   deriveAccountOnboardingProgress,
@@ -58,6 +59,8 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [duplicateAccount, setDuplicateAccount] = useState<CustomerAccountRecord | null>(null);
   const [archiveConfirmationId, setArchiveConfirmationId] = useState('');
   const [reactivateConfirmationId, setReactivateConfirmationId] = useState('');
+  const [relationshipDrafts, setRelationshipDrafts] = useState<Record<string, NonNullable<CustomerAccountRecord['relationshipType']>>>({});
+  const [relationshipConfirmationId, setRelationshipConfirmationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
@@ -211,6 +214,21 @@ export function ManagerCustomerAccountOnboardingPanel({
       setMessage(`${account.customerName} account returned to active onboarding.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'The customer account could not be reactivated.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function saveRelationship(account: CustomerAccountRecord) {
+    const relationshipType = relationshipDrafts[account.accountId] ?? account.relationshipType ?? 'service_provider';
+    setIsLoading(true);
+    try {
+      const updated = await updateCustomerAccountRelationship(account.accountId, relationshipType);
+      setAccounts((current) => current.map((item) => item.accountId === updated.accountId ? updated : item));
+      setRelationshipConfirmationId('');
+      setMessage(`${updated.customerName} relationship updated to ${accountRelationshipLabel(updated.relationshipType)}.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'The customer relationship could not be updated.');
     } finally {
       setIsLoading(false);
     }
@@ -377,6 +395,45 @@ export function ManagerCustomerAccountOnboardingPanel({
                     </p>
                   </div>
                   <button className="min-h-11 px-2 text-sm font-semibold text-emerald-700" onClick={() => openAccountDetails(account)} type="button">Edit</button>
+                </div>
+                <div className="mt-3 rounded-lg border border-slate-200 p-3">
+                  <label className="text-xs font-semibold text-slate-700">Customer relationship
+                    <select
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal"
+                      onChange={(event) => {
+                        setRelationshipDrafts((current) => ({
+                          ...current,
+                          [account.accountId]: event.target.value as NonNullable<CustomerAccountRecord['relationshipType']>,
+                        }));
+                        setRelationshipConfirmationId('');
+                      }}
+                      value={relationshipDrafts[account.accountId] ?? account.relationshipType ?? 'service_provider'}
+                    >
+                      <option value="owner">Direct property owner</option>
+                      <option value="property_manager">Property manager</option>
+                      <option value="service_provider">Service-provider partner</option>
+                    </select>
+                  </label>
+                  {relationshipConfirmationId === account.accountId ? (
+                    <div className="mt-3 rounded-lg bg-amber-50 p-3">
+                      <p className="text-xs text-amber-950">
+                        This changes how portal ownership and portfolio responsibility are described. Existing properties and history stay linked.
+                      </p>
+                      <div className="mt-3 flex justify-end gap-2">
+                        <button className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" disabled={isLoading} onClick={() => setRelationshipConfirmationId('')} type="button">Keep current type</button>
+                        <button className="min-h-11 rounded-lg bg-amber-800 px-3 py-2 text-sm font-bold text-white disabled:opacity-60" disabled={isLoading} onClick={() => void saveRelationship(account)} type="button">Confirm relationship change</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="mt-2 min-h-11 text-sm font-semibold text-emerald-700 disabled:text-slate-400"
+                      disabled={(relationshipDrafts[account.accountId] ?? account.relationshipType ?? 'service_provider') === account.relationshipType}
+                      onClick={() => setRelationshipConfirmationId(account.accountId)}
+                      type="button"
+                    >
+                      Change relationship
+                    </button>
+                  )}
                 </div>
                 {account.billingNotes ? <p className="mt-2 text-sm text-slate-600">{account.billingNotes}</p> : null}
                 <AccountProgress
