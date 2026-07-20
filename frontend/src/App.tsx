@@ -876,8 +876,8 @@ export function App() {
   const auth = useAuth();
   const workspaceGuidance = workspaceGuidanceForRoles(auth.roles);
   const canUseManagerTools = workspaceGuidance.managerTools;
-  const canManageDispatchHierarchy = auth.roles.includes('organization_owner')
-    || auth.roles.includes('support_admin');
+  const canManageDispatchHierarchy = auth.roles.includes('OrganizationOwner')
+    || auth.roles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);

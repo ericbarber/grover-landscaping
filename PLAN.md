@@ -497,6 +497,7 @@ Current state:
 - Organization owners can deactivate and reactivate branches and territories from mobile with two-step confirmation
 - Territory deactivation is blocked while active crews remain assigned; branch deactivation also requires every nested territory to be inactive
 - Branch and territory lifecycle changes are tenant-guarded and actor-attributed in the audit trail
+- Pixel 7 smoke coverage verifies owner hierarchy visibility, persisted crew scope selections, assigned-territory lifecycle guards, invalid hierarchy rejection, and mobile overflow safety
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -637,7 +638,7 @@ Current state:
 
 Next implementation work:
 
-- Add hierarchy lifecycle and crew-assignment coverage to the live mobile smoke suite
+- Surface hierarchy creation, assignment, and lifecycle events in owner activity
 
 ## Planned
 

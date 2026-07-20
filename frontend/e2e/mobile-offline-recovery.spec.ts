@@ -132,6 +132,77 @@ test('restores persisted manager report filters after a mobile reload', async ({
   await expect(reportQueue.getByText('2 persisted filters applied.')).toBeVisible();
 });
 
+test('guards mobile dispatch hierarchy and exposes crew scope assignment', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/');
+  const frontendUrl = new URL(page.url());
+  const apiOrigin = `${frontendUrl.protocol}//${frontendUrl.hostname}:8080`;
+  const [crewsResponse, branchesResponse, territoriesResponse] = await Promise.all([
+    request.get(`${apiOrigin}/organizations/org_demo_landscaping/crews`),
+    request.get(`${apiOrigin}/organization-branches`),
+    request.get(`${apiOrigin}/service-territories`),
+  ]);
+  expect(crewsResponse.ok()).toBe(true);
+  expect(branchesResponse.ok()).toBe(true);
+  expect(territoriesResponse.ok()).toBe(true);
+  const crews = await crewsResponse.json() as Array<{
+    id: string;
+    branch_id: string;
+    territory_id: string;
+  }>;
+  const branches = await branchesResponse.json() as Array<{ id: string; name: string }>;
+  const territories = await territoriesResponse.json() as Array<{
+    id: string;
+    name: string;
+    status: string;
+  }>;
+  const crew = crews.find((item) => item.id === 'crew_1001');
+  expect(crew).toBeTruthy();
+  const branch = branches.find((item) => item.id === crew?.branch_id);
+  const territory = territories.find((item) => item.id === crew?.territory_id);
+  expect(branch).toBeTruthy();
+  expect(territory).toBeTruthy();
+
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const crewAdministration = page
+    .getByRole('heading', { name: 'Crew administration' })
+    .locator('xpath=ancestor::div[1]');
+  await expect(crewAdministration.getByLabel('Branch')).toHaveValue(crew!.branch_id);
+  await expect(crewAdministration.getByLabel('Territory')).toHaveValue(crew!.territory_id);
+
+  const hierarchy = page
+    .getByRole('heading', { name: 'Branches and territories' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(hierarchy.locator('p').filter({ hasText: branch!.name }).last()).toBeVisible();
+  const territoryRow = hierarchy
+    .locator('p')
+    .filter({ hasText: territory!.name })
+    .last()
+    .locator('xpath=parent::div/parent::div');
+  await territoryRow.getByRole('button', { name: 'Deactivate' }).click();
+  await territoryRow.getByRole('button', { name: 'Confirm inactive' }).click();
+  await expect(hierarchy.getByText('Move active crews out of this territory first.')).toBeVisible();
+
+  const hierarchyConflict = await request.put(
+    `${apiOrigin}/organizations/org_demo_landscaping/crews/crew_1001`,
+    {
+      data: {
+        name: 'North Route Crew',
+        status: 'active',
+        branch_id: crew!.branch_id,
+        territory_id: 'territory_outside_selected_branch',
+      },
+    },
+  );
+  expect(hierarchyConflict.status()).toBe(409);
+  const territoryAfter = await request.get(`${apiOrigin}/service-territories`);
+  const currentTerritories = await territoryAfter.json() as Array<{ id: string; status: string }>;
+  expect(currentTerritories.find((item) => item.id === territory!.id)?.status).toBe('active');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('moves scheduled work with notification follow-up from mobile dispatch', async ({
   page,
   request,
