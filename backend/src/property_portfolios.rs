@@ -34,6 +34,18 @@ pub struct PropertyPortfolioResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyPortfolioListResult {
+    Loaded(Vec<PropertyPortfolioResponse>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerPropertyPortfolioReadResult {
+    Loaded(CustomerPropertyPortfolioReadResponse),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PortfolioPropertyLinkResponse {
     pub id: String,
@@ -150,48 +162,62 @@ impl PropertyPortfolioRepository {
         &self,
         account_id: &str,
         organization_ids: &[String],
-    ) -> Vec<PropertyPortfolioResponse> {
+    ) -> PropertyPortfolioListResult {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return PropertyPortfolioListResult::Loaded(Vec::new());
         }
 
         if let Some(pool) = &self.pool {
-            return list_property_portfolios_for_account(pool, account_id, organization_ids)
+            return match list_property_portfolios_for_account(pool, account_id, organization_ids)
                 .await
-                .unwrap_or_default();
+            {
+                Ok(portfolios) => PropertyPortfolioListResult::Loaded(portfolios),
+                Err(error) => {
+                    tracing::error!(%error, account_id, "persisted property-portfolio list failed");
+                    PropertyPortfolioListResult::Unavailable
+                }
+            };
         }
 
-        seed_portfolios_for_account(account_id, organization_ids)
+        PropertyPortfolioListResult::Loaded(seed_portfolios_for_account(
+            account_id,
+            organization_ids,
+        ))
     }
 
     pub async fn customer_portfolio_read(
         &self,
         account_id: &str,
         organization_ids: &[String],
-    ) -> CustomerPropertyPortfolioReadResponse {
+    ) -> CustomerPropertyPortfolioReadResult {
         if organization_ids.is_empty() {
-            return CustomerPropertyPortfolioReadResponse {
-                account_id: account_id.to_string(),
-                organization_ids: Vec::new(),
-                portfolios: Vec::new(),
-                ungrouped_properties: Vec::new(),
-                persisted: false,
-            };
+            return CustomerPropertyPortfolioReadResult::Loaded(
+                CustomerPropertyPortfolioReadResponse {
+                    account_id: account_id.to_string(),
+                    organization_ids: Vec::new(),
+                    portfolios: Vec::new(),
+                    ungrouped_properties: Vec::new(),
+                    persisted: false,
+                },
+            );
         }
 
         if let Some(pool) = &self.pool {
-            return customer_portfolio_read_for_account(pool, account_id, organization_ids)
+            return match customer_portfolio_read_for_account(pool, account_id, organization_ids)
                 .await
-                .unwrap_or_else(|_| CustomerPropertyPortfolioReadResponse {
-                    account_id: account_id.to_string(),
-                    organization_ids: organization_ids.to_vec(),
-                    portfolios: Vec::new(),
-                    ungrouped_properties: Vec::new(),
-                    persisted: true,
-                });
+            {
+                Ok(read) => CustomerPropertyPortfolioReadResult::Loaded(read),
+                Err(error) => {
+                    tracing::error!(%error, account_id, "persisted customer portfolio read failed");
+                    CustomerPropertyPortfolioReadResult::Unavailable
+                }
+            };
         }
 
-        seed_customer_portfolio_read(account_id, organization_ids)
+        CustomerPropertyPortfolioReadResult::Loaded(seed_customer_portfolio_read(
+            account_id,
+            organization_ids,
+        ))
     }
 }
 
@@ -535,7 +561,7 @@ async fn customer_portfolio_read_for_account(
               AND job.property_address = property.service_address
         ) service ON TRUE
         LEFT JOIN portfolio_property_links link
-          ON link.property_id = property.property_id
+          ON link.property_id = property.id
          AND link.organization_id = property.organization_id
         LEFT JOIN property_portfolios linked_portfolio
           ON linked_portfolio.id = link.portfolio_id

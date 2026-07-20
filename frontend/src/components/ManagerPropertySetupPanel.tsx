@@ -439,8 +439,8 @@ export function ManagerPropertySetupPanel({
                 : 'This property is not currently grouped in a portfolio.'}
             </p>
             {!portfolioSetupAvailable ? (
-              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
-                Portfolio setup is not available for your current access.
+              <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900" role="alert">
+                Persisted portfolio grouping could not be loaded. Grouping controls remain blocked until API readiness recovers.
               </p>
             ) : null}
             <select className="mt-3 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={selectedPortfolioId} onChange={(event) => setSelectedPortfolioId(event.target.value)}>

@@ -368,6 +368,27 @@ test('blocks property activation context when persisted readiness is unavailable
   );
 });
 
+test('blocks portfolio grouping when persisted customer portfolios are unavailable', async ({ page }) => {
+  await page.route('**/accounts/*/customer-property-portfolio', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'customer_property_portfolio_unavailable',
+      message: 'The persisted customer property portfolio could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const setup = page
+    .getByRole('heading', { name: 'Portfolio and crew' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(setup.getByRole('alert')).toContainText(
+    'Persisted portfolio grouping could not be loaded.',
+  );
+  await expect(setup.getByRole('button', { name: 'Group property' })).toBeDisabled();
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

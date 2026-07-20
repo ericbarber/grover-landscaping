@@ -354,12 +354,14 @@ Delivered:
 - Manager setup warns when persisted progress or readiness cannot be trusted
 - Customer-account creation and updates distinguish unavailable persistence from missing tenant-scoped records
 - Mobile onboarding explains when create or update attempts were not saved
+- Manager and customer portfolio reads distinguish unavailable persistence from valid empty grouping
+- Property setup blocks grouping controls when persisted portfolio context cannot be loaded
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make remaining customer-property reads and mutations return explicit persistence outcomes
-- Add API and phone-flow coverage for persisted property mutation availability
+- Distinguish unavailable property-crew assignment lists from valid unassigned properties
+- Add repository and phone-flow coverage for assignment availability
 
 ### Manager scheduling workflow
 
@@ -772,12 +774,13 @@ Current state:
 - Customer-property lists distinguish unavailable persistence from a valid account with no properties
 - Onboarding progress and activation readiness return explicit unavailable persistence states
 - Customer-account create and update paths return explicit unavailable persistence states
+- Property portfolio lists and customer grouping reads return explicit unavailable persistence states
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make remaining customer-property reads and mutations return explicit persistence outcomes
-- Add API and phone-flow coverage for persisted property mutation availability
+- Distinguish unavailable property-crew assignment lists from valid unassigned properties
+- Add repository and phone-flow coverage for assignment availability
 
 ## Planned
 

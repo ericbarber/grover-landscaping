@@ -1,10 +1,36 @@
 use grover_landscaping_api::{
     property_portfolio_requests::{AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest},
-    property_portfolios::PropertyPortfolioRepository,
+    property_portfolios::{
+        CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
+        PropertyPortfolioRepository,
+    },
 };
 use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 
 mod common;
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_portfolio_reads_from_empty_results() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = PropertyPortfolioRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository
+            .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyPortfolioListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        CustomerPropertyPortfolioReadResult::Unavailable
+    ));
+}
 
 #[tokio::test]
 async fn repository_persists_lists_and_links_property_portfolios() {
@@ -220,9 +246,12 @@ async fn repository_persists_lists_and_links_property_portfolios() {
         .await;
     assert!(cross_account_link.is_none());
 
-    let portfolios = repository
+    let PropertyPortfolioListResult::Loaded(portfolios) = repository
         .list_for_account(account_id, &[organization_id.to_string()])
-        .await;
+        .await
+    else {
+        panic!("persisted property portfolio list should load");
+    };
 
     let listed = portfolios
         .iter()
@@ -270,9 +299,12 @@ async fn repository_persists_lists_and_links_property_portfolios() {
     .await
     .expect("wrong-account property link should be inserted");
 
-    let customer_read = repository
+    let CustomerPropertyPortfolioReadResult::Loaded(customer_read) = repository
         .customer_portfolio_read(account_id, &[organization_id.to_string()])
-        .await;
+        .await
+    else {
+        panic!("persisted customer portfolio should load");
+    };
 
     let detail = customer_read
         .portfolios

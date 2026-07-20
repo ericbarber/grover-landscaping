@@ -84,7 +84,10 @@ use grover_landscaping_api::{
         is_valid_add_property_to_portfolio_request, is_valid_create_property_portfolio_request,
         AddPropertyToPortfolioRequest, CreatePropertyPortfolioRequest,
     },
-    property_portfolios::PropertyPortfolioRepository,
+    property_portfolios::{
+        CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
+        PropertyPortfolioRepository,
+    },
 };
 use notifications::{
     start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
@@ -2489,12 +2492,17 @@ async fn list_property_portfolios_for_account(
         can_manage_property_portfolios,
     )
     .await;
-    let portfolios = state
+    match state
         .property_portfolios
         .list_for_account(&account_id, &organization_ids)
-        .await;
-
-    Json(portfolios).into_response()
+        .await
+    {
+        PropertyPortfolioListResult::Loaded(portfolios) => Json(portfolios).into_response(),
+        PropertyPortfolioListResult::Unavailable => persisted_resource_unavailable_response(
+            "property_portfolios_unavailable",
+            "The persisted property portfolios could not be loaded.",
+        ),
+    }
 }
 
 async fn get_customer_property_portfolio(
@@ -2508,12 +2516,19 @@ async fn get_customer_property_portfolio(
         can_view_customer_property_portfolios,
     )
     .await;
-    let response = state
+    match state
         .property_portfolios
         .customer_portfolio_read(&account_id, &organization_ids)
-        .await;
-
-    Json(response).into_response()
+        .await
+    {
+        CustomerPropertyPortfolioReadResult::Loaded(response) => Json(response).into_response(),
+        CustomerPropertyPortfolioReadResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "customer_property_portfolio_unavailable",
+                "The persisted customer property portfolio could not be loaded.",
+            )
+        }
+    }
 }
 
 async fn list_customer_project_bids(
