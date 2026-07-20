@@ -150,6 +150,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Crew-facing submitted amendment request summary with bid-review labeling
 - PostgreSQL persistence for submitted day-plan amendment requests
 - Backend create and list amendment endpoints
+- PostgreSQL-backed route-amendment creation and review return explicit conflict or unavailable responses instead of local-success payloads
+- First-attempt amendment conflicts enter the durable manager-review queue immediately
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -326,9 +328,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed route-amendment creation and review from returning local-success payloads when persistence rejects them
-- Preserve offline amendment queuing for genuine connectivity interruptions while surfacing server conflicts explicitly
-- Cover persisted amendment conflicts across repository, API, replay, and phone behavior
+- Stop PostgreSQL-backed amendment-list reads from translating persistence failures into an empty review queue
+- Return explicit unavailable results while retaining an empty no-database demo queue
+- Render unavailable amendment review separately from a genuinely empty queue
 
 ### Manager scheduling workflow
 
@@ -739,9 +741,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed route-amendment creation and review from returning local-success payloads when persistence rejects them
-- Preserve offline amendment queuing for genuine connectivity interruptions while surfacing server conflicts explicitly
-- Render persisted amendment conflicts honestly and cover repository, API, replay, and phone behavior
+- Stop PostgreSQL-backed amendment-list reads from translating persistence failures into an empty review queue
+- Return explicit unavailable results while retaining an empty no-database demo queue
+- Render unavailable amendment review separately from a genuinely empty queue
 
 ## Planned
 

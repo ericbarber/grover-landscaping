@@ -1098,27 +1098,31 @@ impl DayPlanRepository {
         &self,
         day_plan_id: &str,
         request: CreateDayPlanAmendmentRequest,
-    ) -> DayPlanAmendmentResponse {
+    ) -> PersistedMutationResult<DayPlanAmendmentResponse> {
         let response = local_amendment_response(day_plan_id, request);
 
         if let Some(pool) = &self.pool {
-            if let Ok(persisted) = postgres_day_plans::create_amendment(pool, &response).await {
-                if let Some(persisted) = persisted {
-                    return persisted;
-                }
-                if let Ok(amendments) = postgres_day_plans::list_amendments(pool, day_plan_id).await
-                {
-                    if let Some(existing) = amendments
+            return match postgres_day_plans::create_amendment(pool, &response).await {
+                Ok(Some(persisted)) => PersistedMutationResult::Applied(persisted),
+                Ok(None) => match postgres_day_plans::list_amendments(pool, day_plan_id).await {
+                    Ok(amendments) => amendments
                         .into_iter()
                         .find(|amendment| amendment.id == response.id)
-                    {
-                        return existing;
+                        .map(PersistedMutationResult::Applied)
+                        .unwrap_or(PersistedMutationResult::Conflict),
+                    Err(error) => {
+                        tracing::error!(%error, day_plan_id, "persisted route amendment recovery failed");
+                        PersistedMutationResult::Unavailable
                     }
+                },
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted route amendment creation failed");
+                    PersistedMutationResult::Unavailable
                 }
-            }
+            };
         }
 
-        response
+        PersistedMutationResult::Applied(response)
     }
 
     pub async fn list_amendments(&self, day_plan_id: &str) -> Vec<DayPlanAmendmentResponse> {
@@ -1136,13 +1140,13 @@ impl DayPlanRepository {
         day_plan_id: &str,
         amendment_id: &str,
         request: ReviewDayPlanAmendmentRequest,
-    ) -> DayPlanAmendmentReviewResponse {
+    ) -> PersistedMutationResult<DayPlanAmendmentReviewResponse> {
         let status = amendment_review_status(&request.decision)
             .expect("review request must be validated before repository use")
             .to_string();
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(response)) = postgres_day_plans::review_amendment(
+            return match postgres_day_plans::review_amendment(
                 pool,
                 day_plan_id,
                 amendment_id,
@@ -1151,17 +1155,22 @@ impl DayPlanRepository {
             )
             .await
             {
-                return response;
-            }
+                Ok(Some(response)) => PersistedMutationResult::Applied(response),
+                Ok(None) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, amendment_id, "persisted route amendment review failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        DayPlanAmendmentReviewResponse {
+        PersistedMutationResult::Applied(DayPlanAmendmentReviewResponse {
             id: amendment_id.to_string(),
             day_plan_id: day_plan_id.to_string(),
             status,
             manager_note: request.manager_note,
             persisted: false,
-        }
+        })
     }
 }
 

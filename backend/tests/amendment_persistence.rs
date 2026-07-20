@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
-        ReviewDayPlanAmendmentRequest,
+        PersistedMutationResult, ReviewDayPlanAmendmentRequest,
     },
     db::{JobAddOnStatusUpdate, JobRepository},
     project_bids::{
@@ -11,6 +11,13 @@ use grover_landscaping_api::{
 };
 use sqlx::Row;
 mod common;
+
+fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
+    match result {
+        PersistedMutationResult::Applied(value) => value,
+        other => panic!("{context}, got {other:?}"),
+    }
+}
 
 #[tokio::test]
 async fn repository_deduplicates_offline_day_plan_amendments() {
@@ -32,12 +39,18 @@ async fn repository_deduplicates_offline_day_plan_amendments() {
         client_mutation_id: Some(mutation_id.clone()),
     };
 
-    let first = repository
-        .create_amendment("day_plan_2026_06_15_crew_1001", request())
-        .await;
-    let replay = repository
-        .create_amendment("day_plan_2026_06_15_crew_1001", request())
-        .await;
+    let first = applied(
+        repository
+            .create_amendment("day_plan_2026_06_15_crew_1001", request())
+            .await,
+        "first amendment should persist",
+    );
+    let replay = applied(
+        repository
+            .create_amendment("day_plan_2026_06_15_crew_1001", request())
+            .await,
+        "idempotent amendment replay should recover the persisted request",
+    );
     let count: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM day_plan_amendment_requests WHERE id = $1")
             .bind(&first.id)
@@ -56,6 +69,45 @@ async fn repository_deduplicates_offline_day_plan_amendments() {
         )
     );
     assert_eq!(count, 1);
+}
+
+#[tokio::test]
+async fn repository_reports_rejected_persisted_amendment_writes() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let _jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let repository = DayPlanRepository::new();
+    let day_plan_id = "day_plan_missing";
+
+    let creation = repository
+        .create_amendment(
+            day_plan_id,
+            CreateDayPlanAmendmentRequest {
+                amendment_type: "add_stop".to_string(),
+                requested_by_crew_id: "crew_1001".to_string(),
+                stop_id: None,
+                service: None,
+                note: Some("Missing persisted route".to_string()),
+                client_mutation_id: None,
+            },
+        )
+        .await;
+    let review = repository
+        .review_amendment(
+            day_plan_id,
+            "amendment_missing",
+            ReviewDayPlanAmendmentRequest {
+                decision: "approve".to_string(),
+                manager_note: None,
+            },
+        )
+        .await;
+
+    assert!(matches!(creation, PersistedMutationResult::Unavailable));
+    assert!(matches!(review, PersistedMutationResult::Conflict));
 }
 
 #[tokio::test]
@@ -87,26 +139,29 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     let day_plan_id = "day_plan_2026_06_15_crew_1001";
     let manager_actor_user_id = "user_project_bid_conversion_audit";
 
-    let created = repository
-        .create_amendment(
-            day_plan_id,
-            CreateDayPlanAmendmentRequest {
-                amendment_type: "add_service".to_string(),
-                requested_by_crew_id: "crew_1001".to_string(),
-                stop_id: Some("stop_1001".to_string()),
-                service: Some(AmendmentService {
-                    id: "service_sprinkler_repair".to_string(),
-                    name: "Sprinkler repair".to_string(),
-                    description: Some("Replace a damaged sprinkler head".to_string()),
-                    default_duration_minutes: Some(30),
-                    default_price_cents: Some(8500),
-                    requires_manager_approval: true,
-                }),
-                note: Some("Customer requested an onsite estimate.".to_string()),
-                client_mutation_id: None,
-            },
-        )
-        .await;
+    let created = applied(
+        repository
+            .create_amendment(
+                day_plan_id,
+                CreateDayPlanAmendmentRequest {
+                    amendment_type: "add_service".to_string(),
+                    requested_by_crew_id: "crew_1001".to_string(),
+                    stop_id: Some("stop_1001".to_string()),
+                    service: Some(AmendmentService {
+                        id: "service_sprinkler_repair".to_string(),
+                        name: "Sprinkler repair".to_string(),
+                        description: Some("Replace a damaged sprinkler head".to_string()),
+                        default_duration_minutes: Some(30),
+                        default_price_cents: Some(8500),
+                        requires_manager_approval: true,
+                    }),
+                    note: Some("Customer requested an onsite estimate.".to_string()),
+                    client_mutation_id: None,
+                },
+            )
+            .await,
+        "route amendment should persist",
+    );
 
     assert!(created.persisted);
     assert!(created.requires_bid);
@@ -127,16 +182,19 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         Some("service_sprinkler_repair")
     );
 
-    let reviewed = repository
-        .review_amendment(
-            day_plan_id,
-            &created.id,
-            ReviewDayPlanAmendmentRequest {
-                decision: "send_to_bid_review".to_string(),
-                manager_note: Some("Prepare an itemized customer estimate.".to_string()),
-            },
-        )
-        .await;
+    let reviewed = applied(
+        repository
+            .review_amendment(
+                day_plan_id,
+                &created.id,
+                ReviewDayPlanAmendmentRequest {
+                    decision: "send_to_bid_review".to_string(),
+                    manager_note: Some("Prepare an itemized customer estimate.".to_string()),
+                },
+            )
+            .await,
+        "route amendment review should persist",
+    );
 
     assert!(reviewed.persisted);
     assert_eq!(reviewed.status, "bid_review");

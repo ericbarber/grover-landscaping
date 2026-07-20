@@ -161,7 +161,10 @@ export async function reviewDayPlanAmendment(
     },
   );
   if (!response.ok) {
-    throw new Error(`Review amendment request failed with status ${response.status}`);
+    throw await apiRequestError(
+      response,
+      `Review amendment request failed with status ${response.status}`,
+    );
   }
 
   return toDayPlanAmendmentReview((await response.json()) as ApiDayPlanAmendmentReview);

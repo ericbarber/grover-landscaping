@@ -196,7 +196,7 @@ export function DayPlanPanel({
           [created, ...current.filter((item) => item.id !== request.id)].slice(0, 5),
         );
       })
-      .catch(async () => {
+      .catch(async (error: unknown) => {
         setAmendmentRequests((current) =>
           current.map((item) => (item.id === request.id ? { ...item, persisted: false } : item)),
         );
@@ -212,7 +212,21 @@ export function DayPlanPanel({
             service,
             note,
           });
-          setOfflineAmendmentMutations((current) => [...current, mutation].sort(
+          const queuedMutation = isOfflineMutationConflict(error)
+            ? withOfflineMutationFailure(
+                mutation,
+                error instanceof Error ? error.message : 'Persisted route request conflict',
+                'conflict',
+              )
+            : mutation;
+          if (queuedMutation.syncState === 'conflict') {
+            await markOfflineMutationFailed(
+              mutation,
+              queuedMutation.lastError ?? 'Persisted route request conflict',
+              'conflict',
+            );
+          }
+          setOfflineAmendmentMutations((current) => [...current, queuedMutation].sort(
             (left, right) => left.createdAt.localeCompare(right.createdAt),
           ));
           setQueueStorageUnavailable(false);

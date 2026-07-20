@@ -4778,16 +4778,35 @@ async fn create_day_plan_amendment(
         return response;
     }
 
-    (
-        StatusCode::CREATED,
-        Json(
-            state
-                .day_plans
-                .create_amendment(&day_plan_id, request)
-                .await,
+    match state
+        .day_plans
+        .create_amendment(&day_plan_id, request)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => {
+            (StatusCode::CREATED, Json(response)).into_response()
+        }
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_amendment_not_found",
+            "The persisted route or stop is no longer available.",
         ),
-    )
-        .into_response()
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_amendment_conflict",
+                message: "The route request conflicts with the current persisted route. Refresh it before trying again.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_amendment_unavailable",
+                message: "The route request could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn list_day_plan_amendments(
@@ -4829,13 +4848,33 @@ async fn review_day_plan_amendment(
         return response;
     }
 
-    Json(
-        state
-            .day_plans
-            .review_amendment(&day_plan_id, &amendment_id, request)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .review_amendment(&day_plan_id, &amendment_id, request)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => Json(response).into_response(),
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_amendment_review_not_found",
+            "The route request is no longer available.",
+        ),
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_amendment_review_conflict",
+                message: "The route request changed before this decision was saved. Refresh the review queue and try again.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_amendment_review_unavailable",
+                message: "The route request decision could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn save_project_bid_draft(

@@ -270,6 +270,33 @@ test('marks a rejected persisted progress write as a conflict without waiting fo
   await expect(page.getByRole('button', { name: 'Manager review needed' })).toBeDisabled();
 });
 
+test('marks a rejected persisted route request as a conflict without waiting for replay', async ({ page }) => {
+  await page.route('**/day-plans/*/amendments', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        json: {
+          error: 'day_plan_amendment_conflict',
+          message: 'The route request conflicts with the current persisted route.',
+        },
+      });
+    }
+    return route.continue();
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Route changes' }).click();
+  await page.getByRole('button', { name: 'Request unplanned stop' }).click();
+
+  await expect(page.getByText('1 route request is queued offline.')).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText('0 retry failed · 1 conflicted')).toBeVisible();
+  await page.locator('summary').filter({ hasText: 'Review queued route requests' }).click();
+  await expect(page.getByText('Route-level request · conflict')).toBeVisible();
+});
+
 test('keeps the manager route unchanged when a persisted stop mutation is rejected', async ({ page }) => {
   await page.route('**/day-plans', async (route) => {
     const request = route.request();
