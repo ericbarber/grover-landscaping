@@ -654,10 +654,11 @@ Current state:
 - Prepared crew moves show their saved source and intended destination, with an explicit cross-branch scheduling and reporting warning
 - Successful prepared moves close the unsaved handoff and retain a source-to-destination completion summary across hierarchy refresh
 - Completed crew moves can return directly to the refreshed, focusable hierarchy review on mobile
+- Pixel 7 smoke coverage proves territory staffing preparation, reset, direct crew selection, save confirmation, and hierarchy return without mutating shared fixture data
 
 Next implementation work:
 
-- Add mobile smoke coverage for the territory-to-crew staffing handoff and reset path
+- Surface readable source and destination hierarchy details for crew moves in owner activity
 
 ## Planned
 

@@ -223,6 +223,127 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('prepares, resets, and confirms an unstaffed territory crew move', async ({
+  page,
+  request,
+}) => {
+  const frontendUrl = new URL(process.env.E2E_BASE_URL ?? 'http://127.0.0.1:5173');
+  const apiOrigin = `${frontendUrl.protocol}//${frontendUrl.hostname}:8080`;
+  const [crewsResponse, branchesResponse] = await Promise.all([
+    request.get(`${apiOrigin}/organizations/org_demo_landscaping/crews`),
+    request.get(`${apiOrigin}/organization-branches`),
+  ]);
+  expect(crewsResponse.ok()).toBe(true);
+  expect(branchesResponse.ok()).toBe(true);
+  const originalCrews = await crewsResponse.json() as Array<{
+    id: string;
+    name: string;
+    organization_id: string;
+    branch_id: string;
+    territory_id: string;
+    status: string;
+    daily_stop_capacity: number;
+    lead_membership_id: string | null;
+    persisted: boolean;
+  }>;
+  const branches = await branchesResponse.json() as Array<{
+    id: string;
+    organization_id: string;
+    status: string;
+  }>;
+  const originalCrew = originalCrews.find((crew) => crew.id === 'crew_1001');
+  const branch = branches.find((item) => (
+    item.id === originalCrew?.branch_id
+    && item.organization_id === 'org_demo_landscaping'
+    && item.status === 'active'
+  ));
+  expect(originalCrew).toBeTruthy();
+  expect(branch).toBeTruthy();
+  const territoryId = 'territory_e2e_unstaffed_overlay';
+  const territoryName = 'Mobile Staffing Overlay';
+  let crewMoved = false;
+
+  await page.route('**/service-territories', async (route) => {
+    const response = await route.fetch();
+    const territories = await response.json() as unknown[];
+    await route.fulfill({
+      response,
+      json: [
+        ...territories,
+        {
+          id: territoryId,
+          organization_id: 'org_demo_landscaping',
+          branch_id: branch!.id,
+          name: territoryName,
+          status: 'active',
+        },
+      ],
+    });
+  });
+  await page.route('**/organizations/org_demo_landscaping/crews', async (route) => {
+    await route.fulfill({
+      json: originalCrews.map((crew) => (
+        crewMoved && crew.id === originalCrew!.id
+          ? { ...crew, branch_id: branch!.id, territory_id: territoryId }
+          : crew
+      )),
+    });
+  });
+  await page.route(
+    `**/organizations/org_demo_landscaping/crews/${originalCrew!.id}`,
+    async (route) => {
+      const body = route.request().postDataJSON() as {
+        branch_id: string;
+        territory_id: string;
+      };
+      expect(body.branch_id).toBe(branch!.id);
+      expect(body.territory_id).toBe(territoryId);
+      crewMoved = true;
+      await route.fulfill({
+        json: {
+          ...originalCrew,
+          ...body,
+          persisted: true,
+        },
+      });
+    },
+  );
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const hierarchy = page
+    .getByRole('heading', { name: 'Branches and territories' })
+    .locator('xpath=ancestor::section[1]');
+  const territoryRow = hierarchy
+    .locator('p')
+    .filter({ hasText: territoryName })
+    .locator('xpath=ancestor::div[contains(@class, \"rounded-lg\")][1]');
+  const crewAdministration = page
+    .getByRole('heading', { name: 'Crew administration' })
+    .locator('xpath=ancestor::div[1]');
+
+  await territoryRow.getByRole('button', { name: 'Staff territory' }).click();
+  await expect(crewAdministration.getByLabel('Territory')).toHaveValue(territoryId);
+  await expect(crewAdministration.getByText('Prepared hierarchy destination')).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Reset destination' }).click();
+  await expect(crewAdministration.getByLabel('Territory')).toHaveValue(
+    originalCrew!.territory_id,
+  );
+  await expect(crewAdministration.getByText('Prepared hierarchy destination')).toBeHidden();
+
+  await territoryRow.getByText('Choose an active crew').click();
+  await territoryRow.getByRole('button', { name: new RegExp(originalCrew!.name) }).click();
+  await expect(crewAdministration.getByLabel('Territory')).toHaveValue(territoryId);
+  await crewAdministration.getByRole('button', { name: 'Save crew profile' }).click();
+  await expect(crewAdministration.getByText(
+    new RegExp(`${originalCrew!.name} moved from .* to .*${territoryName}`),
+  )).toBeVisible();
+  await crewAdministration.getByRole('button', { name: 'Return to hierarchy review' }).click();
+  await expect(hierarchy).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
+});
+
 test('moves scheduled work with notification follow-up from mobile dispatch', async ({
   page,
   request,
