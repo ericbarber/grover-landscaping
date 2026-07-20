@@ -335,6 +335,16 @@ export function ManagerTeamActivityPanel({
   );
   const hasCustomReviewView = activeFilterCount > 0 || activitySort !== 'newest';
   const summary = summarizeTeamActivity(activity);
+  const isFocusedCrewMoveReview = Boolean(
+    requestedCrewSignal > 0
+    && requestedCrewId
+    && targetQuery === requestedCrewId
+    && eventFilter === 'crew_hierarchy_updated'
+    && activitySort === 'newest',
+  );
+  const latestFocusedCrewMoveId = isFocusedCrewMoveReview
+    ? filteredActivity[0]?.id
+    : undefined;
 
   async function refresh() {
     if (!organizationId) return;
@@ -696,9 +706,20 @@ export function ManagerTeamActivityPanel({
       ) : null}
       <ol className="mt-4 space-y-2">
         {filteredActivity.map((item) => (
-          <li className="rounded-lg bg-slate-50 p-3 text-sm" key={item.id}>
+          <li className={`rounded-lg p-3 text-sm ${
+            item.id === latestFocusedCrewMoveId
+              ? 'border-2 border-emerald-300 bg-emerald-50'
+              : 'bg-slate-50'
+          }`} key={item.id}>
             <div className="flex items-start justify-between gap-3">
-              <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
+              <div>
+                {item.id === latestFocusedCrewMoveId ? (
+                  <p className="mb-1 inline-block rounded-full bg-emerald-200 px-2 py-1 text-xs font-bold text-emerald-950">
+                    Latest crew move
+                  </p>
+                ) : null}
+                <p className="font-semibold text-slate-900">{teamActivityLabel(item.eventKind)}</p>
+              </div>
               <time className="shrink-0 text-xs text-slate-500" dateTime={item.occurredAt}>
                 {teamActivityTimestampLabel(item.occurredAt)}
               </time>

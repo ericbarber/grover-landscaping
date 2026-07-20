@@ -678,10 +678,11 @@ Current state:
 - Subsequent-move warnings show the crew's current readable branch and territory beside the audited move context
 - Copied, shared, and downloaded support summaries include the current hierarchy when it differs from the audited destination
 - Stale crew inspections open a newest-first hierarchy activity view filtered to the inspected crew
+- Focused crew history highlights the newest matching hierarchy event as the latest crew move
 
 Next implementation work:
 
-- Distinguish the latest crew move in a focused owner activity review
+- Show whether the latest crew move now matches the inspected crew's current hierarchy
 
 ## Planned
 
