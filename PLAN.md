@@ -340,11 +340,18 @@ Current state:
 - GitHub Actions provisions PostgreSQL, applies migrations, and runs database-backed integration tests
 - Integration tests fail loudly in CI when `DATABASE_URL` is missing instead of silently skipping
 
+Delivered:
+
+- Job-account summaries load customer billing, approval, and service-period data from PostgreSQL
+- Persisted job-account reads distinguish missing data from unavailable storage while retaining no-database demo summaries
+- Completion report generation fails closed instead of presenting seeded billing or approval context in persisted mode
+- Phone completion reports hide seeded account figures and explain when persisted account context is unavailable
+
 Next implementation work:
 
-- Replace seeded job-account summaries with PostgreSQL-backed customer account and service-period data
-- Return explicit missing and unavailable account results while retaining no-database demo summaries
-- Prevent completion reports from presenting seeded billing and approval context in persisted mode
+- Distinguish unavailable persisted customer-account collections from valid empty onboarding lists
+- Keep persisted account administration from presenting empty or seeded data after storage failures
+- Add repository and phone-flow coverage for account-list availability states
 
 ### Manager scheduling workflow
 
@@ -755,9 +762,9 @@ Current state:
 
 Next implementation work:
 
-- Replace seeded job-account summaries with PostgreSQL-backed customer account and service-period data
-- Return explicit missing and unavailable account results while retaining no-database demo summaries
-- Prevent completion reports from presenting seeded billing and approval context in persisted mode
+- Distinguish unavailable persisted customer-account collections from valid empty onboarding lists
+- Keep persisted account administration from presenting empty or seeded data after storage failures
+- Add repository and phone-flow coverage for account-list availability states
 
 ## Planned
 

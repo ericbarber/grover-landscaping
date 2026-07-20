@@ -1466,7 +1466,7 @@ export async function completeDispatchCustomerNotification(
 }
 
 export async function fetchAccountStatus(jobId: string): Promise<AccountStatus> {
-  const account = await request<ApiAccountStatus>(`/jobs/${jobId}/account`);
+  const account = await request<ApiAccountStatus>(`/jobs/${encodeURIComponent(jobId)}/account`);
   return toAccountStatus(account);
 }
 

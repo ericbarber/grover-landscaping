@@ -15,6 +15,13 @@ pub struct CustomerAccountSummary {
     pub billing_notes: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerAccountSummaryResult {
+    Loaded(CustomerAccountSummary),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CreateCustomerAccountRequest {
     pub organization_id: String,
@@ -389,9 +396,55 @@ impl AccountRepository {
             .flatten()
     }
 
-    pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummary {
-        seed_summary(job_id)
+    pub async fn get_account_for_job(&self, job_id: &str) -> CustomerAccountSummaryResult {
+        let Some(pool) = &self.pool else {
+            return CustomerAccountSummaryResult::Loaded(seed_summary(job_id));
+        };
+        match account_summary_for_job(pool, job_id).await {
+            Ok(Some(summary)) => CustomerAccountSummaryResult::Loaded(summary),
+            Ok(None) => CustomerAccountSummaryResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, job_id, "persisted job-account summary failed");
+                CustomerAccountSummaryResult::Unavailable
+            }
+        }
     }
+}
+
+async fn account_summary_for_job(
+    pool: &PgPool,
+    job_id: &str,
+) -> Result<Option<CustomerAccountSummary>, sqlx::Error> {
+    let row = sqlx::query(
+        r#"SELECT
+            job.id AS job_id,
+            account.id AS account_id,
+            account.customer_name,
+            account.billing_model,
+            account.payment_status,
+            account.service_approval_status,
+            account.contracted_services_per_period,
+            account.completed_services_this_period,
+            COALESCE(account.billing_notes, '') AS billing_notes
+        FROM service_jobs job
+        JOIN customer_accounts account ON account.id = job.customer_account_id
+        WHERE job.id = $1"#,
+    )
+    .bind(job_id)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|row| CustomerAccountSummary {
+        job_id: row.get("job_id"),
+        account_id: row.get("account_id"),
+        customer_name: row.get("customer_name"),
+        billing_model: row.get("billing_model"),
+        payment_status: row.get("payment_status"),
+        service_approval_status: row.get("service_approval_status"),
+        contracted_services_per_period: row.get::<i32, _>("contracted_services_per_period") as u32,
+        completed_services_this_period: row.get::<i32, _>("completed_services_this_period") as u32,
+        billing_notes: row.get("billing_notes"),
+    }))
 }
 
 pub fn validate_create_customer_account_request(

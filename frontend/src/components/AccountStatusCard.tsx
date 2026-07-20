@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchAccountStatus, type AccountStatus } from '../api/client';
+import { ApiRequestError } from '../api/apiError';
 import {
   billingModelLabel,
   getAccountSummaryForJob,
@@ -11,11 +12,15 @@ type AccountStatusCardProps = {
 };
 
 export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
-  const [account, setAccount] = useState<AccountStatus>(() => getAccountSummaryForJob(jobId));
-  const [source, setSource] = useState<'api' | 'local'>('local');
+  const [account, setAccount] = useState<AccountStatus | null>(null);
+  const [source, setSource] = useState<'api' | 'local' | null>(null);
+  const [persistedAccountUnavailable, setPersistedAccountUnavailable] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    setAccount(null);
+    setSource(null);
+    setPersistedAccountUnavailable(false);
 
     fetchAccountStatus(jobId)
       .then((apiAccount) => {
@@ -24,10 +29,16 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
           setSource('api');
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isMounted) {
-          setAccount(getAccountSummaryForJob(jobId));
-          setSource('local');
+          if (error instanceof ApiRequestError) {
+            setAccount(null);
+            setSource(null);
+            setPersistedAccountUnavailable(true);
+          } else {
+            setAccount(getAccountSummaryForJob(jobId));
+            setSource('local');
+          }
         }
       });
 
@@ -35,6 +46,26 @@ export function AccountStatusCard({ jobId }: AccountStatusCardProps) {
       isMounted = false;
     };
   }, [jobId]);
+
+  if (persistedAccountUnavailable) {
+    return (
+      <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-amber-800">Account status unavailable</p>
+        <p className="mt-2 text-sm text-amber-950" role="alert">
+          Persisted billing and service-approval context could not be loaded. Retry after API readiness recovers.
+        </p>
+      </section>
+    );
+  }
+
+  if (!account || !source) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Account status</p>
+        <p className="mt-2 text-sm text-slate-600" role="status">Loading persisted account context…</p>
+      </section>
+    );
+  }
 
   const accountIsCurrent =
     account.paymentStatus === 'paid' || account.paymentStatus === 'not_required' || account.paymentStatus === 'waived';

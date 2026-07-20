@@ -14,9 +14,10 @@ use accounts::{
     valid_customer_account_relationship, validate_create_customer_account_request,
     validate_create_customer_property_request, validate_update_customer_account_request,
     AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-    CustomerAccountArchiveError, CustomerPropertyMutationError, CustomerPropertyStatusError,
-    UpdateCustomerAccountRelationshipRequest, UpdateCustomerAccountRequest,
-    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
+    CustomerAccountArchiveError, CustomerAccountSummaryResult, CustomerPropertyMutationError,
+    CustomerPropertyStatusError, UpdateCustomerAccountRelationshipRequest,
+    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+    UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -1214,7 +1215,21 @@ async fn get_account_for_job(
         return response;
     }
 
-    let account = state.accounts.get_account_for_job(&id).await;
+    let account = match state.accounts.get_account_for_job(&id).await {
+        CustomerAccountSummaryResult::Loaded(account) => account,
+        CustomerAccountSummaryResult::NotFound => {
+            return resource_not_found_response(
+                "job_account_not_found",
+                "Customer account context was not found for this job.",
+            );
+        }
+        CustomerAccountSummaryResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "job_account_unavailable",
+                "The persisted customer account context could not be loaded.",
+            );
+        }
+    };
     let _ = state
         .jobs
         .record_account_view(&id, &principal.subject)
@@ -4728,7 +4743,21 @@ async fn build_and_persist_completion_report(
             ));
         }
     };
-    let account = state.accounts.get_account_for_job(id).await;
+    let account = match state.accounts.get_account_for_job(id).await {
+        CustomerAccountSummaryResult::Loaded(account) => account,
+        CustomerAccountSummaryResult::NotFound => {
+            return Err(resource_not_found_response(
+                "job_account_not_found",
+                "Customer account context was not found for this job.",
+            ));
+        }
+        CustomerAccountSummaryResult::Unavailable => {
+            return Err(persisted_resource_unavailable_response(
+                "job_account_unavailable",
+                "The persisted customer account context could not be loaded.",
+            ));
+        }
+    };
     let photo_evidence = match state.jobs.list_photo_evidence(id).await {
         ResourceReadResult::Loaded(photos) => photos,
         ResourceReadResult::NotFound => Vec::new(),

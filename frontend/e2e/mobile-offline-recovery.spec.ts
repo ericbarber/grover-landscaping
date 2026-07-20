@@ -340,6 +340,24 @@ test('keeps persisted photo proof hidden when evidence cannot be loaded', async 
   );
 });
 
+test('keeps persisted billing context hidden when the job account cannot be loaded', async ({ page }) => {
+  await page.route('**/jobs/job_1001/account', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'job_account_unavailable',
+      message: 'The persisted customer account context could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  const detail = page.locator('#job-detail');
+  await expect(detail.getByRole('alert')).toContainText(
+    'Persisted billing and service-approval context could not be loaded.',
+  );
+  await expect(detail.getByText('Source: browser fallback')).toHaveCount(0);
+});
+
 test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
   await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
     status: 404,
