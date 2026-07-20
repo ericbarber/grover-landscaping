@@ -20,7 +20,12 @@ describe('team administration activity labels', () => {
     expect(teamActivityLabel('membership_suspended')).toBe('Membership suspended');
     expect(teamActivityLabel('membership_reactivated')).toBe('Membership reactivated');
     expect(teamActivityLabel('membership_profile_updated')).toBe('Member display name updated');
+    expect(teamActivityLabel('branch_created')).toBe('Branch created');
+    expect(teamActivityLabel('branch_status_updated')).toBe('Branch status updated');
+    expect(teamActivityLabel('territory_created')).toBe('Territory created');
+    expect(teamActivityLabel('territory_status_updated')).toBe('Territory status updated');
     expect(teamActivityLabel('crew_profile_updated')).toBe('Crew profile updated');
+    expect(teamActivityLabel('crew_hierarchy_updated')).toBe('Crew hierarchy updated');
     expect(teamActivityLabel('crew_deactivated')).toBe('Crew deactivated');
     expect(teamActivityLabel('crew_reactivated')).toBe('Crew reactivated');
   });
@@ -78,7 +83,8 @@ describe('team administration activity labels', () => {
       base,
       { ...base, id: 'audit_2', eventKind: 'crew_profile_updated' },
       { ...base, id: 'audit_3', eventKind: 'organization_profile_updated' },
-    ])).toEqual({ total: 3, access: 1, crew: 1, organization: 1 });
+      { ...base, id: 'audit_4', eventKind: 'territory_status_updated' },
+    ])).toEqual({ total: 4, access: 1, crew: 1, organization: 2 });
   });
 
   it('exports quoted CSV with readable and immutable audit identities', () => {

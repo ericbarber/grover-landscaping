@@ -109,6 +109,11 @@ territory is inactive; territory reactivation also requires an active parent
 branch. Successful lifecycle writes emit `branch_status_updated` or
 `territory_status_updated` audit events.
 
+Owner team activity includes branch creation, territory creation, crew hierarchy
+assignment, and hierarchy lifecycle events. Branch and territory targets resolve
+to readable names and participate in the same persisted target search used for
+members and crews.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan

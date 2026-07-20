@@ -23,8 +23,18 @@ export function teamActivityLabel(eventKind: TeamAdministrationEventKind): strin
       return 'Membership reactivated';
     case 'membership_profile_updated':
       return 'Member display name updated';
+    case 'branch_created':
+      return 'Branch created';
+    case 'branch_status_updated':
+      return 'Branch status updated';
+    case 'territory_created':
+      return 'Territory created';
+    case 'territory_status_updated':
+      return 'Territory status updated';
     case 'crew_profile_updated':
       return 'Crew profile updated';
+    case 'crew_hierarchy_updated':
+      return 'Crew hierarchy updated';
     case 'crew_deactivated':
       return 'Crew deactivated';
     case 'crew_reactivated':
@@ -41,7 +51,12 @@ const eventKinds: TeamAdministrationEventKind[] = [
   'membership_suspended',
   'membership_reactivated',
   'membership_profile_updated',
+  'branch_created',
+  'branch_status_updated',
+  'territory_created',
+  'territory_status_updated',
   'crew_profile_updated',
+  'crew_hierarchy_updated',
   'crew_deactivated',
   'crew_reactivated',
 ];
@@ -110,7 +125,11 @@ export function summarizeTeamActivity(activity: TeamAdministrationActivity[]) {
   return activity.reduce(
     (summary, item) => {
       if (item.eventKind.startsWith('crew_')) summary.crew += 1;
-      else if (item.eventKind === 'organization_profile_updated') summary.organization += 1;
+      else if (
+        item.eventKind === 'organization_profile_updated'
+        || item.eventKind.startsWith('branch_')
+        || item.eventKind.startsWith('territory_')
+      ) summary.organization += 1;
       else summary.access += 1;
       summary.total += 1;
       return summary;

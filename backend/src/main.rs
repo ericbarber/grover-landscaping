@@ -2046,7 +2046,12 @@ async fn list_team_administration_activity(
         "membership_suspended",
         "membership_reactivated",
         "membership_profile_updated",
+        "branch_created",
+        "branch_status_updated",
+        "territory_created",
+        "territory_status_updated",
         "crew_profile_updated",
+        "crew_hierarchy_updated",
         "crew_deactivated",
         "crew_reactivated",
     ];

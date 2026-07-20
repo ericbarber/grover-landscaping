@@ -1088,6 +1088,8 @@ async fn list_team_administration_activity(
             COALESCE(
                 target_member.display_name,
                 target_crew.name,
+                target_branch.name,
+                target_territory.name,
                 CASE WHEN organization.id = audit.target_id THEN organization.display_name END,
                 audit.target_id
             ) AS target_label,
@@ -1111,6 +1113,12 @@ async fn list_team_administration_activity(
         LEFT JOIN crews target_crew
           ON target_crew.organization_id = audit.organization_id
          AND target_crew.id = audit.target_id
+        LEFT JOIN organization_branches target_branch
+          ON target_branch.organization_id = audit.organization_id
+         AND target_branch.id = audit.target_id
+        LEFT JOIN service_territories target_territory
+          ON target_territory.organization_id = audit.organization_id
+         AND target_territory.id = audit.target_id
         WHERE audit.organization_id = $1
           AND ($2::text IS NULL OR audit.event_kind = $2)
           AND (
@@ -1123,6 +1131,8 @@ async fn list_team_administration_activity(
               OR audit.target_id ILIKE '%' || $4 || '%'
               OR COALESCE(target_member.display_name, '') ILIKE '%' || $4 || '%'
               OR COALESCE(target_crew.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(target_branch.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(target_territory.name, '') ILIKE '%' || $4 || '%'
               OR (
                   organization.id = audit.target_id
                   AND organization.display_name ILIKE '%' || $4 || '%'
@@ -1139,7 +1149,12 @@ async fn list_team_administration_activity(
             'membership_suspended',
             'membership_reactivated',
             'membership_profile_updated',
+            'branch_created',
+            'branch_status_updated',
+            'territory_created',
+            'territory_status_updated',
             'crew_profile_updated',
+            'crew_hierarchy_updated',
             'crew_deactivated',
             'crew_reactivated'
         )

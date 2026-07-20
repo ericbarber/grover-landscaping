@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Surfaced readable dispatch hierarchy events in owner activity.
 - 2026-07-19: Added live mobile smoke coverage for dispatch hierarchy safety.
 - 2026-07-19: Added guarded audited lifecycle controls for dispatch hierarchy.
 - 2026-07-19: Added audited mobile branch and territory assignment for existing crews.

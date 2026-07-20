@@ -2823,7 +2823,10 @@ export function App() {
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
-                onChanged={() => setDispatchHierarchyRefreshSignal((current) => current + 1)}
+                onChanged={() => {
+                  setDispatchHierarchyRefreshSignal((current) => current + 1);
+                  setTeamActivityRefreshSignal((current) => current + 1);
+                }}
               />
             ) : null}
           </div>
