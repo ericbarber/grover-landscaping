@@ -363,7 +363,7 @@ export async function createDraftDayPlan(request: CreateDayPlanRequest): Promise
   });
 
   if (!response.ok) {
-    throw new Error(`Create day plan request failed with status ${response.status}`);
+    throw new DayPlanRequestError(response.status);
   }
 
   const dayPlan = (await response.json()) as ApiDayPlanMutationResponse;
@@ -378,7 +378,8 @@ export async function createDraftDayPlanWithFallback(
 
   try {
     return await createDraftDayPlan(normalizedRequest);
-  } catch {
+  } catch (error) {
+    if (error instanceof DayPlanRequestError) throw error;
     return localDraftDayPlanResponse(normalizedRequest.crewId, normalizedRequest.serviceDate);
   }
 }

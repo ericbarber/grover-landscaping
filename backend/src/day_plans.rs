@@ -887,7 +887,7 @@ impl DayPlanRepository {
     pub async fn create_draft_day_plan(
         &self,
         request: CreateDayPlanRequest,
-    ) -> DayPlanMutationResponse {
+    ) -> PersistedMutationResult<DayPlanMutationResponse> {
         self.create_draft_day_plan_as(request, "system").await
     }
 
@@ -895,12 +895,12 @@ impl DayPlanRepository {
         &self,
         request: CreateDayPlanRequest,
         actor_user_id: &str,
-    ) -> DayPlanMutationResponse {
+    ) -> PersistedMutationResult<DayPlanMutationResponse> {
         let request = normalize_create_day_plan_request(request);
         let id = draft_day_plan_id(&request.crew_id, &request.service_date);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(day_plan)) = postgres_day_plans::create_draft_day_plan(
+            return match postgres_day_plans::create_draft_day_plan(
                 pool,
                 &id,
                 &request.crew_id,
@@ -909,14 +909,22 @@ impl DayPlanRepository {
             )
             .await
             {
-                return day_plan;
-            }
+                Ok(Some(day_plan)) => PersistedMutationResult::Applied(day_plan),
+                Ok(None) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, crew_id = request.crew_id, "persisted route draft creation failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        draft_day_plan_response(&request, false)
+        PersistedMutationResult::Applied(draft_day_plan_response(&request, false))
     }
 
-    pub async fn publish_day_plan(&self, id: &str) -> DayPlanMutationResponse {
+    pub async fn publish_day_plan(
+        &self,
+        id: &str,
+    ) -> PersistedMutationResult<DayPlanMutationResponse> {
         self.publish_day_plan_as(id, "system").await
     }
 
@@ -924,16 +932,19 @@ impl DayPlanRepository {
         &self,
         id: &str,
         actor_user_id: &str,
-    ) -> DayPlanMutationResponse {
+    ) -> PersistedMutationResult<DayPlanMutationResponse> {
         if let Some(pool) = &self.pool {
-            if let Ok(Some(day_plan)) =
-                postgres_day_plans::publish_day_plan(pool, id, actor_user_id).await
-            {
-                return day_plan;
-            }
+            return match postgres_day_plans::publish_day_plan(pool, id, actor_user_id).await {
+                Ok(Some(day_plan)) => PersistedMutationResult::Applied(day_plan),
+                Ok(None) => PersistedMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id = id, "persisted route publication failed");
+                    PersistedMutationResult::Unavailable
+                }
+            };
         }
 
-        local_published_day_plan_response(id)
+        PersistedMutationResult::Applied(local_published_day_plan_response(id))
     }
 
     pub async fn assign_stop(
@@ -1745,7 +1756,11 @@ mod tests {
             service_date: " 2026-06-16 ".to_string(),
         };
 
-        let response = repository.create_draft_day_plan(request).await;
+        let PersistedMutationResult::Applied(response) =
+            repository.create_draft_day_plan(request).await
+        else {
+            panic!("no-database draft creation should retain demo behavior");
+        };
 
         assert_eq!(response.id, "day_plan_2026_06_16_crew_1001");
         assert_eq!(response.crew_id, "crew_1001");

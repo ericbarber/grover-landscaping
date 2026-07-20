@@ -28,8 +28,8 @@ export function localDraftStopFromJob(job: YardCareJob, stopOrder: number): DayP
     stopOrder,
     jobStatus: job.status,
     stopStatus: 'pending',
-    estimatedDriveMinutes: 0,
-    estimatedServiceMinutes: 0,
+    estimatedDriveMinutes: 10,
+    estimatedServiceMinutes: 45,
   };
 }
 

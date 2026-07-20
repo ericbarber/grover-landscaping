@@ -40,6 +40,7 @@ export function ManagerDayPlanPanel({
   const [crewLoadError, setCrewLoadError] = useState(false);
   const [serviceDate, setServiceDate] = useState(() => defaultManagerServiceDate());
   const [draftPlan, setDraftPlan] = useState<DayPlanMutationResponse | null>(null);
+  const [draftError, setDraftError] = useState<string | null>(null);
   const [routePublishGuard, setRoutePublishGuard] = useState<ManagerDraftRoutePublishGuard>(emptyRoutePublishGuard);
   const [isCreating, setIsCreating] = useState(false);
   const planningJobs = getManagerRoutePlanningSeedJobs(jobs);
@@ -78,12 +79,16 @@ export function ManagerDayPlanPanel({
     }
 
     setIsCreating(true);
+    setDraftError(null);
 
     void createDraftDayPlanWithFallback(draftTarget)
       .then((dayPlan) => {
         setDraftPlan(dayPlan);
         setRoutePublishGuard(emptyRoutePublishGuard);
       })
+      .catch(() => setDraftError(
+        'Draft was not saved, so scheduling stayed unchanged. Refresh the crew schedule and try again.',
+      ))
       .finally(() => setIsCreating(false));
   }
 
@@ -165,6 +170,11 @@ export function ManagerDayPlanPanel({
         <button className="w-full rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={!canCreateDraft} type="submit">
           {isCreating ? 'Creating draft...' : isPublishedDraftTarget ? 'Route already published' : 'Create draft day plan'}
         </button>
+        {draftError ? (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800" role="alert">
+            {draftError}
+          </p>
+        ) : null}
       </form>
 
       {draftPlan ? (

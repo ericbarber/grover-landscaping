@@ -4682,16 +4682,35 @@ async fn create_draft_day_plan(
         return response;
     }
 
-    (
-        StatusCode::CREATED,
-        Json(
-            state
-                .day_plans
-                .create_draft_day_plan_as(request, &principal.subject)
-                .await,
+    match state
+        .day_plans
+        .create_draft_day_plan_as(request, &principal.subject)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => {
+            (StatusCode::CREATED, Json(response)).into_response()
+        }
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_draft_not_found",
+            "The selected crew is no longer available.",
         ),
-    )
-        .into_response()
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_draft_conflict",
+                message: "A route draft could not be created for this crew and service date. Refresh scheduling and try again.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_draft_unavailable",
+                message: "The route draft could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn publish_day_plan(
@@ -4706,13 +4725,33 @@ async fn publish_day_plan(
         return response;
     }
 
-    Json(
-        state
-            .day_plans
-            .publish_day_plan_as(&day_plan_id, &principal.subject)
-            .await,
-    )
-    .into_response()
+    match state
+        .day_plans
+        .publish_day_plan_as(&day_plan_id, &principal.subject)
+        .await
+    {
+        day_plans::PersistedMutationResult::Applied(response) => Json(response).into_response(),
+        day_plans::PersistedMutationResult::NotFound => resource_not_found_response(
+            "day_plan_publish_not_found",
+            "The route draft is no longer available.",
+        ),
+        day_plans::PersistedMutationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "day_plan_publish_conflict",
+                message: "The route could not be published. Refresh the draft and confirm it has saved stops.".to_string(),
+            }),
+        )
+            .into_response(),
+        day_plans::PersistedMutationResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "day_plan_publish_unavailable",
+                message: "The route could not be published.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn create_day_plan_amendment(

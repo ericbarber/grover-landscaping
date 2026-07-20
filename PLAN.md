@@ -104,6 +104,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Backend manager routes for assigning, removing, and reordering day-plan stops
 - PostgreSQL-backed route-stop mutations return explicit conflict, not-found, or unavailable responses instead of local success payloads
 - Manager route planning preserves the last synced route and offers retry guidance after rejected persisted mutations
+- PostgreSQL-backed draft creation and route publication return explicit conflict or unavailable responses instead of local success payloads
+- API-rejected draft creation leaves manager scheduling unchanged, while failed publication retains the synced draft for retry
+- Newly assigned manager route stops receive reviewable drive and service estimates so a synced route can satisfy the publish guard
 - New day-plan drafts snapshot the crew organization's timezone, service-area label, and daily stop capacity
 - Manager crew selection shows each crew's capacity and whether a crew lead is assigned before drafting
 - Draft route assignment is blocked at the snapshotted stop capacity with mobile manager feedback
@@ -320,9 +323,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed draft creation and publication from reporting local fallback success when persistence fails
-- Return explicit create and publish failure results while retaining no-database demo behavior
-- Keep failed draft and publish attempts out of the manager's saved-route state
+- Stop PostgreSQL-backed crew stop-progress writes from returning local-success payloads when persistence rejects them
+- Preserve offline queue behavior for genuine connectivity interruptions while surfacing server conflicts explicitly
+- Cover persisted progress conflicts across repository, API, replay, and phone behavior
 
 ### Manager scheduling workflow
 
@@ -733,9 +736,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed draft creation and publication from reporting local fallback success when persistence fails
-- Return explicit create and publish failure results while retaining no-database demo behavior
-- Render failed draft and publish attempts honestly in manager scheduling and cover repository, API, and phone behavior
+- Stop PostgreSQL-backed crew stop-progress writes from returning local-success payloads when persistence rejects them
+- Preserve offline queue behavior for genuine connectivity interruptions while surfacing server conflicts explicitly
+- Render persisted progress conflicts honestly and cover repository, API, replay, and phone behavior
 
 ## Planned
 

@@ -8,7 +8,19 @@ use grover_landscaping_api::{
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 mod common;
 
+fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
+    match result {
+        PersistedMutationResult::Applied(value) => value,
+        other => panic!("{context}, got {other:?}"),
+    }
+}
+
 async fn reset_day_plan_fixture(pool: &PgPool, day_plan_id: &str) {
+    sqlx::query("DELETE FROM stop_progress_mutations WHERE day_plan_id = $1")
+        .bind(day_plan_id)
+        .execute(pool)
+        .await
+        .expect("test stop-progress mutations should reset");
     sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
         .bind(day_plan_id)
         .execute(pool)
@@ -53,12 +65,15 @@ async fn repository_creates_draft_day_plan() {
         .execute(&pool)
         .await
         .expect("seed crew capacity should be configurable");
-    let response = day_plans
-        .create_draft_day_plan(CreateDayPlanRequest {
-            crew_id: "crew_1001".to_string(),
-            service_date: "2026-06-16".to_string(),
-        })
-        .await;
+    let response = applied(
+        day_plans
+            .create_draft_day_plan(CreateDayPlanRequest {
+                crew_id: "crew_1001".to_string(),
+                service_date: "2026-06-16".to_string(),
+            })
+            .await,
+        "draft creation should persist",
+    );
 
     assert_eq!(response.id, "day_plan_2026_06_16_crew_1001");
     assert_eq!(response.status, "draft");
@@ -90,15 +105,18 @@ async fn repository_publishes_draft_day_plan() {
 
     let day_plans = DayPlanRepository::new();
     let actor_user_id = "manager_publish_audit_test";
-    let draft = day_plans
-        .create_draft_day_plan_as(
-            CreateDayPlanRequest {
-                crew_id: "crew_1001".to_string(),
-                service_date: "2026-06-18".to_string(),
-            },
-            actor_user_id,
-        )
-        .await;
+    let draft = applied(
+        day_plans
+            .create_draft_day_plan_as(
+                CreateDayPlanRequest {
+                    crew_id: "crew_1001".to_string(),
+                    service_date: "2026-06-18".to_string(),
+                },
+                actor_user_id,
+            )
+            .await,
+        "audited draft creation should persist",
+    );
     let PersistedMutationResult::Applied(assigned_stop) = day_plans
         .assign_stop_as(
             &draft.id,
@@ -116,9 +134,12 @@ async fn repository_publishes_draft_day_plan() {
 
     assert!(assigned_stop.persisted);
 
-    let response = day_plans
-        .publish_day_plan_as(&draft.id, actor_user_id)
-        .await;
+    let response = applied(
+        day_plans
+            .publish_day_plan_as(&draft.id, actor_user_id)
+            .await,
+        "audited route publication should persist",
+    );
 
     assert_eq!(response.id, "day_plan_2026_06_18_crew_1001");
     assert_eq!(response.status, "published");
@@ -174,12 +195,15 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
     reset_day_plan_fixture(&pool, &day_plan_id).await;
 
     let day_plans = DayPlanRepository::new();
-    let draft = day_plans
-        .create_draft_day_plan(CreateDayPlanRequest {
-            crew_id: crew_id.to_string(),
-            service_date,
-        })
-        .await;
+    let draft = applied(
+        day_plans
+            .create_draft_day_plan(CreateDayPlanRequest {
+                crew_id: crew_id.to_string(),
+                service_date,
+            })
+            .await,
+        "crew route draft creation should persist",
+    );
     let PersistedMutationResult::Applied(assigned_stop) = day_plans
         .assign_stop(
             &draft.id,
@@ -202,7 +226,10 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
         "draft route should be hidden, got {before_publish:?}"
     );
 
-    let published = day_plans.publish_day_plan(&draft.id).await;
+    let published = applied(
+        day_plans.publish_day_plan(&draft.id).await,
+        "crew route publication should persist",
+    );
     assert!(published.persisted);
 
     let TodayDayPlanResult::Found(crew_route) = day_plans.today_for_crew(crew_id).await else {
@@ -234,15 +261,18 @@ async fn repository_assigns_reorders_and_removes_day_plan_stops() {
 
     let day_plans = DayPlanRepository::new();
     let actor_user_id = "manager_schedule_audit_test";
-    let draft = day_plans
-        .create_draft_day_plan_as(
-            CreateDayPlanRequest {
-                crew_id: "crew_1001".to_string(),
-                service_date: "2026-06-20".to_string(),
-            },
-            actor_user_id,
-        )
-        .await;
+    let draft = applied(
+        day_plans
+            .create_draft_day_plan_as(
+                CreateDayPlanRequest {
+                    crew_id: "crew_1001".to_string(),
+                    service_date: "2026-06-20".to_string(),
+                },
+                actor_user_id,
+            )
+            .await,
+        "route-edit draft creation should persist",
+    );
 
     let PersistedMutationResult::Applied(first_stop) = day_plans
         .assign_stop_as(
@@ -386,12 +416,15 @@ async fn repository_blocks_stop_assignments_beyond_draft_capacity() {
     reset_day_plan_fixture(&pool, day_plan_id).await;
 
     let day_plans = DayPlanRepository::new();
-    let draft = day_plans
-        .create_draft_day_plan(CreateDayPlanRequest {
-            crew_id: "crew_1001".to_string(),
-            service_date: "2026-06-21".to_string(),
-        })
-        .await;
+    let draft = applied(
+        day_plans
+            .create_draft_day_plan(CreateDayPlanRequest {
+                crew_id: "crew_1001".to_string(),
+                service_date: "2026-06-21".to_string(),
+            })
+            .await,
+        "capacity-test draft creation should persist",
+    );
     sqlx::query("UPDATE day_plans SET stop_capacity = 1 WHERE id = $1")
         .bind(&draft.id)
         .execute(&pool)
@@ -450,6 +483,13 @@ async fn repository_reports_rejected_persisted_route_stop_mutations() {
     let day_plans = DayPlanRepository::from_pool(pool);
     let missing_day_plan_id = "day_plan_2099_01_01_crew_missing";
 
+    let draft_creation = day_plans
+        .create_draft_day_plan(CreateDayPlanRequest {
+            crew_id: "crew_missing".to_string(),
+            service_date: "2099-01-01".to_string(),
+        })
+        .await;
+    let publication = day_plans.publish_day_plan(missing_day_plan_id).await;
     let assignment = day_plans
         .assign_stop(
             missing_day_plan_id,
@@ -472,6 +512,8 @@ async fn repository_reports_rejected_persisted_route_stop_mutations() {
         )
         .await;
 
+    assert!(matches!(draft_creation, PersistedMutationResult::Conflict));
+    assert!(matches!(publication, PersistedMutationResult::Conflict));
     assert!(matches!(assignment, PersistedMutationResult::Conflict));
     assert!(matches!(removal, PersistedMutationResult::Conflict));
     assert!(matches!(reorder, PersistedMutationResult::NotFound));

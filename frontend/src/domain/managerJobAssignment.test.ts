@@ -91,8 +91,8 @@ describe('manager job assignment helpers', () => {
       stopOrder: 2,
       jobStatus: 'scheduled',
       stopStatus: 'pending',
-      estimatedDriveMinutes: 0,
-      estimatedServiceMinutes: 0,
+      estimatedDriveMinutes: 10,
+      estimatedServiceMinutes: 45,
     });
   });
 

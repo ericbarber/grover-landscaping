@@ -297,6 +297,96 @@ test('keeps the manager route unchanged when a persisted stop mutation is reject
   await expect(scheduling.getByText('Route capacity: 0/10 stops')).toBeVisible();
 });
 
+test('does not substitute a local manager draft after the persisted API rejects creation', async ({ page }) => {
+  await page.route('**/day-plans', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      json: {
+        error: 'day_plan_draft_unavailable',
+        message: 'The route draft could not be saved.',
+      },
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const scheduling = page.getByRole('heading', { name: 'Create day plan' })
+    .locator('xpath=ancestor::section[1]');
+  await scheduling.getByRole('button', { name: 'Create draft day plan' }).click();
+
+  await expect(scheduling.getByRole('alert')).toContainText(
+    'Draft was not saved, so scheduling stayed unchanged.',
+  );
+  await expect(scheduling.getByText('Draft route', { exact: true })).toHaveCount(0);
+});
+
+test('keeps a manager draft unpublished when persisted publication is rejected', async ({ page }) => {
+  await page.route('**/day-plans', async (route) => {
+    const request = route.request();
+    if (request.method() !== 'POST') {
+      await route.continue();
+      return;
+    }
+    const input = request.postDataJSON() as { crew_id: string; service_date: string };
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      json: {
+        id: `day_plan_${input.service_date.replaceAll('-', '_')}_${input.crew_id}`,
+        crew_id: input.crew_id,
+        service_date: input.service_date,
+        status: 'draft',
+        route_status: 'manual',
+        time_zone: 'America/Phoenix',
+        service_area_label: 'Phoenix metro',
+        stop_capacity: 10,
+        persisted: true,
+      },
+    });
+  });
+  await page.route('**/day-plans/*/stops', async (route) => {
+    const input = route.request().postDataJSON() as { job_id: string };
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      json: {
+        day_plan_id: 'day_plan_publish_rejection',
+        stop_id: `stop_publish_${input.job_id}`,
+        job_id: input.job_id,
+        stop_order: 1,
+        persisted: true,
+      },
+    });
+  });
+  await page.route('**/day-plans/*/publish', (route) => route.fulfill({
+    status: 409,
+    contentType: 'application/json',
+    json: {
+      error: 'day_plan_publish_conflict',
+      message: 'The route could not be published.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const scheduling = page.getByRole('heading', { name: 'Create day plan' })
+    .locator('xpath=ancestor::section[1]');
+  await scheduling.getByRole('button', { name: 'Create draft day plan' }).click();
+  await scheduling.getByRole('button', { name: 'Add', exact: true }).first().click();
+  await scheduling.getByRole('button', { name: 'Publish day plan' }).click();
+
+  await expect(scheduling.getByText(
+    'Publish failed. Confirm this draft has synced stops and try again before sending the route to crews.',
+  )).toBeVisible();
+  await expect(scheduling.getByRole('button', { name: 'Publish day plan' })).toBeVisible();
+  await expect(scheduling.getByRole('button', { name: 'Day plan published' })).toHaveCount(0);
+});
+
 test('queues route progress during interruption and replays after recovery', async ({
   context,
   page,
