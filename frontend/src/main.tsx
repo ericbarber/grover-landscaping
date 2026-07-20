@@ -10,6 +10,7 @@ import { registerProductionServiceWorker } from './registerServiceWorker';
 import { ServiceWorkerUpdateBanner } from './components/ServiceWorkerUpdateBanner';
 import { InstallAppBanner } from './components/InstallAppBanner';
 import { isDiagnosticsPath } from './domain/diagnosticsRoute';
+import { isApplicationPath } from './domain/applicationRoute';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -30,18 +31,32 @@ const MobileDiagnosticsPage = React.lazy(
   () => import('./components/MobileDiagnosticsPage')
     .then((module) => ({ default: module.MobileDiagnosticsPage })),
 );
+const PublicLandingPage = React.lazy(
+  () => import('./components/PublicLandingPage')
+    .then((module) => ({ default: module.PublicLandingPage })),
+);
 
 const diagnosticsRoute = isDiagnosticsPath(window.location.pathname);
+const applicationRoute = isApplicationPath(window.location.pathname);
 const sharedBidToken = sharedBidTokenFromPath(window.location.pathname);
 const sharedReportToken = sharedReportTokenFromPath(window.location.pathname);
 const organizationInvitationToken = organizationInvitationTokenFromPath(window.location.pathname);
+const showOperationalBanners = diagnosticsRoute
+  || applicationRoute
+  || Boolean(sharedBidToken)
+  || Boolean(sharedReportToken)
+  || Boolean(organizationInvitationToken);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <NetworkStatusBanner />
-    <ApiStatusBanner />
-    <ServiceWorkerUpdateBanner />
-    <InstallAppBanner />
+    {showOperationalBanners ? (
+      <>
+        <NetworkStatusBanner />
+        <ApiStatusBanner />
+        <ServiceWorkerUpdateBanner />
+        <InstallAppBanner />
+      </>
+    ) : null}
     <RouteLoadBoundary>
       <React.Suspense fallback={(
         <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
@@ -56,8 +71,10 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           <CustomerBidReviewPage shareToken={sharedBidToken} />
         ) : sharedReportToken ? (
           <CustomerCompletionReportPage shareToken={sharedReportToken} />
-        ) : (
+        ) : applicationRoute || organizationInvitationToken ? (
           <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
+        ) : (
+          <PublicLandingPage />
         )}
       </React.Suspense>
     </RouteLoadBoundary>

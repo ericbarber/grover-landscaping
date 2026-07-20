@@ -2,7 +2,7 @@
   "name": "Grover Landscaping Field Work",
   "short_name": "Grover Field",
   "description": "Mobile field workflow for landscaping routes, jobs, and completion evidence.",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f1f5f9",

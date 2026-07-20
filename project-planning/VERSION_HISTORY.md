@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Added an API-independent public persona-selectable Grover homepage with product narrative, preview, outcomes, and direct workspace routing.
 - 2026-07-20: Added auditable photo-erasure recovery events and isolated durable photo recovery integration coverage.
 - 2026-07-20: Aligned day-plan, amendment, and bid readiness tests with explicit persistence result contracts.
 - 2026-07-20: Restored the full 160-test Rust library readiness suite after persistence contract hardening.

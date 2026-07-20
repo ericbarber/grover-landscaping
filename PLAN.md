@@ -13,6 +13,16 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## Delivered
 
+### Public product experience
+
+- Public root homepage introduces Grover without requiring authentication
+- Outcome-led hero positions Grover around the plan, field care, and customer-ready proof
+- Interactive audience selector tailors benefits for yard owners, property managers, landscaping companies, and crew leads
+- Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
+- `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
+- Installed application sessions now start directly at `/app`
+- Public marketing remains independent of API, network, update, and installation banners so backend readiness cannot make the homepage appear unavailable
+
 ### Mobile navigation and context
 
 - Persona-aware authenticated application Home is the default mobile workspace
@@ -1291,7 +1301,7 @@ These stories convert the capability roadmap into deliverable role outcomes. Kee
 - Position property manager messaging around multi-property visibility, portfolio grouping, crew accountability, completion evidence, tenant/owner communication, and service issue tracking
 - Position small yard-care company messaging around simple mobile crew workflows, daily route clarity, before/after proof, customer confidence, faster completion reporting, and reduced office follow-up
 - Position larger yard-care company messaging around multi-crew operations, manager scheduling, route oversight, audit trails, role-based access, reporting consistency, and scalable service operations
-- Create landing-page paths for each audience segment with tailored benefits, screenshots, proof points, calls to action, and pilot signup flows
+- Extend the delivered persona-selectable public homepage with campaign-specific paths, production screenshots, customer proof, and pilot signup flows
 - Plan advertising channels for local search, social media, industry directories, referral partnerships, property-management associations, landscaping trade groups, and targeted email outreach
 - Add campaign tracking for source, audience segment, landing page, signup intent, demo requests, pilot conversion, and customer acquisition cost
 - Keep campaign claims tied to implemented or planned product capabilities, and avoid promising automations, integrations, or scale features before they are ready

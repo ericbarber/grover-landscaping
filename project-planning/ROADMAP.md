@@ -5,6 +5,12 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
+The public root homepage now introduces Grover through an outcome-led hero,
+persona-selectable benefits for yard owners, property managers, landscaping
+companies, and crew leads, the Plan-Care-Proof workflow, a product preview,
+capability proof points, and clear workspace calls to action. `/app` remains the
+direct workspace entry.
+
 The current delivery priority is a mobile-first navigation redesign before the
 remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,
 and Manager into explicit mobile workspace views with stable bottom navigation
@@ -182,8 +188,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Productivity, route efficiency, profitability, account health, bid conversion,
   retention, missed-service, and campaign analytics.
 - Role, retention, support, and usage administration.
-- Audience-specific marketing pages, pilot signup, attribution, and acquisition-cost
-  tracking.
+- Campaign-specific marketing paths, production screenshots, customer proof,
+  pilot signup, attribution, and acquisition-cost tracking beyond the delivered
+  persona-selectable public homepage.
 
 ## Sequencing Rules
 

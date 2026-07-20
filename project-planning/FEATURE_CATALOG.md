@@ -1,5 +1,13 @@
 # Feature Catalog
 
+## Public Product Experience
+
+- Public outcome-led homepage with direct workspace entry
+- Interactive benefit stories for yard owners, property managers, landscaping companies, and crew leads
+- Plan-Care-Proof product narrative and representative workspace preview
+- Responsive product capability and trust sections
+- Planned extensions: customer proof, production screenshots, campaign paths, demo capture, and attribution
+
 ## Persona Workspaces
 
 - Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
