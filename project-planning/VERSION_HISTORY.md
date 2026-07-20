@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added current hierarchy context to stale crew-move inspections.
 - 2026-07-19: Flagged subsequent crew moves during audited hierarchy inspection.
 - 2026-07-19: Added downloadable crew-move support summaries.
 - 2026-07-19: Added native sharing with copy fallback for crew-move support.

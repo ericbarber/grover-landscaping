@@ -675,10 +675,11 @@ Current state:
 - Crew inspection shares the support summary through the native phone share sheet and falls back to copy when sharing is unavailable
 - Crew inspection downloads the move support summary as an audit-ID-named text file when share and clipboard capabilities are restricted
 - Crew inspection compares the audited destination IDs with the crew's current assignment and flags crews that moved again after the selected event
+- Subsequent-move warnings show the crew's current readable branch and territory beside the audited move context
 
 Next implementation work:
 
-- Show the crew's current hierarchy beside the audited destination when a subsequent move is detected
+- Include the crew's current hierarchy in copied, shared, and downloaded support summaries when the audited destination is stale
 
 ## Planned
 

@@ -74,6 +74,14 @@ export function OwnerCrewAdministrationPanel({
     && selectedCrew.branchId === inspectedDestinationBranchId
     && selectedCrew.territoryId === inspectedDestinationTerritoryId,
   );
+  const currentInspectionBranchLabel = selectedCrew
+    ? branches.find((branch) => branch.id === selectedCrew.branchId)?.name
+      ?? selectedCrew.branchId
+    : undefined;
+  const currentInspectionTerritoryLabel = selectedCrew
+    ? territories.find((territory) => territory.id === selectedCrew.territoryId)?.name
+      ?? selectedCrew.territoryId
+    : undefined;
 
   async function refresh() {
     setIsLoading(true);
@@ -318,16 +326,23 @@ export function OwnerCrewAdministrationPanel({
           {inspectionAuditLabel ? (
             <p className="mt-2 break-all text-sky-800">{inspectionAuditLabel}</p>
           ) : null}
-          {inspectedDestinationBranchId && inspectedDestinationTerritoryId ? (
-            <p className={`mt-2 rounded-lg p-2 font-bold ${
+          {selectedCrew && inspectedDestinationBranchId && inspectedDestinationTerritoryId ? (
+            <div className={`mt-2 rounded-lg p-2 font-bold ${
               inspectionMatchesCurrentAssignment
                 ? 'bg-emerald-100 text-emerald-950'
                 : 'bg-amber-100 text-amber-950'
             }`}>
-              {inspectionMatchesCurrentAssignment
-                ? 'Current crew assignment matches this audited destination.'
-                : 'Current crew assignment differs. This crew moved again after the audited event.'}
-            </p>
+              <p>
+                {inspectionMatchesCurrentAssignment
+                  ? 'Current crew assignment matches this audited destination.'
+                  : 'Current crew assignment differs. This crew moved again after the audited event.'}
+              </p>
+              {!inspectionMatchesCurrentAssignment ? (
+                <p className="mt-1 font-medium">
+                  Current assignment: {currentInspectionBranchLabel} · {currentInspectionTerritoryLabel}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {inspectionAuditId ? (
             <div className="mt-2 flex flex-wrap gap-2">

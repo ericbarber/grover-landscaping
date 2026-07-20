@@ -405,6 +405,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(crewAdministration.getByText(
     'Current crew assignment differs. This crew moved again after the audited event.',
   )).toBeVisible();
+  await expect(crewAdministration.getByText(
+    `Current assignment: Main Branch · ${territoryName}`,
+  )).toBeVisible();
   await expect(crewAdministration.getByText(/Audit audit_e2e_crew_hierarchy_move/)).toBeVisible();
   await crewAdministration.getByRole('button', { name: 'Copy audit event ID' }).click();
   await expect(crewAdministration.getByText(
