@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added assigned crew counts to branch and territory lifecycle records.
 - 2026-07-19: Extended live hierarchy smoke through filter restoration and clearing.
 - 2026-07-19: Restored owner hierarchy filters across mobile reloads.
 - 2026-07-19: Added lifecycle status filters and clearing to hierarchy search.

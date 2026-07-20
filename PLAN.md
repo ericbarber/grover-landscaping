@@ -504,6 +504,7 @@ Current state:
 - Hierarchy lists combine active/inactive status with search, applied-result counts, and one-action filter clearing
 - Owner hierarchy search and lifecycle status restore per organization across mobile reloads with malformed-storage fallback
 - Pixel 7 hierarchy smoke restores persisted search/status after reload and verifies one-action clearing
+- Branch and territory lifecycle records show active and total assigned crew counts and refresh after crew creation or reassignment
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -644,7 +645,7 @@ Current state:
 
 Next implementation work:
 
-- Show assigned crew counts beside branch and territory lifecycle records
+- Add crew-assignment status to hierarchy search so owners can find unstaffed scopes
 
 ## Planned
 

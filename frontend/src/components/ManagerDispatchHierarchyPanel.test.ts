@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { OrganizationBranchRecord, ServiceTerritoryRecord } from '../api/client';
+import type {
+  CrewRecord,
+  OrganizationBranchRecord,
+  ServiceTerritoryRecord,
+} from '../api/client';
 import {
   filterDispatchHierarchy,
   parseDispatchHierarchyFilters,
+  summarizeHierarchyCrewAssignments,
   summarizeDispatchHierarchy,
 } from './ManagerDispatchHierarchyPanel';
 
@@ -89,5 +94,36 @@ describe('dispatch hierarchy summaries', () => {
       status: 'unknown',
     }))).toEqual({ query: 'x'.repeat(120), status: 'all' });
     expect(parseDispatchHierarchyFilters('{bad json')).toEqual({ query: '', status: 'all' });
+  });
+
+  it('summarizes active and total crew assignments by both hierarchy levels', () => {
+    const crews = [
+      {
+        id: 'crew_1',
+        branchId: 'branch_1',
+        territoryId: 'territory_1',
+        status: 'active',
+      },
+      {
+        id: 'crew_2',
+        branchId: 'branch_1',
+        territoryId: 'territory_1',
+        status: 'inactive',
+      },
+      {
+        id: 'crew_3',
+        branchId: 'branch_1',
+        territoryId: 'territory_2',
+        status: 'active',
+      },
+    ] as CrewRecord[];
+
+    expect(summarizeHierarchyCrewAssignments(crews)).toEqual({
+      branchCounts: { branch_1: { active: 2, total: 3 } },
+      territoryCounts: {
+        territory_1: { active: 1, total: 2 },
+        territory_2: { active: 1, total: 1 },
+      },
+    });
   });
 });

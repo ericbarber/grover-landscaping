@@ -3,16 +3,19 @@ import {
   createOrganizationBranch,
   createServiceTerritory,
   fetchOrganizationBranches,
+  fetchOrganizationCrews,
   fetchServiceTerritories,
   updateOrganizationBranchStatus,
   updateServiceTerritoryStatus,
   type OrganizationBranchRecord,
+  type CrewRecord,
   type ServiceTerritoryRecord,
 } from '../api/client';
 
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
   onChanged: () => void;
+  refreshSignal?: number;
 };
 
 const timeZones = [
@@ -101,13 +104,34 @@ export function filterDispatchHierarchy(
   };
 }
 
+export function summarizeHierarchyCrewAssignments(crews: CrewRecord[]) {
+  const branchCounts: Record<string, { active: number; total: number }> = {};
+  const territoryCounts: Record<string, { active: number; total: number }> = {};
+  for (const crew of crews) {
+    for (const [scopeId, counts] of [
+      [crew.branchId, branchCounts],
+      [crew.territoryId, territoryCounts],
+    ] as const) {
+      if (!scopeId) continue;
+      const current = counts[scopeId] ?? { active: 0, total: 0 };
+      counts[scopeId] = {
+        active: current.active + Number(crew.status === 'active'),
+        total: current.total + 1,
+      };
+    }
+  }
+  return { branchCounts, territoryCounts };
+}
+
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
+  refreshSignal = 0,
 }: ManagerDispatchHierarchyPanelProps) {
   const initialFilters = loadDispatchHierarchyFilters(organizationId);
   const [branches, setBranches] = useState<OrganizationBranchRecord[]>([]);
   const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
+  const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [branchName, setBranchName] = useState('');
   const [branchCode, setBranchCode] = useState('');
   const [timeZone, setTimeZone] = useState('America/Phoenix');
@@ -127,12 +151,14 @@ export function ManagerDispatchHierarchyPanel({
     hierarchyQuery,
     hierarchyStatus,
   );
+  const crewAssignments = summarizeHierarchyCrewAssignments(crews);
   const hasHierarchyFilters = Boolean(hierarchyQuery.trim()) || hierarchyStatus !== 'all';
 
   async function refreshHierarchy() {
-    const [branchItems, territoryItems] = await Promise.all([
+    const [branchItems, territoryItems, crewItems] = await Promise.all([
       fetchOrganizationBranches(),
       fetchServiceTerritories(),
+      fetchOrganizationCrews(organizationId),
     ]);
     const scopedBranches = branchItems.filter(
       (branch) => branch.organizationId === organizationId,
@@ -142,6 +168,7 @@ export function ManagerDispatchHierarchyPanel({
     setTerritories(territoryItems.filter(
       (territory) => territory.organizationId === organizationId,
     ));
+    setCrews(crewItems);
     setTerritoryBranchId((current) => (
       active.some((branch) => branch.id === current) ? current : active[0]?.id || ''
     ));
@@ -149,7 +176,7 @@ export function ManagerDispatchHierarchyPanel({
 
   useEffect(() => {
     void refreshHierarchy().catch(() => setStatus('Hierarchy choices could not be loaded.'));
-  }, [organizationId]);
+  }, [organizationId, refreshSignal]);
 
   useEffect(() => {
     if (filterOrganizationRef.current !== organizationId) {
@@ -429,6 +456,10 @@ export function ManagerDispatchHierarchyPanel({
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{branch.name}</p>
                     <p className="text-xs text-slate-500">{branch.code} · {branch.status}</p>
+                    <p className="text-xs text-slate-500">
+                      {crewAssignments.branchCounts[branch.id]?.active ?? 0} active ·{' '}
+                      {crewAssignments.branchCounts[branch.id]?.total ?? 0} total crews
+                    </p>
                   </div>
                   <button
                     className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
@@ -466,6 +497,10 @@ export function ManagerDispatchHierarchyPanel({
                     <p className="text-sm font-semibold text-slate-900">{territory.name}</p>
                     <p className="text-xs text-slate-500">
                       {branch?.name ?? 'Unknown branch'} · {territory.status}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {crewAssignments.territoryCounts[territory.id]?.active ?? 0} active ·{' '}
+                      {crewAssignments.territoryCounts[territory.id]?.total ?? 0} total crews
                     </p>
                   </div>
                   <button

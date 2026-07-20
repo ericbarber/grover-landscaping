@@ -2653,9 +2653,13 @@ export function App() {
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
-            onCrewCreated={() => setCrewRefreshSignal((current) => current + 1)}
+            onCrewCreated={() => {
+              setCrewRefreshSignal((current) => current + 1);
+              setDispatchHierarchyRefreshSignal((current) => current + 1);
+            }}
             onCrewChanged={() => {
               setCrewRefreshSignal((current) => current + 1);
+              setDispatchHierarchyRefreshSignal((current) => current + 1);
               setTeamActivityRefreshSignal((current) => current + 1);
             }}
             onOrganizationReady={(organizationName, organizationId) => {
@@ -2823,6 +2827,7 @@ export function App() {
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
+                refreshSignal={dispatchHierarchyRefreshSignal}
                 onChanged={() => {
                   setDispatchHierarchyRefreshSignal((current) => current + 1);
                   setTeamActivityRefreshSignal((current) => current + 1);
