@@ -21,6 +21,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Home uses a branded first-impression hero with a time-aware greeting, current date, and persona-specific headline
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
+- Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones
 - Explicit Route, Jobs, Job, and Manager mobile workspace views replace long-page anchor jumps
 - Fixed bottom navigation preserves a stable thumb-reachable location and iPhone safe-area spacing
 - Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count

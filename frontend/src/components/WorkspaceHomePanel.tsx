@@ -41,6 +41,44 @@ export function personaHomeHeadline(persona: WorkspacePersona): string {
   return 'Everything you need for today.';
 }
 
+export function homePriorityStatus({
+  assignedJobCount,
+  completedJobCount,
+  pendingChangeCount,
+}: {
+  assignedJobCount: number;
+  completedJobCount: number;
+  pendingChangeCount: number;
+}): { tone: 'attention' | 'ready' | 'complete'; title: string; detail: string } {
+  if (pendingChangeCount > 0) {
+    return {
+      tone: 'attention',
+      title: 'Sync needs attention',
+      detail: `${pendingChangeCount} saved ${pendingChangeCount === 1 ? 'change is' : 'changes are'} waiting to reach the server.`,
+    };
+  }
+  if (assignedJobCount === 0) {
+    return {
+      tone: 'ready',
+      title: 'You’re clear for now',
+      detail: 'No field work is currently assigned. Use your workspace shortcuts for the next task.',
+    };
+  }
+  if (completedJobCount >= assignedJobCount) {
+    return {
+      tone: 'complete',
+      title: 'Today’s assigned work is complete',
+      detail: 'Everything is synced and ready for the next workflow.',
+    };
+  }
+  const remaining = assignedJobCount - completedJobCount;
+  return {
+    tone: 'ready',
+    title: `${remaining} ${remaining === 1 ? 'job' : 'jobs'} remaining`,
+    detail: 'Everything is synced. Continue with the recommended next action.',
+  };
+}
+
 export function WorkspaceHomePanel({
   assignedJobCount,
   completedJobCount,
@@ -66,6 +104,11 @@ export function WorkspaceHomePanel({
     ? Math.min(100, Math.round((completedJobCount / assignedJobCount) * 100))
     : 0;
   const firstName = signedInName.split(/[\s@]/)[0] || signedInName;
+  const priorityStatus = homePriorityStatus({
+    assignedJobCount,
+    completedJobCount,
+    pendingChangeCount,
+  });
 
   return (
     <section className="space-y-4 lg:hidden">
@@ -122,6 +165,33 @@ export function WorkspaceHomePanel({
           </span>
         </div>
       </article>
+
+      <aside className={`rounded-2xl border p-4 ${
+        priorityStatus.tone === 'attention'
+          ? 'border-amber-300 bg-amber-50'
+          : priorityStatus.tone === 'complete'
+            ? 'border-emerald-300 bg-emerald-50'
+            : 'border-sky-200 bg-sky-50'
+      }`} role="status">
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black ${
+              priorityStatus.tone === 'attention'
+                ? 'bg-amber-200 text-amber-950'
+                : priorityStatus.tone === 'complete'
+                  ? 'bg-emerald-200 text-emerald-950'
+                  : 'bg-sky-200 text-sky-950'
+            }`}
+          >
+            {priorityStatus.tone === 'attention' ? '!' : '✓'}
+          </span>
+          <div>
+            <p className="text-sm font-black text-slate-950">{priorityStatus.title}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">{priorityStatus.detail}</p>
+          </div>
+        </div>
+      </aside>
 
       {primaryAction ? (
         <button

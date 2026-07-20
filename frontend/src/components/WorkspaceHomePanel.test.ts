@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { workspacePersonasForRoles } from '../domain/workspacePersona';
 import {
   homeGreeting,
+  homePriorityStatus,
   personaHomeHeadline,
   workspaceHomeActions,
 } from './WorkspaceHomePanel';
@@ -44,5 +45,34 @@ describe('workspace home actions', () => {
       .toBe('A clear plan for the work ahead.');
     expect(personaHomeHeadline(workspacePersonasForRoles(['OrganizationOwner'])[0]))
       .toBe('Run today with confidence.');
+  });
+
+  it('prioritizes unsynced changes over routine progress', () => {
+    expect(homePriorityStatus({
+      assignedJobCount: 4,
+      completedJobCount: 2,
+      pendingChangeCount: 1,
+    })).toMatchObject({
+      tone: 'attention',
+      title: 'Sync needs attention',
+    });
+  });
+
+  it('distinguishes work remaining, a clear schedule, and a completed day', () => {
+    expect(homePriorityStatus({
+      assignedJobCount: 4,
+      completedJobCount: 2,
+      pendingChangeCount: 0,
+    }).title).toBe('2 jobs remaining');
+    expect(homePriorityStatus({
+      assignedJobCount: 0,
+      completedJobCount: 0,
+      pendingChangeCount: 0,
+    }).title).toBe('You’re clear for now');
+    expect(homePriorityStatus({
+      assignedJobCount: 3,
+      completedJobCount: 3,
+      pendingChangeCount: 0,
+    }).tone).toBe('complete');
   });
 });
