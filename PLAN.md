@@ -15,6 +15,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ### Mobile navigation and context
 
+- Persona-aware authenticated application Home is the default mobile workspace
+- Home identifies the signed-in person and active persona, summarizes assigned, finished, and pending-sync work, and provides relevant quick actions
+- Yard owners, property managers, field crews, company operators, dispatch, billing, and support receive different Home shortcuts
 - Explicit Route, Jobs, Job, and Manager mobile workspace views replace long-page anchor jumps
 - Fixed bottom navigation preserves a stable thumb-reachable location and iPhone safe-area spacing
 - Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count
@@ -894,7 +897,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with compact service-work history and iPhone interaction validation
+- Continue the mobile navigation phase with compact service-work history, richer persona Home alerts, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention

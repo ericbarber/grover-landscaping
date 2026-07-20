@@ -2,6 +2,7 @@
 
 ## Persona Workspaces
 
+- Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence

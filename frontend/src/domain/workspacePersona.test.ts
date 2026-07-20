@@ -27,8 +27,8 @@ describe('persona workspaces', () => {
 
   it('limits customer and crew navigation to relevant work', () => {
     expect(workspacePersonasForRoles(['PropertyOwner'])[0].navigation.map(({ view }) => view))
-      .toEqual(['customer']);
+      .toEqual(['home', 'customer']);
     expect(workspacePersonasForRoles(['CrewMember'])[0].navigation.map(({ view }) => view))
-      .toEqual(['route', 'jobs', 'job']);
+      .toEqual(['home', 'route', 'jobs', 'job']);
   });
 });

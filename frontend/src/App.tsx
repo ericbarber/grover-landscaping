@@ -102,6 +102,7 @@ import {
   CustomerHistoryMenu,
   type CustomerHistoryView,
 } from './components/CustomerHistoryMenu';
+import { WorkspaceHomePanel } from './components/WorkspaceHomePanel';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -2669,6 +2670,27 @@ export function App() {
 
       <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
+          <div className={mobileView === 'home' ? 'block' : 'hidden'}>
+            <WorkspaceHomePanel
+              assignedJobCount={jobs.length}
+              completedJobCount={jobs.filter((job) => job.status === 'completed').length}
+              hasSelectedJob={Boolean(selectedJobId)}
+              onOpen={(view) => {
+                if (view === 'manager') {
+                  setManagerWorkspaceSection(null);
+                  setManagerWorkspaceTool(null);
+                }
+                changeMobileView(view, true);
+              }}
+              pendingChangeCount={
+                offlineJobMutations.length
+                + offlineChecklistMutations.length
+                + offlinePhotoMutations.length
+              }
+              persona={activePersona}
+              signedInName={auth.displayName || 'Signed-in user'}
+            />
+          </div>
           <div className={`${mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16 lg:block`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}

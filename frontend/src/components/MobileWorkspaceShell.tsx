@@ -1,6 +1,6 @@
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
 
-export type MobileWorkspaceView = 'route' | 'jobs' | 'job' | 'manager' | 'customer';
+export type MobileWorkspaceView = 'home' | 'route' | 'jobs' | 'job' | 'manager' | 'customer';
 
 interface MobileWorkspaceContextInput {
   view: MobileWorkspaceView;
@@ -32,6 +32,12 @@ export function mobileWorkspaceContext(
   input: MobileWorkspaceContextInput,
 ): MobileWorkspaceContext {
   switch (input.view) {
+    case 'home':
+      return {
+        eyebrow: input.personaLabel,
+        title: 'Home',
+        detail: input.personaDescription,
+      };
     case 'route':
       return {
         eyebrow: 'Today',

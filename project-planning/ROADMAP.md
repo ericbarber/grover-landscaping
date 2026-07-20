@@ -26,6 +26,8 @@ Customer mobile history now separates property/service history from bid history
 instead of stacking both areas on one screen.
 Selected properties preview the two newest reports on mobile and expand older
 completion-report history only when requested.
+The authenticated application now opens on a persona-aware Home with signed-in
+identity, work and sync summaries, and role-relevant shortcuts.
 
 ## Immediate Continuation Work
 

@@ -21,14 +21,16 @@ export interface WorkspacePersona {
 }
 
 const fieldNavigation: WorkspacePersona['navigation'] = [
+  { view: 'home', label: 'Home', symbol: '⌂' },
   { view: 'route', label: 'Route', symbol: '↗' },
   { view: 'jobs', label: 'Jobs', symbol: '☷' },
   { view: 'job', label: 'Job', symbol: '✓' },
 ];
 
 const managerNavigation: WorkspacePersona['navigation'] = [
+  { view: 'home', label: 'Home', symbol: '⌂' },
   { view: 'manager', label: 'Manage', symbol: '▦' },
-  ...fieldNavigation,
+  ...fieldNavigation.slice(1),
 ];
 
 const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
@@ -36,16 +38,20 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     id: 'yard-owner',
     label: 'Yard owner',
     description: 'Properties, upcoming service, reports, photos, and bids',
-    defaultView: 'customer',
-    navigation: [{ view: 'customer', label: 'My yard', symbol: '⌂' }],
+    defaultView: 'home',
+    navigation: [
+      { view: 'home', label: 'Home', symbol: '⌂' },
+      { view: 'customer', label: 'My yard', symbol: '◇' },
+    ],
   },
   'property-manager': {
     id: 'property-manager',
     label: 'Property manager',
     description: 'Portfolio service, vendor work, reports, and approvals',
-    defaultView: 'customer',
+    defaultView: 'home',
     navigation: [
-      { view: 'customer', label: 'Portfolio', symbol: '⌂' },
+      { view: 'home', label: 'Home', symbol: '⌂' },
+      { view: 'customer', label: 'Portfolio', symbol: '◇' },
       { view: 'manager', label: 'Manage', symbol: '▦' },
     ],
   },
@@ -53,59 +59,63 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     id: 'crew-lead',
     label: 'Crew lead',
     description: 'Today’s route, crew progress, field work, and exceptions',
-    defaultView: 'route',
+    defaultView: 'home',
     navigation: fieldNavigation,
   },
   'crew-member': {
     id: 'crew-member',
     label: 'Crew member',
     description: 'Assigned route, job steps, photos, and completion evidence',
-    defaultView: 'route',
+    defaultView: 'home',
     navigation: fieldNavigation,
   },
   'company-owner': {
     id: 'company-owner',
     label: 'Yard-care company owner',
     description: 'Company operations, customers, teams, routes, and recovery',
-    defaultView: 'manager',
+    defaultView: 'home',
     navigation: managerNavigation,
   },
   'company-manager': {
     id: 'company-manager',
     label: 'Yard-care company manager',
     description: 'Dispatch, schedules, customers, reports, and daily operations',
-    defaultView: 'manager',
+    defaultView: 'home',
     navigation: managerNavigation,
   },
   dispatcher: {
     id: 'dispatcher',
     label: 'Dispatcher',
     description: 'Route risk, crew workload, assignments, and schedule changes',
-    defaultView: 'manager',
+    defaultView: 'home',
     navigation: managerNavigation,
   },
   'billing-admin': {
     id: 'billing-admin',
     label: 'Billing administrator',
     description: 'Customer accounts, bids, approvals, and billing readiness',
-    defaultView: 'manager',
+    defaultView: 'home',
     navigation: [
+      { view: 'home', label: 'Home', symbol: '⌂' },
       { view: 'manager', label: 'Billing', symbol: '▦' },
-      { view: 'customer', label: 'Accounts', symbol: '⌂' },
+      { view: 'customer', label: 'Accounts', symbol: '◇' },
     ],
   },
   support: {
     id: 'support',
     label: 'Support administrator',
     description: 'Tenant support, access review, recovery, and diagnostics',
-    defaultView: 'manager',
-    navigation: [{ view: 'manager', label: 'Support', symbol: '▦' }],
+    defaultView: 'home',
+    navigation: [
+      { view: 'home', label: 'Home', symbol: '⌂' },
+      { view: 'manager', label: 'Support', symbol: '▦' },
+    ],
   },
   general: {
     id: 'general',
     label: 'Team member',
     description: 'Available work for the signed-in organization role',
-    defaultView: 'route',
+    defaultView: 'home',
     navigation: fieldNavigation,
   },
 };

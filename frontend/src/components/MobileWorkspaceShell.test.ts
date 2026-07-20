@@ -12,6 +12,13 @@ const baseInput = {
 };
 
 describe('mobileWorkspaceContext', () => {
+  it('identifies the persona-aware application home', () => {
+    expect(mobileWorkspaceContext({ ...baseInput, view: 'home' })).toEqual({
+      eyebrow: 'Crew lead',
+      title: 'Home',
+      detail: 'Today’s route and field work',
+    });
+  });
   it('keeps route sync and workload context visible', () => {
     expect(mobileWorkspaceContext({ ...baseInput, view: 'route' })).toEqual({
       eyebrow: 'Today',
