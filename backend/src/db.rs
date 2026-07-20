@@ -641,14 +641,18 @@ impl JobRepository {
         ResourceReadResult::Loaded(seed_job_detail(id))
     }
 
-    pub async fn list_job_add_ons(&self, job_id: &str) -> Vec<JobAddOn> {
+    pub async fn list_job_add_ons(&self, job_id: &str) -> ResourceReadResult<Vec<JobAddOn>> {
         if let Some(pool) = &self.pool {
-            if let Ok(add_ons) = postgres_read::list_job_add_ons(pool, job_id).await {
-                return add_ons;
-            }
+            return match postgres_read::list_job_add_ons(pool, job_id).await {
+                Ok(add_ons) => ResourceReadResult::Loaded(add_ons),
+                Err(error) => {
+                    tracing::error!(%error, job_id, "persisted job add-on list failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        ResourceReadResult::Loaded(Vec::new())
     }
 
     pub async fn update_job_add_on_status(

@@ -161,6 +161,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - PostgreSQL-backed job list and detail reads return explicit missing or unavailable results instead of seeded field work
 - Completion-report construction propagates unavailable job reads, while no-database demo mode retains seeded jobs
 - The phone assigned-work list distinguishes persisted unavailability from an empty schedule and network-only demo fallback
+- PostgreSQL-backed job add-on read failures return an unavailable response instead of an empty add-on list
+- Completion-report construction propagates unavailable add-on reads, while demo mode retains an intentionally empty list
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -337,9 +339,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed job add-on reads from translating persistence failures into an empty add-on list
-- Return explicit unavailable results while retaining an empty no-database demo list
-- Render unavailable add-on context separately from a job with no add-ons
+- Stop PostgreSQL-backed photo-evidence reads from translating persistence failures into empty evidence
+- Return explicit unavailable results while retaining empty no-database demo evidence
+- Prevent completion reports from presenting missing proof when persisted photo reads fail
 
 ### Manager scheduling workflow
 
@@ -750,9 +752,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed job add-on reads from translating persistence failures into an empty add-on list
-- Return explicit unavailable results while retaining an empty no-database demo list
-- Render unavailable add-on context separately from a job with no add-ons
+- Stop PostgreSQL-backed photo-evidence reads from translating persistence failures into empty evidence
+- Return explicit unavailable results while retaining empty no-database demo evidence
+- Prevent completion reports from presenting missing proof when persisted photo reads fail
 
 ## Planned
 

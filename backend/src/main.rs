@@ -4616,7 +4616,14 @@ async fn list_job_add_ons(
         return response;
     }
 
-    Json(state.jobs.list_job_add_ons(&id).await).into_response()
+    match state.jobs.list_job_add_ons(&id).await {
+        ResourceReadResult::Loaded(add_ons) => Json(add_ons).into_response(),
+        ResourceReadResult::NotFound => Json(Vec::<JobAddOn>::new()).into_response(),
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "job_add_ons_unavailable",
+            "The persisted job add-ons could not be loaded.",
+        ),
+    }
 }
 
 async fn update_job_add_on_status(
@@ -4723,7 +4730,16 @@ async fn build_and_persist_completion_report(
     };
     let account = state.accounts.get_account_for_job(id).await;
     let photo_evidence = state.jobs.list_photo_evidence(id).await;
-    let add_ons = state.jobs.list_job_add_ons(id).await;
+    let add_ons = match state.jobs.list_job_add_ons(id).await {
+        ResourceReadResult::Loaded(add_ons) => add_ons,
+        ResourceReadResult::NotFound => Vec::new(),
+        ResourceReadResult::Unavailable => {
+            return Err(persisted_resource_unavailable_response(
+                "job_add_ons_unavailable",
+                "The persisted job add-ons could not be loaded.",
+            ));
+        }
+    };
     let mut report = build_completion_report(job, account, photo_evidence, add_ons);
     if let Some(crew_id) = report.job.assigned_crew_id.as_deref() {
         if let Some(day_plan) = state.day_plans.today_summary_for_crew(crew_id).await {

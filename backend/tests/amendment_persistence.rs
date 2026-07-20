@@ -3,7 +3,7 @@ use grover_landscaping_api::{
         AmendmentService, CreateDayPlanAmendmentRequest, DayPlanRepository,
         PersistedMutationResult, PersistedReadResult, ReviewDayPlanAmendmentRequest,
     },
-    db::{JobAddOnStatusUpdate, JobRepository},
+    db::{JobAddOnStatusUpdate, JobRepository, ResourceReadResult},
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidRepository,
         ProjectBidSendResult, SendProjectBidRequest,
@@ -421,7 +421,9 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         service_minutes_before_conversion + 30
     );
 
-    let crew_add_ons = jobs.list_job_add_ons("job_1001").await;
+    let ResourceReadResult::Loaded(crew_add_ons) = jobs.list_job_add_ons("job_1001").await else {
+        panic!("persisted job add-ons should load");
+    };
     let converted_add_on = crew_add_ons
         .iter()
         .find(|add_on| add_on.id.contains(&bid.id))

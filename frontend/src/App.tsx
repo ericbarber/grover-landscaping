@@ -883,6 +883,7 @@ export function App() {
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
+  const [jobAddOnsUnavailable, setJobAddOnsUnavailable] = useState(false);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -1472,16 +1473,21 @@ export function App() {
   useEffect(() => {
     if (!selectedJobId) {
       setSelectedJobAddOns([]);
+      setJobAddOnsUnavailable(false);
       return;
     }
 
     let isMounted = true;
+    setJobAddOnsUnavailable(false);
     fetchJobAddOns(selectedJobId)
       .then((addOns) => {
         if (isMounted) setSelectedJobAddOns(addOns);
       })
-      .catch(() => {
-        if (isMounted) setSelectedJobAddOns([]);
+      .catch((error: unknown) => {
+        if (isMounted) {
+          setSelectedJobAddOns([]);
+          setJobAddOnsUnavailable(error instanceof ApiRequestError);
+        }
       });
 
     return () => {
@@ -3018,6 +3024,11 @@ export function App() {
           {jobDetailUnavailable ? (
             <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
               Persisted job access could not be verified. Job details remain hidden until API readiness recovers.
+            </p>
+          ) : null}
+          {jobAddOnsUnavailable ? (
+            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
+              Persisted add-on context could not be loaded. Add-ons remain hidden until API readiness recovers.
             </p>
           ) : null}
           <JobDetailPanel

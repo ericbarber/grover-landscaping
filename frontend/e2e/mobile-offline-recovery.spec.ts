@@ -306,6 +306,23 @@ test('does not substitute seed jobs when the persisted field schedule is unavail
   await expect(page.getByText('0 assigned jobs')).toBeVisible();
 });
 
+test('distinguishes unavailable persisted add-ons from a job with no add-ons', async ({ page }) => {
+  await page.route('**/jobs/job_1001/add-ons', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'job_add_ons_unavailable',
+      message: 'The persisted job add-ons could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  const detail = page.locator('#job-detail');
+  await expect(detail.getByRole('alert')).toContainText(
+    'Persisted add-on context could not be loaded.',
+  );
+});
+
 test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
   await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
     status: 404,
