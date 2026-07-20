@@ -467,6 +467,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
+  await teamActivity.getByRole('button', { name: 'Exit focused review' }).click();
+  await expect(teamActivity.getByText('Focused latest-move review')).toBeHidden();
+  await expect(teamActivity.getByLabel('Find affected item')).toHaveValue('');
+  await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });

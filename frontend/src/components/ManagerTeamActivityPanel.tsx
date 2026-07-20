@@ -434,6 +434,17 @@ export function ManagerTeamActivityPanel({
     }
   }
 
+  function resetReviewView() {
+    setActorQuery('');
+    setTargetQuery('');
+    setSourceQuery('');
+    setDestinationQuery('');
+    setAuditIdQuery('');
+    setEventFilter('all');
+    setMoveScope('all');
+    setActivitySort('newest');
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
@@ -678,16 +689,7 @@ export function ManagerTeamActivityPanel({
         {hasCustomReviewView ? (
           <button
             className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
-            onClick={() => {
-              setActorQuery('');
-              setTargetQuery('');
-              setSourceQuery('');
-              setDestinationQuery('');
-              setAuditIdQuery('');
-              setEventFilter('all');
-              setMoveScope('all');
-              setActivitySort('newest');
-            }}
+            onClick={resetReviewView}
             type="button"
           >
             Reset review view
@@ -695,11 +697,20 @@ export function ManagerTeamActivityPanel({
         ) : null}
       </div>
       {isFocusedCrewMoveReview ? (
-        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
-          <p className="font-bold">Focused latest-move review</p>
-          <p className="mt-1 break-all">
-            Crew {requestedCrewId} remains selected when you inspect the latest move and return.
-          </p>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
+          <div>
+            <p className="font-bold">Focused latest-move review</p>
+            <p className="mt-1 break-all">
+              Crew {requestedCrewId} remains selected when you inspect the latest move and return.
+            </p>
+          </div>
+          <button
+            className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
+            onClick={resetReviewView}
+            type="button"
+          >
+            Exit focused review
+          </button>
         </div>
       ) : null}
       {sourceQuery || destinationQuery ? (
