@@ -669,10 +669,11 @@ Current state:
 - Crew hierarchy owner activity opens the affected crew directly in focused crew administration, with live mobile smoke coverage
 - Audit-launched crew inspection exposes a focused return action back to owner activity
 - Audit-launched crew inspection keeps the readable move scope, source, and destination visible beside crew controls
+- Crew inspection context includes the immutable audit event ID and localized event timestamp
 
 Next implementation work:
 
-- Include audit timestamp and immutable event ID in crew inspection context
+- Copy the immutable audit event ID from crew inspection
 
 ## Planned
 

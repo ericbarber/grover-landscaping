@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added audit identity and timestamp to crew inspection context.
 - 2026-07-19: Kept audited crew move context visible during crew inspection.
 - 2026-07-19: Added focused return from crew inspection to owner activity.
 - 2026-07-19: Linked crew hierarchy activity to affected crew administration.

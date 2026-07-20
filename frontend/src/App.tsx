@@ -932,6 +932,8 @@ export function App() {
   >();
   const [crewAdministrationInspectionSummary, setCrewAdministrationInspectionSummary] =
     useState<string>();
+  const [crewAdministrationInspectionAuditLabel, setCrewAdministrationInspectionAuditLabel] =
+    useState<string>();
   const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
@@ -2669,6 +2671,7 @@ export function App() {
                 : undefined
             }
             crewInspectionSummary={crewAdministrationInspectionSummary}
+            crewInspectionAuditLabel={crewAdministrationInspectionAuditLabel}
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
@@ -2689,6 +2692,7 @@ export function App() {
             onReturnFromCrewInspection={() => {
               setCrewAdministrationReturnTarget(undefined);
               setCrewAdministrationInspectionSummary(undefined);
+              setCrewAdministrationInspectionAuditLabel(undefined);
               const target = document.getElementById('team-activity-review');
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
@@ -2799,6 +2803,9 @@ export function App() {
                     activity.destinationTerritoryLabel ?? 'unknown territory'
                   }`,
                 );
+                setCrewAdministrationInspectionAuditLabel(
+                  `Audit ${activity.id} · ${new Date(activity.occurredAt).toLocaleString()}`,
+                );
                 setCrewAdministrationSelectionSignal((current) => current + 1);
                 const target = document.getElementById('crew-administration');
                 target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2884,6 +2891,7 @@ export function App() {
                 onOpenCrewAdministration={(request) => {
                   setCrewAdministrationReturnTarget(undefined);
                   setCrewAdministrationInspectionSummary(undefined);
+                  setCrewAdministrationInspectionAuditLabel(undefined);
                   setCrewAdministrationSelection(request?.crewId);
                   setCrewAdministrationBranch(request?.branchId);
                   setCrewAdministrationTerritory(request?.territoryId);
