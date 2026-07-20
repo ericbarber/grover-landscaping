@@ -537,6 +537,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.locator('ol > li')).toHaveCount(1);
   await expect(teamActivity.locator('ol > li').first())
     .toContainText('audit_e2e_latest_crew_hierarchy_move');
+  await expect(teamActivity.getByText(
+    'Audit event audit_e2e_latest_crew_hierarchy_move loaded by immutable ID.',
+  )).toBeVisible();
+  await expect(teamActivity.locator('ol > li').first())
+    .toContainText('Restored after inspection');
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);

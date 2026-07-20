@@ -331,6 +331,7 @@ export function ManagerTeamActivityPanel({
   const [restoredAuditId, setRestoredAuditId] = useState<string | null>(null);
   const [unavailableRestoredAuditId, setUnavailableRestoredAuditId] =
     useState<string | null>(null);
+  const [recoveringAuditId, setRecoveringAuditId] = useState<string | null>(null);
   const restoredReviewFingerprintRef = useRef<string | null>(null);
   const filteredActivity = sortTeamActivity(
     filterTeamActivity(
@@ -394,6 +395,24 @@ export function ManagerTeamActivityPanel({
       setActivity(loaded);
       setHasOlder(loaded.length === 25);
       setMessage(null);
+      if (recoveringAuditId) {
+        if (loaded.some((item) => item.id === recoveringAuditId)) {
+          setRestoredAuditId(recoveringAuditId);
+          restoredReviewFingerprintRef.current = JSON.stringify({
+            actorQuery,
+            targetQuery,
+            sourceQuery,
+            destinationQuery,
+            auditIdQuery,
+            eventFilter,
+            moveScope,
+            activitySort,
+          });
+          setReviewNotice(`Audit event ${recoveringAuditId} loaded by immutable ID.`);
+          setReviewNoticeAuditId(recoveringAuditId);
+        }
+        setRecoveringAuditId(null);
+      }
       if (restoredAuditId && !loaded.some((item) => item.id === restoredAuditId)) {
         setRestoredAuditId(null);
         restoredReviewFingerprintRef.current = null;
@@ -462,9 +481,12 @@ export function ManagerTeamActivityPanel({
 
   function resetReviewView() {
     focusedReviewRestoreRef.current = null;
+    restoredReviewFingerprintRef.current = null;
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
     setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
+    setRestoredAuditId(null);
     setActorQuery('');
     setTargetQuery('');
     setSourceQuery('');
@@ -478,6 +500,10 @@ export function ManagerTeamActivityPanel({
   function exitFocusedReview() {
     const prior = focusedReviewRestoreRef.current;
     focusedReviewRestoreRef.current = null;
+    restoredReviewFingerprintRef.current = null;
+    setRestoredAuditId(null);
+    setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
     if (!prior) {
       resetReviewView();
       return;
@@ -493,10 +519,12 @@ export function ManagerTeamActivityPanel({
     setReviewNotice('Your prior owner activity review was restored.');
     setReviewNoticeAuditId(null);
     setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
   }
 
   function findUnavailableRestoredAudit() {
     if (!unavailableRestoredAuditId) return;
+    setRecoveringAuditId(unavailableRestoredAuditId);
     setAuditIdQuery(unavailableRestoredAuditId);
     setReviewNotice(null);
     setUnavailableRestoredAuditId(null);
@@ -507,6 +535,7 @@ export function ManagerTeamActivityPanel({
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
     setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
     if (!auditId) return;
     window.requestAnimationFrame(() => {
       document.getElementById(`team-activity-${auditId}`)?.focus({ preventScroll: true });
@@ -573,6 +602,7 @@ export function ManagerTeamActivityPanel({
     setReviewNoticeAuditId(returnedAuditId);
     setRestoredAuditId(returnedAuditId);
     setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
     restoredReviewFingerprintRef.current = JSON.stringify({
       actorQuery,
       targetQuery,

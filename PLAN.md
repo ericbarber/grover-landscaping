@@ -700,10 +700,11 @@ Current state:
 - Restored-row markers persist through same-review refreshes and older-page loading
 - Refresh clears stale restored-row context and explains when that audit event is no longer loaded
 - Missing restored events provide a one-tap immutable audit-ID search in the current owner review
+- Successful audit-ID recovery confirms the immutable event and restores its row marker and dismissal focus target
 
 Next implementation work:
 
-- Confirm when audit-ID recovery loads the missing event
+- Explain when audit-ID recovery cannot find the missing event
 
 ## Planned
 

@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Confirmed successful immutable-ID audit recovery.
 - 2026-07-19: Added audit-ID recovery for restored events outside loaded history.
 - 2026-07-19: Cleared restored audit markers when refreshed results omit them.
 - 2026-07-19: Preserved restored audit markers across same-review reloads.
