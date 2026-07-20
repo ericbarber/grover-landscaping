@@ -17,6 +17,7 @@ pub enum JobLifecycleWriteResult {
     Replayed,
     NotFound,
     IdempotencyConflict,
+    Unavailable,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -25,6 +26,7 @@ pub enum ChecklistWriteResult {
     Replayed,
     NotFound,
     IdempotencyConflict,
+    Unavailable,
 }
 
 async fn claim_job_lifecycle_mutation(

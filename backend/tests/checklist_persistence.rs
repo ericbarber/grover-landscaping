@@ -1,5 +1,41 @@
-use grover_landscaping_api::db::{ChecklistWriteResult, JobRepository, ResourceReadResult};
+use grover_landscaping_api::db::{
+    ChecklistWriteResult, JobLifecycleWriteResult, JobRepository, ResourceReadResult,
+};
+use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 mod common;
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_job_writes_from_missing_records() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = JobRepository::from_pool(pool);
+
+    assert_eq!(
+        repository.start_job("job_1001", None, "user_outage").await,
+        JobLifecycleWriteResult::Unavailable,
+    );
+    assert_eq!(
+        repository
+            .complete_job("job_1001", None, "user_outage")
+            .await,
+        JobLifecycleWriteResult::Unavailable,
+    );
+    assert_eq!(
+        repository
+            .update_checklist_item(
+                "job_1001",
+                "job_1001_yard_service",
+                true,
+                None,
+                "user_outage",
+            )
+            .await,
+        ChecklistWriteResult::Unavailable,
+    );
+}
 
 #[tokio::test]
 async fn repository_persists_checklist_item_state_and_summary_count() {

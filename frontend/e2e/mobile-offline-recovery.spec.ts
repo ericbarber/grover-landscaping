@@ -211,6 +211,21 @@ test('confirms membership profile was not changed during persisted write outages
   );
 });
 
+test('queues job lifecycle changes instead of reporting persisted success during write outages', async ({ page }) => {
+  await page.route(/\/jobs\/[^/]+\/start$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'job_lifecycle_write_unavailable',
+      message: 'The persisted job lifecycle could not be updated.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Start Job' }).click();
+  await expect(page.getByText(/Started .* locally; the change is queued offline/)).toBeVisible();
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

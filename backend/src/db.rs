@@ -702,11 +702,9 @@ impl JobRepository {
         actor_id: &str,
     ) -> JobLifecycleWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(result) =
-                postgres_write::start_job(pool, id, client_mutation_id, actor_id).await
-            {
-                return result;
-            }
+            return postgres_write::start_job(pool, id, client_mutation_id, actor_id)
+                .await
+                .unwrap_or(JobLifecycleWriteResult::Unavailable);
         }
         JobLifecycleWriteResult::NotFound
     }
@@ -718,11 +716,9 @@ impl JobRepository {
         actor_id: &str,
     ) -> JobLifecycleWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(result) =
-                postgres_write::complete_job(pool, id, client_mutation_id, actor_id).await
-            {
-                return result;
-            }
+            return postgres_write::complete_job(pool, id, client_mutation_id, actor_id)
+                .await
+                .unwrap_or(JobLifecycleWriteResult::Unavailable);
         }
         JobLifecycleWriteResult::NotFound
     }
@@ -736,7 +732,7 @@ impl JobRepository {
         actor_id: &str,
     ) -> ChecklistWriteResult {
         if let Some(pool) = &self.pool {
-            if let Ok(result) = postgres_write::update_checklist_item(
+            return postgres_write::update_checklist_item(
                 pool,
                 job_id,
                 item_id,
@@ -745,9 +741,7 @@ impl JobRepository {
                 actor_id,
             )
             .await
-            {
-                return result;
-            }
+            .unwrap_or(ChecklistWriteResult::Unavailable);
         }
         ChecklistWriteResult::NotFound
     }

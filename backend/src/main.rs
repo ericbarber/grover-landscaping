@@ -5744,6 +5744,15 @@ async fn start_job(
         )
             .into_response();
     }
+    if result == JobLifecycleWriteResult::Unavailable {
+        return persisted_resource_unavailable_response(
+            "job_lifecycle_write_unavailable",
+            "The persisted job lifecycle could not be updated.",
+        );
+    }
+    if result == JobLifecycleWriteResult::NotFound {
+        return resource_not_found_response("job_not_found", "The requested job was not found.");
+    }
 
     (
         StatusCode::ACCEPTED,
@@ -5799,6 +5808,15 @@ async fn complete_job(
             }),
         )
             .into_response();
+    }
+    if result == JobLifecycleWriteResult::Unavailable {
+        return persisted_resource_unavailable_response(
+            "job_lifecycle_write_unavailable",
+            "The persisted job lifecycle could not be updated.",
+        );
+    }
+    if result == JobLifecycleWriteResult::NotFound {
+        return resource_not_found_response("job_not_found", "The requested job was not found.");
     }
 
     (
@@ -5862,6 +5880,18 @@ async fn update_checklist_item(
             }),
         )
             .into_response();
+    }
+    if persisted == ChecklistWriteResult::Unavailable {
+        return persisted_resource_unavailable_response(
+            "checklist_write_unavailable",
+            "The persisted checklist item could not be updated.",
+        );
+    }
+    if persisted == ChecklistWriteResult::NotFound {
+        return resource_not_found_response(
+            "checklist_item_not_found",
+            "The requested checklist item was not found.",
+        );
     }
     Json(JobLifecycleActionResponse {
         status: "accepted",
