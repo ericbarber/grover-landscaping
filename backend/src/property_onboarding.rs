@@ -33,6 +33,20 @@ pub struct PropertyOnboardingResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyOnboardingReadResult {
+    Found(PropertyOnboardingResponse),
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyOnboardingWriteResult {
+    Saved(PropertyOnboardingResponse),
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct PropertyOnboardingRepository {
     pool: Option<PgPool>,
@@ -47,36 +61,50 @@ impl PropertyOnboardingRepository {
         &self,
         property_id: &str,
         organization_ids: &[String],
-    ) -> Option<PropertyOnboardingResponse> {
+    ) -> PropertyOnboardingReadResult {
         if organization_ids.is_empty() {
-            return None;
+            return PropertyOnboardingReadResult::NotFound;
         }
 
         if let Some(pool) = &self.pool {
-            return get_property_onboarding(pool, property_id, organization_ids)
-                .await
-                .ok()
-                .flatten();
+            return match get_property_onboarding(pool, property_id, organization_ids).await {
+                Ok(Some(profile)) => PropertyOnboardingReadResult::Found(profile),
+                Ok(None) => PropertyOnboardingReadResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, property_id, "persisted property onboarding read failed");
+                    PropertyOnboardingReadResult::Unavailable
+                }
+            };
         }
 
-        seed_property_onboarding(property_id, organization_ids)
+        match seed_property_onboarding(property_id, organization_ids) {
+            Some(profile) => PropertyOnboardingReadResult::Found(profile),
+            None => PropertyOnboardingReadResult::NotFound,
+        }
     }
 
     pub async fn upsert(
         &self,
         property_id: &str,
         request: UpsertPropertyOnboardingRequest,
-    ) -> Option<PropertyOnboardingResponse> {
+    ) -> PropertyOnboardingWriteResult {
         let request = normalize_upsert_property_onboarding_request(request);
 
         if let Some(pool) = &self.pool {
-            return upsert_property_onboarding(pool, property_id, &request)
-                .await
-                .ok()
-                .flatten();
+            return match upsert_property_onboarding(pool, property_id, &request).await {
+                Ok(Some(profile)) => PropertyOnboardingWriteResult::Saved(profile),
+                Ok(None) => PropertyOnboardingWriteResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, property_id, "persisted property onboarding write failed");
+                    PropertyOnboardingWriteResult::Unavailable
+                }
+            };
         }
 
-        Some(local_property_onboarding_response(property_id, request))
+        PropertyOnboardingWriteResult::Saved(local_property_onboarding_response(
+            property_id,
+            request,
+        ))
     }
 }
 
@@ -410,10 +438,11 @@ mod tests {
     async fn repository_returns_local_upsert_when_database_is_unavailable() {
         let repository = PropertyOnboardingRepository::default();
 
-        let response = repository
-            .upsert(" property_1001 ", valid_request())
-            .await
-            .expect("local response should be returned");
+        let PropertyOnboardingWriteResult::Saved(response) =
+            repository.upsert(" property_1001 ", valid_request()).await
+        else {
+            panic!("local response should be returned");
+        };
 
         assert_eq!(response.property_id, "property_1001");
         assert_eq!(response.service_address, "123 Oak Street");
@@ -424,10 +453,12 @@ mod tests {
     async fn repository_returns_seed_profile_when_database_is_unavailable() {
         let repository = PropertyOnboardingRepository::default();
 
-        let response = repository
+        let PropertyOnboardingReadResult::Found(response) = repository
             .get("property_1001", &["org_demo_landscaping".to_string()])
             .await
-            .expect("seed profile should be returned");
+        else {
+            panic!("seed profile should be returned");
+        };
 
         assert_eq!(response.account_id, "acct_1001");
         assert_eq!(response.onboarding_status, "active");

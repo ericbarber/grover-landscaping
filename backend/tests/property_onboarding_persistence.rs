@@ -1,7 +1,9 @@
 use grover_landscaping_api::property_onboarding::{
-    PropertyOnboardingRepository, UpsertPropertyOnboardingRequest,
+    PropertyOnboardingReadResult, PropertyOnboardingRepository, PropertyOnboardingWriteResult,
+    UpsertPropertyOnboardingRequest,
 };
 use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 
 mod common;
 
@@ -18,6 +20,28 @@ fn request(status: &str, address: &str) -> UpsertPropertyOnboardingRequest {
         notification_phone: Some("+16025550123".to_string()),
         onboarding_status: status.to_string(),
     }
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_property_onboarding_storage() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = PropertyOnboardingRepository::from_pool(pool);
+
+    assert_eq!(
+        repository
+            .get("property_1001", &["org_demo_landscaping".to_string()],)
+            .await,
+        PropertyOnboardingReadResult::Unavailable
+    );
+    assert_eq!(
+        repository
+            .upsert("property_1001", request("active", "123 Unavailable Lane"),)
+            .await,
+        PropertyOnboardingWriteResult::Unavailable
+    );
 }
 
 #[tokio::test]
@@ -61,37 +85,45 @@ async fn repository_persists_updates_and_reads_property_onboarding() {
     .expect("test property should exist");
 
     let repository = PropertyOnboardingRepository::from_pool(pool.clone());
-    let created = repository
+    let PropertyOnboardingWriteResult::Saved(created) = repository
         .upsert(property_id, request("incomplete", "111 New Property Lane"))
         .await
-        .expect("profile should be created");
+    else {
+        panic!("profile should be created");
+    };
 
     assert!(created.persisted);
     assert_eq!(created.onboarding_status, "incomplete");
     assert_eq!(created.service_address, "111 New Property Lane");
 
-    let updated = repository
+    let PropertyOnboardingWriteResult::Saved(updated) = repository
         .upsert(property_id, request("active", "222 Updated Property Lane"))
         .await
-        .expect("profile should be updated");
+    else {
+        panic!("profile should be updated");
+    };
 
     assert!(updated.persisted);
     assert_eq!(updated.onboarding_status, "active");
     assert_eq!(updated.service_address, "222 Updated Property Lane");
 
-    let read = repository
+    let PropertyOnboardingReadResult::Found(read) = repository
         .get(property_id, &[organization_id.to_string()])
         .await
-        .expect("profile should be read");
+    else {
+        panic!("profile should be read");
+    };
 
     assert_eq!(read.property_id, property_id);
     assert_eq!(read.service_address, "222 Updated Property Lane");
     assert_eq!(read.notification_phone.as_deref(), Some("+16025550123"));
 
-    assert!(repository
-        .get(property_id, &["org_other".to_string()])
-        .await
-        .is_none());
+    assert_eq!(
+        repository
+            .get(property_id, &["org_other".to_string()])
+            .await,
+        PropertyOnboardingReadResult::NotFound
+    );
 
     let mismatched = repository
         .upsert(
@@ -102,7 +134,7 @@ async fn repository_persists_updates_and_reads_property_onboarding() {
             },
         )
         .await;
-    assert!(mismatched.is_none());
+    assert_eq!(mismatched, PropertyOnboardingWriteResult::Conflict);
 
     sqlx::query("DELETE FROM customer_properties WHERE id = $1")
         .bind(property_id)

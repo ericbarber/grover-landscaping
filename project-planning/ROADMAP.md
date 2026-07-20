@@ -17,6 +17,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 3. **Customer account onboarding**
    - Complete customer-account setup and administration workflows.
    - Capture service-ready contact and communication details during initial account creation.
+   - Keep property operational profiles fail-closed when persisted onboarding storage is unavailable.
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.

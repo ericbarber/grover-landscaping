@@ -840,11 +840,13 @@ Current state:
 - Crew creation and updates distinguish unavailable persistence from duplicate or missing crews
 - Completion-report generation fails closed when authoritative assigned-route context is unavailable
 - Customer report links distinguish route-context outages from invalid or expired links
+- Property-onboarding reads and writes distinguish unavailable persistence from missing profiles and business conflicts
+- Manager property onboarding refuses to substitute an empty editable profile during storage outages
 
 Next implementation work:
 
 - Audit remaining amendment and day-plan mutations for missing or conflict persistence fallbacks
-- Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
+- Continue auditing remaining persisted operational reads for silent empty or missing fallbacks
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

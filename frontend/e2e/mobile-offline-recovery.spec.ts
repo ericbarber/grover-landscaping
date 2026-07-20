@@ -1,6 +1,29 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
+test('does not present empty property onboarding during persisted storage outages', async ({
+  page,
+}) => {
+  await page.route('**/properties/*/onboarding', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'property_onboarding_unavailable',
+      message: 'The persisted property onboarding profile could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByRole('heading', { name: 'Operational profile' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'an empty profile is not being shown',
+  );
+  await expect(onboarding.getByRole('button', { name: 'Save onboarding profile' })).toHaveCount(0);
+});
+
 test('does not assemble a customer report without authoritative route context', async ({ page }) => {
   await page.route('**/reports/route-unavailable', (route) => route.fulfill({
     status: 503,

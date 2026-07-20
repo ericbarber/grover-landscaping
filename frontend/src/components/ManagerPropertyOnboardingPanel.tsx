@@ -6,6 +6,7 @@ import {
   type PropertyOnboardingStatus,
   type SavePropertyOnboardingRequest,
 } from '../api/client';
+import { isApiErrorCode } from '../api/apiError';
 
 export type PropertyOnboardingOption = {
   propertyId: string;
@@ -81,6 +82,7 @@ export function ManagerPropertyOnboardingPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('Select a property to load its onboarding profile.');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [storageUnavailable, setStorageUnavailable] = useState(false);
 
   useEffect(() => {
     if (
@@ -104,12 +106,20 @@ export function ManagerPropertyOnboardingPanel({
       .then((profile) => {
         if (!active) return;
         setForm(profileToForm(profile));
+        setStorageUnavailable(false);
         setMessage(profile.persisted ? 'Loaded persisted onboarding profile.' : 'Loaded local onboarding profile.');
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
-        setForm(emptyForm(property));
-        setMessage('No saved profile was found. Complete the fields below to create one.');
+        if (isApiErrorCode(error, 'property_onboarding_unavailable')) {
+          setForm(null);
+          setStorageUnavailable(true);
+          setMessage('Property onboarding storage is temporarily unavailable.');
+        } else {
+          setForm(emptyForm(property));
+          setStorageUnavailable(false);
+          setMessage('No saved profile was found. Complete the fields below to create one.');
+        }
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -140,8 +150,12 @@ export function ManagerPropertyOnboardingPanel({
       setForm(profileToForm(saved));
       setMessage(saved.persisted ? 'Onboarding profile saved to PostgreSQL.' : 'Saved in local fallback mode.');
       onSaved?.(saved);
-    } catch {
-      setValidationMessage('The onboarding profile could not be saved. Check access and try again.');
+    } catch (error) {
+      setValidationMessage(
+        isApiErrorCode(error, 'property_onboarding_save_unavailable')
+          ? 'Property onboarding storage is temporarily unavailable. The profile was not reported as conflicting.'
+          : 'The onboarding profile could not be saved. Check access and try again.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +188,11 @@ export function ManagerPropertyOnboardingPanel({
       </label>
 
       <p className="mt-2 text-xs text-slate-500">{isLoading ? 'Loading onboarding profile…' : message}</p>
+      {storageUnavailable ? (
+        <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
+          Authoritative onboarding details could not be loaded; an empty profile is not being shown.
+        </p>
+      ) : null}
 
       {form ? (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -220,7 +239,7 @@ export function ManagerPropertyOnboardingPanel({
             {isLoading ? 'Saving…' : 'Save onboarding profile'}
           </button>
         </div>
-      ) : (
+      ) : storageUnavailable ? null : (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">No properties are available for onboarding.</p>
       )}
     </section>

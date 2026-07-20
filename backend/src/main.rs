@@ -80,7 +80,8 @@ use grover_landscaping_api::{
         PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
     },
     property_onboarding::{
-        validate_property_onboarding_request, PropertyOnboardingRepository,
+        validate_property_onboarding_request, PropertyOnboardingReadResult,
+        PropertyOnboardingRepository, PropertyOnboardingWriteResult,
         UpsertPropertyOnboardingRequest,
     },
     property_portfolio_requests::{
@@ -3444,18 +3445,21 @@ async fn get_property_onboarding(
         can_view_customer_property_portfolios,
     )
     .await;
-    let Some(profile) = state
+    match state
         .property_onboarding
         .get(&property_id, &organization_ids)
         .await
-    else {
-        return resource_not_found_response(
+    {
+        PropertyOnboardingReadResult::Found(profile) => Json(profile).into_response(),
+        PropertyOnboardingReadResult::NotFound => resource_not_found_response(
             "property_onboarding_not_found",
             "The requested property onboarding profile was not found.",
-        );
-    };
-
-    Json(profile).into_response()
+        ),
+        PropertyOnboardingReadResult::Unavailable => persisted_resource_unavailable_response(
+            "property_onboarding_unavailable",
+            "The persisted property onboarding profile could not be loaded.",
+        ),
+    }
 }
 
 async fn upsert_property_onboarding(
@@ -3486,22 +3490,27 @@ async fn upsert_property_onboarding(
         return response;
     }
 
-    let Some(profile) = state
+    match state
         .property_onboarding
         .upsert(&property_id, request)
         .await
-    else {
-        return (
+    {
+        PropertyOnboardingWriteResult::Saved(profile) => {
+            (StatusCode::CREATED, Json(profile)).into_response()
+        }
+        PropertyOnboardingWriteResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "property_onboarding_not_saved",
                 message: "The property onboarding profile could not be saved.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    (StatusCode::CREATED, Json(profile)).into_response()
+            .into_response(),
+        PropertyOnboardingWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "property_onboarding_save_unavailable",
+            "The property onboarding profile could not be saved to persisted storage.",
+        ),
+    }
 }
 
 async fn get_completion_report(
