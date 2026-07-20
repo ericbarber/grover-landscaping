@@ -154,7 +154,11 @@ export function ManagerProjectBidEditor({
         onSaved(bid);
         setMessage('Customer review link revoked. Reissue it when a new destination is ready.');
       })
-      .catch(() => setMessage('Customer review link could not be revoked.'))
+      .catch((error: unknown) => setMessage(
+        isApiErrorCode(error, 'project_bid_revoke_unavailable')
+          ? 'Bid storage is unavailable. The customer link was not revoked.'
+          : 'Customer review link could not be revoked.',
+      ))
       .finally(() => setIsRevoking(false));
   }
 
@@ -167,7 +171,11 @@ export function ManagerProjectBidEditor({
         onSaved(bid);
         setMessage('Approved bid converted into scheduled job add-ons.');
       })
-      .catch(() => setMessage('Approved bid could not be converted to work.'))
+      .catch((error: unknown) => setMessage(
+        isApiErrorCode(error, 'project_bid_conversion_unavailable')
+          ? 'Bid storage is unavailable. No job add-ons were created.'
+          : 'Approved bid could not be converted to work.',
+      ))
       .finally(() => setIsConverting(false));
   }
 

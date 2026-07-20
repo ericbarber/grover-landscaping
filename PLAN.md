@@ -362,12 +362,14 @@ Delivered:
 - Manager amendment review warns when existing persisted bid context cannot be trusted
 - Project-bid draft creation returns explicit conflict and unavailable outcomes in persisted mode
 - Manager bid editing explains when a draft was not saved
+- Project-bid revoke and approved-work conversion distinguish business conflicts from unavailable persistence
+- Manager bid editing states when links were not revoked or add-ons were not created
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make remaining project-bid revoke and conversion mutations distinguish missing, conflict, and unavailable persistence
-- Add repository and phone-flow coverage for bid lifecycle availability
+- Make shared-bid reads and customer decisions distinguish missing links from unavailable persistence
+- Add repository and browser-flow coverage for shared-bid availability
 
 ### Manager scheduling workflow
 
@@ -784,12 +786,13 @@ Current state:
 - Property and active-crew assignment lists return explicit unavailable persistence states
 - Day-plan and customer project-bid lists return explicit unavailable persistence states
 - Project-bid draft writes fail closed when persisted storage is unavailable
+- Project-bid revoke and conversion writes return explicit conflict and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make remaining project-bid revoke and conversion mutations distinguish missing, conflict, and unavailable persistence
-- Add repository and phone-flow coverage for bid lifecycle availability
+- Make shared-bid reads and customer decisions distinguish missing links from unavailable persistence
+- Add repository and browser-flow coverage for shared-bid availability
 
 ## Planned
 

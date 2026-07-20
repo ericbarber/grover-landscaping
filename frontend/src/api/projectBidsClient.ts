@@ -195,7 +195,7 @@ export async function revokeProjectBid(dayPlanId: string, bidId: string): Promis
     { method: 'POST' },
   );
   if (!response.ok) {
-    throw new Error(`Revoke project bid failed with status ${response.status}`);
+    throw await apiRequestError(response, `Revoke project bid failed with status ${response.status}`);
   }
 
   return toProjectBid((await response.json()) as ApiProjectBid);
@@ -207,7 +207,7 @@ export async function convertProjectBid(dayPlanId: string, bidId: string): Promi
     { method: 'POST' },
   );
   if (!response.ok) {
-    throw new Error(`Convert project bid failed with status ${response.status}`);
+    throw await apiRequestError(response, `Convert project bid failed with status ${response.status}`);
   }
 
   return toProjectBid((await response.json()) as ApiProjectBid);

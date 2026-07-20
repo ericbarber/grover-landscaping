@@ -99,8 +99,8 @@ use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfi
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
-    ProjectBidDraftResult, ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult,
-    SendProjectBidRequest,
+    ProjectBidDraftResult, ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository,
+    ProjectBidSendResult, SendProjectBidRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -5247,18 +5247,21 @@ async fn revoke_project_bid(
         return response;
     }
 
-    let Some(bid) = state.project_bids.revoke(&day_plan_id, &bid_id).await else {
-        return (
+    match state.project_bids.revoke(&day_plan_id, &bid_id).await {
+        ProjectBidMutationResult::Updated(bid) => Json(bid).into_response(),
+        ProjectBidMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "project_bid_not_revocable",
                 message: "Only an unanswered active bid link can be revoked.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    Json(bid).into_response()
+            .into_response(),
+        ProjectBidMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "project_bid_revoke_unavailable",
+            "The project bid link revocation could not be persisted.",
+        ),
+    }
 }
 
 async fn convert_project_bid(
@@ -5273,22 +5276,25 @@ async fn convert_project_bid(
         return response;
     }
 
-    let Some(bid) = state
+    match state
         .project_bids
         .convert_to_job_add_ons(&day_plan_id, &bid_id, &principal.subject)
         .await
-    else {
-        return (
+    {
+        ProjectBidMutationResult::Updated(bid) => Json(bid).into_response(),
+        ProjectBidMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "project_bid_not_convertible",
                 message: "Only an approved persisted bid can be converted to work.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    Json(bid).into_response()
+            .into_response(),
+        ProjectBidMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "project_bid_conversion_unavailable",
+            "The approved project bid could not be converted to persisted work.",
+        ),
+    }
 }
 
 async fn get_shared_project_bid(

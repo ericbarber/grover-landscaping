@@ -6,7 +6,8 @@ use grover_landscaping_api::{
     db::{JobAddOnStatusUpdate, JobRepository, ResourceReadResult},
     project_bids::{
         CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidDraftResult,
-        ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
+        ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository, ProjectBidSendResult,
+        SendProjectBidRequest,
     },
 };
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -34,6 +35,17 @@ fn loaded_bids(
     match result {
         ProjectBidListResult::Loaded(bids) => bids,
         ProjectBidListResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+fn updated_bid(
+    result: ProjectBidMutationResult,
+    context: &str,
+) -> grover_landscaping_api::project_bids::ProjectBidResponse {
+    match result {
+        ProjectBidMutationResult::Updated(bid) => bid,
+        ProjectBidMutationResult::Conflict => panic!("{context}: conflict"),
+        ProjectBidMutationResult::Unavailable => panic!("{context}: unavailable"),
     }
 }
 
@@ -182,6 +194,22 @@ async fn repository_reports_unavailable_persisted_project_bid_lists() {
             )
             .await,
         ProjectBidDraftResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .revoke("day_plan_2026_06_15_crew_1001", "bid_missing")
+            .await,
+        ProjectBidMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .convert_to_job_add_ons(
+                "day_plan_2026_06_15_crew_1001",
+                "bid_missing",
+                "manager_test",
+            )
+            .await,
+        ProjectBidMutationResult::Unavailable
     ));
 }
 
@@ -349,10 +377,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .expect("sent bid should load from its share token");
     assert_eq!(shared.total_cents, 17_000);
 
-    let revoked = bid_repository
-        .revoke(day_plan_id, &bid.id)
-        .await
-        .expect("unanswered bid link should be revocable");
+    let revoked = updated_bid(
+        bid_repository.revoke(day_plan_id, &bid.id).await,
+        "unanswered bid link should be revocable",
+    );
     assert!(revoked.share_revoked_at.is_some());
     assert!(revoked.share_url.is_none());
     assert_eq!(revoked.delivery_status.as_deref(), Some("skipped"));
@@ -423,18 +451,22 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     let service_minutes_before_conversion =
         source_stop_before_conversion.get::<i32, _>("estimated_service_minutes") as u32;
 
-    let converted = bid_repository
-        .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
-        .await
-        .expect("approved bid should convert to job add-ons");
+    let converted = updated_bid(
+        bid_repository
+            .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
+            .await,
+        "approved bid should convert to job add-ons",
+    );
     assert_eq!(converted.status, "converted");
     assert_eq!(converted.converted_job_id.as_deref(), Some("job_1001"));
     assert!(converted.converted_at.is_some());
 
-    let converted_again = bid_repository
-        .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
-        .await
-        .expect("bid conversion should be idempotent");
+    let converted_again = updated_bid(
+        bid_repository
+            .convert_to_job_add_ons(day_plan_id, &bid.id, manager_actor_user_id)
+            .await,
+        "bid conversion should be idempotent",
+    );
     assert_eq!(converted_again.converted_at, converted.converted_at);
 
     let account_bid_history = loaded_bids(

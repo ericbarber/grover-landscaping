@@ -479,6 +479,60 @@ test('explains that an unavailable project bid draft was not saved', async ({ pa
   );
 });
 
+test('explains that unavailable bid storage did not revoke the customer link', async ({ page }) => {
+  await page.route('**/day-plans/*/amendments', (route) => route.fulfill({
+    contentType: 'application/json',
+    json: [{
+      id: 'amendment_revoke_unavailable',
+      day_plan_id: 'day_plan_mobile',
+      amendment_type: 'add_service',
+      status: 'bid_review',
+      requested_by_crew_id: 'crew_1001',
+      stop_id: 'stop_1001',
+      service: {
+        id: 'service_test',
+        name: 'Test service',
+        default_price_cents: 1000,
+        requires_manager_approval: true,
+      },
+      requires_bid: true,
+      persisted: true,
+    }],
+  }));
+  await page.route('**/day-plans/*/bids', (route) => route.fulfill({
+    contentType: 'application/json',
+    json: [{
+      id: 'bid_revoke_unavailable',
+      day_plan_id: 'day_plan_mobile',
+      customer_account_id: 'acct_1001',
+      source_amendment_id: 'amendment_revoke_unavailable',
+      status: 'sent',
+      line_items: [],
+      total_cents: 1000,
+      share_url: '/bid-review/revoke-unavailable',
+      persisted: true,
+    }],
+  }));
+  await page.route('**/day-plans/*/bids/*/revoke', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'project_bid_revoke_unavailable',
+      message: 'The project bid link revocation could not be persisted.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const workspace = page
+    .getByText('Project bid workspace')
+    .locator('xpath=ancestor::div[contains(@class,\"rounded-xl\")][1]');
+  await workspace.getByRole('button', { name: 'Revoke customer link' }).click();
+  await expect(workspace).toContainText(
+    'The customer link was not revoked.',
+  );
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

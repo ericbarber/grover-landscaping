@@ -70,6 +70,13 @@ pub enum ProjectBidDraftResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum ProjectBidMutationResult {
+    Updated(ProjectBidResponse),
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct SendProjectBidRequest {
     pub channel: String,
@@ -197,12 +204,18 @@ impl ProjectBidRepository {
             .unwrap_or(ProjectBidSendResult::Unavailable)
     }
 
-    pub async fn revoke(&self, day_plan_id: &str, bid_id: &str) -> Option<ProjectBidResponse> {
-        let pool = self.pool.as_ref()?;
-        postgres_project_bids::revoke(pool, day_plan_id, bid_id)
-            .await
-            .ok()
-            .flatten()
+    pub async fn revoke(&self, day_plan_id: &str, bid_id: &str) -> ProjectBidMutationResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return ProjectBidMutationResult::Unavailable;
+        };
+        match postgres_project_bids::revoke(pool, day_plan_id, bid_id).await {
+            Ok(Some(bid)) => ProjectBidMutationResult::Updated(bid),
+            Ok(None) => ProjectBidMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, day_plan_id, bid_id, "persisted project bid revoke failed");
+                ProjectBidMutationResult::Unavailable
+            }
+        }
     }
 
     pub async fn convert_to_job_add_ons(
@@ -210,12 +223,25 @@ impl ProjectBidRepository {
         day_plan_id: &str,
         bid_id: &str,
         actor_user_id: &str,
-    ) -> Option<ProjectBidResponse> {
-        let pool = self.pool.as_ref()?;
-        postgres_project_bids::convert_to_job_add_ons(pool, day_plan_id, bid_id, actor_user_id)
-            .await
-            .ok()
-            .flatten()
+    ) -> ProjectBidMutationResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return ProjectBidMutationResult::Unavailable;
+        };
+        match postgres_project_bids::convert_to_job_add_ons(
+            pool,
+            day_plan_id,
+            bid_id,
+            actor_user_id,
+        )
+        .await
+        {
+            Ok(Some(bid)) => ProjectBidMutationResult::Updated(bid),
+            Ok(None) => ProjectBidMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, day_plan_id, bid_id, "persisted project bid conversion failed");
+                ProjectBidMutationResult::Unavailable
+            }
+        }
     }
 
     pub async fn shared_for_token(&self, share_token: &str) -> Option<ProjectBidResponse> {
