@@ -220,6 +220,15 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   await expect(hierarchy.getByLabel('Search hierarchy')).toHaveValue('');
   await expect(hierarchy.getByLabel('Lifecycle status')).toHaveValue('all');
   await expect(hierarchy.getByRole('button', { name: 'Clear hierarchy filters' })).toBeHidden();
+  const teamActivity = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await teamActivity.getByRole('button', { name: /Cross-branch moves/ }).click();
+  await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
+  await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('cross_branch');
+  await teamActivity.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
+  await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('all');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

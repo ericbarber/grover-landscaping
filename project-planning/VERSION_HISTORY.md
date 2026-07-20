@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Turned crew move summaries into one-tap owner activity filters.
 - 2026-07-19: Summarized loaded owner activity by crew move scope.
 - 2026-07-19: Added paginated owner activity filtering by crew move scope.
 - 2026-07-19: Classified crew hierarchy activity by move scope.

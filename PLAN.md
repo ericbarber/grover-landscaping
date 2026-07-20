@@ -659,10 +659,11 @@ Current state:
 - Owner activity and CSV exports classify crew hierarchy changes as cross-branch or within-branch moves
 - Owner activity filters cross-branch and within-branch crew moves server-side across paginated history
 - Owner activity summarizes loaded cross-branch and within-branch crew move counts separately
+- Crew move scope summary cards apply the paginated hierarchy-event and scope filters together, with mobile smoke coverage for selection and clearing
 
 Next implementation work:
 
-- Turn crew move scope summaries into one-tap paginated review filters
+- Restore owner activity move-scope filters across mobile reloads
 
 ## Planned
 

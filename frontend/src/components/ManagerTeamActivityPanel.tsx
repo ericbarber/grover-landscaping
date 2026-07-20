@@ -349,21 +349,52 @@ export function ManagerTeamActivityPanel({
         </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
-      <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
         {[
-          ['Loaded', summary.total],
-          ['Access', summary.access],
-          ['Crew', summary.crew],
-          ['Organization', summary.organization],
-          ['Cross-branch moves', summary.crossBranchMoves],
-          ['Within-branch moves', summary.withinBranchMoves],
-        ].map(([label, value]) => (
-          <div className="rounded-lg bg-slate-50 px-2 py-3" key={label}>
-            <dt className="text-xs text-slate-500">{label}</dt>
-            <dd className="mt-1 text-lg font-bold text-slate-950">{value}</dd>
-          </div>
+          { label: 'Loaded', value: summary.total },
+          { label: 'Access', value: summary.access },
+          { label: 'Crew', value: summary.crew },
+          { label: 'Organization', value: summary.organization },
+          {
+            label: 'Cross-branch moves',
+            value: summary.crossBranchMoves,
+            scope: 'cross_branch' as const,
+          },
+          {
+            label: 'Within-branch moves',
+            value: summary.withinBranchMoves,
+            scope: 'within_branch' as const,
+          },
+        ].map(({ label, value, scope }) => (
+          scope ? (
+            <button
+              aria-pressed={moveScope === scope}
+              className={`min-h-16 rounded-lg px-2 py-3 ${
+                moveScope === scope
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-50 text-slate-950'
+              }`}
+              disabled={isLoading}
+              key={label}
+              onClick={() => {
+                setEventFilter('crew_hierarchy_updated');
+                setMoveScope(scope);
+              }}
+              type="button"
+            >
+              <span className={`block text-xs ${
+                moveScope === scope ? 'text-slate-200' : 'text-slate-500'
+              }`}>{label}</span>
+              <span className="mt-1 block text-lg font-bold">{value}</span>
+            </button>
+          ) : (
+            <div className="rounded-lg bg-slate-50 px-2 py-3" key={label}>
+              <p className="text-xs text-slate-500">{label}</p>
+              <p className="mt-1 text-lg font-bold text-slate-950">{value}</p>
+            </div>
+          )
         ))}
-      </dl>
+      </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <label className="text-xs font-semibold text-slate-700">
           Find actor
