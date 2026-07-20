@@ -444,6 +444,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/properties/")
         || path == "/crews"
         || path.starts_with("/crews/")
+        || path == "/organization-branches"
+        || path == "/service-territories"
         || path == "/day-plans"
         || path.starts_with("/day-plans/")
         || path.starts_with("/shared-bids/")
@@ -641,6 +643,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path == "/crews" {
+        return *method == Method::GET && can_manage_assignments;
+    }
+
+    if path == "/organization-branches" || path == "/service-territories" {
         return *method == Method::GET && can_manage_assignments;
     }
 

@@ -45,6 +45,26 @@ pub struct CrewSummary {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OrganizationBranchSummary {
+    pub id: String,
+    pub organization_id: String,
+    pub name: String,
+    pub code: String,
+    pub time_zone: String,
+    pub service_area_label: Option<String>,
+    pub status: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct ServiceTerritorySummary {
+    pub id: String,
+    pub organization_id: String,
+    pub branch_id: String,
+    pub name: String,
+    pub status: String,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct CreateCrewRequest {
     pub name: String,
@@ -234,6 +254,74 @@ impl DayPlanRepository {
                 persisted: true,
             })
             .collect()
+    }
+
+    pub async fn list_organization_branches(
+        &self,
+        organization_ids: &[String],
+    ) -> Vec<OrganizationBranchSummary> {
+        if organization_ids.is_empty() {
+            return Vec::new();
+        }
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        sqlx::query(
+            r#"
+            SELECT id, organization_id, name, code, time_zone, service_area_label, status
+            FROM organization_branches
+            WHERE organization_id = ANY($1)
+            ORDER BY organization_id, status, name, id
+            "#,
+        )
+        .bind(organization_ids)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|row| OrganizationBranchSummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            name: row.get("name"),
+            code: row.get("code"),
+            time_zone: row.get("time_zone"),
+            service_area_label: row.get("service_area_label"),
+            status: row.get("status"),
+        })
+        .collect()
+    }
+
+    pub async fn list_service_territories(
+        &self,
+        organization_ids: &[String],
+    ) -> Vec<ServiceTerritorySummary> {
+        if organization_ids.is_empty() {
+            return Vec::new();
+        }
+        let Some(pool) = &self.pool else {
+            return Vec::new();
+        };
+        sqlx::query(
+            r#"
+            SELECT id, organization_id, branch_id, name, status
+            FROM service_territories
+            WHERE organization_id = ANY($1)
+            ORDER BY organization_id, branch_id, status, name, id
+            "#,
+        )
+        .bind(organization_ids)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|row| ServiceTerritorySummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            branch_id: row.get("branch_id"),
+            name: row.get("name"),
+            status: row.get("status"),
+        })
+        .collect()
     }
 
     pub async fn create_crew(

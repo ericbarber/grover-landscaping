@@ -70,6 +70,11 @@ Crew list/create/update responses expose optional `branch_id` and
 Branch and Primary Territory, allowing dispatch views to show hierarchy context
 without accepting unsafe free-form tenant identifiers.
 
+Authenticated managers can discover authorized hierarchy records through
+`GET /organization-branches` and `GET /service-territories`. Both endpoints
+derive organization scopes from active memberships and never accept a caller
+supplied organization list.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan

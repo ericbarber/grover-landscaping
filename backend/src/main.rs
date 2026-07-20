@@ -704,6 +704,8 @@ fn app_with_runtime(
             get(get_property_onboarding).put(upsert_property_onboarding),
         )
         .route("/crews", get(list_crews))
+        .route("/organization-branches", get(list_organization_branches))
+        .route("/service-territories", get(list_service_territories))
         .route(
             "/organizations/{organization_id}/crews",
             get(list_organization_crews).post(create_organization_crew),
@@ -2499,6 +2501,34 @@ async fn list_crews(
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
             .await;
     Json(state.day_plans.list_crews(&organization_ids).await).into_response()
+}
+
+async fn list_organization_branches(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    Json(
+        state
+            .day_plans
+            .list_organization_branches(&organization_ids)
+            .await,
+    )
+    .into_response()
+}
+
+async fn list_service_territories(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    Json(
+        state
+            .day_plans
+            .list_service_territories(&organization_ids)
+            .await,
+    )
+    .into_response()
 }
 
 async fn create_organization_crew(
@@ -6410,6 +6440,21 @@ mod tests {
 
         assert!(json.as_array().unwrap().len() >= 2);
         assert_eq!(json[0]["before_photos"], 0);
+    }
+
+    #[tokio::test]
+    async fn branch_and_territory_endpoints_are_tenant_scoped_lists() {
+        for uri in ["/organization-branches", "/service-territories"] {
+            let response = seed_app()
+                .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            let status = response.status();
+            let body = response.into_body().collect().await.unwrap().to_bytes();
+            assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+            let records: Value = serde_json::from_slice(&body).unwrap();
+            assert!(records.is_array());
+        }
     }
 
     #[tokio::test]
