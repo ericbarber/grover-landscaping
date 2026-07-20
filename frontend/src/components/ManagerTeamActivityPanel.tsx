@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   fetchTeamAdministrationActivity,
   type TeamAdministrationActivity,
@@ -340,6 +341,7 @@ export function ManagerTeamActivityPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [activityUnavailable, setActivityUnavailable] = useState(false);
   const [reviewNotice, setReviewNotice] = useState<string | null>(
     () => restoredReviewNotice(initialReviewFilters.current),
   );
@@ -398,6 +400,7 @@ export function ManagerTeamActivityPanel({
     if (!organizationId) return;
     const activeRecoveryAuditId = recoveryAuditId ?? recoveringAuditId;
     setIsLoading(true);
+    setActivityUnavailable(false);
     try {
       const loaded = await fetchTeamAdministrationActivity(organizationId, {
         eventKind: eventFilter === 'all' ? undefined : eventFilter,
@@ -445,8 +448,15 @@ export function ManagerTeamActivityPanel({
         setReviewNoticeAuditId(null);
         setUnavailableRestoredAuditId(restoredAuditId);
       }
-    } catch {
-      setMessage('Team activity requires organization-owner access.');
+    } catch (error) {
+      if (isApiErrorCode(error, 'team_activity_unavailable')) {
+        setActivity([]);
+        setHasOlder(false);
+        setActivityUnavailable(true);
+        setMessage('Persisted team activity could not be loaded. Retry after API readiness recovers.');
+      } else {
+        setMessage('Team activity requires organization-owner access.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1183,7 +1193,12 @@ export function ManagerTeamActivityPanel({
           </li>
         ))}
       </ol>
-      {!isLoading && activity.length === 0 ? (
+      {activityUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted team activity is unavailable; an empty activity history is not being shown.
+        </p>
+      ) : null}
+      {!isLoading && !activityUnavailable && activity.length === 0 ? (
         <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No persisted team access activity yet.
         </p>

@@ -33,6 +33,18 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .await,
         OrganizationCollectionResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .list_team_administration_activity("org_demo_landscaping")
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_operational_activity(&["org_demo_landscaping".to_string()])
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -312,9 +324,12 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("membership lifecycle audits should be available");
     assert_eq!(lifecycle_audit_count, 2);
-    let team_activity = repository
-        .list_team_administration_activity(organization_id)
-        .await;
+    let team_activity = loaded(
+        repository
+            .list_team_administration_activity(organization_id)
+            .await,
+        "team activity should load",
+    );
     assert!(team_activity.iter().any(|item| {
         item.target_id == invitation.membership_id && item.event_kind == "role_changed"
     }));

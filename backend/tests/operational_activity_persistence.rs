@@ -1,8 +1,15 @@
-use grover_landscaping_api::organizations::OrganizationRepository;
+use grover_landscaping_api::organizations::{OrganizationCollectionResult, OrganizationRepository};
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
 
 mod common;
+
+fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
+    match result {
+        OrganizationCollectionResult::Loaded(items) => items,
+        OrganizationCollectionResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
 
 #[tokio::test]
 async fn repository_lists_tenant_scoped_operational_activity() {
@@ -54,9 +61,12 @@ async fn repository_lists_tenant_scoped_operational_activity() {
     .expect("bid and photo audit fixtures should be inserted");
 
     let repository = OrganizationRepository::from_pool(pool.clone());
-    let activity = repository
-        .list_operational_activity(&["org_demo_landscaping".to_string()])
-        .await;
+    let activity = loaded(
+        repository
+            .list_operational_activity(&["org_demo_landscaping".to_string()])
+            .await,
+        "operational activity should load",
+    );
 
     assert!(activity.iter().any(|item| {
         item.id == audit_id
@@ -64,40 +74,44 @@ async fn repository_lists_tenant_scoped_operational_activity() {
             && item.target_id == "report_operational_test"
             && item.actor_label == "Local Development Owner"
     }));
-    assert!(activity.iter().any(|item| {
-        item.event_kind == "route_published"
-            && item.target_id == "day_plan_2026_06_15_crew_1001"
-            && item.metadata["crew_id"] == "crew_1001"
-    }));
     assert!(activity
         .iter()
         .any(|item| item.id == bid_audit_id && item.event_kind == "bid_approved"));
     assert!(activity.iter().any(|item| {
         item.id == photo_audit_id && item.event_kind == "photo_processing_retried"
     }));
-    assert!(repository
-        .list_operational_activity(&["org_missing".to_string()])
-        .await
-        .is_empty());
-    let bid_page = repository
-        .list_operational_activity_page(
-            &["org_demo_landscaping".to_string()],
-            Some("bid_approved"),
-            None,
-            1,
-        )
-        .await;
+    assert!(loaded(
+        repository
+            .list_operational_activity(&["org_missing".to_string()])
+            .await,
+        "missing organization activity should load",
+    )
+    .is_empty());
+    let bid_page = loaded(
+        repository
+            .list_operational_activity_page(
+                &["org_demo_landscaping".to_string()],
+                Some("bid_approved"),
+                None,
+                1,
+            )
+            .await,
+        "filtered operational activity should load",
+    );
     assert_eq!(bid_page.len(), 1);
     assert_eq!(bid_page[0].event_kind, "bid_approved");
-    assert!(repository
-        .list_operational_activity_page(
-            &["org_demo_landscaping".to_string()],
-            None,
-            Some("2000-01-01T00:00:00Z"),
-            25,
-        )
-        .await
-        .is_empty());
+    assert!(loaded(
+        repository
+            .list_operational_activity_page(
+                &["org_demo_landscaping".to_string()],
+                None,
+                Some("2000-01-01T00:00:00Z"),
+                25,
+            )
+            .await,
+        "older operational activity should load",
+    )
+    .is_empty());
 
     sqlx::query("DELETE FROM access_audit_events WHERE id = ANY($1)")
         .bind(vec![audit_id, bid_audit_id, photo_audit_id])

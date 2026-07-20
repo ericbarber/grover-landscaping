@@ -40,6 +40,7 @@ type ActivityToneFilter = ManagerActivityTone | 'all';
 type ManagerActivityHistoryPanelProps = {
   items?: ManagerActivityItem[];
   isHistoryPersisted?: boolean;
+  isOperationalActivityUnavailable?: boolean;
   canLoadOlder?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
@@ -98,6 +99,7 @@ function readSavedToneFilter(): ActivityToneFilter {
 export function ManagerActivityHistoryPanel({
   items = [],
   isHistoryPersisted = true,
+  isOperationalActivityUnavailable = false,
   canLoadOlder = false,
   isLoadingOlder = false,
   onLoadOlder,
@@ -289,6 +291,12 @@ export function ManagerActivityHistoryPanel({
           </span>
         </div>
       </div>
+
+      {isOperationalActivityUnavailable ? (
+        <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted operational activity is unavailable. Browser-local warnings remain visible, but an empty persisted history is not being implied.
+        </p>
+      ) : null}
 
       <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
         {activitySources.map((source) => {

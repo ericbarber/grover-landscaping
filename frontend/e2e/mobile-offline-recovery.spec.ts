@@ -57,6 +57,34 @@ test('does not present empty organization administration during persisted collec
   );
 });
 
+test('distinguishes unavailable persisted team activity from empty history', async ({ page }) => {
+  await page.route(/\/operational-activity(?:\?.*)?$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'operational_activity_unavailable',
+      message: 'Persisted operational activity could not be loaded.',
+    },
+  }));
+  await page.route(/\/organizations\/[^/]+\/team-activity(?:\?.*)?$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'team_activity_unavailable',
+      message: 'Persisted team administration activity could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const teamActivity = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(teamActivity.getByRole('alert')).toContainText(
+    'an empty activity history is not being shown',
+  );
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

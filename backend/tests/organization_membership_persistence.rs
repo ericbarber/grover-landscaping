@@ -22,6 +22,16 @@ fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
     }
 }
 
+trait LoadedCollectionExt<T> {
+    fn into_loaded(self) -> Vec<T>;
+}
+
+impl<T> LoadedCollectionExt<T> for OrganizationCollectionResult<T> {
+    fn into_loaded(self) -> Vec<T> {
+        loaded(self, "activity collection should load")
+    }
+}
+
 fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
     match result {
         PersistedMutationResult::Applied(value) => value,
@@ -364,9 +374,12 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .expect("crew lifecycle audit should be countable");
     assert_eq!(crew_audit_count, 2);
-    let owner_activity = organizations
-        .list_team_administration_activity(&created.organization_id)
-        .await;
+    let owner_activity = loaded(
+        organizations
+            .list_team_administration_activity(&created.organization_id)
+            .await,
+        "owner activity should load",
+    );
     assert!(owner_activity
         .iter()
         .any(|item| { item.target_id == crew.id && item.event_kind == "crew_deactivated" }));
@@ -416,9 +429,12 @@ async fn repository_bootstraps_first_owner_once() {
     .await
     .unwrap();
     assert_eq!(membership_profile_audit_count, 1);
-    let team_activity = organizations
-        .list_team_administration_activity(&created.organization_id)
-        .await;
+    let team_activity = loaded(
+        organizations
+            .list_team_administration_activity(&created.organization_id)
+            .await,
+        "team activity should load",
+    );
     assert!(team_activity.iter().any(|item| {
         item.target_id == created.membership.id && item.event_kind == "membership_profile_updated"
     }));
@@ -429,21 +445,24 @@ async fn repository_bootstraps_first_owner_once() {
     assert_eq!(profile_activity.actor_label, "Jordan Grover");
     assert_eq!(profile_activity.target_label, "Jordan Grover");
     assert_eq!(
-        organizations
-            .list_team_administration_activity_page(
-                &created.organization_id,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                1,
-            )
-            .await
-            .len(),
+        loaded(
+            organizations
+                .list_team_administration_activity_page(
+                    &created.organization_id,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    1,
+                )
+                .await,
+            "team activity page should load",
+        )
+        .len(),
         1
     );
     assert!(organizations
@@ -460,6 +479,7 @@ async fn repository_bootstraps_first_owner_once() {
             25,
         )
         .await
+        .into_loaded()
         .iter()
         .all(|item| item.event_kind == "membership_profile_updated"));
     assert!(organizations
@@ -476,6 +496,7 @@ async fn repository_bootstraps_first_owner_once() {
             25,
         )
         .await
+        .into_loaded()
         .iter()
         .all(|item| item.actor_label == "Jordan Grover"));
     assert!(organizations
@@ -492,6 +513,7 @@ async fn repository_bootstraps_first_owner_once() {
             25,
         )
         .await
+        .into_loaded()
         .iter()
         .all(|item| item.target_label == "Jordan Grover"));
     assert!(organizations
@@ -508,6 +530,7 @@ async fn repository_bootstraps_first_owner_once() {
             25,
         )
         .await
+        .into_loaded()
         .iter()
         .all(|item| item.id == profile_activity.id));
 }

@@ -2403,24 +2403,28 @@ async fn list_team_administration_activity(
         )
             .into_response();
     }
-    Json(
-        state
-            .organizations
-            .list_team_administration_activity_page(
-                &organization_id,
-                event_kind,
-                move_scope,
-                actor_query,
-                target_query,
-                source_query,
-                destination_query,
-                audit_id_query,
-                before,
-                limit,
-            )
-            .await,
-    )
-    .into_response()
+    match state
+        .organizations
+        .list_team_administration_activity_page(
+            &organization_id,
+            event_kind,
+            move_scope,
+            actor_query,
+            target_query,
+            source_query,
+            destination_query,
+            audit_id_query,
+            before,
+            limit,
+        )
+        .await
+    {
+        OrganizationCollectionResult::Loaded(activity) => Json(activity).into_response(),
+        OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "team_activity_unavailable",
+            "Persisted team administration activity could not be loaded.",
+        ),
+    }
 }
 
 async fn list_operational_activity(
@@ -2484,13 +2488,17 @@ async fn list_operational_activity(
     }
     let organization_ids =
         principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await;
-    Json(
-        state
-            .organizations
-            .list_operational_activity_page(&organization_ids, event_kind, before, limit)
-            .await,
-    )
-    .into_response()
+    match state
+        .organizations
+        .list_operational_activity_page(&organization_ids, event_kind, before, limit)
+        .await
+    {
+        OrganizationCollectionResult::Loaded(activity) => Json(activity).into_response(),
+        OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "operational_activity_unavailable",
+            "Persisted operational activity could not be loaded.",
+        ),
+    }
 }
 
 async fn list_property_portfolios_for_account(

@@ -278,7 +278,7 @@ impl OrganizationRepository {
     pub async fn list_team_administration_activity(
         &self,
         organization_id: &str,
-    ) -> Vec<TeamAdministrationActivity> {
+    ) -> OrganizationCollectionResult<TeamAdministrationActivity> {
         self.list_team_administration_activity_page(
             organization_id,
             None,
@@ -306,11 +306,11 @@ impl OrganizationRepository {
         audit_id_query: Option<&str>,
         before: Option<&str>,
         limit: i64,
-    ) -> Vec<TeamAdministrationActivity> {
+    ) -> OrganizationCollectionResult<TeamAdministrationActivity> {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return OrganizationCollectionResult::Loaded(Vec::new());
         };
-        list_team_administration_activity(
+        match list_team_administration_activity(
             pool,
             organization_id,
             event_kind,
@@ -324,13 +324,19 @@ impl OrganizationRepository {
             limit,
         )
         .await
-        .unwrap_or_default()
+        {
+            Ok(activity) => OrganizationCollectionResult::Loaded(activity),
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted team administration activity list failed");
+                OrganizationCollectionResult::Unavailable
+            }
+        }
     }
 
     pub async fn list_operational_activity(
         &self,
         organization_ids: &[String],
-    ) -> Vec<OperationalActivity> {
+    ) -> OrganizationCollectionResult<OperationalActivity> {
         self.list_operational_activity_page(organization_ids, None, None, 50)
             .await
     }
@@ -341,13 +347,17 @@ impl OrganizationRepository {
         event_kind: Option<&str>,
         before: Option<&str>,
         limit: i64,
-    ) -> Vec<OperationalActivity> {
+    ) -> OrganizationCollectionResult<OperationalActivity> {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return OrganizationCollectionResult::Loaded(Vec::new());
         };
-        list_operational_activity(pool, organization_ids, event_kind, before, limit)
-            .await
-            .unwrap_or_default()
+        match list_operational_activity(pool, organization_ids, event_kind, before, limit).await {
+            Ok(activity) => OrganizationCollectionResult::Loaded(activity),
+            Err(error) => {
+                tracing::error!(%error, ?organization_ids, "persisted operational activity list failed");
+                OrganizationCollectionResult::Unavailable
+            }
+        }
     }
 
     async fn record_login_audit_events(

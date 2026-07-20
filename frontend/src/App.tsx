@@ -896,6 +896,7 @@ export function App() {
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
+  const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
   const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
@@ -1636,6 +1637,7 @@ export function App() {
   }, [dayPlanRefreshSignal]);
 
   async function refreshOperationalActivity() {
+    setOperationalActivityUnavailable(false);
     try {
       const items = await fetchOperationalActivity({ limit: 25 });
       setOperationalActivity(items);
@@ -1643,6 +1645,7 @@ export function App() {
     } catch {
       setOperationalActivity([]);
       setCanLoadOlderOperationalActivity(false);
+      setOperationalActivityUnavailable(true);
     }
   }
 
@@ -2953,6 +2956,7 @@ export function App() {
             <ManagerActivityHistoryPanel
               items={visibleManagerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
+              isOperationalActivityUnavailable={operationalActivityUnavailable}
               canLoadOlder={canLoadOlderOperationalActivity}
               isLoadingOlder={isLoadingOlderOperationalActivity}
               onLoadOlder={() => void loadOlderOperationalActivity()}
