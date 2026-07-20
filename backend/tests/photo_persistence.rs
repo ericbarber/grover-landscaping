@@ -9,7 +9,9 @@ use grover_landscaping_api::{
     photo_storage::PhotoStorageConfig,
     PhotoUploadMetadata, PhotoUploadRequest,
 };
+use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
+use std::time::Duration;
 mod common;
 
 fn loaded<T: std::fmt::Debug>(result: ResourceReadResult<T>, context: &str) -> T {
@@ -17,6 +19,55 @@ fn loaded<T: std::fmt::Debug>(result: ResourceReadResult<T>, context: &str) -> T
         ResourceReadResult::Loaded(value) => value,
         other => panic!("{context}, got {other:?}"),
     }
+}
+
+trait ResourceReadTestExt<T> {
+    fn expect_loaded(self, context: &str) -> T;
+}
+
+impl<T: std::fmt::Debug> ResourceReadTestExt<T> for ResourceReadResult<T> {
+    fn expect_loaded(self, context: &str) -> T {
+        loaded(self, context)
+    }
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_photo_writes() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = JobRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository
+            .create_photo_upload(
+                "job_1001".to_string(),
+                PhotoUploadRequest {
+                    file_name: "outage.jpg".to_string(),
+                    content_type: "image/jpeg".to_string(),
+                    photo_type: "before".to_string(),
+                    client_mutation_id: None,
+                },
+            )
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .complete_photo_upload(
+                "job_1001",
+                "photo_outage",
+                PhotoUploadMetadata {
+                    file_size_bytes: None,
+                    image_width_px: None,
+                    image_height_px: None,
+                    metadata_source: None,
+                },
+            )
+            .await,
+        ResourceReadResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -40,7 +91,8 @@ async fn repository_reuses_photo_ticket_for_offline_mutation() {
                 client_mutation_id: Some(mutation_id.clone()),
             },
         )
-        .await;
+        .await
+        .expect_loaded("first photo ticket should persist");
     let replay = repository
         .create_photo_upload(
             "job_1001".to_string(),
@@ -51,7 +103,8 @@ async fn repository_reuses_photo_ticket_for_offline_mutation() {
                 client_mutation_id: Some(mutation_id.clone()),
             },
         )
-        .await;
+        .await
+        .expect_loaded("replayed photo ticket should persist");
 
     assert_eq!(
         first.photo_id,
@@ -85,7 +138,8 @@ async fn repository_persists_and_lists_photo_evidence() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("photo ticket should persist");
 
     let pending_photos = loaded(
         repository.list_photo_evidence("job_1001").await,
@@ -109,7 +163,8 @@ async fn repository_persists_and_lists_photo_evidence() {
                 metadata_source: Some("client_reported".to_string()),
             },
         )
-        .await;
+        .await
+        .expect_loaded("processed photo ticket should persist");
 
     let photos = loaded(
         repository.list_photo_evidence("job_1001").await,
@@ -144,7 +199,8 @@ async fn repository_persists_and_lists_photo_evidence() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("rejected photo ticket should persist");
 
     repository
         .complete_photo_upload(
@@ -157,7 +213,8 @@ async fn repository_persists_and_lists_photo_evidence() {
                 metadata_source: Some("server_extracted".to_string()),
             },
         )
-        .await;
+        .await
+        .expect_loaded("processing photo ticket should persist");
 
     let processed_photos = loaded(
         repository.list_photo_evidence("job_1001").await,
@@ -184,7 +241,8 @@ async fn repository_persists_and_lists_photo_evidence() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("worker photo ticket should persist");
     let pool = repository
         .pool()
         .expect("photo persistence test should have a PostgreSQL pool");
@@ -274,7 +332,8 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("recovery photo ticket should persist");
 
     assert!(
         repository
@@ -420,7 +479,8 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("privacy photo ticket should persist");
     let pool = repository
         .pool()
         .expect("photo worker test should have a PostgreSQL pool");
@@ -496,7 +556,8 @@ async fn repository_recovers_failed_photo_processing_jobs() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("recovery photo ticket should persist");
     let pool = repository
         .pool()
         .expect("photo recovery test should have a PostgreSQL pool");
@@ -781,7 +842,8 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
                 client_mutation_id: None,
             },
         )
-        .await;
+        .await
+        .expect_loaded("privacy photo ticket should persist");
 
     repository
         .complete_photo_upload(

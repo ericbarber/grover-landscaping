@@ -997,7 +997,7 @@ impl JobRepository {
         &self,
         job_id: String,
         request: PhotoUploadRequest,
-    ) -> PhotoUploadResponse {
+    ) -> ResourceReadResult<PhotoUploadResponse> {
         let safe_file_name = request.file_name.replace('/', "-");
         let client_mutation_uuid = request
             .client_mutation_id
@@ -1023,7 +1023,7 @@ impl JobRepository {
         );
 
         if let Some(pool) = &self.pool {
-            let _ = postgres_write::create_photo_upload(
+            if let Err(error) = postgres_write::create_photo_upload(
                 pool,
                 &job_id,
                 &request,
@@ -1033,10 +1033,19 @@ impl JobRepository {
                 storage_ticket.upload_mode,
                 storage_ticket.thumbnail_object_key.as_deref(),
             )
-            .await;
+            .await
+            {
+                tracing::error!(%error, job_id, photo_id, "persisted photo upload create failed");
+                return ResourceReadResult::Unavailable;
+            }
         }
 
-        postgres_write::photo_upload_response(job_id, request, photo_id, storage_ticket)
+        ResourceReadResult::Loaded(postgres_write::photo_upload_response(
+            job_id,
+            request,
+            photo_id,
+            storage_ticket,
+        ))
     }
 
     pub async fn complete_photo_upload(
@@ -1044,11 +1053,18 @@ impl JobRepository {
         job_id: &str,
         photo_id: &str,
         metadata: PhotoUploadMetadata,
-    ) -> String {
+    ) -> ResourceReadResult<String> {
         if let Some(pool) = &self.pool {
             let mut upload_metadata = metadata;
-            if let Ok(Some(location)) =
-                postgres_read::photo_storage_location(pool, job_id, photo_id).await
+            let location = match postgres_read::photo_storage_location(pool, job_id, photo_id).await
+            {
+                Ok(Some(location)) => location,
+                Ok(None) => return ResourceReadResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, job_id, photo_id, "persisted photo upload lookup failed");
+                    return ResourceReadResult::Unavailable;
+                }
+            };
             {
                 let photo_storage = PhotoStorageConfig::from_env();
                 match photo_storage
@@ -1079,9 +1095,16 @@ impl JobRepository {
                         upload_metadata = server_metadata;
                     }
                     UploadedPhotoInspection::Rejected(reason) => {
-                        let _ = postgres_write::reject_photo_upload(pool, job_id, photo_id, reason)
-                            .await;
-                        return format!("Photo {photo_id} for job {job_id} has been rejected.");
+                        if let Err(error) =
+                            postgres_write::reject_photo_upload(pool, job_id, photo_id, reason)
+                                .await
+                        {
+                            tracing::error!(%error, job_id, photo_id, "persisted photo rejection failed");
+                            return ResourceReadResult::Unavailable;
+                        }
+                        return ResourceReadResult::Loaded(format!(
+                            "Photo {photo_id} for job {job_id} has been rejected."
+                        ));
                     }
                     UploadedPhotoInspection::Unavailable => {
                         if location.upload_mode == "s3-presigned"
@@ -1100,11 +1123,18 @@ impl JobRepository {
                 }
             }
 
-            let _ = postgres_write::complete_photo_upload(pool, job_id, photo_id, &upload_metadata)
-                .await;
+            if let Err(error) =
+                postgres_write::complete_photo_upload(pool, job_id, photo_id, &upload_metadata)
+                    .await
+            {
+                tracing::error!(%error, job_id, photo_id, "persisted photo upload completion failed");
+                return ResourceReadResult::Unavailable;
+            }
         }
 
-        format!("Photo {photo_id} for job {job_id} has been marked uploaded.")
+        ResourceReadResult::Loaded(format!(
+            "Photo {photo_id} for job {job_id} has been marked uploaded."
+        ))
     }
 
     #[allow(dead_code)]

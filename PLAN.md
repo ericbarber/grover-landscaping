@@ -390,12 +390,14 @@ Delivered:
 - Customer report links explain storage outages separately from invalid links
 - Completion-report persistence and immutable delivered-snapshot writes return explicit unavailable outcomes
 - Report construction and delivery refuse to report success when required persisted artifacts cannot be stored
+- Photo-upload ticket creation and completion distinguish unavailable persistence from missing uploads
+- Persisted photo writes no longer return accepted upload messages after database failures
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable photo-upload creation and completion writes from accepted uploads
-- Add repository and phone-flow coverage for photo write availability
+- Audit photo-processing and deletion worker claims for swallowed persistence failures
+- Add explicit worker availability outcomes and validation coverage
 
 ### Manager scheduling workflow
 
@@ -826,12 +828,13 @@ Current state:
 - Job lifecycle and checklist writes return explicit missing, conflict, and unavailable outcomes
 - Completion-report share and property-history reads return explicit missing and unavailable outcomes
 - Completion-report persistence and snapshot writes return explicit unavailable outcomes
+- Photo-upload creation and completion return explicit missing and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable photo-upload creation and completion writes from accepted uploads
-- Add repository and phone-flow coverage for photo write availability
+- Audit photo-processing and deletion worker claims for swallowed persistence failures
+- Add explicit worker availability outcomes and validation coverage
 
 ## Planned
 

@@ -5968,9 +5968,16 @@ async fn create_local_photo_upload(
             .into_response();
     }
 
-    let ticket = state.jobs.create_photo_upload(id, request).await;
-
-    (StatusCode::CREATED, Json(ticket)).into_response()
+    match state.jobs.create_photo_upload(id, request).await {
+        ResourceReadResult::Loaded(ticket) => (StatusCode::CREATED, Json(ticket)).into_response(),
+        ResourceReadResult::NotFound => {
+            resource_not_found_response("job_not_found", "The requested job was not found.")
+        }
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "photo_upload_create_unavailable",
+            "The persisted photo upload could not be created.",
+        ),
+    }
 }
 
 async fn list_job_photos(
@@ -6020,19 +6027,28 @@ async fn complete_photo_upload(
         }
     };
 
-    let message = state
+    match state
         .jobs
         .complete_photo_upload(&id, &request.photo_id, metadata)
-        .await;
-
-    (
-        StatusCode::ACCEPTED,
-        Json(ActionResponse {
-            status: "accepted",
-            message,
-        }),
-    )
-        .into_response()
+        .await
+    {
+        ResourceReadResult::Loaded(message) => (
+            StatusCode::ACCEPTED,
+            Json(ActionResponse {
+                status: "accepted",
+                message,
+            }),
+        )
+            .into_response(),
+        ResourceReadResult::NotFound => resource_not_found_response(
+            "photo_upload_not_found",
+            "The requested photo upload was not found.",
+        ),
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "photo_upload_completion_unavailable",
+            "The persisted photo upload could not be completed.",
+        ),
+    }
 }
 
 impl PhotoCompleteRequest {
