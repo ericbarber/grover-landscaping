@@ -606,6 +606,15 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(reloadedTeamActivity.getByText(
     'Restored 2 saved owner activity review settings for this organization.',
   )).toBeVisible();
+  await reloadedTeamActivity.getByRole('button', {
+    name: 'Dismiss activity review message',
+  }).click();
+  await expect(reloadedTeamActivity.getByText(
+    'Restored 2 saved owner activity review settings for this organization.',
+  )).toBeHidden();
+  await expect(reloadedTeamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(reloadedTeamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
+  await expect(reloadedTeamActivity.getByLabel('Sort')).toHaveValue('newest');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });
