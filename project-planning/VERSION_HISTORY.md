@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable photo worker claims from valid empty processing queues.
 - 2026-07-20: Distinguished unavailable photo-upload creation and completion from accepted or missing uploads.
 - 2026-07-20: Failed completion-report persistence and delivered-snapshot writes closed on storage errors.
 - 2026-07-20: Distinguished unavailable shared completion reports and property report history from missing or empty results.

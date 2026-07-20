@@ -1182,14 +1182,18 @@ impl JobRepository {
         &self,
         limit: i64,
         max_attempts: i32,
-    ) -> Vec<PhotoProcessingClaim> {
+    ) -> ResourceReadResult<Vec<PhotoProcessingClaim>> {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::claim_photo_processing_jobs(pool, limit, max_attempts)
-            .await
-            .unwrap_or_default()
+        match postgres_write::claim_photo_processing_jobs(pool, limit, max_attempts).await {
+            Ok(claims) => ResourceReadResult::Loaded(claims),
+            Err(error) => {
+                tracing::error!(%error, "photo-processing claim batch failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -1349,13 +1353,17 @@ impl JobRepository {
         &self,
         limit: i64,
         max_attempts: i32,
-    ) -> Vec<PhotoErasureDeletionClaim> {
+    ) -> ResourceReadResult<Vec<PhotoErasureDeletionClaim>> {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return ResourceReadResult::Unavailable;
         };
-        postgres_privacy::claim_photo_erasure_deletion_jobs(pool, limit, max_attempts)
-            .await
-            .unwrap_or_default()
+        match postgres_privacy::claim_photo_erasure_deletion_jobs(pool, limit, max_attempts).await {
+            Ok(claims) => ResourceReadResult::Loaded(claims),
+            Err(error) => {
+                tracing::error!(%error, "photo-erasure deletion claim batch failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn mark_photo_erasure_deletion_completed(&self, id: &str) -> bool {

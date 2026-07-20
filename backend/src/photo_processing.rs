@@ -1,4 +1,7 @@
-use crate::{db::JobRepository, photo_storage::PhotoStorageConfig};
+use crate::{
+    db::{JobRepository, ResourceReadResult},
+    photo_storage::PhotoStorageConfig,
+};
 use std::time::Duration;
 
 const DEFAULT_BATCH_SIZE: i64 = 5;
@@ -71,8 +74,14 @@ pub fn start_photo_processing_worker(
                 config.max_attempts,
             )
             .await;
-            if processed > 0 {
-                tracing::info!(processed, "photo processing worker cycle completed");
+            match processed {
+                ResourceReadResult::Loaded(processed) if processed > 0 => {
+                    tracing::info!(processed, "photo processing worker cycle completed");
+                }
+                ResourceReadResult::Unavailable => {
+                    tracing::error!("photo processing worker cycle could not claim persisted work");
+                }
+                _ => {}
             }
             tokio::time::sleep(config.poll_interval).await;
         }
@@ -86,13 +95,19 @@ pub async fn process_photo_processing_once(
     photo_storage: &PhotoStorageConfig,
     batch_size: i64,
     max_attempts: i32,
-) -> usize {
-    let claims = repository
+) -> ResourceReadResult<usize> {
+    let ResourceReadResult::Loaded(claims) = repository
         .claim_photo_processing_batch(batch_size, max_attempts)
-        .await;
-    let deletion_claims = repository
+        .await
+    else {
+        return ResourceReadResult::Unavailable;
+    };
+    let ResourceReadResult::Loaded(deletion_claims) = repository
         .claim_photo_erasure_deletion_batch(batch_size, max_attempts)
-        .await;
+        .await
+    else {
+        return ResourceReadResult::Unavailable;
+    };
     let processed = claims.len() + deletion_claims.len();
 
     for claim in claims {
@@ -149,7 +164,7 @@ pub async fn process_photo_processing_once(
         }
     }
 
-    processed
+    ResourceReadResult::Loaded(processed)
 }
 
 fn parse_positive_env(name: &str, default: u64) -> Result<u64, String> {

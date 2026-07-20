@@ -68,6 +68,14 @@ async fn repository_distinguishes_unavailable_photo_writes() {
             .await,
         ResourceReadResult::Unavailable
     ));
+    assert!(matches!(
+        repository.claim_photo_processing_batch(10, 3).await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository.claim_photo_erasure_deletion_batch(10, 3).await,
+        ResourceReadResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -392,7 +400,10 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
     assert_eq!(queued.status, "queued");
     assert_eq!(queued.attempt_count, 0);
 
-    let claimed = repository.claim_photo_processing_batch(10, 3).await;
+    let claimed = loaded(
+        repository.claim_photo_processing_batch(10, 3).await,
+        "photo processing claims should load",
+    );
     assert_eq!(claimed.len(), 1);
     let claim = &claimed[0];
     assert_eq!(claim.id, queued.id);
@@ -411,10 +422,11 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
             .await
     );
     assert!(
-        repository
-            .claim_photo_processing_batch(10, 3)
-            .await
-            .is_empty(),
+        loaded(
+            repository.claim_photo_processing_batch(10, 3).await,
+            "delayed photo processing claims should load",
+        )
+        .is_empty(),
         "failed jobs should wait for retry availability before being claimed again"
     );
 
@@ -424,7 +436,10 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
         .await
         .unwrap();
 
-    let retry_claimed = repository.claim_photo_processing_batch(10, 3).await;
+    let retry_claimed = loaded(
+        repository.claim_photo_processing_batch(10, 3).await,
+        "retry photo processing claims should load",
+    );
     assert_eq!(retry_claimed.len(), 1);
     assert_eq!(retry_claimed[0].id, queued.id);
     assert_eq!(retry_claimed[0].attempt_count, 2);
@@ -453,10 +468,11 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
             .await
             .unwrap();
     assert_eq!(status, "completed");
-    assert!(repository
-        .claim_photo_processing_batch(10, 3)
-        .await
-        .is_empty());
+    assert!(loaded(
+        repository.claim_photo_processing_batch(10, 3).await,
+        "completed photo processing claims should load",
+    )
+    .is_empty());
 }
 
 #[tokio::test]
@@ -510,7 +526,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
 
     let processed =
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await;
-    assert_eq!(processed, 1);
+    assert_eq!(processed, ResourceReadResult::Loaded(1));
 
     let row = sqlx::query(
         r#"
@@ -532,7 +548,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
     );
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        0
+        ResourceReadResult::Loaded(0)
     );
 }
 
@@ -587,7 +603,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        1
+        ResourceReadResult::Loaded(1)
     );
 
     let dead_letters = repository
@@ -636,7 +652,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        1
+        ResourceReadResult::Loaded(1)
     );
 
     let resolved = repository
@@ -707,7 +723,7 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
 
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 3).await,
-        1
+        ResourceReadResult::Loaded(1)
     );
 
     let row = sqlx::query(

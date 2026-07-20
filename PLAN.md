@@ -392,12 +392,14 @@ Delivered:
 - Report construction and delivery refuse to report success when required persisted artifacts cannot be stored
 - Photo-upload ticket creation and completion distinguish unavailable persistence from missing uploads
 - Persisted photo writes no longer return accepted upload messages after database failures
+- Photo-processing and erasure-deletion worker claims distinguish unavailable persistence from empty queues
+- Worker cycles log unavailable claim storage instead of reporting an idle successful cycle
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit photo-processing and deletion worker claims for swallowed persistence failures
-- Add explicit worker availability outcomes and validation coverage
+- Audit photo-processing and deletion completion/failure writes for swallowed persistence errors
+- Add explicit worker mutation outcomes and validation coverage
 
 ### Manager scheduling workflow
 
@@ -829,12 +831,13 @@ Current state:
 - Completion-report share and property-history reads return explicit missing and unavailable outcomes
 - Completion-report persistence and snapshot writes return explicit unavailable outcomes
 - Photo-upload creation and completion return explicit missing and unavailable outcomes
+- Photo worker claims return explicit loaded and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Audit photo-processing and deletion worker claims for swallowed persistence failures
-- Add explicit worker availability outcomes and validation coverage
+- Audit photo-processing and deletion completion/failure writes for swallowed persistence errors
+- Add explicit worker mutation outcomes and validation coverage
 
 ## Planned
 
