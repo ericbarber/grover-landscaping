@@ -120,6 +120,7 @@
 - 2026-07-19: Added protected tenant-scoped branch and territory discovery APIs.
 - 2026-07-19: Added readable branch and territory filters to manager dispatch.
 - 2026-07-19: Added audited owner-managed branch creation.
+- 2026-07-19: Added audited owner-managed service territory creation.
 
 The project did not use formal product version numbers during its initial
 development. The entries below establish a milestone history from the repository's

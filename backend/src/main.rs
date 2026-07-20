@@ -36,10 +36,11 @@ use completion_reports::{
 };
 use day_plans::{
     validate_amendment_request, validate_amendment_review, validate_create_crew_name,
-    validate_create_organization_branch_request, AssignDayPlanStopRequest, CreateCrewRequest,
-    CreateDayPlanAmendmentRequest, CreateDayPlanRequest, CreateOrganizationBranchRequest,
-    CreateOrganizationBranchResult, DayPlanRepository, ReorderDayPlanStopsRequest,
-    ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
+    validate_create_organization_branch_request, validate_create_service_territory_request,
+    AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
+    CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
+    CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
+    ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest, UpdateCrewRequest, UpdateCrewResult,
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
@@ -710,6 +711,10 @@ fn app_with_runtime(
         .route(
             "/organizations/{organization_id}/branches",
             post(create_organization_branch),
+        )
+        .route(
+            "/organizations/{organization_id}/territories",
+            post(create_service_territory),
         )
         .route(
             "/organizations/{organization_id}/crews",
@@ -2584,6 +2589,67 @@ async fn create_organization_branch(
             Json(ErrorResponse {
                 error: "branch_creation_unavailable",
                 message: "The branch could not be created.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn create_service_territory(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(organization_id): Path<String>,
+    Json(request): Json<CreateServiceTerritoryRequest>,
+) -> Response {
+    if let Err(response) = require_organization_membership(
+        &state,
+        &principal,
+        &organization_id,
+        can_manage_organization,
+    )
+    .await
+    {
+        return response;
+    }
+    if let Err(error) = validate_create_service_territory_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error,
+                message: "Select an active branch and provide a territory name.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .day_plans
+        .create_service_territory(&organization_id, &principal.subject, &request)
+        .await
+    {
+        CreateServiceTerritoryResult::Created(territory) => {
+            (StatusCode::CREATED, Json(territory)).into_response()
+        }
+        CreateServiceTerritoryResult::BranchNotFound => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "territory_branch_not_available",
+                message: "Select an active branch in this organization.".to_string(),
+            }),
+        )
+            .into_response(),
+        CreateServiceTerritoryResult::DuplicateName => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "territory_name_exists",
+                message: "Territory names must be unique within the branch.".to_string(),
+            }),
+        )
+            .into_response(),
+        CreateServiceTerritoryResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "territory_creation_unavailable",
+                message: "The service territory could not be created.".to_string(),
             }),
         )
             .into_response(),

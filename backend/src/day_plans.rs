@@ -80,6 +80,32 @@ pub enum CreateOrganizationBranchResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct CreateServiceTerritoryRequest {
+    pub branch_id: String,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CreateServiceTerritoryResult {
+    Created(ServiceTerritorySummary),
+    BranchNotFound,
+    DuplicateName,
+    Unavailable,
+}
+
+pub fn validate_create_service_territory_request(
+    request: &CreateServiceTerritoryRequest,
+) -> Result<(), &'static str> {
+    if request.branch_id.trim().is_empty() || request.branch_id.chars().count() > 120 {
+        return Err("territory_branch_invalid");
+    }
+    if request.name.trim().is_empty() || request.name.trim().chars().count() > 120 {
+        return Err("territory_name_invalid");
+    }
+    Ok(())
+}
+
 pub fn validate_create_organization_branch_request(
     request: &CreateOrganizationBranchRequest,
 ) -> Result<(), &'static str> {
@@ -410,6 +436,92 @@ impl DayPlanRepository {
             code: row.get("code"),
             time_zone: row.get("time_zone"),
             service_area_label: row.get("service_area_label"),
+            status: row.get("status"),
+        })
+    }
+
+    pub async fn create_service_territory(
+        &self,
+        organization_id: &str,
+        actor_user_id: &str,
+        request: &CreateServiceTerritoryRequest,
+    ) -> CreateServiceTerritoryResult {
+        let Some(pool) = &self.pool else {
+            return CreateServiceTerritoryResult::Unavailable;
+        };
+        let id = format!("territory_{}", Uuid::new_v4().simple());
+        let mut tx = match pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return CreateServiceTerritoryResult::Unavailable,
+        };
+        let branch_exists = sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM organization_branches
+                WHERE id = $1 AND organization_id = $2 AND status = 'active'
+            )
+            "#,
+        )
+        .bind(request.branch_id.trim())
+        .bind(organization_id)
+        .fetch_one(&mut *tx)
+        .await;
+        if !matches!(branch_exists, Ok(true)) {
+            return match branch_exists {
+                Ok(false) => CreateServiceTerritoryResult::BranchNotFound,
+                _ => CreateServiceTerritoryResult::Unavailable,
+            };
+        }
+        let row = sqlx::query(
+            r#"
+            INSERT INTO service_territories (
+                id, organization_id, branch_id, name
+            ) VALUES ($1, $2, $3, $4)
+            ON CONFLICT (organization_id, branch_id, name) DO NOTHING
+            RETURNING id, organization_id, branch_id, name, status
+            "#,
+        )
+        .bind(&id)
+        .bind(organization_id)
+        .bind(request.branch_id.trim())
+        .bind(request.name.trim())
+        .fetch_optional(&mut *tx)
+        .await;
+        let row = match row {
+            Ok(Some(row)) => row,
+            Ok(None) => return CreateServiceTerritoryResult::DuplicateName,
+            Err(_) => return CreateServiceTerritoryResult::Unavailable,
+        };
+        if sqlx::query(
+            r#"
+            INSERT INTO access_audit_events (
+                id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
+            ) VALUES (
+                $1, $2, $3, 'territory_created', $4, NOW(),
+                jsonb_build_object('branch_id', $5::text)
+            )
+            "#,
+        )
+        .bind(format!(
+            "audit_territory_created_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(actor_user_id)
+        .bind(organization_id)
+        .bind(&id)
+        .bind(request.branch_id.trim())
+        .execute(&mut *tx)
+        .await
+        .is_err()
+            || tx.commit().await.is_err()
+        {
+            return CreateServiceTerritoryResult::Unavailable;
+        }
+        CreateServiceTerritoryResult::Created(ServiceTerritorySummary {
+            id: row.get("id"),
+            organization_id: row.get("organization_id"),
+            branch_id: row.get("branch_id"),
+            name: row.get("name"),
             status: row.get("status"),
         })
     }
@@ -1109,9 +1221,10 @@ mod tests {
         local_published_day_plan_response, normalize_create_day_plan_request, seed_day_plan,
         validate_amendment_request, validate_amendment_review, validate_create_crew_name,
         validate_create_day_plan_request, validate_create_organization_branch_request,
-        AmendmentService, AssignDayPlanStopRequest, CreateCrewRequest,
-        CreateDayPlanAmendmentRequest, CreateDayPlanRequest, CreateOrganizationBranchRequest,
-        DayPlanRepository, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
+        validate_create_service_territory_request, AmendmentService, AssignDayPlanStopRequest,
+        CreateCrewRequest, CreateDayPlanAmendmentRequest, CreateDayPlanRequest,
+        CreateOrganizationBranchRequest, CreateServiceTerritoryRequest, DayPlanRepository,
+        ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
     };
 
     #[test]
@@ -1133,6 +1246,24 @@ mod tests {
                 service_area_label: None,
             },),
             Err("branch_code_invalid")
+        );
+    }
+
+    #[test]
+    fn territory_creation_validation_requires_branch_and_name() {
+        assert!(
+            validate_create_service_territory_request(&CreateServiceTerritoryRequest {
+                branch_id: "branch_1001".to_string(),
+                name: "East Valley".to_string(),
+            })
+            .is_ok()
+        );
+        assert_eq!(
+            validate_create_service_territory_request(&CreateServiceTerritoryRequest {
+                branch_id: " ".to_string(),
+                name: "East Valley".to_string(),
+            }),
+            Err("territory_branch_invalid")
         );
     }
 

@@ -85,6 +85,12 @@ alphanumeric/underscore codes, the supported organization timezone set, and
 optional service-area labels are validated before a transactional branch insert
 and `branch_created` audit event.
 
+Owners create territories through
+`POST /organizations/{organization_id}/territories`. The selected branch must
+be active in the same organization, territory names are unique within that
+branch, and creation writes a linked `territory_created` audit event in the
+same transaction.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan
