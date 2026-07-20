@@ -711,10 +711,11 @@ Current state:
 - Summary-driven newest-first ordering persists per organization across mobile reloads while actor and audit-ID searches remain transient
 - Mobile reloads announce the count of saved organization-scoped activity review settings restored
 - Dismissing saved-review restoration feedback leaves every restored setting applied
+- Saved-review feedback can clear persisted settings directly, and defaults remain after the next mobile reload
 
 Next implementation work:
 
-- Clear saved activity review settings directly from restoration feedback
+- Undo an accidental saved-review clear during the current session
 
 ## Planned
 

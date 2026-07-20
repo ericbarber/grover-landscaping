@@ -593,6 +593,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('newest');
+  await expect.poll(() => page.evaluate(() => (
+    window.localStorage.getItem(
+      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+    )
+  ))).toContain('"sourceQuery":"Main Branch"');
   await page.reload();
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
   const reloadedTeamActivity = page
@@ -615,6 +620,28 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(reloadedTeamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(reloadedTeamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(reloadedTeamActivity.getByLabel('Sort')).toHaveValue('newest');
+  await page.reload();
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const savedReview = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await savedReview.getByRole('button', { name: 'Clear saved review settings' }).click();
+  await expect(savedReview.getByLabel('Find move source')).toHaveValue('');
+  await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('all');
+  await expect(savedReview.getByLabel('Sort')).toHaveValue('newest');
+  await expect.poll(() => page.evaluate(() => (
+    window.localStorage.getItem(
+      'grover.team-activity-review-filters.v1.org_demo_landscaping',
+    )
+  ))).toContain('"sourceQuery":""');
+  await page.reload();
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const clearedReview = page
+    .getByRole('heading', { name: 'Recent access activity' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(clearedReview.getByLabel('Find move source')).toHaveValue('');
+  await expect(clearedReview.getByLabel('Crew move scope')).toHaveValue('all');
+  await expect(clearedReview.getByText(/saved owner activity review setting/)).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
 });

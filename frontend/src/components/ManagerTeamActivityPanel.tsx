@@ -754,6 +754,15 @@ export function ManagerTeamActivityPanel({
         >
           <p>{reviewNotice}</p>
           <div className="flex flex-wrap gap-2">
+            {reviewNotice.includes('saved owner activity review setting') ? (
+              <button
+                className="min-h-11 rounded-lg border border-sky-300 bg-white px-3 text-xs font-bold"
+                onClick={resetReviewView}
+                type="button"
+              >
+                Clear saved review settings
+              </button>
+            ) : null}
             {unavailableRestoredAuditId ? (
               <button
                 className="min-h-11 rounded-lg border border-sky-300 bg-white px-3 text-xs font-bold"

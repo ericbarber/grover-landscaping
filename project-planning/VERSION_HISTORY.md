@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Cleared saved activity reviews directly from restoration feedback.
 - 2026-07-19: Verified non-destructive dismissal of saved-review feedback.
 - 2026-07-19: Announced saved activity review restoration after reload.
 - 2026-07-19: Persisted summary-driven newest-first activity ordering.
