@@ -269,6 +269,24 @@ test('fails the phone route closed when persisted ownership cannot be verified',
   await expect(route.getByText('Source: persisted route status')).toBeVisible();
 });
 
+test('keeps persisted job details hidden when ownership cannot be verified', async ({ page }) => {
+  await page.route('**/jobs/job_1001', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'job_ownership_unavailable',
+      message: 'Persisted resource ownership could not be verified.',
+    },
+  }));
+
+  await page.goto('/');
+  const detail = page.locator('#job-detail');
+  await expect(detail.getByRole('alert')).toContainText(
+    'Persisted job access could not be verified.',
+  );
+  await expect(detail.getByText('Sample Customer')).toHaveCount(0);
+});
+
 test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
   await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
     status: 404,

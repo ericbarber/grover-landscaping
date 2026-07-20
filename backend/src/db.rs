@@ -46,6 +46,12 @@ pub struct JobRepository {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ResourceOwnershipResult {
+    Loaded(Option<String>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PhotoProcessingJobRecord {
     pub id: String,
     pub photo_id: String,
@@ -322,6 +328,11 @@ impl JobRepository {
         self.pool.clone()
     }
 
+    #[allow(dead_code)]
+    pub fn from_pool(pool: PgPool) -> Self {
+        Self { pool: Some(pool) }
+    }
+
     pub async fn is_database_healthy(&self) -> bool {
         let Some(pool) = &self.pool else {
             return false;
@@ -333,28 +344,39 @@ impl JobRepository {
             .is_ok()
     }
 
-    pub async fn organization_id_for_job(&self, job_id: &str) -> Option<String> {
+    pub async fn organization_id_for_job(&self, job_id: &str) -> ResourceOwnershipResult {
         if let Some(pool) = &self.pool {
-            if let Ok(organization_id) = postgres_read::organization_id_for_job(pool, job_id).await
-            {
-                return organization_id;
-            }
+            return match postgres_read::organization_id_for_job(pool, job_id).await {
+                Ok(organization_id) => ResourceOwnershipResult::Loaded(organization_id),
+                Err(error) => {
+                    tracing::error!(%error, job_id, "persisted job ownership lookup failed");
+                    ResourceOwnershipResult::Unavailable
+                }
+            };
         }
 
-        seed_organization_id_for_job(job_id)
+        ResourceOwnershipResult::Loaded(seed_organization_id_for_job(job_id))
     }
 
-    pub async fn organization_id_for_completion_report(&self, report_id: &str) -> Option<String> {
+    pub async fn organization_id_for_completion_report(
+        &self,
+        report_id: &str,
+    ) -> ResourceOwnershipResult {
         if let Some(pool) = &self.pool {
-            if let Ok(organization_id) =
-                postgres_read::organization_id_for_completion_report(pool, report_id).await
+            return match postgres_read::organization_id_for_completion_report(pool, report_id).await
             {
-                return organization_id;
-            }
+                Ok(organization_id) => ResourceOwnershipResult::Loaded(organization_id),
+                Err(error) => {
+                    tracing::error!(%error, report_id, "persisted completion-report ownership lookup failed");
+                    ResourceOwnershipResult::Unavailable
+                }
+            };
         }
 
-        let job_id = report_id.strip_prefix("report_")?;
-        seed_organization_id_for_job(job_id)
+        let organization_id = report_id
+            .strip_prefix("report_")
+            .and_then(seed_organization_id_for_job);
+        ResourceOwnershipResult::Loaded(organization_id)
     }
 
     pub async fn record_account_view(&self, job_id: &str, actor_user_id: &str) -> bool {

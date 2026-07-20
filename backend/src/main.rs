@@ -50,7 +50,7 @@ use db::{
     JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
     PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
     PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
-    StopProgressWriteResult,
+    ResourceOwnershipResult, StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -4131,11 +4131,19 @@ async fn require_job_organization_access(
     job_id: &str,
     required_role: fn(&AccessRole) -> bool,
 ) -> Result<(), Response> {
-    let Some(organization_id) = state.jobs.organization_id_for_job(job_id).await else {
-        return Err(resource_not_found_response(
-            "job_not_found",
-            "Job was not found.",
-        ));
+    let organization_id = match state.jobs.organization_id_for_job(job_id).await {
+        ResourceOwnershipResult::Loaded(Some(organization_id)) => organization_id,
+        ResourceOwnershipResult::Loaded(None) => {
+            return Err(resource_not_found_response(
+                "job_not_found",
+                "Job was not found.",
+            ));
+        }
+        ResourceOwnershipResult::Unavailable => {
+            return Err(persisted_ownership_unavailable_response(
+                "job_ownership_unavailable",
+            ));
+        }
     };
 
     require_organization_membership(state, principal, &organization_id, required_role).await
@@ -4147,15 +4155,23 @@ async fn require_completion_report_organization_access(
     report_id: &str,
     required_role: fn(&AccessRole) -> bool,
 ) -> Result<(), Response> {
-    let Some(organization_id) = state
+    let organization_id = match state
         .jobs
         .organization_id_for_completion_report(report_id)
         .await
-    else {
-        return Err(resource_not_found_response(
-            "completion_report_not_found",
-            "The requested completion report was not found.",
-        ));
+    {
+        ResourceOwnershipResult::Loaded(Some(organization_id)) => organization_id,
+        ResourceOwnershipResult::Loaded(None) => {
+            return Err(resource_not_found_response(
+                "completion_report_not_found",
+                "The requested completion report was not found.",
+            ));
+        }
+        ResourceOwnershipResult::Unavailable => {
+            return Err(persisted_ownership_unavailable_response(
+                "completion_report_ownership_unavailable",
+            ));
+        }
     };
 
     require_organization_membership(state, principal, &organization_id, required_role).await
@@ -5843,6 +5859,39 @@ mod tests {
         .unwrap_err();
 
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn job_and_report_access_fail_closed_when_persistence_is_unavailable() {
+        let mut state = (*seed_state()).clone();
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .acquire_timeout(std::time::Duration::from_millis(100))
+            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .expect("unavailable test pool URL should be valid");
+        state.jobs = JobRepository::from_pool(pool);
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
+            claim_roles: vec![AccessRole::OrganizationOwner],
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        let job_response =
+            require_job_organization_access(&state, &principal, "job_1001", can_view_crew_route)
+                .await
+                .unwrap_err();
+        let report_response = require_completion_report_organization_access(
+            &state,
+            &principal,
+            "report_job_1001",
+            can_review_completion_report,
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(job_response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(report_response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]

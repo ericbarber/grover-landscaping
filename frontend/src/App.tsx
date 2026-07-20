@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { isApiErrorCode } from './api/apiError';
+import { ApiRequestError, isApiErrorCode } from './api/apiError';
 import {
   completeJob,
   completeDispatchCustomerNotification,
@@ -881,6 +881,7 @@ export function App() {
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
+  const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -1429,6 +1430,7 @@ export function App() {
 
     let isMounted = true;
     setIsLoadingDetail(true);
+    setJobDetailUnavailable(false);
 
     fetchJobDetail(selectedJobId)
       .then((detail) => {
@@ -1436,10 +1438,15 @@ export function App() {
           setSelectedJob(detail);
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isMounted) {
-          const fallback = jobs.find((job) => job.id === selectedJobId) ?? null;
-          setSelectedJob(fallback ? fallbackJobDetail(fallback) : null);
+          if (error instanceof ApiRequestError) {
+            setSelectedJob(null);
+            setJobDetailUnavailable(true);
+          } else {
+            const fallback = jobs.find((job) => job.id === selectedJobId) ?? null;
+            setSelectedJob(fallback ? fallbackJobDetail(fallback) : null);
+          }
         }
       })
       .finally(() => {
@@ -2994,6 +3001,11 @@ export function App() {
         </div>
 
         <div className="min-w-0 scroll-mt-16 lg:sticky lg:top-4 lg:self-start" id="job-detail" ref={jobDetailRef}>
+          {jobDetailUnavailable ? (
+            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
+              Persisted job access could not be verified. Job details remain hidden until API readiness recovers.
+            </p>
+          ) : null}
           <JobDetailPanel
             job={selectedJob}
             isLoading={isLoadingDetail}

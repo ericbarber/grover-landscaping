@@ -156,6 +156,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - No-database demo mode retains an intentionally empty amendment queue
 - PostgreSQL-backed crew and day-plan ownership lookups return explicit missing or unavailable results instead of seeded tenant IDs
 - Route authorization fails closed with `503` when persisted ownership cannot be verified
+- PostgreSQL-backed job and completion-report ownership lookups return explicit missing or unavailable results instead of seeded tenant IDs
+- Job and report authorization fail closed with `503`, and the phone detail view does not substitute seeded job detail after an API denial
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -332,9 +334,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed job and completion-report ownership lookups from falling back to seeded tenant IDs
-- Return explicit missing and unavailable ownership results while retaining no-database demo ownership
-- Prove job and report authorization fail closed when persisted ownership cannot be resolved
+- Stop PostgreSQL-backed job list and detail reads from substituting seeded jobs on missing or failed persistence
+- Return explicit loaded, missing, and unavailable job results while retaining no-database demo data
+- Render unavailable persisted field work separately from a genuinely empty schedule
 
 ### Manager scheduling workflow
 
@@ -745,9 +747,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed job and completion-report ownership lookups from falling back to seeded tenant IDs
-- Return explicit missing and unavailable ownership results while retaining no-database demo ownership
-- Prove job and report authorization fail closed when persisted ownership cannot be resolved
+- Stop PostgreSQL-backed job list and detail reads from substituting seeded jobs on missing or failed persistence
+- Return explicit loaded, missing, and unavailable job results while retaining no-database demo data
+- Render unavailable persisted field work separately from a genuinely empty schedule
 
 ## Planned
 
