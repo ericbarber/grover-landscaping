@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added contextual active crew choices to unstaffed hierarchy review.
 - 2026-07-19: Linked active unstaffed hierarchy review to crew administration.
 - 2026-07-19: Added active unstaffed hierarchy counts and quick filtering.
 - 2026-07-19: Added staffed and unstaffed dispatch hierarchy filtering.

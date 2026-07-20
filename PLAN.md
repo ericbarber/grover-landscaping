@@ -508,6 +508,7 @@ Current state:
 - Owner hierarchy filtering finds staffed or unstaffed scopes from active crew assignments and persists that choice with other filters
 - A mobile quick filter counts and opens active unstaffed branches and territories for immediate owner review
 - Active unstaffed results provide a direct accessible handoff to focused crew administration
+- Unstaffed review lists active crews with current branch/territory context and preselects the chosen crew during handoff
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -648,7 +649,7 @@ Current state:
 
 Next implementation work:
 
-- Show active crew choices and current scope context in the unstaffed hierarchy handoff
+- Carry the selected unstaffed branch or territory into crew administration
 
 ## Planned
 

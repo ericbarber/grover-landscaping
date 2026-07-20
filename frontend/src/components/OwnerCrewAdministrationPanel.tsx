@@ -15,6 +15,8 @@ type Props = {
   organizationId: string;
   refreshSignal?: number;
   onCrewChanged?: (crew: CrewRecord) => void;
+  requestedCrewId?: string;
+  selectionSignal?: number;
 };
 
 export function crewLeadOptionLabel(membership: OrganizationMembership): string {
@@ -26,6 +28,8 @@ export function OwnerCrewAdministrationPanel({
   organizationId,
   refreshSignal = 0,
   onCrewChanged,
+  requestedCrewId,
+  selectionSignal = 0,
 }: Props) {
   const [crews, setCrews] = useState<CrewRecord[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState('');
@@ -76,6 +80,12 @@ export function OwnerCrewAdministrationPanel({
   useEffect(() => {
     void refresh();
   }, [organizationId, refreshSignal]);
+
+  useEffect(() => {
+    if (requestedCrewId && crews.some((crew) => crew.id === requestedCrewId)) {
+      setSelectedCrewId(requestedCrewId);
+    }
+  }, [requestedCrewId, selectionSignal, crews]);
 
   useEffect(() => {
     setName(selectedCrew?.name ?? '');

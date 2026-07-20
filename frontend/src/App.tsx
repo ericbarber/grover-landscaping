@@ -924,6 +924,8 @@ export function App() {
   const [firstOwnerProgressRefreshSignal, setFirstOwnerProgressRefreshSignal] = useState(0);
   const [crewRefreshSignal, setCrewRefreshSignal] = useState(0);
   const [dispatchHierarchyRefreshSignal, setDispatchHierarchyRefreshSignal] = useState(0);
+  const [crewAdministrationSelection, setCrewAdministrationSelection] = useState<string>();
+  const [crewAdministrationSelectionSignal, setCrewAdministrationSelectionSignal] = useState(0);
   const [offlineJobMutations, setOfflineJobMutations] = useState<JobLifecycleOfflineMutation[]>([]);
   const [offlineChecklistMutations, setOfflineChecklistMutations] = useState<ChecklistOfflineMutation[]>([]);
   const [offlinePhotoMutations, setOfflinePhotoMutations] = useState<PhotoUploadOfflineMutation[]>([]);
@@ -2650,6 +2652,8 @@ export function App() {
             </summary>
             <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
+            crewSelectionRequest={crewAdministrationSelection}
+            crewSelectionSignal={crewAdministrationSelectionSignal}
             hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
@@ -2827,7 +2831,9 @@ export function App() {
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
-                onOpenCrewAdministration={() => {
+                onOpenCrewAdministration={(crewId) => {
+                  if (crewId) setCrewAdministrationSelection(crewId);
+                  setCrewAdministrationSelectionSignal((current) => current + 1);
                   const target = document.getElementById('crew-administration');
                   target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   target?.focus({ preventScroll: true });

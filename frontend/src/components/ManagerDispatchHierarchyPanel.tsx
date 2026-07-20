@@ -15,7 +15,7 @@ import {
 type ManagerDispatchHierarchyPanelProps = {
   organizationId: string;
   onChanged: () => void;
-  onOpenCrewAdministration?: () => void;
+  onOpenCrewAdministration?: (crewId?: string) => void;
   refreshSignal?: number;
 };
 
@@ -203,6 +203,8 @@ export function ManagerDispatchHierarchyPanel({
   const hasHierarchyFilters = Boolean(hierarchyQuery.trim())
     || hierarchyStatus !== 'all'
     || hierarchyAssignment !== 'all';
+  const hasVisibleUnstaffed = hierarchyAssignment === 'unstaffed'
+    && visibleHierarchy.branches.length + visibleHierarchy.territories.length > 0;
 
   async function refreshHierarchy() {
     const [branchItems, territoryItems, crewItems] = await Promise.all([
@@ -521,17 +523,40 @@ export function ManagerDispatchHierarchyPanel({
               Clear hierarchy filters
             </button>
           ) : null}
-          {hierarchyAssignment === 'unstaffed'
-            && visibleHierarchy.branches.length + visibleHierarchy.territories.length > 0
-            && onOpenCrewAdministration ? (
+          {hasVisibleUnstaffed && onOpenCrewAdministration ? (
               <button
                 className="mt-2 min-h-11 rounded-lg bg-slate-900 px-3 text-xs font-bold text-white"
-                onClick={onOpenCrewAdministration}
+                onClick={() => onOpenCrewAdministration()}
                 type="button"
               >
                 Open crew administration
               </button>
             ) : null}
+          {hasVisibleUnstaffed && crews.some((crew) => crew.status === 'active') ? (
+            <div className="mt-2 rounded-lg bg-slate-50 p-3">
+              <p className="text-xs font-bold text-slate-800">Active crews available to move</p>
+              <div className="mt-2 space-y-2">
+                {crews.filter((crew) => crew.status === 'active').map((crew) => {
+                  const branch = branches.find((item) => item.id === crew.branchId);
+                  const territory = territories.find((item) => item.id === crew.territoryId);
+                  return (
+                    <button
+                      className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-left text-xs"
+                      key={crew.id}
+                      onClick={() => onOpenCrewAdministration?.(crew.id)}
+                      type="button"
+                    >
+                      <span className="block font-bold text-slate-900">{crew.name}</span>
+                      <span className="text-slate-500">
+                        {branch?.name ?? 'Unknown branch'} ·{' '}
+                        {territory?.name ?? 'Unknown territory'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           {hasHierarchyFilters ? (
             <p className="mt-2 text-xs text-slate-500">
               Showing {visibleHierarchy.branches.length} of {branches.length} branches and{' '}
