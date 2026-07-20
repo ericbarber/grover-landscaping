@@ -492,6 +492,8 @@ Current state:
 - Organization owners can create validated tenant branches with unique normalized codes and transactional audit records
 - Organization owners can create uniquely named service territories only inside active same-tenant branches with transactional audit
 - Organization owners can create branches and nested territories from a mobile hierarchy panel, with new scopes immediately available to dispatch filters
+- Organization owners can assign existing crews to active same-tenant branch/territory pairs from mobile crew administration
+- Persisted crew hierarchy changes validate the branch/territory relationship transactionally and write actor-attributed audit context
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -632,7 +634,7 @@ Current state:
 
 Next implementation work:
 
-- Add tenant-guarded owner controls for assigning crews to branches and territories
+- Add branch and territory lifecycle controls with guards for assigned crews
 
 ## Planned
 

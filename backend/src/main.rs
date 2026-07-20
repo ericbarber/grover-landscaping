@@ -2758,6 +2758,16 @@ async fn update_organization_crew(
         )
             .into_response();
     }
+    if request.branch_id.is_some() != request.territory_id.is_some() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_crew_hierarchy",
+                message: "Crew branch and territory must be updated together.".to_string(),
+            }),
+        )
+            .into_response();
+    }
     if let Err(response) = require_organization_membership(
         &state,
         &principal,
@@ -2781,6 +2791,15 @@ async fn update_organization_crew(
                 message:
                     "Reassign active properties and current routes before deactivating this crew."
                         .to_string(),
+            }),
+        )
+            .into_response(),
+        UpdateCrewResult::InvalidHierarchy => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "invalid_crew_hierarchy",
+                message: "Choose an active territory inside an active branch in this organization."
+                    .to_string(),
             }),
         )
             .into_response(),
@@ -5541,6 +5560,57 @@ mod tests {
         assert_eq!(json["name"], "North Operations Crew");
         assert_eq!(json["status"], "inactive");
         assert_eq!(json["persisted"], false);
+    }
+
+    #[tokio::test]
+    async fn organization_crew_endpoint_updates_local_dispatch_hierarchy() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/crews/crew_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{
+                            "name":"North Operations Crew",
+                            "status":"active",
+                            "branch_id":"branch_north",
+                            "territory_id":"territory_north"
+                        }"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["branch_id"], "branch_north");
+        assert_eq!(json["territory_id"], "territory_north");
+    }
+
+    #[tokio::test]
+    async fn organization_crew_endpoint_rejects_partial_dispatch_hierarchy() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/organizations/org_demo_landscaping/crews/crew_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{
+                            "name":"North Operations Crew",
+                            "status":"active",
+                            "branch_id":"branch_north"
+                        }"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

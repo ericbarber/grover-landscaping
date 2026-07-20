@@ -96,6 +96,12 @@ refreshes the manager dispatch hierarchy after a successful write. The panel is
 only mounted for organization owners and support administrators; API membership
 and role checks remain authoritative.
 
+Owner crew profile updates may include `branch_id` and `territory_id` together.
+The API locks the crew, verifies that both scopes are active, tenant-owned, and
+nested together, then updates the crew and writes a `crew_hierarchy_updated`
+audit event containing the old and new scope IDs. Omitting both fields preserves
+the existing assignment for backward-compatible profile updates.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan

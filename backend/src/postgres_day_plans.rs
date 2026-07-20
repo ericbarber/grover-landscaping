@@ -93,13 +93,15 @@ pub async fn update_crew(
     status: &str,
     daily_stop_capacity: u32,
     lead_membership_id: Option<&str>,
+    branch_id: Option<&str>,
+    territory_id: Option<&str>,
 ) -> Result<crate::day_plans::UpdateCrewResult, sqlx::Error> {
     use crate::day_plans::UpdateCrewResult;
 
     let mut tx = pool.begin().await?;
-    let current_status: Option<String> = sqlx::query_scalar(
+    let current = sqlx::query(
         r#"
-        SELECT status
+        SELECT status, branch_id, territory_id
         FROM crews
         WHERE id = $1
           AND organization_id = $2
@@ -110,10 +112,41 @@ pub async fn update_crew(
     .bind(organization_id)
     .fetch_optional(&mut *tx)
     .await?;
-    let Some(current_status) = current_status else {
+    let Some(current) = current else {
         tx.rollback().await?;
         return Ok(UpdateCrewResult::NotFound);
     };
+    let current_status: String = current.get("status");
+    let current_branch_id: Option<String> = current.get("branch_id");
+    let current_territory_id: Option<String> = current.get("territory_id");
+
+    if let (Some(branch_id), Some(territory_id)) = (branch_id, territory_id) {
+        let hierarchy_is_valid: bool = sqlx::query_scalar(
+            r#"
+            SELECT EXISTS (
+                SELECT 1
+                FROM organization_branches branch
+                JOIN service_territories territory
+                  ON territory.branch_id = branch.id
+                 AND territory.organization_id = branch.organization_id
+                WHERE branch.id = $1
+                  AND territory.id = $2
+                  AND branch.organization_id = $3
+                  AND branch.status = 'active'
+                  AND territory.status = 'active'
+            )
+            "#,
+        )
+        .bind(branch_id)
+        .bind(territory_id)
+        .bind(organization_id)
+        .fetch_one(&mut *tx)
+        .await?;
+        if !hierarchy_is_valid {
+            tx.rollback().await?;
+            return Ok(UpdateCrewResult::InvalidHierarchy);
+        }
+    }
 
     if current_status == "active" && status == "inactive" {
         let has_operational_work: bool = sqlx::query_scalar(
@@ -159,6 +192,8 @@ pub async fn update_crew(
                   AND membership.status = 'active'
                   AND membership.role IN ('crew_lead', 'organization_owner')
             ),
+            branch_id = COALESCE($7, branch_id),
+            territory_id = COALESCE($8, territory_id),
             updated_at = NOW()
         WHERE id = $1
           AND organization_id = $2
@@ -182,6 +217,8 @@ pub async fn update_crew(
     .bind(status)
     .bind(daily_stop_capacity as i32)
     .bind(lead_membership_id)
+    .bind(branch_id)
+    .bind(territory_id)
     .fetch_optional(&mut *tx)
     .await?;
     let Some(row) = row else {
@@ -189,21 +226,26 @@ pub async fn update_crew(
         return Ok(UpdateCrewResult::NotFound);
     };
 
+    let hierarchy_changed = branch_id.is_some()
+        && (current_branch_id.as_deref() != branch_id
+            || current_territory_id.as_deref() != territory_id);
     let event_kind = if current_status != status {
         if status == "active" {
             "crew_reactivated"
         } else {
             "crew_deactivated"
         }
+    } else if hierarchy_changed {
+        "crew_hierarchy_updated"
     } else {
         "crew_profile_updated"
     };
     sqlx::query(
         r#"
         INSERT INTO access_audit_events (
-            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at, metadata
         )
-        VALUES ($1, $2, $3, $4, $5, NOW())
+        VALUES ($1, $2, $3, $4, $5, NOW(), $6)
         "#,
     )
     .bind(format!("audit_{}_{}", event_kind, Uuid::new_v4().simple()))
@@ -211,6 +253,12 @@ pub async fn update_crew(
     .bind(organization_id)
     .bind(event_kind)
     .bind(crew_id)
+    .bind(serde_json::json!({
+        "old_branch_id": current_branch_id,
+        "new_branch_id": branch_id,
+        "old_territory_id": current_territory_id,
+        "new_territory_id": territory_id,
+    }))
     .execute(&mut *tx)
     .await?;
 

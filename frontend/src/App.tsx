@@ -2650,6 +2650,7 @@ export function App() {
             </summary>
             <div className="mt-5 space-y-6">
           <FirstOwnerOnboardingPanel
+            hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
             onOpenSetupStep={openFirstOwnerSetupStep}
             refreshSignal={firstOwnerProgressRefreshSignal}
             onCrewCreated={() => setCrewRefreshSignal((current) => current + 1)}

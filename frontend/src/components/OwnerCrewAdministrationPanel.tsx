@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
   fetchOrganizationCrews,
+  fetchOrganizationBranches,
   fetchOrganizationMemberships,
+  fetchServiceTerritories,
   updateOrganizationCrew,
   type CrewRecord,
+  type OrganizationBranchRecord,
   type OrganizationMembership,
+  type ServiceTerritoryRecord,
 } from '../api/client';
 
 type Props = {
@@ -29,6 +33,10 @@ export function OwnerCrewAdministrationPanel({
   const [dailyStopCapacity, setDailyStopCapacity] = useState(10);
   const [leadMembershipId, setLeadMembershipId] = useState('');
   const [leadCandidates, setLeadCandidates] = useState<OrganizationMembership[]>([]);
+  const [branches, setBranches] = useState<OrganizationBranchRecord[]>([]);
+  const [territories, setTerritories] = useState<ServiceTerritoryRecord[]>([]);
+  const [branchId, setBranchId] = useState('');
+  const [territoryId, setTerritoryId] = useState('');
   const [pendingStatus, setPendingStatus] = useState<CrewRecord['status'] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,11 +45,19 @@ export function OwnerCrewAdministrationPanel({
   async function refresh() {
     setIsLoading(true);
     try {
-      const [nextCrews, memberships] = await Promise.all([
+      const [nextCrews, memberships, nextBranches, nextTerritories] = await Promise.all([
         fetchOrganizationCrews(organizationId),
         fetchOrganizationMemberships(organizationId),
+        fetchOrganizationBranches(),
+        fetchServiceTerritories(),
       ]);
       setCrews(nextCrews);
+      setBranches(nextBranches.filter((branch) => (
+        branch.organizationId === organizationId && branch.status === 'active'
+      )));
+      setTerritories(nextTerritories.filter((territory) => (
+        territory.organizationId === organizationId && territory.status === 'active'
+      )));
       setLeadCandidates(memberships.filter((membership) => (
         membership.status === 'active'
         && (membership.role === 'CrewLead' || membership.role === 'OrganizationOwner')
@@ -65,13 +81,19 @@ export function OwnerCrewAdministrationPanel({
     setName(selectedCrew?.name ?? '');
     setDailyStopCapacity(selectedCrew?.dailyStopCapacity ?? 10);
     setLeadMembershipId(selectedCrew?.leadMembershipId ?? '');
+    setBranchId(selectedCrew?.branchId ?? '');
+    setTerritoryId(selectedCrew?.territoryId ?? '');
     setPendingStatus(null);
   }, [
     selectedCrewId,
     selectedCrew?.name,
     selectedCrew?.dailyStopCapacity,
     selectedCrew?.leadMembershipId,
+    selectedCrew?.branchId,
+    selectedCrew?.territoryId,
   ]);
+
+  const branchTerritories = territories.filter((territory) => territory.branchId === branchId);
 
   async function save(nextStatus = selectedCrew?.status) {
     if (
@@ -81,8 +103,13 @@ export function OwnerCrewAdministrationPanel({
       || name.trim().length > 120
       || dailyStopCapacity < 1
       || dailyStopCapacity > 100
+      || !branchId
+      || !territoryId
+      || !branchTerritories.some((territory) => territory.id === territoryId)
     ) {
-      setMessage('Enter a 2–120 character name and a daily capacity from 1 to 100 stops.');
+      setMessage(
+        'Enter a 2–120 character name, a daily capacity from 1 to 100 stops, and a valid territory.',
+      );
       return;
     }
     setIsLoading(true);
@@ -94,6 +121,8 @@ export function OwnerCrewAdministrationPanel({
         nextStatus,
         dailyStopCapacity,
         leadMembershipId || null,
+        branchId,
+        territoryId,
       );
       setCrews((current) => current.map((crew) => crew.id === updated.id ? updated : crew));
       setPendingStatus(null);
@@ -161,6 +190,40 @@ export function OwnerCrewAdministrationPanel({
             />
           </label>
           <label className="block text-sm font-semibold text-slate-700">
+            Branch
+            <select
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+              disabled={isLoading}
+              onChange={(event) => {
+                const nextBranchId = event.target.value;
+                setBranchId(nextBranchId);
+                setTerritoryId(
+                  territories.find((territory) => territory.branchId === nextBranchId)?.id ?? '',
+                );
+              }}
+              value={branchId}
+            >
+              <option value="">Select branch</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>{branch.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-slate-700">
+            Territory
+            <select
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+              disabled={isLoading || !branchId}
+              onChange={(event) => setTerritoryId(event.target.value)}
+              value={territoryId}
+            >
+              <option value="">Select territory</option>
+              {branchTerritories.map((territory) => (
+                <option key={territory.id} value={territory.id}>{territory.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold text-slate-700">
             Crew lead
             <select
               className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
@@ -184,6 +247,8 @@ export function OwnerCrewAdministrationPanel({
                 name.trim() === selectedCrew?.name
                 && dailyStopCapacity === selectedCrew.dailyStopCapacity
                 && (leadMembershipId || null) === selectedCrew.leadMembershipId
+                && branchId === selectedCrew.branchId
+                && territoryId === selectedCrew.territoryId
               )
             }
             onClick={() => void save()}

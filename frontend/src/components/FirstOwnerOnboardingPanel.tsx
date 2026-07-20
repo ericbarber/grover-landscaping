@@ -16,6 +16,7 @@ type Props = {
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
   onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
   refreshSignal?: number;
+  hierarchyRefreshSignal?: number;
   onCrewCreated?: (crew: CrewRecord) => void;
   onCrewChanged?: (crew: CrewRecord) => void;
 };
@@ -69,6 +70,7 @@ export function FirstOwnerOnboardingPanel({
   onOrganizationReady,
   onOpenSetupStep,
   refreshSignal = 0,
+  hierarchyRefreshSignal = 0,
   onCrewCreated,
   onCrewChanged,
 }: Props) {
@@ -505,7 +507,7 @@ export function FirstOwnerOnboardingPanel({
             <OwnerCrewAdministrationPanel
               organizationId={membership.organizationId}
               onCrewChanged={onCrewChanged}
-              refreshSignal={refreshSignal}
+              refreshSignal={refreshSignal + hierarchyRefreshSignal}
             />
           ) : null}
           <ol className="mt-4 space-y-2">

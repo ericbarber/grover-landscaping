@@ -236,6 +236,8 @@ async fn repository_bootstraps_first_owner_once() {
                 status: "inactive".to_string(),
                 daily_stop_capacity: Some(12),
                 lead_membership_id: Some(created.membership.id.clone()),
+                branch_id: None,
+                territory_id: None,
             },
         )
         .await;
@@ -256,6 +258,8 @@ async fn repository_bootstraps_first_owner_once() {
                 status: "inactive".to_string(),
                 daily_stop_capacity: Some(12),
                 lead_membership_id: Some(created.membership.id.clone()),
+                branch_id: None,
+                territory_id: None,
             },
         )
         .await;
@@ -287,6 +291,8 @@ async fn repository_bootstraps_first_owner_once() {
                 status: "active".to_string(),
                 daily_stop_capacity: Some(12),
                 lead_membership_id: Some(created.membership.id.clone()),
+                branch_id: None,
+                territory_id: None,
             },
         )
         .await;

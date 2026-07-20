@@ -2453,6 +2453,7 @@ export async function createOrganizationCrew(
 ): Promise<CrewRecord> {
   const item = await request<{
     id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    branch_id?: string | null; territory_id?: string | null;
     daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>(`/organizations/${encodeURIComponent(organizationId)}/crews`, {
     method: 'POST',
@@ -2462,6 +2463,8 @@ export async function createOrganizationCrew(
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
+    branchId: item.branch_id ?? null,
+    territoryId: item.territory_id ?? null,
     status: item.status,
     dailyStopCapacity: item.daily_stop_capacity,
     leadMembershipId: item.lead_membership_id ?? null,
@@ -2472,12 +2475,15 @@ export async function createOrganizationCrew(
 export async function fetchOrganizationCrews(organizationId: string): Promise<CrewRecord[]> {
   const items = await request<Array<{
     id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    branch_id?: string | null; territory_id?: string | null;
     daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>>(`/organizations/${encodeURIComponent(organizationId)}/crews`);
   return items.map((item) => ({
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
+    branchId: item.branch_id ?? null,
+    territoryId: item.territory_id ?? null,
     status: item.status,
     dailyStopCapacity: item.daily_stop_capacity,
     leadMembershipId: item.lead_membership_id ?? null,
@@ -2492,9 +2498,12 @@ export async function updateOrganizationCrew(
   status: CrewRecord['status'],
   dailyStopCapacity: number,
   leadMembershipId: string | null,
+  branchId?: string | null,
+  territoryId?: string | null,
 ): Promise<CrewRecord> {
   const item = await request<{
     id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    branch_id?: string | null; territory_id?: string | null;
     daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>(
     `/organizations/${encodeURIComponent(organizationId)}/crews/${encodeURIComponent(crewId)}`,
@@ -2505,6 +2514,8 @@ export async function updateOrganizationCrew(
         status,
         daily_stop_capacity: dailyStopCapacity,
         lead_membership_id: leadMembershipId,
+        branch_id: branchId,
+        territory_id: territoryId,
       }),
     },
   );
@@ -2512,6 +2523,8 @@ export async function updateOrganizationCrew(
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
+    branchId: item.branch_id ?? null,
+    territoryId: item.territory_id ?? null,
     status: item.status,
     dailyStopCapacity: item.daily_stop_capacity,
     leadMembershipId: item.lead_membership_id ?? null,

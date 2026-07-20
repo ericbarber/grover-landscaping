@@ -152,12 +152,15 @@ pub struct UpdateCrewRequest {
     pub status: String,
     pub daily_stop_capacity: Option<u32>,
     pub lead_membership_id: Option<String>,
+    pub branch_id: Option<String>,
+    pub territory_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UpdateCrewResult {
     Updated(CrewSummary),
     OperationalConflict,
+    InvalidHierarchy,
     NotFound,
 }
 
@@ -623,6 +626,8 @@ impl DayPlanRepository {
                 status,
                 daily_stop_capacity,
                 request.lead_membership_id.as_deref(),
+                request.branch_id.as_deref(),
+                request.territory_id.as_deref(),
             )
             .await
             .unwrap_or(UpdateCrewResult::NotFound);
@@ -637,6 +642,10 @@ impl DayPlanRepository {
         crew.status = status.to_string();
         crew.daily_stop_capacity = daily_stop_capacity;
         crew.lead_membership_id = request.lead_membership_id;
+        if let (Some(branch_id), Some(territory_id)) = (request.branch_id, request.territory_id) {
+            crew.branch_id = Some(branch_id);
+            crew.territory_id = Some(territory_id);
+        }
         UpdateCrewResult::Updated(crew)
     }
 
