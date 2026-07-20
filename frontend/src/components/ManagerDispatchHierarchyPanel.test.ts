@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { OrganizationBranchRecord, ServiceTerritoryRecord } from '../api/client';
-import { summarizeDispatchHierarchy } from './ManagerDispatchHierarchyPanel';
+import {
+  filterDispatchHierarchy,
+  summarizeDispatchHierarchy,
+} from './ManagerDispatchHierarchyPanel';
 
 describe('dispatch hierarchy summaries', () => {
   it('counts active and inactive branches and territories independently', () => {
@@ -20,5 +23,33 @@ describe('dispatch hierarchy summaries', () => {
       activeTerritories: 2,
       inactiveTerritories: 1,
     });
+  });
+
+  it('searches branch identity, service area, territory, and parent branch context', () => {
+    const branches = [
+      {
+        id: 'branch_1',
+        name: 'North Branch',
+        code: 'NORTH',
+        serviceAreaLabel: 'Scottsdale',
+      },
+      {
+        id: 'branch_2',
+        name: 'South Branch',
+        code: 'SOUTH',
+        serviceAreaLabel: null,
+      },
+    ] as OrganizationBranchRecord[];
+    const territories = [
+      { id: 'territory_1', branchId: 'branch_1', name: 'Desert Ridge' },
+      { id: 'territory_2', branchId: 'branch_2', name: 'Tempe' },
+    ] as ServiceTerritoryRecord[];
+
+    expect(filterDispatchHierarchy(branches, territories, 'scottsdale').branches)
+      .toEqual([branches[0]]);
+    expect(filterDispatchHierarchy(branches, territories, 'desert').territories)
+      .toEqual([territories[0]]);
+    expect(filterDispatchHierarchy(branches, territories, 'south').territories)
+      .toEqual([territories[1]]);
   });
 });

@@ -35,6 +35,28 @@ export function summarizeDispatchHierarchy(
   };
 }
 
+export function filterDispatchHierarchy(
+  branches: OrganizationBranchRecord[],
+  territories: ServiceTerritoryRecord[],
+  query: string,
+) {
+  const normalized = query.trim().toLocaleLowerCase();
+  if (!normalized) return { branches, territories };
+  return {
+    branches: branches.filter((branch) => (
+      branch.name.toLocaleLowerCase().includes(normalized)
+      || branch.code.toLocaleLowerCase().includes(normalized)
+      || branch.serviceAreaLabel?.toLocaleLowerCase().includes(normalized)
+    )),
+    territories: territories.filter((territory) => {
+      const branch = branches.find((item) => item.id === territory.branchId);
+      return territory.name.toLocaleLowerCase().includes(normalized)
+        || branch?.name.toLocaleLowerCase().includes(normalized)
+        || branch?.code.toLocaleLowerCase().includes(normalized);
+    }),
+  };
+}
+
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
@@ -50,7 +72,9 @@ export function ManagerDispatchHierarchyPanel({
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
+  const [hierarchyQuery, setHierarchyQuery] = useState('');
   const summary = summarizeDispatchHierarchy(branches, territories);
+  const visibleHierarchy = filterDispatchHierarchy(branches, territories, hierarchyQuery);
 
   async function refreshHierarchy() {
     const [branchItems, territoryItems] = await Promise.all([
@@ -280,8 +304,24 @@ export function ManagerDispatchHierarchyPanel({
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         <div className="rounded-xl border border-slate-200 p-3">
           <p className="text-sm font-bold text-slate-900">Branch lifecycle</p>
+          <label className="mt-2 block text-xs font-semibold text-slate-700">
+            Search hierarchy
+            <input
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-normal"
+              onChange={(event) => setHierarchyQuery(event.target.value)}
+              placeholder="Branch, code, service area, or territory"
+              type="search"
+              value={hierarchyQuery}
+            />
+          </label>
+          {hierarchyQuery ? (
+            <p className="mt-2 text-xs text-slate-500">
+              Showing {visibleHierarchy.branches.length} of {branches.length} branches and{' '}
+              {visibleHierarchy.territories.length} of {territories.length} territories.
+            </p>
+          ) : null}
           <div className="mt-2 space-y-2">
-            {branches.map((branch) => {
+            {visibleHierarchy.branches.map((branch) => {
               const nextStatus = branch.status === 'active' ? 'inactive' : 'active';
               const actionId = `branch:${branch.id}:${nextStatus}`;
               return (
@@ -306,12 +346,17 @@ export function ManagerDispatchHierarchyPanel({
                 </div>
               );
             })}
+            {visibleHierarchy.branches.length === 0 ? (
+              <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                No branches match this search.
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="rounded-xl border border-slate-200 p-3">
           <p className="text-sm font-bold text-slate-900">Territory lifecycle</p>
           <div className="mt-2 space-y-2">
-            {territories.map((territory) => {
+            {visibleHierarchy.territories.map((territory) => {
               const nextStatus = territory.status === 'active' ? 'inactive' : 'active';
               const actionId = `territory:${territory.id}:${nextStatus}`;
               const branch = branches.find((item) => item.id === territory.branchId);
@@ -339,6 +384,11 @@ export function ManagerDispatchHierarchyPanel({
                 </div>
               );
             })}
+            {visibleHierarchy.territories.length === 0 ? (
+              <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                No territories match this search.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
