@@ -145,6 +145,26 @@ export function summarizeHierarchyCrewAssignments(crews: CrewRecord[]) {
   return { branchCounts, territoryCounts };
 }
 
+export function countActiveUnstaffedHierarchy(
+  branches: OrganizationBranchRecord[],
+  territories: ServiceTerritoryRecord[],
+  crews: CrewRecord[],
+) {
+  const unstaffed = filterDispatchHierarchy(
+    branches,
+    territories,
+    '',
+    'active',
+    'unstaffed',
+    crews,
+  );
+  return {
+    branches: unstaffed.branches.length,
+    territories: unstaffed.territories.length,
+    total: unstaffed.branches.length + unstaffed.territories.length,
+  };
+}
+
 export function ManagerDispatchHierarchyPanel({
   organizationId,
   onChanged,
@@ -177,6 +197,7 @@ export function ManagerDispatchHierarchyPanel({
     crews,
   );
   const crewAssignments = summarizeHierarchyCrewAssignments(crews);
+  const activeUnstaffed = countActiveUnstaffedHierarchy(branches, territories, crews);
   const hasHierarchyFilters = Boolean(hierarchyQuery.trim())
     || hierarchyStatus !== 'all'
     || hierarchyAssignment !== 'all';
@@ -472,6 +493,19 @@ export function ManagerDispatchHierarchyPanel({
               <option value="unstaffed">No active crew</option>
             </select>
           </label>
+          <button
+            className="mt-2 min-h-11 rounded-lg bg-amber-100 px-3 text-xs font-bold text-amber-950 disabled:opacity-60"
+            disabled={activeUnstaffed.total === 0}
+            onClick={() => {
+              setHierarchyQuery('');
+              setHierarchyStatus('active');
+              setHierarchyAssignment('unstaffed');
+            }}
+            type="button"
+          >
+            Review active unstaffed ({activeUnstaffed.branches} branches ·{' '}
+            {activeUnstaffed.territories} territories)
+          </button>
           {hasHierarchyFilters ? (
             <button
               className="mt-2 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"

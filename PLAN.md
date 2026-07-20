@@ -506,6 +506,7 @@ Current state:
 - Pixel 7 hierarchy smoke restores persisted search/status after reload and verifies one-action clearing
 - Branch and territory lifecycle records show active and total assigned crew counts and refresh after crew creation or reassignment
 - Owner hierarchy filtering finds staffed or unstaffed scopes from active crew assignments and persists that choice with other filters
+- A mobile quick filter counts and opens active unstaffed branches and territories for immediate owner review
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -646,7 +647,7 @@ Current state:
 
 Next implementation work:
 
-- Add quick-filter actions for active unstaffed hierarchy scopes
+- Add direct crew-administration handoff from active unstaffed hierarchy results
 
 ## Planned
 

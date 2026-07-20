@@ -5,6 +5,7 @@ import type {
   ServiceTerritoryRecord,
 } from '../api/client';
 import {
+  countActiveUnstaffedHierarchy,
   filterDispatchHierarchy,
   parseDispatchHierarchyFilters,
   summarizeHierarchyCrewAssignments,
@@ -167,6 +168,11 @@ describe('dispatch hierarchy summaries', () => {
     )).toEqual({
       branches: [branches[1]],
       territories: [territories[1]],
+    });
+    expect(countActiveUnstaffedHierarchy(branches, territories, crews)).toEqual({
+      branches: 1,
+      territories: 1,
+      total: 2,
     });
   });
 });
