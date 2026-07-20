@@ -851,11 +851,14 @@ Current state:
 - Route-stop assignment, removal, and reorder distinguish missing plans, jobs, or stops from capacity and lifecycle conflicts
 - Principal access summaries fail closed when their required persisted login audit cannot be written
 - Sensitive job-account reads fail closed when their required persisted account-view audit cannot be written
+- Docker services expose health status, tolerate bounded cold starts, and restart automatically after repeated runtime readiness failures
+- Controlled Vite-process failure testing proves automatic frontend recovery and restored Tailscale HTTP access
 
 Next implementation work:
 
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Harden the remaining ignored photo-erasure recovery write before pilot use
+- Continue application-readiness hardening from observed runtime failure modes
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

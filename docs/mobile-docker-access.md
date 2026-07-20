@@ -22,3 +22,19 @@ can answer browser preflight without a bearer principal. The actual GET, POST,
 PUT, and DELETE request remains fully authenticated and authorized. Read-only
 client requests omit an unnecessary JSON content-type header to avoid needless
 preflight traffic.
+
+Compose health checks probe PostgreSQL, the backend `/health` endpoint, and the
+Vite root page. Backend and frontend watchdogs allow extended cold-start setup,
+then exit their container after three consecutive runtime readiness failures.
+The `unless-stopped` restart policy brings the failed service back without
+restarting it after an intentional operator stop.
+
+Check phone-stack readiness with:
+
+```bash
+docker compose ps
+curl --fail http://localhost:8080/health
+curl --fail --head http://localhost:5173/
+```
+
+All three services should report `healthy` before mobile validation.

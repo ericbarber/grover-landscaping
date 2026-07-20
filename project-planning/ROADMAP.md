@@ -5,6 +5,8 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Immediate Continuation Work
 
+0. **Local mobile runtime readiness**
+   - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.

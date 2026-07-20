@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Added Docker health checks and watchdog-driven frontend/backend runtime recovery.
 - 2026-07-20: Failed sensitive job-account reads closed when account-view auditing fails.
 - 2026-07-20: Failed principal access summaries closed when persisted login auditing fails.
 - 2026-07-20: Distinguished missing route-stop mutation targets from capacity and lifecycle conflicts.
