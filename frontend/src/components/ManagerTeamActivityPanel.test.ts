@@ -50,6 +50,10 @@ describe('team administration activity labels', () => {
         eventKind: 'crew_profile_updated',
         targetId: 'crew_1',
         targetLabel: 'North Crew',
+        sourceBranchLabel: 'North Branch',
+        sourceTerritoryLabel: 'Desert Ridge',
+        destinationBranchLabel: 'South Branch',
+        destinationTerritoryLabel: 'Tempe',
         occurredAt: '2026-07-19T13:00:00Z',
       },
     ];
@@ -57,6 +61,7 @@ describe('team administration activity labels', () => {
     expect(filterTeamActivity(activity, 'manager-identity', '', '', 'all')).toEqual([activity[1]]);
     expect(filterTeamActivity(activity, '', 'alex', '', 'all')).toEqual([activity[0]]);
     expect(filterTeamActivity(activity, '', 'crew_1', '', 'all')).toEqual([activity[1]]);
+    expect(filterTeamActivity(activity, '', 'tempe', '', 'all')).toEqual([activity[1]]);
     expect(filterTeamActivity(activity, '', '', 'audit_2', 'all')).toEqual([activity[1]]);
     expect(filterTeamActivity(activity, '', '', '', 'role_changed')).toEqual([activity[0]]);
     expect(filterTeamActivity(activity, 'sam', '', '', 'role_changed')).toEqual([]);
@@ -103,6 +108,27 @@ describe('team administration activity labels', () => {
     );
     expect(teamActivityCsv([item])).toContain(
       '"2026-07-19T12:00:00Z","audit_1","Membership role changed"',
+    );
+  });
+
+  it('exports readable source and destination hierarchy context for crew moves', () => {
+    const item: TeamAdministrationActivity = {
+      id: 'audit_move',
+      actorUserId: 'owner-1',
+      actorLabel: 'Jordan Grover',
+      organizationId: 'org_1',
+      eventKind: 'crew_hierarchy_updated',
+      targetId: 'crew_1',
+      targetLabel: 'North Crew',
+      sourceBranchLabel: 'North Branch',
+      sourceTerritoryLabel: 'Desert Ridge',
+      destinationBranchLabel: 'South Branch',
+      destinationTerritoryLabel: 'Tempe',
+      occurredAt: '2026-07-19T12:00:00Z',
+    };
+
+    expect(teamActivityCsv([item])).toContain(
+      '"North Branch","Desert Ridge","South Branch","Tempe"',
     );
   });
 

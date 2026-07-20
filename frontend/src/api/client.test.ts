@@ -221,6 +221,10 @@ describe('core API client mapping', () => {
       event_kind: 'membership_suspended',
       target_id: 'membership_1',
       target_label: 'Alex Rivera',
+      source_branch_label: 'North Branch',
+      source_territory_label: 'Desert Ridge',
+      destination_branch_label: 'South Branch',
+      destination_territory_label: 'Tempe',
       occurred_at: '2026-07-18T12:00:00Z',
     })).toEqual({
       id: 'audit_1',
@@ -230,6 +234,10 @@ describe('core API client mapping', () => {
       eventKind: 'membership_suspended',
       targetId: 'membership_1',
       targetLabel: 'Alex Rivera',
+      sourceBranchLabel: 'North Branch',
+      sourceTerritoryLabel: 'Desert Ridge',
+      destinationBranchLabel: 'South Branch',
+      destinationTerritoryLabel: 'Tempe',
       occurredAt: '2026-07-18T12:00:00Z',
     });
   });

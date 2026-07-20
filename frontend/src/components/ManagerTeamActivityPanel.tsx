@@ -79,7 +79,11 @@ export function filterTeamActivity(
     const matchesTarget = !normalizedTarget || [
       item.targetLabel,
       item.targetId,
-    ].some((value) => value.toLocaleLowerCase().includes(normalizedTarget));
+      item.sourceBranchLabel,
+      item.sourceTerritoryLabel,
+      item.destinationBranchLabel,
+      item.destinationTerritoryLabel,
+    ].some((value) => value?.toLocaleLowerCase().includes(normalizedTarget));
     const matchesAuditId = !normalizedAuditId
       || item.id.toLocaleLowerCase().includes(normalizedAuditId);
     return matchesActor
@@ -151,6 +155,10 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
     'actor_id',
     'target_label',
     'target_id',
+    'source_branch',
+    'source_territory',
+    'destination_branch',
+    'destination_territory',
   ];
   const rows = activity.map((item) => [
     item.occurredAt,
@@ -160,6 +168,10 @@ export function teamActivityCsv(activity: TeamAdministrationActivity[]): string 
     item.actorUserId,
     item.targetLabel,
     item.targetId,
+    item.sourceBranchLabel ?? '',
+    item.sourceTerritoryLabel ?? '',
+    item.destinationBranchLabel ?? '',
+    item.destinationTerritoryLabel ?? '',
   ]);
   return [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\n');
 }
@@ -400,6 +412,18 @@ export function ManagerTeamActivityPanel({
             <p className="mt-1 break-all text-xs text-slate-600">
               {item.targetLabel} · by {item.actorLabel}
             </p>
+            {item.eventKind === 'crew_hierarchy_updated'
+              && item.sourceBranchLabel
+              && item.sourceTerritoryLabel
+              && item.destinationBranchLabel
+              && item.destinationTerritoryLabel ? (
+                <p className="mt-2 rounded-lg bg-white p-2 text-xs text-slate-700">
+                  From {item.sourceBranchLabel} · {item.sourceTerritoryLabel}
+                  <span aria-hidden="true"> → </span>
+                  <span className="sr-only"> to </span>
+                  {item.destinationBranchLabel} · {item.destinationTerritoryLabel}
+                </p>
+              ) : null}
             <details className="mt-2 text-xs text-slate-500">
               <summary className="min-h-11 cursor-pointer content-center font-semibold">
                 Show immutable IDs

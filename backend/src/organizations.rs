@@ -186,6 +186,10 @@ pub struct TeamAdministrationActivity {
     pub event_kind: String,
     pub target_id: String,
     pub target_label: String,
+    pub source_branch_label: Option<String>,
+    pub source_territory_label: Option<String>,
+    pub destination_branch_label: Option<String>,
+    pub destination_territory_label: Option<String>,
     pub occurred_at: String,
 }
 
@@ -1093,6 +1097,10 @@ async fn list_team_administration_activity(
                 CASE WHEN organization.id = audit.target_id THEN organization.display_name END,
                 audit.target_id
             ) AS target_label,
+            old_branch.name AS source_branch_label,
+            old_territory.name AS source_territory_label,
+            new_branch.name AS destination_branch_label,
+            new_territory.name AS destination_territory_label,
             audit.occurred_at::text AS occurred_at
         FROM access_audit_events audit
         JOIN organizations organization ON organization.id = audit.organization_id
@@ -1119,6 +1127,18 @@ async fn list_team_administration_activity(
         LEFT JOIN service_territories target_territory
           ON target_territory.organization_id = audit.organization_id
          AND target_territory.id = audit.target_id
+        LEFT JOIN organization_branches old_branch
+          ON old_branch.organization_id = audit.organization_id
+         AND old_branch.id = audit.metadata->>'old_branch_id'
+        LEFT JOIN service_territories old_territory
+          ON old_territory.organization_id = audit.organization_id
+         AND old_territory.id = audit.metadata->>'old_territory_id'
+        LEFT JOIN organization_branches new_branch
+          ON new_branch.organization_id = audit.organization_id
+         AND new_branch.id = audit.metadata->>'new_branch_id'
+        LEFT JOIN service_territories new_territory
+          ON new_territory.organization_id = audit.organization_id
+         AND new_territory.id = audit.metadata->>'new_territory_id'
         WHERE audit.organization_id = $1
           AND ($2::text IS NULL OR audit.event_kind = $2)
           AND (
@@ -1133,6 +1153,10 @@ async fn list_team_administration_activity(
               OR COALESCE(target_crew.name, '') ILIKE '%' || $4 || '%'
               OR COALESCE(target_branch.name, '') ILIKE '%' || $4 || '%'
               OR COALESCE(target_territory.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(old_branch.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(old_territory.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(new_branch.name, '') ILIKE '%' || $4 || '%'
+              OR COALESCE(new_territory.name, '') ILIKE '%' || $4 || '%'
               OR (
                   organization.id = audit.target_id
                   AND organization.display_name ILIKE '%' || $4 || '%'
@@ -1181,6 +1205,10 @@ async fn list_team_administration_activity(
             event_kind: row.get("event_kind"),
             target_id: row.get("target_id"),
             target_label: row.get("target_label"),
+            source_branch_label: row.get("source_branch_label"),
+            source_territory_label: row.get("source_territory_label"),
+            destination_branch_label: row.get("destination_branch_label"),
+            destination_territory_label: row.get("destination_territory_label"),
             occurred_at: row.get("occurred_at"),
         })
         .collect())

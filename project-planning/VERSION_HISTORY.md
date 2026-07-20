@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added readable crew move paths to owner activity and CSV exports.
 - 2026-07-19: Added non-polluting mobile smoke coverage for territory staffing.
 - 2026-07-19: Linked completed crew moves back to refreshed hierarchy review.
 - 2026-07-19: Closed prepared crew handoffs with durable move confirmation.

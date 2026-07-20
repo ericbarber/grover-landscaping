@@ -490,6 +490,10 @@ interface ApiTeamAdministrationActivity {
   event_kind: TeamAdministrationEventKind;
   target_id: string;
   target_label: string;
+  source_branch_label?: string | null;
+  source_territory_label?: string | null;
+  destination_branch_label?: string | null;
+  destination_territory_label?: string | null;
   occurred_at: string;
 }
 
@@ -501,6 +505,10 @@ export interface TeamAdministrationActivity {
   eventKind: TeamAdministrationEventKind;
   targetId: string;
   targetLabel: string;
+  sourceBranchLabel?: string;
+  sourceTerritoryLabel?: string;
+  destinationBranchLabel?: string;
+  destinationTerritoryLabel?: string;
   occurredAt: string;
 }
 
@@ -1772,6 +1780,10 @@ export function toTeamAdministrationActivity(
     eventKind: item.event_kind,
     targetId: item.target_id,
     targetLabel: item.target_label,
+    sourceBranchLabel: item.source_branch_label ?? undefined,
+    sourceTerritoryLabel: item.source_territory_label ?? undefined,
+    destinationBranchLabel: item.destination_branch_label ?? undefined,
+    destinationTerritoryLabel: item.destination_territory_label ?? undefined,
     occurredAt: item.occurred_at,
   };
 }
