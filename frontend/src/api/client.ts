@@ -767,6 +767,8 @@ export interface CrewRecord {
   id: string;
   name: string;
   organizationId: string;
+  branchId?: string | null;
+  territoryId?: string | null;
   status: 'active' | 'inactive';
   dailyStopCapacity: number;
   leadMembershipId: string | null;
@@ -2313,12 +2315,15 @@ export async function fetchCustomerPropertyActivationReadiness(
 export async function fetchCrews(): Promise<CrewRecord[]> {
   const items = await request<Array<{
     id: string; name: string; organization_id: string; status: CrewRecord['status'];
+    branch_id?: string | null; territory_id?: string | null;
     daily_stop_capacity: number; lead_membership_id?: string | null; persisted: boolean;
   }>>('/crews');
   return items.map((item) => ({
     id: item.id,
     name: item.name,
     organizationId: item.organization_id,
+    branchId: item.branch_id ?? null,
+    territoryId: item.territory_id ?? null,
     status: item.status,
     dailyStopCapacity: item.daily_stop_capacity,
     leadMembershipId: item.lead_membership_id ?? null,

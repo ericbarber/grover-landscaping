@@ -486,6 +486,7 @@ Current state:
 - Manager operational activity can complete dispatch customer follow-up by channel and suppresses actions for linked completed reassignment events
 - Pixel 7 dispatch smoke completes and verifies channel-specific customer follow-up before restoring the baseline schedule
 - Tenant-owned branch and territory tables enforce same-organization hierarchy and backfill existing crews into default operational scopes
+- Crew APIs expose branch/territory scope, new crews inherit tenant defaults, and dispatch workload cards show their operational hierarchy
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -626,7 +627,7 @@ Current state:
 
 Next implementation work:
 
-- Expose crew branch and territory context through manager APIs and dispatch grouping
+- Add tenant-scoped branch and territory list endpoints with lifecycle-ready response contracts
 
 ## Planned
 

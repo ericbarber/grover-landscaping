@@ -132,7 +132,9 @@ export function ManagerDispatchWorkloadPanel({
         </p>
       ) : (
         <div className="mt-4 space-y-3">
-          {groups.map((group) => (
+          {groups.map((group) => {
+            const groupCrew = crews.find((crew) => crew.id === group.crewId);
+            return (
             <article
               className={`rounded-xl border p-3 ${
                 group.needsAssignment
@@ -147,6 +149,11 @@ export function ManagerDispatchWorkloadPanel({
                     {group.crewId ?? 'Unassigned work'}
                   </p>
                   <p className="mt-1 text-xs text-slate-600">{group.scheduledDate}</p>
+                  {groupCrew?.branchId || groupCrew?.territoryId ? (
+                    <p className="mt-1 text-[11px] font-medium text-slate-500">
+                      {groupCrew.branchId ?? 'No branch'} · {groupCrew.territoryId ?? 'No territory'}
+                    </p>
+                  ) : null}
                 </div>
                 <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-700">
                   {group.jobs.length} {group.jobs.length === 1 ? 'job' : 'jobs'}
@@ -275,7 +282,8 @@ export function ManagerDispatchWorkloadPanel({
                 </form>
               ) : null}
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

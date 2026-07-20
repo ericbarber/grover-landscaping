@@ -37,6 +37,8 @@ pub struct CrewSummary {
     pub id: String,
     pub name: String,
     pub organization_id: String,
+    pub branch_id: Option<String>,
+    pub territory_id: Option<String>,
     pub status: String,
     pub daily_stop_capacity: u32,
     pub lead_membership_id: Option<String>,
@@ -209,7 +211,7 @@ impl DayPlanRepository {
             return seed_crews(organization_ids);
         };
         let rows = sqlx::query(
-            r#"SELECT id, name, organization_id, status, daily_stop_capacity, lead_membership_id
+            r#"SELECT id, name, organization_id, branch_id, territory_id, status, daily_stop_capacity, lead_membership_id
             FROM crews
             WHERE organization_id = ANY($1)
               AND status = 'active'
@@ -224,6 +226,8 @@ impl DayPlanRepository {
                 id: row.get("id"),
                 name: row.get("name"),
                 organization_id: row.get("organization_id"),
+                branch_id: row.get("branch_id"),
+                territory_id: row.get("territory_id"),
                 status: row.get("status"),
                 daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
                 lead_membership_id: row.get("lead_membership_id"),
@@ -252,6 +256,8 @@ impl DayPlanRepository {
             id,
             name: name.to_string(),
             organization_id: organization_id.to_string(),
+            branch_id: None,
+            territory_id: None,
             status: "active".to_string(),
             daily_stop_capacity: 10,
             lead_membership_id: None,
@@ -876,6 +882,8 @@ fn seed_crews(organization_ids: &[String]) -> Vec<CrewSummary> {
         id: "crew_1001".to_string(),
         name: "North Route Crew".to_string(),
         organization_id: "org_demo_landscaping".to_string(),
+        branch_id: None,
+        territory_id: None,
         status: "active".to_string(),
         daily_stop_capacity: 10,
         lead_membership_id: None,

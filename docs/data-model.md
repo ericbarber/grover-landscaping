@@ -65,6 +65,11 @@ Primary Territory during migration so single-branch operations keep working
 without setup interruption. Composite foreign keys prevent a crew or territory
 from crossing organization boundaries.
 
+Crew list/create/update responses expose optional `branch_id` and
+`territory_id`. Persisted crew creation automatically uses the active Main
+Branch and Primary Territory, allowing dispatch views to show hierarchy context
+without accepting unsafe free-form tenant identifiers.
+
 Day plans inherit their tenant boundary through the assigned crew, and
 manager/crew route APIs resolve that organization before returning or mutating
 day-plan, stop, amendment, or manager bid data. Requests for a crew or day plan

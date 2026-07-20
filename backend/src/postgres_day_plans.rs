@@ -16,13 +16,22 @@ pub async fn create_crew(
 ) -> Result<Option<crate::day_plans::CrewSummary>, sqlx::Error> {
     let row = sqlx::query(
         r#"
-        INSERT INTO crews (id, name, organization_id)
-        SELECT $1, $3, organization.id
+        INSERT INTO crews (id, name, organization_id, branch_id, territory_id)
+        SELECT $1, $3, organization.id, branch.id, territory.id
         FROM organizations organization
+        JOIN organization_branches branch
+          ON branch.organization_id = organization.id
+         AND branch.code = 'MAIN'
+         AND branch.status = 'active'
+        JOIN service_territories territory
+          ON territory.organization_id = organization.id
+         AND territory.branch_id = branch.id
+         AND territory.name = 'Primary Territory'
+         AND territory.status = 'active'
         WHERE organization.id = $2
           AND organization.status = 'active'
         ON CONFLICT DO NOTHING
-        RETURNING id, name, organization_id, status, daily_stop_capacity, lead_membership_id
+        RETURNING id, name, organization_id, branch_id, territory_id, status, daily_stop_capacity, lead_membership_id
         "#,
     )
     .bind(id)
@@ -35,6 +44,8 @@ pub async fn create_crew(
         id: row.get("id"),
         name: row.get("name"),
         organization_id: row.get("organization_id"),
+        branch_id: row.get("branch_id"),
+        territory_id: row.get("territory_id"),
         status: row.get("status"),
         daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
         lead_membership_id: row.get("lead_membership_id"),
@@ -48,7 +59,7 @@ pub async fn list_organization_crews(
 ) -> Result<Vec<crate::day_plans::CrewSummary>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
-        SELECT id, name, organization_id, status, daily_stop_capacity, lead_membership_id
+        SELECT id, name, organization_id, branch_id, territory_id, status, daily_stop_capacity, lead_membership_id
         FROM crews
         WHERE organization_id = $1
         ORDER BY status, name, id
@@ -63,6 +74,8 @@ pub async fn list_organization_crews(
             id: row.get("id"),
             name: row.get("name"),
             organization_id: row.get("organization_id"),
+            branch_id: row.get("branch_id"),
+            territory_id: row.get("territory_id"),
             status: row.get("status"),
             daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
             lead_membership_id: row.get("lead_membership_id"),
@@ -160,7 +173,7 @@ pub async fn update_crew(
                     AND membership.role IN ('crew_lead', 'organization_owner')
               )
           )
-        RETURNING id, name, organization_id, status, daily_stop_capacity, lead_membership_id
+        RETURNING id, name, organization_id, branch_id, territory_id, status, daily_stop_capacity, lead_membership_id
         "#,
     )
     .bind(crew_id)
@@ -206,6 +219,8 @@ pub async fn update_crew(
         id: row.get("id"),
         name: row.get("name"),
         organization_id: row.get("organization_id"),
+        branch_id: row.get("branch_id"),
+        territory_id: row.get("territory_id"),
         status: row.get("status"),
         daily_stop_capacity: row.get::<i32, _>("daily_stop_capacity") as u32,
         lead_membership_id: row.get("lead_membership_id"),
