@@ -17,7 +17,7 @@ const marketingPersonas: Array<{
   eyebrow: string;
   headline: string;
   description: string;
-  outcomes: [string, string, string];
+  outcomes: Array<{ title: string; description: string }>;
 }> = [
   {
     id: 'owner',
@@ -25,7 +25,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Confidence after every visit',
     headline: 'See the care behind your yard.',
     description: 'Know what was planned, what was completed, and what your property may need next.',
-    outcomes: ['Upcoming service', 'Before-and-after proof', 'Recommendations in one place'],
+    outcomes: [
+      { title: 'Know what’s next', description: 'Upcoming service and property expectations stay easy to find.' },
+      { title: 'See the care', description: 'Before-and-after evidence makes each visit feel tangible.' },
+      { title: 'Stay ahead', description: 'Recommendations arrive with the context needed to decide.' },
+    ],
   },
   {
     id: 'property-manager',
@@ -33,7 +37,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Clarity across every address',
     headline: 'Keep every property ready.',
     description: 'Track service quality, open needs, and completion evidence across your portfolio.',
-    outcomes: ['Portfolio-wide visibility', 'Fewer status calls', 'Property-ready reports'],
+    outcomes: [
+      { title: 'See the whole portfolio', description: 'Service progress and open needs stay visible across addresses.' },
+      { title: 'Replace status chasing', description: 'Shared progress reduces calls between properties and vendors.' },
+      { title: 'Report with confidence', description: 'Property-ready evidence supports owners and stakeholders.' },
+    ],
   },
   {
     id: 'company',
@@ -41,7 +49,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Operations customers can trust',
     headline: 'Turn great field work into growth.',
     description: 'Connect scheduling, crews, proof, customer communication, and revenue in one operating view.',
-    outcomes: ['Clearer daily execution', 'Faster approvals', 'More work ready to invoice'],
+    outcomes: [
+      { title: 'Run a clearer day', description: 'Routes, crews, property context, and exceptions stay connected.' },
+      { title: 'Move approvals faster', description: 'Evidence and recommendations give customers a complete story.' },
+      { title: 'Turn work into revenue', description: 'Verified completion keeps approved work moving toward invoice.' },
+    ],
   },
   {
     id: 'crew',
@@ -49,7 +61,11 @@ const marketingPersonas: Array<{
     eyebrow: 'A better day in the field',
     headline: 'Know the next stop—and what done looks like.',
     description: 'Give crews the route, service details, and evidence requirements they need without the office back-and-forth.',
-    outcomes: ['Field-ready routes', 'Offline work capture', 'Clean handoffs'],
+    outcomes: [
+      { title: 'Start field-ready', description: 'Every stop includes the service and property details crews need.' },
+      { title: 'Keep working offline', description: 'Progress and evidence wait safely when coverage disappears.' },
+      { title: 'Finish with a clean handoff', description: 'Photos, notes, and exceptions reach the office together.' },
+    ],
   },
 ];
 
@@ -232,13 +248,25 @@ export function PublicLandingPage({
                 {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
               </button>
             </div>
-            <div className="grid gap-px bg-white/10 sm:grid-cols-3">
-              {activePersona.outcomes.map((outcome, index) => (
-                <div className="bg-emerald-950/60 p-6" key={outcome}>
-                  <p className="text-sm font-black text-emerald-300">0{index + 1}</p>
-                  <p className="mt-8 text-lg font-black">{outcome}</p>
+            <div className="bg-gradient-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
+              <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">What improves</p>
+                  <p className="mt-2 text-xl font-black">One connected view. Three meaningful outcomes.</p>
                 </div>
-              ))}
+                <span aria-hidden="true" className="hidden text-3xl text-emerald-400 sm:block">↗</span>
+              </div>
+              <div className="mt-2 divide-y divide-white/10">
+                {activePersona.outcomes.map((outcome) => (
+                  <div className="group grid grid-cols-[2.75rem_1fr] gap-3 py-5" key={outcome.title}>
+                    <span aria-hidden="true" className="grid h-10 w-10 place-items-center rounded-xl border border-emerald-300/20 bg-emerald-400/10 font-black text-emerald-300 transition group-hover:bg-emerald-400 group-hover:text-emerald-950">✓</span>
+                    <div>
+                      <p className="text-lg font-black text-white">{outcome.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-emerald-50/65">{outcome.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </article>
         </div>
