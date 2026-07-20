@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   addPropertyToPortfolio,
   assignPropertyCrew,
@@ -320,8 +321,12 @@ export function ManagerPropertySetupPanel({
       }));
       onSetupChanged?.();
       setMessage(`${selectedProperty.displayName} assigned to ${eligibleCrews.find((crew) => crew.id === selectedCrewId)?.name ?? selectedCrewId}.`);
-    } catch {
-      setMessage('The crew could not be assigned to that property.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'property_crew_assignment_unavailable')
+          ? 'Crew assignment storage is unavailable. The property assignment was not changed.'
+          : 'The crew could not be assigned to that property.',
+      );
     } finally {
       setIsLoading(false);
     }

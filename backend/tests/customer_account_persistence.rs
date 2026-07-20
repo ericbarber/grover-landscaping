@@ -7,7 +7,10 @@ use grover_landscaping_api::{
         UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
-    property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
+    property_crew_assignments::{
+        AssignPropertyCrewRequest, PropertyCrewAssignmentListResult,
+        PropertyCrewAssignmentMutationResult, PropertyCrewAssignmentRepository,
+    },
 };
 mod common;
 
@@ -400,7 +403,7 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
     .expect("test onboarding profile should be created");
 
     let assignments = PropertyCrewAssignmentRepository::from_pool(pool.clone());
-    let assignment = assignments
+    let PropertyCrewAssignmentMutationResult::Assigned(assignment) = assignments
         .assign_crew(
             &property.property_id,
             AssignPropertyCrewRequest {
@@ -411,7 +414,9 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
             "property-lifecycle-test",
         )
         .await
-        .expect("active property should accept a crew assignment");
+    else {
+        panic!("active property should accept a crew assignment");
+    };
     assert!(assignment.active);
     let ready = loaded_context(
         accounts
@@ -476,9 +481,12 @@ async fn customer_account_updates_are_persisted_and_tenant_scoped() {
         .await
         .expect("tenant member should archive the property");
     assert_eq!(archived.status, "archived");
-    let history = assignments
+    let PropertyCrewAssignmentListResult::Loaded(history) = assignments
         .list_for_property(&property.property_id, &["org_demo_landscaping".to_string()])
-        .await;
+        .await
+    else {
+        panic!("archived property assignment history should load");
+    };
     assert_eq!(history.len(), 1);
     assert!(!history[0].active);
     assert!(history[0].ended_at.is_some());

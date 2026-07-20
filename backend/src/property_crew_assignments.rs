@@ -28,6 +28,13 @@ pub enum PropertyCrewAssignmentListResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PropertyCrewAssignmentMutationResult {
+    Assigned(PropertyCrewAssignmentResponse),
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct PropertyCrewAssignmentRepository {
     pool: Option<PgPool>,
@@ -43,7 +50,7 @@ impl PropertyCrewAssignmentRepository {
         property_id: &str,
         request: AssignPropertyCrewRequest,
         actor_user_id: &str,
-    ) -> Option<PropertyCrewAssignmentResponse> {
+    ) -> PropertyCrewAssignmentMutationResult {
         let request = normalize_assign_property_crew_request(request);
         let assigned_at = request
             .assigned_at
@@ -52,7 +59,7 @@ impl PropertyCrewAssignmentRepository {
         let id = assignment_id(property_id, &request.crew_id);
 
         if let Some(pool) = &self.pool {
-            return insert_property_crew_assignment(
+            return match insert_property_crew_assignment(
                 pool,
                 &id,
                 property_id,
@@ -61,11 +68,17 @@ impl PropertyCrewAssignmentRepository {
                 actor_user_id,
             )
             .await
-            .ok()
-            .flatten();
+            {
+                Ok(Some(assignment)) => PropertyCrewAssignmentMutationResult::Assigned(assignment),
+                Ok(None) => PropertyCrewAssignmentMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, property_id, "persisted property crew assignment failed");
+                    PropertyCrewAssignmentMutationResult::Unavailable
+                }
+            };
         }
 
-        Some(PropertyCrewAssignmentResponse {
+        PropertyCrewAssignmentMutationResult::Assigned(PropertyCrewAssignmentResponse {
             id,
             property_id: property_id.trim().to_string(),
             crew_id: request.crew_id,
@@ -464,7 +477,7 @@ mod tests {
     async fn repository_returns_local_assignment_when_database_is_unavailable() {
         let repository = PropertyCrewAssignmentRepository::default();
 
-        let response = repository
+        let PropertyCrewAssignmentMutationResult::Assigned(response) = repository
             .assign_crew(
                 " property_1001 ",
                 AssignPropertyCrewRequest {
@@ -475,7 +488,9 @@ mod tests {
                 "actor_1001",
             )
             .await
-            .expect("local assignment response should be returned");
+        else {
+            panic!("local assignment response should be returned");
+        };
 
         assert_eq!(response.property_id, "property_1001");
         assert_eq!(response.crew_id, "crew_1001");

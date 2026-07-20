@@ -427,6 +427,33 @@ test('blocks crew assignment when persisted assignment history is unavailable', 
   await expect(setup.getByRole('button', { name: 'Assign crew' })).toBeDisabled();
 });
 
+test('explains that unavailable assignment storage changed no property crew', async ({ page }) => {
+  await page.route('**/properties/*/crew-assignments', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        json: {
+          error: 'property_crew_assignment_unavailable',
+          message: 'The crew assignment could not be persisted.',
+        },
+      });
+    }
+    return route.continue();
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const setup = page
+    .getByRole('heading', { name: 'Portfolio and crew' })
+    .locator('xpath=ancestor::section[1]');
+  await setup.getByRole('combobox').last().selectOption({ index: 1 });
+  await setup.getByRole('button', { name: 'Assign crew' }).click();
+  await expect(setup.getByRole('status')).toContainText(
+    'The property assignment was not changed.',
+  );
+});
+
 test('keeps persisted project bid context hidden when the bid list is unavailable', async ({ page }) => {
   await page.route('**/day-plans/*/bids', (route) => {
     if (route.request().method() === 'GET') {

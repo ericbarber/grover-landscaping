@@ -74,8 +74,8 @@ use grover_landscaping_api::{
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
-        PropertyCrewAssignmentListResult, PropertyCrewAssignmentRepository,
-        PropertyCrewAssignmentResponse,
+        PropertyCrewAssignmentListResult, PropertyCrewAssignmentMutationResult,
+        PropertyCrewAssignmentRepository, PropertyCrewAssignmentResponse,
     },
     property_onboarding::{
         validate_property_onboarding_request, PropertyOnboardingRepository,
@@ -2777,22 +2777,29 @@ async fn assign_property_crew(
         return response;
     }
 
-    let Some(assignment) = state
+    match state
         .property_crew_assignments
         .assign_crew(&property_id, request, &principal.subject)
         .await
-    else {
-        return (
+    {
+        PropertyCrewAssignmentMutationResult::Assigned(assignment) => {
+            (StatusCode::CREATED, Json(assignment)).into_response()
+        }
+        PropertyCrewAssignmentMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "property_crew_not_assignable",
                 message: "The crew could not be assigned to that property.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    (StatusCode::CREATED, Json(assignment)).into_response()
+            .into_response(),
+        PropertyCrewAssignmentMutationResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "property_crew_assignment_unavailable",
+                "The crew assignment could not be persisted.",
+            )
+        }
+    }
 }
 
 async fn list_crews(

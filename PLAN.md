@@ -366,12 +366,14 @@ Delivered:
 - Manager bid editing states when links were not revoked or add-ons were not created
 - Shared-bid reads distinguish missing links from unavailable persisted storage
 - Customer bid decisions return explicit conflict and unavailable outcomes, with browser-safe retry guidance
+- Property-crew assignment writes distinguish invalid targets from unavailable persistence
+- Property setup confirms that no assignment changed when persisted storage is unavailable
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make property-crew assignment writes distinguish invalid targets from unavailable persistence
-- Add repository and phone-flow coverage for assignment write availability
+- Make property-portfolio create and link writes distinguish conflicts from unavailable persistence
+- Add repository and phone-flow coverage for portfolio write availability
 
 ### Manager scheduling workflow
 
@@ -790,12 +792,13 @@ Current state:
 - Project-bid draft writes fail closed when persisted storage is unavailable
 - Project-bid revoke and conversion writes return explicit conflict and unavailable outcomes
 - Shared-bid reads and customer decisions return explicit missing, conflict, and unavailable outcomes
+- Property-crew assignment writes return explicit conflict and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make property-crew assignment writes distinguish invalid targets from unavailable persistence
-- Add repository and phone-flow coverage for assignment write availability
+- Make property-portfolio create and link writes distinguish conflicts from unavailable persistence
+- Add repository and phone-flow coverage for portfolio write availability
 
 ## Planned
 

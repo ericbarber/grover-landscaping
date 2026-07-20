@@ -1,5 +1,6 @@
 use grover_landscaping_api::property_crew_assignments::{
-    AssignPropertyCrewRequest, PropertyCrewAssignmentListResult, PropertyCrewAssignmentRepository,
+    AssignPropertyCrewRequest, PropertyCrewAssignmentListResult,
+    PropertyCrewAssignmentMutationResult, PropertyCrewAssignmentRepository,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
@@ -25,6 +26,20 @@ async fn repository_distinguishes_unavailable_assignment_lists_from_empty_result
             .list_active_for_crew("crew_1001", &["org_demo_landscaping".to_string()])
             .await,
         PropertyCrewAssignmentListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .assign_crew(
+                "property_1001",
+                AssignPropertyCrewRequest {
+                    crew_id: "crew_1001".to_string(),
+                    organization_id: "org_demo_landscaping".to_string(),
+                    assigned_at: None,
+                },
+                "manager_test",
+            )
+            .await,
+        PropertyCrewAssignmentMutationResult::Unavailable
     ));
 }
 
@@ -77,7 +92,7 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
     .await
     .expect("test property should exist");
 
-    let first = repository
+    let PropertyCrewAssignmentMutationResult::Assigned(first) = repository
         .assign_crew(
             property_id,
             AssignPropertyCrewRequest {
@@ -88,14 +103,16 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
             actor_user_id,
         )
         .await
-        .expect("first assignment should persist");
+    else {
+        panic!("first assignment should persist");
+    };
 
     assert_eq!(first.property_id, property_id);
     assert_eq!(first.crew_id, crew_id);
     assert!(first.active);
     assert!(first.persisted);
 
-    let second = repository
+    let PropertyCrewAssignmentMutationResult::Assigned(second) = repository
         .assign_crew(
             property_id,
             AssignPropertyCrewRequest {
@@ -106,7 +123,9 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
             actor_user_id,
         )
         .await
-        .expect("second assignment should persist");
+    else {
+        panic!("second assignment should persist");
+    };
 
     assert_ne!(first.id, second.id);
     assert!(second.active);
@@ -154,18 +173,20 @@ async fn repository_persists_reassigns_and_lists_property_crew_assignments() {
     .expect("crew assignment audit count should be available");
     assert_eq!(audit_count, 2);
 
-    assert!(repository
-        .assign_crew(
-            "property_missing",
-            AssignPropertyCrewRequest {
-                crew_id: crew_id.to_string(),
-                organization_id: organization_id.to_string(),
-                assigned_at: Some("2026-06-17T08:00:00Z".to_string()),
-            },
-            actor_user_id,
-        )
-        .await
-        .is_none());
+    assert!(matches!(
+        repository
+            .assign_crew(
+                "property_missing",
+                AssignPropertyCrewRequest {
+                    crew_id: crew_id.to_string(),
+                    organization_id: organization_id.to_string(),
+                    assigned_at: Some("2026-06-17T08:00:00Z".to_string()),
+                },
+                actor_user_id,
+            )
+            .await,
+        PropertyCrewAssignmentMutationResult::Conflict
+    ));
 
     sqlx::query("DELETE FROM customer_properties WHERE id = $1")
         .bind(property_id)
