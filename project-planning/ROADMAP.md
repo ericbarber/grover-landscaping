@@ -3,6 +3,15 @@
 This is the consolidated review version of the Grover Landscaping development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
+## Active UX Priority
+
+The current delivery priority is a mobile-first navigation redesign before the
+remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,
+and Manager into explicit mobile workspace views with stable bottom navigation
+and a contextual header. Follow-up slices will group manager capabilities into a
+manager home, make route and job summaries more compact, preserve per-view scroll
+position, and validate the complete interaction model on iPhone.
+
 ## Immediate Continuation Work
 
 0. **Local mobile runtime readiness**

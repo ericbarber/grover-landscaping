@@ -78,6 +78,11 @@ import {
   requiredPhotoEvidence,
 } from './domain/photoQuality';
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
+import {
+  MobileWorkspaceHeader,
+  MobileWorkspaceNavigation,
+  type MobileWorkspaceView,
+} from './components/MobileWorkspaceShell';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -881,6 +886,7 @@ export function App() {
     || auth.roles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
+  const [mobileView, setMobileView] = useState<MobileWorkspaceView>('route');
   const [selectedJob, setSelectedJob] = useState<JobDetail | null>(null);
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
@@ -1007,9 +1013,8 @@ export function App() {
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
     if (window.innerWidth < 1024) {
-      window.setTimeout(() => {
-        jobDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 0);
+      setMobileView('job');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -2406,8 +2411,8 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-slate-100">
-      <section className="bg-slate-950 px-4 py-6 text-white sm:px-6 sm:py-8">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100 pb-20 lg:pb-0">
+      <section className="hidden bg-slate-950 px-4 py-6 text-white sm:px-6 sm:py-8 lg:block">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300 sm:text-sm sm:tracking-[0.3em]">Grover Landscaping</p>
           <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -2429,32 +2434,32 @@ export function App() {
         </div>
       </section>
 
-      <nav
-        aria-label="Mobile workflow"
-        className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden"
-      >
-        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
-          <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#today-route">Route</a>
-          <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#assigned-jobs">Jobs</a>
-          <a className="flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-2 text-center text-xs font-semibold text-white" href="#job-detail">Job detail</a>
-          {canUseManagerTools ? (
-            <a className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-100" href="#manager-tools">Manager</a>
-          ) : (
-            <span className="flex min-h-11 items-center justify-center rounded-lg px-2 text-center text-xs font-semibold text-slate-400">Access</span>
-          )}
-        </div>
-      </nav>
+      <MobileWorkspaceHeader
+        assignedJobCount={jobs.length}
+        managerOrganizationId={activeManagerOrganizationId}
+        onBackToJobs={() => setMobileView('jobs')}
+        pendingChangeCount={
+          offlineJobMutations.length
+          + offlineChecklistMutations.length
+          + offlinePhotoMutations.length
+        }
+        selectedCustomerName={selectedJob?.customerName}
+        selectedJobStatus={selectedJob?.status}
+        selectedPropertyAddress={selectedJob?.propertyAddress}
+        view={mobileView}
+      />
 
       <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="min-w-0">
-          <div className="scroll-mt-16" id="today-route">
+          <div className={`${mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16 lg:block`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
             />
           </div>
-          <div className="mb-4 mt-6 scroll-mt-16" id="assigned-jobs">
+          <section className={`${mobileView === 'jobs' ? 'block' : 'hidden'} lg:block`}>
+          <div className="mb-4 mt-0 scroll-mt-16 lg:mt-6" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
             {jobsUnavailable ? (
@@ -2725,9 +2730,10 @@ export function App() {
               />
             ))}
           </div>
+          </section>
 
           {canUseManagerTools ? (
-          <details className="mt-6 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:open:bg-transparent" id="manager-tools">
+          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:mt-6 lg:block lg:open:bg-transparent`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
             <summary className="cursor-pointer list-none rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               Manager and office tools
               <span className="ml-2 text-xs font-normal text-slate-300">Scheduling, customers, and recovery</span>
@@ -3049,7 +3055,7 @@ export function App() {
           ) : null}
         </div>
 
-        <div className="min-w-0 scroll-mt-16 lg:sticky lg:top-4 lg:self-start" id="job-detail" ref={jobDetailRef}>
+        <div className={`${mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 lg:sticky lg:top-4 lg:block lg:self-start`} id="job-detail" ref={jobDetailRef}>
           {jobDetailUnavailable ? (
             <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
               Persisted job access could not be verified. Job details remain hidden until API readiness recovers.
@@ -3085,6 +3091,15 @@ export function App() {
           />
         </div>
       </section>
+      <MobileWorkspaceNavigation
+        activeView={mobileView}
+        canUseManagerTools={canUseManagerTools}
+        hasSelectedJob={Boolean(selectedJobId)}
+        onChange={(view) => {
+          setMobileView(view);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
     </main>
   );
 }

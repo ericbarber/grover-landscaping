@@ -13,6 +13,14 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## Delivered
 
+### Mobile navigation and context
+
+- Explicit Route, Jobs, Job, and Manager mobile workspace views replace long-page anchor jumps
+- Fixed bottom navigation preserves a stable thumb-reachable location and iPhone safe-area spacing
+- Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count
+- Selecting a job opens its dedicated mobile view with a clear return to assigned jobs
+- Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
+
 ### Crew dashboard foundation
 
 - React/Tailwind crew dashboard
@@ -865,6 +873,7 @@ Current state:
 
 Next implementation work:
 
+- Continue the mobile navigation phase with a grouped manager home, compact route/job summaries, scroll restoration, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
