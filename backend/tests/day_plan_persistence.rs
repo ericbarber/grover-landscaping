@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
-        TodayDayPlanResult,
+        PersistedMutationResult, TodayDayPlanResult,
     },
     db::JobRepository,
 };
@@ -48,13 +48,16 @@ async fn day_plan_repository_reads_persisted_stop_status() {
         .expect("test day plan should reset");
 
     let day_plans = DayPlanRepository::new();
-    let draft = day_plans
+    let PersistedMutationResult::Applied(draft) = day_plans
         .create_draft_day_plan(CreateDayPlanRequest {
             crew_id: crew_id.to_string(),
             service_date,
         })
-        .await;
-    let assigned_stop = day_plans
+        .await
+    else {
+        panic!("draft day plan should persist");
+    };
+    let PersistedMutationResult::Applied(assigned_stop) = day_plans
         .assign_stop(
             &draft.id,
             AssignDayPlanStopRequest {
@@ -63,11 +66,17 @@ async fn day_plan_repository_reads_persisted_stop_status() {
                 estimated_service_minutes: Some(45),
             },
         )
-        .await;
+        .await
+    else {
+        panic!("assigned stop should persist");
+    };
 
     assert!(assigned_stop.persisted);
 
-    day_plans.publish_day_plan(&draft.id).await;
+    assert!(matches!(
+        day_plans.publish_day_plan(&draft.id).await,
+        PersistedMutationResult::Applied(_)
+    ));
 
     assert_eq!(
         jobs.update_stop_progress(

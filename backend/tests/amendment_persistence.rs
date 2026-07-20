@@ -148,7 +148,7 @@ async fn repository_reports_rejected_persisted_amendment_writes() {
         .await;
 
     assert!(matches!(creation, PersistedMutationResult::Unavailable));
-    assert!(matches!(review, PersistedMutationResult::Conflict));
+    assert!(matches!(review, PersistedMutationResult::NotFound));
 }
 
 #[tokio::test]

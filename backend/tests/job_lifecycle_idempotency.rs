@@ -12,25 +12,13 @@ async fn repository_deduplicates_offline_job_lifecycle_mutations() {
     let start_mutation_id = uuid::Uuid::new_v4().to_string();
 
     let first = repository
-        .start_job(
-            "job_1001",
-            Some(&start_mutation_id),
-            "integration_user",
-        )
+        .start_job("job_1001", Some(&start_mutation_id), "integration_user")
         .await;
     let replay = repository
-        .start_job(
-            "job_1001",
-            Some(&start_mutation_id),
-            "integration_user",
-        )
+        .start_job("job_1001", Some(&start_mutation_id), "integration_user")
         .await;
     let conflicting_reuse = repository
-        .complete_job(
-            "job_1001",
-            Some(&start_mutation_id),
-            "integration_user",
-        )
+        .complete_job("job_1001", Some(&start_mutation_id), "integration_user")
         .await;
     let completion_mutation_id = uuid::Uuid::new_v4().to_string();
     let completion = repository

@@ -2532,6 +2532,8 @@ async fn list_operational_activity(
         "bid_converted",
         "photo_processing_retried",
         "photo_processing_resolved",
+        "photo_erasure_deletion_retried",
+        "photo_erasure_deletion_resolved",
         "customer_photo_evidence_erased",
     ];
     let event_kind = query.event_kind.as_deref().map(str::trim);
@@ -9006,7 +9008,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn revoke_project_bid_requires_an_active_persisted_link() {
+    async fn revoke_project_bid_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -9018,11 +9020,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]
-    async fn convert_project_bid_requires_an_approved_persisted_bid() {
+    async fn convert_project_bid_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -9034,11 +9036,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]
-    async fn shared_project_bid_returns_not_found_without_persistence() {
+    async fn shared_project_bid_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -9049,7 +9051,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]

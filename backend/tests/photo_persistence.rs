@@ -659,10 +659,10 @@ async fn repository_recovers_failed_photo_processing_jobs() {
         .await
         .expect_loaded("thumbnail processing job should be queued");
 
-    assert_eq!(
+    assert!(matches!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        ResourceReadResult::Loaded(1)
-    );
+        ResourceReadResult::Loaded(processed) if processed >= 1
+    ));
 
     let dead_letters = repository
         .list_photo_processing_history(PhotoProcessingHistoryFilter {
@@ -673,11 +673,13 @@ async fn repository_recovers_failed_photo_processing_jobs() {
         })
         .await
         .unwrap();
-    assert_eq!(dead_letters.len(), 1);
-    assert_eq!(dead_letters[0].id, queued.id);
-    assert_eq!(dead_letters[0].file_name, "recover-thumbnail.jpg");
+    let recovered_job = dead_letters
+        .iter()
+        .find(|job| job.id == queued.id)
+        .expect("the test processing job should be dead-lettered");
+    assert_eq!(recovered_job.file_name, "recover-thumbnail.jpg");
     assert_eq!(
-        dead_letters[0].last_error.as_deref(),
+        recovered_job.last_error.as_deref(),
         Some("thumbnail_generation_failed")
     );
 

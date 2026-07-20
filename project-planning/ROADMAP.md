@@ -8,6 +8,8 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 0. **Local mobile runtime readiness**
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.
    - Keep backend and frontend unit readiness suites green as persistence contracts evolve.
+   - Keep PostgreSQL integration fixtures isolated from durable recovery history created by earlier runs.
+   - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.

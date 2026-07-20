@@ -857,13 +857,16 @@ Current state:
 - Privacy exports decode delivered-snapshot photo counts with a stable PostgreSQL bigint contract
 - Backend library readiness suite compiles against explicit persistence result contracts and passes all 160 tests
 - Frontend unit readiness suite passes all 340 tests across 78 test files
+- Day-plan and amendment PostgreSQL integration coverage follows explicit applied, missing, conflict, and unavailable mutation outcomes
+- Photo-erasure retry and manual-resolution audit events are accepted by PostgreSQL and included in manager operational activity
+- Photo processing recovery integration coverage remains isolated when durable jobs from earlier runs are present
 
 Next implementation work:
 
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
-- Expand the readiness gate through broader integration and mobile smoke coverage
+- Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

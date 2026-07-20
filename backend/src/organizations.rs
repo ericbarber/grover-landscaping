@@ -1466,6 +1466,8 @@ async fn list_operational_activity(
                 'bid_converted',
                 'photo_processing_retried',
                 'photo_processing_resolved',
+                'photo_erasure_deletion_retried',
+                'photo_erasure_deletion_resolved',
                 'customer_photo_evidence_erased'
           )
           AND ($2::text IS NULL OR audit.event_kind = $2)

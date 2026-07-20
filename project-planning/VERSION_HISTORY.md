@@ -1,5 +1,7 @@
 # Version History
 
+- 2026-07-20: Added auditable photo-erasure recovery events and isolated durable photo recovery integration coverage.
+- 2026-07-20: Aligned day-plan, amendment, and bid readiness tests with explicit persistence result contracts.
 - 2026-07-20: Restored the full 160-test Rust library readiness suite after persistence contract hardening.
 - 2026-07-20: Made photo-erasure redaction and durable object-deletion recovery transactional.
 - 2026-07-20: Added Docker health checks and watchdog-driven frontend/backend runtime recovery.
