@@ -899,6 +899,7 @@ export function ManagerTeamActivityPanel({
         <p className="text-xs text-slate-500" aria-live="polite">
           Showing {filteredActivity.length} of {activity.length} events
           {activeFilterCount ? ` · ${activeFilterCount} active filter${activeFilterCount === 1 ? '' : 's'}` : ''}
+          {activitySort === 'oldest' ? ' · oldest first' : ''}
         </p>
         {hasCustomReviewView ? (
           <button

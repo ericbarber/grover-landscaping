@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Identified oldest-first ordering in activity review summaries.
 - 2026-07-19: Verified restored recovery-review filter counts.
 - 2026-07-19: Preserved complete owner review state after audit recovery.
 - 2026-07-19: Returned recovered audits to full focused crew history.

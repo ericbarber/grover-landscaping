@@ -580,6 +580,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
   await expect(teamActivity.getByText(/4 active filters/)).toBeVisible();
+  await expect(teamActivity.getByText(/4 active filters · oldest first/)).toBeVisible();
   await expect(teamActivity.getByText('Your prior owner activity review was restored.'))
     .toBeVisible();
   await teamActivity.getByRole('button', { name: 'Dismiss activity review message' }).click();
