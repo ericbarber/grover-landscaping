@@ -855,12 +855,15 @@ Current state:
 - Controlled Vite-process failure testing proves automatic frontend recovery and restored Tailscale HTTP access
 - Customer photo erasure transactionally persists object-deletion recovery before redacted evidence becomes committed
 - Privacy exports decode delivered-snapshot photo counts with a stable PostgreSQL bigint contract
+- Backend library readiness suite compiles against explicit persistence result contracts and passes all 160 tests
+- Frontend unit readiness suite passes all 340 tests across 78 test files
 
 Next implementation work:
 
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
+- Expand the readiness gate through broader integration and mobile smoke coverage
 - Harden and validate the next highest-impact persisted workflow
 
 ## Planned

@@ -763,6 +763,7 @@ mod tests {
     use super::{
         is_valid_portfolio_type, portfolio_id, portfolio_property_link_id,
         seed_customer_portfolio_read, seed_portfolios_for_account, storage_key,
+        CustomerPropertyPortfolioReadResult, PropertyPortfolioMutationResult,
         PropertyPortfolioRepository,
     };
 
@@ -874,9 +875,12 @@ mod tests {
     async fn repository_returns_local_customer_read_when_database_is_unavailable() {
         let repository = PropertyPortfolioRepository::default();
 
-        let response = repository
+        let CustomerPropertyPortfolioReadResult::Loaded(response) = repository
             .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
-            .await;
+            .await
+        else {
+            panic!("local customer portfolio response should be returned");
+        };
 
         assert_eq!(response.account_id, "acct_1001");
         assert_eq!(response.portfolios[0].property_count, 1);

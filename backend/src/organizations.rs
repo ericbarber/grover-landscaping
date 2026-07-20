@@ -2659,7 +2659,8 @@ mod tests {
         validate_create_invitation_request, validate_reissue_invitation_request,
         validate_update_organization_profile_request, BootstrapOrganizationRequest,
         CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
-        MembershipStatusUpdateResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
+        MembershipStatusUpdateResult, OrganizationCollectionResult, OrganizationMutationResult,
+        OrganizationRepository, ReissueOrganizationInvitationRequest,
         UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
         UpdateOrganizationProfileRequest,
     };
@@ -2782,9 +2783,12 @@ mod tests {
     async fn local_development_user_has_seed_membership_without_database() {
         let repository = OrganizationRepository::default();
 
-        let memberships = repository
+        let OrganizationCollectionResult::Loaded(memberships) = repository
             .list_active_memberships("local-development-user")
-            .await;
+            .await
+        else {
+            panic!("local memberships should load");
+        };
 
         assert_eq!(memberships.len(), 1);
         assert_eq!(memberships[0].organization_id, "org_demo_landscaping");
@@ -2795,10 +2799,10 @@ mod tests {
     async fn unknown_user_has_no_seed_memberships_without_database() {
         let repository = OrganizationRepository::default();
 
-        assert!(repository
-            .list_active_memberships("other-user")
-            .await
-            .is_empty());
+        assert_eq!(
+            repository.list_active_memberships("other-user").await,
+            OrganizationCollectionResult::Loaded(Vec::new())
+        );
     }
 
     #[tokio::test]
@@ -2820,7 +2824,7 @@ mod tests {
     async fn repository_returns_local_invitation_without_database() {
         let repository = OrganizationRepository::default();
 
-        let invitation = repository
+        let OrganizationMutationResult::Applied(invitation) = repository
             .create_invitation(
                 "org_demo_landscaping",
                 "local-development-user",
@@ -2833,7 +2837,9 @@ mod tests {
                 },
             )
             .await
-            .expect("local invitation should be returned");
+        else {
+            panic!("local invitation should be returned");
+        };
 
         assert_eq!(invitation.organization_id, "org_demo_landscaping");
         assert_eq!(invitation.invitee_email, "new.manager@example.com");
@@ -2845,14 +2851,16 @@ mod tests {
     async fn repository_accepts_local_invitation_tokens_without_database() {
         let repository = OrganizationRepository::default();
 
-        let accepted = repository
+        let OrganizationMutationResult::Applied(accepted) = repository
             .accept_invitation(
                 "invite_token_org_demo_landscaping_manager",
                 "accepted-user",
                 Some("invited@example.com"),
             )
             .await
-            .expect("local invite token should be accepted");
+        else {
+            panic!("local invite token should be accepted");
+        };
 
         assert_eq!(accepted.invitation.status, "accepted");
         assert_eq!(accepted.membership.user_id, "accepted-user");

@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Restored the full 160-test Rust library readiness suite after persistence contract hardening.
 - 2026-07-20: Made photo-erasure redaction and durable object-deletion recovery transactional.
 - 2026-07-20: Added Docker health checks and watchdog-driven frontend/backend runtime recovery.
 - 2026-07-20: Failed sensitive job-account reads closed when account-view auditing fails.

@@ -1954,17 +1954,21 @@ mod tests {
     #[tokio::test]
     async fn local_updates_stay_tenant_scoped() {
         let repository = AccountRepository::new();
-        assert!(repository
-            .update(
-                "acct_1001",
-                &["org_demo_landscaping".to_string()],
-                update_request(),
-            )
-            .await
-            .is_some());
-        assert!(repository
-            .update("acct_1001", &["org_other".to_string()], update_request())
-            .await
-            .is_none());
+        assert!(matches!(
+            repository
+                .update(
+                    "acct_1001",
+                    &["org_demo_landscaping".to_string()],
+                    update_request(),
+                )
+                .await,
+            CustomerContextReadResult::Loaded(_)
+        ));
+        assert_eq!(
+            repository
+                .update("acct_1001", &["org_other".to_string()], update_request())
+                .await,
+            CustomerContextReadResult::NotFound
+        );
     }
 }

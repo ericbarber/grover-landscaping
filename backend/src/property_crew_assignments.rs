@@ -440,7 +440,8 @@ fn seed_property_assignments_for_crew(
 mod tests {
     use super::{
         is_valid_assign_property_crew_request, seed_property_assignments_for_crew, storage_key,
-        AssignPropertyCrewRequest, PropertyCrewAssignmentRepository,
+        AssignPropertyCrewRequest, PropertyCrewAssignmentMutationResult,
+        PropertyCrewAssignmentRepository,
     };
 
     #[test]

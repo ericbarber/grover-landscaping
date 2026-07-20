@@ -373,7 +373,8 @@ fn seed_property_onboarding(
 mod tests {
     use super::{
         is_valid_property_onboarding_status, validate_property_onboarding_request,
-        PropertyOnboardingRepository, UpsertPropertyOnboardingRequest,
+        PropertyOnboardingReadResult, PropertyOnboardingRepository, PropertyOnboardingWriteResult,
+        UpsertPropertyOnboardingRequest,
     };
 
     fn valid_request() -> UpsertPropertyOnboardingRequest {
