@@ -48,6 +48,7 @@ export function OwnerCrewAdministrationPanel({
   const [dismissedDestinationSignal, setDismissedDestinationSignal] = useState(0);
   const [pendingStatus, setPendingStatus] = useState<CrewRecord['status'] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [moveConfirmation, setMoveConfirmation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const selectedCrew = crews.find((crew) => crew.id === selectedCrewId);
 
@@ -91,6 +92,10 @@ export function OwnerCrewAdministrationPanel({
       setSelectedCrewId(requestedCrewId);
     }
   }, [requestedCrewId, selectionSignal, crews]);
+
+  useEffect(() => {
+    setMoveConfirmation(null);
+  }, [selectedCrewId]);
 
   useEffect(() => {
     setName(selectedCrew?.name ?? '');
@@ -172,6 +177,13 @@ export function OwnerCrewAdministrationPanel({
       );
       return;
     }
+    const completingPreparedMove = hasPreparedDestination;
+    const sourceLabel = `${savedBranch?.name ?? 'unassigned branch'} · ${
+      savedTerritory?.name ?? 'unassigned territory'
+    }`;
+    const destinationLabel = `${preparedBranch?.name ?? 'selected branch'} · ${
+      preparedTerritory?.name ?? 'selected territory'
+    }`;
     setIsLoading(true);
     try {
       const updated = await updateOrganizationCrew(
@@ -186,11 +198,18 @@ export function OwnerCrewAdministrationPanel({
       );
       setCrews((current) => current.map((crew) => crew.id === updated.id ? updated : crew));
       setPendingStatus(null);
-      setMessage(
-        updated.status === 'active'
-          ? `${updated.name} is active and available for scheduling.`
-          : `${updated.name} is inactive and hidden from new assignments.`,
-      );
+      if (completingPreparedMove) {
+        setDismissedDestinationSignal(selectionSignal);
+        setMoveConfirmation(`${updated.name} moved from ${sourceLabel} to ${destinationLabel}.`);
+        setMessage(null);
+      } else {
+        setMoveConfirmation(null);
+        setMessage(
+          updated.status === 'active'
+            ? `${updated.name} is active and available for scheduling.`
+            : `${updated.name} is inactive and hidden from new assignments.`,
+        );
+      }
       onCrewChanged?.(updated);
     } catch {
       setMessage(
@@ -214,6 +233,14 @@ export function OwnerCrewAdministrationPanel({
       <h3 className="font-bold text-slate-950">Crew administration</h3>
       <p className="mt-1 text-xs text-slate-600">Set crew leadership and route capacity, or remove inactive crews from new scheduling.</p>
       {message ? <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs font-medium text-slate-700" role="status">{message}</p> : null}
+      {moveConfirmation ? (
+        <p
+          className="mt-3 rounded-lg bg-emerald-50 p-3 text-xs font-bold text-emerald-900"
+          role="status"
+        >
+          {moveConfirmation}
+        </p>
+      ) : null}
       {crews.length > 0 ? (
         <div className="mt-3 space-y-3">
           <label className="block text-sm font-semibold text-slate-700">
