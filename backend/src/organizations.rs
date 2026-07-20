@@ -15,6 +15,13 @@ pub enum OrganizationCollectionResult<T> {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OrganizationResourceResult<T> {
+    Found(T),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationMembership {
     pub id: String,
@@ -419,36 +426,52 @@ impl OrganizationRepository {
         bootstrap_organization(pool, user_id, &request).await
     }
 
-    pub async fn organization_profile(&self, organization_id: &str) -> Option<OrganizationProfile> {
+    pub async fn organization_profile(
+        &self,
+        organization_id: &str,
+    ) -> OrganizationResourceResult<OrganizationProfile> {
         if let Some(pool) = &self.pool {
-            return organization_profile(pool, organization_id)
-                .await
-                .ok()
-                .flatten();
+            return match organization_profile(pool, organization_id).await {
+                Ok(Some(profile)) => OrganizationResourceResult::Found(profile),
+                Ok(None) => OrganizationResourceResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted organization profile read failed");
+                    OrganizationResourceResult::Unavailable
+                }
+            };
         }
         local_organization_profile(organization_id)
+            .map(OrganizationResourceResult::Found)
+            .unwrap_or(OrganizationResourceResult::NotFound)
     }
 
     pub async fn first_owner_setup_progress(
         &self,
         organization_id: &str,
-    ) -> Option<FirstOwnerSetupProgress> {
+    ) -> OrganizationResourceResult<FirstOwnerSetupProgress> {
         if let Some(pool) = &self.pool {
-            return first_owner_setup_progress(pool, organization_id)
-                .await
-                .ok()
-                .flatten();
+            return match first_owner_setup_progress(pool, organization_id).await {
+                Ok(Some(progress)) => OrganizationResourceResult::Found(progress),
+                Ok(None) => OrganizationResourceResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted first-owner setup progress read failed");
+                    OrganizationResourceResult::Unavailable
+                }
+            };
         }
-        local_organization_profile(organization_id).map(|_| FirstOwnerSetupProgress {
-            organization_id: organization_id.to_string(),
-            organization_profile_complete: true,
-            team_invitation_created: true,
-            crew_configured: true,
-            first_route_published: true,
-            completed_steps: 4,
-            total_steps: 4,
-            persisted: false,
-        })
+        local_organization_profile(organization_id)
+            .map(|_| FirstOwnerSetupProgress {
+                organization_id: organization_id.to_string(),
+                organization_profile_complete: true,
+                team_invitation_created: true,
+                crew_configured: true,
+                first_route_published: true,
+                completed_steps: 4,
+                total_steps: 4,
+                persisted: false,
+            })
+            .map(OrganizationResourceResult::Found)
+            .unwrap_or(OrganizationResourceResult::NotFound)
     }
 
     pub async fn update_organization_profile(

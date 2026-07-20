@@ -85,6 +85,37 @@ test('distinguishes unavailable persisted team activity from empty history', asy
   );
 });
 
+test('does not infer organization setup state during persisted profile outages', async ({ page }) => {
+  await page.route(/\/organizations\/[^/]+\/setup-progress$/, (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'organization_setup_progress_unavailable',
+      message: 'Persisted first-owner setup progress could not be loaded.',
+    },
+  }));
+  await page.route(/\/organizations\/[^/]+$/, (route) => {
+    if (route.request().method() !== 'GET') return route.continue();
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      json: {
+        error: 'organization_profile_unavailable',
+        message: 'The persisted organization profile could not be loaded.',
+      },
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const onboarding = page
+    .getByText('First-user setup', { exact: true })
+    .locator('xpath=ancestor::section[1]');
+  await expect(onboarding.getByRole('alert')).toContainText(
+    'missing or completed setup is not being assumed',
+  );
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

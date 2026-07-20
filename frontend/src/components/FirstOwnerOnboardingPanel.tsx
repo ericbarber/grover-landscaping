@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   bootstrapOrganization,
   createOrganizationCrew,
@@ -117,9 +118,11 @@ export function FirstOwnerOnboardingPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [setupReadsUnavailable, setSetupReadsUnavailable] = useState(false);
 
   async function refresh() {
     setIsLoading(true);
+    setSetupReadsUnavailable(false);
     try {
       const nextAccess = await fetchPrincipalAccessSummary();
       setAccess(nextAccess);
@@ -142,8 +145,17 @@ export function FirstOwnerOnboardingPanel({
         setSetupProgress(null);
       }
       setMessage(null);
-    } catch {
-      setMessage('Your access summary could not be loaded. Check authentication and try again.');
+    } catch (error) {
+      if (
+        isApiErrorCode(error, 'organization_profile_unavailable')
+        || isApiErrorCode(error, 'organization_setup_progress_unavailable')
+      ) {
+        setSetupProgress(null);
+        setSetupReadsUnavailable(true);
+        setMessage('Persisted organization setup could not be loaded. Retry after API readiness recovers.');
+      } else {
+        setMessage('Your access summary could not be loaded. Check authentication and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -262,6 +274,11 @@ export function FirstOwnerOnboardingPanel({
       {message ? (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-700" role="status">
           {message}
+        </p>
+      ) : null}
+      {setupReadsUnavailable ? (
+        <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted organization profile and setup progress are unavailable; missing or completed setup is not being assumed.
         </p>
       ) : null}
 

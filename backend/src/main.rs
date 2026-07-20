@@ -68,7 +68,7 @@ use grover_landscaping_api::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
         CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
         MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
-        OrganizationRepository, ReissueOrganizationInvitationRequest,
+        OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
         UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
@@ -1323,10 +1323,14 @@ async fn get_organization_profile(
         .organization_profile(&organization_id)
         .await
     {
-        Some(profile) => Json(profile).into_response(),
-        None => resource_not_found_response(
+        OrganizationResourceResult::Found(profile) => Json(profile).into_response(),
+        OrganizationResourceResult::NotFound => resource_not_found_response(
             "organization_not_found",
             "The requested organization was not found.",
+        ),
+        OrganizationResourceResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_profile_unavailable",
+            "The persisted organization profile could not be loaded.",
         ),
     }
 }
@@ -1351,10 +1355,14 @@ async fn get_first_owner_setup_progress(
         .first_owner_setup_progress(&organization_id)
         .await
     {
-        Some(progress) => Json(progress).into_response(),
-        None => resource_not_found_response(
+        OrganizationResourceResult::Found(progress) => Json(progress).into_response(),
+        OrganizationResourceResult::NotFound => resource_not_found_response(
             "organization_not_found",
             "The requested organization was not found.",
+        ),
+        OrganizationResourceResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_setup_progress_unavailable",
+            "Persisted first-owner setup progress could not be loaded.",
         ),
     }
 }

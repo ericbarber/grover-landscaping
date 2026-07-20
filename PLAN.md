@@ -374,12 +374,14 @@ Delivered:
 - Owner administration clears stale collections and refuses to present seeded or empty history during outages
 - Team-administration and operational activity distinguish unavailable persistence from valid empty audit history
 - Manager activity views preserve browser-local warnings while identifying unavailable persisted history
+- Organization profile and first-owner setup reads distinguish unavailable persistence from missing organizations
+- First-owner onboarding refuses to infer missing or completed setup when persisted reads fail
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable organization profile and first-owner setup reads from genuinely missing setup records
-- Add repository and phone-flow coverage for organization setup read availability
+- Distinguish unavailable organization profile updates from invalid or missing organizations
+- Add repository and phone-flow coverage for organization profile write availability
 
 ### Manager scheduling workflow
 
@@ -802,12 +804,13 @@ Current state:
 - Property-portfolio create and link writes return explicit conflict and unavailable outcomes
 - Organization membership and invitation reads return explicit unavailable outcomes
 - Team-administration and operational activity reads return explicit unavailable outcomes
+- Organization profile and first-owner setup reads return explicit missing and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable organization profile and first-owner setup reads from genuinely missing setup records
-- Add repository and phone-flow coverage for organization setup read availability
+- Distinguish unavailable organization profile updates from invalid or missing organizations
+- Add repository and phone-flow coverage for organization profile write availability
 
 ## Planned
 

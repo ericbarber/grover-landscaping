@@ -8,7 +8,7 @@ use grover_landscaping_api::{
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, MembershipProfileUpdateResult,
-        OrganizationCollectionResult, OrganizationRepository,
+        OrganizationCollectionResult, OrganizationRepository, OrganizationResourceResult,
         UpdateOrganizationMembershipProfileRequest, UpdateOrganizationProfileRequest,
     },
 };
@@ -29,6 +29,14 @@ trait LoadedCollectionExt<T> {
 impl<T> LoadedCollectionExt<T> for OrganizationCollectionResult<T> {
     fn into_loaded(self) -> Vec<T> {
         loaded(self, "activity collection should load")
+    }
+}
+
+fn found<T>(result: OrganizationResourceResult<T>, context: &str) -> T {
+    match result {
+        OrganizationResourceResult::Found(resource) => resource,
+        OrganizationResourceResult::NotFound => panic!("{context}: not found"),
+        OrganizationResourceResult::Unavailable => panic!("{context}: unavailable"),
     }
 }
 
@@ -214,10 +222,12 @@ async fn repository_bootstraps_first_owner_once() {
     );
     assert_eq!(updated_profile.default_daily_stop_capacity, 16);
 
-    let setup_progress = organizations
-        .first_owner_setup_progress(&created.organization_id)
-        .await
-        .expect("owner setup progress should be available");
+    let setup_progress = found(
+        organizations
+            .first_owner_setup_progress(&created.organization_id)
+            .await,
+        "owner setup progress should be available",
+    );
     assert!(setup_progress.organization_profile_complete);
     assert!(!setup_progress.team_invitation_created);
     assert!(!setup_progress.crew_configured);
@@ -267,11 +277,13 @@ async fn repository_bootstraps_first_owner_once() {
     assert!(crew.persisted);
     assert_eq!(crew.organization_id, created.organization_id);
     assert!(
-        organizations
-            .first_owner_setup_progress(&created.organization_id)
-            .await
-            .expect("updated owner setup progress should be available")
-            .crew_configured
+        found(
+            organizations
+                .first_owner_setup_progress(&created.organization_id)
+                .await,
+            "updated owner setup progress should be available",
+        )
+        .crew_configured
     );
 
     let current_service_date: String = sqlx::query_scalar("SELECT CURRENT_DATE::text")
@@ -336,11 +348,13 @@ async fn repository_bootstraps_first_owner_once() {
         Some(created.membership.id.as_str())
     );
     assert!(
-        !organizations
-            .first_owner_setup_progress(&created.organization_id)
-            .await
-            .expect("inactive crew progress should be available")
-            .crew_configured
+        !found(
+            organizations
+                .first_owner_setup_progress(&created.organization_id)
+                .await,
+            "inactive crew progress should be available",
+        )
+        .crew_configured
     );
 
     let reactivated = day_plans
@@ -387,10 +401,13 @@ async fn repository_bootstraps_first_owner_once() {
         .iter()
         .any(|item| { item.target_id == crew.id && item.event_kind == "crew_reactivated" }));
     assert_eq!(
-        organizations
-            .organization_profile(&created.organization_id)
-            .await,
-        Some(updated_profile)
+        found(
+            organizations
+                .organization_profile(&created.organization_id)
+                .await,
+            "organization profile should be available",
+        ),
+        updated_profile
     );
 
     let duplicate = organizations

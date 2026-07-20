@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable organization profile and first-owner setup reads from missing organizations.
 - 2026-07-20: Distinguished unavailable team-administration and operational activity from valid empty audit history.
 - 2026-07-20: Distinguished unavailable organization membership and invitation collections from valid empty lists.
 - 2026-07-20: Distinguished unavailable property-portfolio writes from business conflicts.

@@ -1,7 +1,8 @@
 use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
-    OrganizationCollectionResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
-    UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
+    OrganizationCollectionResult, OrganizationRepository, OrganizationResourceResult,
+    ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipRoleRequest,
+    UpdateOrganizationMembershipStatusRequest,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::time::Duration;
@@ -44,6 +45,18 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .list_operational_activity(&["org_demo_landscaping".to_string()])
             .await,
         OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .organization_profile("org_demo_landscaping")
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .first_owner_setup_progress("org_demo_landscaping")
+            .await,
+        OrganizationResourceResult::Unavailable
     ));
 }
 
