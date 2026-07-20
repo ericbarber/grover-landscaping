@@ -14,6 +14,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
    - Process provider delivery receipts and manual resolutions.
    - Connect manager activity history to persisted notification and audit events.
    - Add templates, preferences, quiet hours, and customer contact rules.
+   - Audit provider delivery and recovery outcomes for lossy fallbacks before pilot use.
 3. **Customer account onboarding**
    - Complete customer-account setup and administration workflows.
    - Capture service-ready contact and communication details during initial account creation.

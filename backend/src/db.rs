@@ -1082,14 +1082,29 @@ impl JobRepository {
                                 )
                                 .await;
                             if !thumbnail_generated {
-                                let _ = postgres_write::queue_photo_processing_job(
+                                match postgres_write::queue_photo_processing_job(
                                     pool,
                                     job_id,
                                     photo_id,
                                     "thumbnail_generation",
                                     "thumbnail_generation_unavailable",
                                 )
-                                .await;
+                                .await
+                                {
+                                    Ok(Some(_)) => {}
+                                    Ok(None) => {
+                                        tracing::error!(
+                                            job_id,
+                                            photo_id,
+                                            "photo thumbnail retry could not be queued"
+                                        );
+                                        return ResourceReadResult::Unavailable;
+                                    }
+                                    Err(error) => {
+                                        tracing::error!(%error, job_id, photo_id, "photo thumbnail retry persistence failed");
+                                        return ResourceReadResult::Unavailable;
+                                    }
+                                }
                             }
                         }
                         upload_metadata = server_metadata;
@@ -1110,14 +1125,29 @@ impl JobRepository {
                         if location.upload_mode == "s3-presigned"
                             && location.thumbnail_object_key.is_some()
                         {
-                            let _ = postgres_write::queue_photo_processing_job(
+                            match postgres_write::queue_photo_processing_job(
                                 pool,
                                 job_id,
                                 photo_id,
                                 "thumbnail_generation",
                                 "storage_inspection_unavailable",
                             )
-                            .await;
+                            .await
+                            {
+                                Ok(Some(_)) => {}
+                                Ok(None) => {
+                                    tracing::error!(
+                                        job_id,
+                                        photo_id,
+                                        "photo inspection retry could not be queued"
+                                    );
+                                    return ResourceReadResult::Unavailable;
+                                }
+                                Err(error) => {
+                                    tracing::error!(%error, job_id, photo_id, "photo inspection retry persistence failed");
+                                    return ResourceReadResult::Unavailable;
+                                }
+                            }
                         }
                     }
                 }
@@ -1143,14 +1173,19 @@ impl JobRepository {
         job_id: &str,
         photo_id: &str,
         rejected_reason: &str,
-    ) -> bool {
+    ) -> ResourceReadResult<bool> {
         let Some(pool) = &self.pool else {
-            return false;
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::reject_photo_upload(pool, job_id, photo_id, rejected_reason)
-            .await
-            .unwrap_or(false)
+        match postgres_write::reject_photo_upload(pool, job_id, photo_id, rejected_reason).await {
+            Ok(true) => ResourceReadResult::Loaded(true),
+            Ok(false) => ResourceReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, job_id, photo_id, "persisted photo rejection failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -1160,12 +1195,12 @@ impl JobRepository {
         photo_id: &str,
         task_type: &str,
         failure_reason: &str,
-    ) -> Option<PhotoProcessingJobRecord> {
+    ) -> ResourceReadResult<PhotoProcessingJobRecord> {
         let Some(pool) = &self.pool else {
-            return None;
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::queue_photo_processing_job(
+        match postgres_write::queue_photo_processing_job(
             pool,
             job_id,
             photo_id,
@@ -1173,8 +1208,14 @@ impl JobRepository {
             failure_reason,
         )
         .await
-        .ok()
-        .flatten()
+        {
+            Ok(Some(job)) => ResourceReadResult::Loaded(job),
+            Ok(None) => ResourceReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, job_id, photo_id, task_type, "persisted photo retry queue failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]

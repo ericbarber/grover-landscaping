@@ -32,6 +32,33 @@ impl<T: std::fmt::Debug> ResourceReadTestExt<T> for ResourceReadResult<T> {
 }
 
 #[tokio::test]
+async fn repository_distinguishes_unavailable_photo_recovery_writes() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = JobRepository::from_pool(pool);
+
+    assert_eq!(
+        repository
+            .reject_photo_upload("job_1001", "photo_1001", "invalid_image")
+            .await,
+        ResourceReadResult::Unavailable
+    );
+    assert_eq!(
+        repository
+            .queue_photo_processing_retry(
+                "job_1001",
+                "photo_1001",
+                "thumbnail_generation",
+                "thumbnail_generation_unavailable",
+            )
+            .await,
+        ResourceReadResult::Unavailable
+    );
+}
+
+#[tokio::test]
 async fn repository_distinguishes_unavailable_photo_writes() {
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
@@ -284,24 +311,26 @@ async fn repository_persists_and_lists_photo_evidence() {
             .await
             .unwrap();
 
-    assert!(
+    assert_eq!(
         repository
             .reject_photo_upload(
                 "job_1001",
                 &rejected_ticket.photo_id,
                 "unsupported_or_invalid_image_header",
             )
-            .await
+            .await,
+        ResourceReadResult::Loaded(true)
     );
-    assert!(
-        !repository
+    assert_eq!(
+        repository
             .reject_photo_upload(
                 "job_1001",
                 "photo_missing_for_rejection",
                 "unsupported_or_invalid_image_header",
             )
             .await,
-        "rejecting an unknown photo id should report that nothing changed"
+        ResourceReadResult::NotFound,
+        "rejecting an unknown photo id should report a missing upload"
     );
 
     let rejected_row = sqlx::query(
@@ -367,7 +396,7 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
         .await
         .expect_loaded("recovery photo ticket should persist");
 
-    assert!(
+    assert_eq!(
         repository
             .queue_photo_processing_retry(
                 "job_1001",
@@ -375,8 +404,8 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
                 "thumbnail_generation",
                 "thumbnail_generation_unavailable",
             )
-            .await
-            .is_none(),
+            .await,
+        ResourceReadResult::NotFound,
         "photos without thumbnail object keys should not enqueue thumbnail work"
     );
 
@@ -405,7 +434,7 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
             "thumbnail_generation_unavailable",
         )
         .await
-        .expect("thumbnail processing job should be queued");
+        .expect_loaded("thumbnail processing job should be queued");
     let duplicate = repository
         .queue_photo_processing_retry(
             "job_1001",
@@ -414,7 +443,7 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
             "storage_inspection_unavailable",
         )
         .await
-        .expect("duplicate thumbnail processing queue should return existing row");
+        .expect_loaded("duplicate thumbnail processing queue should return existing row");
 
     assert_eq!(duplicate.id, queued.id);
     assert_eq!(queued.photo_id, ticket.photo_id);
@@ -551,7 +580,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
             "thumbnail_generation_unavailable",
         )
         .await
-        .expect("thumbnail processing job should be queued");
+        .expect_loaded("thumbnail processing job should be queued");
 
     let processed =
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await;
@@ -628,7 +657,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
             "thumbnail_generation_unavailable",
         )
         .await
-        .expect("thumbnail processing job should be queued");
+        .expect_loaded("thumbnail processing job should be queued");
 
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
