@@ -3,7 +3,7 @@ use grover_landscaping_api::{
         CustomerPhotoErasureResult, CustomerPrivacyExportResult, JobRepository,
         PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
         PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter,
-        PhotoProcessingResolveResult, PhotoProcessingRetryResult,
+        PhotoProcessingResolveResult, PhotoProcessingRetryResult, ResourceReadResult,
     },
     photo_processing::process_photo_processing_once,
     photo_storage::PhotoStorageConfig,
@@ -11,6 +11,13 @@ use grover_landscaping_api::{
 };
 use sqlx::Row;
 mod common;
+
+fn loaded<T: std::fmt::Debug>(result: ResourceReadResult<T>, context: &str) -> T {
+    match result {
+        ResourceReadResult::Loaded(value) => value,
+        other => panic!("{context}, got {other:?}"),
+    }
+}
 
 #[tokio::test]
 async fn repository_reuses_photo_ticket_for_offline_mutation() {
@@ -80,7 +87,10 @@ async fn repository_persists_and_lists_photo_evidence() {
         )
         .await;
 
-    let pending_photos = repository.list_photo_evidence("job_1001").await;
+    let pending_photos = loaded(
+        repository.list_photo_evidence("job_1001").await,
+        "pending photo evidence should load",
+    );
     assert!(
         pending_photos
             .iter()
@@ -101,7 +111,10 @@ async fn repository_persists_and_lists_photo_evidence() {
         )
         .await;
 
-    let photos = repository.list_photo_evidence("job_1001").await;
+    let photos = loaded(
+        repository.list_photo_evidence("job_1001").await,
+        "photo evidence should load",
+    );
     let photo = photos
         .iter()
         .find(|photo| photo.id == ticket.photo_id)
@@ -146,7 +159,10 @@ async fn repository_persists_and_lists_photo_evidence() {
         )
         .await;
 
-    let processed_photos = repository.list_photo_evidence("job_1001").await;
+    let processed_photos = loaded(
+        repository.list_photo_evidence("job_1001").await,
+        "processed photo evidence should load",
+    );
     let processed_photo = processed_photos
         .iter()
         .find(|photo| photo.id == processed_ticket.photo_id)
@@ -214,7 +230,10 @@ async fn repository_persists_and_lists_photo_evidence() {
             .fetch_one(&pool)
             .await
             .unwrap();
-    let visible_photos = repository.list_photo_evidence("job_1001").await;
+    let visible_photos = loaded(
+        repository.list_photo_evidence("job_1001").await,
+        "visible photo evidence should load",
+    );
 
     assert_eq!(rejected_row.get::<String, _>("status"), "rejected");
     assert_eq!(
@@ -818,7 +837,10 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     assert_eq!(erasure.failed_object_key_count, 0);
     assert!(erasure.object_keys_pending_deletion.is_empty());
 
-    let visible_photos = repository.list_photo_evidence("job_1001").await;
+    let visible_photos = loaded(
+        repository.list_photo_evidence("job_1001").await,
+        "retained photo evidence should load",
+    );
     assert!(
         visible_photos
             .iter()

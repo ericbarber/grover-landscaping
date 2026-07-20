@@ -13,6 +13,7 @@ import {
   fetchCustomerPrivacyExport,
   fetchJobDetail,
   fetchJobAddOns,
+  fetchJobPhotoEvidence,
   fetchJobs,
   fetchNotificationHistory,
   fetchOperationalActivity,
@@ -884,6 +885,7 @@ export function App() {
   const [jobDetailUnavailable, setJobDetailUnavailable] = useState(false);
   const [selectedJobAddOns, setSelectedJobAddOns] = useState<JobAddOn[]>([]);
   const [jobAddOnsUnavailable, setJobAddOnsUnavailable] = useState(false);
+  const [photoEvidenceUnavailable, setPhotoEvidenceUnavailable] = useState(false);
   const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [jobsUnavailable, setJobsUnavailable] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -1488,6 +1490,29 @@ export function App() {
           setSelectedJobAddOns([]);
           setJobAddOnsUnavailable(error instanceof ApiRequestError);
         }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedJobId]);
+
+  useEffect(() => {
+    if (!selectedJobId) {
+      setPhotoEvidenceUnavailable(false);
+      return;
+    }
+
+    let isMounted = true;
+    setPhotoEvidenceUnavailable(false);
+    fetchJobPhotoEvidence(selectedJobId)
+      .then((photos) => {
+        if (isMounted) {
+          setUploadTickets((current) => mergePhotoEvidence(current, selectedJobId, photos));
+        }
+      })
+      .catch((error: unknown) => {
+        if (isMounted) setPhotoEvidenceUnavailable(error instanceof ApiRequestError);
       });
 
     return () => {
@@ -3029,6 +3054,11 @@ export function App() {
           {jobAddOnsUnavailable ? (
             <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
               Persisted add-on context could not be loaded. Add-ons remain hidden until API readiness recovers.
+            </p>
+          ) : null}
+          {photoEvidenceUnavailable ? (
+            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
+              Persisted photo evidence could not be loaded. Proof remains hidden until API readiness recovers.
             </p>
           ) : null}
           <JobDetailPanel

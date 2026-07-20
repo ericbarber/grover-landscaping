@@ -163,6 +163,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - The phone assigned-work list distinguishes persisted unavailability from an empty schedule and network-only demo fallback
 - PostgreSQL-backed job add-on read failures return an unavailable response instead of an empty add-on list
 - Completion-report construction propagates unavailable add-on reads, while demo mode retains an intentionally empty list
+- PostgreSQL-backed photo-evidence read failures return an unavailable response instead of empty proof
+- Completion-report construction propagates unavailable evidence reads, while demo mode retains intentionally empty evidence
+- The phone job view keeps persisted proof hidden and labels evidence unavailability explicitly
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -339,9 +342,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed photo-evidence reads from translating persistence failures into empty evidence
-- Return explicit unavailable results while retaining empty no-database demo evidence
-- Prevent completion reports from presenting missing proof when persisted photo reads fail
+- Replace seeded job-account summaries with PostgreSQL-backed customer account and service-period data
+- Return explicit missing and unavailable account results while retaining no-database demo summaries
+- Prevent completion reports from presenting seeded billing and approval context in persisted mode
 
 ### Manager scheduling workflow
 
@@ -752,9 +755,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed photo-evidence reads from translating persistence failures into empty evidence
-- Return explicit unavailable results while retaining empty no-database demo evidence
-- Prevent completion reports from presenting missing proof when persisted photo reads fail
+- Replace seeded job-account summaries with PostgreSQL-backed customer account and service-period data
+- Return explicit missing and unavailable account results while retaining no-database demo summaries
+- Prevent completion reports from presenting seeded billing and approval context in persisted mode
 
 ## Planned
 

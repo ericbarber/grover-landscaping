@@ -4729,7 +4729,16 @@ async fn build_and_persist_completion_report(
         }
     };
     let account = state.accounts.get_account_for_job(id).await;
-    let photo_evidence = state.jobs.list_photo_evidence(id).await;
+    let photo_evidence = match state.jobs.list_photo_evidence(id).await {
+        ResourceReadResult::Loaded(photos) => photos,
+        ResourceReadResult::NotFound => Vec::new(),
+        ResourceReadResult::Unavailable => {
+            return Err(persisted_resource_unavailable_response(
+                "photo_evidence_unavailable",
+                "The persisted photo evidence could not be loaded.",
+            ));
+        }
+    };
     let add_ons = match state.jobs.list_job_add_ons(id).await {
         ResourceReadResult::Loaded(add_ons) => add_ons,
         ResourceReadResult::NotFound => Vec::new(),
@@ -5680,7 +5689,14 @@ async fn list_job_photos(
         return response;
     }
 
-    Json(state.jobs.list_photo_evidence(&id).await).into_response()
+    match state.jobs.list_photo_evidence(&id).await {
+        ResourceReadResult::Loaded(photos) => Json(photos).into_response(),
+        ResourceReadResult::NotFound => Json(Vec::<PhotoEvidence>::new()).into_response(),
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "photo_evidence_unavailable",
+            "The persisted photo evidence could not be loaded.",
+        ),
+    }
 }
 
 async fn complete_photo_upload(

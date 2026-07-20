@@ -323,6 +323,23 @@ test('distinguishes unavailable persisted add-ons from a job with no add-ons', a
   );
 });
 
+test('keeps persisted photo proof hidden when evidence cannot be loaded', async ({ page }) => {
+  await page.route('**/jobs/job_1001/photos', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'photo_evidence_unavailable',
+      message: 'The persisted photo evidence could not be loaded.',
+    },
+  }));
+
+  await page.goto('/');
+  const detail = page.locator('#job-detail');
+  await expect(detail.getByRole('alert')).toContainText(
+    'Persisted photo evidence could not be loaded.',
+  );
+});
+
 test('marks a rejected persisted progress write as a conflict without waiting for replay', async ({ page }) => {
   await page.route('**/day-plans/*/stops/*/status', (route) => route.fulfill({
     status: 404,

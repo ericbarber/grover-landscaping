@@ -782,16 +782,27 @@ impl JobRepository {
         StopProgressWriteResult::LocalFallback
     }
 
-    pub async fn list_photo_evidence(&self, job_id: &str) -> Vec<PhotoEvidence> {
+    pub async fn list_photo_evidence(
+        &self,
+        job_id: &str,
+    ) -> ResourceReadResult<Vec<PhotoEvidence>> {
         if let Some(pool) = &self.pool {
-            if let Ok(photos) =
-                postgres_read::list_job_photos(pool, job_id, &PhotoStorageConfig::from_env()).await
+            return match postgres_read::list_job_photos(
+                pool,
+                job_id,
+                &PhotoStorageConfig::from_env(),
+            )
+            .await
             {
-                return photos;
-            }
+                Ok(photos) => ResourceReadResult::Loaded(photos),
+                Err(error) => {
+                    tracing::error!(%error, job_id, "persisted photo-evidence list failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        ResourceReadResult::Loaded(Vec::new())
     }
 
     pub async fn persist_completion_report(
