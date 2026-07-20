@@ -685,10 +685,11 @@ Current state:
 - Exiting focused crew history restores the owner's prior transient and persisted activity filters and ordering
 - Owner activity confirms when a prior review has been restored after focused crew history
 - Owners can dismiss restored-review feedback without changing the restored filters or ordering
+- Focused latest-move entry is announced politely to assistive technology while activity-section focus is preserved
 
 Next implementation work:
 
-- Announce entry into focused latest-move review for assistive technology
+- Include the number of matching crew moves in focused-review context
 
 ## Planned
 

@@ -459,6 +459,9 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
+  await expect(teamActivity.getByRole('status').filter({
+    hasText: `Crew ${originalCrew!.id} remains selected`,
+  })).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')

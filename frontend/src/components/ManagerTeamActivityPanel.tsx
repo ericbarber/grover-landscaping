@@ -753,7 +753,11 @@ export function ManagerTeamActivityPanel({
         ) : null}
       </div>
       {isFocusedCrewMoveReview ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950">
+        <div
+          aria-live="polite"
+          className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-950"
+          role="status"
+        >
           <div>
             <p className="font-bold">Focused latest-move review</p>
             <p className="mt-1 break-all">
