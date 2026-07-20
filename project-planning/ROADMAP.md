@@ -16,6 +16,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
    - Add templates, preferences, quiet hours, and customer contact rules.
 3. **Customer account onboarding**
    - Complete customer-account setup and administration workflows.
+   - Capture service-ready contact and communication details during initial account creation.
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.

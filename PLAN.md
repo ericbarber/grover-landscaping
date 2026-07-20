@@ -718,7 +718,9 @@ Current state:
 
 Next implementation work:
 
-- Review the completed crew hierarchy support flow and select the next readiness slice
+- Let managers create a customer account with its primary contact and communication destination in one mobile workflow
+- Validate the new-account contact draft before submission and preserve explicit notification opt-in
+- Cover the complete account-creation path with focused component and mobile smoke tests
 
 ## Planned
 
