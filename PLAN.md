@@ -703,10 +703,11 @@ Current state:
 - Successful audit-ID recovery confirms the immutable event and restores its row marker and dismissal focus target
 - Failed audit-ID recovery explains owner-access and retry paths while retaining the immutable search action
 - Failed immutable-ID searches can retry the same audit directly after a transient history gap
+- Recovered audit searches return to full focused crew history without losing the inspected crew context
 
 Next implementation work:
 
-- Return from recovered audit-ID search to the full focused crew history
+- Preserve the pre-focus owner review after exiting a recovered audit search
 
 ## Planned
 

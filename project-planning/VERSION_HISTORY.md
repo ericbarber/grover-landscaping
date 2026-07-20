@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Returned recovered audits to full focused crew history.
 - 2026-07-19: Added same-ID retry after transient audit recovery failure.
 - 2026-07-19: Added actionable failure guidance to immutable-ID audit recovery.
 - 2026-07-19: Confirmed successful immutable-ID audit recovery.

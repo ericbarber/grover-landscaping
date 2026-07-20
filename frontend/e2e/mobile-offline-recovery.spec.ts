@@ -557,6 +557,11 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
     'Audit event audit_e2e_latest_crew_hierarchy_move loaded by immutable ID.',
   )).toBeVisible();
   await expect(teamActivity.locator('ol > li')).toHaveCount(1);
+  omitLatestFromFocusedReview = false;
+  await teamActivity.getByRole('button', { name: 'Return to full crew history' }).click();
+  await expect(teamActivity.getByLabel('Find audit ID')).toHaveValue('');
+  await expect(teamActivity.locator('ol > li')).toHaveCount(25);
+  await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);

@@ -560,6 +560,16 @@ export function ManagerTeamActivityPanel({
     target?.focus({ preventScroll: true });
   }
 
+  function returnToFullFocusedCrewHistory() {
+    setAuditIdQuery('');
+    setReviewNotice(null);
+    setReviewNoticeAuditId(null);
+    setUnavailableRestoredAuditId(null);
+    setRecoveringAuditId(null);
+    setRestoredAuditId(null);
+    restoredReviewFingerprintRef.current = null;
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
@@ -926,13 +936,24 @@ export function ManagerTeamActivityPanel({
               </p>
             )}
           </div>
-          <button
-            className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
-            onClick={exitFocusedReview}
-            type="button"
-          >
-            Exit focused review
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {auditIdQuery ? (
+              <button
+                className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
+                onClick={returnToFullFocusedCrewHistory}
+                type="button"
+              >
+                Return to full crew history
+              </button>
+            ) : null}
+            <button
+              className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
+              onClick={exitFocusedReview}
+              type="button"
+            >
+              Exit focused review
+            </button>
+          </div>
         </div>
       ) : null}
       {sourceQuery || destinationQuery ? (
