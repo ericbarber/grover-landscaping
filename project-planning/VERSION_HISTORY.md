@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Failed project-bid draft creation closed when persisted storage is unavailable.
 - 2026-07-20: Distinguished unavailable project-bid lists from valid empty bid history.
 - 2026-07-20: Distinguished unavailable property-crew assignment lists from valid unassigned state.
 - 2026-07-20: Distinguished unavailable property-portfolio reads from valid empty grouping.

@@ -99,7 +99,8 @@ use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfi
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
-    ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
+    ProjectBidDraftResult, ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult,
+    SendProjectBidRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -5133,16 +5134,27 @@ async fn save_project_bid_draft(
         return response;
     }
 
-    (
-        StatusCode::CREATED,
-        Json(
-            state
-                .project_bids
-                .save_draft(&day_plan_id, &amendment_id, request)
-                .await,
+    match state
+        .project_bids
+        .save_draft(&day_plan_id, &amendment_id, request)
+        .await
+    {
+        ProjectBidDraftResult::Saved(bid) => {
+            (StatusCode::CREATED, Json(bid)).into_response()
+        }
+        ProjectBidDraftResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "project_bid_draft_conflict",
+                message: "The bid request is no longer eligible for a draft. Refresh the amendment review.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidDraftResult::Unavailable => persisted_resource_unavailable_response(
+            "project_bid_draft_unavailable",
+            "The project bid draft could not be persisted.",
         ),
-    )
-        .into_response()
+    }
 }
 
 async fn list_project_bids(

@@ -63,6 +63,13 @@ pub enum ProjectBidListResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum ProjectBidDraftResult {
+    Saved(ProjectBidResponse),
+    Conflict,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct SendProjectBidRequest {
     pub channel: String,
@@ -121,16 +128,21 @@ impl ProjectBidRepository {
         day_plan_id: &str,
         amendment_id: &str,
         request: CreateProjectBidRequest,
-    ) -> ProjectBidResponse {
+    ) -> ProjectBidDraftResult {
         let response = local_project_bid_response(day_plan_id, amendment_id, request);
 
         if let Some(pool) = &self.pool {
-            if let Ok(Some(persisted)) = postgres_project_bids::save_draft(pool, &response).await {
-                return persisted;
-            }
+            return match postgres_project_bids::save_draft(pool, &response).await {
+                Ok(Some(persisted)) => ProjectBidDraftResult::Saved(persisted),
+                Ok(None) => ProjectBidDraftResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, amendment_id, "persisted project bid draft failed");
+                    ProjectBidDraftResult::Unavailable
+                }
+            };
         }
 
-        response
+        ProjectBidDraftResult::Saved(response)
     }
 
     pub async fn list_for_day_plan(&self, day_plan_id: &str) -> ProjectBidListResult {

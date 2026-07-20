@@ -162,7 +162,7 @@ export async function saveProjectBidDraft(
     },
   );
   if (!response.ok) {
-    throw new Error(`Save project bid failed with status ${response.status}`);
+    throw await apiRequestError(response, `Save project bid failed with status ${response.status}`);
   }
 
   return toProjectBid((await response.json()) as ApiProjectBid);

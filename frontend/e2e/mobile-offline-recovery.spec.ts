@@ -435,6 +435,50 @@ test('keeps persisted project bid context hidden when the bid list is unavailabl
   );
 });
 
+test('explains that an unavailable project bid draft was not saved', async ({ page }) => {
+  await page.route('**/day-plans/*/amendments', (route) => route.fulfill({
+    contentType: 'application/json',
+    json: [{
+      id: 'amendment_bid_unavailable',
+      day_plan_id: 'day_plan_mobile',
+      amendment_type: 'add_service',
+      status: 'bid_review',
+      requested_by_crew_id: 'crew_1001',
+      stop_id: 'stop_1001',
+      service: {
+        id: 'service_sprinkler_repair',
+        name: 'Sprinkler repair',
+        description: 'Replace damaged sprinkler heads',
+        default_duration_minutes: 30,
+        default_price_cents: 8500,
+        requires_manager_approval: true,
+      },
+      note: 'Customer requested repair.',
+      requires_bid: true,
+      manager_note: 'Prepare a bid.',
+      persisted: true,
+    }],
+  }));
+  await page.route('**/day-plans/*/amendments/*/bid', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'project_bid_draft_unavailable',
+      message: 'The project bid draft could not be persisted.',
+    },
+  }));
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const workspace = page
+    .getByText('Project bid workspace')
+    .locator('xpath=ancestor::div[contains(@class,\"rounded-xl\")][1]');
+  await workspace.getByRole('button', { name: 'Save draft bid' }).click();
+  await expect(workspace).toContainText(
+    'The draft was not saved; retry after API readiness recovers.',
+  );
+});
+
 test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
   await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
     status: 404,

@@ -360,12 +360,14 @@ Delivered:
 - Property setup blocks assignment controls when persisted assignment history cannot be loaded
 - Day-plan and customer project-bid lists distinguish unavailable persistence from valid empty history
 - Manager amendment review warns when existing persisted bid context cannot be trusted
+- Project-bid draft creation returns explicit conflict and unavailable outcomes in persisted mode
+- Manager bid editing explains when a draft was not saved
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make project-bid draft and lifecycle mutations fail explicitly instead of returning local or missing state
-- Add repository and phone-flow coverage for bid mutation availability
+- Make remaining project-bid revoke and conversion mutations distinguish missing, conflict, and unavailable persistence
+- Add repository and phone-flow coverage for bid lifecycle availability
 
 ### Manager scheduling workflow
 
@@ -781,12 +783,13 @@ Current state:
 - Property portfolio lists and customer grouping reads return explicit unavailable persistence states
 - Property and active-crew assignment lists return explicit unavailable persistence states
 - Day-plan and customer project-bid lists return explicit unavailable persistence states
+- Project-bid draft writes fail closed when persisted storage is unavailable
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Make project-bid draft and lifecycle mutations fail explicitly instead of returning local or missing state
-- Add repository and phone-flow coverage for bid mutation availability
+- Make remaining project-bid revoke and conversion mutations distinguish missing, conflict, and unavailable persistence
+- Add repository and phone-flow coverage for bid lifecycle availability
 
 ## Planned
 

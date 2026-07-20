@@ -5,8 +5,8 @@ use grover_landscaping_api::{
     },
     db::{JobAddOnStatusUpdate, JobRepository, ResourceReadResult},
     project_bids::{
-        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidListResult,
-        ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
+        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidDraftResult,
+        ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
     },
 };
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -163,6 +163,26 @@ async fn repository_reports_unavailable_persisted_project_bid_lists() {
             .await,
         ProjectBidListResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .save_draft(
+                "day_plan_2026_06_15_crew_1001",
+                "amendment_missing",
+                CreateProjectBidRequest {
+                    customer_message: None,
+                    line_items: vec![CreateProjectBidLineItemRequest {
+                        service_id: "service_test".to_string(),
+                        service_name: "Test service".to_string(),
+                        service_description: None,
+                        quantity: 1,
+                        unit_price_cents: 100,
+                        note: None,
+                    }],
+                },
+            )
+            .await,
+        ProjectBidDraftResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -262,7 +282,7 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     );
 
     let bid_repository = ProjectBidRepository::new();
-    let bid = bid_repository
+    let ProjectBidDraftResult::Saved(bid) = bid_repository
         .save_draft(
             day_plan_id,
             &created.id,
@@ -280,7 +300,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
                 }],
             },
         )
-        .await;
+        .await
+    else {
+        panic!("project bid draft should persist");
+    };
 
     assert!(bid.persisted);
     assert_eq!(bid.customer_account_id, "acct_1001");

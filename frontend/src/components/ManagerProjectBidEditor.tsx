@@ -118,7 +118,13 @@ export function ManagerProjectBidEditor({
         onSaved(bid);
         setMessage(bid.persisted ? 'Draft bid saved.' : 'Draft is local until the API can persist it.');
       })
-      .catch(() => setMessage('Draft bid could not be saved.'))
+      .catch((error: unknown) => setMessage(
+        isApiErrorCode(error, 'project_bid_draft_unavailable')
+          ? 'Bid storage is unavailable. The draft was not saved; retry after API readiness recovers.'
+          : isApiErrorCode(error, 'project_bid_draft_conflict')
+            ? 'This request is no longer eligible for a bid draft. Refresh amendment review.'
+            : 'Draft bid could not be saved.',
+      ))
       .finally(() => setIsSaving(false));
   }
 
