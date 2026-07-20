@@ -681,11 +681,12 @@ Current state:
 - Focused crew history highlights the newest matching hierarchy event as the latest crew move
 - Focused crew history compares the latest move destination with the current assignment captured during inspection
 - Focused latest-move context remains visible and selected after inspecting the newest event and returning to owner activity
-- Focused crew history provides a dedicated touch-safe exit that restores the default activity review
+- Focused crew history provides a dedicated touch-safe exit from the specialized activity review
+- Exiting focused crew history restores the owner's prior transient and persisted activity filters and ordering
 
 Next implementation work:
 
-- Restore the owner's prior activity review filters when exiting focused crew history
+- Identify the restored owner activity review after leaving focused crew history
 
 ## Planned
 

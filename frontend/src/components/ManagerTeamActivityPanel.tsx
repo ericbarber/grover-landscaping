@@ -72,6 +72,12 @@ type TeamActivityReviewFilters = {
   destinationQuery: string;
 };
 
+type TeamActivityReviewState = TeamActivityReviewFilters & {
+  actorQuery: string;
+  targetQuery: string;
+  auditIdQuery: string;
+};
+
 export function parseTeamActivityReviewFilters(raw: string | null): TeamActivityReviewFilters {
   try {
     const value = raw ? JSON.parse(raw) as Record<string, unknown> : {};
@@ -294,6 +300,7 @@ export function ManagerTeamActivityPanel({
   onOpenCrew?: (activity: TeamAdministrationActivity) => void;
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
+  const focusedReviewRestoreRef = useRef<TeamActivityReviewState | null>(null);
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
@@ -435,6 +442,7 @@ export function ManagerTeamActivityPanel({
   }
 
   function resetReviewView() {
+    focusedReviewRestoreRef.current = null;
     setActorQuery('');
     setTargetQuery('');
     setSourceQuery('');
@@ -443,6 +451,23 @@ export function ManagerTeamActivityPanel({
     setEventFilter('all');
     setMoveScope('all');
     setActivitySort('newest');
+  }
+
+  function exitFocusedReview() {
+    const prior = focusedReviewRestoreRef.current;
+    focusedReviewRestoreRef.current = null;
+    if (!prior) {
+      resetReviewView();
+      return;
+    }
+    setActorQuery(prior.actorQuery);
+    setTargetQuery(prior.targetQuery);
+    setSourceQuery(prior.sourceQuery);
+    setDestinationQuery(prior.destinationQuery);
+    setAuditIdQuery(prior.auditIdQuery);
+    setEventFilter(prior.eventFilter);
+    setMoveScope(prior.moveScope);
+    setActivitySort(prior.activitySort);
   }
 
   useEffect(() => {
@@ -465,6 +490,18 @@ export function ManagerTeamActivityPanel({
 
   useEffect(() => {
     if (requestedCrewSignal <= 0 || !requestedCrewId) return;
+    if (!focusedReviewRestoreRef.current) {
+      focusedReviewRestoreRef.current = {
+        actorQuery,
+        targetQuery,
+        sourceQuery,
+        destinationQuery,
+        auditIdQuery,
+        eventFilter,
+        moveScope,
+        activitySort,
+      };
+    }
     setActorQuery('');
     setTargetQuery(requestedCrewId);
     setAuditIdQuery('');
@@ -706,7 +743,7 @@ export function ManagerTeamActivityPanel({
           </div>
           <button
             className="min-h-11 rounded-lg border border-emerald-300 bg-white px-3 font-bold"
-            onClick={resetReviewView}
+            onClick={exitFocusedReview}
             type="button"
           >
             Exit focused review
