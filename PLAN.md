@@ -676,10 +676,11 @@ Current state:
 - Crew inspection downloads the move support summary as an audit-ID-named text file when share and clipboard capabilities are restricted
 - Crew inspection compares the audited destination IDs with the crew's current assignment and flags crews that moved again after the selected event
 - Subsequent-move warnings show the crew's current readable branch and territory beside the audited move context
+- Copied, shared, and downloaded support summaries include the current hierarchy when it differs from the audited destination
 
 Next implementation work:
 
-- Include the crew's current hierarchy in copied, shared, and downloaded support summaries when the audited destination is stale
+- Add a one-tap path from stale crew inspection to the latest hierarchy event for that crew
 
 ## Planned
 

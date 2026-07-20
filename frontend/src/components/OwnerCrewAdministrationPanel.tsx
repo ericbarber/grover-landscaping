@@ -82,6 +82,18 @@ export function OwnerCrewAdministrationPanel({
     ? territories.find((territory) => territory.id === selectedCrew.territoryId)?.name
       ?? selectedCrew.territoryId
     : undefined;
+  const currentInspectionAssignment = (
+    !inspectionMatchesCurrentAssignment
+    && currentInspectionBranchLabel
+    && currentInspectionTerritoryLabel
+  )
+    ? `Current assignment: ${currentInspectionBranchLabel} · ${currentInspectionTerritoryLabel}`
+    : undefined;
+  const inspectionSupportText = [
+    inspectionSummary,
+    inspectionAuditLabel,
+    currentInspectionAssignment,
+  ].filter(Boolean).join('\n');
 
   async function refresh() {
     setIsLoading(true);
@@ -204,7 +216,7 @@ export function OwnerCrewAdministrationPanel({
   async function copyInspectionSummary() {
     if (!inspectionSummary || !inspectionAuditLabel) return;
     try {
-      await navigator.clipboard.writeText(`${inspectionSummary}\n${inspectionAuditLabel}`);
+      await navigator.clipboard.writeText(inspectionSupportText);
       setMessage('Crew move support summary copied.');
     } catch {
       setMessage('Summary copy is unavailable. Select the inspection context text instead.');
@@ -220,7 +232,7 @@ export function OwnerCrewAdministrationPanel({
     try {
       await navigator.share({
         title: 'Crew move audit',
-        text: `${inspectionSummary}\n${inspectionAuditLabel}`,
+        text: inspectionSupportText,
       });
       setMessage('Crew move support summary shared.');
     } catch (error) {
@@ -235,7 +247,7 @@ export function OwnerCrewAdministrationPanel({
   function downloadInspectionSummary() {
     if (!inspectionSummary || !inspectionAuditLabel || !inspectionAuditId) return;
     const url = URL.createObjectURL(new Blob(
-      [`${inspectionSummary}\n${inspectionAuditLabel}\n`],
+      [`${inspectionSupportText}\n`],
       { type: 'text/plain;charset=utf-8' },
     ));
     const anchor = document.createElement('a');
@@ -339,7 +351,7 @@ export function OwnerCrewAdministrationPanel({
               </p>
               {!inspectionMatchesCurrentAssignment ? (
                 <p className="mt-1 font-medium">
-                  Current assignment: {currentInspectionBranchLabel} · {currentInspectionTerritoryLabel}
+                  {currentInspectionAssignment}
                 </p>
               ) : null}
             </div>

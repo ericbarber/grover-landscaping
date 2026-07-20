@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 test('queues route progress during interruption and replays after recovery', async ({
   context,
@@ -425,8 +426,14 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await crewAdministration.getByRole('button', {
     name: 'Download move support summary',
   }).click();
-  expect((await supportDownload).suggestedFilename()).toBe(
+  const downloadedSummary = await supportDownload;
+  expect(downloadedSummary.suggestedFilename()).toBe(
     'crew-move-audit-audit_e2e_crew_hierarchy_move.txt',
+  );
+  const downloadedSummaryPath = await downloadedSummary.path();
+  expect(downloadedSummaryPath).not.toBeNull();
+  expect(await readFile(downloadedSummaryPath!, 'utf8')).toContain(
+    `Current assignment: Main Branch · ${territoryName}`,
   );
   await expect(crewAdministration.getByText(
     'Crew move support summary downloaded.',
