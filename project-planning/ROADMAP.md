@@ -28,6 +28,8 @@ Selected properties preview the two newest reports on mobile and expand older
 completion-report history only when requested.
 The authenticated application now opens on a persona-aware Home with signed-in
 identity, work and sync summaries, and role-relevant shortcuts.
+Home now provides a branded, time-aware first impression with persona messaging,
+daily progress, sync health, and a prominent recommended next action.
 
 ## Immediate Continuation Work
 
