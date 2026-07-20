@@ -704,10 +704,11 @@ Current state:
 - Failed audit-ID recovery explains owner-access and retry paths while retaining the immutable search action
 - Failed immutable-ID searches can retry the same audit directly after a transient history gap
 - Recovered audit searches return to full focused crew history without losing the inspected crew context
+- Exiting recovered crew history restores prior transient actor and audit-ID searches with persisted review settings
 
 Next implementation work:
 
-- Preserve the pre-focus owner review after exiting a recovered audit search
+- Report the correct active-filter count after restoring a recovered owner review
 
 ## Planned
 

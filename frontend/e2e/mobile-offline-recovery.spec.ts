@@ -432,6 +432,8 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   const teamActivity = page
     .getByRole('heading', { name: 'Recent access activity' })
     .locator('xpath=ancestor::section[1]');
+  await teamActivity.getByLabel('Find actor').fill('Local Owner');
+  await teamActivity.getByLabel('Find audit ID').fill('audit_e2e_crew_hierarchy_move');
   await teamActivity.getByLabel('Find move source').fill('Main Branch');
   await teamActivity.getByLabel('Crew move scope').selectOption('within_branch');
   await teamActivity.getByLabel('Sort').selectOption('oldest');
@@ -570,6 +572,10 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.getByText('Restored after inspection')).toBeHidden();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue('');
   await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
+  await expect(teamActivity.getByLabel('Find actor')).toHaveValue('Local Owner');
+  await expect(teamActivity.getByLabel('Find audit ID')).toHaveValue(
+    'audit_e2e_crew_hierarchy_move',
+  );
   await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('within_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
