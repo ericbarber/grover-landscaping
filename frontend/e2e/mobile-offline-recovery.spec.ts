@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   let submittedAccount: Record<string, unknown> | null = null;
   let accountCreateCount = 0;
+  let archivedAccountId = '';
   await page.route('**/customer-accounts', async (route) => {
     if (route.request().method() === 'POST') {
       accountCreateCount += 1;
@@ -33,6 +34,14 @@ test('creates a service-ready customer account in one mobile workflow', async ({
       return;
     }
     await route.fulfill({ contentType: 'application/json', json: [] });
+  });
+  await page.route('**/customer-accounts/*', async (route) => {
+    if (route.request().method() === 'DELETE') {
+      archivedAccountId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      await route.fulfill({ status: 204 });
+      return;
+    }
+    await route.continue();
   });
 
   await page.goto('/');
@@ -70,8 +79,13 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await onboarding.getByLabel('Contact email').fill('separate@example.com');
   await onboarding.getByRole('button', { name: 'Create account' }).click();
   await onboarding.getByRole('button', { name: 'Create separate account' }).click();
+  await expect.poll(() => accountCreateCount).toBe(2);
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
-  expect(accountCreateCount).toBe(2);
+  await onboarding.getByRole('button', { name: 'Archive account' }).last().click();
+  await expect(onboarding.getByText('The account leaves active onboarding')).toBeVisible();
+  await onboarding.getByRole('button', { name: 'Confirm archive' }).click();
+  await expect(onboarding.getByText(/account archived. Historical records remain available/)).toBeVisible();
+  expect(archivedAccountId).toBe('acct_mobile_smoke_2');
   expect(submittedAccount).toMatchObject({
     customer_name: 'Mobile Smoke HOA',
     primary_contact_name: 'Separate Contact',

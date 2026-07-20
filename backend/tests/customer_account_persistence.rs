@@ -1,13 +1,88 @@
 use grover_landscaping_api::{
     accounts::{
         AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-        CustomerPropertyMutationError, CustomerPropertyStatusError, UpdateCustomerAccountRequest,
-        UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
+        CustomerAccountArchiveError, CustomerPropertyMutationError, CustomerPropertyStatusError,
+        UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+        UpdateCustomerPropertyStatusRequest,
     },
     db::JobRepository,
     property_crew_assignments::{AssignPropertyCrewRequest, PropertyCrewAssignmentRepository},
 };
 mod common;
+
+#[tokio::test]
+async fn customer_account_archival_is_tenant_scoped_and_audited() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = jobs.pool().expect("connected repository should expose its pool");
+    let accounts = AccountRepository::from_pool(pool.clone());
+    let created = accounts
+        .create(CreateCustomerAccountRequest {
+            organization_id: "org_demo_landscaping".to_string(),
+            customer_name: "Account Archive Test".to_string(),
+            billing_model: "per_job".to_string(),
+            payment_status: "not_required".to_string(),
+            service_approval_status: "approved".to_string(),
+            contracted_services_per_period: 1,
+            billing_notes: None,
+            primary_contact_name: Some("Archive Contact".to_string()),
+            contact_email: Some("archive@example.com".to_string()),
+            contact_phone: None,
+            email_notifications_enabled: false,
+            sms_notifications_enabled: false,
+            quiet_hours_start: None,
+            quiet_hours_end: None,
+        })
+        .await
+        .expect("test account should be created");
+
+    assert_eq!(
+        accounts
+            .archive(
+                &created.account_id,
+                &["org_outside_tenant".to_string()],
+                "outside-user",
+            )
+            .await,
+        Err(CustomerAccountArchiveError::NotFound)
+    );
+    accounts
+        .archive(
+            &created.account_id,
+            &["org_demo_landscaping".to_string()],
+            "archive-test-user",
+        )
+        .await
+        .expect("tenant manager should archive an unused account");
+    assert!(!accounts
+        .list(&["org_demo_landscaping".to_string()])
+        .await
+        .iter()
+        .any(|account| account.account_id == created.account_id));
+    let audit_kind: String = sqlx::query_scalar(
+        "SELECT event_kind FROM access_audit_events WHERE target_id = $1",
+    )
+    .bind(&created.account_id)
+    .fetch_one(&pool)
+    .await
+    .expect("account archive should be audited");
+    assert_eq!(audit_kind, "account_archived");
+
+    sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
+        .bind(&created.account_id)
+        .execute(&pool)
+        .await
+        .expect("test audit should be cleaned up");
+    sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
+        .bind(&created.account_id)
+        .execute(&pool)
+        .await
+        .expect("test account should be cleaned up");
+}
 
 #[tokio::test]
 async fn customer_account_updates_are_persisted_and_tenant_scoped() {

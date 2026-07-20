@@ -224,6 +224,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Managers can create a service-ready account with primary contact, email or mobile destination, and explicit channel consent in one mobile workflow
 - Customer-account search matches customer, contact, email, phone, property name, and service address while composing with onboarding filters
 - New-account submission warns on exact normalized customer name, email, or phone matches and supports review or explicit separate creation
+- Tenant-scoped customer-account archival preserves records, rejects current properties or unfinished jobs, leaves active onboarding, and records an audit event
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -721,9 +722,9 @@ Current state:
 
 Next implementation work:
 
-- Add tenant-scoped customer-account archival without deleting account history
-- Prevent archival while current properties or active customer work still depend on the account
-- Exclude archived accounts from active onboarding and cover lifecycle authorization, persistence, and mobile confirmation
+- Add an archived customer-account review separate from active onboarding
+- Let authorized managers reactivate an archived organization/account relationship with audit history
+- Cover archived-list tenant boundaries and two-step mobile reactivation
 
 ## Planned
 

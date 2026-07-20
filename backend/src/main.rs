@@ -13,9 +13,9 @@ mod stop_progress;
 use accounts::{
     validate_create_customer_account_request, validate_create_customer_property_request,
     validate_update_customer_account_request, AccountRepository, CreateCustomerAccountRequest,
-    CreateCustomerPropertyRequest, CustomerPropertyMutationError, CustomerPropertyStatusError,
-    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
-    UpdateCustomerPropertyStatusRequest,
+    CreateCustomerPropertyRequest, CustomerAccountArchiveError, CustomerPropertyMutationError,
+    CustomerPropertyStatusError, UpdateCustomerAccountRequest,
+    UpdateCustomerPropertyIdentityRequest, UpdateCustomerPropertyStatusRequest,
 };
 use axum::{
     extract::{Extension, Path, Query, State},
@@ -552,7 +552,7 @@ fn app_with_runtime(
         )
         .route(
             "/customer-accounts/{account_id}",
-            put(update_customer_account),
+            put(update_customer_account).delete(archive_customer_account),
         )
         .route(
             "/customer-accounts/{account_id}/onboarding-progress",
@@ -1432,6 +1432,56 @@ async fn update_customer_account(
             Json(ErrorResponse {
                 error: "customer_account_not_found",
                 message: "The requested customer account was not found.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn archive_customer_account(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(account_id): Path<String>,
+) -> Response {
+    let organization_ids = principal_active_organization_ids_for_role(
+        &state,
+        &principal,
+        can_manage_property_portfolios,
+    )
+    .await;
+    match state
+        .accounts
+        .archive(&account_id, &organization_ids, &principal.subject)
+        .await
+    {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(CustomerAccountArchiveError::NotFound) => resource_not_found_response(
+            "customer_account_not_found",
+            "The requested active customer account was not found.",
+        ),
+        Err(CustomerAccountArchiveError::HasCurrentProperties) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_account_has_current_properties",
+                message: "Archive every current property before archiving this customer account."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerAccountArchiveError::HasActiveJobs) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_account_has_active_jobs",
+                message: "Complete current scheduled or in-progress work before archiving this customer account."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        Err(CustomerAccountArchiveError::Persistence) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "customer_account_not_archived",
+                message: "The customer account could not be archived.".to_string(),
             }),
         )
             .into_response(),

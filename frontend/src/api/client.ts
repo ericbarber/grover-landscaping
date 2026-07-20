@@ -1401,6 +1401,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw await apiRequestError(response);
   }
 
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
@@ -2261,6 +2262,10 @@ export async function updateCustomerAccount(
     }),
   });
   return toCustomerAccountRecord(item);
+}
+
+export async function archiveCustomerAccount(accountId: string): Promise<void> {
+  await request<void>(customerAccountPath(accountId), { method: 'DELETE' });
 }
 
 export function customerAccountPropertiesPath(accountId: string): string {

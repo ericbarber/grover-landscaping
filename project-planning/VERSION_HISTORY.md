@@ -219,6 +219,8 @@ version and release date.
   composed with onboarding status filters.
 - Added duplicate-account warnings with direct existing-account review and an
   explicit separate-account continuation.
+- Added audited tenant-scoped customer-account archival with current-property and
+  unfinished-work safeguards.
 
 Current continuation work:
 

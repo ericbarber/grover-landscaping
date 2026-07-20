@@ -104,6 +104,14 @@ pub enum CustomerPropertyStatusError {
     Persistence,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CustomerAccountArchiveError {
+    NotFound,
+    HasCurrentProperties,
+    HasActiveJobs,
+    Persistence,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct CustomerPropertyRecord {
     pub property_id: String,
@@ -192,6 +200,25 @@ impl AccountRepository {
             .await
             .ok()
             .flatten()
+    }
+
+    pub async fn archive(
+        &self,
+        account_id: &str,
+        organization_ids: &[String],
+        actor_user_id: &str,
+    ) -> Result<(), CustomerAccountArchiveError> {
+        let Some(pool) = &self.pool else {
+            let exists = seed_accounts(organization_ids)
+                .iter()
+                .any(|account| account.account_id == account_id);
+            return if exists {
+                Err(CustomerAccountArchiveError::HasCurrentProperties)
+            } else {
+                Err(CustomerAccountArchiveError::NotFound)
+            };
+        };
+        archive_account(pool, account_id, organization_ids, actor_user_id).await
     }
 
     pub async fn list_properties(
@@ -668,6 +695,89 @@ async fn update_account(
         quiet_hours_end: row.get("quiet_hours_end"),
         persisted: true,
     }))
+}
+
+async fn archive_account(
+    pool: &PgPool,
+    account_id: &str,
+    organization_ids: &[String],
+    actor_user_id: &str,
+) -> Result<(), CustomerAccountArchiveError> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let relation = sqlx::query(
+        r#"SELECT organization_id
+        FROM organization_customer_accounts
+        WHERE account_id = $1
+          AND organization_id = ANY($2)
+          AND status = 'active'
+        FOR UPDATE"#,
+    )
+    .bind(account_id)
+    .bind(organization_ids)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    let Some(relation) = relation else {
+        return Err(CustomerAccountArchiveError::NotFound);
+    };
+    let organization_id: String = relation.get("organization_id");
+    let current_property_count: i64 = sqlx::query_scalar(
+        r#"SELECT COUNT(*)
+        FROM customer_properties
+        WHERE account_id = $1
+          AND organization_id = $2
+          AND status <> 'archived'"#,
+    )
+    .bind(account_id)
+    .bind(&organization_id)
+    .fetch_one(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    if current_property_count > 0 {
+        return Err(CustomerAccountArchiveError::HasCurrentProperties);
+    }
+    let active_job_count: i64 = sqlx::query_scalar(
+        r#"SELECT COUNT(*)
+        FROM service_jobs
+        WHERE customer_account_id = $1
+          AND status IN ('scheduled', 'in_progress')"#,
+    )
+    .bind(account_id)
+    .fetch_one(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    if active_job_count > 0 {
+        return Err(CustomerAccountArchiveError::HasActiveJobs);
+    }
+    sqlx::query(
+        r#"UPDATE organization_customer_accounts
+        SET status = 'archived', updated_at = NOW()
+        WHERE organization_id = $1 AND account_id = $2 AND status = 'active'"#,
+    )
+    .bind(&organization_id)
+    .bind(account_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    sqlx::query(
+        r#"INSERT INTO access_audit_events (
+            id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+        ) VALUES ($1, $2, $3, 'account_archived', $4, NOW())"#,
+    )
+    .bind(format!("audit_account_archive_{}", Uuid::new_v4().simple()))
+    .bind(actor_user_id)
+    .bind(&organization_id)
+    .bind(account_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| CustomerAccountArchiveError::Persistence)?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| CustomerAccountArchiveError::Persistence)
 }
 
 async fn create_property(

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  archiveCustomerAccount,
   createCustomerAccount,
   createCustomerProperty,
   fetchCustomerAccountOnboardingProgress,
@@ -52,6 +53,7 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [createDraft, setCreateDraft] = useState<CustomerAccountDraft>(emptyCustomerAccountDraft);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [duplicateAccount, setDuplicateAccount] = useState<CustomerAccountRecord | null>(null);
+  const [archiveConfirmationId, setArchiveConfirmationId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
@@ -154,6 +156,30 @@ export function ManagerCustomerAccountOnboardingPanel({
       setMessage(`${updated.customerName} account updated.`);
     } catch {
       setMessage('The customer account could not be updated.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function archive(account: CustomerAccountRecord) {
+    setIsLoading(true);
+    try {
+      await archiveCustomerAccount(account.accountId);
+      setAccounts((current) => current.filter((item) => item.accountId !== account.accountId));
+      setProperties((current) => {
+        const next = { ...current };
+        delete next[account.accountId];
+        return next;
+      });
+      setProgress((current) => {
+        const next = { ...current };
+        delete next[account.accountId];
+        return next;
+      });
+      setArchiveConfirmationId('');
+      setMessage(`${account.customerName} account archived. Historical records remain available.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'The customer account could not be archived.');
     } finally {
       setIsLoading(false);
     }
@@ -396,6 +422,36 @@ export function ManagerCustomerAccountOnboardingPanel({
                     </button>
                   </div>
                 </details>
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  {archiveConfirmationId === account.accountId ? (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
+                      <p className="text-sm font-bold text-rose-950">Archive {account.customerName}?</p>
+                      <p className="mt-1 text-xs text-rose-800">
+                        The account leaves active onboarding, but its completed work and audit history are retained.
+                      </p>
+                      {(properties[account.accountId] ?? []).some((property) => property.status !== 'archived') ? (
+                        <p className="mt-2 text-xs font-semibold text-amber-900">
+                          Archive every current property before this account can be archived.
+                        </p>
+                      ) : null}
+                      <div className="mt-3 flex justify-end gap-2">
+                        <button className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" disabled={isLoading} onClick={() => setArchiveConfirmationId('')} type="button">Keep account</button>
+                        <button
+                          className="min-h-11 rounded-lg bg-rose-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                          disabled={isLoading || (properties[account.accountId] ?? []).some((property) => property.status !== 'archived')}
+                          onClick={() => void archive(account)}
+                          type="button"
+                        >
+                          Confirm archive
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button className="min-h-11 text-sm font-semibold text-rose-700" onClick={() => setArchiveConfirmationId(account.accountId)} type="button">
+                      Archive account
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </div>
