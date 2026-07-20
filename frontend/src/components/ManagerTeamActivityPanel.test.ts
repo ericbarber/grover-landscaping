@@ -106,19 +106,31 @@ describe('team administration activity labels', () => {
       eventFilter: 'crew_hierarchy_updated',
       moveScope: 'cross_branch',
       activitySort: 'oldest',
+      sourceQuery: 'North Branch',
+      destinationQuery: 'South Branch',
     }))).toEqual({
       eventFilter: 'crew_hierarchy_updated',
       moveScope: 'cross_branch',
       activitySort: 'oldest',
+      sourceQuery: 'North Branch',
+      destinationQuery: 'South Branch',
     });
     expect(parseTeamActivityReviewFilters(JSON.stringify({
       eventFilter: 'unknown',
       moveScope: 'interstate',
-    }))).toEqual({ eventFilter: 'all', moveScope: 'all', activitySort: 'newest' });
+    }))).toEqual({
+      eventFilter: 'all',
+      moveScope: 'all',
+      activitySort: 'newest',
+      sourceQuery: '',
+      destinationQuery: '',
+    });
     expect(parseTeamActivityReviewFilters('{bad json')).toEqual({
       eventFilter: 'all',
       moveScope: 'all',
       activitySort: 'newest',
+      sourceQuery: '',
+      destinationQuery: '',
     });
   });
 

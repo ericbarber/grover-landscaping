@@ -68,6 +68,8 @@ type TeamActivityReviewFilters = {
   eventFilter: TeamAdministrationEventKind | 'all';
   moveScope: TeamActivityMoveScope | 'all';
   activitySort: TeamActivitySort;
+  sourceQuery: string;
+  destinationQuery: string;
 };
 
 export function parseTeamActivityReviewFilters(raw: string | null): TeamActivityReviewFilters {
@@ -83,9 +85,21 @@ export function parseTeamActivityReviewFilters(raw: string | null): TeamActivity
         ? value.moveScope
         : 'all',
       activitySort: value.activitySort === 'oldest' ? 'oldest' : 'newest',
+      sourceQuery: typeof value.sourceQuery === 'string'
+        ? value.sourceQuery.slice(0, 120)
+        : '',
+      destinationQuery: typeof value.destinationQuery === 'string'
+        ? value.destinationQuery.slice(0, 120)
+        : '',
     };
   } catch {
-    return { eventFilter: 'all', moveScope: 'all', activitySort: 'newest' };
+    return {
+      eventFilter: 'all',
+      moveScope: 'all',
+      activitySort: 'newest',
+      sourceQuery: '',
+      destinationQuery: '',
+    };
   }
 }
 
@@ -274,8 +288,10 @@ export function ManagerTeamActivityPanel({
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
   const [auditIdQuery, setAuditIdQuery] = useState('');
-  const [sourceQuery, setSourceQuery] = useState('');
-  const [destinationQuery, setDestinationQuery] = useState('');
+  const [sourceQuery, setSourceQuery] = useState(initialReviewFilters.current.sourceQuery);
+  const [destinationQuery, setDestinationQuery] = useState(
+    initialReviewFilters.current.destinationQuery,
+  );
   const [eventFilter, setEventFilter] = useState<TeamAdministrationEventKind | 'all'>(
     initialReviewFilters.current.eventFilter,
   );
@@ -413,17 +429,32 @@ export function ManagerTeamActivityPanel({
       setEventFilter(loaded.eventFilter);
       setMoveScope(loaded.moveScope);
       setActivitySort(loaded.activitySort);
+      setSourceQuery(loaded.sourceQuery);
+      setDestinationQuery(loaded.destinationQuery);
       return;
     }
     try {
       window.localStorage.setItem(
         teamActivityReviewStorageKey(organizationId),
-        JSON.stringify({ eventFilter, moveScope, activitySort }),
+        JSON.stringify({
+          eventFilter,
+          moveScope,
+          activitySort,
+          sourceQuery,
+          destinationQuery,
+        }),
       );
     } catch {
       // Activity review remains usable when browser storage is unavailable.
     }
-  }, [organizationId, eventFilter, moveScope, activitySort]);
+  }, [
+    organizationId,
+    eventFilter,
+    moveScope,
+    activitySort,
+    sourceQuery,
+    destinationQuery,
+  ]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

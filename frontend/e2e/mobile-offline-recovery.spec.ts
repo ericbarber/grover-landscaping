@@ -225,9 +225,13 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
     .locator('xpath=ancestor::section[1]');
   await teamActivity.getByRole('button', { name: /Cross-branch moves/ }).click();
   await teamActivity.getByLabel('Sort').selectOption('oldest');
+  await teamActivity.getByLabel('Find move source').fill('Main Branch');
+  await teamActivity.getByLabel('Find move destination').fill('Primary Territory');
   await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('cross_branch');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('oldest');
+  await expect(teamActivity.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(teamActivity.getByLabel('Find move destination')).toHaveValue('Primary Territory');
   await page.reload();
   await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
   await expect(teamActivity.getByLabel('Event')).toHaveValue('crew_hierarchy_updated');
@@ -236,6 +240,8 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   await expect(teamActivity.getByLabel('Event')).toHaveValue('all');
   await expect(teamActivity.getByLabel('Crew move scope')).toHaveValue('all');
   await expect(teamActivity.getByLabel('Sort')).toHaveValue('newest');
+  await expect(teamActivity.getByLabel('Find move source')).toHaveValue('');
+  await expect(teamActivity.getByLabel('Find move destination')).toHaveValue('');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

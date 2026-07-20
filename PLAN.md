@@ -664,10 +664,11 @@ Current state:
 - Owner activity newest/oldest ordering restores with the per-organization crew-move review state
 - A single reset restores persisted owner activity filters and ordering to the default newest/all review view
 - Owner activity filters crew moves by readable source and destination branch or territory across paginated server history
+- Directional crew-move source and destination fields restore per organization across mobile reloads and clear with the review reset
 
 Next implementation work:
 
-- Restore directional crew-move review fields across mobile reloads
+- Show removable source and destination review chips on mobile
 
 ## Planned
 
