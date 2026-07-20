@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished missing amendment reviews from changed-request conflicts.
 - 2026-07-20: Failed photo completion closed when required processing recovery work cannot be persisted.
 - 2026-07-20: Distinguished unavailable property-onboarding reads and writes from missing profiles and conflicts.
 - 2026-07-20: Failed completion-report assembly closed when assigned-route context is unavailable.

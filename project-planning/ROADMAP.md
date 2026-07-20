@@ -22,7 +22,8 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.
-   - Audit remaining amendment and day-plan mutations and other repository fallbacks, then harden the next affected path.
+   - Audit remaining day-plan mutations and other repository fallbacks, then harden the next affected path.
+   - Preserve distinct missing, changed, and unavailable outcomes throughout manager route review.
 5. **Customer bid history**
    - Complete authenticated, tenant-scoped customer bid history.
 

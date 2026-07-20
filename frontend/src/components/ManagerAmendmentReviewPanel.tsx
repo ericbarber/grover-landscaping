@@ -6,6 +6,7 @@ import {
 } from '../api/dayPlanAmendmentsClient';
 import { fetchCrewDayPlan } from '../api/dayPlansClient';
 import { fetchProjectBids } from '../api/projectBidsClient';
+import { isApiErrorCode } from '../api/apiError';
 import {
   amendmentNeedsManagerDecision,
   amendmentReviewPrimaryDecision,
@@ -97,7 +98,13 @@ export function ManagerAmendmentReviewPanel({ crewId }: ManagerAmendmentReviewPa
         );
         setMessage(result.persisted ? 'Manager decision saved.' : 'Decision is local until the API can persist it.');
       })
-      .catch(() => setMessage('Review failed. The request remains submitted.'))
+      .catch((error) => setMessage(
+        isApiErrorCode(error, 'day_plan_amendment_review_not_found')
+          ? 'This request is no longer available. Refresh the review queue.'
+          : isApiErrorCode(error, 'day_plan_amendment_review_unavailable')
+            ? 'Review storage is temporarily unavailable. The request remains submitted.'
+            : 'Review failed because the request changed. Refresh the review queue.',
+      ))
       .finally(() => setReviewingId(null));
   }
 

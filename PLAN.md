@@ -844,10 +844,12 @@ Current state:
 - Manager property onboarding refuses to substitute an empty editable profile during storage outages
 - Photo rejection and processing-retry writes distinguish unavailable persistence from missing uploads
 - S3 photo completion fails closed when required thumbnail or inspection recovery work cannot be queued
+- Amendment reviews distinguish missing requests from requests that changed before a manager decision
+- Manager amendment feedback distinguishes missing, conflicting, and unavailable review writes
 
 Next implementation work:
 
-- Audit remaining amendment and day-plan mutations for missing or conflict persistence fallbacks
+- Audit remaining day-plan mutations for missing or conflict persistence fallbacks
 - Audit notification delivery and recovery paths for remaining lossy provider fallbacks
 - Harden and validate the next highest-impact persisted workflow
 

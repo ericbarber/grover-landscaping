@@ -1213,7 +1213,16 @@ impl DayPlanRepository {
             .await
             {
                 Ok(Some(response)) => PersistedMutationResult::Applied(response),
-                Ok(None) => PersistedMutationResult::Conflict,
+                Ok(None) => match postgres_day_plans::list_amendments(pool, day_plan_id).await {
+                    Ok(amendments) if amendments.iter().any(|item| item.id == amendment_id) => {
+                        PersistedMutationResult::Conflict
+                    }
+                    Ok(_) => PersistedMutationResult::NotFound,
+                    Err(error) => {
+                        tracing::error!(%error, day_plan_id, amendment_id, "persisted route amendment review recovery failed");
+                        PersistedMutationResult::Unavailable
+                    }
+                },
                 Err(error) => {
                     tracing::error!(%error, day_plan_id, amendment_id, "persisted route amendment review failed");
                     PersistedMutationResult::Unavailable

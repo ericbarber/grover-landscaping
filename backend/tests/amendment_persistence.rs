@@ -327,6 +327,19 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         reviewed.manager_note.as_deref(),
         Some("Prepare an itemized customer estimate.")
     );
+    assert!(matches!(
+        repository
+            .review_amendment(
+                day_plan_id,
+                "amendment_missing_for_review",
+                ReviewDayPlanAmendmentRequest {
+                    decision: "approve".to_string(),
+                    manager_note: None,
+                },
+            )
+            .await,
+        PersistedMutationResult::NotFound
+    ));
 
     let bid_repository = ProjectBidRepository::new();
     let ProjectBidDraftResult::Saved(bid) = bid_repository
@@ -604,4 +617,17 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     .await
     .expect("conversion audit actor should be available");
     assert_eq!(conversion_actor, manager_actor_user_id);
+    assert!(matches!(
+        repository
+            .review_amendment(
+                day_plan_id,
+                &created.id,
+                ReviewDayPlanAmendmentRequest {
+                    decision: "reject".to_string(),
+                    manager_note: None,
+                },
+            )
+            .await,
+        PersistedMutationResult::Conflict
+    ));
 }
