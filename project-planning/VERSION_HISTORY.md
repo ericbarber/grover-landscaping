@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Returned focus to restored audit rows after message dismissal.
 - 2026-07-19: Announced exact audit-row restoration after crew inspection.
 - 2026-07-19: Returned crew inspections to their exact owner activity row.
 - 2026-07-19: Added one-tap return to the latest move after focused pagination.

@@ -694,10 +694,11 @@ Current state:
 - Paginated focused history offers a touch-safe return that scrolls to and focuses the latest crew move
 - Returning from crew inspection scrolls to and focuses the exact audit row that opened the inspection
 - Returning from crew inspection announces the exact immutable audit event restored in owner activity
+- Dismissing audit-row return feedback restores focus to that exact event without scrolling away
 
 Next implementation work:
 
-- Dismiss audit-row return feedback without moving focus from the restored event
+- Distinguish a restored audit row visually after crew inspection
 
 ## Planned
 

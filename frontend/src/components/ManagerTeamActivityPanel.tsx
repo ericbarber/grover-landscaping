@@ -327,6 +327,7 @@ export function ManagerTeamActivityPanel({
   const [hasOlder, setHasOlder] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [reviewNotice, setReviewNotice] = useState<string | null>(null);
+  const [reviewNoticeAuditId, setReviewNoticeAuditId] = useState<string | null>(null);
   const filteredActivity = sortTeamActivity(
     filterTeamActivity(
       activity,
@@ -449,6 +450,7 @@ export function ManagerTeamActivityPanel({
   function resetReviewView() {
     focusedReviewRestoreRef.current = null;
     setReviewNotice(null);
+    setReviewNoticeAuditId(null);
     setActorQuery('');
     setTargetQuery('');
     setSourceQuery('');
@@ -475,6 +477,17 @@ export function ManagerTeamActivityPanel({
     setMoveScope(prior.moveScope);
     setActivitySort(prior.activitySort);
     setReviewNotice('Your prior owner activity review was restored.');
+    setReviewNoticeAuditId(null);
+  }
+
+  function dismissReviewNotice() {
+    const auditId = reviewNoticeAuditId;
+    setReviewNotice(null);
+    setReviewNoticeAuditId(null);
+    if (!auditId) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(`team-activity-${auditId}`)?.focus({ preventScroll: true });
+    });
   }
 
   function returnToLatestCrewMove() {
@@ -505,6 +518,7 @@ export function ManagerTeamActivityPanel({
   useEffect(() => {
     if (requestedCrewSignal <= 0 || !requestedCrewId) return;
     setReviewNotice(null);
+    setReviewNoticeAuditId(null);
     if (!focusedReviewRestoreRef.current) {
       focusedReviewRestoreRef.current = {
         actorQuery,
@@ -531,6 +545,7 @@ export function ManagerTeamActivityPanel({
   useEffect(() => {
     if (returnedAuditSignal <= 0 || !returnedAuditId) return;
     setReviewNotice(`Returned to audit event ${returnedAuditId}.`);
+    setReviewNoticeAuditId(returnedAuditId);
   }, [returnedAuditId, returnedAuditSignal]);
 
   useEffect(() => {
@@ -608,7 +623,7 @@ export function ManagerTeamActivityPanel({
           <p>{reviewNotice}</p>
           <button
             className="min-h-11 rounded-lg border border-sky-200 bg-white px-3 text-xs font-bold"
-            onClick={() => setReviewNotice(null)}
+            onClick={dismissReviewNotice}
             type="button"
           >
             Dismiss activity review message
