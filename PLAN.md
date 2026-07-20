@@ -662,10 +662,11 @@ Current state:
 - Crew move scope summary cards apply the paginated hierarchy-event and scope filters together, with mobile smoke coverage for selection and clearing
 - Owner hierarchy-event and move-scope filters restore per organization across mobile reloads with safe storage fallback
 - Owner activity newest/oldest ordering restores with the per-organization crew-move review state
+- A single reset restores persisted owner activity filters and ordering to the default newest/all review view
 
 Next implementation work:
 
-- Reset persisted owner activity filters and ordering to the default review view in one action
+- Filter crew move activity by readable source or destination hierarchy names
 
 ## Planned
 

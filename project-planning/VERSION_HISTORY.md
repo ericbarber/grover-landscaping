@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added one-tap reset for persisted owner activity review state.
 - 2026-07-19: Restored owner activity ordering with crew-move review state.
 - 2026-07-19: Restored owner crew-move review filters across mobile reloads.
 - 2026-07-19: Turned crew move summaries into one-tap owner activity filters.

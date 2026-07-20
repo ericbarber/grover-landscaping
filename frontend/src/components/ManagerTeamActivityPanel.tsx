@@ -280,6 +280,7 @@ export function ManagerTeamActivityPanel({
     eventFilter,
     moveScope,
   );
+  const hasCustomReviewView = activeFilterCount > 0 || activitySort !== 'newest';
   const summary = summarizeTeamActivity(activity);
 
   async function refresh() {
@@ -539,7 +540,7 @@ export function ManagerTeamActivityPanel({
           Showing {filteredActivity.length} of {activity.length} events
           {activeFilterCount ? ` · ${activeFilterCount} active filter${activeFilterCount === 1 ? '' : 's'}` : ''}
         </p>
-        {activeFilterCount ? (
+        {hasCustomReviewView ? (
           <button
             className="min-h-11 shrink-0 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
             onClick={() => {
@@ -548,10 +549,11 @@ export function ManagerTeamActivityPanel({
               setAuditIdQuery('');
               setEventFilter('all');
               setMoveScope('all');
+              setActivitySort('newest');
             }}
             type="button"
           >
-            Clear filters
+            Reset review view
           </button>
         ) : null}
       </div>
