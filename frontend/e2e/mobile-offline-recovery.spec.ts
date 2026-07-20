@@ -47,6 +47,11 @@ test('creates a service-ready customer account in one mobile workflow', async ({
   await onboarding.getByRole('button', { name: 'Create account' }).click();
 
   await expect(onboarding.getByText('Mobile Smoke HOA account created.')).toBeVisible();
+  await onboarding.getByLabel('Find customer account').fill('sam@example.com');
+  await onboarding.getByRole('button', { name: /Needs setup/ }).click();
+  await expect(onboarding.getByText('Mobile Smoke HOA', { exact: true })).toBeVisible();
+  await onboarding.getByLabel('Find customer account').fill('missing customer');
+  await expect(onboarding.getByText('No accounts match this search and onboarding filter.')).toBeVisible();
   expect(submittedAccount).toMatchObject({
     customer_name: 'Mobile Smoke HOA',
     primary_contact_name: 'Sam Lee',

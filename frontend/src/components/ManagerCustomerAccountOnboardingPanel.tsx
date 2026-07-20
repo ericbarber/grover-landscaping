@@ -15,6 +15,7 @@ import {
   filterAccountsByOnboardingProgress,
   propertyAttentionReasonLabel,
   propertyAttentionWorkspace,
+  searchCustomerAccounts,
   type AccountOnboardingFilter,
 } from '../domain/accountOnboardingProgress';
 import {
@@ -54,7 +55,9 @@ export function ManagerCustomerAccountOnboardingPanel({
   const [editingAccount, setEditingAccount] = useState<CustomerAccountRecord | null>(null);
   const [addingPropertyAccountId, setAddingPropertyAccountId] = useState('');
   const [filter, setFilter] = useState<AccountOnboardingFilter>('all');
-  const filteredAccounts = filterAccountsByOnboardingProgress(accounts, progress, filter);
+  const [searchQuery, setSearchQuery] = useState('');
+  const statusFilteredAccounts = filterAccountsByOnboardingProgress(accounts, progress, filter);
+  const filteredAccounts = searchCustomerAccounts(statusFilteredAccounts, properties, searchQuery);
   const completeCount = accounts.filter((account) => progress[account.accountId]?.complete).length;
   const incompleteCount = accounts.length - completeCount;
 
@@ -230,6 +233,15 @@ export function ManagerCustomerAccountOnboardingPanel({
         />
       )}
       {message ? <p className="mt-2 text-sm text-slate-600" role="status">{message}</p> : null}
+      <label className="mt-4 block text-sm font-semibold text-slate-700">Find customer account
+        <input
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal"
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Customer, contact, phone, or property"
+          type="search"
+          value={searchQuery}
+        />
+      </label>
       <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Account onboarding filters">
         {([
           ['all', `All ${accounts.length}`],
@@ -367,7 +379,7 @@ export function ManagerCustomerAccountOnboardingPanel({
         ))}
         {!isLoading && accounts.length > 0 && filteredAccounts.length === 0 ? (
           <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-            No accounts match this onboarding filter.
+            No accounts match this search and onboarding filter.
           </p>
         ) : null}
         {!isLoading && accounts.length === 0 ? <p className="text-sm text-slate-500">No customer accounts yet.</p> : null}

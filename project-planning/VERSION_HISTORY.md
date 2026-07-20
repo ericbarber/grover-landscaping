@@ -215,6 +215,8 @@ version and release date.
 
 - Added one-step mobile customer-account creation with validated primary contact,
   communication destination, and explicit notification consent.
+- Added customer-account search across customer, contact, and property details,
+  composed with onboarding status filters.
 
 Current continuation work:
 

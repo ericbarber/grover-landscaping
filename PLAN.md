@@ -222,6 +222,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Mobile customer account cards refresh progress after profile, crew, and lifecycle changes
 - Manager account onboarding filters separate incomplete work from completed accounts
 - Managers can create a service-ready account with primary contact, email or mobile destination, and explicit channel consent in one mobile workflow
+- Customer-account search matches customer, contact, email, phone, property name, and service address while composing with onboarding filters
 - Account progress identifies property-level profile, crew, blocked-status, and activation attention reasons
 - Mobile property cards translate attention reasons into manager actions
 - Property attention actions select the affected yard and open the relevant operational-profile or service-setup workspace
@@ -719,9 +720,9 @@ Current state:
 
 Next implementation work:
 
-- Add customer-account search across customer, contact, email, phone, and property details
-- Keep onboarding status filters composable with account search on mobile
-- Cover account discovery and empty-result guidance with focused tests
+- Warn managers when a new account matches an existing customer name, email, or phone
+- Let managers review the matching account before intentionally continuing
+- Cover duplicate-risk detection and explicit continuation with focused mobile tests
 
 ## Planned
 

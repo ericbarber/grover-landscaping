@@ -80,3 +80,22 @@ export function filterAccountsByOnboardingProgress(
     return filter === 'complete' ? complete : !complete;
   });
 }
+
+export function searchCustomerAccounts(
+  accounts: CustomerAccountRecord[],
+  properties: Record<string, CustomerPropertyRecord[]>,
+  query: string,
+): CustomerAccountRecord[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery) return accounts;
+  return accounts.filter((account) => [
+    account.customerName,
+    account.primaryContactName,
+    account.contactEmail,
+    account.contactPhone,
+    ...(properties[account.accountId] ?? []).flatMap((property) => [
+      property.displayName,
+      property.serviceAddress,
+    ]),
+  ].some((value) => value.toLocaleLowerCase().includes(normalizedQuery)));
+}

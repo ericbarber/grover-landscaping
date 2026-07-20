@@ -5,6 +5,7 @@ import {
   filterAccountsByOnboardingProgress,
   propertyAttentionReasonLabel,
   propertyAttentionWorkspace,
+  searchCustomerAccounts,
 } from './accountOnboardingProgress';
 
 const account: CustomerAccountRecord = {
@@ -91,6 +92,32 @@ describe('account onboarding progress', () => {
     expect(propertyAttentionReasonLabel('crew_unassigned')).toBe('Assign service crew');
     expect(propertyAttentionReasonLabel('property_blocked')).toBe('Resolve blocked status');
     expect(propertyAttentionReasonLabel('activation_pending')).toBe('Activate property');
+  });
+
+  it('searches customer, contact, and property details case-insensitively', () => {
+    const otherAccount = {
+      ...account,
+      accountId: 'acct_2',
+      customerName: 'Desert HOA',
+      primaryContactName: 'Sam Lee',
+      contactEmail: 'sam@desert.example',
+      contactPhone: '+14805550123',
+    };
+    const accounts = [account, otherAccount];
+    const properties = {
+      acct_1: [property('active')],
+      acct_2: [{
+        ...property('active'),
+        propertyId: 'property_desert',
+        accountId: 'acct_2',
+        displayName: 'North Courtyard',
+        serviceAddress: '900 Cactus Avenue',
+      }],
+    };
+    expect(searchCustomerAccounts(accounts, properties, 'DESERT')).toEqual([otherAccount]);
+    expect(searchCustomerAccounts(accounts, properties, 'sam@')).toEqual([otherAccount]);
+    expect(searchCustomerAccounts(accounts, properties, 'Cactus')).toEqual([otherAccount]);
+    expect(searchCustomerAccounts(accounts, properties, '  ')).toEqual(accounts);
   });
 
   it('routes property attention to the relevant setup workspace', () => {
