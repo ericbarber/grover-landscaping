@@ -24,6 +24,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
 - Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
+- Mobile managers land on a compact six-category home instead of every office tool in one continuous page
+- Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render one task group at a time on mobile
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -878,7 +880,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with a grouped manager home, compact route/job summaries, scroll restoration, and iPhone interaction validation
+- Continue the mobile navigation phase with compact route/job summaries, shorter customer and team sub-workspaces, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention

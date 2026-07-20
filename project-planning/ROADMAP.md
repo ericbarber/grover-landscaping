@@ -12,8 +12,9 @@ and a contextual header. Follow-up slices will group manager capabilities into a
 manager home, make route and job summaries more compact, preserve per-view scroll
 position, and validate the complete interaction model on iPhone. Persona-aware
 navigation now separates yard owners, property managers, field crews, yard-care
-company operators, dispatch, billing, and support; the next slices will deepen
-the content and actions shown inside each persona workspace.
+company operators, dispatch, billing, and support. Mobile managers now enter a
+compact task-category home and load only one category at a time; the next slices
+will shorten the customer, team, route, and job content within those workspaces.
 
 ## Immediate Continuation Work
 
