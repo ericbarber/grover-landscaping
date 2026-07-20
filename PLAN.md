@@ -358,12 +358,14 @@ Delivered:
 - Property setup blocks grouping controls when persisted portfolio context cannot be loaded
 - Property and crew assignment lists distinguish unavailable persistence from valid unassigned state
 - Property setup blocks assignment controls when persisted assignment history cannot be loaded
+- Day-plan and customer project-bid lists distinguish unavailable persistence from valid empty history
+- Manager amendment review warns when existing persisted bid context cannot be trusted
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable project-bid lists from valid empty day-plan and customer bid history
-- Add repository and phone-flow coverage for bid-list availability
+- Make project-bid draft and lifecycle mutations fail explicitly instead of returning local or missing state
+- Add repository and phone-flow coverage for bid mutation availability
 
 ### Manager scheduling workflow
 
@@ -778,12 +780,13 @@ Current state:
 - Customer-account create and update paths return explicit unavailable persistence states
 - Property portfolio lists and customer grouping reads return explicit unavailable persistence states
 - Property and active-crew assignment lists return explicit unavailable persistence states
+- Day-plan and customer project-bid lists return explicit unavailable persistence states
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable project-bid lists from valid empty day-plan and customer bid history
-- Add repository and phone-flow coverage for bid-list availability
+- Make project-bid draft and lifecycle mutations fail explicitly instead of returning local or missing state
+- Add repository and phone-flow coverage for bid mutation availability
 
 ## Planned
 

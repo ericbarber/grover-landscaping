@@ -57,6 +57,12 @@ pub struct ProjectBidResponse {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug)]
+pub enum ProjectBidListResult {
+    Loaded(Vec<ProjectBidResponse>),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct SendProjectBidRequest {
     pub channel: String,
@@ -127,34 +133,42 @@ impl ProjectBidRepository {
         response
     }
 
-    pub async fn list_for_day_plan(&self, day_plan_id: &str) -> Vec<ProjectBidResponse> {
+    pub async fn list_for_day_plan(&self, day_plan_id: &str) -> ProjectBidListResult {
         if let Some(pool) = &self.pool {
-            if let Ok(bids) = postgres_project_bids::list_for_day_plan(pool, day_plan_id).await {
-                return bids;
-            }
+            return match postgres_project_bids::list_for_day_plan(pool, day_plan_id).await {
+                Ok(bids) => ProjectBidListResult::Loaded(bids),
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted day-plan bid list failed");
+                    ProjectBidListResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        ProjectBidListResult::Loaded(Vec::new())
     }
 
     pub async fn list_for_account(
         &self,
         account_id: &str,
         organization_ids: &[String],
-    ) -> Vec<ProjectBidResponse> {
+    ) -> ProjectBidListResult {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return ProjectBidListResult::Loaded(Vec::new());
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(bids) =
-                postgres_project_bids::list_for_account(pool, account_id, organization_ids).await
+            return match postgres_project_bids::list_for_account(pool, account_id, organization_ids)
+                .await
             {
-                return bids;
-            }
+                Ok(bids) => ProjectBidListResult::Loaded(bids),
+                Err(error) => {
+                    tracing::error!(%error, account_id, "persisted customer bid list failed");
+                    ProjectBidListResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        ProjectBidListResult::Loaded(Vec::new())
     }
 
     pub async fn send(

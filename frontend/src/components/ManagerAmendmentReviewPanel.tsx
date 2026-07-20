@@ -33,6 +33,7 @@ export function ManagerAmendmentReviewPanel({ crewId }: ManagerAmendmentReviewPa
   const [dayPlanId, setDayPlanId] = useState<string | null>(null);
   const [amendments, setAmendments] = useState<DayPlanAmendmentRequest[]>([]);
   const [bids, setBids] = useState<ProjectBid[]>([]);
+  const [bidsUnavailable, setBidsUnavailable] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +43,7 @@ export function ManagerAmendmentReviewPanel({ crewId }: ManagerAmendmentReviewPa
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
+    setBidsUnavailable(false);
 
     fetchCrewDayPlan(crewId)
       .then((dayPlan) => {
@@ -49,7 +51,10 @@ export function ManagerAmendmentReviewPanel({ crewId }: ManagerAmendmentReviewPa
         setDayPlanId(dayPlan.id);
         return Promise.all([
           fetchDayPlanAmendments(dayPlan.id),
-          fetchProjectBids(dayPlan.id).catch(() => []),
+          fetchProjectBids(dayPlan.id).catch(() => {
+            if (isMounted) setBidsUnavailable(true);
+            return [];
+          }),
         ]);
       })
       .then(([requests, projectBids]) => {
@@ -116,6 +121,11 @@ export function ManagerAmendmentReviewPanel({ crewId }: ManagerAmendmentReviewPa
       <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
         <span className="font-bold">{pendingAmendmentCount(amendments)}</span> awaiting manager decision
       </div>
+      {bidsUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted project bids could not be loaded. Existing bid context is hidden until API readiness recovers.
+        </p>
+      ) : null}
 
       {isLoading ? <p className="mt-4 text-sm text-slate-500">Loading...</p> : null}
 

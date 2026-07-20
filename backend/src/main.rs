@@ -99,7 +99,7 @@ use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfi
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
     validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
-    ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
+    ProjectBidListResult, ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -2543,12 +2543,17 @@ async fn list_customer_project_bids(
         can_view_customer_property_portfolios,
     )
     .await;
-    let bids = state
+    match state
         .project_bids
         .list_for_account(&account_id, &organization_ids)
-        .await;
-
-    Json(bids).into_response()
+        .await
+    {
+        ProjectBidListResult::Loaded(bids) => Json(bids).into_response(),
+        ProjectBidListResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_project_bids_unavailable",
+            "The persisted customer bid history could not be loaded.",
+        ),
+    }
 }
 
 async fn export_customer_privacy_data(
@@ -5152,7 +5157,13 @@ async fn list_project_bids(
         return response;
     }
 
-    Json(state.project_bids.list_for_day_plan(&day_plan_id).await).into_response()
+    match state.project_bids.list_for_day_plan(&day_plan_id).await {
+        ProjectBidListResult::Loaded(bids) => Json(bids).into_response(),
+        ProjectBidListResult::Unavailable => persisted_resource_unavailable_response(
+            "project_bids_unavailable",
+            "The persisted day-plan bids could not be loaded.",
+        ),
+    }
 }
 
 async fn send_project_bid(

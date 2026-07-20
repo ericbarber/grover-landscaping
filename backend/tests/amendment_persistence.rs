@@ -5,8 +5,8 @@ use grover_landscaping_api::{
     },
     db::{JobAddOnStatusUpdate, JobRepository, ResourceReadResult},
     project_bids::{
-        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidRepository,
-        ProjectBidSendResult, SendProjectBidRequest,
+        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidListResult,
+        ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
     },
 };
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -24,6 +24,16 @@ fn loaded<T: std::fmt::Debug>(result: PersistedReadResult<T>, context: &str) -> 
     match result {
         PersistedReadResult::Loaded(value) => value,
         other => panic!("{context}, got {other:?}"),
+    }
+}
+
+fn loaded_bids(
+    result: ProjectBidListResult,
+    context: &str,
+) -> Vec<grover_landscaping_api::project_bids::ProjectBidResponse> {
+    match result {
+        ProjectBidListResult::Loaded(bids) => bids,
+        ProjectBidListResult::Unavailable => panic!("{context}: unavailable"),
     }
 }
 
@@ -131,6 +141,28 @@ async fn repository_reports_unavailable_persisted_amendment_reads() {
         .await;
 
     assert!(matches!(result, PersistedReadResult::Unavailable));
+}
+
+#[tokio::test]
+async fn repository_reports_unavailable_persisted_project_bid_lists() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = ProjectBidRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository
+            .list_for_day_plan("day_plan_2026_06_15_crew_1001")
+            .await,
+        ProjectBidListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        ProjectBidListResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -259,7 +291,10 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .await
         .expect("test bid audit rows should reset");
 
-    let bids = bid_repository.list_for_day_plan(day_plan_id).await;
+    let bids = loaded_bids(
+        bid_repository.list_for_day_plan(day_plan_id).await,
+        "day-plan bid list should load",
+    );
     assert!(bids.iter().any(|item| item.id == bid.id));
 
     let ProjectBidSendResult::Sent(sent) = bid_repository
@@ -379,9 +414,12 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .expect("bid conversion should be idempotent");
     assert_eq!(converted_again.converted_at, converted.converted_at);
 
-    let account_bid_history = bid_repository
-        .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
-        .await;
+    let account_bid_history = loaded_bids(
+        bid_repository
+            .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        "account bid history should load",
+    );
     let account_bid = account_bid_history
         .iter()
         .find(|item| item.id == bid.id)
@@ -390,14 +428,20 @@ async fn repository_persists_and_lists_day_plan_amendments() {
     assert_eq!(account_bid.customer_account_id, "acct_1001");
     assert_eq!(account_bid.converted_job_id.as_deref(), Some("job_1001"));
 
-    assert!(bid_repository
-        .list_for_account("acct_1001", &["org_other".to_string()])
-        .await
-        .is_empty());
-    assert!(bid_repository
-        .list_for_account("acct_other", &["org_demo_landscaping".to_string()])
-        .await
-        .is_empty());
+    assert!(loaded_bids(
+        bid_repository
+            .list_for_account("acct_1001", &["org_other".to_string()])
+            .await,
+        "outside organization bid history should load",
+    )
+    .is_empty());
+    assert!(loaded_bids(
+        bid_repository
+            .list_for_account("acct_other", &["org_demo_landscaping".to_string()])
+            .await,
+        "outside account bid history should load",
+    )
+    .is_empty());
 
     let add_on_count = sqlx::query_scalar::<_, i64>(
         "SELECT COUNT(*) FROM service_job_add_ons WHERE project_bid_id = $1",
