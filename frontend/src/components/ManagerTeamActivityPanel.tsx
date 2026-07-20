@@ -829,7 +829,7 @@ export function ManagerTeamActivityPanel({
             }`}
             id={`team-activity-${item.id}`}
             key={item.id}
-            tabIndex={item.id === latestFocusedCrewMoveId ? -1 : undefined}
+            tabIndex={item.eventKind === 'crew_hierarchy_updated' ? -1 : undefined}
           >
             <div className="flex items-start justify-between gap-3">
               <div>

@@ -692,10 +692,11 @@ Current state:
 - Focused crew pagination deduplicates overlapping cursor-boundary audit events by immutable event ID
 - The latest crew-move row remains the single semantic current item after older history is appended
 - Paginated focused history offers a touch-safe return that scrolls to and focuses the latest crew move
+- Returning from crew inspection scrolls to and focuses the exact audit row that opened the inspection
 
 Next implementation work:
 
-- Return to the prior pagination position after inspecting the latest crew move
+- Announce the exact audit row restored after crew inspection
 
 ## Planned
 

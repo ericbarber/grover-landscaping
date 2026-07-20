@@ -2713,13 +2713,16 @@ export function App() {
               target?.focus({ preventScroll: true });
             }}
             onReturnFromCrewInspection={() => {
+              const inspectedAuditId = crewAdministrationInspectionAuditId;
               setCrewAdministrationReturnTarget(undefined);
               setCrewAdministrationInspectionSummary(undefined);
               setCrewAdministrationInspectionAuditLabel(undefined);
               setCrewAdministrationInspectionAuditId(undefined);
               setCrewAdministrationInspectedDestinationBranchId(undefined);
               setCrewAdministrationInspectedDestinationTerritoryId(undefined);
-              const target = document.getElementById('team-activity-review');
+              const target = inspectedAuditId
+                ? document.getElementById(`team-activity-${inspectedAuditId}`)
+                : document.getElementById('team-activity-review');
               target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               target?.focus({ preventScroll: true });
             }}

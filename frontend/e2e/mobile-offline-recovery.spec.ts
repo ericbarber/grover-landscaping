@@ -497,7 +497,7 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
     .getByRole('button', { name: 'Open affected crew' })
     .click();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
-  await expect(teamActivity).toBeFocused();
+  await expect(teamActivity.locator('ol > li[aria-current="true"]')).toBeFocused();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
   await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
