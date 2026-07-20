@@ -1,11 +1,13 @@
 use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
-        PersistedMutationResult, ReorderDayPlanStopsRequest, TodayDayPlanResult,
+        PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
+        TodayDayPlanResult,
     },
     db::JobRepository,
 };
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
+use std::time::Duration;
 mod common;
 
 fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
@@ -517,4 +519,53 @@ async fn repository_reports_rejected_persisted_route_stop_mutations() {
     assert!(matches!(assignment, PersistedMutationResult::Conflict));
     assert!(matches!(removal, PersistedMutationResult::Conflict));
     assert!(matches!(reorder, PersistedMutationResult::NotFound));
+}
+
+#[tokio::test]
+async fn repository_fails_persisted_route_ownership_lookups_closed() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let _jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&config.database_url)
+        .await
+        .expect("test pool should connect");
+    let repository = DayPlanRepository::from_pool(pool);
+
+    assert_eq!(
+        repository.organization_id_for_crew("crew_1001").await,
+        PersistedReadResult::Loaded(Some("org_demo_landscaping".to_string()))
+    );
+    assert_eq!(
+        repository.organization_id_for_crew("crew_missing").await,
+        PersistedReadResult::Loaded(None)
+    );
+    assert_eq!(
+        repository
+            .organization_id_for_day_plan("day_plan_missing")
+            .await,
+        PersistedReadResult::Loaded(None)
+    );
+
+    let unavailable_pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let unavailable_repository = DayPlanRepository::from_pool(unavailable_pool);
+    assert_eq!(
+        unavailable_repository
+            .organization_id_for_crew("crew_1001")
+            .await,
+        PersistedReadResult::Unavailable
+    );
+    assert_eq!(
+        unavailable_repository
+            .organization_id_for_day_plan("day_plan_2026_06_15_crew_1001")
+            .await,
+        PersistedReadResult::Unavailable
+    );
 }

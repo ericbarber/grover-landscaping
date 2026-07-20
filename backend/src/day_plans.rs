@@ -47,7 +47,7 @@ pub enum PersistedMutationResult<T> {
     Unavailable,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PersistedReadResult<T> {
     Loaded(T),
     Unavailable,
@@ -332,16 +332,21 @@ impl DayPlanRepository {
         Self { pool: Some(pool) }
     }
 
-    pub async fn organization_id_for_crew(&self, crew_id: &str) -> Option<String> {
+    pub async fn organization_id_for_crew(
+        &self,
+        crew_id: &str,
+    ) -> PersistedReadResult<Option<String>> {
         if let Some(pool) = &self.pool {
-            if let Ok(organization_id) =
-                postgres_day_plans::organization_id_for_crew(pool, crew_id).await
-            {
-                return organization_id;
-            }
+            return match postgres_day_plans::organization_id_for_crew(pool, crew_id).await {
+                Ok(organization_id) => PersistedReadResult::Loaded(organization_id),
+                Err(error) => {
+                    tracing::error!(%error, crew_id, "persisted crew ownership lookup failed");
+                    PersistedReadResult::Unavailable
+                }
+            };
         }
 
-        seed_organization_id_for_crew(crew_id)
+        PersistedReadResult::Loaded(seed_organization_id_for_crew(crew_id))
     }
 
     pub async fn list_crews(&self, organization_ids: &[String]) -> Vec<CrewSummary> {
@@ -877,17 +882,23 @@ impl DayPlanRepository {
         UpdateCrewResult::Updated(crew)
     }
 
-    pub async fn organization_id_for_day_plan(&self, day_plan_id: &str) -> Option<String> {
+    pub async fn organization_id_for_day_plan(
+        &self,
+        day_plan_id: &str,
+    ) -> PersistedReadResult<Option<String>> {
         if let Some(pool) = &self.pool {
-            if let Ok(organization_id) =
-                postgres_day_plans::organization_id_for_day_plan(pool, day_plan_id).await
-            {
-                return organization_id;
-            }
+            return match postgres_day_plans::organization_id_for_day_plan(pool, day_plan_id).await {
+                Ok(organization_id) => PersistedReadResult::Loaded(organization_id),
+                Err(error) => {
+                    tracing::error!(%error, day_plan_id, "persisted day-plan ownership lookup failed");
+                    PersistedReadResult::Unavailable
+                }
+            };
         }
 
-        let (_, crew_id) = day_plan_parts_from_id(day_plan_id)?;
-        seed_organization_id_for_crew(&crew_id)
+        let organization_id = day_plan_parts_from_id(day_plan_id)
+            .and_then(|(_, crew_id)| seed_organization_id_for_crew(&crew_id));
+        PersistedReadResult::Loaded(organization_id)
     }
 
     pub async fn create_draft_day_plan(
@@ -1515,8 +1526,8 @@ mod tests {
         validate_create_service_territory_request, AmendmentService, AssignDayPlanStopRequest,
         CreateCrewRequest, CreateDayPlanAmendmentRequest, CreateDayPlanRequest,
         CreateOrganizationBranchRequest, CreateServiceTerritoryRequest, DayPlanRepository,
-        PersistedMutationResult, ReorderDayPlanStopsRequest, ReviewDayPlanAmendmentRequest,
-        TodayDayPlanResult,
+        PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
+        ReviewDayPlanAmendmentRequest, TodayDayPlanResult,
     };
 
     #[test]
@@ -1810,17 +1821,17 @@ mod tests {
 
         assert_eq!(
             repository.organization_id_for_crew("crew_1001").await,
-            Some("org_demo_landscaping".to_string())
+            PersistedReadResult::Loaded(Some("org_demo_landscaping".to_string()))
         );
         assert_eq!(
             repository
                 .organization_id_for_day_plan("day_plan_2026_06_15_crew_1001")
                 .await,
-            Some("org_demo_landscaping".to_string())
+            PersistedReadResult::Loaded(Some("org_demo_landscaping".to_string()))
         );
         assert_eq!(
             repository.organization_id_for_crew("crew_unknown").await,
-            None
+            PersistedReadResult::Loaded(None)
         );
     }
 

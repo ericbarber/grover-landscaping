@@ -252,6 +252,8 @@ Current continuation work:
 - PostgreSQL-backed amendment-list failures now return an unavailable response
   instead of presenting an empty manager review queue; demo mode retains its
   intentionally empty queue.
+- PostgreSQL-backed crew and day-plan ownership lookup failures now fail closed
+  with an unavailable response instead of authorizing through seeded tenant IDs.
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
 - First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.

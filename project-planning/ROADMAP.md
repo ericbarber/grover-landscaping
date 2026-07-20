@@ -20,7 +20,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.
-   - Make persisted crew and day-plan ownership lookup failures fail closed instead of using seeded tenant IDs.
+   - Make persisted job and completion-report ownership lookup failures fail closed instead of using seeded tenant IDs.
 5. **Customer bid history**
    - Complete authenticated, tenant-scoped customer bid history.
 

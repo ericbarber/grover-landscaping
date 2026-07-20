@@ -154,6 +154,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - First-attempt amendment conflicts enter the durable manager-review queue immediately
 - PostgreSQL-backed amendment-list failures return an unavailable response instead of an empty review queue
 - No-database demo mode retains an intentionally empty amendment queue
+- PostgreSQL-backed crew and day-plan ownership lookups return explicit missing or unavailable results instead of seeded tenant IDs
+- Route authorization fails closed with `503` when persisted ownership cannot be verified
 - Frontend amendment API client with authenticated requests
 - Persisted amendment reload and local fallback with visible sync state
 - Manager amendment review panel with pending-request counts and refresh control
@@ -330,9 +332,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed crew and day-plan ownership lookups from falling back to seeded tenant IDs
+- Stop PostgreSQL-backed job and completion-report ownership lookups from falling back to seeded tenant IDs
 - Return explicit missing and unavailable ownership results while retaining no-database demo ownership
-- Prove route authorization fails closed when persisted ownership cannot be resolved
+- Prove job and report authorization fail closed when persisted ownership cannot be resolved
 
 ### Manager scheduling workflow
 
@@ -743,9 +745,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed crew and day-plan ownership lookups from falling back to seeded tenant IDs
+- Stop PostgreSQL-backed job and completion-report ownership lookups from falling back to seeded tenant IDs
 - Return explicit missing and unavailable ownership results while retaining no-database demo ownership
-- Prove route authorization fails closed when persisted ownership cannot be resolved
+- Prove job and report authorization fail closed when persisted ownership cannot be resolved
 
 ## Planned
 

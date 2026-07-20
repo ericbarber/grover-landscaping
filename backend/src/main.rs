@@ -3174,9 +3174,14 @@ async fn list_active_crew_property_assignments(
         return Json(Vec::<PropertyCrewAssignmentResponse>::new()).into_response();
     }
 
-    let Some(crew_organization_id) = state.day_plans.organization_id_for_crew(&crew_id).await
-    else {
-        return resource_not_found_response("crew_not_found", "Crew was not found.");
+    let crew_organization_id = match state.day_plans.organization_id_for_crew(&crew_id).await {
+        day_plans::PersistedReadResult::Loaded(Some(organization_id)) => organization_id,
+        day_plans::PersistedReadResult::Loaded(None) => {
+            return resource_not_found_response("crew_not_found", "Crew was not found.");
+        }
+        day_plans::PersistedReadResult::Unavailable => {
+            return persisted_ownership_unavailable_response("crew_ownership_unavailable");
+        }
     };
 
     if !organization_ids
@@ -4063,11 +4068,19 @@ async fn require_crew_organization_access(
     crew_id: &str,
     required_role: fn(&AccessRole) -> bool,
 ) -> Result<(), Response> {
-    let Some(organization_id) = state.day_plans.organization_id_for_crew(crew_id).await else {
-        return Err(resource_not_found_response(
-            "crew_not_found",
-            "Crew was not found.",
-        ));
+    let organization_id = match state.day_plans.organization_id_for_crew(crew_id).await {
+        day_plans::PersistedReadResult::Loaded(Some(organization_id)) => organization_id,
+        day_plans::PersistedReadResult::Loaded(None) => {
+            return Err(resource_not_found_response(
+                "crew_not_found",
+                "Crew was not found.",
+            ));
+        }
+        day_plans::PersistedReadResult::Unavailable => {
+            return Err(persisted_ownership_unavailable_response(
+                "crew_ownership_unavailable",
+            ));
+        }
     };
 
     require_organization_membership(state, principal, &organization_id, required_role).await
@@ -4079,18 +4092,37 @@ async fn require_day_plan_organization_access(
     day_plan_id: &str,
     required_role: fn(&AccessRole) -> bool,
 ) -> Result<(), Response> {
-    let Some(organization_id) = state
+    let organization_id = match state
         .day_plans
         .organization_id_for_day_plan(day_plan_id)
         .await
-    else {
-        return Err(resource_not_found_response(
-            "day_plan_not_found",
-            "Day plan was not found.",
-        ));
+    {
+        day_plans::PersistedReadResult::Loaded(Some(organization_id)) => organization_id,
+        day_plans::PersistedReadResult::Loaded(None) => {
+            return Err(resource_not_found_response(
+                "day_plan_not_found",
+                "Day plan was not found.",
+            ));
+        }
+        day_plans::PersistedReadResult::Unavailable => {
+            return Err(persisted_ownership_unavailable_response(
+                "day_plan_ownership_unavailable",
+            ));
+        }
     };
 
     require_organization_membership(state, principal, &organization_id, required_role).await
+}
+
+fn persisted_ownership_unavailable_response(error: &'static str) -> Response {
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(ErrorResponse {
+            error,
+            message: "Persisted resource ownership could not be verified. Access is denied until persistence recovers.".to_string(),
+        }),
+    )
+        .into_response()
 }
 
 async fn require_job_organization_access(
@@ -5783,6 +5815,34 @@ mod tests {
         .unwrap_err();
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn day_plan_organization_access_fails_closed_when_persistence_is_unavailable() {
+        let mut state = (*seed_state()).clone();
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .acquire_timeout(std::time::Duration::from_millis(100))
+            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .expect("unavailable test pool URL should be valid");
+        state.day_plans = DayPlanRepository::from_pool(pool);
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
+            claim_roles: vec![AccessRole::OrganizationOwner],
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+
+        let response = require_day_plan_organization_access(
+            &state,
+            &principal,
+            "day_plan_2026_06_15_crew_1001",
+            can_manage_schedule,
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]
