@@ -1,11 +1,39 @@
 use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
-    OrganizationRepository, ReissueOrganizationInvitationRequest,
+    OrganizationCollectionResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
     UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
 };
 use sqlx::postgres::PgPoolOptions;
+use std::time::Duration;
 
 mod common;
+
+fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
+    match result {
+        OrganizationCollectionResult::Loaded(items) => items,
+        OrganizationCollectionResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_organization_collections_from_empty_results() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = OrganizationRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository.list_invitations("org_demo_landscaping").await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_organization_memberships("org_demo_landscaping")
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+}
 
 #[tokio::test]
 async fn repository_invites_accepts_and_audits_membership_role_changes() {
@@ -83,7 +111,10 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert!(invitation.persisted);
     assert_eq!(invitation.status, "pending");
 
-    let pending_invitations = repository.list_invitations(organization_id).await;
+    let pending_invitations = loaded(
+        repository.list_invitations(organization_id).await,
+        "pending invitations should load",
+    );
     let pending_summary = pending_invitations
         .iter()
         .find(|item| item.id == invitation.id)
@@ -178,7 +209,10 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_eq!(accepted.membership.user_id, accepted_user_id);
     assert_eq!(accepted.membership.status, "active");
 
-    let accepted_invitations = repository.list_invitations(organization_id).await;
+    let accepted_invitations = loaded(
+        repository.list_invitations(organization_id).await,
+        "accepted invitations should load",
+    );
     assert_eq!(
         accepted_invitations
             .iter()
@@ -360,13 +394,15 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     assert_eq!(revocation_audit_count, 1);
 
     let expiring_email = "invite-expiration@example.com";
+    let reissued_user_id = "user_reissued_invitation";
     sqlx::query("DELETE FROM organization_invitations WHERE invitee_email = $1")
         .bind(expiring_email)
         .execute(&pool)
         .await
         .expect("expiration invitation should reset");
-    sqlx::query("DELETE FROM organization_memberships WHERE user_id = $1")
+    sqlx::query("DELETE FROM organization_memberships WHERE user_id = $1 OR user_id = $2")
         .bind(expiring_email)
+        .bind(reissued_user_id)
         .execute(&pool)
         .await
         .expect("expiration membership should reset");
@@ -392,7 +428,10 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
     .await
     .expect("invitation expiration should be simulated");
 
-    let invitations = repository.list_invitations(organization_id).await;
+    let invitations = loaded(
+        repository.list_invitations(organization_id).await,
+        "invitation history should load",
+    );
     assert_eq!(
         invitations
             .iter()
@@ -452,11 +491,7 @@ async fn repository_invites_accepts_and_audits_membership_role_changes() {
         "reissue should invalidate the previous token"
     );
     let accepted_reissue = repository
-        .accept_invitation(
-            &reissued.token,
-            "user_reissued_invitation",
-            Some(expiring_email),
-        )
+        .accept_invitation(&reissued.token, reissued_user_id, Some(expiring_email))
         .await
         .expect("new reissue token should activate access");
     assert_eq!(accepted_reissue.membership.status, "active");

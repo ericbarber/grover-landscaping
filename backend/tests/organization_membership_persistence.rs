@@ -1,15 +1,33 @@
 use grover_landscaping_api::{
     access_control::{can_manage_schedule, AccessRole},
-    day_plans::{CreateCrewRequest, DayPlanRepository, UpdateCrewRequest, UpdateCrewResult},
+    day_plans::{
+        CreateCrewRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
+        CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
+        PersistedMutationResult, UpdateCrewRequest, UpdateCrewResult,
+    },
     db::JobRepository,
     organizations::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, MembershipProfileUpdateResult,
-        OrganizationRepository, UpdateOrganizationMembershipProfileRequest,
-        UpdateOrganizationProfileRequest,
+        OrganizationCollectionResult, OrganizationRepository,
+        UpdateOrganizationMembershipProfileRequest, UpdateOrganizationProfileRequest,
     },
 };
 use sqlx::Row;
 mod common;
+
+fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
+    match result {
+        OrganizationCollectionResult::Loaded(items) => items,
+        OrganizationCollectionResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str) -> T {
+    match result {
+        PersistedMutationResult::Applied(value) => value,
+        other => panic!("{context}, got {other:?}"),
+    }
+}
 
 #[tokio::test]
 async fn repository_reads_seeded_local_owner_membership_from_postgres() {
@@ -140,13 +158,16 @@ async fn repository_bootstraps_first_owner_once() {
         panic!("owner membership display name should be editable");
     };
     assert_eq!(renamed_member.display_name, "Jordan Grover");
-    assert!(organizations
-        .list_organization_memberships(&created.organization_id)
-        .await
-        .iter()
-        .any(|membership| {
-            membership.id == created.membership.id && membership.display_name == "Jordan Grover"
-        }));
+    assert!(loaded(
+        organizations
+            .list_organization_memberships(&created.organization_id)
+            .await,
+        "organization memberships should load",
+    )
+    .iter()
+    .any(|membership| {
+        membership.id == created.membership.id && membership.display_name == "Jordan Grover"
+    }));
 
     let updated_profile = organizations
         .update_organization_profile(
@@ -196,6 +217,34 @@ async fn repository_bootstraps_first_owner_once() {
     assert!(setup_progress.persisted);
 
     let day_plans = DayPlanRepository::from_pool(pool.clone());
+    let CreateOrganizationBranchResult::Created(branch) = day_plans
+        .create_organization_branch(
+            &created.organization_id,
+            &user_id,
+            &CreateOrganizationBranchRequest {
+                name: "Main Branch".to_string(),
+                code: "MAIN".to_string(),
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: None,
+            },
+        )
+        .await
+    else {
+        panic!("owner should create the default branch");
+    };
+    let CreateServiceTerritoryResult::Created(_) = day_plans
+        .create_service_territory(
+            &created.organization_id,
+            &user_id,
+            &CreateServiceTerritoryRequest {
+                branch_id: branch.id,
+                name: "Primary Territory".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("owner should create the default territory");
+    };
     let crew = day_plans
         .create_crew(
             &created.organization_id,
@@ -219,12 +268,15 @@ async fn repository_bootstraps_first_owner_once() {
         .fetch_one(&pool)
         .await
         .expect("current service date should be available");
-    let current_draft = day_plans
-        .create_draft_day_plan(grover_landscaping_api::day_plans::CreateDayPlanRequest {
-            crew_id: crew.id.clone(),
-            service_date: current_service_date,
-        })
-        .await;
+    let current_draft = applied(
+        day_plans
+            .create_draft_day_plan(grover_landscaping_api::day_plans::CreateDayPlanRequest {
+                crew_id: crew.id.clone(),
+                service_date: current_service_date,
+            })
+            .await,
+        "current draft should persist",
+    );
     assert!(current_draft.persisted);
     let blocked_deactivation = day_plans
         .update_crew(

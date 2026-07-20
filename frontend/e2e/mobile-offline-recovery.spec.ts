@@ -18,6 +18,45 @@ test('distinguishes unavailable shared-bid storage from an invalid customer link
   )).toBeVisible();
 });
 
+test('does not present empty organization administration during persisted collection outages', async ({ page }) => {
+  await page.route('**/organizations/*/memberships', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'organization_memberships_unavailable',
+      message: 'The persisted organization memberships could not be loaded.',
+    },
+  }));
+  await page.route('**/organizations/*/invitations', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        json: {
+          error: 'organization_invitations_unavailable',
+          message: 'The persisted organization invitations could not be loaded.',
+        },
+      });
+    }
+    return route.continue();
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const memberships = page
+    .getByRole('heading', { name: 'Active memberships' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(memberships.getByRole('alert')).toContainText(
+    'no empty or seeded membership list is being shown',
+  );
+  const invitations = page
+    .getByRole('heading', { name: 'Invite a team member' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(invitations.getByRole('alert')).toContainText(
+    'an empty invitation history is not being shown',
+  );
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {

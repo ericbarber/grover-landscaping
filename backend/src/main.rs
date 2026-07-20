@@ -67,10 +67,10 @@ use grover_landscaping_api::{
         validate_reissue_invitation_request, validate_update_organization_profile_request,
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
         CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
-        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationRepository,
-        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipProfileRequest,
-        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
-        UpdateOrganizationProfileRequest,
+        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
+        OrganizationRepository, ReissueOrganizationInvitationRequest,
+        UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
+        UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -1964,7 +1964,13 @@ async fn list_organization_invitations(
         return response;
     }
 
-    Json(state.organizations.list_invitations(&organization_id).await).into_response()
+    match state.organizations.list_invitations(&organization_id).await {
+        OrganizationCollectionResult::Loaded(invitations) => Json(invitations).into_response(),
+        OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_invitations_unavailable",
+            "The persisted organization invitations could not be loaded.",
+        ),
+    }
 }
 
 async fn revoke_organization_invitation(
@@ -2182,13 +2188,17 @@ async fn list_organization_memberships(
     {
         return response;
     }
-    Json(
-        state
-            .organizations
-            .list_organization_memberships(&organization_id)
-            .await,
-    )
-    .into_response()
+    match state
+        .organizations
+        .list_organization_memberships(&organization_id)
+        .await
+    {
+        OrganizationCollectionResult::Loaded(memberships) => Json(memberships).into_response(),
+        OrganizationCollectionResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_memberships_unavailable",
+            "The persisted organization memberships could not be loaded.",
+        ),
+    }
 }
 
 async fn update_organization_membership_status(

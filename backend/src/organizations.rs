@@ -9,6 +9,12 @@ pub struct OrganizationRepository {
     pool: Option<PgPool>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OrganizationCollectionResult<T> {
+    Loaded(Vec<T>),
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationMembership {
     pub id: String,
@@ -251,16 +257,22 @@ impl OrganizationRepository {
     pub async fn list_organization_memberships(
         &self,
         organization_id: &str,
-    ) -> Vec<OrganizationMembership> {
+    ) -> OrganizationCollectionResult<OrganizationMembership> {
         if let Some(pool) = &self.pool {
-            if let Ok(memberships) = list_organization_memberships(pool, organization_id).await {
-                return memberships;
-            }
+            return match list_organization_memberships(pool, organization_id).await {
+                Ok(memberships) => OrganizationCollectionResult::Loaded(memberships),
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted organization membership list failed");
+                    OrganizationCollectionResult::Unavailable
+                }
+            };
         }
-        seed_memberships("local-development-user")
-            .into_iter()
-            .filter(|membership| membership.organization_id == organization_id)
-            .collect()
+        OrganizationCollectionResult::Loaded(
+            seed_memberships("local-development-user")
+                .into_iter()
+                .filter(|membership| membership.organization_id == organization_id)
+                .collect(),
+        )
     }
 
     pub async fn list_team_administration_activity(
@@ -480,13 +492,17 @@ impl OrganizationRepository {
     pub async fn list_invitations(
         &self,
         organization_id: &str,
-    ) -> Vec<OrganizationInvitationSummary> {
+    ) -> OrganizationCollectionResult<OrganizationInvitationSummary> {
         let Some(pool) = &self.pool else {
-            return Vec::new();
+            return OrganizationCollectionResult::Loaded(Vec::new());
         };
-        list_invitations(pool, organization_id)
-            .await
-            .unwrap_or_default()
+        match list_invitations(pool, organization_id).await {
+            Ok(invitations) => OrganizationCollectionResult::Loaded(invitations),
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted organization invitation list failed");
+                OrganizationCollectionResult::Unavailable
+            }
+        }
     }
 
     pub async fn revoke_invitation(
@@ -1519,19 +1535,19 @@ async fn list_invitations(
     let rows = sqlx::query(
         r#"
         SELECT
-            id,
-            organization_id,
-            invitee_email,
-            role,
+            invitation.id,
+            invitation.organization_id,
+            invitation.invitee_email,
+            invitation.role,
             CASE
               WHEN invitation.status = 'pending'
                 AND invitation.expires_at <= NOW()
               THEN 'expired'
               ELSE invitation.status
             END AS status,
-            scope_type,
-            scope_id,
-            membership_id,
+            invitation.scope_type,
+            invitation.scope_id,
+            invitation.membership_id,
             invitation.expires_at::text AS expires_at,
             delivery.id AS delivery_notification_id,
             delivery.status AS delivery_status,

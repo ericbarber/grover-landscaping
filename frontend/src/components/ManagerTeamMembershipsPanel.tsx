@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   fetchOrganizationMemberships,
   updateOrganizationMembershipProfile,
@@ -130,6 +131,7 @@ export function ManagerTeamMembershipsPanel({
   const [membershipSort, setMembershipSort] = useState<MembershipSort>('name');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [membershipsUnavailable, setMembershipsUnavailable] = useState(false);
   const activeOwnerCount = memberships.filter(
     (membership) => membership.status === 'active'
       && membership.role === 'OrganizationOwner',
@@ -148,6 +150,7 @@ export function ManagerTeamMembershipsPanel({
   async function refresh() {
     if (!organizationId) return;
     setIsLoading(true);
+    setMembershipsUnavailable(false);
     try {
       const loaded = await fetchOrganizationMemberships(organizationId);
       setMemberships(loaded);
@@ -157,8 +160,14 @@ export function ManagerTeamMembershipsPanel({
         item.displayName ?? item.userId,
       ])));
       setMessage(null);
-    } catch {
-      setMessage('Team membership administration requires organization-owner access.');
+    } catch (error) {
+      if (isApiErrorCode(error, 'organization_memberships_unavailable')) {
+        setMemberships([]);
+        setMembershipsUnavailable(true);
+        setMessage('Persisted team memberships could not be loaded. Administration is unavailable until API readiness recovers.');
+      } else {
+        setMessage('Team membership administration requires organization-owner access.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -287,6 +296,11 @@ export function ManagerTeamMembershipsPanel({
         </div>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      {membershipsUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted team membership data is unavailable; no empty or seeded membership list is being shown.
+        </p>
+      ) : null}
       <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
         {[
           ['Active', summary.active],

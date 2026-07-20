@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   createOrganizationInvitation,
   fetchOrganizationInvitations,
@@ -74,6 +75,7 @@ export function ManagerTeamInvitationsPanel({
   const [invitation, setInvitation] = useState<OrganizationInvitation | null>(null);
   const [history, setHistory] = useState<OrganizationInvitationSummary[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [historyUnavailable, setHistoryUnavailable] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [confirmingRevocationId, setConfirmingRevocationId] = useState('');
@@ -86,10 +88,17 @@ export function ManagerTeamInvitationsPanel({
   async function refreshHistory() {
     if (!organizationId) return;
     setIsLoadingHistory(true);
+    setHistoryUnavailable(false);
     try {
       setHistory(await fetchOrganizationInvitations(organizationId));
-    } catch {
-      setMessage('Invitation history requires organization-owner access.');
+    } catch (error) {
+      if (isApiErrorCode(error, 'organization_invitations_unavailable')) {
+        setHistory([]);
+        setHistoryUnavailable(true);
+        setMessage('Persisted invitation history could not be loaded. Retry after API readiness recovers.');
+      } else {
+        setMessage('Invitation history requires organization-owner access.');
+      }
     } finally {
       setIsLoadingHistory(false);
     }
@@ -267,6 +276,11 @@ export function ManagerTeamInvitationsPanel({
         </button>
       </div>
       {message ? <p className="mt-3 text-sm text-slate-700" role="status">{message}</p> : null}
+      {historyUnavailable ? (
+        <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+          Persisted invitation history is unavailable; an empty invitation history is not being shown.
+        </p>
+      ) : null}
       {invitation ? (
         <div className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
           <p className="font-semibold">{invitation.inviteeEmail}</p>

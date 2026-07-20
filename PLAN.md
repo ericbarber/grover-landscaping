@@ -370,12 +370,14 @@ Delivered:
 - Property setup confirms that no assignment changed when persisted storage is unavailable
 - Property-portfolio creation and linking distinguish business conflicts from unavailable persistence
 - Property setup confirms that unavailable portfolio storage created or changed nothing
+- Organization membership and invitation collections distinguish unavailable persistence from valid empty lists
+- Owner administration clears stale collections and refuses to present seeded or empty history during outages
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable organization and membership collections from valid empty administration lists
-- Add repository and phone-flow coverage for organization read availability
+- Distinguish unavailable team and operational activity collections from valid empty audit history
+- Add repository and phone-flow coverage for persisted activity availability
 
 ### Manager scheduling workflow
 
@@ -796,12 +798,13 @@ Current state:
 - Shared-bid reads and customer decisions return explicit missing, conflict, and unavailable outcomes
 - Property-crew assignment writes return explicit conflict and unavailable outcomes
 - Property-portfolio create and link writes return explicit conflict and unavailable outcomes
+- Organization membership and invitation reads return explicit unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable organization and membership collections from valid empty administration lists
-- Add repository and phone-flow coverage for organization read availability
+- Distinguish unavailable team and operational activity collections from valid empty audit history
+- Add repository and phone-flow coverage for persisted activity availability
 
 ## Planned
 
