@@ -15,7 +15,9 @@ navigation now separates yard owners, property managers, field crews, yard-care
 company operators, dispatch, billing, and support. Mobile managers now enter a
 compact task-category home and load only one category at a time; the next slices
 now use a second-level task picker so only one manager tool renders at a time.
-The next slices will shorten route, job, and yard-owner property history content.
+The next slices will shorten job and yard-owner property history content.
+Crew routes now focus on the current and next stop by default while retaining an
+explicit full-route view.
 
 ## Immediate Continuation Work
 

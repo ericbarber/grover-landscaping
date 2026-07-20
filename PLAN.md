@@ -29,6 +29,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Each manager category has a compact task picker and renders only one selected tool on mobile
 - Customer, team, report, schedule, and recovery panels no longer stack together inside their category views
 - Active manager tools collapse the picker into a compact context bar with a clear return to the category tools
+- Crew routes default to the current and next stop instead of rendering the full day down the mobile page
+- Crews can expand the complete route on demand and return to the current-work focus in one tap
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -883,7 +885,7 @@ Current state:
 
 Next implementation work:
 
-- Continue the mobile navigation phase with compact route/job summaries, shorter yard-owner property history, and iPhone interaction validation
+- Continue the mobile navigation phase with compact job detail sections, shorter yard-owner property history, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention

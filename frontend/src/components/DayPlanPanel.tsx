@@ -133,6 +133,7 @@ export function DayPlanPanel({
   const [conflictResolutionError, setConflictResolutionError] = useState(false);
   const [queueStorageUnavailable, setQueueStorageUnavailable] = useState(false);
   const [storagePersistence, setStoragePersistence] = useState<OfflineStoragePersistence | null>(null);
+  const [showAllStops, setShowAllStops] = useState(false);
   const replayInProgress = useRef(false);
   const amendmentReplayInProgress = useRef(false);
   const offlineSummary = summarizeOfflineMutations(offlineMutations);
@@ -140,6 +141,15 @@ export function DayPlanPanel({
   const conflictMutationCount = offlineSummary.conflicts;
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
+  const nextStopIndex = dayPlan.stops.findIndex(
+    (stop) => resolveStopStatus(stopStates[stop.id], stop.stopStatus) !== 'finished',
+  );
+  const focusedStopStart = nextStopIndex >= 0
+    ? nextStopIndex
+    : Math.max(0, dayPlan.stops.length - 2);
+  const visibleStops = showAllStops
+    ? dayPlan.stops
+    : dayPlan.stops.slice(focusedStopStart, focusedStopStart + 2);
 
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
@@ -901,7 +911,28 @@ export function DayPlanPanel({
             The persisted crew route could not be loaded. Retry after API readiness recovers.
           </p>
         ) : null}
-        {dayPlan.stops.map((stop) => {
+        {dayPlan.stops.length > 2 ? (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+            <div>
+              <p className="text-sm font-bold text-emerald-950">
+                {showAllStops ? 'Full route' : 'Current route focus'}
+              </p>
+              <p className="text-xs text-emerald-800">
+                {showAllStops
+                  ? `${dayPlan.stops.length} stops shown`
+                  : `Showing the next ${visibleStops.length} stops · ${completedStops} finished`}
+              </p>
+            </div>
+            <button
+              className="min-h-11 shrink-0 rounded-xl border border-emerald-300 bg-white px-3 text-xs font-bold text-emerald-900"
+              onClick={() => setShowAllStops((current) => !current)}
+              type="button"
+            >
+              {showAllStops ? 'Focus current' : `Show all ${dayPlan.stops.length}`}
+            </button>
+          </div>
+        ) : null}
+        {visibleStops.map((stop) => {
           const localState: StopProgressStatus = resolveStopStatus(stopStates[stop.id], stop.stopStatus);
           const actionLabel = stopActionLabel(localState);
           const selectedExtraServiceId = selectedExtraServices[stop.id] ?? crewExtraServiceCatalog[0]?.id ?? '';
