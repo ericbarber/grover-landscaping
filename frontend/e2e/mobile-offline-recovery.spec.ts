@@ -488,16 +488,18 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(teamActivity.locator('ol > li[aria-current="true"]')).toHaveCount(1);
   await expect(teamActivity.locator('ol > li[aria-current="true"]'))
     .toContainText('audit_e2e_latest_crew_hierarchy_move');
-  await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
+  await teamActivity.getByRole('button', { name: 'Return to latest crew move' }).click();
+  await expect(teamActivity.locator('ol > li[aria-current="true"]')).toBeFocused();
+  await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
-  await teamActivity.getByText('Latest crew move')
+  await teamActivity.getByText('Latest crew move', { exact: true })
     .locator('xpath=ancestor::li[1]')
     .getByRole('button', { name: 'Open affected crew' })
     .click();
   await crewAdministration.getByRole('button', { name: 'Return to owner activity' }).click();
   await expect(teamActivity).toBeFocused();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeVisible();
-  await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
+  await expect(teamActivity.getByText('Latest crew move', { exact: true })).toBeVisible();
   await expect(teamActivity.getByLabel('Find affected item')).toHaveValue(originalCrew!.id);
   await teamActivity.getByRole('button', { name: 'Exit focused review' }).click();
   await expect(teamActivity.getByText('Focused latest-move review')).toBeHidden();

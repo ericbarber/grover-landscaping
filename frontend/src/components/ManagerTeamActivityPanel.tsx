@@ -473,6 +473,13 @@ export function ManagerTeamActivityPanel({
     setReviewNotice('Your prior owner activity review was restored.');
   }
 
+  function returnToLatestCrewMove() {
+    if (!latestFocusedCrewMoveId) return;
+    const target = document.getElementById(`team-activity-${latestFocusedCrewMoveId}`);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target?.focus({ preventScroll: true });
+  }
+
   useEffect(() => {
     const timeout = window.setTimeout(
       () => void refresh(),
@@ -820,7 +827,9 @@ export function ManagerTeamActivityPanel({
               ? 'border-2 border-emerald-300 bg-emerald-50'
               : 'bg-slate-50'
             }`}
+            id={`team-activity-${item.id}`}
             key={item.id}
+            tabIndex={item.id === latestFocusedCrewMoveId ? -1 : undefined}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -942,6 +951,15 @@ export function ManagerTeamActivityPanel({
           type="button"
         >
           {isLoading ? 'Loading…' : 'Load older activity'}
+        </button>
+      ) : null}
+      {isFocusedCrewMoveReview && activity.length > 25 ? (
+        <button
+          className="mt-3 min-h-11 w-full rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-950"
+          onClick={returnToLatestCrewMove}
+          type="button"
+        >
+          Return to latest crew move
         </button>
       ) : null}
     </section>

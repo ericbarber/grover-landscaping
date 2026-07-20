@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-19: Added one-tap return to the latest move after focused pagination.
 - 2026-07-19: Kept the semantic latest-move marker stable across pagination.
 - 2026-07-19: Proved cursor-overlap deduplication in focused crew history.
 - 2026-07-19: Confirmed complete focused crew move history after pagination.
