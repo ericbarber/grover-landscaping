@@ -503,6 +503,7 @@ Current state:
 - Owner hierarchy lifecycle lists share mobile search across branch names, codes, service areas, territory names, and parent branch context
 - Hierarchy lists combine active/inactive status with search, applied-result counts, and one-action filter clearing
 - Owner hierarchy search and lifecycle status restore per organization across mobile reloads with malformed-storage fallback
+- Pixel 7 hierarchy smoke restores persisted search/status after reload and verifies one-action clearing
 - Backend manager report queue loading is scoped to the principal's active organization memberships
 - Delivered completion reports store an immutable customer-facing JSON snapshot for shared report links
 - Delivered completion report snapshots include schema version, capture timestamp, and evidence-count metadata
@@ -643,7 +644,7 @@ Current state:
 
 Next implementation work:
 
-- Extend the live mobile hierarchy smoke through filter restoration and clearing
+- Show assigned crew counts beside branch and territory lifecycle records
 
 ## Planned
 

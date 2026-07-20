@@ -36,7 +36,7 @@ test('queues route progress during interruption and replays after recovery', asy
   await accessReady;
 
   await expect(page.getByText('Crew day plan', { exact: true })).toBeVisible();
-  await expect(page.getByText('Source: local API')).toBeVisible();
+  await expect(page.locator('#today-route').getByText('Source: local API')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   const storageProbe = await page.evaluate(async () => {
     const queue = await import('/src/domain/offlineMutationQueue.ts');
@@ -139,6 +139,12 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   await page.goto('/');
   const frontendUrl = new URL(page.url());
   const apiOrigin = `${frontendUrl.protocol}//${frontendUrl.hostname}:8080`;
+  await page.evaluate(() => {
+    localStorage.removeItem(
+      'grover.dispatch-hierarchy-filters.v1.org_demo_landscaping',
+    );
+  });
+  await page.reload();
   const [crewsResponse, branchesResponse, territoriesResponse] = await Promise.all([
     request.get(`${apiOrigin}/organizations/org_demo_landscaping/crews`),
     request.get(`${apiOrigin}/organization-branches`),
@@ -200,6 +206,20 @@ test('guards mobile dispatch hierarchy and exposes crew scope assignment', async
   const territoryAfter = await request.get(`${apiOrigin}/service-territories`);
   const currentTerritories = await territoryAfter.json() as Array<{ id: string; status: string }>;
   expect(currentTerritories.find((item) => item.id === territory!.id)?.status).toBe('active');
+
+  await hierarchy.getByLabel('Search hierarchy').fill(branch!.name);
+  await hierarchy.getByLabel('Lifecycle status').selectOption('active');
+  await expect(hierarchy.getByText(
+    `Showing 1 of ${branches.length} branches and 1 of ${territories.length} territories.`,
+  )).toBeVisible();
+  await page.reload();
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  await expect(hierarchy.getByLabel('Search hierarchy')).toHaveValue(branch!.name);
+  await expect(hierarchy.getByLabel('Lifecycle status')).toHaveValue('active');
+  await hierarchy.getByRole('button', { name: 'Clear hierarchy filters' }).click();
+  await expect(hierarchy.getByLabel('Search hierarchy')).toHaveValue('');
+  await expect(hierarchy.getByLabel('Lifecycle status')).toHaveValue('all');
+  await expect(hierarchy.getByRole('button', { name: 'Clear hierarchy filters' })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
