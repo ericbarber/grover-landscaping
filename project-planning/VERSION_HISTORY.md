@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-20: Distinguished unavailable shared completion reports and property report history from missing or empty results.
 - 2026-07-20: Distinguished unavailable job lifecycle and checklist writes from missing records.
 - 2026-07-20: Removed seeded-owner fallback from persisted active-membership and principal-access outages.
 - 2026-07-20: Distinguished unavailable membership role, status, and profile writes from membership conflicts.

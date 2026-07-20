@@ -18,6 +18,23 @@ test('distinguishes unavailable shared-bid storage from an invalid customer link
   )).toBeVisible();
 });
 
+test('distinguishes unavailable shared-report storage from an invalid customer link', async ({ page }) => {
+  await page.route('**/reports/storage-unavailable', (route) => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    json: {
+      error: 'shared_report_unavailable',
+      message: 'The persisted shared report could not be loaded.',
+    },
+  }));
+
+  await page.goto('/report-view/storage-unavailable');
+  await expect(page.getByRole('heading', { name: 'Unable to open this completion report' })).toBeVisible();
+  await expect(page.getByText(
+    'Report storage is temporarily unavailable. Retry after service readiness recovers.',
+  )).toBeVisible();
+});
+
 test('does not present empty organization administration during persisted collection outages', async ({ page }) => {
   await page.route('**/organizations/*/memberships', (route) => route.fulfill({
     status: 503,

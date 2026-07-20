@@ -7,8 +7,49 @@ use grover_landscaping_api::{
     },
     db::{JobRepository, ResourceReadResult},
 };
+use sqlx::postgres::PgPoolOptions;
 use sqlx::Row;
+use std::time::Duration;
 mod common;
+
+fn loaded<T>(result: ResourceReadResult<T>, context: &str) -> T {
+    match result {
+        ResourceReadResult::Loaded(value) => value,
+        ResourceReadResult::NotFound => panic!("{context}: not found"),
+        ResourceReadResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+#[tokio::test]
+async fn repository_distinguishes_unavailable_completion_report_reads() {
+    let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_millis(100))
+        .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+        .expect("unavailable test pool URL should be valid");
+    let repository = JobRepository::from_pool(pool);
+
+    assert!(matches!(
+        repository
+            .delivered_snapshot_for_report_share_token("share_outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .job_id_for_report_share_token("share_outage")
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_delivered_completion_reports_for_property(
+                "property_1001",
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+}
 
 #[tokio::test]
 async fn repository_persists_completion_report_state() {
@@ -48,6 +89,16 @@ async fn repository_persists_completion_report_state() {
         .execute(&pool)
         .await
         .expect("prior completion report should be removable");
+    sqlx::query("UPDATE job_checklist_items SET completed = false WHERE job_id = $1")
+        .bind("job_1001")
+        .execute(&pool)
+        .await
+        .expect("checklist fixture should reset");
+    sqlx::query("UPDATE service_jobs SET completed_checklist_items = 0 WHERE id = $1")
+        .bind("job_1001")
+        .execute(&pool)
+        .await
+        .expect("job checklist summary fixture should reset");
     let ResourceReadResult::Loaded(job) = repository.get_job("job_1001".to_string()).await else {
         panic!("persisted job detail should load");
     };
@@ -191,12 +242,15 @@ async fn repository_persists_completion_report_state() {
     assert!(delivered_persistence.share_token.is_some());
     let share_token = delivered_persistence.share_token.clone().unwrap();
 
-    let property_reports = repository
-        .list_delivered_completion_reports_for_property(
-            "property_1001",
-            &["org_demo_landscaping".to_string()],
-        )
-        .await;
+    let property_reports = loaded(
+        repository
+            .list_delivered_completion_reports_for_property(
+                "property_1001",
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        "property completion reports should load",
+    );
     assert_eq!(property_reports.len(), 1);
     assert_eq!(property_reports[0].report_id, "report_job_1001");
     assert_eq!(property_reports[0].job_id, "job_1001");
@@ -207,9 +261,15 @@ async fn repository_persists_completion_report_state() {
         format!("/report-view/{share_token}")
     );
 
-    let other_org_property_reports = repository
-        .list_delivered_completion_reports_for_property("property_1001", &["org_other".to_string()])
-        .await;
+    let other_org_property_reports = loaded(
+        repository
+            .list_delivered_completion_reports_for_property(
+                "property_1001",
+                &["org_other".to_string()],
+            )
+            .await,
+        "other organization property completion reports should load",
+    );
     assert!(other_org_property_reports.is_empty());
 
     let ResourceReadResult::Loaded(delivered_job) =
@@ -232,10 +292,12 @@ async fn repository_persists_completion_report_state() {
         .await
         .expect("live job should be mutable after delivery");
 
-    let stored_snapshot = repository
-        .delivered_snapshot_for_report_share_token(&share_token)
-        .await
-        .expect("delivered snapshot should be readable by share token");
+    let stored_snapshot = loaded(
+        repository
+            .delivered_snapshot_for_report_share_token(&share_token)
+            .await,
+        "delivered snapshot should be readable by share token",
+    );
     assert_eq!(
         stored_snapshot["job"]["customer_name"], "Sample Customer",
         "delivered snapshot should not reflect later live job edits"

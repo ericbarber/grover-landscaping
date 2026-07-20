@@ -386,12 +386,14 @@ Delivered:
 - Authentication and onboarding fail closed instead of substituting seeded owner access during database outages
 - Job start, completion, and checklist writes distinguish unavailable persistence from missing records
 - Phone job actions queue durable offline mutations instead of reporting persisted success during write outages
+- Shared completion-report and property report-history reads distinguish unavailable persistence from missing or empty results
+- Customer report links explain storage outages separately from invalid links
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable completion-report share and property-history reads from missing or empty results
-- Add repository and phone-flow coverage for completion-report read availability
+- Distinguish unavailable completion-report persistence and delivered-snapshot writes from unsaved reports
+- Add repository and phone-flow coverage for completion-report write availability
 
 ### Manager scheduling workflow
 
@@ -820,12 +822,13 @@ Current state:
 - Membership role, status, and profile writes return explicit unavailable outcomes
 - Principal access reads fail closed and report explicit unavailable outcomes
 - Job lifecycle and checklist writes return explicit missing, conflict, and unavailable outcomes
+- Completion-report share and property-history reads return explicit missing and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable completion-report share and property-history reads from missing or empty results
-- Add repository and phone-flow coverage for completion-report read availability
+- Distinguish unavailable completion-report persistence and delivered-snapshot writes from unsaved reports
+- Add repository and phone-flow coverage for completion-report write availability
 
 ## Planned
 

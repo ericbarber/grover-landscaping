@@ -2732,12 +2732,20 @@ async fn list_property_completion_reports(
         can_view_customer_property_portfolios,
     )
     .await;
-    let reports = state
+    match state
         .jobs
         .list_delivered_completion_reports_for_property(&property_id, &organization_ids)
-        .await;
-
-    Json(reports).into_response()
+        .await
+    {
+        ResourceReadResult::Loaded(reports) => Json(reports).into_response(),
+        ResourceReadResult::NotFound => {
+            unreachable!("property completion-report collections are never singularly missing")
+        }
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "property_completion_reports_unavailable",
+            "Persisted property completion reports could not be loaded.",
+        ),
+    }
 }
 
 async fn create_property_portfolio(
@@ -4862,23 +4870,39 @@ async fn get_shared_completion_report(
     State(state): State<Arc<AppState>>,
     Path(share_token): Path<String>,
 ) -> impl IntoResponse {
-    if let Some(snapshot) = state
+    match state
         .jobs
         .delivered_snapshot_for_report_share_token(&share_token)
         .await
     {
-        return Json(snapshot).into_response();
+        ResourceReadResult::Loaded(snapshot) => return Json(snapshot).into_response(),
+        ResourceReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "shared_report_unavailable",
+                "The persisted shared report could not be loaded.",
+            );
+        }
+        ResourceReadResult::NotFound => {}
     }
 
-    let Some(job_id) = state.jobs.job_id_for_report_share_token(&share_token).await else {
-        return (
-            StatusCode::NOT_FOUND,
-            Json(ErrorResponse {
-                error: "shared_report_not_found",
-                message: "Shared report link was not found.".to_string(),
-            }),
-        )
-            .into_response();
+    let job_id = match state.jobs.job_id_for_report_share_token(&share_token).await {
+        ResourceReadResult::Loaded(job_id) => job_id,
+        ResourceReadResult::NotFound => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ErrorResponse {
+                    error: "shared_report_not_found",
+                    message: "Shared report link was not found.".to_string(),
+                }),
+            )
+                .into_response()
+        }
+        ResourceReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "shared_report_unavailable",
+                "The persisted shared report could not be loaded.",
+            )
+        }
     };
 
     match build_and_persist_completion_report(&state, &job_id).await {

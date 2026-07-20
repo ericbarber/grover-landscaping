@@ -814,56 +814,75 @@ impl JobRepository {
         CompletionReportPersistence::default()
     }
 
-    pub async fn job_id_for_report_share_token(&self, share_token: &str) -> Option<String> {
+    pub async fn job_id_for_report_share_token(
+        &self,
+        share_token: &str,
+    ) -> ResourceReadResult<String> {
         if let Some(pool) = &self.pool {
-            if let Ok(job_id) =
-                postgres_completion_reports::job_id_for_share_token(pool, share_token).await
+            return match postgres_completion_reports::job_id_for_share_token(pool, share_token)
+                .await
             {
-                return job_id;
-            }
+                Ok(Some(job_id)) => ResourceReadResult::Loaded(job_id),
+                Ok(None) => ResourceReadResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, share_token, "persisted shared-report job lookup failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        None
+        ResourceReadResult::NotFound
     }
 
     pub async fn delivered_snapshot_for_report_share_token(
         &self,
         share_token: &str,
-    ) -> Option<serde_json::Value> {
+    ) -> ResourceReadResult<serde_json::Value> {
         if let Some(pool) = &self.pool {
-            if let Ok(snapshot) =
-                postgres_completion_reports::delivered_snapshot_for_share_token(pool, share_token)
-                    .await
+            return match postgres_completion_reports::delivered_snapshot_for_share_token(
+                pool,
+                share_token,
+            )
+            .await
             {
-                return snapshot;
-            }
+                Ok(Some(snapshot)) => ResourceReadResult::Loaded(snapshot),
+                Ok(None) => ResourceReadResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, share_token, "persisted shared-report snapshot lookup failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        None
+        ResourceReadResult::NotFound
     }
 
     pub async fn list_delivered_completion_reports_for_property(
         &self,
         property_id: &str,
         organization_ids: &[String],
-    ) -> Vec<PropertyCompletionReportSummary> {
+    ) -> ResourceReadResult<Vec<PropertyCompletionReportSummary>> {
         if organization_ids.is_empty() {
-            return Vec::new();
+            return ResourceReadResult::Loaded(Vec::new());
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(reports) = postgres_completion_reports::list_delivered_for_property(
+            return match postgres_completion_reports::list_delivered_for_property(
                 pool,
                 property_id,
                 organization_ids,
             )
             .await
             {
-                return reports;
-            }
+                Ok(reports) => ResourceReadResult::Loaded(reports),
+                Err(error) => {
+                    tracing::error!(%error, property_id, "persisted property completion-report list failed");
+                    ResourceReadResult::Unavailable
+                }
+            };
         }
 
-        Vec::new()
+        ResourceReadResult::Loaded(Vec::new())
     }
 
     pub async fn store_delivered_completion_report_snapshot(

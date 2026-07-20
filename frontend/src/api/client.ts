@@ -2819,7 +2819,7 @@ export async function fetchSharedCompletionReport(shareToken: string): Promise<C
   const response = await fetch(`${API_BASE_URL}/reports/${encodeURIComponent(shareToken)}`);
 
   if (!response.ok) {
-    throw new Error(`Shared completion report request failed with status ${response.status}`);
+    throw await apiRequestError(response);
   }
 
   const report = await response.json() as ApiCompletionReport;

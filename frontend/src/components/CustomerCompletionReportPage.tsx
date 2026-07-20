@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import { fetchSharedCompletionReport, type CompletionReportSnapshot } from '../api/client';
 
 type CustomerCompletionReportPageProps = {
@@ -40,8 +41,14 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
       .then((response) => {
         if (isMounted) setReport(response);
       })
-      .catch(() => {
-        if (isMounted) setError('This completion report link is invalid or no longer available.');
+      .catch((requestError) => {
+        if (isMounted) {
+          setError(
+            isApiErrorCode(requestError, 'shared_report_unavailable')
+              ? 'Report storage is temporarily unavailable. Retry after service readiness recovers.'
+              : 'This completion report link is invalid or no longer available.',
+          );
+        }
       });
 
     return () => {
