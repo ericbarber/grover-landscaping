@@ -378,12 +378,14 @@ Delivered:
 - First-owner onboarding refuses to infer missing or completed setup when persisted reads fail
 - Organization profile updates distinguish unavailable persistence from invalid or missing organizations
 - Profile editing confirms that no changes were saved when persisted storage is unavailable
+- Invitation create, revoke, reissue, and acceptance writes distinguish persistence outages from lifecycle conflicts
+- Invitation workflows confirm that no invitation or access change occurred during persisted write outages
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable invitation lifecycle writes from invalid or conflicting invitations
-- Add repository and phone-flow coverage for invitation write availability
+- Distinguish unavailable membership role, status, and profile writes from missing or conflicting memberships
+- Add repository and phone-flow coverage for membership write availability
 
 ### Manager scheduling workflow
 
@@ -808,12 +810,13 @@ Current state:
 - Team-administration and operational activity reads return explicit unavailable outcomes
 - Organization profile and first-owner setup reads return explicit missing and unavailable outcomes
 - Organization profile updates return explicit invalid, missing, and unavailable outcomes
+- Invitation lifecycle writes return explicit applied, conflict, invalid, and unavailable outcomes
 
 Next implementation work:
 
 - Continue auditing remaining persisted customer reads for silent empty or missing fallbacks
-- Distinguish unavailable invitation lifecycle writes from invalid or conflicting invitations
-- Add repository and phone-flow coverage for invitation write availability
+- Distinguish unavailable membership role, status, and profile writes from missing or conflicting memberships
+- Add repository and phone-flow coverage for membership write availability
 
 ## Planned
 

@@ -1,7 +1,7 @@
 use grover_landscaping_api::organizations::{
     CreateOrganizationInvitationRequest, MembershipRoleUpdateResult, MembershipStatusUpdateResult,
-    OrganizationCollectionResult, OrganizationProfileUpdateResult, OrganizationRepository,
-    OrganizationResourceResult, ReissueOrganizationInvitationRequest,
+    OrganizationCollectionResult, OrganizationMutationResult, OrganizationProfileUpdateResult,
+    OrganizationRepository, OrganizationResourceResult, ReissueOrganizationInvitationRequest,
     UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
     UpdateOrganizationProfileRequest,
 };
@@ -14,6 +14,29 @@ fn loaded<T>(result: OrganizationCollectionResult<T>, context: &str) -> Vec<T> {
     match result {
         OrganizationCollectionResult::Loaded(items) => items,
         OrganizationCollectionResult::Unavailable => panic!("{context}: unavailable"),
+    }
+}
+
+trait MutationTestExt<T> {
+    fn expect(self, context: &str) -> T;
+    fn is_none(&self) -> bool;
+}
+
+impl<T> MutationTestExt<T> for OrganizationMutationResult<T> {
+    fn expect(self, context: &str) -> T {
+        match self {
+            OrganizationMutationResult::Applied(value) => value,
+            OrganizationMutationResult::Conflict => panic!("{context}: conflict"),
+            OrganizationMutationResult::Invalid => panic!("{context}: invalid"),
+            OrganizationMutationResult::Unavailable => panic!("{context}: unavailable"),
+        }
+    }
+
+    fn is_none(&self) -> bool {
+        matches!(
+            self,
+            OrganizationMutationResult::Conflict | OrganizationMutationResult::Invalid
+        )
     }
 }
 
@@ -77,6 +100,51 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             )
             .await,
         OrganizationProfileUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .create_invitation(
+                "org_demo_landscaping",
+                "local-development-user",
+                CreateOrganizationInvitationRequest {
+                    invitee_email: "outage@example.com".to_string(),
+                    role: "crew_member".to_string(),
+                    scope_type: Some("organization".to_string()),
+                    scope_id: Some("org_demo_landscaping".to_string()),
+                    expires_at: None,
+                },
+            )
+            .await,
+        OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .revoke_invitation(
+                "org_demo_landscaping",
+                "invitation_outage",
+                "local-development-user",
+            )
+            .await,
+        OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .reissue_invitation(
+                "org_demo_landscaping",
+                "invitation_outage",
+                "local-development-user",
+                ReissueOrganizationInvitationRequest {
+                    expires_at: "2099-08-01T12:00:00.000Z".to_string(),
+                },
+            )
+            .await,
+        OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .accept_invitation("invite_outage", "user_outage", Some("outage@example.com"),)
+            .await,
+        OrganizationMutationResult::Unavailable
     ));
 }
 

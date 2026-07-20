@@ -34,6 +34,9 @@ export function validateTeamInvitation(email: string): string | null {
 }
 
 export function invitationCreationFailureMessage(error: unknown): string {
+  if (isApiErrorCode(error, 'organization_invitation_create_unavailable')) {
+    return 'Persisted invitation storage is unavailable. No invitation was created or queued.';
+  }
   return error instanceof Error && error.message.includes('status 409')
     ? 'This recipient may already have pending access. Refresh history, or reissue expired or revoked access.'
     : 'The invitation could not be created. Confirm owner access and try again.';
@@ -160,8 +163,12 @@ export function ManagerTeamInvitationsPanel({
       setConfirmingRevocationId('');
       setMessage(`Invitation for ${revoked.inviteeEmail} revoked.`);
       onTeamChanged?.();
-    } catch {
-      setMessage('The invitation could not be revoked. Refresh its status and try again.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'organization_invitation_revoke_unavailable')
+          ? 'Persisted invitation storage is unavailable. The invitation was not revoked.'
+          : 'The invitation could not be revoked. Refresh its status and try again.',
+      );
     } finally {
       setIsRevoking(false);
     }
@@ -189,8 +196,12 @@ export function ManagerTeamInvitationsPanel({
       setConfirmingReissueId('');
       setMessage(`Invitation for ${reissued.inviteeEmail} reissued.`);
       onTeamChanged?.();
-    } catch {
-      setMessage('The invitation could not be reissued. Refresh its status and try again.');
+    } catch (error) {
+      setMessage(
+        isApiErrorCode(error, 'organization_invitation_reissue_unavailable')
+          ? 'Persisted invitation storage is unavailable. The invitation was not reissued.'
+          : 'The invitation could not be reissued. Refresh its status and try again.',
+      );
     } finally {
       setIsReissuing(false);
     }

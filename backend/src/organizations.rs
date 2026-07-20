@@ -30,6 +30,14 @@ pub enum OrganizationProfileUpdateResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OrganizationMutationResult<T> {
+    Applied(T),
+    Conflict,
+    Invalid,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OrganizationMembership {
     pub id: String,
@@ -519,20 +527,24 @@ impl OrganizationRepository {
         organization_id: &str,
         actor_user_id: &str,
         request: CreateOrganizationInvitationRequest,
-    ) -> Option<OrganizationInvitationResponse> {
+    ) -> OrganizationMutationResult<OrganizationInvitationResponse> {
         let request = normalize_create_invitation_request(request);
         if validate_create_invitation_request(&request).is_err() {
-            return None;
+            return OrganizationMutationResult::Invalid;
         }
 
         if let Some(pool) = &self.pool {
-            return create_invitation(pool, organization_id, actor_user_id, &request)
-                .await
-                .ok()
-                .flatten();
+            return match create_invitation(pool, organization_id, actor_user_id, &request).await {
+                Ok(Some(invitation)) => OrganizationMutationResult::Applied(invitation),
+                Ok(None) => OrganizationMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, organization_id, "persisted organization invitation create failed");
+                    OrganizationMutationResult::Unavailable
+                }
+            };
         }
 
-        Some(local_invitation_response(
+        OrganizationMutationResult::Applied(local_invitation_response(
             organization_id,
             actor_user_id,
             request,
@@ -560,12 +572,18 @@ impl OrganizationRepository {
         organization_id: &str,
         invitation_id: &str,
         actor_user_id: &str,
-    ) -> Option<OrganizationInvitationSummary> {
-        let pool = self.pool.as_ref()?;
-        revoke_invitation(pool, organization_id, invitation_id, actor_user_id)
-            .await
-            .ok()
-            .flatten()
+    ) -> OrganizationMutationResult<OrganizationInvitationSummary> {
+        let Some(pool) = self.pool.as_ref() else {
+            return OrganizationMutationResult::Conflict;
+        };
+        match revoke_invitation(pool, organization_id, invitation_id, actor_user_id).await {
+            Ok(Some(invitation)) => OrganizationMutationResult::Applied(invitation),
+            Ok(None) => OrganizationMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, organization_id, invitation_id, "persisted organization invitation revoke failed");
+                OrganizationMutationResult::Unavailable
+            }
+        }
     }
 
     pub async fn reissue_invitation(
@@ -574,13 +592,15 @@ impl OrganizationRepository {
         invitation_id: &str,
         actor_user_id: &str,
         request: ReissueOrganizationInvitationRequest,
-    ) -> Option<OrganizationInvitationResponse> {
+    ) -> OrganizationMutationResult<OrganizationInvitationResponse> {
         let expires_at = request.expires_at.trim();
         if validate_reissue_invitation_request(&request).is_err() {
-            return None;
+            return OrganizationMutationResult::Invalid;
         }
-        let pool = self.pool.as_ref()?;
-        reissue_invitation(
+        let Some(pool) = self.pool.as_ref() else {
+            return OrganizationMutationResult::Conflict;
+        };
+        match reissue_invitation(
             pool,
             organization_id,
             invitation_id,
@@ -588,8 +608,14 @@ impl OrganizationRepository {
             expires_at,
         )
         .await
-        .ok()
-        .flatten()
+        {
+            Ok(Some(invitation)) => OrganizationMutationResult::Applied(invitation),
+            Ok(None) => OrganizationMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, organization_id, invitation_id, "persisted organization invitation reissue failed");
+                OrganizationMutationResult::Unavailable
+            }
+        }
     }
 
     pub async fn accept_invitation(
@@ -597,24 +623,35 @@ impl OrganizationRepository {
         token: &str,
         accepting_user_id: &str,
         accepting_email: Option<&str>,
-    ) -> Option<OrganizationInvitationAcceptanceResponse> {
+    ) -> OrganizationMutationResult<OrganizationInvitationAcceptanceResponse> {
         if token.trim().is_empty() {
-            return None;
+            return OrganizationMutationResult::Invalid;
         }
-        let accepting_email = accepting_email?.trim().to_ascii_lowercase();
+        let Some(accepting_email) = accepting_email else {
+            return OrganizationMutationResult::Conflict;
+        };
+        let accepting_email = accepting_email.trim().to_ascii_lowercase();
         if !valid_invitee_email(&accepting_email) {
-            return None;
+            return OrganizationMutationResult::Invalid;
         }
 
         if let Some(pool) = &self.pool {
-            if let Ok(accepted) =
-                accept_invitation(pool, token.trim(), accepting_user_id, &accepting_email).await
+            return match accept_invitation(pool, token.trim(), accepting_user_id, &accepting_email)
+                .await
             {
-                return accepted;
-            }
+                Ok(Some(accepted)) => OrganizationMutationResult::Applied(accepted),
+                Ok(None) => OrganizationMutationResult::Conflict,
+                Err(error) => {
+                    tracing::error!(%error, token = token.trim(), "persisted organization invitation acceptance failed");
+                    OrganizationMutationResult::Unavailable
+                }
+            };
         }
 
-        local_invitation_acceptance(token, accepting_user_id, &accepting_email)
+        match local_invitation_acceptance(token, accepting_user_id, &accepting_email) {
+            Some(accepted) => OrganizationMutationResult::Applied(accepted),
+            None => OrganizationMutationResult::Conflict,
+        }
     }
 
     pub async fn update_membership_role(

@@ -68,10 +68,10 @@ use grover_landscaping_api::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult,
         CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
         MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
-        OrganizationProfileUpdateResult, OrganizationRepository, OrganizationResourceResult,
-        ReissueOrganizationInvitationRequest, UpdateOrganizationMembershipProfileRequest,
-        UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
-        UpdateOrganizationProfileRequest,
+        OrganizationMutationResult, OrganizationProfileUpdateResult, OrganizationRepository,
+        OrganizationResourceResult, ReissueOrganizationInvitationRequest,
+        UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
+        UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -1951,22 +1951,35 @@ async fn create_organization_invitation(
         return response;
     }
 
-    let Some(invitation) = state
+    match state
         .organizations
         .create_invitation(&organization_id, &principal.subject, request)
         .await
-    else {
-        return (
+    {
+        OrganizationMutationResult::Applied(invitation) => {
+            (StatusCode::CREATED, Json(invitation)).into_response()
+        }
+        OrganizationMutationResult::Conflict => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
                 error: "organization_invitation_not_created",
                 message: "The invitation could not be created. This recipient may already have pending access; refresh invitation history before trying again.".to_string(),
             }),
         )
-            .into_response();
-    };
-
-    (StatusCode::CREATED, Json(invitation)).into_response()
+            .into_response(),
+        OrganizationMutationResult::Invalid => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_organization_invitation",
+                message: "The normalized organization invitation is invalid.".to_string(),
+            }),
+        )
+            .into_response(),
+        OrganizationMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_invitation_create_unavailable",
+            "The persisted organization invitation could not be created.",
+        ),
+    }
 }
 
 async fn list_organization_invitations(
@@ -2015,10 +2028,16 @@ async fn revoke_organization_invitation(
         .revoke_invitation(&organization_id, &invitation_id, &principal.subject)
         .await
     {
-        Some(invitation) => Json(invitation).into_response(),
-        None => resource_not_found_response(
-            "organization_invitation_not_pending",
-            "The invitation was not found or is no longer pending.",
+        OrganizationMutationResult::Applied(invitation) => Json(invitation).into_response(),
+        OrganizationMutationResult::Conflict | OrganizationMutationResult::Invalid => {
+            resource_not_found_response(
+                "organization_invitation_not_pending",
+                "The invitation was not found or is no longer pending.",
+            )
+        }
+        OrganizationMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_invitation_revoke_unavailable",
+            "The persisted organization invitation could not be revoked.",
         ),
     }
 }
@@ -2061,10 +2080,14 @@ async fn reissue_organization_invitation(
         )
         .await
     {
-        Some(invitation) => Json(invitation).into_response(),
-        None => resource_not_found_response(
+        OrganizationMutationResult::Applied(invitation) => Json(invitation).into_response(),
+        OrganizationMutationResult::Conflict | OrganizationMutationResult::Invalid => resource_not_found_response(
             "organization_invitation_not_reissuable",
             "The invitation was not found, is not expired or revoked, or has an invalid new expiration.",
+        ),
+        OrganizationMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_invitation_reissue_unavailable",
+            "The persisted organization invitation could not be reissued.",
         ),
     }
 }
@@ -2074,7 +2097,7 @@ async fn accept_organization_invitation(
     Extension(principal): Extension<AuthPrincipal>,
     Path(token): Path<String>,
 ) -> Response {
-    let Some(accepted) = state
+    match state
         .organizations
         .accept_invitation(
             &token,
@@ -2082,14 +2105,17 @@ async fn accept_organization_invitation(
             principal.verified_email.as_deref(),
         )
         .await
-    else {
-        return resource_not_found_response(
+    {
+        OrganizationMutationResult::Applied(accepted) => Json(accepted).into_response(),
+        OrganizationMutationResult::Conflict | OrganizationMutationResult::Invalid => resource_not_found_response(
             "organization_invitation_not_found",
             "The organization invitation was not found, is no longer pending, or is addressed to a different verified email.",
-        );
-    };
-
-    Json(accepted).into_response()
+        ),
+        OrganizationMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "organization_invitation_acceptance_unavailable",
+            "The persisted organization invitation could not be accepted.",
+        ),
+    }
 }
 
 async fn update_organization_membership_role(

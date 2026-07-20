@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isApiErrorCode } from '../api/apiError';
 import {
   acceptOrganizationInvitation,
   type OrganizationInvitationAcceptance,
@@ -19,9 +20,11 @@ export function OrganizationInvitationAcceptancePage({ token }: { token: string 
       const result = await acceptOrganizationInvitation(token);
       setAccepted(result);
       await auth.refreshAccess();
-    } catch {
+    } catch (error) {
       setMessage(
-        'This invitation is unavailable, has expired, or was sent to a different verified email. Sign in with the invited address and try again.',
+        isApiErrorCode(error, 'organization_invitation_acceptance_unavailable')
+          ? 'Invitation storage is temporarily unavailable. No access was activated; retry after service readiness recovers.'
+          : 'This invitation is unavailable, has expired, or was sent to a different verified email. Sign in with the invited address and try again.',
       );
     } finally {
       setIsAccepting(false);

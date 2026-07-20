@@ -20,7 +20,7 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 4. **Route persistence**
    - Continue replacing seeded/browser-only behavior with database-backed routes.
    - Expand persistence and integration-test coverage.
-   - Make invitation lifecycle writes fail explicitly when persisted storage is unavailable.
+   - Make membership role, status, and profile writes fail explicitly when persisted storage is unavailable.
 5. **Customer bid history**
    - Complete authenticated, tenant-scoped customer bid history.
 

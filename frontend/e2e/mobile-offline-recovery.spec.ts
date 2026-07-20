@@ -142,6 +142,31 @@ test('confirms organization profile changes were not saved during storage outage
   await expect(onboarding.getByRole('button', { name: 'Save organization profile' })).toBeVisible();
 });
 
+test('confirms no invitation was created during persisted write outages', async ({ page }) => {
+  await page.route(/\/organizations\/[^/]+\/invitations$/, (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    return route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      json: {
+        error: 'organization_invitation_create_unavailable',
+        message: 'The persisted organization invitation could not be created.',
+      },
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('summary').filter({ hasText: 'Manager and office tools' }).click();
+  const invitations = page
+    .getByRole('heading', { name: 'Invite a team member' })
+    .locator('xpath=ancestor::section[1]');
+  await invitations.getByLabel('Email address').fill('write-outage@example.com');
+  await invitations.getByRole('button', { name: 'Send invitation' }).click();
+  await expect(invitations.getByRole('status')).toContainText(
+    'No invitation was created or queued',
+  );
+});
+
 test('creates a service-ready customer account in one mobile workflow', async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('customer-relationship-filter-initialized')) {
