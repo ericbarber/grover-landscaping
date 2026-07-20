@@ -29,11 +29,13 @@ const timeZones = [
 type DispatchHierarchyFilters = {
   query: string;
   status: 'all' | 'active' | 'inactive';
+  assignment: 'all' | 'staffed' | 'unstaffed';
 };
 
 const defaultDispatchHierarchyFilters: DispatchHierarchyFilters = {
   query: '',
   status: 'all',
+  assignment: 'all',
 };
 
 export function parseDispatchHierarchyFilters(value: string | null): DispatchHierarchyFilters {
@@ -43,6 +45,9 @@ export function parseDispatchHierarchyFilters(value: string | null): DispatchHie
     return {
       query: typeof parsed.query === 'string' ? parsed.query.slice(0, 120) : '',
       status: parsed.status === 'active' || parsed.status === 'inactive' ? parsed.status : 'all',
+      assignment: parsed.assignment === 'staffed' || parsed.assignment === 'unstaffed'
+        ? parsed.assignment
+        : 'all',
     };
   } catch {
     return defaultDispatchHierarchyFilters;
@@ -80,13 +85,30 @@ export function filterDispatchHierarchy(
   territories: ServiceTerritoryRecord[],
   query: string,
   status: 'all' | 'active' | 'inactive' = 'all',
+  assignment: 'all' | 'staffed' | 'unstaffed' = 'all',
+  crews: CrewRecord[] = [],
 ) {
-  const statusBranches = status === 'all'
+  let statusBranches = status === 'all'
     ? branches
     : branches.filter((branch) => branch.status === status);
-  const statusTerritories = status === 'all'
+  let statusTerritories = status === 'all'
     ? territories
     : territories.filter((territory) => territory.status === status);
+  if (assignment !== 'all') {
+    const activeBranchIds = new Set(
+      crews.filter((crew) => crew.status === 'active').map((crew) => crew.branchId),
+    );
+    const activeTerritoryIds = new Set(
+      crews.filter((crew) => crew.status === 'active').map((crew) => crew.territoryId),
+    );
+    const keepStaffed = assignment === 'staffed';
+    statusBranches = statusBranches.filter(
+      (branch) => activeBranchIds.has(branch.id) === keepStaffed,
+    );
+    statusTerritories = statusTerritories.filter(
+      (territory) => activeTerritoryIds.has(territory.id) === keepStaffed,
+    );
+  }
   const normalized = query.trim().toLocaleLowerCase();
   if (!normalized) return { branches: statusBranches, territories: statusTerritories };
   return {
@@ -143,6 +165,7 @@ export function ManagerDispatchHierarchyPanel({
   const [pendingLifecycleAction, setPendingLifecycleAction] = useState<string | null>(null);
   const [hierarchyQuery, setHierarchyQuery] = useState(initialFilters.query);
   const [hierarchyStatus, setHierarchyStatus] = useState(initialFilters.status);
+  const [hierarchyAssignment, setHierarchyAssignment] = useState(initialFilters.assignment);
   const filterOrganizationRef = useRef(organizationId);
   const summary = summarizeDispatchHierarchy(branches, territories);
   const visibleHierarchy = filterDispatchHierarchy(
@@ -150,9 +173,13 @@ export function ManagerDispatchHierarchyPanel({
     territories,
     hierarchyQuery,
     hierarchyStatus,
+    hierarchyAssignment,
+    crews,
   );
   const crewAssignments = summarizeHierarchyCrewAssignments(crews);
-  const hasHierarchyFilters = Boolean(hierarchyQuery.trim()) || hierarchyStatus !== 'all';
+  const hasHierarchyFilters = Boolean(hierarchyQuery.trim())
+    || hierarchyStatus !== 'all'
+    || hierarchyAssignment !== 'all';
 
   async function refreshHierarchy() {
     const [branchItems, territoryItems, crewItems] = await Promise.all([
@@ -184,17 +211,22 @@ export function ManagerDispatchHierarchyPanel({
       const loaded = loadDispatchHierarchyFilters(organizationId);
       setHierarchyQuery(loaded.query);
       setHierarchyStatus(loaded.status);
+      setHierarchyAssignment(loaded.assignment);
       return;
     }
     try {
       window.localStorage.setItem(
         dispatchHierarchyFilterStorageKey(organizationId),
-        JSON.stringify({ query: hierarchyQuery, status: hierarchyStatus }),
+        JSON.stringify({
+          query: hierarchyQuery,
+          status: hierarchyStatus,
+          assignment: hierarchyAssignment,
+        }),
       );
     } catch {
       // Hierarchy filtering remains usable when browser storage is unavailable.
     }
-  }, [organizationId, hierarchyQuery, hierarchyStatus]);
+  }, [organizationId, hierarchyQuery, hierarchyStatus, hierarchyAssignment]);
 
   async function submitBranch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -426,12 +458,27 @@ export function ManagerDispatchHierarchyPanel({
               <option value="inactive">Inactive</option>
             </select>
           </label>
+          <label className="mt-2 block text-xs font-semibold text-slate-700">
+            Crew assignment
+            <select
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal"
+              onChange={(event) => setHierarchyAssignment(
+                event.target.value as 'all' | 'staffed' | 'unstaffed',
+              )}
+              value={hierarchyAssignment}
+            >
+              <option value="all">All assignments</option>
+              <option value="staffed">Has active crew</option>
+              <option value="unstaffed">No active crew</option>
+            </select>
+          </label>
           {hasHierarchyFilters ? (
             <button
               className="mt-2 min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold"
               onClick={() => {
                 setHierarchyQuery('');
                 setHierarchyStatus('all');
+                setHierarchyAssignment('all');
               }}
               type="button"
             >

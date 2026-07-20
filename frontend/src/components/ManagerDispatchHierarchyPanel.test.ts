@@ -88,12 +88,18 @@ describe('dispatch hierarchy summaries', () => {
     expect(parseDispatchHierarchyFilters(JSON.stringify({
       query: 'North',
       status: 'inactive',
-    }))).toEqual({ query: 'North', status: 'inactive' });
+      assignment: 'unstaffed',
+    }))).toEqual({ query: 'North', status: 'inactive', assignment: 'unstaffed' });
     expect(parseDispatchHierarchyFilters(JSON.stringify({
       query: 'x'.repeat(200),
       status: 'unknown',
-    }))).toEqual({ query: 'x'.repeat(120), status: 'all' });
-    expect(parseDispatchHierarchyFilters('{bad json')).toEqual({ query: '', status: 'all' });
+      assignment: 'unknown',
+    }))).toEqual({ query: 'x'.repeat(120), status: 'all', assignment: 'all' });
+    expect(parseDispatchHierarchyFilters('{bad json')).toEqual({
+      query: '',
+      status: 'all',
+      assignment: 'all',
+    });
   });
 
   it('summarizes active and total crew assignments by both hierarchy levels', () => {
@@ -124,6 +130,43 @@ describe('dispatch hierarchy summaries', () => {
         territory_1: { active: 1, total: 2 },
         territory_2: { active: 1, total: 1 },
       },
+    });
+  });
+
+  it('finds staffed and unstaffed scopes from active crew assignments', () => {
+    const branches = [
+      { id: 'branch_1', name: 'North', code: 'N', status: 'active' },
+      { id: 'branch_2', name: 'South', code: 'S', status: 'active' },
+    ] as OrganizationBranchRecord[];
+    const territories = [
+      { id: 'territory_1', branchId: 'branch_1', name: 'North', status: 'active' },
+      { id: 'territory_2', branchId: 'branch_2', name: 'South', status: 'active' },
+    ] as ServiceTerritoryRecord[];
+    const crews = [
+      {
+        id: 'crew_1',
+        branchId: 'branch_1',
+        territoryId: 'territory_1',
+        status: 'active',
+      },
+      {
+        id: 'crew_2',
+        branchId: 'branch_2',
+        territoryId: 'territory_2',
+        status: 'inactive',
+      },
+    ] as CrewRecord[];
+
+    expect(filterDispatchHierarchy(
+      branches,
+      territories,
+      '',
+      'active',
+      'unstaffed',
+      crews,
+    )).toEqual({
+      branches: [branches[1]],
+      territories: [territories[1]],
     });
   });
 });
