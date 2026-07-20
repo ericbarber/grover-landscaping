@@ -378,7 +378,14 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
       ];
       await route.fulfill({
         json: crewMoved
-          ? isOlderFocusedPage ? [] : isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
+          ? isOlderFocusedPage ? [
+            focusedCrewMoves[focusedCrewMoves.length - 1],
+            {
+              ...auditedMove,
+              id: 'audit_e2e_oldest_unique_crew_hierarchy_move',
+              occurred_at: '2026-07-18T23:00:00Z',
+            },
+          ] : isFocusedCrewReview ? focusedCrewMoves : [auditedMove]
           : [],
       });
     },
@@ -476,7 +483,8 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   )).toBeVisible();
   await teamActivity.getByRole('button', { name: 'Load older activity' }).click();
   await expect(teamActivity.getByText('All matching crew moves are loaded.')).toBeVisible();
-  await expect(teamActivity.getByText('25 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.getByText('26 matching crew moves loaded.')).toBeVisible();
+  await expect(teamActivity.locator('ol > li')).toHaveCount(26);
   await expect(teamActivity.getByText('Latest crew move')).toBeVisible();
   await expect(teamActivity.getByText('Destination matches current assignment')).toBeVisible();
   await teamActivity.getByText('Latest crew move')
