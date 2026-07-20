@@ -1,6 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
+        TodayDayPlanResult,
     },
     db::JobRepository,
 };
@@ -80,7 +81,9 @@ async fn day_plan_repository_reads_persisted_stop_status() {
         grover_landscaping_api::db::StopProgressWriteResult::Persisted,
     );
 
-    let day_plan = day_plans.today_for_crew(crew_id).await;
+    let TodayDayPlanResult::Found(day_plan) = day_plans.today_for_crew(crew_id).await else {
+        panic!("published persisted day plan should be found");
+    };
 
     let stop = day_plan
         .stops

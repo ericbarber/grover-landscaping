@@ -57,6 +57,19 @@ export const seedDayPlan: DayPlan = {
   ],
 };
 
+export function emptyCrewDayPlan(crewId: string): DayPlan {
+  return {
+    id: `no_persisted_route_${crewId}`,
+    crewId,
+    crewName: 'Crew route',
+    organizationId: '',
+    serviceDate: new Date().toISOString().slice(0, 10),
+    status: 'published',
+    routeStatus: 'manual',
+    stops: [],
+  };
+}
+
 export function getTotalEstimatedMinutes(dayPlan: DayPlan): number {
   return dayPlan.stops.reduce(
     (total, stop) => total + stop.estimatedDriveMinutes + stop.estimatedServiceMinutes,

@@ -3,9 +3,9 @@ import {
   createDayPlanAmendment,
   fetchDayPlanAmendments,
 } from '../api/dayPlanAmendmentsClient';
-import { fetchCrewDayPlan } from '../api/dayPlansClient';
+import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
 import { updateStopProgress } from '../api/stopProgressClient';
-import { getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
+import { emptyCrewDayPlan, getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   enqueueDayPlanAmendmentMutation,
@@ -116,7 +116,7 @@ export function DayPlanPanel({
   refreshSignal = 0,
 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
-  const [source, setSource] = useState<'api' | 'local'>('local');
+  const [source, setSource] = useState<'api' | 'local' | 'missing' | 'unavailable'>('local');
   const [syncStatus, setSyncStatus] = useState<RouteProgressSyncStatus>('local');
   const [stopStates, setStopStates] = useState<StopStateMap>(() => loadStopStates(seedDayPlan.id));
   const [amendmentRequests, setAmendmentRequests] = useState<DayPlanAmendmentRequest[]>([]);
@@ -478,11 +478,17 @@ export function DayPlanPanel({
           setSource('api');
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (isMounted) {
-          setDayPlan(seedDayPlan);
-          setStopStates(loadStopStates(seedDayPlan.id));
-          setSource('local');
+          if (error instanceof DayPlanRequestError) {
+            setDayPlan(emptyCrewDayPlan(seedDayPlan.crewId));
+            setStopStates({});
+            setSource(error.status === 404 ? 'missing' : 'unavailable');
+          } else {
+            setDayPlan(seedDayPlan);
+            setStopStates(loadStopStates(seedDayPlan.id));
+            setSource('local');
+          }
         }
       });
 
@@ -492,6 +498,7 @@ export function DayPlanPanel({
   }, [refreshSignal]);
 
   useEffect(() => {
+    if (source === 'missing' || source === 'unavailable') return;
     let isMounted = true;
 
     fetchDayPlanAmendments(dayPlan.id)
@@ -505,7 +512,7 @@ export function DayPlanPanel({
     return () => {
       isMounted = false;
     };
-  }, [dayPlan.id]);
+  }, [dayPlan.id, source]);
 
   useEffect(() => {
     if (!dayPlan.organizationId || !actorId) {
@@ -550,7 +557,13 @@ export function DayPlanPanel({
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Crew day plan</p>
           <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
           <p className="mt-1 text-sm text-slate-600">{dayPlan.serviceDate}</p>
-          <p className="mt-1 text-xs text-slate-500">Source: {source === 'api' ? 'local API' : 'browser fallback'}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Source: {source === 'api'
+              ? 'local API'
+              : source === 'local'
+                ? 'browser fallback'
+                : 'persisted route status'}
+          </p>
           <p className="mt-1 text-xs text-slate-500">Progress: {syncStatusLabel(syncStatus)}</p>
           {queueStorageUnavailable && (
             <p className="mt-2 rounded-lg bg-red-50 p-2 text-xs font-semibold text-red-900" role="alert">
@@ -845,6 +858,16 @@ export function DayPlanPanel({
       )}
 
       <div className="mt-5 space-y-3">
+        {source === 'missing' ? (
+          <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700" role="status">
+            No published persisted route is available for this crew. Ask a manager to publish the day plan.
+          </p>
+        ) : null}
+        {source === 'unavailable' ? (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-medium text-amber-950" role="alert">
+            The persisted crew route could not be loaded. Retry after API readiness recovers.
+          </p>
+        ) : null}
         {dayPlan.stops.map((stop) => {
           const localState: StopProgressStatus = resolveStopStatus(stopStates[stop.id], stop.stopStatus);
           const actionLabel = stopActionLabel(localState);

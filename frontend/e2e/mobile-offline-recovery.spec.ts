@@ -234,6 +234,22 @@ test('restores the saved customer relationship filter on mobile', async ({ page 
   await expect(page.getByLabel('Customer relationship filter')).toHaveValue('property_manager');
 });
 
+test('shows persisted route absence without substituting seeded stops', async ({ page }) => {
+  await page.route('**/crews/crew_1001/day-plan/today', (route) => route.fulfill({
+    status: 404,
+    contentType: 'application/json',
+    json: {
+      error: 'crew_day_plan_not_found',
+      message: 'No published persisted route is available for this crew.',
+    },
+  }));
+  await page.goto('/');
+  const route = page.locator('#today-route');
+  await expect(route.getByText('No published persisted route is available for this crew.')).toBeVisible();
+  await expect(route.getByText('Sample Customer')).toHaveCount(0);
+  await expect(route.getByText('Source: persisted route status')).toBeVisible();
+});
+
 test('queues route progress during interruption and replays after recovery', async ({
   context,
   page,

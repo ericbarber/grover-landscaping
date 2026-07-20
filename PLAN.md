@@ -79,7 +79,9 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Stop-progress route attempts database persistence and reports whether it persisted
 - Day-plan API response includes stop status
 - Backend day-plan read helper for PostgreSQL-backed crew routes
-- Day-plan repository attempts PostgreSQL reads with seeded fallback
+- PostgreSQL-backed day-plan reads return explicit missing or unavailable results instead of substituting seeded routes
+- No-database demo mode retains its seeded crew route
+- Mobile crew routes distinguish persisted absence and API unavailability from browser fallback
 - Route summary finished count resolves server status plus local browser status
 
 ### Manager scheduling foundation
@@ -302,7 +304,7 @@ Current state:
 
 - Frontend has a day-plan API client for `GET /crews/{crew_id}/day-plan/today`
 - Frontend has stop-progress API client for `POST /day-plans/{day_plan_id}/stops/{stop_id}/status`
-- Backend has `GET /crews/{crew_id}/day-plan/today` returning seeded repository data when no persisted route is available
+- Backend has `GET /crews/{crew_id}/day-plan/today` returning explicit `404` and `503` responses for missing and unavailable persisted routes
 - Backend has stop-progress route returning `persisted: true` when the PostgreSQL update succeeds and local fallback when it does not
 - Backend has a PostgreSQL day-plan read helper that joins day plans, crews, stops, and jobs
 - Day-plan, crew, and stop tables exist in migrations
@@ -316,7 +318,9 @@ Current state:
 
 Next implementation work:
 
-- Expand database-backed route coverage as new persistence behavior is added
+- Stop PostgreSQL-backed manager route mutations from reporting local fallback success when persistence fails
+- Return explicit mutation failure results while retaining no-database demo behavior
+- Give managers actionable retry guidance without presenting failed route changes as saved
 
 ### Manager scheduling workflow
 
@@ -727,9 +731,9 @@ Current state:
 
 Next implementation work:
 
-- Stop PostgreSQL-backed crew route reads from substituting seeded day plans on missing or failed persistence
-- Return explicit not-found and unavailable route responses while keeping no-database demo seeding
-- Render persisted route absence honestly on mobile and cover repository, API, and phone behavior
+- Stop PostgreSQL-backed manager route mutations from reporting local fallback success when persistence fails
+- Return explicit mutation failure results while retaining no-database demo behavior
+- Render failed route changes honestly in manager scheduling and cover repository, API, and phone behavior
 
 ## Planned
 

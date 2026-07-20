@@ -234,6 +234,9 @@ version and release date.
 
 Current continuation work:
 
+- PostgreSQL-backed crew route reads now return explicit missing or unavailable
+  results instead of silently substituting seeded day plans, and the mobile route
+  panel presents those states without demo stops.
 - New day-plan drafts snapshot organization timezone, service-area, and daily stop-capacity defaults.
 - Draft route planning now blocks stop assignments at the plan's snapshotted capacity.
 - First-owner setup now reports persisted organization, crew, published-route, and team-invitation completion milestones.

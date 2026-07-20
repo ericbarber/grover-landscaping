@@ -4616,19 +4616,20 @@ async fn build_and_persist_completion_report(
     let add_ons = state.jobs.list_job_add_ons(id).await;
     let mut report = build_completion_report(job, account, photo_evidence, add_ons);
     if let Some(crew_id) = report.job.assigned_crew_id.as_deref() {
-        let day_plan = state.day_plans.today_for_crew(crew_id).await;
-        if let Some(stop) = day_plan.stops.iter().find(|stop| stop.job_id == id) {
-            completion_reports::attach_completion_report_route_stop(
-                &mut report,
-                completion_reports::CompletionReportRouteStopContext {
-                    day_plan_id: day_plan.id,
-                    crew_id: day_plan.crew_id,
-                    service_date: day_plan.service_date,
-                    stop_id: stop.id.clone(),
-                    stop_order: stop.stop_order,
-                    stop_status: stop.stop_status.clone(),
-                },
-            );
+        if let Some(day_plan) = state.day_plans.today_summary_for_crew(crew_id).await {
+            if let Some(stop) = day_plan.stops.iter().find(|stop| stop.job_id == id) {
+                completion_reports::attach_completion_report_route_stop(
+                    &mut report,
+                    completion_reports::CompletionReportRouteStopContext {
+                        day_plan_id: day_plan.id,
+                        crew_id: day_plan.crew_id,
+                        service_date: day_plan.service_date,
+                        stop_id: stop.id.clone(),
+                        stop_order: stop.stop_order,
+                        stop_status: stop.stop_status.clone(),
+                    },
+                );
+            }
         }
     }
     let persistence = state.jobs.persist_completion_report(&report).await;
@@ -4648,7 +4649,21 @@ async fn get_today_day_plan(
         return response;
     }
 
-    Json(state.day_plans.today_for_crew(&crew_id).await).into_response()
+    match state.day_plans.today_for_crew(&crew_id).await {
+        day_plans::TodayDayPlanResult::Found(day_plan) => Json(day_plan).into_response(),
+        day_plans::TodayDayPlanResult::NotFound => resource_not_found_response(
+            "crew_day_plan_not_found",
+            "No published persisted route is available for this crew.",
+        ),
+        day_plans::TodayDayPlanResult::Unavailable => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "crew_day_plan_unavailable",
+                message: "The persisted crew route could not be loaded.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
 }
 
 async fn create_draft_day_plan(

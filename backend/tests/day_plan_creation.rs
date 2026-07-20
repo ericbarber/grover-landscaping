@@ -1,7 +1,7 @@
 use grover_landscaping_api::{
     day_plans::{
         draft_day_plan_id, AssignDayPlanStopRequest, CreateDayPlanRequest, DayPlanRepository,
-        ReorderDayPlanStopsRequest,
+        ReorderDayPlanStopsRequest, TodayDayPlanResult,
     },
     db::JobRepository,
 };
@@ -159,6 +159,15 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
         .execute(&pool)
         .await
         .expect("test crew should be present");
+    let prior_day_plan_ids =
+        sqlx::query_scalar::<_, String>("SELECT id FROM day_plans WHERE crew_id = $1")
+            .bind(crew_id)
+            .fetch_all(&pool)
+            .await
+            .expect("prior test day plans should be readable");
+    for prior_day_plan_id in prior_day_plan_ids {
+        reset_day_plan_fixture(&pool, &prior_day_plan_id).await;
+    }
     reset_day_plan_fixture(&pool, &day_plan_id).await;
 
     let day_plans = DayPlanRepository::new();
@@ -182,12 +191,17 @@ async fn repository_exposes_published_day_plan_to_crew_route() {
     assert!(assigned_stop.persisted);
 
     let before_publish = day_plans.today_for_crew(crew_id).await;
-    assert_ne!(before_publish.id, draft.id);
+    assert!(
+        matches!(before_publish, TodayDayPlanResult::NotFound),
+        "draft route should be hidden, got {before_publish:?}"
+    );
 
     let published = day_plans.publish_day_plan(&draft.id).await;
     assert!(published.persisted);
 
-    let crew_route = day_plans.today_for_crew(crew_id).await;
+    let TodayDayPlanResult::Found(crew_route) = day_plans.today_for_crew(crew_id).await else {
+        panic!("published persisted route should be found");
+    };
 
     assert_eq!(crew_route.id, draft.id);
     assert_eq!(crew_route.status, "published");

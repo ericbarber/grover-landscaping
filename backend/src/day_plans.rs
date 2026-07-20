@@ -32,6 +32,13 @@ pub struct DayPlanSummary {
     pub stops: Vec<DayPlanStop>,
 }
 
+#[derive(Clone, Debug)]
+pub enum TodayDayPlanResult {
+    Found(DayPlanSummary),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 pub struct CrewSummary {
     pub id: String,
@@ -1031,14 +1038,26 @@ impl DayPlanRepository {
         }
     }
 
-    pub async fn today_for_crew(&self, crew_id: &str) -> DayPlanSummary {
+    pub async fn today_for_crew(&self, crew_id: &str) -> TodayDayPlanResult {
         if let Some(pool) = &self.pool {
-            if let Ok(Some(day_plan)) = postgres_day_plans::today_for_crew(pool, crew_id).await {
-                return day_plan;
-            }
+            return match postgres_day_plans::today_for_crew(pool, crew_id).await {
+                Ok(Some(day_plan)) => TodayDayPlanResult::Found(day_plan),
+                Ok(None) => TodayDayPlanResult::NotFound,
+                Err(error) => {
+                    tracing::error!(%error, crew_id, "persisted crew day plan read failed");
+                    TodayDayPlanResult::Unavailable
+                }
+            };
         }
 
-        seed_day_plan(crew_id)
+        TodayDayPlanResult::Found(seed_day_plan(crew_id))
+    }
+
+    pub async fn today_summary_for_crew(&self, crew_id: &str) -> Option<DayPlanSummary> {
+        match self.today_for_crew(crew_id).await {
+            TodayDayPlanResult::Found(day_plan) => Some(day_plan),
+            TodayDayPlanResult::NotFound | TodayDayPlanResult::Unavailable => None,
+        }
     }
 
     pub async fn create_amendment(
@@ -1714,6 +1733,9 @@ mod tests {
         let repository = DayPlanRepository::default();
 
         let day_plan = repository.today_for_crew("crew_2001").await;
+        let TodayDayPlanResult::Found(day_plan) = day_plan else {
+            panic!("no-database repository should retain the seeded demo route");
+        };
 
         assert_eq!(day_plan.crew_id, "crew_2001");
         assert_eq!(day_plan.status, "published");

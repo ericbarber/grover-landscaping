@@ -102,6 +102,16 @@ export interface DayPlanStopReorderResponse {
   persisted: boolean;
 }
 
+export class DayPlanRequestError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code?: string,
+  ) {
+    super(`Day plan request failed with status ${status}`);
+    this.name = 'DayPlanRequestError';
+  }
+}
+
 export function normalizeCrewDayPlanId(crewId: string): string {
   return crewId.trim();
 }
@@ -254,7 +264,14 @@ export async function fetchCrewDayPlan(crewId: string): Promise<DayPlan> {
   const response = await authenticatedFetch(`${API_BASE_URL}/crews/${normalizedCrewId}/day-plan/today`);
 
   if (!response.ok) {
-    throw new Error(`Day plan request failed with status ${response.status}`);
+    let code: string | undefined;
+    try {
+      const payload = await response.json() as { error?: unknown };
+      if (typeof payload.error === 'string') code = payload.error;
+    } catch {
+      // Upstream failures may not include a JSON response body.
+    }
+    throw new DayPlanRequestError(response.status, code);
   }
 
   const dayPlan = (await response.json()) as ApiDayPlan;
