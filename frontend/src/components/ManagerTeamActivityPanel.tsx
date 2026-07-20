@@ -318,6 +318,7 @@ export function ManagerTeamActivityPanel({
 }) {
   const initialReviewFilters = useRef(loadTeamActivityReviewFilters(organizationId));
   const focusedReviewRestoreRef = useRef<TeamActivityReviewState | null>(null);
+  const clearedSavedReviewRef = useRef<TeamActivityReviewState | null>(null);
   const [activity, setActivity] = useState<TeamAdministrationActivity[]>([]);
   const [actorQuery, setActorQuery] = useState('');
   const [targetQuery, setTargetQuery] = useState('');
@@ -503,6 +504,7 @@ export function ManagerTeamActivityPanel({
 
   function resetReviewView() {
     focusedReviewRestoreRef.current = null;
+    clearedSavedReviewRef.current = null;
     restoredReviewFingerprintRef.current = null;
     setReviewNotice(null);
     setReviewNoticeAuditId(null);
@@ -517,6 +519,37 @@ export function ManagerTeamActivityPanel({
     setEventFilter('all');
     setMoveScope('all');
     setActivitySort('newest');
+  }
+
+  function clearSavedReviewSettings() {
+    const prior: TeamActivityReviewState = {
+      actorQuery,
+      targetQuery,
+      sourceQuery,
+      destinationQuery,
+      auditIdQuery,
+      eventFilter,
+      moveScope,
+      activitySort,
+    };
+    resetReviewView();
+    clearedSavedReviewRef.current = prior;
+    setReviewNotice('Saved owner activity review settings cleared.');
+  }
+
+  function undoSavedReviewClear() {
+    const prior = clearedSavedReviewRef.current;
+    if (!prior) return;
+    clearedSavedReviewRef.current = null;
+    setActorQuery(prior.actorQuery);
+    setTargetQuery(prior.targetQuery);
+    setSourceQuery(prior.sourceQuery);
+    setDestinationQuery(prior.destinationQuery);
+    setAuditIdQuery(prior.auditIdQuery);
+    setEventFilter(prior.eventFilter);
+    setMoveScope(prior.moveScope);
+    setActivitySort(prior.activitySort);
+    setReviewNotice(restoredReviewNotice(prior));
   }
 
   function exitFocusedReview() {
@@ -757,10 +790,19 @@ export function ManagerTeamActivityPanel({
             {reviewNotice.includes('saved owner activity review setting') ? (
               <button
                 className="min-h-11 rounded-lg border border-sky-300 bg-white px-3 text-xs font-bold"
-                onClick={resetReviewView}
+                onClick={clearSavedReviewSettings}
                 type="button"
               >
                 Clear saved review settings
+              </button>
+            ) : null}
+            {clearedSavedReviewRef.current ? (
+              <button
+                className="min-h-11 rounded-lg border border-sky-300 bg-white px-3 text-xs font-bold"
+                onClick={undoSavedReviewClear}
+                type="button"
+              >
+                Undo saved review clear
               </button>
             ) : null}
             {unavailableRestoredAuditId ? (

@@ -629,6 +629,13 @@ test('prepares, resets, and confirms an unstaffed territory crew move', async ({
   await expect(savedReview.getByLabel('Find move source')).toHaveValue('');
   await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('all');
   await expect(savedReview.getByLabel('Sort')).toHaveValue('newest');
+  await savedReview.getByRole('button', { name: 'Undo saved review clear' }).click();
+  await expect(savedReview.getByLabel('Find move source')).toHaveValue('Main Branch');
+  await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('within_branch');
+  await expect(savedReview.getByLabel('Sort')).toHaveValue('newest');
+  await savedReview.getByRole('button', { name: 'Clear saved review settings' }).click();
+  await expect(savedReview.getByLabel('Find move source')).toHaveValue('');
+  await expect(savedReview.getByLabel('Crew move scope')).toHaveValue('all');
   await expect.poll(() => page.evaluate(() => (
     window.localStorage.getItem(
       'grover.team-activity-review-filters.v1.org_demo_landscaping',

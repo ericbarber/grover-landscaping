@@ -712,10 +712,11 @@ Current state:
 - Mobile reloads announce the count of saved organization-scoped activity review settings restored
 - Dismissing saved-review restoration feedback leaves every restored setting applied
 - Saved-review feedback can clear persisted settings directly, and defaults remain after the next mobile reload
+- Saved-review clearing provides a current-session undo that restores the exact prior review
 
 Next implementation work:
 
-- Undo an accidental saved-review clear during the current session
+- Persist an undone saved review across a mobile reload
 
 ## Planned
 
