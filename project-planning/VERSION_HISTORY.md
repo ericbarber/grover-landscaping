@@ -266,6 +266,8 @@ version and release date.
 - Tenant-scoped jobs, accounts, properties, portfolios, reports, bids,
   notifications, and recovery endpoints now fail closed when active-membership
   storage is unavailable while preserving legitimate empty membership scopes.
+- Specific-resource tenant authorization now reports unavailable membership
+  verification separately from genuine cross-organization or role-based denial.
 - Added one-step mobile customer-account creation with validated primary contact,
   communication destination, and explicit notification consent.
 - Added customer-account search across customer, contact, and property details,

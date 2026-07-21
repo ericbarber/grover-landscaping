@@ -135,6 +135,8 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Database-backed readiness checks and production smoke-test script
 - Tenant-scoped collection and recovery endpoints return explicit `503` responses
   when active-membership storage is unavailable instead of presenting valid empty data
+- Specific-resource authorization distinguishes unavailable membership verification
+  from genuine access denial, returning `503` for storage outages and `403` for real denials
 
 ### Crew route and stop progress
 
@@ -397,26 +399,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Project README rewritten as practical project documentation
 
 ## In Progress
-
-### Active Phase 1 slice: explicit membership authorization availability
-
-Goal: distinguish a real organization-access denial from unavailable membership
-storage when authorizing a specific tenant resource.
-
-Planned implementation:
-
-- Replace the boolean active-membership check with explicit allowed, denied, and
-  unavailable outcomes.
-- Return `503 Service Unavailable` when specific-resource authorization cannot
-  verify membership, while retaining `403 Forbidden` for a loaded non-membership.
-- Cover loaded authorization, real denial, and unavailable persistence in focused tests.
-- Re-run backend unit and PostgreSQL integration coverage plus frontend type checks.
-
-Acceptance criteria:
-
-- Membership storage outages are never presented as user authorization failures.
-- Cross-organization and insufficient-role requests remain forbidden.
-- Auth-disabled local resource access remains unchanged.
 
 ### Day-plan backend persistence
 

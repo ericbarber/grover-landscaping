@@ -68,7 +68,7 @@ use grover_landscaping_api::{
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
         validate_reissue_invitation_request, validate_update_organization_profile_request,
-        BootstrapOrganizationRequest, BootstrapOrganizationResult,
+        ActiveMembershipCheckResult, BootstrapOrganizationRequest, BootstrapOrganizationResult,
         CreateOrganizationInvitationRequest, MembershipProfileUpdateResult,
         MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
         OrganizationMutationResult, OrganizationProfileUpdateResult, OrganizationRepository,
@@ -4687,22 +4687,26 @@ async fn require_organization_membership(
     organization_id: &str,
     required_role: fn(&AccessRole) -> bool,
 ) -> Result<(), Response> {
-    if state
+    match state
         .organizations
         .user_has_active_membership(&principal.subject, organization_id, required_role)
         .await
     {
-        return Ok(());
+        ActiveMembershipCheckResult::Allowed => Ok(()),
+        ActiveMembershipCheckResult::Denied => Err((
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "organization_access_denied",
+                message: "Active organization membership is required for this resource."
+                    .to_string(),
+            }),
+        )
+            .into_response()),
+        ActiveMembershipCheckResult::Unavailable => Err(persisted_resource_unavailable_response(
+            "organization_membership_verification_unavailable",
+            "Active organization membership could not be verified.",
+        )),
     }
-
-    Err((
-        StatusCode::FORBIDDEN,
-        Json(ErrorResponse {
-            error: "organization_access_denied",
-            message: "Active organization membership is required for this resource.".to_string(),
-        }),
-    )
-        .into_response())
 }
 
 fn resource_not_found_response(error: &'static str, message: &'static str) -> Response {
@@ -6588,6 +6592,19 @@ mod tests {
             .await
             .expect_err("unavailable membership storage should fail closed");
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let authorization_response = require_organization_membership(
+            &unavailable_state,
+            &principal,
+            "org_demo_landscaping",
+            can_manage_schedule,
+        )
+        .await
+        .expect_err("unavailable membership verification should fail closed");
+        assert_eq!(
+            authorization_response.status(),
+            StatusCode::SERVICE_UNAVAILABLE
+        );
     }
 
     #[tokio::test]

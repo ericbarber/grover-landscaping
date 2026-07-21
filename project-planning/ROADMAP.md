@@ -81,7 +81,6 @@ schedule, remaining work, or a completed day.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.
-   - Distinguish unavailable membership verification from genuine resource-access denial.
    - Expand account onboarding and first-user administration.
    - Keep access-summary reads fail-closed when required login auditing is unavailable.
    - Keep sensitive customer account reads fail-closed when view auditing is unavailable.

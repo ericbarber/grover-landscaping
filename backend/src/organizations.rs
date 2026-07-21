@@ -123,6 +123,13 @@ pub enum BootstrapOrganizationResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ActiveMembershipCheckResult {
+    Allowed,
+    Denied,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MembershipRoleUpdateResult {
     Updated(OrganizationMembership),
     LastActiveOwner,
@@ -435,14 +442,18 @@ impl OrganizationRepository {
         user_id: &str,
         organization_id: &str,
         required_role: fn(&AccessRole) -> bool,
-    ) -> bool {
+    ) -> ActiveMembershipCheckResult {
         match self.list_active_memberships(user_id).await {
             OrganizationCollectionResult::Loaded(memberships) => {
-                memberships.iter().any(|membership| {
+                if memberships.iter().any(|membership| {
                     membership.organization_id == organization_id && required_role(&membership.role)
-                })
+                }) {
+                    ActiveMembershipCheckResult::Allowed
+                } else {
+                    ActiveMembershipCheckResult::Denied
+                }
             }
-            OrganizationCollectionResult::Unavailable => false,
+            OrganizationCollectionResult::Unavailable => ActiveMembershipCheckResult::Unavailable,
         }
     }
 
@@ -2659,10 +2670,10 @@ mod tests {
     use super::{
         access_role_from_storage, access_role_to_storage, validate_bootstrap_organization_request,
         validate_create_invitation_request, validate_reissue_invitation_request,
-        validate_update_organization_profile_request, BootstrapOrganizationRequest,
-        CreateOrganizationInvitationRequest, MembershipRoleUpdateResult,
-        MembershipStatusUpdateResult, OrganizationCollectionResult, OrganizationMutationResult,
-        OrganizationRepository, ReissueOrganizationInvitationRequest,
+        validate_update_organization_profile_request, ActiveMembershipCheckResult,
+        BootstrapOrganizationRequest, CreateOrganizationInvitationRequest,
+        MembershipRoleUpdateResult, MembershipStatusUpdateResult, OrganizationCollectionResult,
+        OrganizationMutationResult, OrganizationRepository, ReissueOrganizationInvitationRequest,
         UpdateOrganizationMembershipRoleRequest, UpdateOrganizationMembershipStatusRequest,
         UpdateOrganizationProfileRequest,
     };
@@ -2811,14 +2822,25 @@ mod tests {
     async fn membership_role_check_uses_active_seed_memberships() {
         let repository = OrganizationRepository::default();
 
-        assert!(
+        assert_eq!(
             repository
                 .user_has_active_membership(
                     "local-development-user",
                     "org_demo_landscaping",
                     can_manage_schedule,
                 )
-                .await
+                .await,
+            ActiveMembershipCheckResult::Allowed
+        );
+        assert_eq!(
+            repository
+                .user_has_active_membership(
+                    "other-user",
+                    "org_demo_landscaping",
+                    can_manage_schedule,
+                )
+                .await,
+            ActiveMembershipCheckResult::Denied
         );
     }
 
