@@ -9,9 +9,11 @@ import {
   createPhotoUploadOfflineMutation,
   enqueuePhotoUploadMutation,
   enqueueDayPlanAmendmentMutation,
+  enqueueJobLifecycleMutation,
   getOfflinePhotoBlob,
   isOfflineMutationConflict,
   listOfflineMutations,
+  listOfflineMutationsForActor,
   markOfflineMutationFailed,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
@@ -214,6 +216,77 @@ describe('offline mutation queue records', () => {
       completed: true,
       syncState: 'pending',
     });
+  });
+
+  it('discovers current-actor mutations across tenants in creation order', async () => {
+    const earlier = await enqueueJobLifecycleMutation({
+      organizationId: 'org-2',
+      actorId: 'crew-user-1',
+      jobId: 'job-2',
+      action: 'complete',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    const otherActor = await enqueueJobLifecycleMutation({
+      organizationId: 'org-1',
+      actorId: 'crew-user-2',
+      jobId: 'job-other',
+      action: 'start',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    const later = await enqueueJobLifecycleMutation({
+      organizationId: 'org-1',
+      actorId: 'crew-user-1',
+      jobId: 'job-1',
+      action: 'start',
+    });
+
+    const mutations = await listOfflineMutationsForActor('crew-user-1');
+    expect(mutations.map((mutation) => mutation.id)).toEqual([earlier.id, later.id]);
+    expect(mutations).not.toContainEqual(otherActor);
+    expect(mutations.map((mutation) => mutation.createdAt)).toEqual(
+      mutations.map((mutation) => mutation.createdAt).sort(),
+    );
+  });
+
+  it('upgrades a version-3 queue without losing mutations or photo blobs', async () => {
+    const mutation = createPhotoUploadOfflineMutation({
+      organizationId: 'org-upgrade',
+      actorId: 'crew-upgrade',
+      jobId: 'job-upgrade',
+      photoType: 'before',
+      fileName: 'before.jpg',
+      contentType: 'image/jpeg',
+      fileSizeBytes: 4,
+    }, 'mutation-upgrade', new Date('2026-07-20T12:00:00.000Z'));
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open('grover-field-offline', 3);
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        const store = database.createObjectStore('mutations', { keyPath: 'id' });
+        store.createIndex('by_sync_state_and_created_at', ['syncState', 'createdAt']);
+        store.createIndex('by_organization_and_created_at', ['organizationId', 'createdAt']);
+        store.createIndex(
+          'by_organization_actor_and_created_at',
+          ['organizationId', 'actorId', 'createdAt'],
+        );
+        database.createObjectStore('photo_blobs');
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction(['mutations', 'photo_blobs'], 'readwrite');
+        transaction.objectStore('mutations').put(mutation);
+        transaction.objectStore('photo_blobs').put(new Blob(['data'], { type: 'image/jpeg' }), mutation.id);
+        transaction.oncomplete = () => {
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+
+    expect(await listOfflineMutationsForActor('crew-upgrade')).toEqual([mutation]);
+    expect(await getOfflinePhotoBlob(mutation.id)).toMatchObject({ size: 4, type: 'image/jpeg' });
   });
 
   it('persists tenant-scoped day-plan amendment requests with service context', async () => {

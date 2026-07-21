@@ -400,26 +400,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
-### Active Phase 2 slice: recover offline queues without a jobs response
-
-Goal: keep durable job, checklist, and photo work discoverable after an offline
-reload even when the API cannot provide the current jobs collection.
-
-Planned implementation:
-
-- Upgrade the IndexedDB schema with an actor-and-created-time queue index.
-- Load all current-actor mutations without deriving organization IDs from jobs.
-- Preserve each mutation's server-owned organization ID for replay authorization.
-- Keep queue counts, conflicts, and manual retry controls visible without fresh job data.
-- Add IndexedDB migration and actor-isolation regression coverage.
-
-Acceptance criteria:
-
-- Current-actor queued work remains visible when the jobs collection is empty or unavailable.
-- Mutations belonging to another actor are never returned or replayed.
-- Replay remains oldest-first and tenant-scoped using the organization stored on each record.
-- Existing version-3 offline databases upgrade without losing mutations or photo blobs.
-
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
@@ -827,6 +807,7 @@ Current state:
 - Queued photo blobs replay oldest-first with deterministic client-mutation ticket identities, fresh upload credentials, completion confirmation, and safe retry/conflict feedback
 - Crew photo queue review exposes safe capture details and two-step reviewed-conflict deletion before ordered replay resumes
 - Browser-compatible IndexedDB tests cover photo blob persistence, conflict retention, ordered replay, idempotency identity, and atomic reviewed deletion
+- IndexedDB schema version 4 discovers the signed-in actor's queued job, checklist, and photo work without a jobs response while preserving tenant context, creation order, actor isolation, and existing photo blobs
 - Client photo checks reject unsupported, unpreviewable, undersized, and duplicate captures before upload or offline storage
 - Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
 - Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance

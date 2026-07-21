@@ -6,7 +6,7 @@ import type {
 import { ApiRequestError } from '../api/apiError';
 
 const DATABASE_NAME = 'grover-field-offline';
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 const MUTATION_STORE = 'mutations';
 const PHOTO_BLOB_STORE = 'photo_blobs';
 export const MAX_OFFLINE_PHOTO_BYTES = 20 * 1024 * 1024;
@@ -321,6 +321,9 @@ function openOfflineDatabase(): Promise<IDBDatabase> {
           ['organizationId', 'actorId', 'createdAt'],
         );
       }
+      if (!store.indexNames.contains('by_actor_and_created_at')) {
+        store.createIndex('by_actor_and_created_at', ['actorId', 'createdAt']);
+      }
       if (!database.objectStoreNames.contains(PHOTO_BLOB_STORE)) {
         database.createObjectStore(PHOTO_BLOB_STORE);
       }
@@ -460,6 +463,27 @@ export async function listOfflineMutations(
     await completion;
     return mutations
       .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  } finally {
+    database.close();
+  }
+}
+
+export async function listOfflineMutationsForActor(actorId: string): Promise<OfflineMutation[]> {
+  const database = await openOfflineDatabase();
+  try {
+    const transaction = database.transaction(MUTATION_STORE, 'readonly');
+    const completion = waitForTransaction(transaction);
+    const range = IDBKeyRange.bound([actorId, ''], [actorId, '\uffff']);
+    const request = transaction
+      .objectStore(MUTATION_STORE)
+      .index('by_actor_and_created_at')
+      .getAll(range);
+    const mutations = await new Promise<OfflineMutation[]>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as OfflineMutation[]);
+      request.onerror = () => reject(request.error);
+    });
+    await completion;
+    return mutations.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
   } finally {
     database.close();
   }

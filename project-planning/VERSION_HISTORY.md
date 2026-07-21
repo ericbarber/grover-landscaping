@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-21: Recovered actor-scoped offline job, checklist, and photo queues without requiring a fresh jobs response.
 - 2026-07-20: Added SupportAdmin conversion reporting with funnel, persona, campaign, failure, low-volume, and overdue-follow-up signals.
 - 2026-07-20: Redesigned persona outcomes as a cohesive benefit narrative with contextual explanations instead of placeholder numbered blocks.
 - 2026-07-20: Added a SupportAdmin-only platform lead inbox with assignment, follow-up scheduling, qualification states, and durable workflow history.
