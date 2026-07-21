@@ -400,6 +400,26 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Active Phase 3 slice: unify invitation notification history
+
+Goal: let managers review and recover organization-invitation deliveries in the
+same tenant-scoped notification history used for completion reports and bids.
+
+Planned implementation:
+
+- Add `organization_invitation` to the frontend notification entity contract.
+- Add an Invitations entity filter with a clear manager-facing label.
+- Preserve existing status filters and retry/manual-resolution actions.
+- Add API-path and manager-filter regression coverage.
+- Update notification history documentation and delivery records.
+
+Acceptance criteria:
+
+- Managers can request notification history filtered to organization invitations.
+- Invitation history cards use a readable Invitations label.
+- Report and bid filters remain unchanged.
+- Recovery actions retain the active entity/status filters after refresh.
+
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
