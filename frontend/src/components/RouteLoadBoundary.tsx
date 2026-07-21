@@ -2,21 +2,38 @@ import React, { type ReactNode } from 'react';
 
 type State = {
   failed: boolean;
+  recovering: boolean;
 };
 
 export class RouteLoadBoundary extends React.Component<
   { children: ReactNode },
   State
 > {
-  state: State = { failed: false };
+  state: State = { failed: false, recovering: false };
 
   static getDerivedStateFromError(): State {
-    return { failed: true };
+    return { failed: true, recovering: false };
   }
 
   componentDidCatch(error: Error) {
     console.error('Frontend route failed to load.', error);
   }
+
+  recover = async () => {
+    this.setState({ recovering: true });
+    try {
+      if ('caches' in window) {
+        const cacheNames = await window.caches.keys();
+        await Promise.all(
+          cacheNames
+            .filter((name) => name.startsWith('grover-field-shell-'))
+            .map((name) => window.caches.delete(name)),
+        );
+      }
+    } finally {
+      window.location.reload();
+    }
+  };
 
   render() {
     if (this.state.failed) {
@@ -29,10 +46,11 @@ export class RouteLoadBoundary extends React.Component<
             </p>
             <button
               className="mt-5 min-h-11 w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white"
-              onClick={() => window.location.reload()}
+              disabled={this.state.recovering}
+              onClick={() => void this.recover()}
               type="button"
             >
-              Reload application
+              {this.state.recovering ? 'Refreshing application files…' : 'Reload application'}
             </button>
           </section>
         </main>
