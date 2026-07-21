@@ -75,7 +75,7 @@ export function InstallAppBanner() {
 
   return (
     <aside className="fixed inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-50 rounded-xl bg-emerald-950 p-4 text-sm text-white shadow-xl sm:left-auto sm:right-4 sm:max-w-sm lg:bottom-3">
-      <p className="font-bold">Keep Grover Field on this phone</p>
+      <p className="font-bold">Keep Grover Field on this device</p>
       <p className="mt-1 text-emerald-100">
         {installPrompt
           ? 'Install the app for quicker access from your home screen.'

@@ -67,6 +67,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
 - Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
+- Install guidance uses device-neutral language across phones, tablets, and desktop computers
 - Failed route recovery clears stale Grover Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
 - Mobile managers land on a compact six-category home instead of every office tool in one continuous page
 - Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render one task group at a time on mobile
