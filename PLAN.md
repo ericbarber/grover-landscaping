@@ -396,6 +396,28 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Active Phase 1 slice: fail-closed organization membership scope
+
+Goal: prevent a membership-storage outage from making tenant-scoped customer and
+operational collections appear legitimately empty.
+
+Planned implementation:
+
+- Return an explicit unavailable outcome from shared active-organization scope resolution.
+- Propagate that outcome as `503 Service Unavailable` from tenant-scoped jobs,
+  accounts, properties, portfolios, reports, bids, notifications, and recovery reads.
+- Preserve successful empty collections for principals who genuinely have no
+  qualifying active memberships.
+- Add representative route and repository tests for unavailable, empty, and loaded scopes.
+- Re-run backend unit and PostgreSQL integration coverage plus frontend readiness checks.
+
+Acceptance criteria:
+
+- A membership repository failure never becomes an HTTP `200` empty collection.
+- A valid principal with no qualifying membership still receives the endpoint's
+  existing empty or forbidden result as appropriate.
+- Auth-disabled local development retains its seeded organization access.
+
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
