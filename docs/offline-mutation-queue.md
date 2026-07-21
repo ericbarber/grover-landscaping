@@ -101,10 +101,11 @@ the queue as unavailable.
 
 Schema version 4 includes indexes for ordered state processing,
 organization-scoped inspection, and actor-scoped discovery. On app load, job,
-checklist, and photo queues are loaded for the signed-in actor directly from
-IndexedDB, so queued work remains visible and eligible for replay when the jobs
-API is empty or unavailable. Each record retains its server-owned organization
-for authorized replay, and records for other actors are excluded. The version-4
+checklist, photo, stop-progress, and route-amendment queues are loaded for the
+signed-in actor directly from IndexedDB. Queued work therefore remains visible
+and eligible for replay when the jobs or day-plan API is empty or unavailable.
+Each record retains its server-owned organization and route context for
+authorized replay, and records for other actors are excluded. The version-4
 upgrade adds the actor index in `onupgradeneeded` without replacing the mutation
 or photo-blob stores. Future schema changes must likewise increment the database
 version and migrate existing records in place.

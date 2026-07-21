@@ -13,7 +13,7 @@ import {
   isDayPlanAmendmentOfflineMutation,
   isOfflineMutationConflict,
   isStopProgressOfflineMutation,
-  listOfflineMutations,
+  listOfflineMutationsForActor,
   markOfflineMutationFailed,
   removeOfflineMutation,
   requestPersistentOfflineStorage,
@@ -351,11 +351,11 @@ export function DayPlanPanel({
   }
 
   const replayOfflineMutations = useCallback(async () => {
-    if (!dayPlan.organizationId || !actorId || !navigator.onLine || replayInProgress.current) return;
+    if (!actorId || !navigator.onLine || replayInProgress.current) return;
     replayInProgress.current = true;
     setIsReplayingMutations(true);
     try {
-      const mutations = (await listOfflineMutations(dayPlan.organizationId, actorId))
+      const mutations = (await listOfflineMutationsForActor(actorId))
         .filter(isStopProgressOfflineMutation);
       for (const mutation of mutations) {
         if (mutation.syncState === 'conflict') break;
@@ -380,7 +380,7 @@ export function DayPlanPanel({
           break;
         }
       }
-      const remaining = (await listOfflineMutations(dayPlan.organizationId, actorId))
+      const remaining = (await listOfflineMutationsForActor(actorId))
         .filter(isStopProgressOfflineMutation);
       setQueueStorageUnavailable(false);
       setOfflineMutations(remaining);
@@ -392,19 +392,14 @@ export function DayPlanPanel({
       replayInProgress.current = false;
       setIsReplayingMutations(false);
     }
-  }, [actorId, dayPlan.organizationId]);
+  }, [actorId]);
 
   const replayOfflineAmendments = useCallback(async () => {
-    if (
-      !dayPlan.organizationId
-      || !actorId
-      || !navigator.onLine
-      || amendmentReplayInProgress.current
-    ) return;
+    if (!actorId || !navigator.onLine || amendmentReplayInProgress.current) return;
     amendmentReplayInProgress.current = true;
     setIsReplayingAmendments(true);
     try {
-      const mutations = (await listOfflineMutations(dayPlan.organizationId, actorId))
+      const mutations = (await listOfflineMutationsForActor(actorId))
         .filter(isDayPlanAmendmentOfflineMutation);
       for (const mutation of mutations) {
         if (mutation.syncState === 'conflict') break;
@@ -446,7 +441,7 @@ export function DayPlanPanel({
           break;
         }
       }
-      const remaining = (await listOfflineMutations(dayPlan.organizationId, actorId))
+      const remaining = (await listOfflineMutationsForActor(actorId))
         .filter(isDayPlanAmendmentOfflineMutation);
       setQueueStorageUnavailable(false);
       setOfflineAmendmentMutations(remaining);
@@ -456,7 +451,7 @@ export function DayPlanPanel({
       amendmentReplayInProgress.current = false;
       setIsReplayingAmendments(false);
     }
-  }, [actorId, dayPlan.organizationId]);
+  }, [actorId]);
 
   async function discardReviewedConflict(mutation: StopProgressOfflineMutation) {
     try {
@@ -558,13 +553,17 @@ export function DayPlanPanel({
   }, [dayPlan.id, source]);
 
   useEffect(() => {
-    if (!dayPlan.organizationId || !actorId) {
+    if (!actorId) {
       setOfflineMutations([]);
       setOfflineAmendmentMutations([]);
       return;
     }
-    void listOfflineMutations(dayPlan.organizationId, actorId)
+    setOfflineMutations([]);
+    setOfflineAmendmentMutations([]);
+    let active = true;
+    void listOfflineMutationsForActor(actorId)
       .then((mutations) => {
+        if (!active) return;
         setQueueStorageUnavailable(false);
         const stopMutations = mutations.filter(isStopProgressOfflineMutation);
         setOfflineMutations(stopMutations);
@@ -576,6 +575,7 @@ export function DayPlanPanel({
         }
       })
       .catch(() => {
+        if (!active) return;
         setOfflineMutations([]);
         setOfflineAmendmentMutations([]);
         setQueueStorageUnavailable(true);
@@ -585,10 +585,12 @@ export function DayPlanPanel({
       void replayOfflineAmendments();
     };
     window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+    return () => {
+      active = false;
+      window.removeEventListener('online', handleOnline);
+    };
   }, [
     actorId,
-    dayPlan.organizationId,
     replayOfflineAmendments,
     replayOfflineMutations,
   ]);

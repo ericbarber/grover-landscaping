@@ -117,8 +117,6 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 ## Phase 2 — Field Crew Mobile Reliability
 
-- Recover actor-scoped stop-progress and route-amendment queues without depending
-  on a fresh day-plan API response.
 - Add an installable PWA, application-shell caching, and mobile metadata.
 - Store offline field mutations in IndexedDB.
 - Store offline photo metadata and blobs atomically without retaining upload credentials.

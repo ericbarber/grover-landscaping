@@ -400,26 +400,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
-### Active Phase 2 slice: recover route queues without a day-plan response
-
-Goal: keep durable stop-progress and route-amendment work visible and replayable
-after an offline reload when the current day plan cannot be fetched.
-
-Planned implementation:
-
-- Discover the signed-in actor's stop and amendment mutations directly from IndexedDB.
-- Replay each mutation with its stored organization, day-plan, stop, and request context.
-- Keep pending, failed, and conflict review visible while the day-plan response is unavailable.
-- Clear prior queue state immediately when the authenticated actor changes.
-- Add regression coverage for actor-scoped route queue selection without loaded day-plan data.
-
-Acceptance criteria:
-
-- Queued stop progress and amendments remain visible when the day plan is unavailable.
-- Mutations for another actor are never shown or replayed.
-- Replay preserves creation order and stops at the first conflict or failed write per queue.
-- Existing tenant/actor queueing and reviewed-conflict behavior remains intact.
-
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
@@ -828,6 +808,7 @@ Current state:
 - Crew photo queue review exposes safe capture details and two-step reviewed-conflict deletion before ordered replay resumes
 - Browser-compatible IndexedDB tests cover photo blob persistence, conflict retention, ordered replay, idempotency identity, and atomic reviewed deletion
 - IndexedDB schema version 4 discovers the signed-in actor's queued job, checklist, and photo work without a jobs response while preserving tenant context, creation order, actor isolation, and existing photo blobs
+- Stop-progress and route-amendment queues are discovered for the signed-in actor without a day-plan response and replay from their stored tenant and route context
 - Client photo checks reject unsupported, unpreviewable, undersized, and duplicate captures before upload or offline storage
 - Job completion requires both before and after evidence, including captured offline evidence, with crew-readable recovery guidance
 - Completion-report responses expose ordered server-owned checklist and before/after readiness blockers, rendered as actionable field guidance

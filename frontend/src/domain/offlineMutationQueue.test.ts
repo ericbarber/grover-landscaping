@@ -10,6 +10,7 @@ import {
   enqueuePhotoUploadMutation,
   enqueueDayPlanAmendmentMutation,
   enqueueJobLifecycleMutation,
+  enqueueStopProgressMutation,
   getOfflinePhotoBlob,
   isOfflineMutationConflict,
   listOfflineMutations,
@@ -219,11 +220,12 @@ describe('offline mutation queue records', () => {
   });
 
   it('discovers current-actor mutations across tenants in creation order', async () => {
-    const earlier = await enqueueJobLifecycleMutation({
+    const earlier = await enqueueStopProgressMutation({
       organizationId: 'org-2',
       actorId: 'crew-user-1',
-      jobId: 'job-2',
-      action: 'complete',
+      dayPlanId: 'day-plan-2',
+      stopId: 'stop-2',
+      status: 'finished',
     });
     await new Promise((resolve) => setTimeout(resolve, 1));
     const otherActor = await enqueueJobLifecycleMutation({
@@ -233,11 +235,14 @@ describe('offline mutation queue records', () => {
       action: 'start',
     });
     await new Promise((resolve) => setTimeout(resolve, 1));
-    const later = await enqueueJobLifecycleMutation({
+    const later = await enqueueDayPlanAmendmentMutation({
       organizationId: 'org-1',
       actorId: 'crew-user-1',
-      jobId: 'job-1',
-      action: 'start',
+      dayPlanId: 'day-plan-1',
+      amendmentType: 'remove_stop',
+      requestedByCrewId: 'crew-1',
+      stopId: 'stop-1',
+      note: 'Gate is inaccessible',
     });
 
     const mutations = await listOfflineMutationsForActor('crew-user-1');
