@@ -49,5 +49,9 @@ Notification delivery history distinguishes provider- or preference-skipped work
 from failed or dead-letter deliveries a manager explicitly marks `resolved`.
 Resolved entries retain the manager's recovery note and remain available through
 the status filter; only failed and dead-letter entries can be retried.
+The shared history can be narrowed to completion-report, project-bid, or
+organization-invitation deliveries. The manager interface presents those entity
+types as Reports, Bids, and Invitations and preserves the selected entity and
+status filters after retry or resolution.
 
 `GET /completion-reports` supports server-side queue narrowing by lifecycle status, readiness, readiness blocker, assigned crew ID, customer-name text, property-address text, and inclusive scheduled-date range. Current blocker values are `any`, `checklist`, `before_photos`, and `after_photos`.

@@ -87,6 +87,9 @@ describe('core API client mapping', () => {
       status: 'resolved',
       limit: 10,
     })).toBe('/notifications?entity_type=completion_report&status=resolved&limit=10');
+    expect(notificationHistoryPath({ entityType: 'organization_invitation' })).toBe(
+      '/notifications?entity_type=organization_invitation',
+    );
     expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
     expect(notificationResolvePath('notification/1001')).toBe('/notifications/notification%2F1001/resolve');
   });

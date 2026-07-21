@@ -21,7 +21,12 @@ export type NotificationHistoryFilters = {
   status: NotificationHistoryStatusFilter;
 };
 
-const entityFilters: NotificationHistoryEntityFilter[] = ['all', 'completion_report', 'project_bid'];
+export const notificationHistoryEntityFilters: NotificationHistoryEntityFilter[] = [
+  'all',
+  'completion_report',
+  'project_bid',
+  'organization_invitation',
+];
 const statusFilters: NotificationHistoryStatusFilter[] = [
   'all',
   'queued',
@@ -40,9 +45,12 @@ function statusLabel(status: NotificationHistoryStatusFilter): string {
   return status.replace('_', ' ');
 }
 
-function entityLabel(entity: NotificationHistoryEntityFilter): string {
+export function notificationHistoryEntityLabel(
+  entity: NotificationHistoryEntityFilter,
+): string {
   if (entity === 'completion_report') return 'Reports';
   if (entity === 'project_bid') return 'Bids';
+  if (entity === 'organization_invitation') return 'Invitations';
   return 'All work';
 }
 
@@ -112,7 +120,7 @@ export function ManagerNotificationHistoryPanel({
       </div>
 
       <div aria-label="Filter notification history by work type" className="mt-4 flex flex-wrap gap-2">
-        {entityFilters.map((filter) => (
+        {notificationHistoryEntityFilters.map((filter) => (
           <button
             key={filter}
             aria-pressed={entityType === filter}
@@ -124,7 +132,7 @@ export function ManagerNotificationHistoryPanel({
             onClick={() => updateFilters({ entityType: filter })}
             type="button"
           >
-            {entityLabel(filter)}
+            {notificationHistoryEntityLabel(filter)}
           </button>
         ))}
       </div>
@@ -158,7 +166,7 @@ export function ManagerNotificationHistoryPanel({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-semibold text-slate-950">
-                    {entityLabel(notification.entityType)} · {notification.templateKey.replace(/_/g, ' ')}
+                    {notificationHistoryEntityLabel(notification.entityType)} · {notification.templateKey.replace(/_/g, ' ')}
                   </p>
                   <p className="mt-1 break-all text-xs text-slate-600">
                     {notification.channel.toUpperCase()} to {notification.recipient}

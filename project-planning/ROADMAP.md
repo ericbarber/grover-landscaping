@@ -128,7 +128,6 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 ## Phase 3 — Manager Command Center
 
-- Include organization-invitation deliveries in unified manager notification history.
 - Complete persisted report filters and unified activity history.
 - Expand notification, photo, erasure, and report recovery workflows.
 - Add route capacity, duration, overage risk, and publish guards.

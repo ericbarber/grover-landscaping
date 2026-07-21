@@ -296,7 +296,10 @@ export interface PropertyCompletionReportSummary {
   shareUrl: string;
 }
 
-export type NotificationHistoryEntityType = 'project_bid' | 'completion_report';
+export type NotificationHistoryEntityType =
+  | 'project_bid'
+  | 'completion_report'
+  | 'organization_invitation';
 export type NotificationHistoryStatus =
   | 'queued'
   | 'sending'

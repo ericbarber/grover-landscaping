@@ -62,6 +62,8 @@ Expected behavior:
 - Serialize creation per organization and normalized recipient email, and reject
   a second live pending invitation for that recipient even when its role differs.
 - Queue an `organization_invitation` email record in `notification_outbox` when PostgreSQL persistence is available.
+- Expose invitation delivery rows through the tenant-scoped manager notification
+  history and its Invitations filter, including retry and manual-resolution actions.
 - Return the invitation token so local fallback and manual pilot workflows can still proceed if delivery is not configured.
 - The mobile team workflow always supplies a finite 7-, 14-, or 30-day
   expiration; seven days is the default.
