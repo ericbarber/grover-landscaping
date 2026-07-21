@@ -1,10 +1,10 @@
 import type { OperationalActivity } from '../api/client';
 import type { ManagerActivityItem } from './managerActivity';
 
-const activityPresentation: Record<
+const activityPresentation: Partial<Record<
   OperationalActivity['eventKind'],
   Pick<ManagerActivityItem, 'title' | 'tone' | 'source' | 'recommendedAction'>
-> = {
+>> = {
   route_draft_saved: {
     title: 'Route draft persisted',
     tone: 'info',
@@ -103,10 +103,30 @@ const activityPresentation: Record<
     source: 'photo',
     recommendedAction: 'Confirm customer-facing reports and privacy records reflect the erasure.',
   },
+  photo_erasure_deletion_retried: {
+    title: 'Photo erasure deletion retried',
+    tone: 'info',
+    source: 'photo',
+    recommendedAction: 'Monitor the deletion recovery item until storage cleanup succeeds.',
+  },
+  photo_erasure_deletion_resolved: {
+    title: 'Photo erasure deletion resolved',
+    tone: 'success',
+    source: 'photo',
+  },
+};
+
+const unknownActivityPresentation: Pick<
+  ManagerActivityItem,
+  'title' | 'tone' | 'source' | 'recommendedAction'
+> = {
+  title: 'Operational activity recorded',
+  tone: 'info',
+  source: 'job',
 };
 
 export function operationalToManagerActivity(activity: OperationalActivity): ManagerActivityItem {
-  const presentation = activityPresentation[activity.eventKind];
+  const presentation = activityPresentation[activity.eventKind] ?? unknownActivityPresentation;
   const metadata = activity.metadata ?? {};
   const stopId = typeof metadata.stop_id === 'string' ? metadata.stop_id : undefined;
   const jobId = typeof metadata.job_id === 'string' ? metadata.job_id : undefined;

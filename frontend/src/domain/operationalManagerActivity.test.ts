@@ -83,6 +83,36 @@ describe('persisted operational manager activity', () => {
     });
   });
 
+  it('maps photo erasure recovery events without crashing the activity feed', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_photo_erasure_retry_1001',
+      organizationId: 'org_1001',
+      eventKind: 'photo_erasure_deletion_retried',
+      targetId: 'photo_erasure_1001',
+      actorUserId: 'manager_1001',
+      occurredAt: '2026-07-19T17:12:00Z',
+    })).toMatchObject({
+      title: 'Photo erasure deletion retried',
+      tone: 'info',
+      source: 'photo',
+    });
+  });
+
+  it('falls back safely when the API adds an activity kind before the UI presentation', () => {
+    expect(operationalToManagerActivity({
+      id: 'audit_future_1001',
+      organizationId: 'org_1001',
+      eventKind: 'future_operational_event' as never,
+      targetId: 'job_1001',
+      actorUserId: 'manager_1001',
+      occurredAt: '2026-07-19T17:13:00Z',
+    })).toMatchObject({
+      title: 'Operational activity recorded',
+      tone: 'info',
+      source: 'job',
+    });
+  });
+
   it('surfaces customer follow-up for a schedule-changing dispatch move', () => {
     expect(operationalToManagerActivity({
       id: 'audit_move_1001',

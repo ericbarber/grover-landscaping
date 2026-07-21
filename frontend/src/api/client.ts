@@ -538,7 +538,9 @@ export type OperationalActivityEventKind =
   | 'bid_converted'
   | 'photo_processing_retried'
   | 'photo_processing_resolved'
-  | 'customer_photo_evidence_erased';
+  | 'customer_photo_evidence_erased'
+  | 'photo_erasure_deletion_retried'
+  | 'photo_erasure_deletion_resolved';
 
 interface ApiOperationalActivity {
   id: string;

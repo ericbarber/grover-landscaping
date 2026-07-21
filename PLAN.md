@@ -69,6 +69,7 @@ This file tracks what has been delivered, what is actively being built, what is 
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Install guidance uses device-neutral language across phones, tablets, and desktop computers
 - Failed route recovery clears stale Grover Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
+- Manager activity renders photo-erasure recovery audits and safely falls back for newer server event kinds instead of crashing application startup
 - Mobile managers land on a compact six-category home instead of every office tool in one continuous page
 - Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render one task group at a time on mobile
 - Each manager category has a compact task picker and renders only one selected tool on mobile
