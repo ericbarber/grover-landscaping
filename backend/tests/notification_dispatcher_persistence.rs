@@ -246,9 +246,24 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
         resolution,
         NotificationResolveResult::Resolved(ref item)
             if item.id == resolve_id
-                && item.status == "skipped"
+                && item.status == "resolved"
                 && item.last_error.as_deref() == Some("Customer confirmed by phone")
     ));
+
+    let resolved_history = repository
+        .list_history(NotificationHistoryFilter {
+            organization_ids: organization_ids.clone(),
+            entity_type: Some("test".to_string()),
+            status: Some("resolved".to_string()),
+            limit: 10,
+        })
+        .await
+        .unwrap();
+    assert!(resolved_history.iter().any(|item| {
+        item.id == resolve_id
+            && item.status == "resolved"
+            && item.last_error.as_deref() == Some("Customer confirmed by phone")
+    }));
 
     assert!(matches!(
         repository

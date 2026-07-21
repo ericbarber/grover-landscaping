@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-21: Distinguished manually resolved notification failures from provider- and preference-skipped deliveries.
 - 2026-07-21: Recovered actor-scoped offline job, checklist, and photo queues without requiring a fresh jobs response.
 - 2026-07-21: Recovered actor-scoped stop-progress and route-amendment queues without requiring a fresh day-plan response.
 - 2026-07-20: Added SupportAdmin conversion reporting with funnel, persona, campaign, failure, low-volume, and overdue-follow-up signals.

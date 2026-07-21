@@ -45,4 +45,9 @@ Manager review should work from persisted report snapshots so late job edits do 
 
 The manager queue endpoint returns only reports for jobs owned by organizations where the signed-in principal has an active membership. Notification history and notification recovery actions use the same active-membership boundary.
 
+Notification delivery history distinguishes provider- or preference-skipped work
+from failed or dead-letter deliveries a manager explicitly marks `resolved`.
+Resolved entries retain the manager's recovery note and remain available through
+the status filter; only failed and dead-letter entries can be retried.
+
 `GET /completion-reports` supports server-side queue narrowing by lifecycle status, readiness, readiness blocker, assigned crew ID, customer-name text, property-address text, and inclusive scheduled-date range. Current blocker values are `any`, `checklist`, `before_photos`, and `after_photos`.

@@ -84,9 +84,9 @@ describe('core API client mapping', () => {
     expect(notificationHistoryPath()).toBe('/notifications');
     expect(notificationHistoryPath({
       entityType: 'completion_report',
-      status: 'failed',
+      status: 'resolved',
       limit: 10,
-    })).toBe('/notifications?entity_type=completion_report&status=failed&limit=10');
+    })).toBe('/notifications?entity_type=completion_report&status=resolved&limit=10');
     expect(notificationRetryPath('notification/1001')).toBe('/notifications/notification%2F1001/retry');
     expect(notificationResolvePath('notification/1001')).toBe('/notifications/notification%2F1001/resolve');
   });
@@ -575,7 +575,7 @@ describe('core API client mapping', () => {
       channel: 'email',
       recipient: 'customer@example.com',
       template_key: 'completion_report_delivery',
-      status: 'failed',
+      status: 'resolved',
       attempt_count: 2,
       available_at: '2026-07-13 10:00:00+00',
       last_attempt_at: '2026-07-13 09:00:00+00',
@@ -588,7 +588,7 @@ describe('core API client mapping', () => {
     })).toMatchObject({
       id: 'notification_1001',
       entityType: 'completion_report',
-      status: 'failed',
+      status: 'resolved',
       attemptCount: 2,
       lastError: 'provider unavailable',
       providerResponseCode: 503,

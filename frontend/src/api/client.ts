@@ -303,7 +303,8 @@ export type NotificationHistoryStatus =
   | 'sent'
   | 'failed'
   | 'skipped'
-  | 'dead_letter';
+  | 'dead_letter'
+  | 'resolved';
 
 export interface ApiNotificationHistoryItem {
   id: string;

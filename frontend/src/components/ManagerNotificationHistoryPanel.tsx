@@ -29,11 +29,13 @@ const statusFilters: NotificationHistoryStatusFilter[] = [
   'sent',
   'failed',
   'dead_letter',
+  'resolved',
   'skipped',
 ];
 
 function statusLabel(status: NotificationHistoryStatusFilter): string {
   if (status === 'dead_letter') return 'Needs attention';
+  if (status === 'resolved') return 'Resolved';
   if (status === 'all') return 'All statuses';
   return status.replace('_', ' ');
 }
@@ -46,6 +48,7 @@ function entityLabel(entity: NotificationHistoryEntityFilter): string {
 
 function statusClassName(status: NotificationHistoryStatus): string {
   if (status === 'sent') return 'bg-emerald-100 text-emerald-800';
+  if (status === 'resolved') return 'bg-violet-100 text-violet-800';
   if (status === 'failed' || status === 'dead_letter') return 'bg-rose-100 text-rose-800';
   if (status === 'sending' || status === 'queued') return 'bg-sky-100 text-sky-800';
   return 'bg-slate-100 text-slate-700';

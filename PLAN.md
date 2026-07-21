@@ -400,26 +400,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
-### Active Phase 3 slice: distinguish manually resolved notifications
-
-Goal: make manager notification recovery auditable by separating deliveries a
-manager explicitly resolves from notifications skipped by provider or preference rules.
-
-Planned implementation:
-
-- Add `resolved` to the persisted notification-outbox status contract.
-- Transition failed or dead-letter notifications to `resolved` after manual recovery.
-- Support `resolved` in notification history filters and frontend API types.
-- Render a distinct resolved label and history filter in the manager workspace.
-- Update backend, frontend, migration, and recovery regression coverage.
-
-Acceptance criteria:
-
-- Manual resolution persists `resolved`, its note, and the existing audit event atomically.
-- Provider-skipped notifications remain `skipped` and visually distinct.
-- Managers can filter notification history to resolved deliveries.
-- Retry remains limited to failed and dead-letter deliveries.
-
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
@@ -713,6 +693,7 @@ Current state:
 - Backend notification history and notification retry/resolve actions are scoped to active organization memberships
 - Manager notification history can retry failed and dead-letter delivery records by returning them to queued status
 - Manager notification history can mark failed and dead-letter delivery records manually resolved
+- Manually resolved delivery failures persist an explicit `resolved` status and recovery note, remain filterable in manager history, and stay distinct from provider- or preference-skipped notifications
 - Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
 - Job-scoped reads and mutations, photo endpoints, add-on status updates, and completion-report actions reject access outside the principal's active organization memberships
 

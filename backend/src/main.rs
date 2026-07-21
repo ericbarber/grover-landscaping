@@ -4074,10 +4074,11 @@ fn notification_history_filter(
     if let Some(status) = query.status.as_deref() {
         if !matches!(
             status,
-            "queued" | "sending" | "sent" | "failed" | "skipped" | "dead_letter"
+            "queued" | "sending" | "sent" | "failed" | "skipped" | "dead_letter" | "resolved"
         ) {
             return Err(
-                "status must be queued, sending, sent, failed, skipped, or dead_letter".to_string(),
+                "status must be queued, sending, sent, failed, skipped, dead_letter, or resolved"
+                    .to_string(),
             );
         }
     }
@@ -8643,7 +8644,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri(
-                        "/notifications?entity_type=organization_invitation&status=queued&limit=10",
+                        "/notifications?entity_type=organization_invitation&status=resolved&limit=10",
                     )
                     .body(Body::empty())
                     .unwrap(),

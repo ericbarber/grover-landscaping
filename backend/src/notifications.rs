@@ -445,7 +445,7 @@ impl NotificationOutboxRepository {
             r#"
             UPDATE notification_outbox
             SET
-                status = 'skipped',
+                status = 'resolved',
                 available_at = now(),
                 last_error = $2,
                 updated_at = now()
