@@ -400,6 +400,26 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Active Phase 2 slice: recover route queues without a day-plan response
+
+Goal: keep durable stop-progress and route-amendment work visible and replayable
+after an offline reload when the current day plan cannot be fetched.
+
+Planned implementation:
+
+- Discover the signed-in actor's stop and amendment mutations directly from IndexedDB.
+- Replay each mutation with its stored organization, day-plan, stop, and request context.
+- Keep pending, failed, and conflict review visible while the day-plan response is unavailable.
+- Clear prior queue state immediately when the authenticated actor changes.
+- Add regression coverage for actor-scoped route queue selection without loaded day-plan data.
+
+Acceptance criteria:
+
+- Queued stop progress and amendments remain visible when the day plan is unavailable.
+- Mutations for another actor are never shown or replayed.
+- Replay preserves creation order and stops at the first conflict or failed write per queue.
+- Existing tenant/actor queueing and reviewed-conflict behavior remains intact.
+
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
