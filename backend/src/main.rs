@@ -147,6 +147,15 @@ struct AppState {
     marketing_events: MarketingEventRepository,
 }
 
+macro_rules! organization_ids_or_return {
+    ($result:expr) => {
+        match $result {
+            Ok(organization_ids) => organization_ids,
+            Err(response) => return response,
+        }
+    };
+}
+
 #[derive(Debug, Serialize)]
 struct HealthResponse {
     status: &'static str,
@@ -1129,7 +1138,10 @@ async fn list_jobs(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids = match principal_active_organization_ids(&state, &principal).await {
+        Ok(organization_ids) => organization_ids,
+        Err(response) => return response,
+    };
     let visible_organization_ids: HashSet<&str> =
         organization_ids.iter().map(String::as_str).collect();
     if visible_organization_ids.is_empty() {
@@ -1598,12 +1610,14 @@ async fn list_customer_accounts(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state.accounts.list(&organization_ids).await {
         CustomerAccountListResult::Loaded(accounts) => Json(accounts).into_response(),
         CustomerAccountListResult::Unavailable => persisted_resource_unavailable_response(
@@ -1617,12 +1631,14 @@ async fn list_archived_customer_accounts(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state.accounts.list_archived(&organization_ids).await {
         CustomerAccountListResult::Loaded(accounts) => Json(accounts).into_response(),
         CustomerAccountListResult::Unavailable => persisted_resource_unavailable_response(
@@ -1688,12 +1704,14 @@ async fn update_customer_account(
         )
             .into_response();
     }
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .update(&account_id, &organization_ids, request)
@@ -1716,12 +1734,14 @@ async fn archive_customer_account(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .archive(&account_id, &organization_ids, &principal.subject)
@@ -1766,12 +1786,14 @@ async fn reactivate_customer_account(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .reactivate(&account_id, &organization_ids, &principal.subject)
@@ -1810,12 +1832,14 @@ async fn update_customer_account_relationship(
         )
             .into_response();
     }
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .update_relationship(
@@ -1847,12 +1871,14 @@ async fn list_customer_properties(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .list_properties(&account_id, &organization_ids)
@@ -1871,12 +1897,14 @@ async fn get_customer_account_onboarding_progress(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .account_onboarding_progress(&account_id, &organization_ids)
@@ -1962,12 +1990,14 @@ async fn update_customer_property_identity(
         )
             .into_response();
     }
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .update_property_identity(
@@ -2020,12 +2050,14 @@ async fn update_customer_property_status(
         )
             .into_response();
     }
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .update_property_status(
@@ -2075,12 +2107,14 @@ async fn get_customer_property_activation_readiness(
     Extension(principal): Extension<AuthPrincipal>,
     Path((account_id, property_id)): Path<(String, String)>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .accounts
         .property_activation_readiness(&account_id, &property_id, &organization_ids)
@@ -2722,8 +2756,9 @@ async fn list_operational_activity(
         )
             .into_response();
     }
-    let organization_ids =
-        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await
+    );
     match state
         .organizations
         .list_operational_activity_page(&organization_ids, event_kind, before, limit)
@@ -2742,12 +2777,14 @@ async fn list_property_portfolios_for_account(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_manage_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_manage_property_portfolios,
+        )
+        .await
+    );
     match state
         .property_portfolios
         .list_for_account(&account_id, &organization_ids)
@@ -2766,12 +2803,14 @@ async fn get_customer_property_portfolio(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_view_customer_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_view_customer_property_portfolios,
+        )
+        .await
+    );
     match state
         .property_portfolios
         .customer_portfolio_read(&account_id, &organization_ids)
@@ -2792,12 +2831,14 @@ async fn list_customer_project_bids(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_view_customer_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_view_customer_property_portfolios,
+        )
+        .await
+    );
     match state
         .project_bids
         .list_for_account(&account_id, &organization_ids)
@@ -2816,12 +2857,14 @@ async fn export_customer_privacy_data(
     Extension(principal): Extension<AuthPrincipal>,
     Path(account_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_review_completion_report,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_review_completion_report,
+        )
+        .await
+    );
 
     match state
         .jobs
@@ -2864,12 +2907,14 @@ async fn erase_customer_photo_evidence(
                 .into_response();
         }
     };
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_review_completion_report,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_review_completion_report,
+        )
+        .await
+    );
 
     match state
         .jobs
@@ -2897,12 +2942,14 @@ async fn list_property_completion_reports(
     Extension(principal): Extension<AuthPrincipal>,
     Path(property_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_view_customer_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_view_customer_property_portfolios,
+        )
+        .await
+    );
     match state
         .jobs
         .list_delivered_completion_reports_for_property(&property_id, &organization_ids)
@@ -3078,9 +3125,10 @@ async fn list_crews(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids =
+    let organization_ids = organization_ids_or_return!(
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
-            .await;
+            .await
+    );
     match state.day_plans.list_crews(&organization_ids).await {
         PersistedReadResult::Loaded(crews) => Json(crews).into_response(),
         PersistedReadResult::Unavailable => persisted_resource_unavailable_response(
@@ -3094,7 +3142,8 @@ async fn list_organization_branches(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .day_plans
         .list_organization_branches(&organization_ids)
@@ -3112,7 +3161,8 @@ async fn list_service_territories(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .day_plans
         .list_service_territories(&organization_ids)
@@ -3537,9 +3587,10 @@ async fn list_property_crew_assignments(
     Extension(principal): Extension<AuthPrincipal>,
     Path(property_id): Path<String>,
 ) -> Response {
-    let organization_ids =
+    let organization_ids = organization_ids_or_return!(
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
-            .await;
+            .await
+    );
     match state
         .property_crew_assignments
         .list_for_property(&property_id, &organization_ids)
@@ -3558,9 +3609,10 @@ async fn list_active_crew_property_assignments(
     Extension(principal): Extension<AuthPrincipal>,
     Path(crew_id): Path<String>,
 ) -> Response {
-    let organization_ids =
+    let organization_ids = organization_ids_or_return!(
         principal_active_organization_ids_for_role(&state, &principal, can_manage_crew_assignments)
-            .await;
+            .await
+    );
     if organization_ids.is_empty() {
         return Json(Vec::<PropertyCrewAssignmentResponse>::new()).into_response();
     }
@@ -3608,12 +3660,14 @@ async fn get_property_onboarding(
     Extension(principal): Extension<AuthPrincipal>,
     Path(property_id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids_for_role(
-        &state,
-        &principal,
-        can_view_customer_property_portfolios,
-    )
-    .await;
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(
+            &state,
+            &principal,
+            can_view_customer_property_portfolios,
+        )
+        .await
+    );
     match state
         .property_onboarding
         .get(&property_id, &organization_ids)
@@ -3715,7 +3769,8 @@ async fn list_completion_reports(
             .into_response();
     }
 
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     let visible_organization_ids: HashSet<&str> =
         organization_ids.iter().map(String::as_str).collect();
     if visible_organization_ids.is_empty() {
@@ -3974,7 +4029,9 @@ async fn list_notification_history(
 ) -> Response {
     match notification_history_filter(query) {
         Ok(mut filter) => {
-            filter.organization_ids = principal_active_organization_ids(&state, &principal).await;
+            filter.organization_ids = organization_ids_or_return!(
+                principal_active_organization_ids(&state, &principal).await
+            );
             match state.notifications.list_history(filter).await {
                 Ok(items) => Json(items).into_response(),
                 Err(_) => (
@@ -4045,7 +4102,9 @@ async fn list_photo_processing_history(
 ) -> Response {
     match photo_processing_history_filter(query) {
         Ok(mut filter) => {
-            filter.organization_ids = principal_active_organization_ids(&state, &principal).await;
+            filter.organization_ids = organization_ids_or_return!(
+                principal_active_organization_ids(&state, &principal).await
+            );
             match state.jobs.list_photo_processing_history(filter).await {
                 Ok(items) => Json(items).into_response(),
                 Err(_) => (
@@ -4109,7 +4168,8 @@ async fn retry_photo_processing_job(
     Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .jobs
         .retry_photo_processing_job(&id, &organization_ids, &principal.subject)
@@ -4164,7 +4224,8 @@ async fn resolve_photo_processing_job(
         }
     };
 
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .jobs
         .resolve_photo_processing_job(
@@ -4237,7 +4298,9 @@ async fn list_photo_erasure_deletion_history(
             .into_response();
     }
     let filter = PhotoErasureDeletionHistoryFilter {
-        organization_ids: principal_active_organization_ids(&state, &principal).await,
+        organization_ids: organization_ids_or_return!(
+            principal_active_organization_ids(&state, &principal).await
+        ),
         status: query.status,
         limit,
     };
@@ -4260,7 +4323,8 @@ async fn retry_photo_erasure_deletion_job(
     Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .jobs
         .retry_photo_erasure_deletion_job(&id, &organization_ids, &principal.subject)
@@ -4313,7 +4377,8 @@ async fn resolve_photo_erasure_deletion_job(
                 .into_response();
         }
     };
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .jobs
         .resolve_photo_erasure_deletion_job(
@@ -4358,7 +4423,8 @@ async fn retry_notification_delivery(
     Extension(principal): Extension<AuthPrincipal>,
     Path(id): Path<String>,
 ) -> Response {
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .notifications
         .retry_failed(&id, &organization_ids, &principal.subject)
@@ -4412,7 +4478,8 @@ async fn resolve_notification_delivery(
         }
     };
 
-    let organization_ids = principal_active_organization_ids(&state, &principal).await;
+    let organization_ids =
+        organization_ids_or_return!(principal_active_organization_ids(&state, &principal).await);
     match state
         .notifications
         .resolve_failed(
@@ -4455,7 +4522,7 @@ async fn resolve_notification_delivery(
 async fn principal_active_organization_ids(
     state: &AppState,
     principal: &AuthPrincipal,
-) -> Vec<String> {
+) -> Result<Vec<String>, Response> {
     principal_active_organization_ids_for_role(state, principal, |_| true).await
 }
 
@@ -4463,14 +4530,14 @@ async fn principal_active_organization_ids_for_role(
     state: &AppState,
     principal: &AuthPrincipal,
     required_role: fn(&AccessRole) -> bool,
-) -> Vec<String> {
+) -> Result<Vec<String>, Response> {
     let mut seen = HashSet::new();
     match state
         .organizations
         .list_active_memberships(&principal.subject)
         .await
     {
-        OrganizationCollectionResult::Loaded(memberships) => memberships
+        OrganizationCollectionResult::Loaded(memberships) => Ok(memberships
             .into_iter()
             .filter(|membership| required_role(&membership.role))
             .filter_map(|membership| {
@@ -4480,8 +4547,11 @@ async fn principal_active_organization_ids_for_role(
                     None
                 }
             })
-            .collect(),
-        OrganizationCollectionResult::Unavailable => Vec::new(),
+            .collect()),
+        OrganizationCollectionResult::Unavailable => Err(persisted_resource_unavailable_response(
+            "organization_memberships_unavailable",
+            "Active organization memberships could not be loaded.",
+        )),
     }
 }
 
@@ -6481,6 +6551,68 @@ mod tests {
         .unwrap_err();
 
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn active_organization_scope_distinguishes_loaded_empty_and_unavailable() {
+        let principal = AuthPrincipal {
+            subject: "local-development-user".to_string(),
+            username: "Local Developer".to_string(),
+            verified_email: Some("invited@example.com".to_string()),
+            claim_roles: vec![AccessRole::OrganizationOwner],
+            roles: vec![AccessRole::OrganizationOwner],
+        };
+        let state = seed_state();
+
+        assert_eq!(
+            principal_active_organization_ids(&state, &principal)
+                .await
+                .expect("seed membership scope should load"),
+            vec!["org_demo_landscaping".to_string()]
+        );
+        assert!(
+            principal_active_organization_ids_for_role(&state, &principal, |_| false)
+                .await
+                .expect("role-filtered seed membership scope should load")
+                .is_empty()
+        );
+
+        let mut unavailable_state = (*state).clone();
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .acquire_timeout(std::time::Duration::from_millis(100))
+            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .expect("unavailable test pool URL should be valid");
+        unavailable_state.organizations = OrganizationRepository::from_pool(pool);
+
+        let response = principal_active_organization_ids(&unavailable_state, &principal)
+            .await
+            .expect_err("unavailable membership storage should fail closed");
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn customer_account_collection_fails_closed_when_memberships_are_unavailable() {
+        let mut state = (*seed_state()).clone();
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .acquire_timeout(std::time::Duration::from_millis(100))
+            .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
+            .expect("unavailable test pool URL should be valid");
+        state.organizations = OrganizationRepository::from_pool(pool);
+
+        let response = app_with_state(Arc::new(state), "seed-local")
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-accounts")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "organization_memberships_unavailable");
     }
 
     #[tokio::test]

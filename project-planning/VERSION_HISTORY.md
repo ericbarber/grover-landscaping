@@ -263,6 +263,9 @@ version and release date.
 
 ## Unreleased — Pilot Readiness
 
+- Tenant-scoped jobs, accounts, properties, portfolios, reports, bids,
+  notifications, and recovery endpoints now fail closed when active-membership
+  storage is unavailable while preserving legitimate empty membership scopes.
 - Added one-step mobile customer-account creation with validated primary contact,
   communication destination, and explicit notification consent.
 - Added customer-account search across customer, contact, and property details,

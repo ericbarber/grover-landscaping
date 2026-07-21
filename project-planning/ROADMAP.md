@@ -81,8 +81,6 @@ schedule, remaining work, or a completed day.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.
    - Finish tenant-aware boundaries for remaining customer reads.
-   - Fail closed across tenant-scoped collection endpoints when active-membership
-     storage is unavailable instead of presenting valid empty data.
    - Expand account onboarding and first-user administration.
    - Keep access-summary reads fail-closed when required login auditing is unavailable.
    - Keep sensitive customer account reads fail-closed when view auditing is unavailable.
