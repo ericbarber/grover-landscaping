@@ -400,6 +400,30 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Active Phase 3 slice: operational exception backend foundation
+
+Goal: establish a tenant-scoped, auditable persistence boundary for manager
+exceptions before adding the consolidated manager review interface.
+
+Planned implementation:
+
+- Add an `operational_exceptions` table with category, priority, lifecycle,
+  ownership, optional affected-resource context, notes, and timestamps.
+- Define validated categories for delay, staffing, access, weather, equipment,
+  safety, and customer escalation, plus open/in-progress/resolved lifecycle rules.
+- Add manager-scoped `GET` and `POST /operational-exceptions` endpoints.
+- Support organization, category, priority, status, and bounded-limit list filters.
+- Persist actor-attributed `operational_exception_created` audit events atomically.
+- Add unit, API, migration, tenant-isolation, filter, and audit integration coverage.
+
+Acceptance criteria:
+
+- Only active schedule-managing memberships can create or list exceptions.
+- List results never cross active organization boundaries.
+- Invalid category, priority, lifecycle, resource pairing, and oversized text are rejected.
+- Creation and audit history commit together or neither is visible.
+- Persisted-storage outages return explicit unavailable responses rather than demo data.
+
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.

@@ -128,6 +128,7 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 ## Phase 3 — Manager Command Center
 
+- Establish tenant-scoped operational exception persistence, filtering, and creation audits.
 - Complete persisted report filters and unified activity history.
 - Expand notification, photo, erasure, and report recovery workflows.
 - Add route capacity, duration, overage risk, and publish guards.
