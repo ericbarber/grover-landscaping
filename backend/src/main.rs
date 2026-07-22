@@ -65,6 +65,11 @@ use grover_landscaping_api::{
         AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
+    operational_exceptions::{
+        validate_create_operational_exception, validate_operational_exception_filter,
+        CreateOperationalExceptionRequest, OperationalExceptionCreateResult,
+        OperationalExceptionFilter, OperationalExceptionListResult, OperationalExceptionRepository,
+    },
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
         validate_reissue_invitation_request, validate_update_organization_profile_request,
@@ -140,6 +145,7 @@ struct AppState {
     project_bids: ProjectBidRepository,
     organizations: OrganizationRepository,
     notifications: NotificationOutboxRepository,
+    operational_exceptions: OperationalExceptionRepository,
     property_portfolios: PropertyPortfolioRepository,
     property_crew_assignments: PropertyCrewAssignmentRepository,
     property_onboarding: PropertyOnboardingRepository,
@@ -283,6 +289,15 @@ struct CompletionReportListQuery {
 #[derive(Debug, Default, Deserialize)]
 struct NotificationHistoryQuery {
     entity_type: Option<String>,
+    status: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct OperationalExceptionQuery {
+    organization_id: Option<String>,
+    category: Option<String>,
+    priority: Option<String>,
     status: Option<String>,
     limit: Option<i64>,
 }
@@ -434,6 +449,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         project_bids,
         organizations,
         notifications,
+        operational_exceptions,
         property_portfolios,
         property_crew_assignments,
         property_onboarding,
@@ -452,6 +468,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             let project_bids = ProjectBidRepository::from_pool(pool.clone());
             let organizations = OrganizationRepository::from_pool(pool.clone());
             let notifications = NotificationOutboxRepository::from_pool(pool.clone());
+            let operational_exceptions = OperationalExceptionRepository::from_pool(pool.clone());
             let property_portfolios = PropertyPortfolioRepository::from_pool(pool.clone());
             let property_crew_assignments =
                 PropertyCrewAssignmentRepository::from_pool(pool.clone());
@@ -468,6 +485,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 project_bids,
                 organizations,
                 notifications,
+                operational_exceptions,
                 property_portfolios,
                 property_crew_assignments,
                 property_onboarding,
@@ -488,6 +506,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             ProjectBidRepository::default(),
             OrganizationRepository::default(),
             NotificationOutboxRepository::default(),
+            OperationalExceptionRepository::default(),
             PropertyPortfolioRepository::default(),
             PropertyCrewAssignmentRepository::default(),
             PropertyOnboardingRepository::default(),
@@ -530,6 +549,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             project_bids,
             organizations,
             notifications,
+            operational_exceptions,
             property_portfolios,
             property_crew_assignments,
             property_onboarding,
@@ -656,6 +676,10 @@ fn app_with_runtime(
         )
         .route("/completion-reports", get(list_completion_reports))
         .route("/notifications", get(list_notification_history))
+        .route(
+            "/operational-exceptions",
+            get(list_operational_exceptions).post(create_operational_exception),
+        )
         .route("/photo-processing-jobs", get(list_photo_processing_history))
         .route(
             "/photo-processing-jobs/{id}/retry",
@@ -4056,6 +4080,91 @@ async fn list_notification_history(
     }
 }
 
+async fn list_operational_exceptions(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Query(query): Query<OperationalExceptionQuery>,
+) -> Response {
+    let mut filter = OperationalExceptionFilter {
+        organization_id: query.organization_id,
+        category: query.category,
+        priority: query.priority,
+        status: query.status,
+        limit: query.limit.unwrap_or(25),
+        ..OperationalExceptionFilter::default()
+    };
+    if let Err(message) = validate_operational_exception_filter(&filter) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_exception_filter",
+                message,
+            }),
+        )
+            .into_response();
+    }
+
+    filter.organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await
+    );
+    match state.operational_exceptions.list(filter).await {
+        Ok(OperationalExceptionListResult::Loaded(items)) => Json(items).into_response(),
+        Ok(OperationalExceptionListResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "operational_exceptions_unavailable",
+                message: "Operational exceptions could not be loaded from persistence.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
+async fn create_operational_exception(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateOperationalExceptionRequest>,
+) -> Response {
+    if let Err(message) = validate_create_operational_exception(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_exception",
+                message,
+            }),
+        )
+            .into_response();
+    }
+
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await
+    );
+    if !organization_ids.contains(&request.organization_id) {
+        return resource_not_found_response(
+            "operational_exception_organization_not_found",
+            "The requested organization was not found.",
+        );
+    }
+
+    match state
+        .operational_exceptions
+        .create(request, &principal.subject)
+        .await
+    {
+        Ok(OperationalExceptionCreateResult::Created(exception)) => {
+            (StatusCode::CREATED, Json(exception)).into_response()
+        }
+        Ok(OperationalExceptionCreateResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "operational_exception_persistence_unavailable",
+                message: "The operational exception could not be saved.".to_string(),
+            }),
+        )
+            .into_response(),
+    }
+}
+
 fn notification_history_filter(
     query: NotificationHistoryQuery,
 ) -> Result<NotificationHistoryFilter, String> {
@@ -6439,6 +6548,7 @@ mod tests {
             project_bids: ProjectBidRepository::default(),
             organizations: OrganizationRepository::default(),
             notifications: NotificationOutboxRepository::default(),
+            operational_exceptions: OperationalExceptionRepository::default(),
             property_portfolios: PropertyPortfolioRepository::default(),
             property_crew_assignments: PropertyCrewAssignmentRepository::default(),
             property_onboarding: PropertyOnboardingRepository::default(),
@@ -8676,6 +8786,88 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(json["error"], "invalid_notification_history_filter");
+    }
+
+    #[tokio::test]
+    async fn operational_exception_endpoints_validate_and_fail_closed_without_persistence() {
+        let invalid_filter = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/operational-exceptions?category=traffic")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let invalid_filter_status = invalid_filter.status();
+        let invalid_filter_body = invalid_filter
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        assert_eq!(
+            invalid_filter_status,
+            StatusCode::BAD_REQUEST,
+            "{}",
+            String::from_utf8_lossy(&invalid_filter_body)
+        );
+
+        let unavailable_list = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/operational-exceptions?status=open&limit=10")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unavailable_list.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let invalid_create = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/operational-exceptions")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"organization_id":"org_demo_landscaping","category":"traffic","priority":"high","title":"Blocked road"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(invalid_create.status(), StatusCode::BAD_REQUEST);
+
+        let unavailable_create = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/operational-exceptions")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"organization_id":"org_demo_landscaping","category":"weather","priority":"high","title":"Lightning delay","affected_resource_type":"route","affected_resource_id":"day_plan_1001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unavailable_create.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let inaccessible_create = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/operational-exceptions")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"organization_id":"org_other","category":"weather","priority":"high","title":"Lightning delay"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(inaccessible_create.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

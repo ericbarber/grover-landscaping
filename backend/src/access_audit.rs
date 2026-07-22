@@ -22,6 +22,7 @@ pub enum AccessAuditEventKind {
     BidConverted,
     NotificationRetried,
     NotificationResolved,
+    OperationalExceptionCreated,
     ReportReviewStarted,
     ReportChangesRequested,
     ReportResubmitted,

@@ -400,30 +400,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
-### Active Phase 3 slice: operational exception backend foundation
-
-Goal: establish a tenant-scoped, auditable persistence boundary for manager
-exceptions before adding the consolidated manager review interface.
-
-Planned implementation:
-
-- Add an `operational_exceptions` table with category, priority, lifecycle,
-  ownership, optional affected-resource context, notes, and timestamps.
-- Define validated categories for delay, staffing, access, weather, equipment,
-  safety, and customer escalation, plus open/in-progress/resolved lifecycle rules.
-- Add manager-scoped `GET` and `POST /operational-exceptions` endpoints.
-- Support organization, category, priority, status, and bounded-limit list filters.
-- Persist actor-attributed `operational_exception_created` audit events atomically.
-- Add unit, API, migration, tenant-isolation, filter, and audit integration coverage.
-
-Acceptance criteria:
-
-- Only active schedule-managing memberships can create or list exceptions.
-- List results never cross active organization boundaries.
-- Invalid category, priority, lifecycle, resource pairing, and oversized text are rejected.
-- Creation and audit history commit together or neither is visible.
-- Persisted-storage outages return explicit unavailable responses rather than demo data.
-
 ### Day-plan backend persistence
 
 Goal: move crew route and stop progress from local/browser state to database-backed state.
@@ -719,6 +695,7 @@ Current state:
 - Manager notification history can mark failed and dead-letter delivery records manually resolved
 - Manually resolved delivery failures persist an explicit `resolved` status and recovery note, remain filterable in manager history, and stay distinct from provider- or preference-skipped notifications
 - Unified manager notification history filters completion-report, project-bid, and organization-invitation deliveries with readable work-type labels and filter-preserving recovery actions
+- Operational exceptions have a tenant-scoped PostgreSQL foundation with validated categories, priorities, lifecycle and affected-resource context, manager list/create APIs, fail-closed outages, filters, and atomic creation audits
 - Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
 - Job-scoped reads and mutations, photo endpoints, add-on status updates, and completion-report actions reject access outside the principal's active organization memberships
 

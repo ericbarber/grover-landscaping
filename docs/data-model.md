@@ -363,6 +363,17 @@ Project-bid sends create `queued` email or SMS records in the same transaction a
 
 Manager notification history reads use this table directly with optional entity-type and status filters and are constrained to the principal's active organization memberships. Supported history entity filters include `project_bid`, `completion_report`, and `organization_invitation`. Failed and dead-letter rows can be explicitly retried within those same organization boundaries, which resets attempt metadata, returns the row to `queued` for the dispatcher, and writes a `notification_retried` audit event. They can also be manually resolved, which marks the row `resolved` with a resolution note and writes a `notification_resolved` audit event so managers can distinguish their recovery work from notifications the provider or preference rules marked `skipped`.
 
+## operational_exceptions
+
+`operational_exceptions` stores tenant-owned manager attention items across delay,
+staffing, access, weather, equipment, safety, and customer-escalation categories.
+Each row records priority, open/in-progress/resolved lifecycle state, title and
+description, optional affected route/job/property/crew/stop context, optional
+assignment, reporting actor, resolution context, and timestamps. Creation and its
+`operational_exception_created` audit event commit atomically. Manager reads are
+restricted to active schedule-managing memberships and can filter by organization,
+category, priority, or status.
+
 ## project_bid_conversions and service_job_add_ons
 
 An approved amendment-sourced bid converts into its source route stop's service job. `project_bid_conversions` records the one-to-one bid/job conversion and conversion timestamp. Each bid line item creates one `service_job_add_ons` row containing the approved service, quantity, unit price, note, and execution status.
@@ -385,7 +396,7 @@ occurred_at
 created_at
 ```
 
-Current `event_kind` values include login and access events plus business-sensitive changes such as `login`, `invite_accepted`, `invitation_revoked`, `role_changed`, `membership_suspended`, `membership_reactivated`, `account_viewed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, `bid_rejected`, `bid_converted`, `notification_retried`, `notification_resolved`, `report_review_started`, `report_changes_requested`, `report_resubmitted`, and `report_delivered`. Authenticated current-user access summary reads write one `login` audit row per active organization membership. Persisted job account-summary reads write `account_viewed` audit rows after organization access is authorized. Completion report review-start, change-request, resubmit, and delivery transitions write audit rows in the same transaction as the lifecycle transition so manager approval workflow and customer-visible report exposure are traceable by actor, organization, and report ID. Shared customer bid approvals/rejections, manager bid conversions, and notification recovery actions write audit rows in the same transactions as their persisted status changes. Invitation acceptance, revocation, role administration, membership lifecycle changes, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.
+Current `event_kind` values include login and access events plus business-sensitive changes such as `login`, `invite_accepted`, `invitation_revoked`, `role_changed`, `membership_suspended`, `membership_reactivated`, `account_viewed`, `portfolio_changed`, `crew_assignment_changed`, `bid_approved`, `bid_rejected`, `bid_converted`, `notification_retried`, `notification_resolved`, `operational_exception_created`, `report_review_started`, `report_changes_requested`, `report_resubmitted`, and `report_delivered`. Authenticated current-user access summary reads write one `login` audit row per active organization membership. Persisted job account-summary reads write `account_viewed` audit rows after organization access is authorized. Completion report review-start, change-request, resubmit, and delivery transitions write audit rows in the same transaction as the lifecycle transition so manager approval workflow and customer-visible report exposure are traceable by actor, organization, and report ID. Shared customer bid approvals/rejections, manager bid conversions, notification recovery actions, and operational exception creation write audit rows in the same transactions as their persisted state changes. Invitation acceptance, revocation, role administration, membership lifecycle changes, portfolio grouping, and crew assignment changes also write audit rows in the same transaction as their persisted changes.
 
 The team-administration activity read is limited to the 25 newest invitation
 acceptance/revocation, role-change, suspension, and reactivation events inside

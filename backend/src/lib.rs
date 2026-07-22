@@ -8,6 +8,7 @@ pub mod db;
 pub mod marketing_events;
 pub mod marketing_leads;
 pub mod notifications;
+pub mod operational_exceptions;
 pub mod organizations;
 pub mod photo_processing;
 pub mod photo_storage;

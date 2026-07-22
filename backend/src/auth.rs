@@ -435,6 +435,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/marketing-events"
         || path == "/me/access"
         || path == "/operational-activity"
+        || path == "/operational-exceptions"
         || path == "/jobs"
         || path.starts_with("/jobs/")
         || path.starts_with("/organizations/")
@@ -553,6 +554,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 
     if path == "/operational-activity" {
         return *method == Method::GET && can_manage_routes;
+    }
+
+    if path == "/operational-exceptions" {
+        return matches!(*method, Method::GET | Method::POST) && can_manage_routes;
     }
 
     if path == "/completion-reports" {
@@ -885,6 +890,29 @@ mod tests {
             &Method::GET,
             path
         ));
+    }
+
+    #[test]
+    fn only_schedule_managers_can_list_and_create_operational_exceptions() {
+        let path = "/operational-exceptions";
+
+        for method in [Method::GET, Method::POST] {
+            assert!(is_authorized(
+                &principal(AccessRole::Manager),
+                &method,
+                path
+            ));
+            assert!(is_authorized(
+                &principal(AccessRole::OrganizationOwner),
+                &method,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::CrewMember),
+                &method,
+                path
+            ));
+        }
     }
 
     #[test]

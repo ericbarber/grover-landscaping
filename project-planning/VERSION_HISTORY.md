@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-21: Added tenant-scoped operational exception persistence, filtering, creation APIs, and atomic audit history.
 - 2026-07-21: Added organization-invitation deliveries to unified manager notification history and recovery filters.
 - 2026-07-21: Distinguished manually resolved notification failures from provider- and preference-skipped deliveries.
 - 2026-07-21: Recovered actor-scoped offline job, checklist, and photo queues without requiring a fresh jobs response.
