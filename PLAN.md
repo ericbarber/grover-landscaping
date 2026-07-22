@@ -11,6 +11,28 @@ This file tracks what has been delivered, what is actively being built, what is 
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
+## In Progress
+
+### Operational exception activity integration
+
+Goal: connect the exception recovery queue to the persisted manager activity
+timeline so lifecycle decisions remain visible and actionable outside the queue.
+
+Planned slice:
+
+- Include operational-exception creation and lifecycle audits in persisted
+  operational activity reads with readable actor, status, assignment, and
+  resolution context.
+- Map those records into manager activity tones and labels without breaking
+  unknown-event fallback behavior.
+- Add an activity-to-Recovery handoff that opens the operational exception tool
+  with the affected item context.
+- Cover tenant scoping, event mapping, and mobile handoff behavior, then update
+  delivery records after validation.
+
+Exit condition: a manager can see who changed an operational exception, understand
+the outcome, and return to its recovery workflow from persisted activity history.
+
 ## Delivered
 
 ### Public product experience
