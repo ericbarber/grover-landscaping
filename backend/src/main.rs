@@ -67,8 +67,10 @@ use grover_landscaping_api::{
     auth::{require_api_auth, AuthPrincipal, AuthService},
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
-        CreateOperationalExceptionRequest, OperationalExceptionCreateResult,
-        OperationalExceptionFilter, OperationalExceptionListResult, OperationalExceptionRepository,
+        validate_update_operational_exception, CreateOperationalExceptionRequest,
+        OperationalExceptionCreateResult, OperationalExceptionFilter,
+        OperationalExceptionListResult, OperationalExceptionRepository,
+        OperationalExceptionUpdateResult, UpdateOperationalExceptionRequest,
     },
     organizations::{
         validate_bootstrap_organization_request, validate_create_invitation_request,
@@ -679,6 +681,10 @@ fn app_with_runtime(
         .route(
             "/operational-exceptions",
             get(list_operational_exceptions).post(create_operational_exception),
+        )
+        .route(
+            "/operational-exceptions/{id}",
+            put(update_operational_exception),
         )
         .route("/photo-processing-jobs", get(list_photo_processing_history))
         .route(
@@ -4162,6 +4168,58 @@ async fn create_operational_exception(
             }),
         )
             .into_response(),
+    }
+}
+
+async fn update_operational_exception(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(id): Path<String>,
+    Json(request): Json<UpdateOperationalExceptionRequest>,
+) -> Response {
+    if id.trim().is_empty() || id != id.trim() {
+        return resource_not_found_response(
+            "operational_exception_not_found",
+            "The requested operational exception was not found.",
+        );
+    }
+    if let Err(message) = validate_update_operational_exception(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_operational_exception_update",
+                message,
+            }),
+        )
+            .into_response();
+    }
+    let organization_ids = organization_ids_or_return!(
+        principal_active_organization_ids_for_role(&state, &principal, can_manage_schedule).await
+    );
+    match state
+        .operational_exceptions
+        .update(&id, &organization_ids, request, &principal.subject)
+        .await
+    {
+        Ok(OperationalExceptionUpdateResult::Updated(exception)) => Json(exception).into_response(),
+        Ok(OperationalExceptionUpdateResult::NotFound) => resource_not_found_response(
+            "operational_exception_not_found",
+            "The requested operational exception was not found.",
+        ),
+        Ok(OperationalExceptionUpdateResult::Conflict) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "operational_exception_conflict",
+                message: "The exception changed or the requested lifecycle transition is no longer valid. Reload and try again.".to_string(),
+            }),
+        ).into_response(),
+        Ok(OperationalExceptionUpdateResult::Unavailable) | Err(_) => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(ErrorResponse {
+                error: "operational_exception_persistence_unavailable",
+                message: "The operational exception could not be updated.".to_string(),
+            }),
+        ).into_response(),
     }
 }
 
@@ -8868,6 +8926,36 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(inaccessible_create.status(), StatusCode::NOT_FOUND);
+
+        let invalid_update = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/operational-exceptions/exception_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"resolve","expected_updated_at":"2026-07-21 12:00:00+00"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(invalid_update.status(), StatusCode::BAD_REQUEST);
+
+        let unavailable_update = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/operational-exceptions/exception_1001")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"start","expected_updated_at":"2026-07-21 12:00:00+00"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(unavailable_update.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]

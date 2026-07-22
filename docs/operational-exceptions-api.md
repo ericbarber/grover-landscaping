@@ -20,11 +20,21 @@ Supported categories are `delay`, `staffing`, `access`, `weather`, `equipment`,
 newest-first and always constrained to organizations where the principal has an
 active schedule-managing membership.
 
+`PUT /operational-exceptions/{id}` applies one lifecycle action and requires the
+latest `expected_updated_at` value. `assign` requires `assigned_user_id`; `start`
+moves an open item to `in_progress`; `resolve` requires a non-empty
+`resolution_note`; and `reopen` returns a resolved item to `open` while clearing
+its prior resolution fields.
+
+Lifecycle requests outside the caller's tenant scope return `404`. Invalid or
+stale transitions return `409`, and unavailable persistence returns `503`.
+Updates and actor-attributed audit events commit in one transaction.
+
 Creation writes the exception and an actor-attributed
 `operational_exception_created` audit event in one transaction. The audit
 metadata records category, priority, and affected-resource context. Missing
 persistence returns explicit unavailable responses; the API never substitutes
 seeded exceptions.
 
-Lifecycle mutation, assignment changes, resolution, and the consolidated manager
-review interface are follow-on slices built on this contract.
+The consolidated manager review interface is a follow-on slice built on this
+contract.

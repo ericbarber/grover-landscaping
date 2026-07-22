@@ -11,28 +11,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
-## In Progress
-
-### Operational exception lifecycle
-
-Goal: turn persisted operational exceptions into an actionable manager recovery
-queue without weakening tenant or audit boundaries.
-
-Planned slice:
-
-- Add manager-only assignment, in-progress, resolution, and reopen transitions.
-- Validate lifecycle consistency and reject stale or invalid transitions with
-  explicit not-found, conflict, and unavailable outcomes.
-- Persist actor-attributed lifecycle audit events in the same transaction as each
-  exception update.
-- Add API, repository, and PostgreSQL integration coverage for tenant isolation,
-  lifecycle transitions, and audit metadata.
-- Document the lifecycle contract and update delivery records after validation.
-
-Exit condition: an authorized manager can move a tenant-owned exception through
-its supported lifecycle, and every persisted transition remains attributable and
-recoverable after refresh.
-
 ## Delivered
 
 ### Public product experience
@@ -718,6 +696,7 @@ Current state:
 - Manually resolved delivery failures persist an explicit `resolved` status and recovery note, remain filterable in manager history, and stay distinct from provider- or preference-skipped notifications
 - Unified manager notification history filters completion-report, project-bid, and organization-invitation deliveries with readable work-type labels and filter-preserving recovery actions
 - Operational exceptions have a tenant-scoped PostgreSQL foundation with validated categories, priorities, lifecycle and affected-resource context, manager list/create APIs, fail-closed outages, filters, and atomic creation audits
+- Managers can assign, start, resolve with a note, and reopen operational exceptions through tenant-guarded optimistic lifecycle updates with atomic actor-attributed audits
 - Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
 - Job-scoped reads and mutations, photo endpoints, add-on status updates, and completion-report actions reject access outside the principal's active organization memberships
 

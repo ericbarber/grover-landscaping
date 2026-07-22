@@ -3,6 +3,7 @@ use grover_landscaping_api::{
     operational_exceptions::{
         CreateOperationalExceptionRequest, OperationalExceptionCreateResult,
         OperationalExceptionFilter, OperationalExceptionListResult, OperationalExceptionRepository,
+        OperationalExceptionUpdateResult, UpdateOperationalExceptionRequest,
     },
 };
 use sqlx::Row;
@@ -109,6 +110,139 @@ async fn creates_filters_and_tenant_scopes_operational_exceptions_with_audit() {
         audit.get::<serde_json::Value, _>("metadata")["category"],
         "equipment"
     );
+
+    let hidden_update = repository
+        .update(
+            &created.id,
+            &["org_demo_landscaping".to_string()],
+            UpdateOperationalExceptionRequest {
+                action: "start".to_string(),
+                assigned_user_id: None,
+                resolution_note: None,
+                expected_updated_at: created.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    assert_eq!(hidden_update, OperationalExceptionUpdateResult::NotFound);
+
+    let assigned = repository
+        .update(
+            &created.id,
+            std::slice::from_ref(&organization_id),
+            UpdateOperationalExceptionRequest {
+                action: "assign".to_string(),
+                assigned_user_id: Some("user_dispatch_manager".to_string()),
+                resolution_note: None,
+                expected_updated_at: created.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    let OperationalExceptionUpdateResult::Updated(assigned) = assigned else {
+        panic!("open exception should be assignable");
+    };
+    assert_eq!(
+        assigned.assigned_user_id.as_deref(),
+        Some("user_dispatch_manager")
+    );
+
+    let started = repository
+        .update(
+            &created.id,
+            std::slice::from_ref(&organization_id),
+            UpdateOperationalExceptionRequest {
+                action: "start".to_string(),
+                assigned_user_id: None,
+                resolution_note: None,
+                expected_updated_at: assigned.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    let OperationalExceptionUpdateResult::Updated(started) = started else {
+        panic!("open exception should start");
+    };
+    assert_eq!(started.status, "in_progress");
+
+    let stale_update = repository
+        .update(
+            &created.id,
+            std::slice::from_ref(&organization_id),
+            UpdateOperationalExceptionRequest {
+                action: "resolve".to_string(),
+                assigned_user_id: None,
+                resolution_note: Some("Replacement mower arrived.".to_string()),
+                expected_updated_at: created.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    assert_eq!(stale_update, OperationalExceptionUpdateResult::Conflict);
+
+    let resolved = repository
+        .update(
+            &created.id,
+            std::slice::from_ref(&organization_id),
+            UpdateOperationalExceptionRequest {
+                action: "resolve".to_string(),
+                assigned_user_id: None,
+                resolution_note: Some("Replacement mower arrived.".to_string()),
+                expected_updated_at: started.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    let OperationalExceptionUpdateResult::Updated(resolved) = resolved else {
+        panic!("in-progress exception should resolve");
+    };
+    assert_eq!(resolved.status, "resolved");
+    assert_eq!(
+        resolved.resolved_by_user_id.as_deref(),
+        Some(actor_user_id.as_str())
+    );
+    assert_eq!(
+        resolved.resolution_note.as_deref(),
+        Some("Replacement mower arrived.")
+    );
+
+    let reopened = repository
+        .update(
+            &created.id,
+            std::slice::from_ref(&organization_id),
+            UpdateOperationalExceptionRequest {
+                action: "reopen".to_string(),
+                assigned_user_id: None,
+                resolution_note: None,
+                expected_updated_at: resolved.updated_at.clone(),
+            },
+            &actor_user_id,
+        )
+        .await
+        .unwrap();
+    let OperationalExceptionUpdateResult::Updated(reopened) = reopened else {
+        panic!("resolved exception should reopen");
+    };
+    assert_eq!(reopened.status, "open");
+    assert!(reopened.resolved_at.is_none());
+    assert!(reopened.resolution_note.is_none());
+
+    let lifecycle_audits: Vec<String> = sqlx::query_scalar(
+        "SELECT event_kind FROM access_audit_events WHERE target_id = $1 ORDER BY occurred_at, event_kind",
+    )
+    .bind(&created.id)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert!(lifecycle_audits.contains(&"operational_exception_start".to_string()));
+    assert!(lifecycle_audits.contains(&"operational_exception_assign".to_string()));
+    assert!(lifecycle_audits.contains(&"operational_exception_resolve".to_string()));
+    assert!(lifecycle_audits.contains(&"operational_exception_reopen".to_string()));
 
     sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
         .bind(&created.id)

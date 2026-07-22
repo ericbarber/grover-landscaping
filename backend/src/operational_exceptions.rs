@@ -27,6 +27,14 @@ pub struct CreateOperationalExceptionRequest {
     pub assigned_user_id: Option<String>,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateOperationalExceptionRequest {
+    pub action: String,
+    pub assigned_user_id: Option<String>,
+    pub resolution_note: Option<String>,
+    pub expected_updated_at: String,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct OperationalExceptionFilter {
     pub organization_ids: Vec<String>,
@@ -67,6 +75,54 @@ pub enum OperationalExceptionListResult {
 pub enum OperationalExceptionCreateResult {
     Created(Box<OperationalException>),
     Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OperationalExceptionUpdateResult {
+    Updated(Box<OperationalException>),
+    NotFound,
+    Conflict,
+    Unavailable,
+}
+
+pub fn validate_update_operational_exception(
+    request: &UpdateOperationalExceptionRequest,
+) -> Result<(), String> {
+    validate_choice(
+        "action",
+        &request.action,
+        &["assign", "start", "resolve", "reopen"],
+    )?;
+    validate_bounded_text(
+        "expected_updated_at",
+        &request.expected_updated_at,
+        100,
+        true,
+    )?;
+    if let Some(user_id) = request.assigned_user_id.as_deref() {
+        validate_required_id("assigned_user_id", user_id)?;
+    }
+    validate_optional_text("resolution_note", request.resolution_note.as_deref(), 2000)?;
+    match request.action.as_str() {
+        "assign" if request.assigned_user_id.is_none() => {
+            Err("assigned_user_id is required when assigning an exception".to_string())
+        }
+        "resolve"
+            if request
+                .resolution_note
+                .as_deref()
+                .is_none_or(|note| note.trim().is_empty()) =>
+        {
+            Err("resolution_note is required when resolving an exception".to_string())
+        }
+        "assign" | "start" | "reopen" if request.resolution_note.is_some() => {
+            Err("resolution_note is only supported when resolving an exception".to_string())
+        }
+        "start" | "resolve" | "reopen" if request.assigned_user_id.is_some() => {
+            Err("assigned_user_id is only supported when assigning an exception".to_string())
+        }
+        _ => Ok(()),
+    }
 }
 
 pub fn validate_create_operational_exception(
@@ -275,6 +331,91 @@ impl OperationalExceptionRepository {
             operational_exception_from_row(row),
         )))
     }
+
+    pub async fn update(
+        &self,
+        id: &str,
+        organization_ids: &[String],
+        request: UpdateOperationalExceptionRequest,
+        actor_user_id: &str,
+    ) -> Result<OperationalExceptionUpdateResult, sqlx::Error> {
+        let Some(pool) = &self.pool else {
+            return Ok(OperationalExceptionUpdateResult::Unavailable);
+        };
+        let mut transaction = pool.begin().await?;
+        let current = sqlx::query(
+            "SELECT organization_id, status, assigned_user_id, updated_at::text AS updated_at FROM operational_exceptions WHERE id = $1 AND organization_id = ANY($2) FOR UPDATE",
+        )
+        .bind(id)
+        .bind(organization_ids)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        let Some(current) = current else {
+            return Ok(OperationalExceptionUpdateResult::NotFound);
+        };
+        let organization_id: String = current.get("organization_id");
+        let previous_status: String = current.get("status");
+        let previous_assignee: Option<String> = current.get("assigned_user_id");
+        let updated_at: String = current.get("updated_at");
+        if updated_at != request.expected_updated_at {
+            return Ok(OperationalExceptionUpdateResult::Conflict);
+        }
+        let valid = match request.action.as_str() {
+            "assign" => previous_status != "resolved",
+            "start" => previous_status == "open",
+            "resolve" => previous_status == "open" || previous_status == "in_progress",
+            "reopen" => previous_status == "resolved",
+            _ => false,
+        };
+        if !valid {
+            return Ok(OperationalExceptionUpdateResult::Conflict);
+        }
+        let event_kind = format!("operational_exception_{}", request.action);
+        let row = sqlx::query(
+            r#"
+            UPDATE operational_exceptions SET
+                assigned_user_id = CASE WHEN $2 = 'assign' THEN $3 ELSE assigned_user_id END,
+                status = CASE WHEN $2 = 'start' THEN 'in_progress' WHEN $2 = 'resolve' THEN 'resolved' WHEN $2 = 'reopen' THEN 'open' ELSE status END,
+                resolved_by_user_id = CASE WHEN $2 = 'resolve' THEN $4 WHEN $2 = 'reopen' THEN NULL ELSE resolved_by_user_id END,
+                resolution_note = CASE WHEN $2 = 'resolve' THEN $5 WHEN $2 = 'reopen' THEN NULL ELSE resolution_note END,
+                resolved_at = CASE WHEN $2 = 'resolve' THEN NOW() WHEN $2 = 'reopen' THEN NULL ELSE resolved_at END,
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING id, organization_id, category, priority, status, title, description,
+                affected_resource_type, affected_resource_id, assigned_user_id,
+                reported_by_user_id, resolved_by_user_id, resolution_note,
+                resolved_at::text AS resolved_at, created_at::text AS created_at,
+                updated_at::text AS updated_at
+            "#,
+        )
+        .bind(id)
+        .bind(&request.action)
+        .bind(request.assigned_user_id.as_deref().map(str::trim))
+        .bind(actor_user_id)
+        .bind(request.resolution_note.as_deref().map(str::trim))
+        .fetch_one(&mut *transaction)
+        .await?;
+        let exception = operational_exception_from_row(row);
+        sqlx::query("INSERT INTO access_audit_events (id, actor_user_id, organization_id, event_kind, target_id, metadata, occurred_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())")
+            .bind(format!("audit_exception_{}_{}", request.action, Uuid::new_v4().simple()))
+            .bind(actor_user_id)
+            .bind(&organization_id)
+            .bind(&event_kind)
+            .bind(id)
+            .bind(serde_json::json!({
+                "previous_status": previous_status,
+                "status": exception.status,
+                "previous_assigned_user_id": previous_assignee,
+                "assigned_user_id": exception.assigned_user_id,
+                "resolution_note": exception.resolution_note,
+            }))
+            .execute(&mut *transaction)
+            .await?;
+        transaction.commit().await?;
+        Ok(OperationalExceptionUpdateResult::Updated(Box::new(
+            exception,
+        )))
+    }
 }
 
 fn operational_exception_from_row(row: sqlx::postgres::PgRow) -> OperationalException {
@@ -302,7 +443,8 @@ fn operational_exception_from_row(row: sqlx::postgres::PgRow) -> OperationalExce
 mod tests {
     use super::{
         validate_create_operational_exception, validate_operational_exception_filter,
-        CreateOperationalExceptionRequest, OperationalExceptionFilter,
+        validate_update_operational_exception, CreateOperationalExceptionRequest,
+        OperationalExceptionFilter, UpdateOperationalExceptionRequest,
     };
 
     fn request() -> CreateOperationalExceptionRequest {
@@ -354,5 +496,22 @@ mod tests {
             ..OperationalExceptionFilter::default()
         };
         assert!(validate_operational_exception_filter(&filter).is_err());
+    }
+
+    #[test]
+    fn validates_lifecycle_action_payloads() {
+        let request = UpdateOperationalExceptionRequest {
+            action: "resolve".to_string(),
+            assigned_user_id: None,
+            resolution_note: Some("Crew received replacement equipment.".to_string()),
+            expected_updated_at: "2026-07-21 12:00:00+00".to_string(),
+        };
+        assert!(validate_update_operational_exception(&request).is_ok());
+        let mut invalid = request.clone();
+        invalid.resolution_note = None;
+        assert!(validate_update_operational_exception(&invalid).is_err());
+        let mut invalid = request;
+        invalid.action = "close".to_string();
+        assert!(validate_update_operational_exception(&invalid).is_err());
     }
 }

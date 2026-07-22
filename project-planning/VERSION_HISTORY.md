@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-07-21: Added tenant-guarded operational exception assignment, start, resolution, and reopen transitions with optimistic conflicts and atomic lifecycle audits.
 - 2026-07-21: Added tenant-scoped operational exception persistence, filtering, creation APIs, and atomic audit history.
 - 2026-07-21: Added organization-invitation deliveries to unified manager notification history and recovery filters.
 - 2026-07-21: Distinguished manually resolved notification failures from provider- and preference-skipped deliveries.
