@@ -11,30 +11,6 @@ This file tracks what has been delivered, what is actively being built, what is 
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
-## In Progress
-
-### Mobile manager operational exception queue
-
-Goal: expose the persisted exception and lifecycle contracts as one focused,
-mobile-first manager recovery workflow.
-
-Planned slice:
-
-- Add typed frontend clients for listing, creating, assigning, starting,
-  resolving, and reopening operational exceptions.
-- Add an exception manager tool with status, category, and priority filters,
-  attention counts, durable empty/error states, and refresh behavior.
-- Provide compact create and lifecycle controls that preserve the latest synced
-  item when a request conflicts or persistence is unavailable.
-- Integrate the tool into the manager Recovery category without lengthening the
-  mobile manager home.
-- Add client, component, and mobile viewport coverage, then update delivery
-  records after validation.
-
-Exit condition: a mobile manager can identify, create, and progress persisted
-operational exceptions after refresh without inspecting logs or leaving the
-manager workspace.
-
 ## Delivered
 
 ### Public product experience
@@ -721,6 +697,7 @@ Current state:
 - Unified manager notification history filters completion-report, project-bid, and organization-invitation deliveries with readable work-type labels and filter-preserving recovery actions
 - Operational exceptions have a tenant-scoped PostgreSQL foundation with validated categories, priorities, lifecycle and affected-resource context, manager list/create APIs, fail-closed outages, filters, and atomic creation audits
 - Managers can assign, start, resolve with a note, and reopen operational exceptions through tenant-guarded optimistic lifecycle updates with atomic actor-attributed audits
+- Mobile managers have a focused Recovery exception queue with persisted filters, attention counts, creation, assignment, start, resolution, reopen, refresh, and conflict-safe last-synced state
 - Crews are owned by organizations, and day-plan, amendment, stop, and manager bid routes reject access outside the principal's active organization memberships
 - Job-scoped reads and mutations, photo endpoints, add-on status updates, and completion-report actions reject access outside the principal's active organization memberships
 

@@ -36,5 +36,7 @@ metadata records category, priority, and affected-resource context. Missing
 persistence returns explicit unavailable responses; the API never substitutes
 seeded exceptions.
 
-The consolidated manager review interface is a follow-on slice built on this
-contract.
+The Manager Recovery workspace consumes this contract through a focused mobile
+queue with status, category, and priority filters; exception creation; assignment;
+and start, resolution, reopen, and refresh actions. Failed mutations retain the
+last synced queue and direct the manager to refresh before retrying.

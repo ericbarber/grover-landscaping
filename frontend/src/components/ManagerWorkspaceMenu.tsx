@@ -26,6 +26,7 @@ export type ManagerWorkspaceTool =
   | 'marketing-leads'
   | 'conversion-dashboard'
   | 'photo-processing'
+  | 'operational-exceptions'
   | 'customer-privacy'
   | 'photo-erasure';
 
@@ -79,6 +80,7 @@ export const managerWorkspaceTools: Record<
     { id: 'completion-reports', label: 'Completion reports', description: 'Quality review and delivery' },
   ],
   recovery: [
+    { id: 'operational-exceptions', label: 'Operational exceptions', description: 'Delays, risks, and escalations' },
     { id: 'photo-processing', label: 'Photo processing', description: 'Failed image work and retries' },
     { id: 'customer-privacy', label: 'Customer privacy', description: 'Exports and photo erasure' },
     { id: 'photo-erasure', label: 'Erasure recovery', description: 'Failed deletions and resolution' },

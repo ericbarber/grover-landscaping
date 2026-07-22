@@ -31,6 +31,6 @@ describe('manager workspace menu', () => {
       'customer-portfolios',
     ]);
     expect(managerWorkspaceTools.team).toHaveLength(3);
-    expect(managerWorkspaceTools.recovery).toHaveLength(3);
+    expect(managerWorkspaceTools.recovery).toHaveLength(4);
   });
 });

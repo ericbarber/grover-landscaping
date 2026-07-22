@@ -140,6 +140,7 @@ import {
   type PhotoProcessingRecoveryFilters,
 } from './components/ManagerPhotoProcessingRecoveryPanel';
 import { ManagerPhotoErasureRecoveryPanel } from './components/ManagerPhotoErasureRecoveryPanel';
+import { ManagerOperationalExceptionsPanel } from './components/ManagerOperationalExceptionsPanel';
 import {
   companyNeedsOnboardingAttention,
   companySupportsMultipleCrews,
@@ -3327,6 +3328,9 @@ export function App() {
               onRetry={(processingJobId, filters) => void handleRetryPhotoProcessing(processingJobId, filters)}
               onResolve={(processingJobId, filters) => void handleResolvePhotoProcessing(processingJobId, filters)}
             />
+          </div>
+          <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6 lg:block`}>
+            <ManagerOperationalExceptionsPanel organizationId={activeManagerOrganizationId} />
           </div>
           <div className={`${managerWorkspaceTool === 'customer-privacy' ? 'block' : 'hidden'} mt-6 lg:block`}>
             <ManagerCustomerPrivacyPanel
