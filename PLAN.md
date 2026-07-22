@@ -11,6 +11,30 @@ This file tracks what has been delivered, what is actively being built, what is 
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
+## In Progress
+
+### Mobile manager operational exception queue
+
+Goal: expose the persisted exception and lifecycle contracts as one focused,
+mobile-first manager recovery workflow.
+
+Planned slice:
+
+- Add typed frontend clients for listing, creating, assigning, starting,
+  resolving, and reopening operational exceptions.
+- Add an exception manager tool with status, category, and priority filters,
+  attention counts, durable empty/error states, and refresh behavior.
+- Provide compact create and lifecycle controls that preserve the latest synced
+  item when a request conflicts or persistence is unavailable.
+- Integrate the tool into the manager Recovery category without lengthening the
+  mobile manager home.
+- Add client, component, and mobile viewport coverage, then update delivery
+  records after validation.
+
+Exit condition: a mobile manager can identify, create, and progress persisted
+operational exceptions after refresh without inspecting logs or leaving the
+manager workspace.
+
 ## Delivered
 
 ### Public product experience
