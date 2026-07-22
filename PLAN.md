@@ -11,6 +11,28 @@ This file tracks what has been delivered, what is actively being built, what is 
 | Planned | Prioritized upcoming work |
 | Backlog | Valuable but not part of the next delivery slice |
 
+## In Progress
+
+### Operational exception lifecycle
+
+Goal: turn persisted operational exceptions into an actionable manager recovery
+queue without weakening tenant or audit boundaries.
+
+Planned slice:
+
+- Add manager-only assignment, in-progress, resolution, and reopen transitions.
+- Validate lifecycle consistency and reject stale or invalid transitions with
+  explicit not-found, conflict, and unavailable outcomes.
+- Persist actor-attributed lifecycle audit events in the same transaction as each
+  exception update.
+- Add API, repository, and PostgreSQL integration coverage for tenant isolation,
+  lifecycle transitions, and audit metadata.
+- Document the lifecycle contract and update delivery records after validation.
+
+Exit condition: an authorized manager can move a tenant-owned exception through
+its supported lifecycle, and every persisted transition remains attributable and
+recoverable after refresh.
+
 ## Delivered
 
 ### Public product experience
