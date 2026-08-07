@@ -13,6 +13,36 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Visual experience blueprint and design review
+
+Goal: review the eventual product structure and visual hierarchy before adding
+new user-interface implementation.
+
+Current state:
+
+- `design/` mirrors the public, access, field, manager, customer, revenue, and
+  future product areas.
+- Twenty deterministic SVG wireframes provide a reviewable first pass across the
+  current application and phased roadmap.
+- A browser gallery, information architecture, review checklist, decision log,
+  artifact manifest, and reproducible renderer keep the review independent of a
+  specific design-tool account.
+- Artifact labels distinguish current targets, mixed current/planned screens,
+  planned targets, and future concepts.
+
+Next design work:
+
+- Review and approve the global information architecture and persona navigation.
+- Revise the field mobile, manager category, customer-safe, and recovery layouts
+  from design feedback.
+- Add required loading, empty, unavailable, offline, conflict, permission, and
+  destructive-action states for approved workflows.
+- Create high-fidelity responsive screens and a component visual system only
+  after the low-fidelity composition is accepted.
+
+Exit condition: each next UI implementation slice links to an approved page,
+responsive behavior, required states, and design decision record.
+
 ### Operational exception activity integration
 
 Goal: connect the exception recovery queue to the persisted manager activity
@@ -34,6 +64,16 @@ Exit condition: a manager can see who changed an operational exception, understa
 the outcome, and return to its recovery workflow from persisted activity history.
 
 ## Delivered
+
+### Design review foundation
+
+- Source-controlled design workspace mirrors the eventual application areas
+- Browsable visual gallery covers twenty public, authenticated, field, manager,
+  customer, revenue, homeowner, and multi-vendor wireframes
+- Deterministic SVG artifacts remain editable, diffable, and viewable without a
+  hosted design platform
+- Information-architecture, responsive-composition, state-coverage, and design
+  decision records establish a review gate before new UI implementation
 
 ### Public product experience
 

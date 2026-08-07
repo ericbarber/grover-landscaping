@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grover design review</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f4f0e7; color: #17352f; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #17352f; color: white; }
+    header p { max-width: 72ch; color: #d6e3dd; line-height: 1.6; }
+    nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+    nav a { color: #17352f; background: #e7d4ac; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
+    main { padding: 2rem max(1.25rem, 5vw) 5rem; }
+    section { scroll-margin-top: 1rem; margin-top: 3rem; }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.5rem); }
+    h2 { margin-bottom: .35rem; font-size: clamp(1.5rem, 3vw, 2.3rem); }
+    .intro { color: #536962; margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+    article { background: white; border: 1px solid #bcc8c3; border-radius: 1rem; overflow: hidden; box-shadow: 0 12px 28px rgb(23 53 47 / 8%); }
+    article a { color: inherit; text-decoration: none; }
+    article img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f7f4ec; border-bottom: 1px solid #d9e0dc; }
+    article.mobile img { aspect-ratio: 390 / 520; object-position: top; }
+    article div { padding: 1rem; }
+    article h3 { margin: 0; }
+    article p { color: #61736d; line-height: 1.45; margin-bottom: 0; }
+    .status { display: inline-block; margin-top: .75rem; color: #2d6654; background: #e8eee9; border-radius: 999px; padding: .35rem .55rem; font-size: .72rem; font-weight: 900; letter-spacing: .04em; }
+    footer { padding: 2rem max(1.25rem, 5vw); color: #60736c; }
+  </style>
+</head>
+<body>
+  <header>
+    <p>GROVER · DESIGN REVIEW</p>
+    <h1>Design the whole experience before polishing the pieces.</h1>
+    <p>These low-fidelity images define pages, hierarchy, navigation, and major elements. They are deliberately restrained so review focuses on product structure before typography, color, imagery, and component styling.</p>
+    <nav aria-label="Artifact groups">
+      <a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
+    </nav>
+  </header>
+  <main>
+    <section id="public"><h2>Public website</h2><p class="intro">Discovery, campaign conversion, and customer-safe shared experiences.</p><div class="grid">
+      <article><a href="wireframes/public/01-homepage.svg"><img src="wireframes/public/01-homepage.svg" alt="Public homepage wireframe"><div><h3>Public homepage</h3><span class="status">CURRENT TARGET</span><p>Hero, audience selector, Plan-Care-Proof tour, capability proof, credibility, and conversion.</p></div></a></article>
+      <article class="mobile"><a href="wireframes/public/02-persona-campaign-mobile.svg"><img src="wireframes/public/02-persona-campaign-mobile.svg" alt="Persona campaign mobile wireframe"><div><h3>Persona campaign</h3><span class="status">CURRENT TARGET</span><p>Tailored entry story with a shared product narrative.</p></div></a></article>
+      <article><a href="wireframes/public/03-conversion-flow.svg"><img src="wireframes/public/03-conversion-flow.svg" alt="Conversion request flow wireframe"><div><h3>Conversion request</h3><span class="status">CURRENT TARGET</span><p>Consent, fit, attribution, persistence, and recovery.</p></div></a></article>
+      <article><a href="wireframes/public/04-shared-customer-proof.svg"><img src="wireframes/public/04-shared-customer-proof.svg" alt="Shared customer proof wireframe"><div><h3>Shared customer proof</h3><span class="status">CURRENT TARGET</span><p>Immutable reports and safe bid decisions.</p></div></a></article>
+    </div></section>
+    <section id="access"><h2>Identity and onboarding</h2><p class="intro">Managed entry, recoverable authentication, and first-owner readiness.</p><div class="grid">
+      <article><a href="wireframes/auth/01-access-and-onboarding.svg"><img src="wireframes/auth/01-access-and-onboarding.svg" alt="Access and onboarding wireframe"><div><h3>Access and onboarding</h3><span class="status">CURRENT TARGET</span><p>Sign in, company setup, invitations, and publish readiness.</p></div></a></article>
+    </div></section>
+    <section id="field"><h2>Field workspace</h2><p class="intro">A stable mobile progression from daily orientation to verifiable work.</p><div class="grid">
+      <article class="mobile"><a href="wireframes/field/01-home.svg"><img src="wireframes/field/01-home.svg" alt="Field home wireframe"><div><h3>Field Home</h3><span class="status">CURRENT TARGET</span><p>Next action, daily progress, and sync health.</p></div></a></article>
+      <article class="mobile"><a href="wireframes/field/02-route.svg"><img src="wireframes/field/02-route.svg" alt="Crew route wireframe"><div><h3>Crew Route</h3><span class="status">CURRENT TARGET</span><p>Current stop, next stop, route changes, and progress.</p></div></a></article>
+      <article class="mobile"><a href="wireframes/field/03-jobs.svg"><img src="wireframes/field/03-jobs.svg" alt="Assigned jobs wireframe"><div><h3>Assigned Jobs</h3><span class="status">CURRENT TARGET</span><p>Searchable jobs with readiness and evidence context.</p></div></a></article>
+      <article class="mobile"><a href="wireframes/field/04-job-detail.svg"><img src="wireframes/field/04-job-detail.svg" alt="Job detail wireframe"><div><h3>Job Detail</h3><span class="status">CURRENT TARGET</span><p>Primary actions plus one focused workflow at a time.</p></div></a></article>
+    </div></section>
+    <section id="manager"><h2>Manager workspace</h2><p class="intro">A compact mobile hub and a scalable desktop command-center model.</p><div class="grid">
+      <article class="mobile"><a href="wireframes/manager/00-manager-hub.svg"><img src="wireframes/manager/00-manager-hub.svg" alt="Manager hub wireframe"><div><h3>Manager Hub</h3><span class="status">CURRENT TARGET</span><p>Six stable categories and one selected tool.</p></div></a></article>
+      <article><a href="wireframes/manager/01-schedule.svg"><img src="wireframes/manager/01-schedule.svg" alt="Schedule and dispatch wireframe"><div><h3>Schedule</h3><span class="status">CURRENT + PLANNED</span><p>Calendar, routes, capacity, hierarchy, and reassignment impact.</p></div></a></article>
+      <article><a href="wireframes/manager/02-customers.svg"><img src="wireframes/manager/02-customers.svg" alt="Customers and properties wireframe"><div><h3>Customers</h3><span class="status">CURRENT + PLANNED</span><p>Account onboarding, property readiness, portfolios, and coverage.</p></div></a></article>
+      <article><a href="wireframes/manager/03-team.svg"><img src="wireframes/manager/03-team.svg" alt="Team and access wireframe"><div><h3>Team</h3><span class="status">CURRENT TARGET</span><p>Members, invitations, crews, hierarchy, and audited changes.</p></div></a></article>
+      <article><a href="wireframes/manager/04-reports.svg"><img src="wireframes/manager/04-reports.svg" alt="Reports and communication wireframe"><div><h3>Reports</h3><span class="status">CURRENT + PLANNED</span><p>Quality, activity, delivery history, and business signals.</p></div></a></article>
+      <article><a href="wireframes/manager/05-recovery.svg"><img src="wireframes/manager/05-recovery.svg" alt="Recovery and exceptions wireframe"><div><h3>Recovery</h3><span class="status">ACTIVE DESIGN TARGET</span><p>Operational exceptions, photo processing, privacy, and audit.</p></div></a></article>
+    </div></section>
+    <section id="customer"><h2>Customer experiences</h2><p class="intro">Simple service confidence for a yard owner; portfolio awareness for property managers.</p><div class="grid">
+      <article class="mobile"><a href="wireframes/customer/01-yard-owner-portal.svg"><img src="wireframes/customer/01-yard-owner-portal.svg" alt="Yard-owner portal wireframe"><div><h3>Yard-owner portal</h3><span class="status">CURRENT + PLANNED</span><p>Upcoming service, proof, bids, preferences, and support.</p></div></a></article>
+      <article><a href="wireframes/customer/02-property-manager-portfolio.svg"><img src="wireframes/customer/02-property-manager-portfolio.svg" alt="Property manager portfolio wireframe"><div><h3>Property portfolio</h3><span class="status">PLANNED TARGET</span><p>Coverage, exceptions, evidence, and approvals across properties.</p></div></a></article>
+    </div></section>
+    <section id="revenue"><h2>Revenue administration</h2><p class="intro">A later manager extension connecting scope, evidence, cost, and payment.</p><div class="grid">
+      <article><a href="wireframes/revenue/01-revenue-operations.svg"><img src="wireframes/revenue/01-revenue-operations.svg" alt="Revenue operations wireframe"><div><h3>Revenue operations</h3><span class="status">PLANNED TARGET</span><p>Catalogs, contracts, estimates, billing readiness, invoices, and profitability.</p></div></a></article>
+    </div></section>
+    <section id="future"><h2>Future product modes</h2><p class="intro">Separate experience models that reuse platform primitives without inheriting provider-only concepts.</p><div class="grid">
+      <article class="mobile"><a href="wireframes/future/01-homeowner-assistant.svg"><img src="wireframes/future/01-homeowner-assistant.svg" alt="Homeowner assistant wireframe"><div><h3>Homeowner assistant</h3><span class="status">FUTURE CONCEPT</span><p>Adaptive schedules, guided tasks, yard health, supplies, and education.</p></div></a></article>
+      <article><a href="wireframes/future/02-multi-vendor-portfolio.svg"><img src="wireframes/future/02-multi-vendor-portfolio.svg" alt="Multi-vendor portfolio wireframe"><div><h3>Multi-vendor operations</h3><span class="status">FUTURE CONCEPT</span><p>Coverage, compliance, work distribution, evidence, scorecards, and invoice matching.</p></div></a></article>
+    </div></section>
+  </main>
+  <footer>Grover design study · Low-fidelity artifact set · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
+</body>
+</html>

@@ -12,6 +12,7 @@ moving their existing canonical documents.
 | [FEATURE_CATALOG.md](FEATURE_CATALOG.md) | Index of product capabilities and their source specifications |
 | [VERSION_HISTORY.md](VERSION_HISTORY.md) | Human-readable history of project milestones and releases |
 | [WORKING_AGREEMENTS.md](WORKING_AGREEMENTS.md) | Durable collaboration, commit, and validation expectations |
+| [`../design/`](../design/) | Visual gallery, information architecture, wireframes, and design decisions |
 
 ## Canonical Sources
 
@@ -21,6 +22,8 @@ moving their existing canonical documents.
   specifications used as roadmap inputs and acceptance-criteria sources.
 - [`../docs/`](../docs/) contains technical designs, API contracts, runbooks, and
   validation notes.
+- [`../design/`](../design/) contains the visual product model used to review page
+  composition and responsive behavior before new UI implementation.
 
 The files in this directory summarize and organize those sources. If a summary and
 a detailed source disagree, `PLAN.md` and the relevant feature or technical

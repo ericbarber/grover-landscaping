@@ -5,6 +5,15 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
+The current UX priority is a design-first review of the eventual application
+before further interface expansion. The source-controlled [`../design/`](../design/)
+workspace mirrors the public, access, field, manager, customer, revenue, and
+future product areas. Its first low-fidelity set contains twenty SVG wireframes,
+a browsable gallery, information architecture, state checklist, and decision log.
+Reviews should approve page composition and responsive behavior before producing
+high-fidelity screens or beginning the corresponding UI slice. Back-end and
+infrastructure work without a visual consequence can continue independently.
+
 The public root homepage now introduces Grover through an outcome-led hero,
 persona-selectable benefits for yard owners, property managers, landscaping
 companies, and crew leads, the Plan-Care-Proof workflow, a product preview,

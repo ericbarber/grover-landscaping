@@ -1,0 +1,122 @@
+[
+  {
+    "path": "wireframes/public/01-homepage.svg",
+    "title": "Public homepage",
+    "status": "CURRENT TARGET",
+    "kind": "marketing"
+  },
+  {
+    "path": "wireframes/public/02-persona-campaign-mobile.svg",
+    "title": "Persona campaign page",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/public/03-conversion-flow.svg",
+    "title": "Conversion request flow",
+    "status": "CURRENT TARGET",
+    "kind": "modal"
+  },
+  {
+    "path": "wireframes/public/04-shared-customer-proof.svg",
+    "title": "Shared report and bid pages",
+    "status": "CURRENT TARGET",
+    "kind": "shared"
+  },
+  {
+    "path": "wireframes/auth/01-access-and-onboarding.svg",
+    "title": "Access and first-owner onboarding",
+    "status": "CURRENT TARGET",
+    "kind": "auth"
+  },
+  {
+    "path": "wireframes/field/01-home.svg",
+    "title": "Field home",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/field/02-route.svg",
+    "title": "Crew route",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/field/03-jobs.svg",
+    "title": "Assigned jobs",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/field/04-job-detail.svg",
+    "title": "Job detail",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/manager/00-manager-hub.svg",
+    "title": "Operations hub",
+    "status": "CURRENT TARGET",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/manager/01-schedule.svg",
+    "title": "Schedule and dispatch",
+    "status": "CURRENT + PLANNED",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/manager/02-customers.svg",
+    "title": "Customers and properties",
+    "status": "CURRENT + PLANNED",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/manager/03-team.svg",
+    "title": "Team and access",
+    "status": "CURRENT TARGET",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/manager/04-reports.svg",
+    "title": "Reports and communication",
+    "status": "CURRENT + PLANNED",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/manager/05-recovery.svg",
+    "title": "Recovery and exceptions",
+    "status": "ACTIVE DESIGN TARGET",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/customer/01-yard-owner-portal.svg",
+    "title": "My yard",
+    "status": "CURRENT + PLANNED",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/customer/02-property-manager-portfolio.svg",
+    "title": "Property portfolio",
+    "status": "PLANNED TARGET",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/revenue/01-revenue-operations.svg",
+    "title": "Revenue operations",
+    "status": "PLANNED TARGET",
+    "kind": "desktop"
+  },
+  {
+    "path": "wireframes/future/01-homeowner-assistant.svg",
+    "title": "Today in your yard",
+    "status": "FUTURE CONCEPT",
+    "kind": "mobile"
+  },
+  {
+    "path": "wireframes/future/02-multi-vendor-portfolio.svg",
+    "title": "Multi-vendor property operations",
+    "status": "FUTURE CONCEPT",
+    "kind": "desktop"
+  }
+]
