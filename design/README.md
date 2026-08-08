@@ -20,6 +20,8 @@ design/
 ├── index.html                         # Browsable visual gallery
 ├── information-architecture.md        # Page model and navigation boundaries
 ├── README.md                          # Workflow and ownership
+├── prototypes/
+│   └── public-homepage/                # Responsive working V2 design
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
 │   ├── decision-log.md                # Accepted decisions and open questions
@@ -49,7 +51,9 @@ design/
    permission, success, and destructive-confirmation variants for approved pages.
 4. **High-fidelity design:** approve typography, spacing, color, iconography,
    photography, components, and desktop/mobile adaptations.
-5. **Implementation handoff:** link the approved screen, states, acceptance
+5. **Working design:** validate responsive composition, interaction, content,
+   keyboard behavior, recovery, and success as one connected journey.
+6. **Implementation handoff:** link the approved screen, states, acceptance
    criteria, and responsive behavior from the corresponding feature slice.
 
 New UI work should not skip directly from a roadmap bullet to implementation.
@@ -94,17 +98,28 @@ the relevant UI is under review.
 5. Validate the changed images and update the decision status.
 6. Create high-fidelity screens only after the page composition is accepted.
 
+The public homepage working design has an additional browser validator:
+
+```bash
+node design/tools/validate-working-homepage.mjs
+```
+
+Pass `--capture` to refresh its desktop and mobile review images. The script uses
+the Playwright dependency already installed for frontend validation.
+
 Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
-1. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-2. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+1. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
+   and review audience, workflow, responsive, recovery, and success behavior.
+2. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+3. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-3. Approve the field mobile sequence: Home → Route → Jobs → Job.
-4. Approve the manager hierarchy: hub → category → tool → record/action.
-5. Review customer-safe pages and the separation from internal operations.
-6. Confirm that homeowner self-service and multi-vendor management remain
+4. Review the field mobile sequence: Home → Route → Jobs → Job.
+5. Review the manager hierarchy: hub → category → tool → record/action.
+6. Review customer-safe pages and the separation from internal operations.
+7. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

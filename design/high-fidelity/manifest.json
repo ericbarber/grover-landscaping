@@ -14,6 +14,20 @@
     "preview": "public/homepage-desktop-v1.png"
   },
   {
+    "id": "homepage-desktop-v2",
+    "area": "public",
+    "status": "validated-working-design",
+    "source": "../prototypes/public-homepage/index.html",
+    "preview": "public/homepage-desktop-v2.png"
+  },
+  {
+    "id": "homepage-mobile-v2",
+    "area": "public",
+    "status": "validated-working-design",
+    "source": "../prototypes/public-homepage/index.html",
+    "preview": "public/homepage-mobile-v2.png"
+  },
+  {
     "id": "crew-route-mobile-v1",
     "area": "field",
     "status": "review",

@@ -18,6 +18,9 @@
 - Durable lead workflow history recording operator, status transition, assignment, next action, note, and timestamp
 - SupportAdmin 30-day conversion dashboard with unique-session stages, persona and campaign segments, failure counts, and low-volume interpretation
 - Overdue lead counts, priority sorting, and visual attention states
+- Validated working homepage design with responsive audience continuity,
+  interactive workflow proof, accessible request states, and implementation
+  handoff; production adoption remains a separate delivery slice
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces

@@ -3,6 +3,17 @@
 These concepts apply the first Grover visual direction to representative product
 surfaces. They are design-review artifacts, not screenshots of implemented code.
 
+## V2 working public design
+
+| Artifact | Review image | Purpose |
+| --- | --- | --- |
+| [`../prototypes/public-homepage/index.html`](../prototypes/public-homepage/index.html) | [Desktop](public/homepage-desktop-v2.png) · [Mobile](public/homepage-mobile-v2.png) | Responsive, persona-aware public journey with workflow and conversion states |
+
+The V2 public artifact is interactive and browser-validated. It remains a design
+prototype rather than the production React page. See the
+[`V2 handoff`](../review/v2-working-homepage-handoff.md) for behavior, validation,
+and adoption guidance.
+
 ## V1 review set
 
 | Artifact | Review image | Purpose |
@@ -22,13 +33,14 @@ surfaces. They are design-review artifacts, not screenshots of implemented code.
 - Do risk and recovery states feel serious without making the entire product feel
   alarming?
 
-## Next after approval
+## Next design expansion
 
-1. Apply feedback to V2 without changing unrelated decisions.
-2. Add responsive homepage and manager variants.
+1. Decide whether to adopt the working public design in the production React
+   homepage as one slice or as smaller foundation, hero, workflow, and conversion
+   slices.
+2. Add a responsive manager schedule interaction model.
 3. Design Job Detail, Recovery, and customer report states.
-4. Define the component states needed for implementation.
-5. Link approved artifacts from the matching delivery slice.
+4. Link validated artifacts from each matching implementation slice.
 
 The SVG files are editable source artifacts. PNG files are validated browser
 renders for review, sharing, and comparison.

@@ -38,13 +38,17 @@ Current state:
 - Professional V2 review retains the split hero and Plan–Care–Proof narrative,
   while identifying audience continuity, interactive workflow proof, responsive
   behavior, accessibility, and conversion recovery as the active design gaps.
+- A dependency-free V2 public-homepage prototype now closes those gaps with
+  persona-aware content, a concrete interactive workflow, capability-backed
+  credibility, responsive composition, and a complete request state model.
+- Repeatable browser validation covers 390px and 1440px layout, keyboard tabs,
+  mobile navigation, dialog focus return, validation, recoverable failure,
+  success, target sizes, overflow, and browser errors.
 
 Next design work:
 
-- Complete the dependency-free working public-homepage design under `design/`
-  with persona-aware content, interactive product workflow, credibility, and a
-  recoverable request flow.
-- Capture desktop and mobile review images and complete the design handoff.
+- Review the V2 working homepage for production React adoption while retaining
+  the existing campaign, metadata, analytics, and persisted-lead contracts.
 - Apply the resulting interaction patterns to Job Detail, Recovery, and customer
   report states in the next design slice.
 - Continue required loading, empty, unavailable, offline, conflict, permission,
@@ -87,6 +91,11 @@ the outcome, and return to its recovery workflow from persisted activity history
 - V1 professional design system and representative high-fidelity concepts replace
   generic card-grid styling with page-specific marketing, field, and dispatch
   compositions
+- V2 working public-homepage design carries audience context through the complete
+  visitor journey and demonstrates responsive, keyboard, validation, recovery,
+  and success behavior without a production dependency
+- Desktop and mobile review images, browser validation, implementation handoff,
+  and explicit prototype boundaries make the public design adoption-ready
 
 ### Public product experience
 

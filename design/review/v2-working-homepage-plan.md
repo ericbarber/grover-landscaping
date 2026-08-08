@@ -14,6 +14,15 @@ The design should help a visitor answer, in order:
 4. What is the right next step for my role?
 5. What will happen after I request a conversation?
 
+## Delivery status
+
+| Phase | Status | Evidence |
+| --- | --- | --- |
+| 1. Review and journey definition | Complete | Review findings, decision log, and acceptance criteria |
+| 2. Responsive working design | Complete | `design/prototypes/public-homepage/` |
+| 3. Interaction, accessibility, and states | Complete | Prototype guide and browser validator |
+| 4. Review package and validation | Complete | Gallery, viewport images, manifest, handoff, and project records |
+
 ## Professional review findings
 
 ### Keep

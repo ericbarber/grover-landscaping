@@ -108,7 +108,7 @@ try {
     await mkdir(imageDirectory, { recursive: true });
     await desktop.page.screenshot({
       path: resolve(imageDirectory, 'homepage-desktop-v2.png'),
-      fullPage: true,
+      fullPage: false,
     });
   }
   await desktop.page.close();
@@ -128,7 +128,7 @@ try {
     await mobile.page.goto(pageUrl, { waitUntil: 'load' });
     await mobile.page.screenshot({
       path: resolve(imageDirectory, 'homepage-mobile-v2.png'),
-      fullPage: true,
+      fullPage: false,
     });
   }
   await mobile.page.close();
