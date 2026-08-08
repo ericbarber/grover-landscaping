@@ -54,10 +54,10 @@
         <div class="audience-control" id="audiences">
           <p id="audience-label">Show me Grover as a</p>
           <div class="audience-tabs" role="tablist" aria-labelledby="audience-label" data-persona-tabs>
-            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="owner">Yard owner</button>
-            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="property">Property manager</button>
-            <button role="tab" aria-selected="true" type="button" data-persona="company">Landscaping company</button>
-            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="crew">Crew lead</button>
+            <button id="audience-tab-owner" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" type="button" data-persona="owner">Yard owner</button>
+            <button id="audience-tab-property" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" type="button" data-persona="property">Property manager</button>
+            <button id="audience-tab-company" role="tab" aria-controls="audience-panel" aria-selected="true" type="button" data-persona="company">Landscaping company</button>
+            <button id="audience-tab-crew" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" type="button" data-persona="crew">Crew lead</button>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@
       </ul>
     </section>
 
-    <section class="audience-story section-shell" aria-labelledby="audience-story-title">
+    <section class="audience-story section-shell" id="audience-panel" role="tabpanel" aria-labelledby="audience-tab-company">
       <div class="section-heading audience-heading">
         <div>
           <p class="eyebrow">One platform, the right perspective</p>
@@ -274,7 +274,7 @@
             <label><input type="checkbox" name="simulate-error"> Simulate a recoverable delivery error</label>
           </details>
 
-          <div class="form-alert" role="alert" hidden data-form-error>
+          <div class="form-alert" role="alert" tabindex="-1" hidden data-form-error>
             <strong>The request was not sent.</strong>
             <span>This prototype is showing a recoverable connection error. Your entries are still here—turn off the simulation and try again.</span>
           </div>

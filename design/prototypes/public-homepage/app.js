@@ -202,6 +202,7 @@ function activatePersona(personaId, { focus = false, updateAddress = true } = {}
     button.tabIndex = selected ? 0 : -1;
     if (selected && focus) button.focus();
   });
+  document.querySelector("#audience-panel")?.setAttribute("aria-labelledby", `audience-tab-${personaId}`);
 
   setText("[data-hero-eyebrow]", content.eyebrow);
   setText("[data-hero-title]", content.headline);
@@ -368,7 +369,7 @@ async function submitRequest(event) {
     error.hidden = false;
     button.disabled = false;
     button.textContent = personaContent[form.elements.persona.value].cta;
-    error.focus?.();
+    error.focus();
     return;
   }
 
