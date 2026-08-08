@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A working design prototype for Grover, the connected operating system for landscape care.">
+  <meta name="theme-color" content="#173f35">
+  <title>Grover working homepage design</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" data-site-header>
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Grover home">
+        <svg aria-hidden="true" class="brand-mark" viewBox="0 0 32 32">
+          <path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22" />
+          <path d="M7 25c5-7 10-12 18-18" />
+        </svg>
+        <span>Grover</span>
+      </a>
+
+      <button class="menu-button" type="button" aria-controls="site-navigation" aria-expanded="false" data-menu-button>
+        <span class="sr-only">Open navigation</span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <nav class="site-navigation" id="site-navigation" aria-label="Primary" data-navigation>
+        <a href="#workflow">How it works</a>
+        <a href="#audiences">Who it helps</a>
+        <a href="#capabilities">Why Grover</a>
+        <a class="quiet-link" href="../../../frontend/index.html">Sign in</a>
+        <button class="button button-small button-primary nav-cta" type="button" data-open-dialog data-cta-label>Request a walkthrough</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow" data-hero-eyebrow>Operations customers can trust</p>
+        <h1 id="hero-title" data-hero-title>Plan every visit. Care with confidence. Prove the work.</h1>
+        <p class="hero-intro" data-hero-description>Connect scheduling, crews, proof, customer communication, and revenue in one calm operating view.</p>
+
+        <div class="hero-actions">
+          <button class="button button-primary" type="button" data-open-dialog data-cta-label>Request a walkthrough</button>
+          <a class="button button-secondary" href="#workflow">Explore the workflow <span aria-hidden="true">↓</span></a>
+        </div>
+
+        <div class="audience-control" id="audiences">
+          <p id="audience-label">Show me Grover as a</p>
+          <div class="audience-tabs" role="tablist" aria-labelledby="audience-label" data-persona-tabs>
+            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="owner">Yard owner</button>
+            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="property">Property manager</button>
+            <button role="tab" aria-selected="true" type="button" data-persona="company">Landscaping company</button>
+            <button role="tab" aria-selected="false" tabindex="-1" type="button" data-persona="crew">Crew lead</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-label="Illustrative Grover product preview">
+        <img src="../../assets/grover-southwest-sunrise-hero.png" alt="Landscape care team working in a Southwestern garden at sunrise">
+        <div class="hero-scrim" aria-hidden="true"></div>
+        <article class="product-card" aria-live="polite" aria-atomic="true">
+          <div class="preview-label-row">
+            <p class="mini-label">Illustrative product preview</p>
+            <span class="status-pill status-positive" data-preview-status>On track</span>
+          </div>
+          <p class="product-card-kicker" data-preview-kicker>Today · North crew</p>
+          <h2 data-preview-title>6 of 8 properties complete</h2>
+          <p class="product-card-copy" data-preview-copy>Photos are synced and one completion report is ready for review.</p>
+          <div class="progress" aria-label="Six of eight properties complete" data-preview-progress>
+            <span style="width: 75%"></span>
+          </div>
+          <div class="product-meta">
+            <span><i class="signal signal-positive" aria-hidden="true"></i><span data-preview-meta-one>Field progress visible</span></span>
+            <span><i class="signal signal-attention" aria-hidden="true"></i><span data-preview-meta-two>1 review needed</span></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="trust-strip" aria-labelledby="trust-heading">
+      <h2 class="trust-heading" id="trust-heading">One shared view of the work</h2>
+      <ul>
+        <li><span aria-hidden="true">✓</span> Offline-ready field progress</li>
+        <li><span aria-hidden="true">✓</span> Role-aware workspaces</li>
+        <li><span aria-hidden="true">✓</span> Evidence linked to service</li>
+        <li><span aria-hidden="true">✓</span> Traceable operational decisions</li>
+      </ul>
+    </section>
+
+    <section class="audience-story section-shell" aria-labelledby="audience-story-title">
+      <div class="section-heading audience-heading">
+        <div>
+          <p class="eyebrow">One platform, the right perspective</p>
+          <h2 id="audience-story-title" data-audience-title>Turn great field work into growth.</h2>
+        </div>
+        <p data-audience-description>Grover keeps the office, field, and customer handoff connected without giving every person the same crowded workspace.</p>
+      </div>
+
+      <div class="outcome-ledger" aria-live="polite" data-outcome-ledger>
+        <article>
+          <span>01</span>
+          <div><h3 data-outcome-title="0">Run a clearer day</h3><p data-outcome-copy="0">Routes, crews, property context, and exceptions stay connected.</p></div>
+        </article>
+        <article>
+          <span>02</span>
+          <div><h3 data-outcome-title="1">Move approvals faster</h3><p data-outcome-copy="1">Evidence and recommendations give customers a complete story.</p></div>
+        </article>
+        <article>
+          <span>03</span>
+          <div><h3 data-outcome-title="2">Turn work into revenue</h3><p data-outcome-copy="2">Verified completion keeps approved work moving toward invoice.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="workflow" id="workflow" aria-labelledby="workflow-title">
+      <div class="workflow-inner section-shell">
+        <div class="section-heading workflow-heading">
+          <div>
+            <p class="eyebrow eyebrow-sand">A complete operating rhythm</p>
+            <h2 id="workflow-title">Follow one day from promise to proof.</h2>
+          </div>
+          <p>Choose a stage to inspect the handoff, the live state, and what the next person can trust.</p>
+        </div>
+
+        <div class="workflow-experience">
+          <div class="workflow-tabs" role="tablist" aria-label="Plan Care Proof workflow" data-workflow-tabs>
+            <button id="workflow-tab-plan" role="tab" aria-selected="true" aria-controls="workflow-panel" type="button" data-workflow="plan">
+              <span>01</span><strong>Plan</strong><small>Prepare the day</small>
+            </button>
+            <button id="workflow-tab-care" role="tab" aria-selected="false" aria-controls="workflow-panel" tabindex="-1" type="button" data-workflow="care">
+              <span>02</span><strong>Care</strong><small>Guide the field</small>
+            </button>
+            <button id="workflow-tab-proof" role="tab" aria-selected="false" aria-controls="workflow-panel" tabindex="-1" type="button" data-workflow="proof">
+              <span>03</span><strong>Proof</strong><small>Close the loop</small>
+            </button>
+          </div>
+
+          <div class="workflow-panel" id="workflow-panel" role="tabpanel" aria-labelledby="workflow-tab-plan" tabindex="0">
+            <div class="workflow-copy">
+              <p class="mini-label" data-workflow-label>Manager workspace</p>
+              <h3 data-workflow-title>Publish a field-ready plan.</h3>
+              <p data-workflow-description>Balance crew capacity, service expectations, route time, and the exceptions that could derail the day.</p>
+              <div class="handoff-note">
+                <span aria-hidden="true">↗</span>
+                <div><strong>Next-team value</strong><p data-workflow-outcome>Crews start with an ordered route and property context they can act on.</p></div>
+              </div>
+            </div>
+
+            <div class="workflow-preview" data-workflow-preview>
+              <div class="preview-toolbar">
+                <div><p class="mini-label">Monday route</p><strong>North Phoenix · Crew A</strong></div>
+                <span class="status-pill status-positive">Ready to publish</span>
+              </div>
+              <div class="route-list">
+                <div><b>01</b><span><strong>Ocotillo Court</strong><small>Weekly service · access ready</small></span><time>7:30</time></div>
+                <div><b>02</b><span><strong>Saguaro Ridge</strong><small>Biweekly service · 55 min</small></span><time>8:25</time></div>
+                <div><b>03</b><span><strong>Desert Willow Commons</strong><small>Irrigation check included</small></span><time>9:40</time></div>
+              </div>
+              <div class="preview-summary"><span>8 properties</span><span>6h 40m planned</span><span>82% capacity</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="capabilities section-shell" id="capabilities" aria-labelledby="capabilities-title">
+      <div class="section-heading capabilities-heading">
+        <div>
+          <p class="eyebrow">Credibility by design</p>
+          <h2 id="capabilities-title">Proof belongs in the workflow.</h2>
+        </div>
+        <p>Every statement below maps to a delivered product foundation. Customer logos, quotes, and performance claims stay out until they are verified and approved.</p>
+      </div>
+
+      <div class="capability-ledger">
+        <article>
+          <p>Field resilience</p><h3>Works beyond the signal</h3><span>Offline changes queue locally and recover when connectivity returns.</span><b aria-hidden="true">01</b>
+        </article>
+        <article>
+          <p>Accountability</p><h3>Keeps decisions traceable</h3><span>Route changes, access updates, and recovery actions retain an operational record.</span><b aria-hidden="true">02</b>
+        </article>
+        <article>
+          <p>Role-aware access</p><h3>Protects every perspective</h3><span>Organization roles keep provider-only tools out of customer views.</span><b aria-hidden="true">03</b>
+        </article>
+        <article>
+          <p>Visible outcomes</p><h3>Turns work into evidence</h3><span>Photos, notes, checklists, reports, bids, and recommendations remain connected.</span><b aria-hidden="true">04</b>
+        </article>
+      </div>
+    </section>
+
+    <section class="conversion section-shell" aria-labelledby="conversion-title">
+      <div class="conversion-card">
+        <div>
+          <p class="eyebrow eyebrow-sand">Make the next handoff clearer</p>
+          <h2 id="conversion-title" data-conversion-title>See how Grover fits your operation.</h2>
+          <p data-conversion-copy>Bring the workflow that creates the most back-and-forth. We’ll shape the conversation around your team and the result you need.</p>
+        </div>
+        <button class="button button-sand" type="button" data-open-dialog data-cta-label>Request a walkthrough</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand brand-light" href="#top" aria-label="Grover home">
+      <svg aria-hidden="true" class="brand-mark" viewBox="0 0 32 32"><path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22"/><path d="M7 25c5-7 10-12 18-18"/></svg>
+      <span>Grover</span>
+    </a>
+    <p>Care you can see. Operations you can trust.</p>
+    <p class="prototype-note">Working design prototype · Sample data is illustrative · No request is transmitted</p>
+  </footer>
+
+  <dialog class="request-dialog" data-dialog aria-labelledby="dialog-title">
+    <div class="dialog-layout">
+      <aside class="dialog-intro">
+        <button class="dialog-close" type="button" aria-label="Close request form" data-close-dialog>×</button>
+        <p class="eyebrow eyebrow-sand">Start a conversation</p>
+        <h2 id="dialog-title" data-dialog-title>See how Grover fits your operation.</h2>
+        <p>Tell us a little about your work. The next conversation should be useful from the first minute.</p>
+        <ol>
+          <li><span>1</span> We review the workflow you want to improve.</li>
+          <li><span>2</span> We tailor the product conversation to your role.</li>
+          <li><span>3</span> We agree on a practical next step.</li>
+        </ol>
+      </aside>
+
+      <div class="dialog-body">
+        <form novalidate data-request-form>
+          <p class="prototype-banner"><strong>Design prototype:</strong> This form demonstrates behavior but does not send or store your information.</p>
+          <div class="form-grid">
+            <label>
+              I’m exploring Grover as
+              <select name="persona" data-form-persona>
+                <option value="owner">Yard owner</option>
+                <option value="property">Property manager</option>
+                <option value="company" selected>Landscaping company</option>
+                <option value="crew">Crew lead</option>
+              </select>
+            </label>
+            <label>
+              Name <span aria-hidden="true">*</span>
+              <input name="name" autocomplete="name" required maxlength="120" aria-describedby="name-error">
+              <small class="field-error" id="name-error" data-error-for="name"></small>
+            </label>
+            <label>
+              Work email <span aria-hidden="true">*</span>
+              <input name="email" autocomplete="email" required type="email" maxlength="254" aria-describedby="email-error">
+              <small class="field-error" id="email-error" data-error-for="email"></small>
+            </label>
+            <label>
+              Company or portfolio
+              <input name="organization" autocomplete="organization" maxlength="160">
+            </label>
+            <label class="form-wide">
+              What would make Grover valuable to you?
+              <textarea name="goal" rows="4" maxlength="600" placeholder="For example: fewer route changes, clearer customer proof, or faster approvals."></textarea>
+            </label>
+          </div>
+
+          <label class="consent-row">
+            <input name="consent" type="checkbox" required aria-describedby="consent-error">
+            <span>I agree that Grover may contact me about this request. <em>In this prototype, no contact occurs.</em></span>
+          </label>
+          <small class="field-error consent-error" id="consent-error" data-error-for="consent"></small>
+
+          <details class="review-controls">
+            <summary>Prototype review controls</summary>
+            <label><input type="checkbox" name="simulate-error"> Simulate a recoverable delivery error</label>
+          </details>
+
+          <div class="form-alert" role="alert" hidden data-form-error>
+            <strong>The request was not sent.</strong>
+            <span>This prototype is showing a recoverable connection error. Your entries are still here—turn off the simulation and try again.</span>
+          </div>
+
+          <div class="form-actions">
+            <button class="button button-primary" type="submit" data-submit-button>Request a walkthrough</button>
+            <button class="text-button" type="button" data-close-dialog>Not now</button>
+          </div>
+          <p class="privacy-note">No mailing list. No automated sales sequence.</p>
+        </form>
+
+        <section class="success-state" tabindex="-1" hidden data-success-state aria-live="polite">
+          <span class="success-icon" aria-hidden="true">✓</span>
+          <p class="eyebrow">Prototype success state</p>
+          <h3>Thank you, <span data-success-name>there</span>.</h3>
+          <p>In production, the request would now be recorded and the team would follow up using the email provided. No data was transmitted by this prototype.</p>
+          <button class="button button-primary" type="button" data-close-dialog>Return to Grover</button>
+        </section>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
