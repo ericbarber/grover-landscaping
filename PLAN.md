@@ -35,19 +35,20 @@ Current state:
   one brand across marketing, mobile field work, and dense office operations.
 - Original Southwestern hero photography is stored with its generation brief and
   project-local usage guidance.
+- Professional V2 review retains the split hero and Plan–Care–Proof narrative,
+  while identifying audience continuity, interactive workflow proof, responsive
+  behavior, accessibility, and conversion recovery as the active design gaps.
 
 Next design work:
 
-- Review and approve or revise the V1 visual foundation and three representative
-  high-fidelity concepts.
-- Confirm the crew-lane schedule direction, field current-stop hierarchy, status
-  colors, and balance of editorial warmth with operational density.
-- Apply the approved direction to Job Detail, Recovery, and customer report
-  states, then revise the remaining wireframes from design feedback.
-- Add required loading, empty, unavailable, offline, conflict, permission, and
-  destructive-action states for approved workflows.
-- Create high-fidelity responsive screens and a component visual system only
-  after the low-fidelity composition is accepted.
+- Complete the dependency-free working public-homepage design under `design/`
+  with persona-aware content, interactive product workflow, credibility, and a
+  recoverable request flow.
+- Capture desktop and mobile review images and complete the design handoff.
+- Apply the resulting interaction patterns to Job Detail, Recovery, and customer
+  report states in the next design slice.
+- Continue required loading, empty, unavailable, offline, conflict, permission,
+  and destructive-action coverage for authenticated workflows.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.
