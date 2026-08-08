@@ -18,6 +18,11 @@ silently revisit settled product structure.
 | D-011 | Public | Make Plan–Care–Proof the interactive product tour and show only one detailed stage at a time. | Accepted for V2 working design | 2026-08-08 | Product/design |
 | D-012 | Evidence | Label sample operating counts as illustrative and reserve customer quotes, logos, and performance metrics for verified approvals. | Accepted | 2026-08-08 | Product/design |
 | D-013 | Conversion | Use persona-specific request language and demonstrate validation, recovery, and success without pretending the design prototype persists a lead. | Accepted for V2 working design | 2026-08-08 | Product/design |
+| D-014 | Delivery model | Bring the remaining application to working-design quality through connected workflow slices rather than isolated page-by-page high-fidelity screens. | Accepted | 2026-08-08 | Product/design |
+| D-015 | Completion gate | Require workflow truth, responsive composition, working interaction, state coverage, accessibility, browser validation, and implementation handoff for every completed design phase. | Accepted | 2026-08-08 | Product/design |
+| D-016 | Sequence | Establish the shared application shell first, then prioritize access, field execution, manager daily operations, and completion proof before broader administration and planned revenue. | Accepted | 2026-08-08 | Product/design |
+| D-017 | Product modes | Keep homeowner self-service and multi-vendor concepts outside the current-application working-design plan until those product modes are activated. | Accepted | 2026-08-08 | Product/design |
+| D-018 | Revenue | Keep revenue surfaces labeled planned and product-gate high-fidelity work on confirmed catalog, contract, billing, invoice, payment, and cost boundaries. | Accepted | 2026-08-08 | Product/design |
 
 ## Open review questions
 

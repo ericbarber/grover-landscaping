@@ -25,6 +25,7 @@ design/
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
 │   ├── decision-log.md                # Accepted decisions and open questions
+│   ├── application-working-design-delivery-plan.md # Remaining application phases
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
@@ -114,12 +115,15 @@ renderer or a design-tool account to see a proposed screen.
 
 1. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
    and review audience, workflow, responsive, recovery, and success behavior.
-2. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-3. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+2. Review the
+   [application working-design delivery plan](review/application-working-design-delivery-plan.md)
+   and its seven completion gates.
+3. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+4. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-4. Review the field mobile sequence: Home → Route → Jobs → Job.
-5. Review the manager hierarchy: hub → category → tool → record/action.
-6. Review customer-safe pages and the separation from internal operations.
-7. Confirm that homeowner self-service and multi-vendor management remain
+5. Review the field mobile sequence: Home → Route → Jobs → Job.
+6. Review the manager hierarchy: hub → category → tool → record/action.
+7. Review customer-safe pages and the separation from internal operations.
+8. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

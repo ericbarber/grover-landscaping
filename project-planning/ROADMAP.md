@@ -20,6 +20,12 @@ composition, persona continuity, interactive Plan-Care-Proof inspection,
 capability-backed credibility, conversion recovery, and success states. The
 prototype remains separate from the production React page; its handoff preserves
 the existing campaign, metadata, analytics, and persisted-lead contracts.
+The [application working-design delivery plan](../design/review/application-working-design-delivery-plan.md)
+now sequences the remaining current product through shared application
+foundations, access and Home, field execution, manager daily operations,
+completion proof, customers, team/organization, product-gated revenue, and final
+cross-application convergence. Each phase requires responsive working behavior,
+state coverage, accessibility, browser validation, and production handoff.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

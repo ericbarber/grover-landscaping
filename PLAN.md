@@ -44,15 +44,23 @@ Current state:
 - Repeatable browser validation covers 390px and 1440px layout, keyboard tabs,
   mobile navigation, dialog focus return, validation, recoverable failure,
   success, target sizes, overflow, and browser errors.
+- The remaining application now has a dependency-ordered working-design delivery
+  plan covering shared foundations, access/Home, field execution, manager daily
+  operations, completion proof, customers, team/organization, revenue, and final
+  convergence.
+- Each application phase must pass the same seven gates: workflow truth,
+  responsive composition, working interaction, state coverage, accessibility,
+  browser validation, and implementation handoff.
 
 Next design work:
 
 - Review the V2 working homepage for production React adoption while retaining
   the existing campaign, metadata, analytics, and persisted-lead contracts.
-- Apply the resulting interaction patterns to Job Detail, Recovery, and customer
-  report states in the next design slice.
-- Continue required loading, empty, unavailable, offline, conflict, permission,
-  and destructive-action coverage for authenticated workflows.
+- Begin Phase 0 of the application working-design plan: audit the production
+  application shell and create the shared responsive navigation, context,
+  component, operational-data, and state laboratory.
+- Continue through access/Home and connected field execution after the shared
+  foundation passes its working-design gates.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.
