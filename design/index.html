@@ -9,7 +9,7 @@
     * { box-sizing: border-box; }
     body { margin: 0; }
     header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #17352f; color: white; }
-    header p { max-width: 72ch; color: #d6e3dd; line-height: 1.6; }
+    header p { max-width: 76ch; color: #d6e3dd; line-height: 1.6; }
     nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
     nav a { color: #17352f; background: #e7d4ac; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
     main { padding: 2rem max(1.25rem, 5vw) 5rem; }
@@ -18,6 +18,10 @@
     h2 { margin-bottom: .35rem; font-size: clamp(1.5rem, 3vw, 2.3rem); }
     .intro { color: #536962; margin-top: 0; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+    .featured { grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+    .featured article:first-child { grid-column: 1 / -1; }
+    .featured article img { aspect-ratio: 16 / 9; }
+    .featured article.mobile img { aspect-ratio: 390 / 520; }
     article { background: white; border: 1px solid #bcc8c3; border-radius: 1rem; overflow: hidden; box-shadow: 0 12px 28px rgb(23 53 47 / 8%); }
     article a { color: inherit; text-decoration: none; }
     article img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f7f4ec; border-bottom: 1px solid #d9e0dc; }
@@ -32,13 +36,19 @@
 <body>
   <header>
     <p>GROVER · DESIGN REVIEW</p>
-    <h1>Design the whole experience before polishing the pieces.</h1>
-    <p>These low-fidelity images define pages, hierarchy, navigation, and major elements. They are deliberately restrained so review focuses on product structure before typography, color, imagery, and component styling.</p>
+    <h1>Care you can see. Operations you can trust.</h1>
+    <p>The gallery now pairs the complete low-fidelity application map with a professional V1 visual direction. Review the foundation and three representative high-fidelity screens first, then use the wireframes to evaluate coverage and information architecture.</p>
     <nav aria-label="Artifact groups">
-      <a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
+      <a href="#high-fidelity">High fidelity</a><a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
     </nav>
   </header>
   <main>
+    <section id="high-fidelity"><h2>Professional V1 direction</h2><p class="intro">A balanced system: premium Southwestern editorial character for trust, with operational precision for daily work.</p><div class="grid featured">
+      <article><a href="foundations/visual-system-v1.svg"><img src="foundations/visual-system-v1.png" alt="Grover V1 visual foundation showing color, typography, components, and experience principles"><div><h3>Visual foundation</h3><span class="status">V1 REVIEW</span><p>Evergreen, bone, sage, sand, clay, editorial display type, operational UI type, status language, actions, and record patterns.</p></div></a></article>
+      <article><a href="high-fidelity/public/homepage-desktop-v1.svg"><img src="high-fidelity/public/homepage-desktop-v1.png" alt="High-fidelity Grover public homepage concept"><div><h3>Public homepage</h3><span class="status">HIGH FIDELITY · V1</span><p>Original landscape photography, direct product promise, credible operational proof, and a calmer Plan-Care-Proof rhythm.</p></div></a></article>
+      <article class="mobile"><a href="high-fidelity/field/crew-route-mobile-v1.svg"><img src="high-fidelity/field/crew-route-mobile-v1.png" alt="High-fidelity Grover crew route mobile concept"><div><h3>Crew route</h3><span class="status">HIGH FIDELITY · V1</span><p>Sync confidence, daily progress, one unmistakable current stop, and stable thumb-reachable navigation.</p></div></a></article>
+      <article><a href="high-fidelity/manager/schedule-desktop-v1.svg"><img src="high-fidelity/manager/schedule-desktop-v1.png" alt="High-fidelity Grover manager schedule concept"><div><h3>Manager schedule</h3><span class="status">HIGH FIDELITY · V1</span><p>A dense crew-lane schedule, realistic capacity signals, unassigned work, publish readiness, and a focused risk inspector.</p></div></a></article>
+    </div></section>
     <section id="public"><h2>Public website</h2><p class="intro">Discovery, campaign conversion, and customer-safe shared experiences.</p><div class="grid">
       <article><a href="wireframes/public/01-homepage.svg"><img src="wireframes/public/01-homepage.svg" alt="Public homepage wireframe"><div><h3>Public homepage</h3><span class="status">CURRENT TARGET</span><p>Hero, audience selector, Plan-Care-Proof tour, capability proof, credibility, and conversion.</p></div></a></article>
       <article class="mobile"><a href="wireframes/public/02-persona-campaign-mobile.svg"><img src="wireframes/public/02-persona-campaign-mobile.svg" alt="Persona campaign mobile wireframe"><div><h3>Persona campaign</h3><span class="status">CURRENT TARGET</span><p>Tailored entry story with a shared product narrative.</p></div></a></article>
@@ -74,6 +84,6 @@
       <article><a href="wireframes/future/02-multi-vendor-portfolio.svg"><img src="wireframes/future/02-multi-vendor-portfolio.svg" alt="Multi-vendor portfolio wireframe"><div><h3>Multi-vendor operations</h3><span class="status">FUTURE CONCEPT</span><p>Coverage, compliance, work distribution, evidence, scorecards, and invoice matching.</p></div></a></article>
     </div></section>
   </main>
-  <footer>Grover design study · Low-fidelity artifact set · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
+  <footer>Grover design study · V1 professional direction plus application-wide wireframes · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
 </body>
 </html>

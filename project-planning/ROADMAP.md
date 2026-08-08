@@ -10,6 +10,11 @@ before further interface expansion. The source-controlled [`../design/`](../desi
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,
 a browsable gallery, information architecture, state checklist, and decision log.
+The V1 professional direction now adds foundations for color, typography,
+spacing, iconography, imagery, and components plus high-fidelity homepage, crew
+route, and manager schedule concepts. These screens test a balanced blend of
+premium Southwestern editorial character and operational-console clarity before
+that visual system expands across the product.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

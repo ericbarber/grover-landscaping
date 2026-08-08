@@ -13,14 +13,20 @@ SVG-capable editor.
 
 ```text
 design/
+├── assets/                            # Original imagery and generation briefs
+├── components/                        # Reusable UI catalog and state coverage
+├── foundations/                       # Color, type, spacing, icons, and imagery
+├── high-fidelity/                     # Approved-direction visual concepts
 ├── index.html                         # Browsable visual gallery
 ├── information-architecture.md        # Page model and navigation boundaries
 ├── README.md                          # Workflow and ownership
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
-│   └── decision-log.md                # Accepted decisions and open questions
+│   ├── decision-log.md                # Accepted decisions and open questions
+│   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
-│   └── render-wireframes.mjs          # Deterministic SVG renderer
+│   ├── render-high-fidelity.mjs        # Professional visual concept renderer
+│   └── render-wireframes.mjs           # Deterministic SVG renderer
 └── wireframes/
     ├── public/                         # Homepage, campaigns, conversion, shares
     ├── auth/                           # Sign-in and first-owner onboarding
@@ -67,13 +73,22 @@ the relevant UI is under review.
 2. Record decisions and unresolved questions in
    [`review/decision-log.md`](review/decision-log.md).
 3. Revise the relevant source definition in
-   [`tools/render-wireframes.mjs`](tools/render-wireframes.mjs).
+   [`tools/render-wireframes.mjs`](tools/render-wireframes.mjs) or
+   [`tools/render-high-fidelity.mjs`](tools/render-high-fidelity.mjs).
 4. Regenerate the image set from the repository root:
 
    ```bash
    docker run --rm -u "$(id -u):$(id -g)" \
      -v "$PWD:/workspace" -w /workspace node:22 \
      node design/tools/render-wireframes.mjs
+   ```
+
+   Render the professional visual concepts with:
+
+   ```bash
+   docker run --rm -u "$(id -u):$(id -g)" \
+     -v "$PWD:/workspace" -w /workspace node:22 \
+     node design/tools/render-high-fidelity.mjs
    ```
 
 5. Validate the changed images and update the decision status.
@@ -84,10 +99,12 @@ renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
-1. Confirm the global information architecture and persona navigation.
-2. Approve the field mobile sequence: Home → Route → Jobs → Job.
-3. Approve the manager hierarchy: hub → category → tool → record/action.
-4. Review customer-safe pages and the separation from internal operations.
-5. Review revenue administration as a later manager extension.
+1. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+2. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+   [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
+   [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
+3. Approve the field mobile sequence: Home → Route → Jobs → Job.
+4. Approve the manager hierarchy: hub → category → tool → record/action.
+5. Review customer-safe pages and the separation from internal operations.
 6. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

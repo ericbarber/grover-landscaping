@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-08: Added a professional V1 visual foundation, original Southwestern hero imagery, and high-fidelity homepage, crew route, and manager schedule concepts.
 - 2026-08-07: Added a design-first review workspace with twenty deterministic SVG wireframes covering public, access, field, manager, customer, revenue, homeowner, and multi-vendor experiences.
 - 2026-07-22: Added a mobile manager operational exception queue with persisted filters, creation, assignment, and lifecycle recovery controls.
 - 2026-07-21: Added tenant-guarded operational exception assignment, start, resolution, and reopen transitions with optimistic conflicts and atomic lifecycle audits.

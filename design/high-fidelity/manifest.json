@@ -1,0 +1,30 @@
+[
+  {
+    "id": "visual-system-v1",
+    "area": "foundation",
+    "status": "review",
+    "source": "../foundations/visual-system-v1.svg",
+    "preview": "../foundations/visual-system-v1.png"
+  },
+  {
+    "id": "homepage-desktop-v1",
+    "area": "public",
+    "status": "review",
+    "source": "public/homepage-desktop-v1.svg",
+    "preview": "public/homepage-desktop-v1.png"
+  },
+  {
+    "id": "crew-route-mobile-v1",
+    "area": "field",
+    "status": "review",
+    "source": "field/crew-route-mobile-v1.svg",
+    "preview": "field/crew-route-mobile-v1.png"
+  },
+  {
+    "id": "schedule-desktop-v1",
+    "area": "manager",
+    "status": "review",
+    "source": "manager/schedule-desktop-v1.svg",
+    "preview": "manager/schedule-desktop-v1.png"
+  }
+]

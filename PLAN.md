@@ -29,12 +29,21 @@ Current state:
   specific design-tool account.
 - Artifact labels distinguish current targets, mixed current/planned screens,
   planned targets, and future concepts.
+- A professional V1 visual foundation defines color, typography, spacing,
+  iconography, imagery, component patterns, and experience principles.
+- High-fidelity public homepage, crew route, and manager schedule concepts test
+  one brand across marketing, mobile field work, and dense office operations.
+- Original Southwestern hero photography is stored with its generation brief and
+  project-local usage guidance.
 
 Next design work:
 
-- Review and approve the global information architecture and persona navigation.
-- Revise the field mobile, manager category, customer-safe, and recovery layouts
-  from design feedback.
+- Review and approve or revise the V1 visual foundation and three representative
+  high-fidelity concepts.
+- Confirm the crew-lane schedule direction, field current-stop hierarchy, status
+  colors, and balance of editorial warmth with operational density.
+- Apply the approved direction to Job Detail, Recovery, and customer report
+  states, then revise the remaining wireframes from design feedback.
 - Add required loading, empty, unavailable, offline, conflict, permission, and
   destructive-action states for approved workflows.
 - Create high-fidelity responsive screens and a component visual system only
@@ -74,6 +83,9 @@ the outcome, and return to its recovery workflow from persisted activity history
   hosted design platform
 - Information-architecture, responsive-composition, state-coverage, and design
   decision records establish a review gate before new UI implementation
+- V1 professional design system and representative high-fidelity concepts replace
+  generic card-grid styling with page-specific marketing, field, and dispatch
+  compositions
 
 ### Public product experience
 
