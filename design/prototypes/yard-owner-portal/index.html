@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A working design for the Grover Yard Owner portal.">
+  <meta name="theme-color" content="#173f35">
+  <title>My yard · Grover working design</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-active-view="home" data-review-state="default">
+  <a class="skip-link" href="#main-content">Skip to my yard</a>
+
+  <div class="prototype-note" role="note">
+    <span><strong>Working design</strong> · Illustrative customer data · Nothing is scheduled, sent, or saved</span>
+    <button type="button" data-open-review>Review states <span aria-hidden="true">⚙</span></button>
+  </div>
+
+  <div class="app-shell">
+    <aside class="desktop-rail" aria-label="Grover Yard Owner portal">
+      <a class="brand" href="#home" data-nav="home" aria-label="Grover, go to My yard home">
+        <svg aria-hidden="true" viewBox="0 0 32 32">
+          <path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22" />
+          <path d="M7 25c5-7 10-12 18-18" />
+        </svg>
+        <span>Grover</span>
+      </a>
+
+      <div class="rail-context">
+        <p class="micro-label">Your portal</p>
+        <strong>My yard</strong>
+        <span>Care from Desert Bloom Landscaping</span>
+      </div>
+
+      <nav class="primary-nav" aria-label="Yard Owner portal">
+        <button type="button" data-nav="home" aria-current="page">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7v9h-6v-6h-4v6H4z" /></svg>
+          <span>Home</span>
+        </button>
+        <button type="button" data-nav="visits">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /><path d="m8 14 2 2 5-5" /></svg>
+          <span>Visits</span>
+        </button>
+        <button type="button" data-nav="proof">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5z" /><path d="m8 14 2-2 2 2 3-4 2 3M8 8h5" /></svg>
+          <span>Proof</span>
+        </button>
+        <button type="button" data-nav="account">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M5 21c.5-4 3-6 7-6s6.5 2 7 6" /></svg>
+          <span>Account</span>
+        </button>
+      </nav>
+
+      <div class="rail-provider">
+        <span class="provider-mark" aria-hidden="true">DB</span>
+        <div>
+          <p>Need help?</p>
+          <strong>Desert Bloom</strong>
+          <a href="tel:+16025550148">(602) 555-0148</a>
+        </div>
+      </div>
+
+      <p class="rail-caption">Customer-safe view · Delivered information only</p>
+    </aside>
+
+    <div class="app-content">
+      <header class="mobile-header">
+        <a class="brand brand-mobile" href="#home" data-nav="home" aria-label="Grover, go to My yard home">
+          <svg aria-hidden="true" viewBox="0 0 32 32"><path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22" /><path d="M7 25c5-7 10-12 18-18" /></svg>
+          <span>Grover</span>
+        </a>
+        <button class="avatar-button" type="button" data-nav="account" aria-label="Open account">MR</button>
+      </header>
+
+      <header class="context-bar">
+        <div>
+          <p class="micro-label">My yard</p>
+          <h1 tabindex="-1" data-page-title>Home</h1>
+        </div>
+        <label class="property-control">
+          <span>Viewing property</span>
+          <select data-property-select aria-label="Viewing property">
+            <option value="home">Sonoran House</option>
+            <option value="garden">Backyard Garden</option>
+          </select>
+        </label>
+        <button class="account-chip" type="button" data-nav="account">
+          <span class="avatar" aria-hidden="true">MR</span>
+          <span><strong>Morgan Reyes</strong><small>Yard owner</small></span>
+          <span aria-hidden="true">⌄</span>
+        </button>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <div class="global-state global-loading" role="status" aria-live="polite">
+          <p class="eyebrow">Loading your yard</p>
+          <h2>Bringing your service details together…</h2>
+          <div class="skeleton-layout" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="global-state global-unavailable" role="alert">
+          <span class="state-icon" aria-hidden="true">↻</span>
+          <p class="eyebrow">Service details unavailable</p>
+          <h2>We couldn’t load your yard right now.</h2>
+          <p>Your information is still protected. Try again, or contact Desert Bloom if you need today’s service details.</p>
+          <div class="state-actions">
+            <button class="button button-primary" type="button" data-retry>Try again</button>
+            <a class="button button-secondary" href="tel:+16025550148">Call provider</a>
+          </div>
+        </div>
+
+        <div class="view-stack">
+          <section class="view-panel home-view" data-view-panel="home" aria-labelledby="home-heading">
+            <div class="welcome-row">
+              <div>
+                <p class="eyebrow">Monday, August 10</p>
+                <h2 id="home-heading">Good evening, Morgan.</h2>
+                <p>Your <span data-property-short>Sonoran House</span> service is on track.</p>
+              </div>
+              <div class="confidence-note">
+                <span aria-hidden="true">✓</span>
+                <div><strong>Everything is handled</strong><small>No preparation needed today</small></div>
+              </div>
+            </div>
+
+            <div class="home-lead-grid">
+              <article class="next-visit-card default-next-visit">
+                <div class="visit-date" aria-label="Tuesday, August 11">
+                  <span>AUG</span><strong data-visit-day>11</strong><small data-visit-weekday>TUE</small>
+                </div>
+                <div class="next-visit-copy">
+                  <div class="card-label-row">
+                    <p class="micro-label light-label">Next visit</p>
+                    <span class="status-pill light-pill"><i aria-hidden="true"></i> Confirmed</span>
+                  </div>
+                  <h3 data-next-service>Weekly yard care</h3>
+                  <p><span data-visit-window>8:00–10:00 AM</span> · <span data-property-address>123 Oak Street, Phoenix</span></p>
+                  <ul class="scope-list" aria-label="Planned care">
+                    <li><span aria-hidden="true">✓</span> Mow and edge lawn</li>
+                    <li><span aria-hidden="true">✓</span> Shape front shrubs</li>
+                    <li data-irrigation-scope><span aria-hidden="true">✓</span> Check irrigation zones</li>
+                  </ul>
+                  <div class="visit-prep"><span aria-hidden="true">☀</span><p><strong>You’re all set.</strong> Side gate access is on file.</p></div>
+                  <button class="text-button light-text-button" type="button" data-open-visit>View visit details <span aria-hidden="true">→</span></button>
+                </div>
+              </article>
+
+              <article class="empty-next-visit">
+                <span class="state-icon" aria-hidden="true">◇</span>
+                <p class="micro-label">Schedule</p>
+                <h3>Nothing is scheduled yet.</h3>
+                <p>Desert Bloom will add the next visit here as soon as it is confirmed.</p>
+                <a class="text-button" href="tel:+16025550148">Ask about service <span aria-hidden="true">→</span></a>
+              </article>
+
+              <article class="action-card pending-action">
+                <div class="card-label-row">
+                  <p class="micro-label clay-label">Your decision</p>
+                  <span class="due-label">By Aug 14</span>
+                </div>
+                <span class="action-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 3h10l2 5-7 4-7-4z" /></svg>
+                </span>
+                <h3>Tree limb removal</h3>
+                <p>We found one limb above the west fence that should be removed before monsoon winds.</p>
+                <div class="action-total"><span>Proposed total</span><strong>$285</strong></div>
+                <button class="button button-clay" type="button" data-open-bid>Review recommendation</button>
+              </article>
+
+              <article class="action-card answered-action">
+                <div class="card-label-row"><p class="micro-label">Your decision</p><span class="status-pill"><i aria-hidden="true"></i> Received</span></div>
+                <span class="action-icon approved-icon" aria-hidden="true">✓</span>
+                <h3>Tree limb removal approved</h3>
+                <p>Desert Bloom received your approval. They’ll contact you when the work is scheduled.</p>
+                <button class="text-button" type="button" data-open-bid>View response <span aria-hidden="true">→</span></button>
+              </article>
+
+              <article class="action-card no-action-card">
+                <div class="card-label-row"><p class="micro-label">Your decisions</p><span class="status-pill"><i aria-hidden="true"></i> Clear</span></div>
+                <span class="action-icon approved-icon" aria-hidden="true">✓</span>
+                <h3>No decisions waiting.</h3>
+                <p>Your provider has not shared any recommendations that need a response for this property.</p>
+                <button class="text-button" type="button" data-nav="proof">Review delivered proof <span aria-hidden="true">→</span></button>
+              </article>
+            </div>
+
+            <section class="proof-story default-proof" aria-labelledby="latest-proof-heading">
+              <div class="section-heading">
+                <div><p class="eyebrow">Last visit · August 4</p><h2 id="latest-proof-heading">Your latest care, at a glance.</h2></div>
+                <button class="text-button" type="button" data-open-report>Open full report <span aria-hidden="true">→</span></button>
+              </div>
+
+              <article class="proof-feature">
+                <div class="evidence-pair" aria-label="Illustrative before and after service evidence">
+                  <figure class="yard-scene yard-before">
+                    <div class="sun"></div><div class="wall"></div><div class="lawn"></div><div class="shrub shrub-one"></div><div class="shrub shrub-two"></div>
+                    <figcaption><span>Before</span><time>8:12 AM</time></figcaption>
+                  </figure>
+                  <figure class="yard-scene yard-after">
+                    <div class="sun"></div><div class="wall"></div><div class="lawn"></div><div class="shrub shrub-one"></div><div class="shrub shrub-two"></div>
+                    <figcaption><span>After</span><time>9:06 AM</time></figcaption>
+                  </figure>
+                  <span class="evidence-note">Illustrative proof preview</span>
+                </div>
+                <div class="proof-summary">
+                  <div class="completion-mark"><span aria-hidden="true">✓</span><div><strong data-report-title>Weekly care complete</strong><small>Delivered Tuesday, Aug 4</small></div></div>
+                  <ul>
+                    <li><span aria-hidden="true">✓</span><span><strong>Lawn and edges</strong><small>Freshly cut and cleared</small></span></li>
+                    <li><span aria-hidden="true">✓</span><span><strong>Shrubs and beds</strong><small>Shaped and debris removed</small></span></li>
+                    <li><span aria-hidden="true">✓</span><span><strong>Irrigation check</strong><small>All visible zones operating</small></span></li>
+                  </ul>
+                  <div class="recommendation-note"><span aria-hidden="true">✦</span><p><strong>Looking ahead</strong> West fence tree limb recommended before peak monsoon weather.</p></div>
+                </div>
+              </article>
+            </section>
+
+            <section class="no-proof-state" aria-labelledby="no-proof-heading">
+              <span class="state-icon" aria-hidden="true">▧</span>
+              <p class="eyebrow">Service proof</p>
+              <h2 id="no-proof-heading">Your first report will appear here.</h2>
+              <p>After completed care is reviewed and delivered, you’ll be able to see the work and any recommendations.</p>
+            </section>
+
+            <section class="care-rhythm" aria-labelledby="rhythm-heading">
+              <div class="section-heading compact-heading">
+                <div><p class="eyebrow">Service rhythm</p><h2 id="rhythm-heading">Clear before, during, and after.</h2></div>
+              </div>
+              <ol>
+                <li class="done"><span>✓</span><div><strong>Last care delivered</strong><small>Report and evidence available</small></div></li>
+                <li class="current"><span>2</span><div><strong>Next visit confirmed</strong><small data-rhythm-next>Tuesday · 8:00–10:00 AM</small></div></li>
+                <li><span>3</span><div><strong>Proof follows</strong><small>After provider review and delivery</small></div></li>
+              </ol>
+            </section>
+          </section>
+
+          <section class="view-panel visits-view" data-view-panel="visits" aria-labelledby="visits-heading" hidden>
+            <div class="view-heading">
+              <div><p class="eyebrow">Service timeline</p><h2 id="visits-heading">Visits to <span data-property-short>Sonoran House</span></h2><p>Know what’s next and revisit completed care in one place.</p></div>
+              <span class="service-cadence" data-service-cadence>Weekly care</span>
+            </div>
+
+            <section class="timeline-section" aria-labelledby="upcoming-heading">
+              <h3 id="upcoming-heading">Upcoming</h3>
+              <article class="timeline-card upcoming-visit default-next-visit">
+                <div class="timeline-date"><span>AUG</span><strong data-visit-day>11</strong><small data-visit-weekday>TUE</small></div>
+                <div><span class="status-pill"><i aria-hidden="true"></i> Confirmed</span><h4 data-next-service>Weekly yard care</h4><p><span data-visit-window>8:00–10:00 AM</span> · No preparation needed</p></div>
+                <button class="button button-secondary" type="button" data-open-visit>Visit details</button>
+              </article>
+              <article class="timeline-empty empty-next-visit"><span aria-hidden="true">◇</span><div><h4>No upcoming visit</h4><p>Your provider will add the next confirmed service here.</p></div></article>
+            </section>
+
+            <section class="timeline-section" aria-labelledby="past-heading">
+              <div class="timeline-heading"><h3 id="past-heading">Completed</h3><span>Delivered reports only</span></div>
+              <div class="visit-history default-proof">
+                <button class="history-row" type="button" data-open-report>
+                  <span class="history-date"><strong>04</strong><small>AUG</small></span>
+                  <span class="history-main"><span class="history-title" data-report-service>Weekly yard care</span><small>Lawn, shrubs, irrigation · Proof delivered</small></span>
+                  <span class="photo-count"><b aria-hidden="true">▧</b> 4 photos</span><span aria-hidden="true">→</span>
+                </button>
+                <button class="history-row" type="button" data-open-report>
+                  <span class="history-date"><strong>28</strong><small>JUL</small></span>
+                  <span class="history-main"><span class="history-title" data-report-service>Weekly yard care</span><small>Lawn, beds, cleanup · Proof delivered</small></span>
+                  <span class="photo-count"><b aria-hidden="true">▧</b> 3 photos</span><span aria-hidden="true">→</span>
+                </button>
+                <button class="history-row" type="button" data-open-report>
+                  <span class="history-date"><strong>21</strong><small>JUL</small></span>
+                  <span class="history-main"><span class="history-title" data-report-service>Weekly yard care</span><small>Routine service · Proof delivered</small></span>
+                  <span class="photo-count"><b aria-hidden="true">▧</b> 4 photos</span><span aria-hidden="true">→</span>
+                </button>
+              </div>
+              <div class="timeline-empty no-proof-state"><span aria-hidden="true">▧</span><div><h4>No completed visits yet</h4><p>Delivered service history will appear after the first completed visit.</p></div></div>
+            </section>
+          </section>
+
+          <section class="view-panel proof-view" data-view-panel="proof" aria-labelledby="proof-heading" hidden>
+            <div class="view-heading">
+              <div><p class="eyebrow">Delivered service proof</p><h2 id="proof-heading">Care you can see.</h2><p>Review completed work and provider recommendations for <span data-property-short>Sonoran House</span>.</p></div>
+              <span class="proof-count default-proof">3 delivered reports</span>
+            </div>
+
+            <div class="default-proof">
+              <article class="proof-hero">
+                <div class="proof-hero-art yard-scene yard-after"><div class="sun"></div><div class="wall"></div><div class="lawn"></div><div class="shrub shrub-one"></div><div class="shrub shrub-two"></div><span>Illustrative evidence</span></div>
+                <div class="proof-hero-copy">
+                  <span class="status-pill"><i aria-hidden="true"></i> Delivered</span>
+                  <p class="micro-label">August 4, 2026</p>
+                  <h3 data-report-title>Weekly yard care complete</h3>
+                  <p>Four photos, three completed care areas, and one recommendation are ready to review.</p>
+                  <div class="proof-stats"><span><strong>4</strong> photos</span><span><strong>3</strong> care areas</span><span><strong>1</strong> recommendation</span></div>
+                  <button class="button button-primary" type="button" data-open-report>View complete proof</button>
+                </div>
+              </article>
+
+              <section class="report-library" aria-labelledby="library-heading">
+                <div class="timeline-heading"><h3 id="library-heading">Earlier reports</h3><label>Show <select aria-label="Filter delivered reports"><option>All delivered</option><option>With recommendations</option></select></label></div>
+                <div class="report-list">
+                  <button type="button" data-open-report><span><strong>Jul 28</strong><small data-report-service>Weekly yard care</small></span><span>3 photos</span><span aria-hidden="true">→</span></button>
+                  <button type="button" data-open-report><span><strong>Jul 21</strong><small data-report-service>Weekly yard care</small></span><span>4 photos</span><span aria-hidden="true">→</span></button>
+                </div>
+              </section>
+            </div>
+
+            <section class="no-proof-state">
+              <span class="state-icon" aria-hidden="true">▧</span><p class="eyebrow">Delivered service proof</p><h3>No reports yet.</h3><p>Proof appears only after completed care is reviewed and delivered by your provider.</p>
+            </section>
+          </section>
+
+          <section class="view-panel account-view" data-view-panel="account" aria-labelledby="account-heading" hidden>
+            <div class="view-heading"><div><p class="eyebrow">Your account</p><h2 id="account-heading">Properties and provider.</h2><p>Review the customer-safe service context connected to your account.</p></div></div>
+
+            <div class="account-layout">
+              <section aria-labelledby="properties-heading">
+                <div class="timeline-heading"><h3 id="properties-heading">Your properties</h3><span>2 active</span></div>
+                <div class="property-list">
+                  <button type="button" data-property-button="home" aria-pressed="true">
+                    <span class="property-thumb home-thumb" aria-hidden="true">⌂</span>
+                    <span><strong>Sonoran House</strong><small>123 Oak Street, Phoenix · Weekly care</small></span>
+                    <span class="selected-label">Viewing</span>
+                  </button>
+                  <button type="button" data-property-button="garden" aria-pressed="false">
+                    <span class="property-thumb garden-thumb" aria-hidden="true">✦</span>
+                    <span><strong>Backyard Garden</strong><small>123 Oak Street, Phoenix · Seasonal care</small></span>
+                    <span class="selected-label">View</span>
+                  </button>
+                </div>
+              </section>
+
+              <aside class="provider-panel" aria-labelledby="provider-heading">
+                <span class="provider-mark large-mark" aria-hidden="true">DB</span>
+                <p class="micro-label">Your care provider</p>
+                <h3 id="provider-heading">Desert Bloom Landscaping</h3>
+                <p>Questions about a visit or recommendation? Contact your provider directly.</p>
+                <a class="contact-row" href="tel:+16025550148"><span aria-hidden="true">☎</span><span><small>Call</small><strong>(602) 555-0148</strong></span></a>
+                <a class="contact-row" href="mailto:care@example.com"><span aria-hidden="true">✉</span><span><small>Email</small><strong>care@example.com</strong></span></a>
+                <p class="provider-hours">Monday–Friday · 7:00 AM–5:00 PM</p>
+              </aside>
+            </div>
+
+            <aside class="boundary-note"><span aria-hidden="true">◉</span><div><strong>A simpler, private view</strong><p>Your portal contains delivered service information for your properties. Internal provider notes and operations stay private.</p></div></aside>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Yard Owner portal">
+    <button type="button" data-nav="home" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7v9h-6v-6h-4v6H4z" /></svg><span>Home</span></button>
+    <button type="button" data-nav="visits"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /><path d="m8 14 2 2 5-5" /></svg><span>Visits</span></button>
+    <button type="button" data-nav="proof"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 4h14v16H5z" /><path d="m8 14 2-2 2 2 3-4 2 3M8 8h5" /></svg><span>Proof</span></button>
+    <button type="button" data-nav="account"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M5 21c.5-4 3-6 7-6s6.5 2 7 6" /></svg><span>Account</span></button>
+  </nav>
+
+  <div class="live-region sr-only" aria-live="polite" aria-atomic="true" data-live-region></div>
+
+  <dialog class="detail-dialog visit-dialog" data-visit-dialog aria-labelledby="visit-dialog-title">
+    <div class="dialog-header">
+      <div><p class="micro-label">Next visit</p><h2 id="visit-dialog-title" data-next-service>Weekly yard care</h2></div>
+      <button type="button" class="icon-button" data-close-dialog aria-label="Close visit details">×</button>
+    </div>
+    <div class="dialog-content">
+      <div class="visit-detail-date"><span class="status-pill"><i aria-hidden="true"></i> Confirmed</span><strong>Tuesday, August <span data-visit-day>11</span></strong><p data-visit-window>8:00–10:00 AM</p></div>
+      <dl class="detail-list">
+        <div><dt>Property</dt><dd><strong data-property-short>Sonoran House</strong><span data-property-address>123 Oak Street, Phoenix</span></dd></div>
+        <div><dt>Planned care</dt><dd>Mow and edge, shape shrubs, clear debris, and check visible irrigation.</dd></div>
+        <div><dt>Before the visit</dt><dd>No preparation needed. Side gate access is on file.</dd></div>
+        <div><dt>After the visit</dt><dd>Delivered proof will appear after provider review.</dd></div>
+      </dl>
+      <aside class="dialog-note"><span aria-hidden="true">i</span><p>Schedule details can change because of weather or field conditions. Your provider will contact you if the visit moves.</p></aside>
+    </div>
+    <div class="dialog-footer"><button class="button button-primary" type="button" data-close-dialog>Done</button></div>
+  </dialog>
+
+  <dialog class="detail-dialog report-dialog" data-report-dialog aria-labelledby="report-dialog-title">
+    <div class="dialog-header">
+      <div><p class="micro-label">Delivered proof · August 4</p><h2 id="report-dialog-title" data-report-service>Weekly yard care</h2></div>
+      <button type="button" class="icon-button" data-close-dialog aria-label="Close service proof">×</button>
+    </div>
+    <div class="report-valid">
+      <div class="report-cover yard-scene yard-after"><div class="sun"></div><div class="wall"></div><div class="lawn"></div><div class="shrub shrub-one"></div><div class="shrub shrub-two"></div><span>Illustrative after evidence · 9:06 AM</span></div>
+      <div class="dialog-content">
+        <div class="report-outcome"><span aria-hidden="true">✓</span><div><strong>Care complete and delivered</strong><p>Desert Bloom reviewed this visit before sharing it with you.</p></div></div>
+        <h3>Completed care</h3>
+        <ul class="report-checklist"><li><span>✓</span><p><strong>Lawn and edges</strong> Mowed, edged, and surfaces cleared.</p></li><li><span>✓</span><p><strong>Shrubs and beds</strong> Front shrubs shaped; debris removed.</p></li><li><span>✓</span><p><strong>Irrigation</strong> Visible zones operating during service.</p></li></ul>
+        <aside class="recommendation-note"><span aria-hidden="true">✦</span><p><strong>Provider recommendation</strong> Remove the west fence tree limb before peak monsoon weather. A separate proposal is ready for review.</p></aside>
+        <button class="button button-secondary full-button" type="button" data-report-to-bid>Review recommendation · $285</button>
+      </div>
+    </div>
+    <div class="report-expired">
+      <div class="dialog-content expired-content"><span class="state-icon" aria-hidden="true">⌁</span><p class="eyebrow">Link no longer available</p><h3>This proof link has expired.</h3><p>Open the latest report from your signed-in portal, or contact Desert Bloom for help.</p><button class="button button-primary" type="button" data-close-dialog>Return to portal</button></div>
+    </div>
+  </dialog>
+
+  <dialog class="bid-dialog" data-bid-dialog aria-labelledby="bid-dialog-title">
+    <div class="dialog-header bid-dialog-header">
+      <div><p class="micro-label">Recommendation · Decision due Aug 14</p><h2 id="bid-dialog-title">Tree limb removal</h2></div>
+      <button type="button" class="icon-button" data-close-dialog aria-label="Close recommendation">×</button>
+    </div>
+
+    <div class="bid-stage bid-review" data-bid-stage="review">
+      <div class="bid-intro"><span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 3h10l2 5-7 4-7-4z" /></svg></span><div><p class="micro-label">Why it’s recommended</p><p>One limb extends above the west fence. Removing it now reduces the chance of damage during monsoon winds.</p></div></div>
+      <div class="bid-evidence"><div class="branch-scene" aria-hidden="true"><span></span><i></i></div><p><strong>Observed Aug 4</strong><span>Illustrative recommendation evidence</span></p></div>
+      <div class="line-items" aria-label="Proposal line items">
+        <div><span><strong>Remove elevated limb</strong><small>Cut, lower, and remove one marked limb</small></span><strong>$225</strong></div>
+        <div><span><strong>Haul and cleanup</strong><small>Remove debris and leave work area clear</small></span><strong>$60</strong></div>
+      </div>
+      <div class="bid-total"><span>Proposal total<small>No payment is collected in this prototype</small></span><strong>$285</strong></div>
+      <aside class="dialog-note"><span aria-hidden="true">i</span><p>Approval authorizes the described work. Desert Bloom will contact you before scheduling it.</p></aside>
+      <div class="bid-actions"><button class="button button-primary" type="button" data-bid-choice="approve">Approve $285</button><button class="button button-secondary" type="button" data-bid-choice="reject">Decline</button></div>
+    </div>
+
+    <div class="bid-stage bid-confirm" data-bid-stage="confirm" hidden>
+      <div class="confirm-card"><span class="state-icon" aria-hidden="true" data-confirm-icon>✓</span><p class="eyebrow">Confirm your response</p><h3 data-confirm-title>Approve tree limb removal?</h3><p data-confirm-copy>You’re approving $285 of described work. Desert Bloom will contact you before scheduling.</p><div class="confirm-summary"><span>Tree limb removal</span><strong>$285</strong></div></div>
+      <div class="form-error" role="alert" data-bid-error hidden><strong>Your response wasn’t saved.</strong><span>Nothing changed. Check your connection and try again.</span></div>
+      <div class="bid-actions"><button class="button button-primary" type="button" data-confirm-bid>Confirm approval</button><button class="button button-secondary" type="button" data-back-bid>Go back</button></div>
+    </div>
+
+    <div class="bid-stage bid-success" data-bid-stage="success" hidden>
+      <div class="success-mark" aria-hidden="true">✓</div><p class="eyebrow">Response received</p><h3 data-bid-success-title>Recommendation approved.</h3><p data-bid-success-copy>Desert Bloom will contact you before scheduling the work.</p><div class="success-summary"><span>Tree limb removal</span><strong data-bid-success-total>$285 approved</strong></div><p class="prototype-banner"><strong>Design prototype:</strong> This decision was not transmitted or saved.</p><button class="button button-primary full-button" type="button" data-finish-bid>Return to my yard</button>
+    </div>
+  </dialog>
+
+  <dialog class="review-dialog" data-review-dialog aria-labelledby="review-dialog-title">
+    <div class="dialog-header"><div><p class="micro-label">Design review tools</p><h2 id="review-dialog-title">Customer-safe states</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close review tools">×</button></div>
+    <div class="dialog-content">
+      <p class="review-intro">Switch the whole portal into representative states. These controls exist only for design review.</p>
+      <fieldset class="state-options">
+        <legend>Portal state</legend>
+        <label><input type="radio" name="review-state" value="default" checked><span><strong>Default</strong><small>Scheduled visit, delivered proof, pending decision</small></span></label>
+        <label><input type="radio" name="review-state" value="loading"><span><strong>Loading</strong><small>Portal hierarchy skeleton and status</small></span></label>
+        <label><input type="radio" name="review-state" value="empty-schedule"><span><strong>No scheduled service</strong><small>Valid empty with provider next step</small></span></label>
+        <label><input type="radio" name="review-state" value="no-proof"><span><strong>No delivered proof</strong><small>First-service or not-yet-delivered state</small></span></label>
+        <label><input type="radio" name="review-state" value="unavailable"><span><strong>Portal unavailable</strong><small>Protected retry and provider contact</small></span></label>
+        <label><input type="radio" name="review-state" value="expired-report"><span><strong>Expired proof link</strong><small>Safe return from unavailable shared proof</small></span></label>
+        <label><input type="radio" name="review-state" value="bid-answered"><span><strong>Decision received</strong><small>Completed bid response on Home</small></span></label>
+      </fieldset>
+      <label class="failure-toggle"><input type="checkbox" data-simulate-bid-error><span><strong>Fail the next bid decision</strong><small>Entries and context remain available for retry</small></span></label>
+    </div>
+    <div class="dialog-footer"><button class="button button-primary" type="button" data-apply-review>Apply state</button></div>
+  </dialog>
+</body>
+</html>
