@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-10: Completed the validated Yard Owner portal working design with responsive Home, Visits, Proof, and Account journeys; property-wide context; next-service confidence; delivered evidence; contextual bid recovery; customer-safe states; reference images; and production handoff.
 - 2026-08-10: Exposed the live design gallery at the local development server's `/design/` path for remote VPN review without bundling design documents into production.
 - 2026-08-08: Established the phased working-design delivery plan and seven-gate completion standard for the remaining current application.
 - 2026-08-08: Completed a validated responsive V2 working homepage design with audience continuity, interactive Plan-Care-Proof workflow, capability credibility, conversion recovery and success states, review images, and implementation handoff.

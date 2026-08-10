@@ -365,7 +365,7 @@ different product decision, missing authority, or unavailable required contract.
 | 2. Field execution | Planned | Reuse crew Route V1 direction in connected prototype |
 | 3. Manager daily operations | Planned | Reuse schedule V1 and Recovery wireframe |
 | 4. Completion proof | Planned | Map current report, evidence, delivery, and bid contracts |
-| 5. Customers and portfolios | In progress · Yard Owner first | Complete responsive portal, states, validation, and handoff before provider/property-manager continuation |
+| 5. Customers and portfolios | In progress · Yard Owner complete | Review production adoption, then continue provider onboarding and property-manager scope |
 | 6. Team and organization | Planned | Map invitation, membership, crew, and hierarchy decisions |
 | 7. Revenue operations | Product-gated | Confirm planned product contracts before high fidelity |
 | 8. Convergence | Planned | Begin after phases 0–7 reach their applicable gates |

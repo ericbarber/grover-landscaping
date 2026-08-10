@@ -26,6 +26,10 @@
     .working-grid article { border-color: #8ea795; box-shadow: 0 18px 42px rgb(23 53 47 / 13%); }
     .working-grid article img { aspect-ratio: 1440 / 800; object-fit: cover; object-position: top; }
     .working-grid article.mobile img { aspect-ratio: 390 / 600; object-fit: cover; object-position: top; }
+    .working-group { margin-top: 2rem; }
+    .working-group + .working-group { border-top: 1px solid #bcc8c3; padding-top: 2.5rem; }
+    .working-group > h3 { margin: 0; font-family: Georgia, serif; font-size: 1.45rem; }
+    .working-group > p { max-width: 78ch; margin: .4rem 0 0; color: #61736d; line-height: 1.5; }
     article { background: white; border: 1px solid #bcc8c3; border-radius: 1rem; overflow: hidden; box-shadow: 0 12px 28px rgb(23 53 47 / 8%); }
     article a { color: inherit; text-decoration: none; }
     article img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f7f4ec; border-bottom: 1px solid #d9e0dc; }
@@ -42,16 +46,22 @@
   <header>
     <p>GROVER · DESIGN REVIEW</p>
     <h1>Care you can see. Operations you can trust.</h1>
-    <p>The gallery now pairs the complete low-fidelity application map with a validated working homepage and the broader professional visual direction. Start with the interactive V2 page, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
+    <p>The gallery pairs the complete low-fidelity application map with validated working designs for the public homepage and Yard Owner portal. Start with an interactive journey, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
     <nav aria-label="Artifact groups">
       <a href="#working">Working design</a><a href="#high-fidelity">High fidelity</a><a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
     </nav>
   </header>
   <main>
-    <section id="working"><h2>Working public homepage · V2</h2><p class="intro">A complete responsive journey with audience continuity, interactive Plan–Care–Proof workflow, capability-backed credibility, and recoverable conversion states.</p><div class="grid working-grid">
-      <article><a href="prototypes/public-homepage/index.html"><img src="high-fidelity/public/homepage-desktop-v2.png" alt="Working Grover public homepage at a desktop viewport"><div><h3>Launch the working design</h3><span class="status">VALIDATED · INTERACTIVE</span><p>Change audiences, inspect the workflow, resize the page, open the request flow, and review validation, recovery, and success.</p></div></a></article>
-      <article class="mobile"><a href="prototypes/public-homepage/index.html"><img src="high-fidelity/public/homepage-mobile-v2.png" alt="Working Grover public homepage at a mobile viewport"><div><h3>Mobile first viewport</h3><span class="status">390 × 844</span><p>One message and primary action remain dominant; the illustrative product preview follows below.</p></div></a></article>
-    </div></section>
+    <section id="working"><h2>Validated working designs</h2><p class="intro">Responsive journeys whose navigation, interactions, states, accessibility, and implementation boundaries can be reviewed in the browser.</p>
+      <div class="working-group"><h3>Yard Owner portal · V1</h3><p>Customer confidence built around next service, delivered proof, and contextual decisions—with property-wide context and customer-safe recovery states.</p><div class="grid working-grid">
+        <article><a href="prototypes/yard-owner-portal/index.html"><img src="high-fidelity/customer/yard-owner-portal-desktop-v1.png" alt="Working Grover Yard Owner portal at a desktop viewport"><div><h3>Launch the Yard Owner portal</h3><span class="status">VALIDATED · INTERACTIVE</span><p>Switch properties and destinations, inspect visits and proof, complete a bid decision, and use Review states to exercise loading, empty, unavailable, expired, recovery, and success.</p></div></a></article>
+        <article class="mobile"><a href="prototypes/yard-owner-portal/index.html"><img src="high-fidelity/customer/yard-owner-portal-mobile-v1.png" alt="Working Grover Yard Owner portal at a mobile viewport"><div><h3>Customer mobile viewport</h3><span class="status">390 × 844</span><p>Next service stays dominant, the decision follows in context, and four destinations remain thumb-reachable.</p></div></a></article>
+      </div></div>
+      <div class="working-group"><h3>Public homepage · V2</h3><p>A complete responsive journey with audience continuity, interactive Plan–Care–Proof workflow, capability-backed credibility, and recoverable conversion states.</p><div class="grid working-grid">
+        <article><a href="prototypes/public-homepage/index.html"><img src="high-fidelity/public/homepage-desktop-v2.png" alt="Working Grover public homepage at a desktop viewport"><div><h3>Launch the public homepage</h3><span class="status">VALIDATED · INTERACTIVE</span><p>Change audiences, inspect the workflow, resize the page, open the request flow, and review validation, recovery, and success.</p></div></a></article>
+        <article class="mobile"><a href="prototypes/public-homepage/index.html"><img src="high-fidelity/public/homepage-mobile-v2.png" alt="Working Grover public homepage at a mobile viewport"><div><h3>Public mobile viewport</h3><span class="status">390 × 844</span><p>One message and primary action remain dominant; the illustrative product preview follows below.</p></div></a></article>
+      </div></div>
+    </section>
     <section id="high-fidelity"><h2>Professional V1 direction</h2><p class="intro">A balanced system: premium Southwestern editorial character for trust, with operational precision for daily work.</p><div class="grid featured">
       <article><a href="foundations/visual-system-v1.svg"><img src="foundations/visual-system-v1.png" alt="Grover V1 visual foundation showing color, typography, components, and experience principles"><div><h3>Visual foundation</h3><span class="status">V1 REVIEW</span><p>Evergreen, bone, sage, sand, clay, editorial display type, operational UI type, status language, actions, and record patterns.</p></div></a></article>
       <article><a href="high-fidelity/public/homepage-desktop-v1.svg"><img src="high-fidelity/public/homepage-desktop-v1.png" alt="High-fidelity Grover public homepage concept"><div><h3>Public homepage</h3><span class="status">HIGH FIDELITY · V1</span><p>Original landscape photography, direct product promise, credible operational proof, and a calmer Plan-Care-Proof rhythm.</p></div></a></article>
@@ -93,6 +103,6 @@
       <article><a href="wireframes/future/02-multi-vendor-portfolio.svg"><img src="wireframes/future/02-multi-vendor-portfolio.svg" alt="Multi-vendor portfolio wireframe"><div><h3>Multi-vendor operations</h3><span class="status">FUTURE CONCEPT</span><p>Coverage, compliance, work distribution, evidence, scorecards, and invoice matching.</p></div></a></article>
     </div></section>
   </main>
-  <footer>Grover design study · Validated V2 working homepage, V1 professional direction, and application-wide wireframes · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
+  <footer>Grover design study · Validated working homepage and Yard Owner portal, V1 professional direction, and application-wide wireframes · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
 </body>
 </html>

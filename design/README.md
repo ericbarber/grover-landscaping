@@ -34,15 +34,19 @@ design/
 ├── information-architecture.md        # Page model and navigation boundaries
 ├── README.md                          # Workflow and ownership
 ├── prototypes/
-│   └── public-homepage/                # Responsive working V2 design
+│   ├── public-homepage/                # Responsive working V2 design
+│   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
 │   ├── decision-log.md                # Accepted decisions and open questions
 │   ├── application-working-design-delivery-plan.md # Remaining application phases
+│   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
+│   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
-│   └── render-wireframes.mjs           # Deterministic SVG renderer
+│   ├── render-wireframes.mjs           # Deterministic SVG renderer
+│   └── validate-yard-owner-portal.mjs  # Responsive customer-flow checks
 └── wireframes/
     ├── public/                         # Homepage, campaigns, conversion, shares
     ├── auth/                           # Sign-in and first-owner onboarding
@@ -121,6 +125,12 @@ node design/tools/validate-working-homepage.mjs
 Pass `--capture` to refresh its desktop and mobile review images. The script uses
 the Playwright dependency already installed for frontend validation.
 
+Validate and capture the Yard Owner working design with:
+
+```bash
+node design/tools/validate-yard-owner-portal.mjs --capture
+```
+
 Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
@@ -128,15 +138,18 @@ renderer or a design-tool account to see a proposed screen.
 
 1. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
    and review audience, workflow, responsive, recovery, and success behavior.
-2. Review the
+2. Launch the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
+   and review next-service confidence, delivered proof, property context, bid
+   decisions, recovery states, and customer-safe boundaries.
+3. Review the
    [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    and its seven completion gates.
-3. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-4. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+4. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+5. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-5. Review the field mobile sequence: Home → Route → Jobs → Job.
-6. Review the manager hierarchy: hub → category → tool → record/action.
-7. Review customer-safe pages and the separation from internal operations.
-8. Confirm that homeowner self-service and multi-vendor management remain
+6. Review the field mobile sequence: Home → Route → Jobs → Job.
+7. Review the manager hierarchy: hub → category → tool → record/action.
+8. Review customer-safe pages and the separation from internal operations.
+9. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

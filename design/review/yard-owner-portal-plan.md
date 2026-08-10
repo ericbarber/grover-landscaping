@@ -19,9 +19,9 @@ already delivered.
 | Phase | Status | Evidence |
 | --- | --- | --- |
 | 1. Product and workflow audit | Complete | Current UI, wireframe, roles, data contracts, and customer-safe boundaries reviewed |
-| 2. Responsive confidence journey | In progress | `design/prototypes/yard-owner-portal/` |
-| 3. Decisions, recovery, and accessibility | Planned | Prototype review controls and browser validator |
-| 4. Review package and handoff | Planned | Gallery, viewport images, manifest, handoff, and project records |
+| 2. Responsive confidence journey | Complete | `design/prototypes/yard-owner-portal/` |
+| 3. Decisions, recovery, and accessibility | Complete | Prototype review controls and browser validator |
+| 4. Review package and handoff | Complete | Gallery, viewport images, manifest, handoff, and project records |
 
 ## Current product evidence
 

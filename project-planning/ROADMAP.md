@@ -26,6 +26,13 @@ foundations, access and Home, field execution, manager daily operations,
 completion proof, customers, team/organization, product-gated revenue, and final
 cross-application convergence. Each phase requires responsive working behavior,
 state coverage, accessibility, browser validation, and production handoff.
+The focused Yard Owner slice of the customer phase is now complete as a validated
+working design. It leads with next service, delivered proof, and action needed;
+uses Home, Visits, Proof, and Account navigation; covers customer-safe empty,
+unavailable, expired, and decision states; and identifies the production need for
+a dedicated next-visit read model plus removal of raw billing notes from shared
+customer reports. Provider onboarding and property-manager portfolio design
+remain in the broader customer phase.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

@@ -56,15 +56,22 @@ Current state:
   customer confidence hierarchy: next service, latest proof, and action needed.
 - The Yard Owner plan defines responsive Home, Visits, Proof, and Account
   navigation, contextual bid decisions, customer-safe state coverage, and strict
-  provider-information exclusions before prototype construction.
+  provider-information exclusions for prototype construction and handoff.
+- The validated Yard Owner working design now completes that focused review with
+  portal-wide property context, next-service confidence, visual delivered proof,
+  contextual bid confirmation and recovery, seven customer-safe review states,
+  desktop/mobile references, and production-contract handoff.
+- Repeatable Yard Owner validation covers desktop, tablet, 390px and 320px mobile,
+  200% text, navigation, target sizes, property switching, modal focus, bid
+  failure/retry, state recovery, overflow, and browser errors.
 
 Next design work:
 
 - Review the V2 working homepage for production React adoption while retaining
   the existing campaign, metadata, analytics, and persisted-lead contracts.
-- Complete the reprioritized Yard Owner working design through responsive
-  composition, customer-safe states, browser validation, review images, and
-  implementation handoff.
+- Review the Yard Owner working design for phased production React adoption,
+  including a customer-specific next-visit read model and removal of raw billing
+  notes from customer completion reports.
 - Resume Phase 0 of the broader application working-design plan after the focused
   Yard Owner review package reaches its seven gates.
 

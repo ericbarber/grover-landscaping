@@ -40,5 +40,19 @@
     "status": "review",
     "source": "manager/schedule-desktop-v1.svg",
     "preview": "manager/schedule-desktop-v1.png"
+  },
+  {
+    "id": "yard-owner-portal-desktop-v1",
+    "area": "customer",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-owner-portal/index.html",
+    "preview": "customer/yard-owner-portal-desktop-v1.png"
+  },
+  {
+    "id": "yard-owner-portal-mobile-v1",
+    "area": "customer",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-owner-portal/index.html",
+    "preview": "customer/yard-owner-portal-mobile-v1.png"
   }
 ]

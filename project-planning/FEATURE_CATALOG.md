@@ -27,6 +27,9 @@
 
 - Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
+- Validated Yard Owner working design with next-service confidence, delivered
+  proof, contextual bid decisions, portal-wide property selection, customer-safe
+  recovery states, responsive references, and production-contract handoff
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence
