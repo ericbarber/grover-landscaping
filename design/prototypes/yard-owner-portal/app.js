@@ -256,7 +256,8 @@ document.querySelector('[data-apply-review]').addEventListener('click', () => {
   closeDialog(reviewDialog);
   if (state === 'expired-report') {
     showView('proof', { moveFocus: false });
-    window.setTimeout(() => openDialog(reportDialog, document.querySelector('[data-open-report]')), 0);
+    const proofTrigger = document.querySelector('[data-view-panel="proof"] [data-open-report]');
+    window.setTimeout(() => openDialog(reportDialog, proofTrigger), 0);
   } else if (['empty-schedule', 'no-proof', 'bid-answered'].includes(state)) {
     showView('home');
   }
