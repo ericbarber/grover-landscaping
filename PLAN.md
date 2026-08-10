@@ -51,16 +51,22 @@ Current state:
 - Each application phase must pass the same seven gates: workflow truth,
   responsive composition, working interaction, state coverage, accessibility,
   browser validation, and implementation handoff.
+- Phase 5 has been intentionally advanced for a focused Yard Owner review. Its
+  product audit now replaces internal-style counts and disconnected lists with a
+  customer confidence hierarchy: next service, latest proof, and action needed.
+- The Yard Owner plan defines responsive Home, Visits, Proof, and Account
+  navigation, contextual bid decisions, customer-safe state coverage, and strict
+  provider-information exclusions before prototype construction.
 
 Next design work:
 
 - Review the V2 working homepage for production React adoption while retaining
   the existing campaign, metadata, analytics, and persisted-lead contracts.
-- Begin Phase 0 of the application working-design plan: audit the production
-  application shell and create the shared responsive navigation, context,
-  component, operational-data, and state laboratory.
-- Continue through access/Home and connected field execution after the shared
-  foundation passes its working-design gates.
+- Complete the reprioritized Yard Owner working design through responsive
+  composition, customer-safe states, browser validation, review images, and
+  implementation handoff.
+- Resume Phase 0 of the broader application working-design plan after the focused
+  Yard Owner review package reaches its seven gates.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.

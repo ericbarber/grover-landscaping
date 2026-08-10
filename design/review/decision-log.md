@@ -23,6 +23,10 @@ silently revisit settled product structure.
 | D-016 | Sequence | Establish the shared application shell first, then prioritize access, field execution, manager daily operations, and completion proof before broader administration and planned revenue. | Accepted | 2026-08-08 | Product/design |
 | D-017 | Product modes | Keep homeowner self-service and multi-vendor concepts outside the current-application working-design plan until those product modes are activated. | Accepted | 2026-08-08 | Product/design |
 | D-018 | Revenue | Keep revenue surfaces labeled planned and product-gate high-fidelity work on confirmed catalog, contract, billing, invoice, payment, and cost boundaries. | Accepted | 2026-08-08 | Product/design |
+| D-019 | Yard Owner | Lead the customer portal with next service, latest proof, and action needed instead of property/report/bid counts. | Accepted for working design | 2026-08-10 | Product/design |
+| D-020 | Yard Owner | Use Home, Visits, Proof, and Account as customer navigation; keep bids contextual to the related need rather than a competing primary destination. | Accepted for working design | 2026-08-10 | Product/design |
+| D-021 | Yard Owner | Exclude provider-only notes, internal IDs, unpublished evidence, crew-management state, recovery data, and staff quality decisions from every customer state. | Accepted | 2026-08-10 | Product/design |
+| D-022 | Yard Owner | Keep new support tickets, ratings, editable notification preferences, invoices, and payments visibly outside the delivered portal prototype until their product contracts exist. | Accepted | 2026-08-10 | Product/design |
 
 ## Open review questions
 
@@ -32,8 +36,6 @@ silently revisit settled product structure.
    switch between both views?
 3. Does Reports need to separate customer delivery operations from business
    analytics at the top navigation level?
-4. Should yard owners see bids beside service history or in a separate primary
-   destination?
-5. Should the production homepage adopt the V2 working design as one complete
+4. Should the production homepage adopt the V2 working design as one complete
    slice or migrate its foundation, hero, workflow, and conversion patterns in
    smaller review units?
