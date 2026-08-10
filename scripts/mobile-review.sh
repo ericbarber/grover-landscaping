@@ -37,6 +37,7 @@ disabled_api_ready() {
 if frontend_ready && disabled_api_ready; then
   echo "Grover Landscaping mobile review is already running."
   echo "Phone URL: ${frontend_url}/"
+  echo "Design URL: ${frontend_url}/design/"
   echo "API URL:   ${api_url}/health"
   echo "Authentication is disabled for this local review environment."
   exit 0
@@ -74,6 +75,7 @@ trap cleanup EXIT INT TERM
 
 echo "Starting Grover Landscaping mobile review..."
 echo "Phone URL: ${frontend_url}/"
+echo "Design URL: ${frontend_url}/design/"
 echo "API URL:   ${api_url}/health"
 echo "The phone must be connected to the same Tailscale network."
 echo "Authentication is disabled for this local review environment."

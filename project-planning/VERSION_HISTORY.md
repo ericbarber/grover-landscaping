@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-10: Exposed the live design gallery at the local development server's `/design/` path for remote VPN review without bundling design documents into production.
 - 2026-08-08: Established the phased working-design delivery plan and seven-gate completion standard for the remaining current application.
 - 2026-08-08: Completed a validated responsive V2 working homepage design with audience continuity, interactive Plan-Care-Proof workflow, capability credibility, conversion recovery and success states, review images, and implementation handoff.
 - 2026-08-08: Added a professional V1 visual foundation, original Southwestern hero imagery, and high-fidelity homepage, crew route, and manager schedule concepts.

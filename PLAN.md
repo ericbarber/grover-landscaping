@@ -104,6 +104,8 @@ the outcome, and return to its recovery workflow from persisted activity history
   and success behavior without a production dependency
 - Desktop and mobile review images, browser validation, implementation handoff,
   and explicit prototype boundaries make the public design adoption-ready
+- The local Vite server exposes the live design gallery at `/design/` for remote
+  VPN review without copying design documents into the production frontend build
 
 ### Public product experience
 

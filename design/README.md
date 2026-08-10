@@ -9,6 +9,19 @@ Open [`index.html`](index.html) in a browser to review the complete visual set.
 The individual SVG files can also be opened directly in a browser, Figma, or an
 SVG-capable editor.
 
+## VPN review URL
+
+When the local Vite development server is running, the complete gallery is
+available at:
+
+```text
+http://<vpn-ip>:5173/design/
+```
+
+The route reads directly from this directory, disables browser caching, and is
+available only from the development server. Design documents are deliberately
+not copied into the production frontend build.
+
 ## Directory structure
 
 ```text
