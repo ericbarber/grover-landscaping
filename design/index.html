@@ -10,6 +10,9 @@
     body { margin: 0; }
     header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #17352f; color: white; }
     header p { max-width: 76ch; color: #d6e3dd; line-height: 1.6; }
+    .portal-cta { min-height: 46px; width: fit-content; display: inline-flex; align-items: center; gap: .55rem; margin-top: .75rem; border-radius: .7rem; background: #e7d4ac; padding: .7rem 1rem; color: #17352f; font-weight: 900; text-decoration: none; box-shadow: 0 10px 24px rgb(0 0 0 / 16%); }
+    .portal-cta:hover { background: #f2dfb5; transform: translateY(-1px); }
+    .portal-cta:focus-visible { outline: 3px solid white; outline-offset: 3px; }
     nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
     nav a { color: #17352f; background: #e7d4ac; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
     main { padding: 2rem max(1.25rem, 5vw) 5rem; }
@@ -47,6 +50,7 @@
     <p>GROVER · DESIGN REVIEW</p>
     <h1>Care you can see. Operations you can trust.</h1>
     <p>The gallery pairs the complete low-fidelity application map with validated working designs for the public homepage and Yard Owner portal. Start with an interactive journey, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
+    <a class="portal-cta" href="prototypes/yard-owner-portal/index.html">Open Yard Owner portal <span aria-hidden="true">→</span></a>
     <nav aria-label="Artifact groups">
       <a href="#working">Working design</a><a href="#high-fidelity">High fidelity</a><a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
     </nav>
