@@ -42,6 +42,8 @@ design/
 │   ├── application-working-design-delivery-plan.md # Remaining application phases
 │   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
+│   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
+│   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
@@ -138,18 +140,21 @@ renderer or a design-tool account to see a proposed screen.
 
 1. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
    and review audience, workflow, responsive, recovery, and success behavior.
-2. Launch the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
-   and review next-service confidence, delivered proof, property context, bid
-   decisions, recovery states, and customer-safe boundaries.
-3. Review the
+2. Launch the [working Yard Owner V2 portal](prototypes/yard-owner-portal/index.html)
+   and review service-day confidence, contextual questions, proof feedback,
+   concern recovery, recommendation collaboration, customer-controlled
+   preferences, and customer-safe boundaries.
+3. Review the [V2 phased plan](review/yard-owner-portal-v2-enhancement-plan.md)
+   and [V2 production handoff](review/yard-owner-portal-v2-handoff.md).
+4. Review the
    [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    and its seven completion gates.
-4. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-5. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+5. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+6. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-6. Review the field mobile sequence: Home → Route → Jobs → Job.
-7. Review the manager hierarchy: hub → category → tool → record/action.
-8. Review customer-safe pages and the separation from internal operations.
-9. Confirm that homeowner self-service and multi-vendor management remain
+7. Review the field mobile sequence: Home → Route → Jobs → Job.
+8. Review the manager hierarchy: hub → category → tool → record/action.
+9. Review customer-safe pages and the separation from internal operations.
+10. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

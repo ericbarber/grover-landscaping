@@ -57,17 +57,18 @@ Current state:
 - The Yard Owner plan defines responsive Home, Visits, Proof, and Account
   navigation, contextual bid decisions, customer-safe state coverage, and strict
   provider-information exclusions for prototype construction and handoff.
-- The validated Yard Owner working design now completes that focused review with
-  portal-wide property context, next-service confidence, visual delivered proof,
-  contextual bid confirmation and recovery, seven customer-safe review states,
-  desktop/mobile references, and production-contract handoff.
+- The validated Yard Owner V2 working design now completes that focused review
+  with portal-wide property context, six service-day modes, contextual questions,
+  proof comparison and feedback, concern recovery, recommendation collaboration,
+  notification/access preferences, customer-safe states, V2 references, and a
+  production-contract handoff.
 - Repeatable Yard Owner validation covers desktop, tablet, 390px and 320px mobile,
-  200% text, navigation, target sizes, property switching, modal focus, bid
-  failure/retry, state recovery, overflow, and browser errors.
-- Yard Owner V2 is now planned in explicit phases for live service-day status,
-  contextual questions and concern recovery, richer proof and recommendation
-  collaboration, customer-controlled notification/access preferences, and
-  product-gated billing.
+  all four destinations at 200% text, service lifecycle branches, target sizes,
+  property switching, modal focus, question/bid/preference failure recovery,
+  concern states, decision independence, overflow, and browser errors.
+- The Yard Owner V2 phased plan records phases 0–4 and 6 complete. Phase 5 billing
+  remains product-gated pending financial ownership, lifecycle, processor,
+  support, privacy, and compliance decisions.
 
 Next design work:
 
@@ -76,11 +77,11 @@ Next design work:
 - Review the Yard Owner working design for phased production React adoption,
   including a customer-specific next-visit read model and removal of raw billing
   notes from customer completion reports.
-- Complete the Yard Owner V2 working design phases that have safe review contracts;
-  keep invoice and payment interaction gated until financial ownership,
-  lifecycle, processor, support, and compliance decisions are approved.
-- Resume Phase 0 of the broader application working-design plan after the focused
-  Yard Owner review package reaches its seven gates.
+- Review the Yard Owner V2 package remotely, then adopt it in the production
+  React portal through the documented privacy/read-model, service-day, proof,
+  conversation, recommendation, and preference slices.
+- Resume Phase 0 of the broader application working-design plan; within customer
+  Phase 5, review the property-manager portfolio next.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.

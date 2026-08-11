@@ -48,7 +48,8 @@ change is immediately understandable.
 - Review accepted, declined, revision-requested, expired, and scheduled
   recommendation history.
 - Edit notification, channel, quiet-hour, access, pet, and vehicle preferences
-  with unsaved, validation, simulated failure, retry, and saved states.
+  with unsaved, validation, simulated failure, retry, saved, and externally
+  changed states.
 - Close details with the close action or Escape and restore focus.
 
 ## Review states
@@ -73,6 +74,7 @@ Use **Review states** in the sand prototype banner to switch among:
 | Recommendation expired | Safe next step without an active decision action |
 | Recommendation scheduled | Approved work with the next known milestone |
 | Concern follow-up / resolved | Customer-visible recovery status and closure |
+| Preferences changed elsewhere | Stale-save protection with explicit latest-settings refresh |
 
 The same review panel can make the next bid decision, message, or preference save
 fail once. Each retry then succeeds so reviewers can inspect recovery without

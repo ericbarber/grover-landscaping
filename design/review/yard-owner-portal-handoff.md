@@ -1,5 +1,8 @@
 # Yard Owner Portal Working-Design Handoff
 
+> This document preserves the V1 production audit. The completed service-lifecycle
+> extension is documented in the [Yard Owner V2 handoff](yard-owner-portal-v2-handoff.md).
+
 ## Outcome
 
 The Yard Owner portal now has a validated responsive working design that replaces

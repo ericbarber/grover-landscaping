@@ -580,10 +580,24 @@ document.querySelector('[data-comparison-range]').addEventListener('input', (eve
 });
 
 const preferencesForm = document.querySelector('[data-preferences-form]');
+const preferencesChanged = document.querySelector('[data-preferences-changed]');
+const savePreferencesButton = document.querySelector('[data-save-preferences]');
 preferencesForm.addEventListener('input', () => {
   document.querySelector('[data-preferences-unsaved]').hidden = false;
   document.querySelector('[data-preferences-success]').hidden = true;
   document.querySelector('[data-preferences-error]').hidden = true;
+});
+
+document.querySelector('[data-refresh-preferences]').addEventListener('click', () => {
+  preferencesForm.elements['preferred-channel'].value = 'email';
+  preferencesForm.elements['quiet-start'].value = '9:00 PM';
+  preferencesChanged.hidden = true;
+  savePreferencesButton.disabled = false;
+  document.querySelector('[data-preferences-unsaved]').hidden = true;
+  const result = document.querySelector('[data-preferences-success]');
+  result.hidden = false;
+  result.textContent = 'Latest saved preferences loaded. Review them before making another change.';
+  announce('Latest saved preferences loaded.');
 });
 
 preferencesForm.addEventListener('submit', (event) => {
@@ -673,6 +687,8 @@ document.querySelector('[data-apply-review]').addEventListener('click', () => {
   const state = selected?.value || 'default';
   body.dataset.reviewState = state;
   renderServiceState();
+  preferencesChanged.hidden = state !== 'preferences-changed';
+  savePreferencesButton.disabled = state === 'preferences-changed';
   if (Object.hasOwn(bidReviewStates, state)) renderBidState(state);
   if (state === 'default') {
     document.querySelector('[data-concern-card]').hidden = true;
@@ -691,6 +707,10 @@ document.querySelector('[data-apply-review]').addEventListener('click', () => {
     body.dataset.hasConcern = 'true';
     renderConcernState(state === 'concern-follow-up' ? 'followUp' : 'resolved');
     showView('proof');
+  } else if (state === 'preferences-changed') {
+    document.querySelector('[data-preferences-unsaved]').hidden = false;
+    document.querySelector('[data-preferences-success]').hidden = true;
+    showView('account');
   }
   announce(`Review state changed to ${selected?.closest('label')?.querySelector('strong')?.textContent || state}.`);
 });

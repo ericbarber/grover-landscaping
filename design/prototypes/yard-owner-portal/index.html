@@ -353,6 +353,12 @@
 
             <aside class="boundary-note"><span aria-hidden="true">◉</span><div><strong>A simpler, private view</strong><p>Your portal contains delivered service information for your properties. Internal provider notes and operations stay private.</p></div></aside>
 
+            <aside class="preference-conflict" data-preferences-changed role="status" hidden>
+              <span aria-hidden="true">↻</span>
+              <div><strong>Your preferences changed after this page opened.</strong><p>Your current entries have not been overwritten. Review the latest saved settings before making another change.</p></div>
+              <button class="button button-secondary" type="button" data-refresh-preferences>Review latest settings</button>
+            </aside>
+
             <form class="customer-settings" data-preferences-form novalidate>
               <div class="settings-heading"><div><p class="eyebrow">Your service preferences</p><h2>Choose how care reaches you.</h2><p>These prototype controls demonstrate customer consent and access information. Nothing is saved or shared.</p></div><span class="unsaved-pill" data-preferences-unsaved hidden>Unsaved changes</span></div>
               <div class="settings-grid">
@@ -511,6 +517,7 @@
         <label><input type="radio" name="review-state" value="bid-revision-requested"><span><strong>Proposal change requested</strong><small>Prior proposal awaits provider revision</small></span></label>
         <label><input type="radio" name="review-state" value="bid-expired"><span><strong>Proposal expired</strong><small>Decision disabled with provider next step</small></span></label>
         <label><input type="radio" name="review-state" value="bid-scheduled"><span><strong>Approved work scheduled</strong><small>Decision history connects to the new visit</small></span></label>
+        <label><input type="radio" name="review-state" value="preferences-changed"><span><strong>Preferences changed elsewhere</strong><small>Stale-save protection and explicit refresh</small></span></label>
       </fieldset>
       <label class="failure-toggle"><input type="checkbox" data-simulate-bid-error><span><strong>Fail the next bid decision</strong><small>Entries and context remain available for retry</small></span></label>
       <label class="failure-toggle"><input type="checkbox" data-simulate-message-error><span><strong>Fail the next message</strong><small>Customer message remains available for retry</small></span></label>

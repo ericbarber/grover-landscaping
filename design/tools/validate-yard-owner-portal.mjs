@@ -226,6 +226,13 @@ try {
   check((await accessInstructions.inputValue()).includes('west side gate'), 'Preferences: failed save did not preserve access instructions');
   await desktop.page.locator('[data-save-preferences]').click();
   check(await desktop.page.locator('[data-preferences-success]').isVisible(), 'Preferences: retry did not reach saved state');
+  await applyReviewState(desktop.page, 'preferences-changed');
+  check(await desktop.page.locator('[data-preferences-changed]').isVisible(), 'Preferences: external-change warning is missing');
+  check(await desktop.page.locator('[data-save-preferences]').isDisabled(), 'Preferences: stale values can still be saved');
+  await desktop.page.locator('[data-refresh-preferences]').click();
+  check(await desktop.page.locator('[data-preferences-changed]').isHidden(), 'Preferences: external-change warning did not clear');
+  check((await desktop.page.locator('input[name="preferred-channel"]:checked').getAttribute('value')) === 'email', 'Preferences: latest saved values did not load');
+  check(await desktop.page.locator('[data-save-preferences]').isEnabled(), 'Preferences: save did not recover after refresh');
 
   check(desktop.browserErrors.length === 0, `Desktop browser errors: ${desktop.browserErrors.join('; ')}`);
   await applyReviewState(desktop.page, 'default');
@@ -253,9 +260,13 @@ try {
   check(await mobile.page.locator('.proof-hero [data-open-report]').evaluate((element) => element === document.activeElement), 'Mobile: report focus was not restored');
   await mobile.page.locator('.mobile-nav [data-nav="account"]').click();
   await checkMobileTargets(mobile.page);
+  await applyReviewState(mobile.page, 'preferences-changed');
+  await checkLayout(mobile.page, 390, 'Mobile preference conflict');
+  await checkMobileTargets(mobile.page);
+  await mobile.page.locator('[data-refresh-preferences]').click();
   check(mobile.browserErrors.length === 0, `Mobile browser errors: ${mobile.browserErrors.join('; ')}`);
 
-  await mobile.page.locator('.mobile-nav [data-nav="home"]').click();
+  await applyReviewState(mobile.page, 'default');
   await mobile.page.waitForTimeout(350);
   if (capture) {
     await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-mobile-v2.png'), fullPage: false });

@@ -16,12 +16,12 @@ provider operations dashboard or present unconfirmed billing behavior as shipped
 | Phase | Status | Review evidence |
 | --- | --- | --- |
 | 0. Contract and privacy foundation | Complete | V1 audit/handoff plus V2 product boundaries below |
-| 1. Live service-day confidence | Planned | Service status modes, preparation, delay, and reschedule behavior |
-| 2. Contextual communication and recovery | Planned | Visit question and concern workflows |
-| 3. Proof, recommendation collaboration, and feedback | Planned | Evidence comparison, question/change request, decision meaning, feedback |
-| 4. Customer preferences and access | Planned | Channel controls, quiet hours, access instructions, visibility contract |
-| 5. Billing and account | Product-gated | Contract requirements and planned composition only |
-| 6. Validation and handoff | Planned | Browser checks, references, gallery, records, and adoption mapping |
+| 1. Live service-day confidence | Complete | Six reviewable lifecycle modes, progress, preparation, delay, and reschedule behavior |
+| 2. Contextual communication and recovery | Complete | Visit questions plus concern received, follow-up, and resolved workflows |
+| 3. Proof, recommendation collaboration, and feedback | Complete | Evidence comparison, question/change request, decision history, and feedback |
+| 4. Customer preferences and access | Complete | Event controls, channel, quiet hours, customer-authored access, validation, and recovery |
+| 5. Billing and account | Product-gated · contract defined | Required ownership, lifecycle, processor, support, privacy, and compliance decisions documented below |
+| 6. Validation and handoff | Complete | Browser checks, V2 references, gallery, records, and production adoption mapping |
 
 ## Product principles
 
