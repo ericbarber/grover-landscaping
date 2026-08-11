@@ -12,14 +12,15 @@ http://<vpn-ip>:5173/design/prototypes/yard-owner-portal/
 
 ## Product journey
 
-- **Home** leads with next service, preparation expectation, an action-needed
-  recommendation, and the newest delivered proof.
+- **Home** leads with live service-day status, preparation expectations, an
+  action-needed recommendation, and comparable delivered proof.
 - **Visits** separates confirmed upcoming service from customer-visible completed
   history.
-- **Proof** makes outcome, evidence, completed care, and recommendations the
-  report story.
-- **Account** provides property selection and provider contact without exposing
-  provider-only operations.
+- **Proof** makes outcome, evidence, completed care, recommendations, feedback,
+  and concern recovery the report story.
+- **Account** provides property selection, provider contact, event-level
+  notification preferences, and customer-authored access guidance without
+  exposing provider-only operations.
 
 Selecting Sonoran House or Backyard Garden updates the property context across
 the entire portal. A property selected from Account returns to its Home so the
@@ -30,11 +31,24 @@ change is immediately understandable.
 - Navigate between Home, Visits, Proof, and Account on mobile or desktop.
 - Switch the active property from the global selector or Account.
 - Open next-visit detail and return to the invoking control.
+- Review confirmed, en-route, arrived, weather-delay, rescheduled, and
+  proof-pending service-day states.
+- Ask a visit-specific question with validation, preserved input, simulated send
+  failure, retry, and confirmation.
 - Open delivered proof, inspect completed work, and continue to its related
   recommendation.
+- Adjust the before/after comparison with a pointer or keyboard.
+- Record positive feedback or report a concern, then inspect received,
+  follow-up, and resolved recovery states.
 - Review bid context, line items, total, expiration, and decision consequence.
+- Ask about a recommendation or request a scope change without accidentally
+  accepting or declining it.
 - Approve or decline through explicit confirmation.
 - Fail the next bid response, preserve context, retry, and reach completion.
+- Review accepted, declined, revision-requested, expired, and scheduled
+  recommendation history.
+- Edit notification, channel, quiet-hour, access, pet, and vehicle preferences
+  with unsaved, validation, simulated failure, retry, and saved states.
 - Close details with the close action or Escape and restore focus.
 
 ## Review states
@@ -44,15 +58,25 @@ Use **Review states** in the sand prototype banner to switch among:
 | State | Intended contract |
 | --- | --- |
 | Default | Confirmed visit, delivered proof, pending recommendation |
+| En route | Arrival range, immediate preparation, and progress rail |
+| Care in progress | Arrival confirmation and no-action expectation |
+| Weather delay | Cause, update deadline, and provider ownership |
+| Rescheduled | Original timing and confirmed replacement date |
+| Visit complete | Completion time and proof-review expectation |
 | Loading | Customer-oriented status plus structural skeleton |
 | No scheduled service | Valid empty state with provider next step |
 | No delivered proof | First-service or not-yet-delivered explanation |
 | Portal unavailable | Protected data message, retry, and provider contact |
 | Expired proof link | Safe explanation and return to the signed-in portal |
-| Decision received | Completed approval with next expectation |
+| Decision received / declined | Completed response with next expectation |
+| Revision requested | Scope question retained independently from a decision |
+| Recommendation expired | Safe next step without an active decision action |
+| Recommendation scheduled | Approved work with the next known milestone |
+| Concern follow-up / resolved | Customer-visible recovery status and closure |
 
-The same review panel can make the next bid decision fail once. The retry then
-succeeds so reviewers can inspect recovery without changing source code.
+The same review panel can make the next bid decision, message, or preference save
+fail once. Each retry then succeeds so reviewers can inspect recovery without
+changing source code.
 
 ## Accessibility behavior
 
@@ -62,6 +86,8 @@ succeeds so reviewers can inspect recovery without changing source code.
 - `aria-current` on the active navigation destination and `aria-pressed` on the
   selected Account property.
 - Native modal focus containment, Escape close, and explicit focus restoration.
+- Native range and form controls with visible labels, descriptions, inline
+  validation, and preserved values after recoverable failures.
 - Live announcements for destination, property, state, error, and decision
   changes.
 - Mobile controls target at least 44 by 44 CSS pixels.
@@ -72,13 +98,16 @@ succeeds so reviewers can inspect recovery without changing source code.
 - Every property, date, image-like illustration, service record, recommendation,
   provider contact, and price is illustrative design-review data.
 - No authentication, API call, scheduling, notification, message, payment,
-  support ticket, or decision persistence occurs.
+  support ticket, preference, feedback, or decision persistence occurs.
 - The working design uses delivered product concepts, but its composition is not
   yet the production React portal.
 - Provider notes, internal IDs, unpublished evidence, crew operations, recovery
   records, and staff-only quality decisions are deliberately absent.
-- Ratings, editable communication preferences, support tickets, invoices, and
-  payments remain planned product work and are not simulated as delivered.
+- Billing, invoices, payment methods, refunds, and balances are deliberately
+  absent until financial ownership, authorization, privacy, and compliance
+  contracts are approved.
+- Message, access, notification, concern, feedback, and recommendation states
+  demonstrate the customer contract only; production services remain planned.
 
 ## Validation
 

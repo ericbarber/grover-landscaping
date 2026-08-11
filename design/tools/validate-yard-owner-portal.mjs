@@ -94,11 +94,67 @@ try {
   check((await desktop.page.locator('[data-property-short]').first().innerText()) === 'Backyard Garden', 'Property: customer-facing property name did not update');
 
   await desktop.page.locator('[data-property-select]').selectOption('home');
+  const serviceStates = {
+    'en-route': ['En route', 'Arriving 8:35–8:55 AM'],
+    arrived: ['Care in progress', 'Started 8:42 AM'],
+    'weather-delay': ['Weather delay', 'Next update by 10:30 AM'],
+    rescheduled: ['Rescheduled', 'Thursday, August 13'],
+    'proof-pending': ['Visit complete', 'Completed 9:06 AM'],
+  };
+  for (const [state, [status, detail]] of Object.entries(serviceStates)) {
+    await applyReviewState(desktop.page, state);
+    check((await desktop.page.locator('[data-service-status]').first().innerText()) === status, `Service day: ${state} status is missing`);
+    const serviceContent = await desktop.page.locator('.next-visit-card').innerText();
+    check(serviceContent.includes(detail), `Service day: ${state} explanation is missing`);
+  }
+  await applyReviewState(desktop.page, 'default');
   const visitTrigger = desktop.page.locator('[data-open-visit]').first();
   await visitTrigger.click();
   check(await desktop.page.locator('[data-visit-dialog]').getAttribute('open') !== null, 'Visit: details did not open');
   await desktop.page.keyboard.press('Escape');
   check(await visitTrigger.evaluate((element) => element === document.activeElement), 'Visit: focus was not restored after Escape');
+
+  await desktop.page.locator('[data-open-review]').click();
+  await desktop.page.locator('[data-simulate-message-error]').check();
+  await desktop.page.locator('[data-apply-review]').click();
+  const questionTrigger = desktop.page.locator('[data-view-panel="home"] [data-open-question]');
+  await questionTrigger.click();
+  await desktop.page.locator('[data-conversation-submit]').click();
+  check((await desktop.page.locator('[data-conversation-error]').innerText()).length > 0, 'Question: inline validation is missing');
+  const questionMessage = 'Will the team need the driveway clear before arrival?';
+  await desktop.page.locator('textarea[name="conversation-message"]').fill(questionMessage);
+  await desktop.page.locator('[data-conversation-submit]').click();
+  check(await desktop.page.locator('[data-conversation-submit-error]').isVisible(), 'Question: recoverable send error is missing');
+  check((await desktop.page.locator('textarea[name="conversation-message"]').inputValue()) === questionMessage, 'Question: failed send did not preserve the message');
+  await desktop.page.locator('[data-conversation-submit]').click();
+  check(await desktop.page.locator('[data-conversation-success]').isVisible(), 'Question: retry did not reach success');
+  await desktop.page.locator('[data-finish-conversation]').click();
+  check(await questionTrigger.evaluate((element) => element === document.activeElement), 'Question: focus did not return to the originating visit action');
+
+  const comparison = desktop.page.locator('[data-comparison-range]');
+  await comparison.evaluate((element) => { element.value = '50'; });
+  const comparisonStart = Number(await comparison.inputValue());
+  await comparison.press('ArrowRight');
+  await desktop.page.waitForTimeout(50);
+  const comparisonEnd = Number(await comparison.inputValue());
+  check(
+    comparisonEnd !== comparisonStart,
+    `Proof: keyboard comparison control did not update (${comparisonStart} to ${comparisonEnd})`,
+  );
+  await desktop.page.locator('.primary-nav [data-nav="proof"]').click();
+  const concernReportTrigger = desktop.page.locator('.proof-hero [data-open-report]');
+  await concernReportTrigger.click();
+  await desktop.page.locator('[data-open-conversation="concern"]').click();
+  await desktop.page.waitForFunction(() => document.querySelector('[data-conversation-dialog]')?.hasAttribute('open'));
+  await desktop.page.locator('textarea[name="conversation-message"]').fill('The west lawn edge appears to have been missed after service.');
+  await desktop.page.locator('[data-conversation-submit]').click();
+  await desktop.page.locator('[data-finish-conversation]').click();
+  check(await desktop.page.locator('[data-concern-card]').isVisible(), 'Concern: received recovery status is missing');
+  await applyReviewState(desktop.page, 'concern-follow-up');
+  check((await desktop.page.locator('[data-concern-status]').innerText()) === 'Follow-up planned', 'Concern: follow-up state is missing');
+  await applyReviewState(desktop.page, 'concern-resolved');
+  check((await desktop.page.locator('[data-concern-status]').innerText()) === 'Resolved', 'Concern: resolved state is missing');
+  await applyReviewState(desktop.page, 'default');
 
   const reportTrigger = desktop.page.locator('[data-open-report]').first();
   await reportTrigger.click();
@@ -122,6 +178,20 @@ try {
   await desktop.page.locator('[data-finish-bid]').click();
   check(await desktop.page.locator('.answered-action').isVisible(), 'Bid: completed decision did not update Home');
 
+  await applyReviewState(desktop.page, 'default');
+  await desktop.page.locator('[data-open-bid]').first().click();
+  await desktop.page.locator('[data-open-conversation="scope-change"]').click();
+  await desktop.page.waitForFunction(() => document.querySelector('[data-conversation-dialog]')?.hasAttribute('open'));
+  await desktop.page.locator('textarea[name="conversation-message"]').fill('Please remove the haul and cleanup line item before I decide.');
+  await desktop.page.locator('[data-conversation-submit]').click();
+  await desktop.page.locator('[data-finish-conversation]').click();
+  check(await desktop.page.locator('body').getAttribute('data-review-state') === 'bid-revision-requested', 'Bid: scope change silently lost its independent state');
+  check((await desktop.page.locator('[data-home-bid-status]').innerText()) === 'Change requested', 'Bid: revision status is missing from Home');
+  for (const state of ['bid-expired', 'bid-scheduled', 'bid-rejected']) {
+    await applyReviewState(desktop.page, state);
+    check(await desktop.page.locator('.answered-action').isVisible(), `Bid: ${state} Home history is missing`);
+  }
+
   await applyReviewState(desktop.page, 'empty-schedule');
   check(await desktop.page.locator('.empty-next-visit').first().isVisible(), 'State: empty schedule is missing');
   await applyReviewState(desktop.page, 'no-proof');
@@ -142,12 +212,27 @@ try {
   await desktop.page.waitForFunction(() => document.activeElement?.matches('[data-view-panel="proof"] [data-open-report]'));
   check(await proofReturnTarget.evaluate((element) => element === document.activeElement), 'State: expired report focus did not return to Proof');
 
+  await applyReviewState(desktop.page, 'default');
+  await desktop.page.locator('.primary-nav [data-nav="account"]').click();
+  const accessInstructions = desktop.page.locator('textarea[name="access-instructions"]');
+  await accessInstructions.fill('Please close the west side gate securely after service.');
+  check(await desktop.page.locator('[data-preferences-unsaved]').isVisible(), 'Preferences: unsaved state is missing');
+  await desktop.page.locator('[data-open-review]').click();
+  await desktop.page.locator('[data-simulate-preferences-error]').check();
+  await desktop.page.locator('[data-apply-review]').click();
+  await desktop.page.locator('.primary-nav [data-nav="account"]').click();
+  await desktop.page.locator('[data-save-preferences]').click();
+  check(await desktop.page.locator('[data-preferences-error]').isVisible(), 'Preferences: recoverable save error is missing');
+  check((await accessInstructions.inputValue()).includes('west side gate'), 'Preferences: failed save did not preserve access instructions');
+  await desktop.page.locator('[data-save-preferences]').click();
+  check(await desktop.page.locator('[data-preferences-success]').isVisible(), 'Preferences: retry did not reach saved state');
+
   check(desktop.browserErrors.length === 0, `Desktop browser errors: ${desktop.browserErrors.join('; ')}`);
   await applyReviewState(desktop.page, 'default');
   await desktop.page.waitForTimeout(350);
   if (capture) {
     await mkdir(imageDirectory, { recursive: true });
-    await desktop.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-desktop-v1.png'), fullPage: false });
+    await desktop.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-desktop-v2.png'), fullPage: false });
   }
   await desktop.page.close();
 
@@ -166,16 +251,21 @@ try {
   check(await mobile.page.locator('[data-report-dialog]').getAttribute('open') !== null, 'Mobile: full-height proof did not open');
   await mobile.page.keyboard.press('Escape');
   check(await mobile.page.locator('.proof-hero [data-open-report]').evaluate((element) => element === document.activeElement), 'Mobile: report focus was not restored');
+  await mobile.page.locator('.mobile-nav [data-nav="account"]').click();
+  await checkMobileTargets(mobile.page);
   check(mobile.browserErrors.length === 0, `Mobile browser errors: ${mobile.browserErrors.join('; ')}`);
 
   await mobile.page.locator('.mobile-nav [data-nav="home"]').click();
   await mobile.page.waitForTimeout(350);
   if (capture) {
-    await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-mobile-v1.png'), fullPage: false });
+    await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-mobile-v2.png'), fullPage: false });
   }
   await mobile.page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   await mobile.page.waitForTimeout(100);
-  await checkLayout(mobile.page, 390, 'Mobile at 200% text');
+  for (const view of ['home', 'visits', 'proof', 'account']) {
+    await mobile.page.locator(`.mobile-nav [data-nav="${view}"]`).click();
+    await checkLayout(mobile.page, 390, `Mobile ${view} at 200% text`);
+  }
   await mobile.page.close();
 
   const compact = await openPage(browser, { width: 320, height: 720 });

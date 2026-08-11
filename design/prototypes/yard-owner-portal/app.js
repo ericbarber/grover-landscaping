@@ -165,7 +165,9 @@ function renderServiceState() {
     element.replaceChildren(dot, ` ${state.status}`);
   });
   document.querySelectorAll('[data-service-update]').forEach((element) => {
-    const update = rescheduled ? `Weather moved this visit from ${property.dateLong}.` : state.update;
+    const update = rescheduled
+      ? `Weather moved this visit from ${property.dateLong}. Your new visit is ${property.rescheduledDateLong}.`
+      : state.update;
     element.textContent = update;
     element.hidden = !update;
   });
