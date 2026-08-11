@@ -27,6 +27,11 @@ silently revisit settled product structure.
 | D-020 | Yard Owner | Use Home, Visits, Proof, and Account as customer navigation; keep bids contextual to the related need rather than a competing primary destination. | Accepted for working design | 2026-08-10 | Product/design |
 | D-021 | Yard Owner | Exclude provider-only notes, internal IDs, unpublished evidence, crew-management state, recovery data, and staff quality decisions from every customer state. | Accepted | 2026-08-10 | Product/design |
 | D-022 | Yard Owner | Keep new support tickets, ratings, editable notification preferences, invoices, and payments visibly outside the delivered portal prototype until their product contracts exist. | Accepted | 2026-08-10 | Product/design |
+| D-023 | Yard Owner V2 | Extend the portal around one customer-visible visit lifecycle from confirmed service through delivered proof and concern resolution. | Accepted for V2 working design | 2026-08-11 | Product/design |
+| D-024 | Yard Owner V2 | Start questions and concerns from a visit, report, or recommendation and expose customer status without internal support tooling. | Accepted for V2 working design | 2026-08-11 | Product/design |
+| D-025 | Yard Owner V2 | Store customer-authored access instructions separately from provider notes and explain exactly when they are shared. | Accepted for V2 working design | 2026-08-11 | Product/design |
+| D-026 | Yard Owner V2 | Treat recommendation questions and scope-change requests as collaboration states that do not silently decide the proposal. | Accepted for V2 working design | 2026-08-11 | Product/design |
+| D-027 | Yard Owner V2 | Product-gate invoices, payment methods, and payment collection until ownership, processor, lifecycle, support, and compliance contracts are approved. | Accepted | 2026-08-11 | Product/design |
 
 ## Open review questions
 

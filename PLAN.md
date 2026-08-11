@@ -64,6 +64,10 @@ Current state:
 - Repeatable Yard Owner validation covers desktop, tablet, 390px and 320px mobile,
   200% text, navigation, target sizes, property switching, modal focus, bid
   failure/retry, state recovery, overflow, and browser errors.
+- Yard Owner V2 is now planned in explicit phases for live service-day status,
+  contextual questions and concern recovery, richer proof and recommendation
+  collaboration, customer-controlled notification/access preferences, and
+  product-gated billing.
 
 Next design work:
 
@@ -72,6 +76,9 @@ Next design work:
 - Review the Yard Owner working design for phased production React adoption,
   including a customer-specific next-visit read model and removal of raw billing
   notes from customer completion reports.
+- Complete the Yard Owner V2 working design phases that have safe review contracts;
+  keep invoice and payment interaction gated until financial ownership,
+  lifecycle, processor, support, and compliance decisions are approved.
 - Resume Phase 0 of the broader application working-design plan after the focused
   Yard Owner review package reaches its seven gates.
 
