@@ -11,6 +11,24 @@ activate the property in the existing service lifecycle and assign its own crew.
 This plan extends the validated Yard Owner V2 portal backward from “service is
 already connected” to “I need to get my yard into Grover and establish care.”
 
+## Working-design execution status
+
+The phases below are now the delivery tracker for the interactive acquisition
+working design. A completed design phase means its responsive workflow, customer
+and provider states, recovery, accessibility, browser validation, and handoff are
+reviewable; it does not mean the production API persists that behavior.
+
+| Phase | Working-design status | Review outcome |
+| --- | --- | --- |
+| 0. Workflow contract and trust | Complete | Ownership, consent, terminology, state model, trust gates, and prototype boundary approved below |
+| 1. Independent owner and property | Planned | Private entry, address, validation, save/resume, and pre-service Home |
+| 2. Yard brief and photos | Planned | Guided areas/goals, optional photographs, processing, removal, and share review |
+| 3. Known-provider connection | Planned | Invitation, identity claim, disclosure, response, expiry, revoke, and recovery |
+| 4. Assessment, proposal, activation | Planned | Scheduling, contextual questions, versioning, comparison, decision, and setup |
+| 5. Curated provider discovery | Planned | Match reasons, shortlist, bounded disclosure, requests, and comparison |
+| 6. Relationship continuity | Planned | Sharing, provider change/end, history, export, and deletion controls |
+| 7. Governance, validation, handoff | Planned | Reviewer states, responsive/browser evidence, gallery, contract map, and records |
+
 ## Product recommendation
 
 ### Owners choose provider companies, not internal crews

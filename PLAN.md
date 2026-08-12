@@ -80,6 +80,10 @@ Current state:
 - The plan explicitly keeps exact addresses and photographs owner-controlled,
   treats owner input as a draft brief rather than an operational contract, and
   lets owners select providers while providers retain internal crew assignment.
+- Yard Owner acquisition working-design execution has started with the workflow,
+  state, consent, terminology, trust, and prototype boundaries recorded as Phase
+  0 complete; phases 1–7 will build and validate the connected owner/provider
+  experience before production adoption.
 
 Next design work:
 
