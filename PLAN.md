@@ -128,11 +128,13 @@ private pre-provider yard inside a landscaping company tenant.
 
 Active slice:
 
-- Phase 1A: add self-scoped owner workspace and private-property persistence,
-  lifecycle events, duplicate protection, fail-closed repository outcomes, and
-  owner-isolation integration coverage.
-- Follow with the verified-identity self-service API and production React private
-  entry before adding owner intake media or provider invitations.
+- Phase 1A is delivered: authenticated-subject workspaces, private properties,
+  per-owner duplicate protection, minimized lifecycle audit events, fail-closed
+  repository outcomes, and PostgreSQL owner-isolation coverage.
+- Phase 1B is active: expose the workspace and properties only through
+  verified-identity, self-scoped API operations, then add the production React
+  private entry in Phase 1C.
+- Do not add owner intake media or provider invitations until Phase 1 exits.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.

@@ -125,8 +125,8 @@ schedule, remaining work, or a completed day.
 
 **Current — Yard Owner acquisition production foundation**
 
-   - Persist an authenticated owner workspace and private pre-provider property outside organization tenants.
-   - Expose only self-scoped verified-identity APIs before adding the production React entry.
+   - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
+   - Complete the self-scoped verified-identity APIs before adding the production React entry.
    - Add yard briefs and owner-intake media before known-provider invitations; defer curated discovery until the direct connection loop is safe.
 
 0. **Local mobile runtime readiness**

@@ -14,6 +14,15 @@ The approved experience is defined by:
 - [`../design/review/yard-owner-acquisition-professional-review.md`](../design/review/yard-owner-acquisition-professional-review.md)
 - [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
 
+## Delivery status
+
+| Slice | Status | Outcome |
+| --- | --- | --- |
+| 1A | Delivered | Private owner workspace/property schema, self-scoped repository, duplicate boundary, lifecycle audit, and PostgreSQL isolation coverage |
+| 1B | In progress | Verified-identity self-service API |
+| 1C | Planned | Production React private entry |
+| 2–7 | Planned | Intake through governed pilot convergence |
+
 ## Delivery principles
 
 - A private owner property is self-scoped by authenticated subject, not by an
@@ -166,11 +175,10 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 1A — owner workspace/private property persistence.
-2. Phase 1B — authenticated self-service API.
-3. Phase 1C — production React private entry.
-4. Phase 2 — brief and owner-scoped intake media.
-5. Phase 3 — known-provider connection pilot.
+1. Phase 1B — authenticated self-service API.
+2. Phase 1C — production React private entry.
+3. Phase 2 — brief and owner-scoped intake media.
+4. Phase 3 — known-provider connection pilot.
 
 Phases 4–7 follow only after the preceding data and authorization boundaries are
 validated. No external address, messaging, identity-fact, or marketplace vendor

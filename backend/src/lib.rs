@@ -10,6 +10,7 @@ pub mod marketing_leads;
 pub mod notifications;
 pub mod operational_exceptions;
 pub mod organizations;
+pub mod owner_acquisition;
 pub mod photo_processing;
 pub mod photo_storage;
 pub mod project_bids;

@@ -40,6 +40,9 @@
   affirmative sensitive-data consent, accessible error/progress semantics,
   functional provider filters, assessment continuity, neutral proposal
   comparison, and confirmed access-reducing actions
+- Delivered private Yard Owner workspace and property persistence keyed to the
+  authenticated subject, outside provider tenants, with per-owner duplicate
+  protection and lifecycle audit coverage
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence
