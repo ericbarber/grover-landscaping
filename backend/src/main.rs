@@ -83,6 +83,11 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipProfileRequest, UpdateOrganizationMembershipRoleRequest,
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
+    owner_acquisition::{
+        validate_property_request, validate_workspace_request, CreateOwnerPropertyRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
+        SaveOwnerWorkspaceRequest,
+    },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
         PropertyCrewAssignmentListResult, PropertyCrewAssignmentMutationResult,
@@ -153,6 +158,7 @@ struct AppState {
     property_onboarding: PropertyOnboardingRepository,
     marketing_leads: MarketingLeadRepository,
     marketing_events: MarketingEventRepository,
+    owner_acquisition: OwnerAcquisitionRepository,
 }
 
 macro_rules! organization_ids_or_return {
@@ -458,6 +464,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         marketing_leads,
         marketing_events,
         accounts,
+        owner_acquisition,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -476,7 +483,8 @@ async fn app_from_env() -> Result<Router, DynError> {
                 PropertyCrewAssignmentRepository::from_pool(pool.clone());
             let property_onboarding = PropertyOnboardingRepository::from_pool(pool.clone());
             let marketing_leads = MarketingLeadRepository::from_pool(pool.clone());
-            let marketing_events = MarketingEventRepository::from_pool(pool);
+            let marketing_events = MarketingEventRepository::from_pool(pool.clone());
+            let owner_acquisition = OwnerAcquisitionRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
                     .expect("connected jobs repository should expose a pool"),
@@ -494,6 +502,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 marketing_leads,
                 marketing_events,
                 accounts,
+                owner_acquisition,
                 "postgres",
             )
         }
@@ -515,6 +524,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             MarketingLeadRepository::default(),
             MarketingEventRepository::default(),
             AccountRepository::new(),
+            OwnerAcquisitionRepository::new(),
             "seed-local",
         ),
     };
@@ -557,6 +567,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             property_onboarding,
             marketing_leads,
             marketing_events,
+            owner_acquisition,
         }),
         persistence,
         persistence == "postgres",
@@ -617,6 +628,15 @@ fn app_with_runtime(
         .route("/marketing-events", post(create_marketing_event))
         .route("/marketing-dashboard", get(get_marketing_dashboard))
         .route("/me/access", get(get_my_access))
+        .route(
+            "/owner-workspace",
+            get(get_owner_workspace).put(save_owner_workspace),
+        )
+        .route(
+            "/owner-properties",
+            get(list_owner_properties).post(create_owner_property),
+        )
+        .route("/owner-properties/{property_id}", get(get_owner_property))
         .route(
             "/customer-accounts",
             get(list_customer_accounts).post(create_customer_account),
@@ -1114,6 +1134,182 @@ async fn get_my_access(
             "Persisted organization access could not be loaded.",
         ),
         OrganizationResourceResult::NotFound => unreachable!("access summaries are never missing"),
+    }
+}
+
+async fn get_owner_workspace(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_workspace(&principal.subject)
+        .await
+    {
+        OwnerReadResult::Loaded(workspace) => Json(workspace).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_workspace_not_found",
+            "Your Yard Owner workspace has not been created yet.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_workspace_unavailable",
+            "Your Yard Owner workspace could not be loaded.",
+        ),
+    }
+}
+
+async fn save_owner_workspace(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<SaveOwnerWorkspaceRequest>,
+) -> Response {
+    if !validate_workspace_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_workspace",
+                message: "Enter a name between 2 and 100 characters.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify your email address before creating a Yard Owner workspace."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+
+    match state
+        .owner_acquisition
+        .save_workspace(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerMutationResult::Saved(workspace) => Json(workspace).into_response(),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_workspace_save_unavailable",
+            "Your Yard Owner workspace could not be saved.",
+        ),
+        OwnerMutationResult::NotFound => unreachable!("workspace saves are upserts"),
+        OwnerMutationResult::Duplicate => unreachable!("workspace saves are idempotent"),
+    }
+}
+
+async fn list_owner_properties(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_properties(&principal.subject)
+        .await
+    {
+        OwnerReadResult::Loaded(properties) => Json(properties).into_response(),
+        OwnerReadResult::NotFound => unreachable!("property lists are never missing"),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_properties_unavailable",
+            "Your properties could not be loaded.",
+        ),
+    }
+}
+
+async fn get_owner_property(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_property(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(property) => Json(property).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_property_unavailable",
+            "The requested property could not be loaded.",
+        ),
+    }
+}
+
+async fn create_owner_property(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateOwnerPropertyRequest>,
+) -> Response {
+    if !validate_property_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_property",
+                message: "Enter a complete service address and confirm you are authorized to request care for this property."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .get_workspace(&principal.subject)
+        .await
+    {
+        OwnerReadResult::Loaded(_) => {}
+        OwnerReadResult::NotFound => {
+            return (
+                StatusCode::CONFLICT,
+                Json(ErrorResponse {
+                    error: "owner_workspace_required",
+                    message: "Create your Yard Owner workspace before adding a property."
+                        .to_string(),
+                }),
+            )
+                .into_response();
+        }
+        OwnerReadResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "owner_workspace_unavailable",
+                "Your Yard Owner workspace could not be loaded.",
+            );
+        }
+    }
+
+    match state
+        .owner_acquisition
+        .create_property(&principal.subject, request)
+        .await
+    {
+        OwnerMutationResult::Saved(property) => {
+            (StatusCode::CREATED, Json(property)).into_response()
+        }
+        OwnerMutationResult::Duplicate => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "duplicate_owner_property",
+                message: "This service address is already in your Yard Owner workspace."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerMutationResult::NotFound => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_workspace_required",
+                message: "Create your Yard Owner workspace before adding a property.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_property_save_unavailable",
+            "Your property could not be saved.",
+        ),
     }
 }
 
@@ -6612,6 +6808,7 @@ mod tests {
             property_onboarding: PropertyOnboardingRepository::default(),
             marketing_leads: MarketingLeadRepository::default(),
             marketing_events: MarketingEventRepository::default(),
+            owner_acquisition: OwnerAcquisitionRepository::new(),
         })
     }
 
@@ -6629,6 +6826,165 @@ mod tests {
             frontend_dist,
             false,
         )
+    }
+
+    #[tokio::test]
+    async fn owner_self_service_endpoints_create_and_read_a_private_property() {
+        let app = seed_app();
+        let property_payload = serde_json::json!({
+            "display_name": "Home",
+            "address_line_1": "123 Oak Street",
+            "address_line_2": null,
+            "city": "Phoenix",
+            "region": "AZ",
+            "postal_code": "85004",
+            "country_code": "US",
+            "coarse_area": "Central Phoenix",
+            "address_status": "owner_confirmed",
+            "authority_attested": true
+        });
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties")
+                    .header("content-type", "application/json")
+                    .body(Body::from(property_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri("/owner-workspace")
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"display_name":"Morgan Reyes"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let workspace: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(workspace["owner_user_id"], "local-development-user");
+        assert_eq!(workspace["verified_email"], "invited@example.com");
+        assert_eq!(workspace["persisted"], false);
+
+        let invalid_payload = serde_json::json!({
+            "display_name": "Home",
+            "address_line_1": "123 Oak Street",
+            "address_line_2": null,
+            "city": "Phoenix",
+            "region": "AZ",
+            "postal_code": "85004",
+            "country_code": "US",
+            "coarse_area": null,
+            "address_status": "owner_confirmed",
+            "authority_attested": false
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties/not-owned")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties")
+                    .header("content-type", "application/json")
+                    .body(Body::from(property_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let property: Value = serde_json::from_slice(&body).unwrap();
+        let property_id = property["property_id"].as_str().unwrap();
+        assert_eq!(property["owner_user_id"], "local-development-user");
+        assert_eq!(property["status"], "draft");
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/owner-properties/{property_id}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let properties: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(properties.as_array().unwrap().len(), 1);
+
+        let duplicate_payload = serde_json::json!({
+            "display_name": "Primary home",
+            "address_line_1": " 123   OAK street ",
+            "address_line_2": null,
+            "city": "phoenix",
+            "region": "az",
+            "postal_code": "85004",
+            "country_code": "us",
+            "coarse_area": null,
+            "address_status": "owner_confirmed",
+            "authority_attested": true
+        });
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties")
+                    .header("content-type", "application/json")
+                    .body(Body::from(duplicate_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::CONFLICT);
     }
 
     #[tokio::test]

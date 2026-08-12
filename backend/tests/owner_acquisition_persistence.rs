@@ -80,6 +80,15 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
         .expect("test owner data should reset");
 
     let repository = OwnerAcquisitionRepository::from_pool(pool.clone());
+    assert_eq!(
+        repository
+            .create_property(
+                "owner_acquisition_missing_workspace",
+                property_request("1 Missing Street"),
+            )
+            .await,
+        OwnerMutationResult::NotFound
+    );
     for (owner, email, name) in [
         (owner_a, "morgan@example.com", "Morgan Reyes"),
         (owner_b, "jamie@example.com", "Jamie Chen"),

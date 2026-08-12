@@ -131,9 +131,12 @@ Active slice:
 - Phase 1A is delivered: authenticated-subject workspaces, private properties,
   per-owner duplicate protection, minimized lifecycle audit events, fail-closed
   repository outcomes, and PostgreSQL owner-isolation coverage.
-- Phase 1B is active: expose the workspace and properties only through
-  verified-identity, self-scoped API operations, then add the production React
-  private entry in Phase 1C.
+- Phase 1B is delivered: verified identities can use self-scoped workspace and
+  property APIs without provider roles; authentication supplies identity,
+  validation is explicit, and missing, duplicate, and unavailable outcomes stay
+  distinct.
+- Phase 1C is active: build the production React private-entry route and connect
+  its workspace/property forms to the delivered API.
 - Do not add owner intake media or provider invitations until Phase 1 exits.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,

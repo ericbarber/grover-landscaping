@@ -434,6 +434,9 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/marketing-leads/")
         || path == "/marketing-events"
         || path == "/me/access"
+        || path == "/owner-workspace"
+        || path == "/owner-properties"
+        || path.starts_with("/owner-properties/")
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -484,6 +487,17 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
     if path.starts_with("/organization-invitations/") && path.ends_with("/accept") {
         return *method == Method::POST;
+    }
+    if path == "/owner-workspace" {
+        return principal.verified_email.is_some()
+            && (*method == Method::GET || *method == Method::PUT);
+    }
+    if path == "/owner-properties" {
+        return principal.verified_email.is_some()
+            && (*method == Method::GET || *method == Method::POST);
+    }
+    if path.starts_with("/owner-properties/") {
+        return principal.verified_email.is_some() && *method == Method::GET;
     }
 
     if principal.roles.is_empty() {
@@ -1519,6 +1533,42 @@ mod tests {
     }
 
     #[test]
+    fn verified_users_can_access_only_supported_owner_self_service_operations() {
+        let owner = AuthPrincipal {
+            subject: "owner-user".to_string(),
+            username: "owner@example.com".to_string(),
+            verified_email: Some("owner@example.com".to_string()),
+            claim_roles: vec![],
+            roles: vec![],
+        };
+        for (method, path) in [
+            (Method::GET, "/owner-workspace"),
+            (Method::PUT, "/owner-workspace"),
+            (Method::GET, "/owner-properties"),
+            (Method::POST, "/owner-properties"),
+            (Method::GET, "/owner-properties/property-1"),
+        ] {
+            assert!(is_protected_api_path(path));
+            assert!(is_authorized(&owner, &method, path));
+        }
+        assert!(!is_authorized(
+            &owner,
+            &Method::DELETE,
+            "/owner-properties/property-1"
+        ));
+
+        let unverified = AuthPrincipal {
+            verified_email: None,
+            ..owner
+        };
+        assert!(!is_authorized(
+            &unverified,
+            &Method::GET,
+            "/owner-workspace"
+        ));
+    }
+
+    #[test]
     fn shared_bid_reads_and_decisions_are_public_token_operations() {
         assert!(is_public_path("/shared-bids/token-1", &Method::GET));
         assert!(is_public_path(
@@ -1582,6 +1632,28 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
         assert!(response.headers().contains_key("www-authenticate"));
+    }
+
+    #[tokio::test]
+    async fn owner_self_service_rejects_a_missing_bearer_token() {
+        let app = Router::new()
+            .route("/owner-workspace", get(|| async { "ok" }))
+            .layer(middleware::from_fn_with_state(
+                AuthService::rejecting(),
+                require_api_auth,
+            ));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-workspace")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]

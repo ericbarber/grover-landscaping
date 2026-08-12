@@ -62,6 +62,7 @@ pub enum OwnerReadResult<T> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerMutationResult<T> {
     Saved(T),
+    NotFound,
     Duplicate,
     Unavailable,
 }
@@ -246,6 +247,9 @@ impl OwnerAcquisitionRepository {
         let fingerprint = address_fingerprint(&property);
         let Some(pool) = &self.pool else {
             let mut local = self.local.write().await;
+            if !local.workspaces.contains_key(owner_user_id) {
+                return OwnerMutationResult::NotFound;
+            }
             if local.properties.values().any(|existing| {
                 existing.owner_user_id == owner_user_id
                     && existing.status != "archived"
@@ -262,6 +266,7 @@ impl OwnerAcquisitionRepository {
         match create_property(pool, &property, &fingerprint).await {
             Ok(saved) => OwnerMutationResult::Saved(saved),
             Err(error) if is_unique_violation(&error) => OwnerMutationResult::Duplicate,
+            Err(error) if is_foreign_key_violation(&error) => OwnerMutationResult::NotFound,
             Err(error) => {
                 tracing::error!(%error, owner_user_id, "owner property creation failed");
                 OwnerMutationResult::Unavailable
@@ -479,6 +484,13 @@ fn is_unique_violation(error: &sqlx::Error) -> bool {
         .is_some_and(|code| code == "23505")
 }
 
+fn is_foreign_key_violation(error: &sqlx::Error) -> bool {
+    error
+        .as_database_error()
+        .and_then(|database_error| database_error.code())
+        .is_some_and(|code| code == "23503")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -517,6 +529,12 @@ mod tests {
     #[tokio::test]
     async fn local_repository_is_self_scoped_and_rejects_owner_duplicates() {
         let repository = OwnerAcquisitionRepository::new();
+        assert_eq!(
+            repository
+                .create_property("missing-owner", property_request("1 Missing Street"))
+                .await,
+            OwnerMutationResult::NotFound
+        );
         let saved = repository
             .save_workspace(
                 "owner-a",
