@@ -69,6 +69,17 @@ Current state:
 - The Yard Owner V2 phased plan records phases 0–4 and 6 complete. Phase 5 billing
   remains product-gated pending financial ownership, lifecycle, processor,
   support, privacy, and compliance decisions.
+- A new Yard Owner entry and provider-connection audit confirms that current
+  customer properties are provider-tenant records, current photo intake requires
+  a provider job, and current invitations cannot represent an independent owner
+  connecting a provider organization.
+- The phased owner-entry plan now defines a private personal yard, guided yard
+  brief and photos, a known-provider invitation pilot, provider assessment and
+  versioned proposal, relationship activation into the existing portal, curated
+  discovery, durable relationship management, and marketplace governance.
+- The plan explicitly keeps exact addresses and photographs owner-controlled,
+  treats owner input as a draft brief rather than an operational contract, and
+  lets owners select providers while providers retain internal crew assignment.
 
 Next design work:
 
@@ -80,8 +91,11 @@ Next design work:
 - Review the Yard Owner V2 package remotely, then adopt it in the production
   React portal through the documented privacy/read-model, service-day, proof,
   conversation, recommendation, and preference slices.
-- Resume Phase 0 of the broader application working-design plan; within customer
-  Phase 5, review the property-manager portfolio next.
+- Build the owner-entry/direct-provider-connection working design across public
+  entry, independent identity, private property, guided photos, share review,
+  provider claim/inbox response, and customer-safe connection progress.
+- Resume Phase 0 of the broader application working-design plan after the focused
+  entry design; within customer Phase 5, return to the property-manager portfolio.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.
@@ -1164,6 +1178,16 @@ Goal: turn public one-off bid/report links into an authenticated customer portal
 
 Build scope:
 
+- Add independent Yard Owner identity and private property setup before any
+  provider membership, customer account, provider property, job, or route exists.
+- Add an owner-controlled yard brief with optional guided photographs, explicit
+  per-provider disclosure, retention, revocation, export, and deletion behavior.
+- Add known-provider connection invitations first, then provider assessment,
+  versioned initial-service proposals, explicit acceptance, and audited
+  projection into provider-scoped customer/property records.
+- Add curated provider discovery only after the direct-connect loop is validated;
+  match provider organizations by coarse location and capability while providers
+  retain internal crew assignment.
 - Add authenticated customer portal access scoped to customer accounts, properties, portfolios, reports, photos, bids, scheduled work, and service history.
 - Build portfolio/group views for individual owners, property management companies, HOAs, and commercial accounts.
 - Surface completed service timelines with immutable report snapshots and customer-safe photo evidence.
@@ -1173,6 +1197,9 @@ Build scope:
 
 Validation and exit criteria:
 
+- A new Yard Owner can save a private property and brief without provider access,
+  share it with one chosen provider, complete an assessment/proposal flow, and
+  enter provider setup without silent scheduling or cross-party data leakage.
 - Customer portal tests prove a customer can only see their own scoped accounts, properties, reports, photos, bids, and notification preferences.
 - Delivered completion reports use immutable customer snapshots rather than live mutable job state.
 - Customer-visible pages cover empty, loading, error, expired-link, revoked-link, and no-portfolio states.

@@ -36,6 +36,15 @@ model, removal of raw billing notes from shared reports, and new customer-safe
 conversation, concern, preference, access, and provider-contact contracts.
 Billing remains product-gated. Provider onboarding and property-manager portfolio
 design remain in the broader customer phase.
+The next focused customer slice is now planned backward from the portal: a yard
+owner first creates a private personal property, guided yard brief, and optional
+photos, then invites an existing provider or later requests assessment from a
+curated provider directory. Owners select provider organizations rather than
+internal crews. Exact address/photo disclosure is per provider and consented;
+provider assessment and a versioned proposal precede relationship activation.
+The recommended rollout delivers known-provider invitations before directory
+matching, then gates marketplace scale on provider eligibility, abuse handling,
+support readiness, and regional provider density.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.
@@ -175,6 +184,12 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 ## Phase 4 — Customer Portal and Portfolio Experience
 
+- Let Yard Owners create a private identity, property, guided yard brief, and
+  optional intake photographs before they have a service provider.
+- Deliver known-provider invitation, assessment, versioned proposal, consented
+  activation, and pre-service connection status before curated discovery.
+- Match owners to provider organizations by coarse service area and capability;
+  never expose internal crews as owner-selectable marketplace inventory.
 - Provide authenticated access to scoped accounts, properties, portfolios,
   schedules, reports, photos, bids, and service history.
 - Support homeowners, property managers, HOAs, and commercial portfolio groups.

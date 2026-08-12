@@ -44,6 +44,7 @@ design/
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
+│   ├── yard-owner-entry-provider-connection-plan.md # Owner acquisition and provider matching
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
@@ -147,14 +148,18 @@ renderer or a design-tool account to see a proposed screen.
 3. Review the [V2 phased plan](review/yard-owner-portal-v2-enhancement-plan.md)
    and [V2 production handoff](review/yard-owner-portal-v2-handoff.md).
 4. Review the
+   [Yard Owner entry and provider-connection plan](review/yard-owner-entry-provider-connection-plan.md)
+   for private property setup, guided photos, known-provider invitations,
+   assessment, proposal, activation, and curated provider discovery.
+5. Review the
    [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    and its seven completion gates.
-5. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-6. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+6. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+7. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-7. Review the field mobile sequence: Home → Route → Jobs → Job.
-8. Review the manager hierarchy: hub → category → tool → record/action.
-9. Review customer-safe pages and the separation from internal operations.
-10. Confirm that homeowner self-service and multi-vendor management remain
+8. Review the field mobile sequence: Home → Route → Jobs → Job.
+9. Review the manager hierarchy: hub → category → tool → record/action.
+10. Review customer-safe pages and the separation from internal operations.
+11. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.

@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-12: Defined the phased Yard Owner entry and provider-connection strategy covering independent owner identity, private address and guided photo intake, yard briefs, known-provider invitations, provider assessment and versioned proposals, relationship activation, curated discovery, privacy and trust controls, marketplace governance, and production acceptance gates.
 - 2026-08-11: Completed the Yard Owner V2 working design with service-day lifecycle states, contextual questions, concern recovery, accessible proof comparison and feedback, recommendation collaboration and history, notification/access preferences, product-gated billing boundaries, expanded browser validation, V2 references, gallery entry, and production handoff.
 - 2026-08-10: Completed the validated Yard Owner portal working design with responsive Home, Visits, Proof, and Account journeys; property-wide context; next-service confidence; delivered evidence; contextual bid recovery; customer-safe states; reference images; and production handoff.
 - 2026-08-10: Exposed the live design gallery at the local development server's `/design/` path for remote VPN review without bundling design documents into production.

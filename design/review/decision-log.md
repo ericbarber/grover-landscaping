@@ -32,6 +32,11 @@ silently revisit settled product structure.
 | D-025 | Yard Owner V2 | Store customer-authored access instructions separately from provider notes and explain exactly when they are shared. | Accepted for V2 working design | 2026-08-11 | Product/design |
 | D-026 | Yard Owner V2 | Treat recommendation questions and scope-change requests as collaboration states that do not silently decide the proposal. | Accepted for V2 working design | 2026-08-11 | Product/design |
 | D-027 | Yard Owner V2 | Product-gate invoices, payment methods, and payment collection until ownership, processor, lifecycle, support, and compliance contracts are approved. | Accepted | 2026-08-11 | Product/design |
+| D-028 | Yard Owner entry | Let an owner create a private personal yard before any provider relationship; do not force the property into a provider tenant during intake. | Accepted for phased planning | 2026-08-12 | Product/design |
+| D-029 | Provider connection | Let owners choose provider organizations, not internal crews; the accepted provider remains responsible for crew assignment and continuity. | Accepted for phased planning | 2026-08-12 | Product/design |
+| D-030 | Care plan | Treat owner answers and photographs as a draft yard brief; require provider assessment and a versioned proposal before service activation. | Accepted for phased planning | 2026-08-12 | Product/design |
+| D-031 | Intake privacy | Keep exact address, photographs, contact details, and access constraints owner-controlled and share them per provider only after an explicit disclosure review. | Accepted for phased planning | 2026-08-12 | Product/design |
+| D-032 | Delivery sequence | Deliver known-provider invitations before a curated directory, and product-gate open marketplace scale on eligibility, trust, abuse, support, and regional-density contracts. | Accepted for phased planning | 2026-08-12 | Product/design |
 
 ## Open review questions
 
