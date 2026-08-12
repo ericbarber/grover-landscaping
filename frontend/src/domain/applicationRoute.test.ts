@@ -5,6 +5,7 @@ describe('application route', () => {
   it('recognizes workspace, callback, and invitation entry paths', () => {
     expect(isApplicationPath('/app')).toBe(true);
     expect(isApplicationPath('/app/')).toBe(true);
+    expect(isApplicationPath('/app/yard-owner')).toBe(true);
     expect(isApplicationPath('/auth/callback')).toBe(true);
     expect(isApplicationPath('/organization-invitations/token')).toBe(true);
   });
@@ -14,5 +15,6 @@ describe('application route', () => {
     expect(isApplicationPath('/reports/token')).toBe(false);
     expect(isApplicationPath('/bids/token')).toBe(false);
     expect(isApplicationPath('/diagnostics')).toBe(false);
+    expect(isApplicationPath('/application')).toBe(false);
   });
 });

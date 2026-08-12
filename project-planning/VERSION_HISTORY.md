@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-12: Added the responsive production Yard Owner entry at `/app/yard-owner` with a direct public owner action, verified-email gating, private profile/property setup, address-change reconfirmation, authority attestation, explicit privacy boundaries, reload recovery, and mobile/desktop browser coverage.
 - 2026-08-12: Added verified-identity Yard Owner self-service APIs that derive owner scope from authentication, require no provider role, validate property authority and structured addresses, and distinguish missing, duplicate, invalid, and unavailable outcomes.
 - 2026-08-12: Added the production Yard Owner acquisition persistence foundation with authenticated-subject workspaces, private pre-provider properties outside organization tenants, per-owner address duplicate protection, minimized lifecycle audit events, fail-closed repository outcomes, and PostgreSQL isolation coverage.
 - 2026-08-12: Completed the professional Yard Owner acquisition workflow, content, and accessibility review with explicit email verification, affirmative consent defaults, stale-address invalidation, accessible field errors and semantic progress, functional provider filtering and no-result guidance, directory-to-assessment continuity, neutral proposals with annualized cost language, and confirmed access-reducing actions.

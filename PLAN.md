@@ -135,9 +135,12 @@ Active slice:
   property APIs without provider roles; authentication supplies identity,
   validation is explicit, and missing, duplicate, and unavailable outcomes stay
   distinct.
-- Phase 1C is active: build the production React private-entry route and connect
-  its workspace/property forms to the delivered API.
-- Do not add owner intake media or provider invitations until Phase 1 exits.
+- Phase 1C is delivered: `/app/yard-owner` connects the approved private-entry
+  experience to the production API, the public Yard Owner journey links directly
+  to it, and responsive browser coverage proves profile/property recovery,
+  address reconfirmation, authority attestation, and privacy wording.
+- Phase 2 is active: add a versioned private yard brief, then owner-scoped guided
+  intake media. Do not add provider invitations until private intake is complete.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.

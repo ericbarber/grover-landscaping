@@ -488,6 +488,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path.starts_with("/organization-invitations/") && path.ends_with("/accept") {
         return *method == Method::POST;
     }
+    if path == "/me/access" {
+        return *method == Method::GET;
+    }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::PUT);
@@ -516,10 +519,6 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         .roles
         .iter()
         .any(can_view_customer_property_portfolios);
-
-    if path == "/me/access" {
-        return *method == Method::GET;
-    }
 
     if path.starts_with("/organizations/") && path.ends_with("/invitations") {
         return (*method == Method::GET || *method == Method::POST) && can_admin_organization;
@@ -1542,6 +1541,7 @@ mod tests {
             roles: vec![],
         };
         for (method, path) in [
+            (Method::GET, "/me/access"),
             (Method::GET, "/owner-workspace"),
             (Method::PUT, "/owner-workspace"),
             (Method::GET, "/owner-properties"),

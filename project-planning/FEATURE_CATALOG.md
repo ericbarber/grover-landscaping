@@ -45,6 +45,9 @@
   protection and lifecycle audit coverage
 - Delivered verified-identity Yard Owner self-service APIs for private workspace
   and property creation/readback without requiring a provider organization role
+- Delivered responsive `/app/yard-owner` production entry with a public
+  Yard Owner call to action, verified-email gating, private profile/property
+  forms, stale-address reconfirmation, authority consent, and recovery states
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence

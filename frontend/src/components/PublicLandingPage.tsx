@@ -10,6 +10,7 @@ import {
   MarketingLeadDialog,
 } from './MarketingLeadDialog';
 import { MarketingProductTour } from './MarketingProductTour';
+import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -149,7 +150,16 @@ export function PublicLandingPage({
               {activePersona.description} Grover connects the people, properties, and proof behind exceptional landscape care.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'hero')} type="button">
+              {activePersona.id === 'owner' ? (
+                <a
+                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
+                  href={OWNER_ACQUISITION_PATH}
+                  onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_private_setup')}
+                >
+                  Set up my yard <span className="ml-2" aria-hidden="true">→</span>
+                </a>
+              ) : null}
+              <button className={`inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-black transition ${activePersona.id === 'owner' ? 'border border-white/25 bg-white/10 text-white hover:bg-white/15' : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'}`} onClick={() => openLeadDialog(activeMarketingPersona, 'hero')} type="button">
                 {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
               </button>
               <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 font-black text-white backdrop-blur-sm transition hover:bg-white/15" href="#who-its-for">
@@ -247,6 +257,15 @@ export function PublicLandingPage({
               >
                 {activeCallToAction.label} <span className="ml-1" aria-hidden="true">→</span>
               </button>
+              {activePersona.id === 'owner' ? (
+                <a
+                  className="ml-0 mt-3 inline-flex min-h-12 items-center rounded-full border border-white/25 px-5 py-3 font-black text-white hover:bg-white/10 sm:ml-2 sm:mt-0"
+                  href={OWNER_ACQUISITION_PATH}
+                  onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'persona_private_setup')}
+                >
+                  Create my private yard
+                </a>
+              ) : null}
             </div>
             <div className="bg-gradient-to-br from-emerald-950 via-emerald-950 to-slate-950 p-5 sm:p-7">
               <div className="flex items-end justify-between gap-4 border-b border-white/10 pb-5">

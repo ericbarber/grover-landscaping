@@ -126,8 +126,8 @@ schedule, remaining work, or a completed day.
 **Current — Yard Owner acquisition production foundation**
 
    - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
-   - Delivered self-scoped verified-identity workspace and property APIs; add the production React entry next.
-   - Add yard briefs and owner-intake media before known-provider invitations; defer curated discovery until the direct connection loop is safe.
+   - Delivered the self-scoped verified-identity APIs and responsive production React private entry.
+   - Add versioned yard briefs and owner-intake media next, before known-provider invitations; defer curated discovery until the direct connection loop is safe.
 
 0. **Local mobile runtime readiness**
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.

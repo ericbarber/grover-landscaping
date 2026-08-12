@@ -20,8 +20,9 @@ The approved experience is defined by:
 | --- | --- | --- |
 | 1A | Delivered | Private owner workspace/property schema, self-scoped repository, duplicate boundary, lifecycle audit, and PostgreSQL isolation coverage |
 | 1B | Delivered | Verified-identity, self-scoped workspace and property API with explicit validation, missing, duplicate, and unavailable outcomes |
-| 1C | In progress | Production React private entry |
-| 2–7 | Planned | Intake through governed pilot convergence |
+| 1C | Delivered | Production React private entry with public owner CTA, verified-email gate, profile/property recovery, address reconfirmation, authority attestation, and responsive browser coverage |
+| 2 | In progress | Private yard brief and owner-scoped intake media |
+| 3–7 | Planned | Provider connection through governed pilot convergence |
 
 ## Delivery principles
 
@@ -175,9 +176,8 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 1C — production React private entry.
-2. Phase 2 — brief and owner-scoped intake media.
-3. Phase 3 — known-provider connection pilot.
+1. Phase 2 — brief and owner-scoped intake media.
+2. Phase 3 — known-provider connection pilot.
 
 Phases 4–7 follow only after the preceding data and authorization boundaries are
 validated. No external address, messaging, identity-fact, or marketplace vendor
