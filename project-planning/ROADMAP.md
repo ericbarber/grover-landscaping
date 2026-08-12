@@ -123,6 +123,12 @@ schedule, remaining work, or a completed day.
 
 ## Immediate Continuation Work
 
+**Current — Yard Owner acquisition production foundation**
+
+   - Persist an authenticated owner workspace and private pre-provider property outside organization tenants.
+   - Expose only self-scoped verified-identity APIs before adding the production React entry.
+   - Add yard briefs and owner-intake media before known-provider invitations; defer curated discovery until the direct connection loop is safe.
+
 0. **Local mobile runtime readiness**
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.
    - Keep backend and frontend unit readiness suites green as persistence contracts evolve.

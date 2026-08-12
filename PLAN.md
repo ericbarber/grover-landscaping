@@ -121,6 +121,26 @@ Next design work:
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.
 
+### Yard Owner acquisition production adoption
+
+Goal: adopt the professionally reviewed acquisition journey without storing a
+private pre-provider yard inside a landscaping company tenant.
+
+Active slice:
+
+- Phase 1A: add self-scoped owner workspace and private-property persistence,
+  lifecycle events, duplicate protection, fail-closed repository outcomes, and
+  owner-isolation integration coverage.
+- Follow with the verified-identity self-service API and production React private
+  entry before adding owner intake media or provider invitations.
+- Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
+  as the phased production tracker and preserve the design handoff’s consent,
+  assessment, proposal, activation, and relationship boundaries.
+
+Exit condition: a verified signed-in owner can create and reload only their own
+private property without creating a provider customer, property, job, contract,
+route, or crew assignment.
+
 ### Operational exception activity integration
 
 Goal: connect the exception recovery queue to the persisted manager activity
