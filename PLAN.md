@@ -92,6 +92,11 @@ Current state:
 - The acquisition production handoff maps the validated experience to the new
   identity, private-property, intake-media, provider-profile, invitation,
   assessment, proposal, activation, and relationship contracts still required.
+- A professional acquisition UX review is in progress to close identity
+  verification, affirmative consent, stale address confirmation, directory
+  assessment continuity, proposal neutrality, destructive-action confirmation,
+  accessible error association, and customer-language gaps before production
+  adoption review.
 
 Next design work:
 
