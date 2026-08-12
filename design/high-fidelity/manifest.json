@@ -68,5 +68,19 @@
     "status": "validated-working-design",
     "source": "../prototypes/yard-owner-portal/index.html",
     "preview": "customer/yard-owner-portal-mobile-v2.png"
+  },
+  {
+    "id": "yard-owner-acquisition-desktop-v1",
+    "area": "customer",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-owner-acquisition/index.html",
+    "preview": "customer/yard-owner-acquisition-desktop-v1.png"
+  },
+  {
+    "id": "yard-owner-acquisition-mobile-v1",
+    "area": "customer",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-owner-acquisition/index.html",
+    "preview": "customer/yard-owner-acquisition-mobile-v1.png"
   }
 ]

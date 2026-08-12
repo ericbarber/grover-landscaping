@@ -80,10 +80,18 @@ Current state:
 - The plan explicitly keeps exact addresses and photographs owner-controlled,
   treats owner input as a draft brief rather than an operational contract, and
   lets owners select providers while providers retain internal crew assignment.
-- Yard Owner acquisition working-design execution has started with the workflow,
-  state, consent, terminology, trust, and prototype boundaries recorded as Phase
-  0 complete; phases 1–7 will build and validate the connected owner/provider
-  experience before production adoption.
+- The Yard Owner acquisition working design is complete across phases 0–7: an
+  owner can create a private property and yard brief, add or skip guided photos,
+  invite a known provider or compare curated providers, approve disclosure,
+  schedule assessment, compare and decide a proposal, enter provider setup, and
+  transition into the connected portal after the first visit is confirmed.
+- Its review controller exposes owner and provider states plus recoverable
+  invitation and proposal failures. Repeatable browser validation covers the
+  connected desktop journey, directory branch, tablet, 390px and 320px mobile,
+  200% text, touch targets, consent, focus, overflow, and browser errors.
+- The acquisition production handoff maps the validated experience to the new
+  identity, private-property, intake-media, provider-profile, invitation,
+  assessment, proposal, activation, and relationship contracts still required.
 
 Next design work:
 
@@ -95,11 +103,11 @@ Next design work:
 - Review the Yard Owner V2 package remotely, then adopt it in the production
   React portal through the documented privacy/read-model, service-day, proof,
   conversation, recommendation, and preference slices.
-- Build the owner-entry/direct-provider-connection working design across public
-  entry, independent identity, private property, guided photos, share review,
-  provider claim/inbox response, and customer-safe connection progress.
-- Resume Phase 0 of the broader application working-design plan after the focused
-  entry design; within customer Phase 5, return to the property-manager portfolio.
+- Review Yard Owner acquisition for phased production adoption, beginning with
+  independent identity/private property, then intake media and known-provider
+  connection before curated discovery.
+- Resume Phase 0 of the broader application working-design plan; within customer
+  Phase 5, return to the property-manager portfolio and keep billing product-gated.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.

@@ -36,15 +36,16 @@ model, removal of raw billing notes from shared reports, and new customer-safe
 conversation, concern, preference, access, and provider-contact contracts.
 Billing remains product-gated. Provider onboarding and property-manager portfolio
 design remain in the broader customer phase.
-The next focused customer slice is now planned backward from the portal: a yard
-owner first creates a private personal property, guided yard brief, and optional
-photos, then invites an existing provider or later requests assessment from a
-curated provider directory. Owners select provider organizations rather than
-internal crews. Exact address/photo disclosure is per provider and consented;
-provider assessment and a versioned proposal precede relationship activation.
-The recommended rollout delivers known-provider invitations before directory
-matching, then gates marketplace scale on provider eligibility, abuse handling,
-support readiness, and regional provider density.
+The focused Yard Owner acquisition slice is also complete as a validated working
+design. It connects private identity/property creation, guided yard briefs and
+optional photos, known-provider invitation or curated discovery, per-provider
+disclosure, assessment, versioned proposal comparison, explicit activation, and
+relationship controls to the existing portal. Owners select provider
+organizations rather than internal crews, and proposal acceptance does not
+silently schedule work. Production adoption should still deliver
+known-provider invitations before directory matching, then gate marketplace
+scale on provider eligibility, abuse handling, support readiness, and regional
+provider density.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

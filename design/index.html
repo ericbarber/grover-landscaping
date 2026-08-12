@@ -10,8 +10,11 @@
     body { margin: 0; }
     header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #17352f; color: white; }
     header p { max-width: 76ch; color: #d6e3dd; line-height: 1.6; }
-    .portal-cta { min-height: 46px; width: fit-content; display: inline-flex; align-items: center; gap: .55rem; margin-top: .75rem; border-radius: .7rem; background: #e7d4ac; padding: .7rem 1rem; color: #17352f; font-weight: 900; text-decoration: none; box-shadow: 0 10px 24px rgb(0 0 0 / 16%); }
+    .portal-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .75rem; }
+    .portal-cta { min-height: 46px; width: fit-content; display: inline-flex; align-items: center; gap: .55rem; border-radius: .7rem; background: #e7d4ac; padding: .7rem 1rem; color: #17352f; font-weight: 900; text-decoration: none; box-shadow: 0 10px 24px rgb(0 0 0 / 16%); }
+    .portal-cta.secondary { border: 1px solid #789188; background: transparent; color: white; box-shadow: none; }
     .portal-cta:hover { background: #f2dfb5; transform: translateY(-1px); }
+    .portal-cta.secondary:hover { background: white; color: #17352f; }
     .portal-cta:focus-visible { outline: 3px solid white; outline-offset: 3px; }
     nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
     nav a { color: #17352f; background: #e7d4ac; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
@@ -50,15 +53,19 @@
   <header>
     <p>GROVER · DESIGN REVIEW</p>
     <h1>Care you can see. Operations you can trust.</h1>
-    <p>The gallery pairs the complete low-fidelity application map with validated working designs for the public homepage and Yard Owner portal. Start with an interactive journey, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
-    <a class="portal-cta" href="prototypes/yard-owner-portal/index.html">Open Yard Owner portal <span aria-hidden="true">→</span></a>
+    <p>The gallery pairs the complete low-fidelity application map with validated working designs for Yard Owner acquisition, the connected customer portal, and the public homepage. Start with an interactive journey, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
+    <div class="portal-actions"><a class="portal-cta" href="prototypes/yard-owner-acquisition/index.html">Start Yard Owner acquisition <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="prototypes/yard-owner-portal/index.html">Open connected portal <span aria-hidden="true">→</span></a></div>
     <nav aria-label="Artifact groups">
       <a href="#working">Working design</a><a href="#high-fidelity">High fidelity</a><a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
     </nav>
   </header>
   <main>
     <section id="working"><h2>Validated working designs</h2><p class="intro">Responsive journeys whose navigation, interactions, states, accessibility, and implementation boundaries can be reviewed in the browser.</p>
-      <div class="working-group"><h3>Yard Owner portal · V2</h3><p>A service-lifecycle companion with live visit confidence, contextual questions, proof feedback and concern recovery, collaborative recommendations, and customer-controlled preferences. <a href="review/yard-owner-entry-provider-connection-plan.md">Review the phased owner-entry and provider-connection plan →</a></p><div class="grid working-grid">
+      <div class="working-group"><h3>Yard Owner acquisition · V1</h3><p>A private-first journey from independent yard setup through optional guided photos, known-provider invitation or curated discovery, assessment, proposal, explicit activation, and durable relationship controls. <a href="review/yard-owner-acquisition-handoff.md">Review the production handoff →</a></p><div class="grid working-grid">
+        <article><a href="prototypes/yard-owner-acquisition/index.html"><img src="high-fidelity/customer/yard-owner-acquisition-desktop-v1.png" alt="Working Grover Yard Owner acquisition journey at a desktop viewport"><div><h3>Launch Yard Owner acquisition</h3><span class="status">V1 · VALIDATED · INTERACTIVE</span><p>Create a private yard, add or skip photographs, invite a known provider, compare curated providers, inspect both sides of the connection, and activate only after an explicit proposal decision.</p></div></a></article>
+        <article class="mobile"><a href="prototypes/yard-owner-acquisition/index.html"><img src="high-fidelity/customer/yard-owner-acquisition-mobile-v1.png" alt="Working Grover Yard Owner acquisition journey at a mobile viewport"><div><h3>Acquisition mobile viewport</h3><span class="status">390 × 844 · 200% TESTED</span><p>The full trust, disclosure, recovery, assessment, and activation journey remains clear and thumb-reachable.</p></div></a></article>
+      </div></div>
+      <div class="working-group"><h3>Yard Owner portal · V2</h3><p>A service-lifecycle companion with live visit confidence, contextual questions, proof feedback and concern recovery, collaborative recommendations, and customer-controlled preferences. <a href="review/yard-owner-entry-provider-connection-plan.md">Review the acquisition contract →</a></p><div class="grid working-grid">
         <article><a href="prototypes/yard-owner-portal/index.html"><img src="high-fidelity/customer/yard-owner-portal-desktop-v2.png" alt="Working Grover Yard Owner V2 portal at a desktop viewport"><div><h3>Launch the Yard Owner portal</h3><span class="status">V2 · VALIDATED · INTERACTIVE</span><p>Switch properties, follow service-day changes, compare proof, ask contextual questions, recover a concern, collaborate on a recommendation, and save access or notification preferences.</p></div></a></article>
         <article class="mobile"><a href="prototypes/yard-owner-portal/index.html"><img src="high-fidelity/customer/yard-owner-portal-mobile-v2.png" alt="Working Grover Yard Owner V2 portal at a mobile viewport"><div><h3>Customer mobile viewport</h3><span class="status">390 × 844 · 200% TESTED</span><p>Service progress, preparation, visit actions, and four destinations remain clear and thumb-reachable.</p></div></a></article>
       </div></div>
@@ -108,6 +115,6 @@
       <article><a href="wireframes/future/02-multi-vendor-portfolio.svg"><img src="wireframes/future/02-multi-vendor-portfolio.svg" alt="Multi-vendor portfolio wireframe"><div><h3>Multi-vendor operations</h3><span class="status">FUTURE CONCEPT</span><p>Coverage, compliance, work distribution, evidence, scorecards, and invoice matching.</p></div></a></article>
     </div></section>
   </main>
-  <footer>Grover design study · Validated V2 working homepage and Yard Owner portal, V1 professional direction, and application-wide wireframes · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
+  <footer>Grover design study · Validated Yard Owner acquisition, connected portal, and V2 public homepage; V1 professional direction; and application-wide wireframes · Review decisions in <a href="review/decision-log.md">the decision log</a>.</footer>
 </body>
 </html>

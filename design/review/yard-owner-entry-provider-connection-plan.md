@@ -21,13 +21,19 @@ reviewable; it does not mean the production API persists that behavior.
 | Phase | Working-design status | Review outcome |
 | --- | --- | --- |
 | 0. Workflow contract and trust | Complete | Ownership, consent, terminology, state model, trust gates, and prototype boundary approved below |
-| 1. Independent owner and property | Planned | Private entry, address, validation, save/resume, and pre-service Home |
-| 2. Yard brief and photos | Planned | Guided areas/goals, optional photographs, processing, removal, and share review |
-| 3. Known-provider connection | Planned | Invitation, identity claim, disclosure, response, expiry, revoke, and recovery |
-| 4. Assessment, proposal, activation | Planned | Scheduling, contextual questions, versioning, comparison, decision, and setup |
-| 5. Curated provider discovery | Planned | Match reasons, shortlist, bounded disclosure, requests, and comparison |
-| 6. Relationship continuity | Planned | Sharing, provider change/end, history, export, and deletion controls |
-| 7. Governance, validation, handoff | Planned | Reviewer states, responsive/browser evidence, gallery, contract map, and records |
+| 1. Independent owner and property | Complete | Private entry, address, validation, authority, save/resume, and pre-service context are interactive |
+| 2. Yard brief and photos | Complete | Guided areas/goals, optional photographs, processing, removal, and share review are interactive |
+| 3. Known-provider connection | Complete | Invitation, provider identity preview, disclosure, response, revoke, failure, and retry are reviewable |
+| 4. Assessment, proposal, activation | Complete | Assessment, contextual questions, proposal comparison, decision recovery, setup, and first-visit activation are connected |
+| 5. Curated provider discovery | Complete | Match reasons, provider detail, shortlist, bounded disclosure, assessment, and comparison are reviewable |
+| 6. Relationship continuity | Complete | Current access, photo revoke, provider change/end, export, and deletion controls are reviewable |
+| 7. Governance, validation, handoff | Complete | Reviewer states, responsive/browser evidence, gallery references, contract map, and delivery records are complete |
+
+The completed working design is available at
+[`../prototypes/yard-owner-acquisition/index.html`](../prototypes/yard-owner-acquisition/index.html).
+Its [production handoff](yard-owner-acquisition-handoff.md) separates validated
+experience decisions from the new persistence, identity, media, notification,
+proposal, and relationship contracts still required for production adoption.
 
 ## Product recommendation
 

@@ -31,10 +31,11 @@
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,
   notification/access preferences, responsive references, and production handoff
-- Planned owner-first acquisition and provider connection with independent
-  identity, private address, guided yard brief/photos, known-provider invitation,
-  assessment, versioned initial proposal, consented activation, curated provider
-  discovery, and marketplace trust gates
+- Validated owner-first acquisition working design with independent identity,
+  private address, guided yard brief/photos, known-provider invitation, curated
+  provider discovery, assessment, versioned initial proposal, consented
+  activation, relationship controls, and marketplace trust gates; production
+  contracts remain planned
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence
@@ -90,10 +91,10 @@ here does not mean every capability has been delivered.
 ### Customer experience
 
 - Authenticated account, property, and portfolio portal
-- Planned owner-created private property and pre-service Yard Owner Home
-- Planned guided yard intake, optional photographs, and shareable care brief
-- Planned existing-provider invitations and curated provider discovery
-- Planned assessment, initial-service proposal, and consented provider activation
+- Validated working design for owner-created private property and pre-service Home
+- Validated working design for guided yard intake, optional photographs, and shareable care brief
+- Validated working design for existing-provider invitations and curated provider discovery
+- Validated working design for assessment, initial proposal, consented activation, and relationship controls
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

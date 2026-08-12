@@ -37,6 +37,7 @@ silently revisit settled product structure.
 | D-030 | Care plan | Treat owner answers and photographs as a draft yard brief; require provider assessment and a versioned proposal before service activation. | Accepted for phased planning | 2026-08-12 | Product/design |
 | D-031 | Intake privacy | Keep exact address, photographs, contact details, and access constraints owner-controlled and share them per provider only after an explicit disclosure review. | Accepted for phased planning | 2026-08-12 | Product/design |
 | D-032 | Delivery sequence | Deliver known-provider invitations before a curated directory, and product-gate open marketplace scale on eligibility, trust, abuse, support, and regional-density contracts. | Accepted for phased planning | 2026-08-12 | Product/design |
+| D-033 | Yard Owner acquisition | Use one private-first working journey with an explicit provider-side preview and reviewer-controlled lifecycle/failure states so consent and handoff can be evaluated end to end. | Accepted for working design | 2026-08-12 | Product/design |
 
 ## Open review questions
 
