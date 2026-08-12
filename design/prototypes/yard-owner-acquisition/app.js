@@ -76,7 +76,7 @@ function showStep(step, { moveFocus = true, updateHash = true } = {}) {
   document.querySelectorAll('input[name="review-step"]').forEach((input) => { input.checked = input.value === next; });
   if (updateHash) window.history.replaceState(null, '', `#${next}`);
   if (moveFocus) {
-    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
     pageTitle.focus({ preventScroll: true });
     announce(`${definition.title} opened.`);
   }

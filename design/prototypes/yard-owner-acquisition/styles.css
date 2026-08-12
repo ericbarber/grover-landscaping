@@ -48,7 +48,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-shell { min-height: 100vh; padding-top: var(--note); }
 
 .journey-rail { position: fixed; z-index: 30; inset: var(--note) auto 0 0; width: var(--rail); display: flex; flex-direction: column; overflow-y: auto; background: var(--evergreen-950); padding: 2rem 1.35rem 1.2rem; color: white; }
-.brand { width: fit-content; display: inline-flex; align-items: center; gap: .65rem; color: inherit; text-decoration: none; font-family: Georgia, serif; font-size: 1.6rem; font-weight: 750; letter-spacing: -.04em; }
+.brand { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .65rem; color: inherit; text-decoration: none; font-family: Georgia, serif; font-size: 1.6rem; font-weight: 750; letter-spacing: -.04em; }
 .brand svg { width: 30px; fill: none; stroke: var(--sand); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .rail-intro { margin-top: 2rem; border-top: 1px solid rgb(255 255 255 / 14%); border-bottom: 1px solid rgb(255 255 255 / 14%); padding: 1.25rem .35rem; }
 .micro-label, .eyebrow { margin: 0; color: var(--evergreen-700); font-size: .67rem; font-weight: 900; letter-spacing: .14em; line-height: 1.3; text-transform: uppercase; }
@@ -82,6 +82,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .save-state small { margin-top: .1rem; color: var(--muted); font-size: .58rem; }
 .account-chip { min-height: 48px; display: flex; align-items: center; gap: .55rem; border: 0; background: transparent; cursor: pointer; }
 .avatar, .avatar-button { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border: 0; border-radius: 50%; background: var(--evergreen-100); color: var(--evergreen-900); font-size: .64rem; font-weight: 900; }
+.avatar-button { min-width: 44px; min-height: 44px; }
 .account-chip strong, .account-chip small { display: block; text-align: left; }
 .account-chip strong { font-size: .7rem; }
 .account-chip small { margin-top: .1rem; color: var(--muted); font-size: .58rem; }
@@ -138,6 +139,7 @@ main { min-height: calc(100vh - var(--note) - 80px); }
 form label:not(.check-row):not(.select-provider), .provider-review-grid section > label, .assessment-layout section > label { display: grid; gap: .4rem; color: var(--ink); font-size: .68rem; font-weight: 800; }
 label small, legend small { color: var(--muted); font-weight: 500; }
 input, select, textarea { min-width: 0; width: 100%; border: 1px solid #b8c7c0; border-radius: .55rem; background: white; padding: .72rem .8rem; color: var(--ink); font-size: .76rem; }
+input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
 textarea { resize: vertical; line-height: 1.5; }
 input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--clay); background: #fff9f6; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
