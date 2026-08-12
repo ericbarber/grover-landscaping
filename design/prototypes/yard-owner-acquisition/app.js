@@ -12,6 +12,7 @@ const dialogReturnTargets = new WeakMap();
 const stepDefinitions = {
   welcome: { title: 'Find care for my yard', eyebrow: 'Get started', progress: null, save: ['Private start', 'Nothing shared'] },
   account: { title: 'Create my private profile', eyebrow: 'Your yard', progress: 'yard', save: ['Private draft', 'Nothing shared'] },
+  verify: { title: 'Verify my email', eyebrow: 'Your identity', progress: 'yard', save: ['Private draft', 'Nothing shared'] },
   property: { title: 'Add my property', eyebrow: 'Your yard', progress: 'yard', save: ['Private draft', 'Nothing shared'] },
   brief: { title: 'Build my yard brief', eyebrow: 'Your yard', progress: 'yard', save: ['Private draft', 'Nothing shared'] },
   photos: { title: 'Show the yard', eyebrow: 'Optional photos', progress: 'photos', save: ['Private draft', 'Nothing shared'] },
@@ -37,6 +38,31 @@ let addressVerified = false;
 let selectedProviders = [];
 let currentProposal = 'desert';
 
+function addReviewOption(value, title, description, beforeValue) {
+  if (reviewDialog.querySelector(`input[name="review-step"][value="${value}"]`)) return;
+  const label = document.createElement('label');
+  const input = document.createElement('input');
+  const copy = document.createElement('span');
+  const strong = document.createElement('strong');
+  const small = document.createElement('small');
+  input.type = 'radio';
+  input.name = 'review-step';
+  input.value = value;
+  strong.textContent = title;
+  small.textContent = description;
+  copy.append(strong, small);
+  label.append(input, copy);
+  const before = reviewDialog.querySelector(`input[name="review-step"][value="${beforeValue}"]`)?.closest('label');
+  before?.before(label);
+}
+
+addReviewOption('verify', 'Email verification', 'Code, resend, and recovery', 'property');
+addReviewOption('directory-share', 'Directory disclosure', 'Separate provider requests', 'assessment');
+addReviewOption('saved', 'Private draft saved', 'No-provider finish-later state', 'unavailable');
+document.querySelectorAll('[data-provider-card]').forEach((card) => {
+  card.querySelector('.select-provider input').setAttribute('aria-label', `Select ${card.querySelector('h3').textContent}`);
+});
+
 function announce(message) {
   liveRegion.textContent = '';
   window.requestAnimationFrame(() => { liveRegion.textContent = message; });
@@ -53,6 +79,8 @@ function renderProgress(active) {
     const index = progressOrder.indexOf(item.dataset.progress);
     item.classList.toggle('current', index === activeIndex);
     item.classList.toggle('done', activeIndex > index || active === 'ready' && index < progressOrder.length - 1);
+    if (index === activeIndex) item.setAttribute('aria-current', 'step');
+    else item.removeAttribute('aria-current');
     const marker = item.querySelector(':scope > span');
     marker.textContent = item.classList.contains('done') ? '✓' : String(index + 1);
   });
@@ -114,21 +142,35 @@ document.querySelectorAll('[data-go-step]').forEach((control) => {
 document.querySelector('[data-open-how]').addEventListener('click', (event) => openDialog(howDialog, event.currentTarget));
 document.querySelector('[data-open-review]').addEventListener('click', (event) => openDialog(reviewDialog, event.currentTarget));
 
+document.querySelectorAll('[data-error-for]').forEach((error) => {
+  if (!error.id) error.id = `${error.dataset.errorFor}-error`;
+  const input = document.querySelector(`[name="${error.dataset.errorFor}"]`);
+  if (!input) return;
+  const describedBy = new Set((input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+  describedBy.add(error.id);
+  input.setAttribute('aria-describedby', [...describedBy].join(' '));
+});
+
 document.querySelector('[data-account-form]').addEventListener('submit', (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const name = form.elements['owner-name'];
   const email = form.elements['owner-email'];
+  const phone = form.elements['owner-phone'];
+  const channel = form.elements['preferred-channel'];
   const privacy = form.elements.privacy;
+  const needsPhone = channel.value !== 'Email';
   const errors = {
     'owner-name': name.value.trim().length < 2 ? 'Enter your name.' : '',
     'owner-email': !/^\S+@\S+\.\S+$/.test(email.value.trim()) ? 'Enter a valid email address.' : '',
+    'owner-phone': needsPhone && phone.value.replace(/\D/g, '').length < 10 ? 'Enter a mobile number for text updates, or choose email.' : '',
   };
   Object.entries(errors).forEach(([field, message]) => {
     const input = form.elements[field];
     input.setAttribute('aria-invalid', String(Boolean(message)));
     document.querySelector(`[data-error-for="${field}"]`).textContent = message;
   });
+  privacy.setAttribute('aria-invalid', String(!privacy.checked));
   const invalid = Object.values(errors).some(Boolean) || !privacy.checked;
   document.querySelector('[data-account-error]').hidden = !invalid;
   if (invalid) {
@@ -136,10 +178,56 @@ document.querySelector('[data-account-form]').addEventListener('submit', (event)
     announce('Check the highlighted owner information.');
     return;
   }
+  document.querySelector('[data-verify-email]').textContent = email.value.trim();
+  showStep('verify');
+});
+
+document.querySelector('[data-verify-form]').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const code = event.currentTarget.elements['verification-code'];
+  const error = document.querySelector('[data-verify-error]');
+  const invalid = code.value.trim() !== '482913';
+  code.setAttribute('aria-invalid', String(invalid));
+  document.querySelector('[data-error-for="verification-code"]').textContent = invalid ? 'Enter the six-digit code 482913 for this working design.' : '';
+  error.hidden = !invalid;
+  if (invalid) {
+    code.focus();
+    announce('The verification code is incorrect. Your private profile is unchanged.');
+    return;
+  }
   showStep('property');
+  announce('Email confirmed for the working design. Nothing has been shared with a provider.');
+});
+
+document.querySelector('[data-resend-code]').addEventListener('click', (event) => {
+  event.currentTarget.disabled = true;
+  document.querySelector('[data-resend-result]').textContent = 'A new illustrative code was sent. Use 482913.';
+  announce('A new verification code was sent in this working design.');
+});
+
+const propertyForm = document.querySelector('[data-property-form]');
+propertyForm.querySelectorAll('input[name="street"], input[name="city"], input[name="postal"], select[name="state"]').forEach((input) => {
+  input.addEventListener('input', () => {
+    if (!addressVerified) return;
+    addressVerified = false;
+    document.querySelector('[data-address-result]').hidden = true;
+    document.querySelector('[data-address-status]').textContent = 'Address changed. Confirm the location again.';
+    const marker = document.querySelector('[data-verify-address] > span:first-child');
+    marker.textContent = '⌖';
+    announce('Address changed. Confirm the location again before continuing.');
+  });
 });
 
 document.querySelector('[data-verify-address]').addEventListener('click', (event) => {
+  const requiredLocationFields = ['street', 'city', 'postal'];
+  const missing = requiredLocationFields.find((field) => !propertyForm.elements[field].value.trim());
+  if (missing) {
+    propertyForm.elements[missing].setAttribute('aria-invalid', 'true');
+    document.querySelector(`[data-error-for="${missing}"]`).textContent = `Enter the ${missing === 'postal' ? 'ZIP code' : missing} before confirming the location.`;
+    propertyForm.elements[missing].focus();
+    announce('Complete the address before confirming the location.');
+    return;
+  }
   addressVerified = true;
   document.querySelector('[data-address-result]').hidden = false;
   document.querySelector('[data-address-status]').textContent = 'Central Phoenix confirmed. Exact address remains private.';
@@ -147,20 +235,29 @@ document.querySelector('[data-verify-address]').addEventListener('click', (event
   announce('Address location confirmed for Central Phoenix.');
 });
 
-document.querySelector('[data-property-form]').addEventListener('submit', (event) => {
+propertyForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const authority = form.elements.authority;
-  const street = form.elements.street;
-  let message = '';
-  if (street.value.trim().length < 5) message = 'Enter a complete service address.';
-  else if (!addressVerified) message = 'Confirm the location before continuing.';
-  else if (!authority.checked) message = 'Confirm that you are authorized to request care.';
+  const fieldErrors = {
+    'property-name': form.elements['property-name'].value.trim().length < 2 ? 'Enter a property nickname.' : '',
+    street: form.elements.street.value.trim().length < 5 ? 'Enter a complete service address.' : '',
+    city: form.elements.city.value.trim().length < 2 ? 'Enter the city.' : '',
+    postal: !/^\d{5}(?:-\d{4})?$/.test(form.elements.postal.value.trim()) ? 'Enter a valid ZIP code.' : '',
+  };
+  Object.entries(fieldErrors).forEach(([field, message]) => {
+    form.elements[field].setAttribute('aria-invalid', String(Boolean(message)));
+    document.querySelector(`[data-error-for="${field}"]`).textContent = message;
+  });
+  authority.setAttribute('aria-invalid', String(!authority.checked));
+  const firstInvalidField = Object.entries(fieldErrors).find(([, message]) => message)?.[0];
+  let message = firstInvalidField ? fieldErrors[firstInvalidField] : '';
+  if (!message && !addressVerified) message = 'Confirm the location before continuing.';
+  else if (!message && !authority.checked) message = 'Confirm that you are authorized to request care.';
   document.querySelector('[data-property-error]').hidden = !message;
   document.querySelector('[data-property-error-copy]').textContent = message;
-  street.setAttribute('aria-invalid', String(street.value.trim().length < 5));
   if (message) {
-    (street.value.trim().length < 5 ? street : authority).focus();
+    (firstInvalidField ? form.elements[firstInvalidField] : !addressVerified ? document.querySelector('[data-verify-address]') : authority).focus();
     announce(message);
     return;
   }
@@ -173,9 +270,15 @@ document.querySelectorAll('.consideration-chips button').forEach((button) => {
   });
 });
 
-document.querySelector('[data-brief-form]').addEventListener('input', () => {
+document.querySelector('[data-brief-form]').addEventListener('input', (event) => {
+  if (event.target.matches('input[name="area"]')) {
+    const unsure = document.querySelector('[data-area-unsure]');
+    const specificAreas = [...document.querySelectorAll('input[name="area"]:not([data-area-unsure])')];
+    if (event.target === unsure && unsure.checked) specificAreas.forEach((input) => { input.checked = false; });
+    if (event.target !== unsure && event.target.checked) unsure.checked = false;
+  }
   const areaCount = document.querySelectorAll('input[name="area"]:checked').length;
-  document.querySelector('[data-brief-complete]').textContent = `${Math.min(100, 40 + areaCount * 10)}%`;
+  document.querySelector('[data-brief-complete]').textContent = areaCount ? 'Ready to continue' : 'Tell us what you know';
 });
 
 document.querySelector('[data-brief-form]').addEventListener('submit', (event) => {
@@ -195,6 +298,8 @@ function updatePhotoSummary() {
   document.querySelector('[data-summary-photos]').textContent = `${count} optional photo${count === 1 ? '' : 's'}`;
   document.querySelector('[data-invite-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
   document.querySelector('[data-access-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
+  document.querySelector('[data-directory-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
+  document.querySelector('[data-continue-photos]').textContent = count ? 'Review my yard brief' : 'Continue without photos';
   document.querySelector('[data-upload-state]').textContent = count
     ? `${count} private photo${count === 1 ? '' : 's'} processed for this design. Location metadata removed.`
     : 'Photos have not been added.';
@@ -219,12 +324,16 @@ document.querySelector('[data-invite-form]').addEventListener('submit', (event) 
   const email = form.elements['provider-email'];
   const confirm = form.elements['confirm-share'];
   const error = document.querySelector('[data-invite-error]');
-  if (!/^\S+@\S+\.\S+$/.test(email.value.trim()) || !confirm.checked) {
+  const invalidEmail = !/^\S+@\S+\.\S+$/.test(email.value.trim());
+  email.setAttribute('aria-invalid', String(invalidEmail));
+  confirm.setAttribute('aria-invalid', String(!confirm.checked));
+  document.querySelector('[data-error-for="provider-email"]').textContent = invalidEmail ? 'Enter a valid business email.' : '';
+  if (invalidEmail || !confirm.checked) {
     error.hidden = false;
-    document.querySelector('[data-invite-error-copy]').textContent = !confirm.checked
-      ? 'Review and confirm the provider-specific disclosure.'
-      : 'Enter a valid business email.';
-    (!confirm.checked ? confirm : email).focus();
+    document.querySelector('[data-invite-error-copy]').textContent = invalidEmail
+      ? 'Enter a valid business email. Nothing was sent.'
+      : 'Confirm the limited invitation. Nothing was sent.';
+    (invalidEmail ? email : confirm).focus();
     announce('Invitation needs more information. Nothing was sent.');
     return;
   }
@@ -244,8 +353,18 @@ document.querySelector('[data-invite-form]').addEventListener('submit', (event) 
 
 document.querySelector('[data-preview-provider]').addEventListener('click', () => showStep('provider'));
 document.querySelector('[data-revoke-invite]').addEventListener('click', () => {
+  const button = document.querySelector('[data-revoke-invite]');
+  if (!button.dataset.confirming) {
+    button.dataset.confirming = 'true';
+    button.textContent = 'Confirm revoke invitation';
+    document.querySelector('[data-connection-result]').textContent = 'Confirm to prevent this recipient from opening or responding to the invitation.';
+    announce('Confirm revocation of the provider invitation.');
+    return;
+  }
   document.querySelector('[data-connection-status]').textContent = 'Invitation revoked';
   document.querySelector('[data-connection-result]').textContent = 'Future invitation access was revoked in this design. No yard details were shared.';
+  document.querySelector('[data-preview-provider]').disabled = true;
+  button.disabled = true;
   announce('Invitation revoked.');
 });
 
@@ -261,11 +380,15 @@ document.querySelector('[data-provider-interest]').addEventListener('click', () 
 
 document.querySelector('[data-access-form]').addEventListener('submit', (event) => {
   event.preventDefault();
-  const confirm = event.currentTarget.elements['approve-confirm'];
+  const form = event.currentTarget;
+  const confirm = form.elements['approve-confirm'];
+  const selected = form.querySelectorAll('input[name="approve-item"]:checked').length;
   const error = document.querySelector('[data-access-error]');
-  if (!confirm.checked) {
+  const errorCopy = document.querySelector('[data-access-error-copy]');
+  if (!selected || !confirm.checked) {
     error.hidden = false;
-    confirm.focus();
+    errorCopy.textContent = !selected ? 'Choose at least one item to share. Nothing has been shared yet.' : 'Confirm this provider-specific disclosure. Nothing has been shared yet.';
+    (!selected ? form.querySelector('input[name="approve-item"]') : confirm).focus();
     announce('Confirm the provider-specific disclosure. Nothing has been shared.');
     return;
   }
@@ -285,10 +408,32 @@ function updateDirectorySelection() {
 
 document.querySelectorAll('.select-provider input').forEach((input) => input.addEventListener('change', updateDirectorySelection));
 
+function filterProviders() {
+  const care = document.querySelector('[data-care-filter]').value;
+  const method = document.querySelector('[data-method-filter]').value;
+  let visible = 0;
+  document.querySelectorAll('[data-provider-card]').forEach((card) => {
+    const matchesCare = card.dataset.care.split(' ').includes(care);
+    const matchesMethod = method === 'any' || card.dataset.method.split(' ').includes(method);
+    card.hidden = !(matchesCare && matchesMethod);
+    if (!card.hidden) visible += 1;
+    if (card.hidden) card.querySelector('input').checked = false;
+  });
+  const words = ['No', 'One', 'Two', 'Three'];
+  document.querySelector('[data-provider-result-count]').textContent = words[visible] || String(visible);
+  document.querySelector('[data-no-provider-results]').hidden = visible !== 0;
+  updateDirectorySelection();
+  announce(`${visible} provider${visible === 1 ? '' : 's'} shown for the selected filters.`);
+}
+
+document.querySelector('[data-care-filter]').addEventListener('change', filterProviders);
+document.querySelector('[data-method-filter]').addEventListener('change', filterProviders);
+
+providerDialog.querySelector('.dialog-content > h3').textContent = 'Why this provider may fit';
 const providerDetails = {
-  desert: { name: 'Desert Bloom Landscaping', logo: 'DB', heading: 'Routine and low-water yard care', area: 'Central Phoenix · Remote or on-site assessment', match: 'Its declared service area and capabilities match all three care areas in your yard brief.', insurance: 'On file · expires March 2027' },
-  copper: { name: 'Copper State Yard Co.', logo: 'CS', heading: 'Routine lawn, shrub, and cleanup care', area: 'Central and North Phoenix · On-site assessment', match: 'Its service area includes your coarse location and it offers the cadence you requested.', insurance: 'On file · expires January 2027' },
-  mesa: { name: 'Mesa Verde Yard Care', logo: 'MY', heading: 'Native and low-water landscape care', area: 'Central Phoenix · Remote-first assessment', match: 'Its declared specialty aligns with the low-water landscape areas in your brief.', insurance: 'Not shown · ask the provider before deciding' },
+  desert: { name: 'Desert Bloom Landscaping', logo: 'DB', heading: 'Routine and low-water yard care', area: 'Central Phoenix · Remote or on-site assessment', match: 'Its declared service area and capabilities cover all three care areas in your yard brief.', insurance: 'On file · expires March 2027' },
+  copper: { name: 'Copper State Yard Co.', logo: 'CS', heading: 'Routine lawn, shrub, and cleanup care', area: 'Central and North Phoenix · On-site assessment', match: 'Its declared service area includes your coarse location and it offers the cadence you requested.', insurance: 'On file · expires January 2027' },
+  mesa: { name: 'Mesa Verde Yard Care', logo: 'MY', heading: 'Native and low-water landscape care', area: 'Central Phoenix · Remote-first assessment', match: 'Its declared specialty covers the low-water landscape areas in your brief.', insurance: 'Not shown · ask the provider before deciding' },
 };
 
 document.querySelectorAll('[data-view-provider]').forEach((button) => {
@@ -321,17 +466,21 @@ document.querySelector('[data-review-requests]').addEventListener('click', () =>
 
 document.querySelector('[data-directory-share-form]').addEventListener('submit', (event) => {
   event.preventDefault();
-  const confirm = event.currentTarget.elements['directory-confirm'];
+  const form = event.currentTarget;
+  const confirm = form.elements['directory-confirm'];
+  const selectedItems = form.querySelectorAll('input[name="directory-item"]:checked').length;
   const error = document.querySelector('[data-directory-share-error]');
-  if (!confirm.checked) {
+  const errorCopy = document.querySelector('[data-directory-share-error-copy]');
+  if (!selectedItems || !confirm.checked) {
     error.hidden = false;
-    confirm.focus();
+    errorCopy.textContent = !selectedItems ? 'Choose at least one item to share. No requests have been sent.' : 'Confirm these separate provider disclosures. No requests have been sent.';
+    (!selectedItems ? form.querySelector('input[name="directory-item"]') : confirm).focus();
     announce('Confirm the separate provider disclosures. No requests were sent.');
     return;
   }
   error.hidden = true;
-  showStep('proposals');
-  announce(`${selectedProviders.length} separate assessment requests completed in this design. Proposal comparison opened.`);
+  showStep('assessment');
+  announce(`${selectedProviders.length} separate assessment requests sent in this design. Desert Bloom responded with an assessment window.`);
 });
 
 document.querySelector('[data-confirm-assessment]').addEventListener('click', () => {
@@ -439,8 +588,9 @@ document.querySelector('[data-simulate-activation]').addEventListener('click', (
 document.querySelector('[data-end-care]').addEventListener('click', (event) => {
   if (!event.currentTarget.dataset.confirming) {
     event.currentTarget.dataset.confirming = 'true';
-    event.currentTarget.textContent = 'Confirm end of future access';
-    document.querySelector('[data-relationship-result]').textContent = 'Ending care stops future provider access after operational closeout; retained delivered records remain available.';
+    event.currentTarget.textContent = 'Confirm end of future provider access';
+    document.querySelector('[data-relationship-result]').textContent = 'Confirm to stop future service and provider access after operational closeout. Accepted proposals and delivered service records remain available.';
+    announce('Confirm ending future provider access. Historical records will remain available.');
     return;
   }
   document.querySelector('[data-relationship-result]').textContent = 'Future provider access ended in this design. Historical accepted and delivered records remain protected.';
@@ -449,17 +599,34 @@ document.querySelector('[data-end-care]').addEventListener('click', (event) => {
 });
 document.querySelector('[data-change-provider]').addEventListener('click', () => showStep('directory'));
 document.querySelector('[data-revoke-photos]').addEventListener('click', (event) => {
+  if (!event.currentTarget.dataset.confirming) {
+    event.currentTarget.dataset.confirming = 'true';
+    event.currentTarget.textContent = 'Confirm photo access revocation';
+    document.querySelector('[data-photo-result]').textContent = 'Confirm to prevent future access to intake photos. A proposal snapshot may retain references under the disclosed policy.';
+    announce('Confirm revocation of future intake photo access.');
+    return;
+  }
   const item = document.querySelector('[data-photo-access]');
   item.querySelector(':scope > span').textContent = '—';
   item.querySelector('small').textContent = 'Future access revoked; proposal snapshot retention remains disclosed';
   event.currentTarget.disabled = true;
+  document.querySelector('[data-photo-result]').textContent = 'Future intake photo access was revoked. Disclosed proposal-snapshot retention remains unchanged.';
   announce('Future intake photo access revoked.');
 });
 document.querySelector('[data-export-data]').addEventListener('click', () => {
   document.querySelector('[data-data-result]').textContent = 'Data export requested in the design. A production version would verify identity and report preparation status.';
 });
-document.querySelector('[data-delete-intake]').addEventListener('click', () => {
+document.querySelector('[data-delete-intake]').addEventListener('click', (event) => {
+  if (!event.currentTarget.dataset.confirming) {
+    event.currentTarget.dataset.confirming = 'true';
+    event.currentTarget.textContent = 'Confirm deletion request';
+    document.querySelector('[data-data-result]').textContent = 'Confirm to request deletion of intake media that is not retained with an accepted proposal or delivered service record.';
+    announce('Confirm the unused intake media deletion request.');
+    return;
+  }
+  event.currentTarget.disabled = true;
   document.querySelector('[data-data-result]').textContent = 'Unused intake-media deletion requested. Failed object deletion would remain visible for recovery.';
+  announce('Unused intake media deletion requested in the working design.');
 });
 
 document.querySelector('[data-retry-load]').addEventListener('click', () => {
@@ -475,4 +642,5 @@ document.querySelector('[data-apply-review]').addEventListener('click', () => {
 
 const initialHash = window.location.hash.slice(1);
 showStep(Object.hasOwn(stepDefinitions, initialHash) ? initialHash : 'welcome', { moveFocus: false, updateHash: false });
+document.querySelector('[data-brief-complete]').textContent = document.querySelectorAll('input[name="area"]:checked').length ? 'Ready to continue' : 'Tell us what you know';
 updatePhotoSummary();

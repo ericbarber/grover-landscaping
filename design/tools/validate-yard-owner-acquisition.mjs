@@ -65,6 +65,23 @@ async function checkMobileTargets(page, label) {
   check(undersized.length === 0, `${label}: undersized interactive targets ${JSON.stringify(undersized)}`);
 }
 
+async function checkAccessibleControls(page, label) {
+  const issues = await page.locator('input, select, textarea, button, a[href]').evaluateAll((elements) => elements
+    .filter((element) => {
+      const rect = element.getBoundingClientRect();
+      const style = window.getComputedStyle(element);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && !element.closest('[hidden]') && !element.closest('dialog:not([open])');
+    })
+    .filter((element) => {
+      if (element.matches('input, select, textarea')) {
+        return !element.labels?.length && !element.getAttribute('aria-label') && !element.getAttribute('aria-labelledby');
+      }
+      return !element.textContent?.trim() && !element.getAttribute('aria-label') && !element.getAttribute('aria-labelledby');
+    })
+    .map((element) => element.outerHTML.slice(0, 180)));
+  check(issues.length === 0, `${label}: visible controls without accessible names ${JSON.stringify(issues)}`);
+}
+
 async function openReview(page) {
   await page.locator('[data-open-review]').click();
   await page.waitForFunction(() => document.querySelector('[data-review-dialog]')?.hasAttribute('open'));
@@ -83,9 +100,11 @@ try {
   const desktop = await openPage(browser, { width: 1440, height: 1000 });
   const page = desktop.page;
   await checkLayout(page, 1440, 'Desktop welcome');
+  await checkAccessibleControls(page, 'Desktop welcome');
+  check(await page.locator('[id]').evaluateAll((elements) => new Set(elements.map((element) => element.id)).size === elements.length), 'Document: duplicate IDs detected');
   check(await page.locator('[data-step-panel="welcome"]').isVisible(), 'Welcome: default journey stage is missing');
   check((await page.locator('.welcome-copy h2').innerText()).includes('Choose who sees it'), 'Welcome: private-first promise is missing');
-  check((await page.locator('.trust-list').innerText()).includes('Exact address stays private'), 'Welcome: exact-address boundary is missing');
+  check((await page.locator('.trust-list').innerText()).includes('private until you approve'), 'Welcome: exact-address boundary is missing');
 
   const howTrigger = page.locator('[data-open-how]');
   await howTrigger.click();
@@ -95,21 +114,36 @@ try {
 
   await page.locator('[data-go-step="account"]').first().click();
   const accountForm = page.locator('[data-account-form]');
+  check(!(await accountForm.locator('input[name="privacy"]').isChecked()), 'Owner identity: privacy acknowledgement is preselected');
   await accountForm.locator('input[name="owner-name"]').fill('');
   await accountForm.locator('input[name="owner-email"]').fill('not-an-email');
   await accountForm.locator('button[type="submit"]').click();
   check(await page.locator('[data-account-error]').isVisible(), 'Owner identity: validation summary is missing');
   check(await accountForm.locator('input[name="owner-email"]').getAttribute('aria-invalid') === 'true', 'Owner identity: invalid email is not exposed');
+  check((await accountForm.locator('input[name="owner-email"]').getAttribute('aria-describedby') || '').includes('owner-email-error'), 'Owner identity: email error is not programmatically associated');
   await accountForm.locator('input[name="owner-name"]').fill('Morgan Reyes');
   await accountForm.locator('input[name="owner-email"]').fill('morgan@example.com');
+  await accountForm.locator('input[name="privacy"]').check();
   await accountForm.locator('button[type="submit"]').click();
-  check(await page.locator('body').getAttribute('data-step') === 'property', 'Owner identity: valid submission did not continue');
+  check(await page.locator('body').getAttribute('data-step') === 'verify', 'Owner identity: valid submission skipped email verification');
+
+  const verifyForm = page.locator('[data-verify-form]');
+  await verifyForm.locator('input[name="verification-code"]').fill('123456');
+  await verifyForm.locator('button[type="submit"]').click();
+  check(await page.locator('[data-verify-error]').isVisible(), 'Email verification: invalid-code recovery is missing');
+  await verifyForm.locator('input[name="verification-code"]').fill('482913');
+  await verifyForm.locator('button[type="submit"]').click();
+  check(await page.locator('body').getAttribute('data-step') === 'property', 'Email verification: valid code did not continue');
+  check(await page.locator('[data-progress="yard"]').getAttribute('aria-current') === 'step', 'Progress: current stage is not exposed semantically');
 
   const propertyForm = page.locator('[data-property-form]');
   await propertyForm.locator('button[type="submit"]').click();
   check(await page.locator('[data-property-error]').isVisible(), 'Property: unconfirmed address error is missing');
   await page.locator('[data-verify-address]').click();
   check(await page.locator('[data-address-result]').isVisible(), 'Property: coarse location confirmation is missing');
+  await propertyForm.locator('input[name="postal"]').fill('85005');
+  check(await page.locator('[data-address-result]').isHidden(), 'Property: changed address did not invalidate stale confirmation');
+  await page.locator('[data-verify-address]').click();
   await propertyForm.locator('button[type="submit"]').click();
   check((await page.locator('[data-property-error-copy]').innerText()).includes('authorized'), 'Property: authority validation is missing');
   await propertyForm.locator('input[name="authority"]').check();
@@ -127,7 +161,7 @@ try {
   await page.locator('[data-toggle-photo="front"]').click();
   check((await page.locator('[data-photo-count]').innerText()) === '2', 'Photos: removal did not update count');
   await page.locator('[data-toggle-photo="front"]').click();
-  await page.getByRole('button', { name: 'Review my yard brief' }).click();
+  await page.locator('[data-continue-photos]').click();
   check(await page.locator('body').getAttribute('data-step') === 'share', 'Photos: did not continue to review');
   check((await page.locator('[data-summary-photos]').innerText()).startsWith('3'), 'Share: photo summary is incorrect');
   check((await page.locator('.disclosure-card').innerText()).includes('No provider can see this yet'), 'Share: private boundary is missing');
@@ -136,6 +170,7 @@ try {
   const inviteForm = page.locator('[data-invite-form]');
   await inviteForm.locator('button[type="submit"]').click();
   check(await page.locator('[data-invite-error]').isVisible(), 'Invitation: disclosure validation is missing');
+  check((await page.locator('.invitation-disclosure').innerText()).includes('Exact street address'), 'Invitation: limited disclosure receipt is missing');
   await inviteForm.locator('input[name="confirm-share"]').check();
   await openReview(page);
   await page.locator('[data-fail-invite]').check();
@@ -154,6 +189,8 @@ try {
   await page.locator('[data-provider-interest]').click();
   check(await page.locator('body').getAttribute('data-step') === 'access-approval', 'Provider: interest did not return to owner approval');
   const accessForm = page.locator('[data-access-form]');
+  check(!(await accessForm.locator('input[value="Exact address"]').isChecked()), 'Access: exact address consent is preselected');
+  check(!(await accessForm.locator('input[value="Yard photos"]').isChecked()), 'Access: photo consent is preselected');
   await accessForm.locator('button[type="submit"]').click();
   check(await page.locator('[data-access-error]').isVisible(), 'Access: explicit consent validation is missing');
   await accessForm.locator('input[name="approve-confirm"]').check();
@@ -190,12 +227,20 @@ try {
 
   await page.getByRole('button', { name: 'Review relationship' }).click();
   await page.locator('[data-revoke-photos]').click();
+  check((await page.locator('[data-photo-result]').innerText()).includes('Confirm'), 'Relationship: photo revocation confirmation is missing');
+  await page.locator('[data-revoke-photos]').click();
   check((await page.locator('[data-photo-access] small').innerText()).includes('revoked'), 'Relationship: photo revocation is missing');
   await page.locator('[data-export-data]').click();
   check((await page.locator('[data-data-result]').innerText()).includes('export requested'), 'Relationship: export request state is missing');
   check(desktop.browserErrors.length === 0, `Desktop workflow browser errors: ${desktop.browserErrors.join('; ')}`);
 
   await jumpTo(page, 'directory');
+  await page.locator('[data-care-filter]').selectOption('irrigation');
+  check(await page.locator('[data-provider-card]:not([hidden])').count() === 1, 'Directory: care filter did not update results');
+  await page.locator('[data-care-filter]').selectOption('seasonal');
+  check(await page.locator('[data-no-provider-results]').isVisible(), 'Directory: no-result guidance is missing');
+  await page.locator('[data-care-filter]').selectOption('routine');
+  check(await page.locator('[data-provider-card]:not([hidden])').count() === 3, 'Directory: filter recovery did not restore results');
   const firstProvider = page.locator('.select-provider input').nth(0);
   const secondProvider = page.locator('.select-provider input').nth(1);
   await firstProvider.check();
@@ -210,16 +255,26 @@ try {
   check(await page.locator('body').getAttribute('data-step') === 'directory-share', 'Directory: shortlist did not reach disclosure review');
   check(await page.locator('[data-selected-provider-list] article').count() === 2, 'Directory: selected providers are missing from disclosure review');
   const directoryShare = page.locator('[data-directory-share-form]');
+  check(!(await directoryShare.locator('input[value="Exact address"]').isChecked()), 'Directory disclosure: exact address is preselected');
+  check(!(await directoryShare.locator('input[value="Yard photos"]').isChecked()), 'Directory disclosure: photographs are preselected');
   await directoryShare.locator('button[type="submit"]').click();
   check(await page.locator('[data-directory-share-error]').isVisible(), 'Directory: disclosure confirmation validation is missing');
   await directoryShare.locator('input[name="directory-confirm"]').check();
   await directoryShare.locator('button[type="submit"]').click();
-  check(await page.locator('body').getAttribute('data-step') === 'proposals', 'Directory: approved separate requests did not reach comparison');
+  check(await page.locator('body').getAttribute('data-step') === 'assessment', 'Directory: approved requests skipped provider assessment');
+  await page.locator('[data-confirm-assessment]').click();
+  check(await page.locator('body').getAttribute('data-step') === 'proposals', 'Directory: assessment did not reach proposal comparison');
 
   await jumpTo(page, 'unavailable');
   check((await page.locator('[data-step-panel="unavailable"]').innerText()).includes('Nothing was sent'), 'Unavailable: protected-data message is missing');
   await page.locator('[data-retry-load]').click();
   check(await page.locator('body').getAttribute('data-step') === 'share', 'Unavailable: retry did not recover the private brief');
+
+  await jumpTo(page, 'connection');
+  await page.locator('[data-revoke-invite]').click();
+  check((await page.locator('[data-connection-result]').innerText()).includes('Confirm'), 'Connection: invitation revocation confirmation is missing');
+  await page.locator('[data-revoke-invite]').click();
+  check(await page.locator('[data-preview-provider]').isDisabled(), 'Connection: revoked invitation still allows provider response');
 
   await jumpTo(page, 'welcome');
   await page.waitForTimeout(200);
@@ -237,11 +292,12 @@ try {
   const mobile = await openPage(browser, { width: 390, height: 844 });
   await checkLayout(mobile.page, 390, 'Mobile welcome');
   await checkMobileTargets(mobile.page, 'Mobile welcome');
-  const mobileStages = ['property', 'photos', 'share', 'invite', 'directory', 'proposals', 'activation', 'relationship'];
+  const mobileStages = ['verify', 'property', 'photos', 'share', 'invite', 'directory', 'directory-share', 'proposals', 'activation', 'relationship'];
   for (const step of mobileStages) {
     await jumpTo(mobile.page, step);
     await checkLayout(mobile.page, 390, `Mobile ${step}`);
     await checkMobileTargets(mobile.page, `Mobile ${step}`);
+    await checkAccessibleControls(mobile.page, `Mobile ${step}`);
   }
   await jumpTo(mobile.page, 'welcome');
   await mobile.page.waitForTimeout(200);
