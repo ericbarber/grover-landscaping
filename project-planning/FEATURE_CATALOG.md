@@ -36,6 +36,10 @@
   provider discovery, assessment, versioned initial proposal, consented
   activation, relationship controls, and marketplace trust gates; production
   contracts remain planned
+- Professionally reviewed acquisition workflow with explicit email verification,
+  affirmative sensitive-data consent, accessible error/progress semantics,
+  functional provider filters, assessment continuity, neutral proposal
+  comparison, and confirmed access-reducing actions
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence

@@ -46,6 +46,11 @@ silently schedule work. Production adoption should still deliver
 known-provider invitations before directory matching, then gate marketplace
 scale on provider eligibility, abuse handling, support readiness, and regional
 provider density.
+The subsequent professional review closes the working design’s remaining trust
+and accessibility gaps with verified email, affirmative sensitive-data consent,
+stale-address reconfirmation, semantic progress and errors, working provider
+filters and no-result states, assessment continuity, neutral proposal treatment,
+and confirmed access-reducing actions.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

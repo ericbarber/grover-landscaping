@@ -92,11 +92,15 @@ Current state:
 - The acquisition production handoff maps the validated experience to the new
   identity, private-property, intake-media, provider-profile, invitation,
   assessment, proposal, activation, and relationship contracts still required.
-- A professional acquisition UX review is in progress to close identity
-  verification, affirmative consent, stale address confirmation, directory
-  assessment continuity, proposal neutrality, destructive-action confirmation,
-  accessible error association, and customer-language gaps before production
-  adoption review.
+- The professional acquisition UX review is complete. It adds explicit email
+  verification, affirmative consent, stale-address reconfirmation, functional
+  provider filters and no-result guidance, directory-to-assessment continuity,
+  neutral proposals with annualized comparison costs, confirmed access-reducing
+  actions, semantic progress, programmatic errors, and customer-centered wording.
+- Expanded validation covers accessible control names and errors, unselected
+  sensitive-data defaults, email-code recovery, address mutation, filtering,
+  no-result recovery, destructive confirmation, and the revised known-provider
+  and directory journeys across responsive and 200% text layouts.
 
 Next design work:
 

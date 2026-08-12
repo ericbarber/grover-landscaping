@@ -27,13 +27,16 @@ reviewable; it does not mean the production API persists that behavior.
 | 4. Assessment, proposal, activation | Complete | Assessment, contextual questions, proposal comparison, decision recovery, setup, and first-visit activation are connected |
 | 5. Curated provider discovery | Complete | Match reasons, provider detail, shortlist, bounded disclosure, assessment, and comparison are reviewable |
 | 6. Relationship continuity | Complete | Current access, photo revoke, provider change/end, export, and deletion controls are reviewable |
-| 7. Governance, validation, handoff | Complete | Reviewer states, responsive/browser evidence, gallery references, contract map, and delivery records are complete |
+| 7. Governance, validation, handoff | Complete | Professional workflow/content/accessibility review, reviewer states, responsive/browser evidence, gallery references, contract map, and delivery records are complete |
 
 The completed working design is available at
 [`../prototypes/yard-owner-acquisition/index.html`](../prototypes/yard-owner-acquisition/index.html).
 Its [production handoff](yard-owner-acquisition-handoff.md) separates validated
 experience decisions from the new persistence, identity, media, notification,
 proposal, and relationship contracts still required for production adoption.
+The [professional UX review](yard-owner-acquisition-professional-review.md)
+records the resolved workflow, wording, affirmative-consent, and accessibility
+findings that define the revised experience standard.
 
 ## Product recommendation
 

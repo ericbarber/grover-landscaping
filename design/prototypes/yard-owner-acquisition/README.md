@@ -14,22 +14,28 @@ http://<vpn-ip>:5173/design/prototypes/yard-owner-acquisition/
 ## Complete journey
 
 1. Enter from a private-first Yard Owner invitation.
-2. Create an illustrative owner profile.
-3. Add and confirm a private service address and authority statement.
-4. Describe yard areas, care goals, cadence, and constraints in plain language.
-5. Add, remove, process, and skip optional guided yard photographs.
-6. Review the complete yard brief before sharing.
-7. Invite an existing provider, finish later, or browse curated providers.
-8. Review the provider-side request and explicit identity/access handoff.
-9. Approve provider-specific information for assessment.
-10. Select an assessment window and ask a contextual question.
-11. Compare proposals by scope, exclusions, cadence, policies, and price.
-12. Ask for clarification or a revision without making a decision.
-13. Confirm proposal acceptance, inspect write failure/retry, and enter provider
+2. Create an illustrative owner profile and affirm its private starting state.
+3. Verify the owner email with an accessible six-digit-code and resend flow.
+4. Add and confirm a private service address and authority statement; editing the
+   location invalidates a stale confirmation.
+5. Describe yard areas, care goals, cadence, and constraints in plain language,
+   including “not sure” and provider-recommendation paths.
+6. Add, remove, process, or continue without optional guided yard photographs.
+7. Review the complete yard brief before sharing.
+8. Invite an existing provider, finish later, or browse and filter suitable
+   providers without revealing the exact address.
+9. Review the provider-side request and explicit identity/access handoff.
+10. Choose and approve provider-specific information for assessment; sensitive
+    address and photograph access is not preselected.
+11. Select an assessment window and ask a contextual question.
+12. Compare neutral proposals by scope, exclusions, cadence, policies, and
+    annualized cost—not provider ranking.
+13. Ask for clarification or a revision without making a decision.
+14. Confirm proposal acceptance, inspect write failure/retry, and enter provider
     setup without silently scheduling service.
-14. Confirm the first visit and continue to the Yard Owner V2 portal.
-15. Review active-provider access, revoke future photo access, change/end care,
-    and request export or unused-intake deletion.
+15. Confirm the first visit and continue to the Yard Owner V2 portal.
+16. Review active-provider access, confirm future photo-access revocation,
+    change/end care, and request export or unused-intake deletion.
 
 ## Review journey
 
@@ -41,18 +47,19 @@ The prototype includes these major states:
 
 | Area | Reviewable behavior |
 | --- | --- |
-| Owner identity | Empty/invalid, valid, consented, private draft |
+| Owner identity | Empty/invalid, affirmative privacy consent, phone/channel dependency, valid, private draft |
+| Email verification | Invalid code, resend, change email, successful confirmation |
 | Address | Unconfirmed, coarse location confirmed, authority missing, valid |
 | Yard brief | Areas, goal, cadence, constraints, “not sure” path |
 | Photos | Zero-photo completion, add/remove, processing result, metadata notice |
 | Sharing | Private summary, per-provider disclosure, no-provider finish-later |
 | Invitation | Invalid, unconfirmed, simulated failure, preserved retry, delivered, revoked |
 | Provider response | Identity gate, interested, declined, assessment-only meaning |
-| Directory | Match reasons, trust fact precision, shortlist, provider detail, bounded requests |
+| Directory | Functional filters, no results, fit reasons, precise trust facts, shortlist, provider detail, bounded requests |
 | Assessment | Time selection, question, confirmation, no-service boundary |
 | Proposal | Scope comparison, detail, question/change request, decline, confirm, failure/retry, accepted snapshot |
 | Activation | Accepted but unscheduled, provider setup, first visit confirmed |
-| Relationship | Current access, photo revoke, provider change/end, export, deletion |
+| Relationship | Current access, confirmed photo revoke, confirmed provider end/change, export, confirmed deletion |
 | Global | Saved private draft, unavailable/retry, responsive and 200% text |
 
 ## Product boundaries
@@ -79,6 +86,10 @@ The prototype includes these major states:
 - Visible focus, native keyboard controls, Escape close, and focus restoration.
 - Inline validation associates errors with the affected decision and preserves
   input after simulated failures.
+- Visible milestone progress exposes `aria-current="step"`; stage changes move
+  focus to the persistent H1 and use a polite live announcement.
+- Privacy acknowledgment and sensitive provider disclosures require affirmative
+  selection instead of relying on preselected consent.
 - Customer status always uses text and structure, not color alone.
 - Mobile controls target at least 44 by 44 CSS pixels.
 - Content reflows without horizontal scrolling at compact mobile and 200% text.
@@ -92,4 +103,9 @@ From an environment with frontend dependencies installed:
 node design/tools/validate-yard-owner-acquisition.mjs
 ```
 
-Pass `--capture` to refresh the desktop and mobile gallery references.
+Pass `--capture` to refresh the desktop and mobile gallery references. The
+validator covers the connected known-provider and directory paths, email
+verification, stale-address recovery, functional directory filters and no-result
+guidance, neutral proposal language, affirmative consent defaults, destructive
+confirmation, programmatic control names and error associations, semantic
+progress, focus behavior, compact touch targets, 200% text, and overflow.

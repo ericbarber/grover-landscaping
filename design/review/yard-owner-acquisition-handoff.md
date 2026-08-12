@@ -32,9 +32,13 @@ failures for recovery review.
 ### Private owner entry
 
 - A yard can exist before a provider relationship.
+- Verified email is an explicit substage with invalid-code, resend, change-email,
+  and recovery behavior.
 - Creating a yard does not create a provider tenant, customer account, job,
   contract, route, or public listing.
 - Address confirmation and authority are explicit gates.
+- Editing a confirmed address invalidates the confirmation and requires a new
+  location check.
 - Exact address, contact information, photographs, and access constraints remain
   private until an owner approves disclosure to a specific provider.
 - Save-and-resume and protected-unavailable states state whether anything was
@@ -44,7 +48,8 @@ failures for recovery review.
 
 - Plain-language areas, outcomes, cadence, and considerations form a draft yard
   brief rather than a professional care plan.
-- The owner can choose “not sure” and continue without measurements, plant names,
+- The owner can choose “not sure” or request a recommendation and continue
+  without measurements, plant names,
   diagnosis, or exact frequency.
 - Photographs are optional, guided, replaceable, removable, and accompanied by a
   processing and metadata-removal result.
@@ -64,11 +69,16 @@ failures for recovery review.
 
 ### Curated discovery
 
-- Directory results explain why each organization matched.
+- Directory results explain why each organization may fit without claiming a
+  quality ranking.
+- Care and assessment filters update the visible result set and provide an honest
+  no-result state without contacting a provider.
 - Trust labels name the specific represented fact and its freshness rather than
   implying a general Grover endorsement.
 - The owner can inspect provider detail, shortlist a bounded number, and approve
   disclosure separately for each provider.
+- Exact address, photographs, and final disclosure confirmation are not
+  preselected. Directory requests proceed to assessment before proposals.
 - Providers cannot see competitors, rank position, or requests sent elsewhere.
 - The design does not introduce sponsored ranking, reviews, instant booking, or
   guaranteed availability.
@@ -79,6 +89,8 @@ failures for recovery review.
 - The owner can ask a contextual question without making a service decision.
 - Proposals compare scope, exclusions, cadence, policy, and price without
   pretending unlike offers are identical.
+- Proposal cards use factual cadence labels instead of provider rankings, and
+  recurring monthly figures are explicitly annualized comparison averages.
 - Acceptance requires explicit confirmation and is separate from payment.
 - Failed decisions retain the proposal and can be retried safely.
 - Acceptance enters provider setup; it does not silently schedule work.
@@ -90,6 +102,8 @@ failures for recovery review.
 - Active access remains inspectable by provider and data category.
 - The owner can revoke future photo access, change or end the provider
   relationship, request an export, and request deletion of unused intake data.
+- Access-reducing and destructive actions explain their effect and require a
+  second confirmation before changing state.
 - Historical agreement and access events need immutable audit representation in
   production even when future access is revoked.
 
@@ -155,10 +169,14 @@ Before a production pilot, approve and test:
 ## Validation evidence
 
 The repeatable Playwright validator passes the connected desktop journey and
-directory branch, invitation and proposal one-shot failures, consent validation,
-focus return, activation boundary, relationship controls, mobile layouts at 390
-and 320 CSS pixels, tablet layout, 200% text, minimum mobile touch targets,
-horizontal-overflow checks, one-visible-stage integrity, and browser-error checks.
+directory branch, email verification and resend semantics, stale-address
+reconfirmation, functional filters and no-result guidance, invitation and
+proposal one-shot failures, affirmative consent defaults, programmatic field
+errors and control names, semantic current-step progress, focus return,
+activation boundary, destructive confirmation and relationship controls, mobile
+layouts at 390 and 320 CSS pixels, tablet layout, 200% text, minimum mobile touch
+targets, horizontal-overflow checks, one-visible-stage integrity, and
+browser-error checks.
 
 Run from an environment with the frontend dependencies installed:
 

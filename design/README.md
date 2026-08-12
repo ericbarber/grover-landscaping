@@ -47,6 +47,7 @@ design/
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
 │   ├── yard-owner-entry-provider-connection-plan.md # Owner acquisition and provider matching
 │   ├── yard-owner-acquisition-handoff.md # Acquisition production contract map
+│   ├── yard-owner-acquisition-professional-review.md # Workflow, content, and accessibility review
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
@@ -155,7 +156,9 @@ renderer or a design-tool account to see a proposed screen.
    branches, consent, assessment, proposal, activation, and relationship control.
 2. Review its
    [phased contract](review/yard-owner-entry-provider-connection-plan.md) and
-   [production handoff](review/yard-owner-acquisition-handoff.md).
+   [production handoff](review/yard-owner-acquisition-handoff.md), then inspect
+   the [professional UX review](review/yard-owner-acquisition-professional-review.md)
+   for resolved workflow, wording, consent, and accessibility findings.
 3. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
    and review audience, workflow, responsive, recovery, and success behavior.
 4. Launch the [working Yard Owner V2 portal](prototypes/yard-owner-portal/index.html)
