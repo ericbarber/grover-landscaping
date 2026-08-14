@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-14: Completed the validated Yard Crew acquisition working design for solo owner-operators, provider companies, and invited workers, spanning evidence-based marketing, provider readiness, owner-approved opportunity discovery, privacy-preserving disclosure, yard assessment, proposal and revision, accepted-but-unassigned handoff, first-visit confirmation, contextual support, responsive references, browser validation, and production handoff.
 - 2026-08-12: Added the responsive production Yard Owner entry at `/app/yard-owner` with a direct public owner action, verified-email gating, private profile/property setup, address-change reconfirmation, authority attestation, explicit privacy boundaries, reload recovery, and mobile/desktop browser coverage.
 - 2026-08-12: Added verified-identity Yard Owner self-service APIs that derive owner scope from authentication, require no provider role, validate property authority and structured addresses, and distinguish missing, duplicate, invalid, and unavailable outcomes.
 - 2026-08-12: Added the production Yard Owner acquisition persistence foundation with authenticated-subject workspaces, private pre-provider properties outside organization tenants, per-owner address duplicate protection, minimized lifecycle audit events, fail-closed repository outcomes, and PostgreSQL isolation coverage.

@@ -39,6 +39,12 @@ silently revisit settled product structure.
 | D-032 | Delivery sequence | Deliver known-provider invitations before a curated directory, and product-gate open marketplace scale on eligibility, trust, abuse, support, and regional-density contracts. | Accepted for phased planning | 2026-08-12 | Product/design |
 | D-033 | Yard Owner acquisition | Use one private-first working journey with an explicit provider-side preview and reviewer-controlled lifecycle/failure states so consent and handoff can be evaluated end to end. | Accepted for working design | 2026-08-12 | Product/design |
 | D-034 | Acquisition accessibility | Require verified identity, affirmative sensitive-data disclosure, stale-address reconfirmation, semantic stage progress, neutral proposal treatment, and confirmation for access-reducing actions in the acquisition experience. | Accepted after professional review | 2026-08-12 | Product/design |
+| D-035 | Yard Crew acquisition | Treat Yard Crew as a marketing audience, not a public marketplace account type: owner-operators create provider organizations of one, companies use provider organizations, and workers join by invitation. | Accepted for working design | 2026-08-14 | Product/design |
+| D-036 | Provider discovery | Show owner-approved provider opportunities, never individually claimable jobs; provider interest requests assessment access and does not mean selection, assignment, or service acceptance. | Accepted for working design | 2026-08-14 | Product/design |
+| D-037 | Provider privacy | Hide exact address, owner contact, photographs, access notes, competitors, rank, budget, and guaranteed value until provider-specific owner disclosure allows each category. | Accepted for working design | 2026-08-14 | Product/design |
+| D-038 | Provider trust | Represent supplied, checked, pending, expired, corrected, not-applicable, and not-collected facts separately; do not use a broad provider-verification badge. | Accepted for working design | 2026-08-14 | Product/design |
+| D-039 | Yard review | Treat owner answers and photographs as context, not measurement, diagnosis, safety proof, price, or treatment guidance; let providers require an on-site assessment or decline. | Accepted for working design | 2026-08-14 | Product/design |
+| D-040 | Provider support | Include contextual setup, verification, opportunity, assessment/safety, team/access, field recovery, and data/relationship support before marketplace scale. | Accepted for working design | 2026-08-14 | Product/design |
 
 ## Open review questions
 
@@ -51,3 +57,10 @@ silently revisit settled product structure.
 4. Should the production homepage adopt the V2 working design as one complete
    slice or migrate its foundation, hero, workflow, and conversion patterns in
    smaller review units?
+5. What minimum region- and service-specific facts make a provider eligible to
+   receive owner opportunities?
+6. Which opportunity details may be shown before provider-specific owner consent?
+7. Which provider roles may express interest, schedule assessment, author price,
+   submit proposals, and assign operational work?
+8. What support hours, safety escalation, abuse response, and verification appeal
+   promise can the first provider-acquisition pilot operate credibly?

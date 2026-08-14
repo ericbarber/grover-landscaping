@@ -101,6 +101,21 @@ Current state:
   sensitive-data defaults, email-code recovery, address mutation, filtering,
   no-result recovery, destructive confirmation, and the revised known-provider
   and directory journeys across responsive and 200% text layouts.
+- The Yard Crew acquisition design is complete as a connected, validated journey
+  for solo owner-operators, multi-crew provider companies, and invited workers.
+  "Yard Crew" remains the audience language while provider organizations remain
+  the account, eligibility, opportunity, proposal, and customer-relationship
+  boundary.
+- Its working prototype covers credible public acquisition, path selection,
+  provider profile and readiness, owner-approved opportunity previews, empty,
+  paused, and unavailable states, provider-specific disclosure, remote or
+  on-site yard review, proposal and revision, accepted-but-unassigned handoff,
+  first-visit confirmation, invitations, and contextual support.
+- Repeatable Yard Crew validation covers the connected desktop journey, tablet,
+  390px and 320px mobile, 200% text, target sizes, accessible names, validation,
+  interest failure and retry, disclosure boundaries, overflow, and browser
+  errors. The handoff preserves owner choice and provider crew assignment as
+  separate decisions and records the marketplace gates still required.
 
 Next design work:
 
@@ -115,6 +130,11 @@ Next design work:
 - Review Yard Owner acquisition for phased production adoption, beginning with
   independent identity/private property, then intake media and known-provider
   connection before curated discovery.
+- Review the Yard Crew acquisition prototype and resolve provider eligibility,
+  pre-consent opportunity fields, provider roles, and safety/support service
+  levels before production adoption. Begin with public routing and provider
+  identity/readiness, then pilot known-owner connections before curated
+  opportunities.
 - Resume Phase 0 of the broader application working-design plan; within customer
   Phase 5, return to the property-manager portfolio and keep billing product-gated.
 

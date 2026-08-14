@@ -51,6 +51,18 @@ and accessibility gaps with verified email, affirmative sensitive-data consent,
 stale-address reconfirmation, semantic progress and errors, working provider
 filters and no-result states, assessment continuity, neutral proposal treatment,
 and confirmed access-reducing actions.
+The Yard Crew acquisition slice is now complete as a validated working design.
+It routes solo owner-operators into a provider organization of one, multi-crew
+companies into provider setup, and workers into invitation-only membership. The
+journey spans evidence-based marketing, service fit and readiness, owner-approved
+opportunity previews, provider-specific disclosure, yard assessment, versioned
+proposals, accepted-but-unassigned handoff, first-visit confirmation, and
+contextual support. Opportunity interest is never represented as a claimed job,
+and owner selection remains separate from the provider's internal crew
+assignment. Production adoption should begin with public routing and provider
+identity/readiness, pilot known-owner connections next, and gate curated
+opportunities on eligibility, consent fields, role authority, safety response,
+abuse handling, and regional density.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.
@@ -128,6 +140,12 @@ schedule, remaining work, or a completed day.
    - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
    - Delivered the self-scoped verified-identity APIs and responsive production React private entry.
    - Add versioned yard briefs and owner-intake media next, before known-provider invitations; defer curated discovery until the direct connection loop is safe.
+
+**Design-ready — Yard Crew acquisition production handoff**
+
+   - Review the validated provider prototype and close the recorded eligibility, pre-consent data, role-authority, and support-level product gates.
+   - Adopt public audience routing and provider identity/readiness first, then connect the known-owner pilot to the Yard Owner invitation flow.
+   - Defer curated opportunity discovery until disclosure, safety, abuse, density, and marketplace-governance gates are operationally owned.
 
 0. **Local mobile runtime readiness**
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.

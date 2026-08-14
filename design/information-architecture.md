@@ -7,18 +7,25 @@ Grover
 ├── Public website
 │   ├── Homepage
 │   ├── Persona campaign landing
+│   ├── Yard Crew provider acquisition
 │   ├── Conversion request
 │   └── Customer-safe shared report or bid
 ├── Identity and setup
 │   ├── Sign in / callback / recovery
 │   ├── First-owner company setup
-│   └── Invitation acceptance
+│   ├── Provider owner-operator or company setup
+│   └── Team invitation acceptance
 ├── Authenticated workspace
 │   ├── Persona Home
 │   ├── Field
 │   │   ├── Route
 │   │   ├── Assigned jobs
 │   │   └── Job detail
+│   ├── Provider growth
+│   │   ├── Provider readiness
+│   │   ├── Owner-approved opportunities
+│   │   ├── Yard assessment
+│   │   └── Initial proposal and work-ready handoff
 │   ├── Manager
 │   │   ├── Overview
 │   │   ├── Schedule
@@ -45,6 +52,13 @@ Grover
   readiness, offline, update, or API failure banners.
 - Persona Home answers “what should I do next?” and does not duplicate every
   destination available to that person.
+- Yard Crew marketing may address owner-operators, company operators, and
+  invited workers together, but it routes them to provider-organization or
+  least-privilege invitation outcomes before authenticated setup.
+- Owner opportunities belong to authorized provider organizations, never public
+  individual-worker inventory. Interest, owner disclosure, assessment, proposal,
+  acceptance, internal crew assignment, and first-visit confirmation remain
+  separate lifecycle decisions.
 - Field navigation remains stable and thumb reachable: Home, Route, Jobs, Job.
 - Manager mobile navigation uses four levels: Home, manager hub, category tool
   picker, and one active tool. Desktop may show persistent category navigation.

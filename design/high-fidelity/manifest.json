@@ -35,6 +35,20 @@
     "preview": "field/crew-route-mobile-v1.png"
   },
   {
+    "id": "yard-crew-acquisition-desktop-v1",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html",
+    "preview": "field/yard-crew-acquisition-desktop-v1.png"
+  },
+  {
+    "id": "yard-crew-acquisition-mobile-v1",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html",
+    "preview": "field/yard-crew-acquisition-mobile-v1.png"
+  },
+  {
     "id": "schedule-desktop-v1",
     "area": "manager",
     "status": "review",

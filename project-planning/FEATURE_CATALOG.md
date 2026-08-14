@@ -21,6 +21,9 @@
 - Validated working homepage design with responsive audience continuity,
   interactive workflow proof, accessible request states, and implementation
   handoff; production adoption remains a separate delivery slice
+- Validated Yard Crew acquisition marketing with distinct solo provider,
+  provider-company, and invited-worker paths, evidence-based capability claims,
+  lifecycle explanation, opportunity preview, and contextual support entry
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces
@@ -40,6 +43,15 @@
   affirmative sensitive-data consent, accessible error/progress semantics,
   functional provider filters, assessment continuity, neutral proposal
   comparison, and confirmed access-reducing actions
+- Validated Yard Crew acquisition working design with provider organization
+  setup, service territory and readiness, owner-approved opportunity search,
+  privacy-preserving previews, provider-specific disclosure, remote/on-site yard
+  assessment, versioned proposal and revision, accepted-but-unassigned handoff,
+  first-visit confirmation, team invitations, contextual support, responsive
+  references, and production contract map
+- Yard Crew marketplace trust model separating interest from job claims, owner
+  selection from provider crew assignment, supplied facts from checked facts,
+  and yard context from provider diagnosis or pricing
 - Delivered private Yard Owner workspace and property persistence keyed to the
   authenticated subject, outside provider tenants, with per-owner duplicate
   protection and lifecycle audit coverage

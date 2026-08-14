@@ -35,6 +35,7 @@ design/
 ├── README.md                          # Workflow and ownership
 ├── prototypes/
 │   ├── public-homepage/                # Responsive working V2 design
+│   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
 │   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
@@ -48,11 +49,14 @@ design/
 │   ├── yard-owner-entry-provider-connection-plan.md # Owner acquisition and provider matching
 │   ├── yard-owner-acquisition-handoff.md # Acquisition production contract map
 │   ├── yard-owner-acquisition-professional-review.md # Workflow, content, and accessibility review
+│   ├── yard-crew-acquisition-plan.md    # Provider acquisition product and trust model
+│   ├── yard-crew-acquisition-handoff.md # Validated provider journey contract map
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
 │   ├── render-wireframes.mjs           # Deterministic SVG renderer
 │   ├── validate-yard-owner-acquisition.mjs # Acquisition workflow checks
+│   ├── validate-yard-crew-acquisition.mjs # Provider acquisition workflow checks
 │   └── validate-yard-owner-portal.mjs  # Responsive customer-flow checks
 └── wireframes/
     ├── public/                         # Homepage, campaigns, conversion, shares
@@ -145,37 +149,53 @@ with:
 node design/tools/validate-yard-owner-acquisition.mjs --capture
 ```
 
+Validate Yard Crew provider acquisition and refresh its marketing/opportunity
+references with:
+
+```bash
+node design/tools/validate-yard-crew-acquisition.mjs --capture
+```
+
 Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
 1. Launch the
+   [working Yard Crew acquisition journey](prototypes/yard-crew-acquisition/index.html)
+   and review provider fit, solo/company/invited paths, readiness facts,
+   opportunity discovery, disclosure, yard assessment, proposal, operational
+   handoff, and provider support.
+2. Review its
+   [phased product plan](review/yard-crew-acquisition-plan.md) and
+   [production handoff](review/yard-crew-acquisition-handoff.md), especially the
+   open eligibility, trust, privacy, role, abuse, support, and monetization gates.
+3. Launch the
    [working Yard Owner acquisition journey](prototypes/yard-owner-acquisition/index.html)
    and review private setup, optional photographs, known-provider and directory
    branches, consent, assessment, proposal, activation, and relationship control.
-2. Review its
+4. Review its
    [phased contract](review/yard-owner-entry-provider-connection-plan.md) and
    [production handoff](review/yard-owner-acquisition-handoff.md), then inspect
    the [professional UX review](review/yard-owner-acquisition-professional-review.md)
    for resolved workflow, wording, consent, and accessibility findings.
-3. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
+5. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
    and review audience, workflow, responsive, recovery, and success behavior.
-4. Launch the [working Yard Owner V2 portal](prototypes/yard-owner-portal/index.html)
+6. Launch the [working Yard Owner V2 portal](prototypes/yard-owner-portal/index.html)
    and review service-day confidence, contextual questions, proof feedback,
    concern recovery, recommendation collaboration, customer-controlled
    preferences, and customer-safe boundaries.
-5. Review the [V2 phased plan](review/yard-owner-portal-v2-enhancement-plan.md)
+7. Review the [V2 phased plan](review/yard-owner-portal-v2-enhancement-plan.md)
    and [V2 production handoff](review/yard-owner-portal-v2-handoff.md).
-6. Review the
+8. Review the
    [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    and its seven completion gates.
-7. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
-8. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
+9. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+10. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-9. Review the field mobile sequence: Home → Route → Jobs → Job.
-10. Review the manager hierarchy: hub → category → tool → record/action.
-11. Review customer-safe pages and the separation from internal operations.
-12. Confirm that homeowner self-service and multi-vendor management remain
+11. Review the field mobile sequence: Home → Route → Jobs → Job.
+12. Review the manager hierarchy: hub → category → tool → record/action.
+13. Review customer-safe pages and the separation from internal operations.
+14. Confirm that homeowner self-service and multi-vendor management remain
    distinct product modes rather than being mixed into the core provider UI.
