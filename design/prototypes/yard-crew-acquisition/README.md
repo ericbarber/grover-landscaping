@@ -1,9 +1,10 @@
 # Yard Crew Acquisition Working Design
 
-This dependency-free prototype explores how working yard-care professionals
+This dependency-free prototype explores how landscape service professionals
 discover Grover, choose the correct provider or invitation path, establish
-readiness, review owner-approved opportunities, assess a yard, author scope, and
-hand accepted work into provider operations.
+qualification, review owner-authorized service opportunities, complete a site
+assessment, issue a service proposal, and mobilize approved work into provider
+operations.
 
 Open [`index.html`](index.html) from the design gallery or at:
 
@@ -14,38 +15,42 @@ http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 ## Review journey
 
 1. Review the evidence-based Yard Crew marketing promise.
-2. Compare owner-operator, multi-crew company, and invited-worker paths.
+2. Compare owner-operator, multi-crew provider, and invited-team-member paths.
 3. Build an illustrative provider organization.
-4. Configure services, territory, response, and precise readiness facts.
-5. Search and filter owner-approved opportunities.
+4. Configure service categories, territory, response standard, and precise
+   qualification facts.
+5. Search and filter owner-authorized service opportunities.
 6. Recover no-result, unavailable, and paused-request states.
-7. Review a disclosure-limited opportunity and request assessment access.
-8. Simulate an interest write failure, retry, and owner-approved disclosure.
-9. Review the yard remotely and select an on-site assessment when needed.
-10. Send a provider-authored proposal and inspect owner question, revision, and
-    acceptance states.
-11. Keep accepted scope distinct from internal crew assignment and first-visit
-    confirmation.
+7. Review a disclosure-limited preliminary service brief and request site-
+   assessment access.
+8. Simulate a statement-of-interest write failure, retry, and owner-authorized
+   disclosure.
+9. Complete a desktop assessment and select an on-site assessment when needed.
+10. Issue a provider-authored service proposal and inspect clarification,
+    revision, and approval states.
+11. Keep approved scope distinct from service mobilization, crew assignment,
+    work-order release, and initial-service confirmation.
 12. Review contextual provider setup, opportunity, safety, field, access, and
     data support.
 13. Inspect the invited crew-lead least-privilege path.
 
 Use **Review journey** to jump directly to each stage, change provider path, set
 opportunities to suitable, empty, unavailable, or paused, and make the next
-interest request fail once.
+statement-of-interest submission fail once.
 
 ## Product boundaries
 
 - “Yard Crew” is the marketing audience, not a public marketplace account type.
 - A solo owner-operator receives a provider organization of one.
 - Established companies use a provider organization with authorized roles.
-- Crew leads and members join existing providers by invitation and do not become
+- Crew leaders and team members join existing providers by invitation and do not become
   independently searchable work inventory.
 - Yard owners select provider organizations; providers assign internal crews.
 - Opportunity previews omit exact address, owner contact, photos, access notes,
   competitors, rank, budget, and guaranteed job value.
-- Interest requests assessment access. It is not owner selection, work
-  acceptance, assignment, scheduling, or service activation.
+- A statement of interest requests site-assessment access. It is not owner
+  selection, proposal approval, crew assignment, work-order release, scheduling,
+  or service activation.
 - Yard photos and owner answers do not establish measurement, diagnosis, safety,
   price, or treatment instructions.
 - Every business, trust fact, opportunity, yard, price, date, and outcome is
@@ -71,5 +76,7 @@ interest request fail once.
 
 Review the phased product and trust model in
 [`../../review/yard-crew-acquisition-plan.md`](../../review/yard-crew-acquisition-plan.md).
-The later production handoff must resolve the product gates recorded there
-before opportunity discovery or verification language ships.
+The [industry language review](../../review/yard-crew-industry-language-review.md)
+defines the production vocabulary used here. The later production handoff must
+resolve the product gates recorded in the phased plan before opportunity
+discovery or credential language ships.

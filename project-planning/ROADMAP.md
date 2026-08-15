@@ -63,6 +63,12 @@ assignment. Production adoption should begin with public routing and provider
 identity/readiness, pilot known-owner connections next, and gate curated
 opportunities on eligibility, consent fields, role authority, safety response,
 abuse handling, and regional density.
+The subsequent professional language review replaces generic marketplace terms
+with landscape-service operating language: provider qualification, service
+opportunity, preliminary service brief, site assessment, scope of work, service
+proposal, mobilization, and work order. Formal terms remain paired with concise
+plain-language consequences, while irrigation, tree work, licensure, insurance,
+and certification retain precise scope and evidence boundaries.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

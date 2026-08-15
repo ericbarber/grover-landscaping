@@ -2,10 +2,10 @@
 
 ## Goal
 
-Design a credible, accessible path for yard-care professionals to discover
-Grover, establish the right kind of provider account, become ready to respond to
-owner-approved opportunities, review a yard safely, and turn mutually agreed
-scope into operational work.
+Design a credible, accessible path for landscape service professionals to
+discover Grover, establish the correct provider organization, qualify to review
+owner-authorized service opportunities, complete a site assessment, issue a
+defined proposal, and mobilize approved scope into operational work orders.
 
 This is a design-phase contract. It does not authorize an open labor
 marketplace, worker classification, instant job claiming, payment processing,
@@ -21,6 +21,7 @@ matching.
 | 2. Working prototype | Complete | Responsive acquisition-to-opportunity journey with reviewer-controlled states |
 | 3. Professional validation | Complete | Mobile, desktop, keyboard, text zoom, failure recovery, privacy, and language review |
 | 4. Production handoff | Complete | Contract map, phased adoption plan, gallery references, and open product gates |
+| 5. Industry language review | Complete | Landscape-service terminology, commercial lifecycle verbs, specialty boundaries, and plain-language pairings applied |
 
 ## Product definition
 
@@ -34,7 +35,7 @@ People arriving through Yard Crew marketing may be:
 2. **Established provider owners or operations leads** who represent a business
    with one or more crews. They create or claim a provider organization and
    invite the team.
-3. **Crew leads or crew members** who work for an existing provider. They join
+3. **Crew leaders or team members** who work for an existing provider. They join
    only through an organization invitation and cannot independently browse the
    organization’s opportunities, pricing, customers, or competitors unless
    their assigned role permits it.
@@ -54,18 +55,18 @@ service delivery.
 - Declare services, territory, languages, assessment methods, and availability.
 - Review suitable owner requests without seeing exact private details too early.
 - Decide whether to assess, decline, pause new requests, or ask for clarification.
-- Turn verified scope into a proposal and then an operational first visit.
+- Turn assessed scope into a service proposal and then an initial work order.
 
 ### Provider owner or operations lead
 
 - Create or claim the correct business identity.
 - Separate public profile facts from private operational configuration.
 - Configure branches, territories, services, response ownership, and capacity.
-- Invite crew leads/members with least-privilege roles.
+- Invite crew leaders and team members with least-privilege roles.
 - Route opportunities to an authorized estimator or manager.
-- Monitor onboarding, verification, response, and support issues.
+- Monitor onboarding, qualification, response, and support issues.
 
-### Invited crew lead or member
+### Invited crew leader or team member
 
 - Confirm which company invited them and what role is being offered.
 - Understand which customer, price, schedule, and opportunity data the role can
@@ -75,12 +76,16 @@ service delivery.
 
 ## Experience promise
 
-> Find work that fits. Review the yard clearly. Deliver what you agree to.
+> Pursue work that fits. Assess the site clearly. Deliver the approved scope.
 
 The promise is intentionally operational rather than financial. Grover may help
 eligible providers receive and respond to opportunities, but the design must not
-promise leads, income, route density, owner selection, or a particular response
-rate.
+guarantee referral volume, contract award, revenue, route density, territory
+exclusivity, or a particular response rate.
+
+The [industry language review](yard-crew-industry-language-review.md) is the
+copy contract for public acquisition, provider onboarding, service opportunity,
+site assessment, proposal, mobilization, work-order, and support terminology.
 
 ## Journey architecture
 
@@ -105,11 +110,11 @@ than testimonials, earnings, lead volume, or unverified growth claims.
 
 ### Stage 1 — Choose the correct path
 
-Ask one plain-language question: **How do you work today?**
+Ask one plain-language question: **What is your operating role?**
 
-- I run the business and do the work.
-- I manage a yard-care company or several crews.
-- I am joining a company that already uses Grover.
+- I am an owner-operator.
+- I operate a landscape service company.
+- I am joining an existing provider.
 
 Each choice previews the resulting account, responsibility, and next step. A
 user may go back and change the choice before creating anything.
@@ -137,8 +142,9 @@ Account creation does not make a provider searchable or eligible for requests.
 
 Collect only details that improve fit or safe response:
 
-- recurring upkeep, cleanup, lawn, desert landscape, irrigation observation,
-  shrubs, trees, seasonal work, or other supported categories;
+- recurring landscape maintenance, seasonal cleanup, turf maintenance, desert
+  landscape maintenance, irrigation inspection/repair, ornamental shrubs and
+  trees, or other supported categories;
 - work explicitly not offered;
 - cities, postal codes, radius, or reviewed service-area map;
 - owner-operator versus multi-crew operating model;
@@ -150,7 +156,7 @@ Collect only details that improve fit or safe response:
 Avoid collecting route schedules, exact crew locations, customer lists, or
 equipment inventories for public matching.
 
-### Stage 4 — Readiness and trust facts
+### Stage 4 — Provider qualification and credential facts
 
 Separate four concepts that are often collapsed into a misleading badge:
 
@@ -162,23 +168,23 @@ Separate four concepts that are often collapsed into a misleading badge:
 4. **Requirement not applicable or not collected** — the product must not imply
    failure when a jurisdiction or service does not require a credential.
 
-Every displayed trust fact needs a source, scope, freshness date, expiration,
-correction route, and customer-safe description. Readiness includes profile,
+Every displayed credential fact needs a source, scope, effective date,
+expiration, correction route, and customer-safe description. Qualification includes profile,
 territory, response owner, assessment method, notification destination, and any
 region/service-specific eligibility requirements.
 
 ### Stage 5 — Opportunity workspace
 
-Use **Find opportunities** and **Requests**, not “claim jobs.” The workspace
-contains only owner-approved requests suitable for the provider’s declared
+Use **Service opportunities** and **Service requests**, not “claim jobs.” The workspace
+contains only owner-authorized requests suitable for the provider’s declared
 territory and services.
 
 Before owner approval, a request may show:
 
 - approximate service area;
-- requested care categories and outcome;
-- preferred cadence or “recommend one”;
-- yard-area summary and optional non-sensitive brief facts;
+- requested service categories and service objective;
+- requested cadence or “provider to recommend”;
+- landscape-area summary and optional non-sensitive preliminary brief facts;
 - request age and response-by time;
 - why it may fit the provider;
 - whether a remote or on-site assessment is expected.
@@ -188,27 +194,27 @@ competitors, ranking position, estimated owner budget, or guaranteed job value.
 
 Provider actions:
 
-- **Interested — request assessment access**;
-- **Ask a safe clarifying question**;
-- **Not a fit** with customer-safe categories;
-- **Report request**;
-- **Pause similar requests**;
+- **Submit interest and request assessment access**;
+- **Request clarification**;
+- **Decline opportunity** with customer-safe categories;
+- **Report service request**;
+- **Pause similar service opportunities**;
 - save for later only within the response window.
 
-Interest is not acceptance, assignment, service activation, or a promise that
-the owner will select the provider.
+A statement of interest is not contract award, proposal approval, assignment,
+service activation, or a promise that the owner will select the provider.
 
-### Stage 6 — Disclosure and yard review
+### Stage 6 — Site disclosure and assessment
 
-After provider interest, the owner approves provider-specific disclosure. The
+After provider interest, the owner authorizes provider-specific disclosure. The
 provider sees exactly what was granted and when. Exact address, contact, photos,
 and access constraints remain independent permissions.
 
-The yard review workspace supports:
+The site-assessment workspace supports:
 
 - review of the owner-authored brief and optional photos;
-- condition unknown/needs on-site review states;
-- remote review or proposed on-site assessment window;
+- condition unknown/field verification required states;
+- desktop assessment or proposed on-site assessment window;
 - provider-private notes separate from owner-visible observations;
 - explicit hazards and work that requires qualified personnel;
 - questions and requests for additional photos;
@@ -218,7 +224,7 @@ The yard review workspace supports:
 The interface must not diagnose plants, infer measurements from photos, create a
 professional treatment plan, or suggest that uploaded photos prove conditions.
 
-### Stage 7 — Proposal and mutual decision
+### Stage 7 — Service estimate, proposal, and owner decision
 
 The authorized provider authors a versioned proposal with:
 
@@ -228,25 +234,25 @@ The authorized provider authors a versioned proposal with:
 - customer-visible price model and total/period estimate;
 - cancellation, weather, access, renewal, and expiration terms;
 - proof and communication expectations;
-- first-visit prerequisites.
+- mobilization and initial-service prerequisites.
 
-The owner may ask questions or request changes without deciding. Acceptance is
-explicit and idempotent. Only accepted scope can enter provider setup; it does
-not silently choose an internal crew or schedule the first visit.
+The owner may ask questions or request changes without deciding. Proposal
+approval is explicit and idempotent. Only an approved proposal can enter service
+mobilization; approval does not silently assign a crew or release a work order.
 
-### Stage 8 — Work-ready handoff
+### Stage 8 — Service mobilization and work-order release
 
-After acceptance, authorized provider operations can:
+After proposal approval, authorized provider operations can:
 
 - link/create the provider-scoped customer and service property;
 - finish operational property onboarding;
 - assign a branch, crew, and responsible manager;
 - confirm access, hazards, materials, evidence, and service instructions;
-- propose and confirm the first visit;
-- hand the visit into the existing Route → Job → Proof workflow.
+- create and confirm the initial service work order;
+- hand the work order into the existing Route → Work order → Service evidence workflow.
 
-The owner sees **Provider setup in progress** until the first visit is genuinely
-confirmed.
+The owner sees **Service mobilization in progress** until the initial service
+work order is genuinely released and confirmed.
 
 ## Support and safety model
 
@@ -295,22 +301,23 @@ Support is part of the acquisition journey, not a footer link added later.
 | Marketing | owner-operator, company, invited-worker message; capability proof; no earnings/lead promise |
 | Path selection | unselected, solo, company, invited worker, change path |
 | Provider setup | draft, duplicate found, claim requested, validation error, saved |
-| Readiness | incomplete, document supplied, check pending, eligible, expired/correction needed, paused |
+| Qualification | incomplete, document supplied, validation pending, eligible, expired/correction needed, paused |
 | Opportunities | loading, suitable list, filters, no results, unavailable, saved, expiring, withdrawn |
-| Interest | disclosure-limited, question, interested, simulated failure, retry, owner approval pending, declined |
-| Yard review | partial disclosure, remote review, on-site required, schedule proposed, owner confirmed, unsafe/not serviceable |
-| Proposal | draft, sent, question, revision, expired, declined, accepted, write failure/retry |
-| Handoff | accepted/unassigned, operational setup, first visit confirmed, field-work destination |
-| Support | contextual help, request pause, report, verification correction, safety escalation, access review |
+| Statement of interest | disclosure-limited, clarification, submitted, simulated failure, retry, owner authorization pending, declined |
+| Site assessment | partial disclosure, desktop assessment, on-site required, schedule proposed, owner confirmed, unsafe/not serviceable |
+| Service proposal | estimate draft, issued, clarification, revision, expired, declined, approved, write failure/retry |
+| Mobilization | approved/unassigned, property onboarding, work order released, field-operations destination |
+| Support | contextual help, opportunity pause, report, credential correction, safety escalation, access review |
 
 ## Content standards
 
 - Use **provider**, **business**, **owner-operator**, and **crew** precisely.
-- Use **opportunity** or **owner request** before accepted scope; use **work** or
-  **service** only after mutual agreement.
-- Use **interested** rather than **accept job** before owner selection.
-- Use **yard review** in approachable marketing and **assessment** for the
-  provider-authored scope process.
+- Use **service opportunity** or **service request** before proposal approval;
+  use **work order** only after mobilization and operational release.
+- Use **submit a statement of interest** rather than **accept job** before owner
+  selection.
+- Use **site assessment** consistently for the provider-authored evaluation and
+  scope-development process.
 - State what an action does and does not do near the action.
 - Never use “verified,” “licensed,” “insured,” “top,” “best,” “guaranteed,”
   “exclusive,” or earnings language without a precise, supportable contract.
@@ -323,14 +330,14 @@ The first working prototype should let a reviewer:
 1. Inspect the Yard Crew marketing promise.
 2. Compare solo, company, and invited-worker paths.
 3. Create an illustrative owner-operator provider profile.
-4. Complete service/territory readiness and inspect trust wording.
+4. Complete service-territory qualification and inspect credential wording.
 5. Search/filter suitable owner opportunities and recover a no-result state.
 6. Review what is hidden before owner disclosure.
-7. Express interest, simulate a failure, retry, and inspect owner approval.
-8. Review an illustrative yard remotely and require an on-site assessment.
-9. Send a versioned proposal and inspect the non-assignment boundary.
-10. Enter operational setup and inspect contextual support/safety paths.
-11. Jump directly to invited-worker, expired verification, unavailable, paused,
+7. Submit a statement of interest, simulate a failure, retry, and inspect owner authorization.
+8. Complete an illustrative desktop assessment and require an on-site assessment.
+9. Issue a versioned service proposal and inspect the non-assignment boundary.
+10. Enter service mobilization and inspect contextual support/safety paths.
+11. Jump directly to invited-worker, expired credential, unavailable, paused,
     no-opportunity, and report-request states from reviewer controls.
 
 ## Production product gates
@@ -353,17 +360,15 @@ support decisions before production implementation:
 
 ## Open review questions
 
-1. Should the customer-facing term be **yard-care provider**, **yard-care
-   business**, or vary by solo/company path?
-2. What minimum facts make a provider eligible to receive opportunities in the
+1. What minimum facts make a provider eligible to receive opportunities in the
    first supported region?
-3. Should an owner-operator see opportunity discovery immediately after basic
-   readiness, or only after a manual eligibility review?
-4. Which opportunity facts may be shown before provider-specific owner consent?
-5. Who inside a multi-crew company can express interest, schedule assessment,
+2. Should an owner-operator see service opportunity discovery immediately after
+   qualification, or only after a manual eligibility review?
+3. Which opportunity facts may be shown before provider-specific owner consent?
+4. Who inside a multi-crew company can submit interest, schedule assessment,
    author price, and submit a proposal?
-6. What decline categories are helpful to matching without exposing sensitive
+5. What decline categories are helpful to matching without exposing sensitive
    business reasoning?
-7. What is the first-launch support promise and escalation coverage?
-8. Are opportunity access and core operations one subscription, separate
+6. What is the first-launch support promise and escalation coverage?
+7. Are opportunity access and core operations one subscription, separate
    products, or intentionally undecided during the first pilot?

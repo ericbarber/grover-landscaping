@@ -116,6 +116,13 @@ Current state:
   interest failure and retry, disclosure boundaries, overflow, and browser
   errors. The handoff preserves owner choice and provider crew assignment as
   separate decisions and records the marketplace gates still required.
+- The Yard Crew industry-language review is complete. Public and workflow copy
+  now uses landscape-service terms for provider qualification, service
+  opportunities, preliminary briefs, site assessment, scope of work, service
+  proposals, mobilization, crew assignment, and work-order release. Specialized
+  language is paired with plain-language consequences, and license, insurance,
+  certification, irrigation, and tree-work claims retain explicit scope and
+  verification boundaries.
 
 Next design work:
 

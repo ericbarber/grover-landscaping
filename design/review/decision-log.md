@@ -45,6 +45,7 @@ silently revisit settled product structure.
 | D-038 | Provider trust | Represent supplied, checked, pending, expired, corrected, not-applicable, and not-collected facts separately; do not use a broad provider-verification badge. | Accepted for working design | 2026-08-14 | Product/design |
 | D-039 | Yard review | Treat owner answers and photographs as context, not measurement, diagnosis, safety proof, price, or treatment guidance; let providers require an on-site assessment or decline. | Accepted for working design | 2026-08-14 | Product/design |
 | D-040 | Provider support | Include contextual setup, verification, opportunity, assessment/safety, team/access, field recovery, and data/relationship support before marketplace scale. | Accepted for working design | 2026-08-14 | Product/design |
+| D-041 | Yard Crew terminology | Use landscape-service operating language—provider qualification, service opportunity, preliminary service brief, site assessment, scope of work, service proposal, mobilization, and work order—while pairing specialized terms with plain-language consequences and preserving precise credential boundaries. | Accepted after professional language review | 2026-08-14 | Product/design |
 
 ## Open review questions
 

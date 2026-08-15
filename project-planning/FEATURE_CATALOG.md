@@ -52,6 +52,10 @@
 - Yard Crew marketplace trust model separating interest from job claims, owner
   selection from provider crew assignment, supplied facts from checked facts,
   and yard context from provider diagnosis or pricing
+- Professionally reviewed Yard Crew terminology spanning landscape-provider
+  roles, provider qualification, service opportunities, site assessment,
+  estimating, scope of work, proposal approval, service mobilization, work-order
+  release, credential evidence, and specialty-service boundaries
 - Delivered private Yard Owner workspace and property persistence keyed to the
   authenticated subject, outside provider tenants, with per-owner duplicate
   protection and lifecycle audit coverage

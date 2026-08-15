@@ -51,6 +51,7 @@ design/
 │   ├── yard-owner-acquisition-professional-review.md # Workflow, content, and accessibility review
 │   ├── yard-crew-acquisition-plan.md    # Provider acquisition product and trust model
 │   ├── yard-crew-acquisition-handoff.md # Validated provider journey contract map
+│   ├── yard-crew-industry-language-review.md # Landscape-service terminology and voice
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
@@ -163,13 +164,15 @@ renderer or a design-tool account to see a proposed screen.
 
 1. Launch the
    [working Yard Crew acquisition journey](prototypes/yard-crew-acquisition/index.html)
-   and review provider fit, solo/company/invited paths, readiness facts,
-   opportunity discovery, disclosure, yard assessment, proposal, operational
-   handoff, and provider support.
+   and review provider fit, solo/company/invited paths, qualification facts,
+   service opportunity discovery, disclosure, site assessment, proposal,
+   mobilization, work-order handoff, and provider support.
 2. Review its
    [phased product plan](review/yard-crew-acquisition-plan.md) and
-   [production handoff](review/yard-crew-acquisition-handoff.md), especially the
-   open eligibility, trust, privacy, role, abuse, support, and monetization gates.
+   [production handoff](review/yard-crew-acquisition-handoff.md), then use the
+   [industry language review](review/yard-crew-industry-language-review.md) to
+   assess terminology consistency and the open eligibility, trust, privacy,
+   role, abuse, support, and monetization gates.
 3. Launch the
    [working Yard Owner acquisition journey](prototypes/yard-owner-acquisition/index.html)
    and review private setup, optional photographs, known-provider and directory

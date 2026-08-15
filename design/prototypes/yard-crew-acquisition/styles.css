@@ -283,7 +283,7 @@ dialog::backdrop { background: rgb(9 36 30 / 72%); backdrop-filter: blur(3px); }
   .app-grid { display: block; min-height: calc(100vh - 162px); }
   .stage-nav { display: none; }
   .stage-main { padding: 1.3rem 1rem 6rem; }
-  .stage-heading h1 { font-size: 2.55rem; }
+  .stage-heading h1 { font-size: 2.55rem; overflow-wrap: anywhere; }
   .choice-grid, .form-grid, .assessment-grid, .support-categories { grid-template-columns: 1fr; }
   .choice-card { min-height: 175px; }
   .field.full { grid-column: auto; }

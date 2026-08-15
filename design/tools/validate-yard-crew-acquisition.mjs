@@ -85,17 +85,18 @@ try {
   const page = desktop.page;
   await checkLayout(page, 1440, 'Desktop marketing');
   await checkAccessibleControls(page, 'Desktop marketing');
-  check((await page.locator('.hero h1').innerText()).includes('Find work that fits'), 'Marketing: operational promise is missing');
-  check((await page.locator('.hero-note').innerText()).includes('does not promise leads'), 'Marketing: no-lead-promise boundary is missing');
-  check((await page.locator('#fit').innerText()).includes('joining a company'), 'Marketing: invited-worker route is missing');
-  check((await page.locator('#how').innerText()).includes('Interest is only the beginning'), 'Marketing: staged opportunity lifecycle is missing');
+  check((await page.locator('.hero h1').innerText()).includes('Pursue work that fits'), 'Marketing: professional operational promise is missing');
+  check((await page.locator('.hero-note').innerText()).includes('does not guarantee referral volume'), 'Marketing: no-guarantee boundary is missing');
+  check((await page.locator('#fit').innerText()).includes('joining an existing provider'), 'Marketing: invited-worker route is missing');
+  check((await page.locator('#how').innerText()).includes('Each commercial decision remains explicit'), 'Marketing: staged commercial lifecycle is missing');
+  check((await page.locator('#how').innerText()).includes('scope of work') && (await page.locator('#how').innerText()).includes('work order'), 'Marketing: industry lifecycle terminology is incomplete');
   check(await page.locator('[id]').evaluateAll((elements) => new Set(elements.map((element) => element.id)).size === elements.length), 'Document: duplicate IDs detected');
   if (capture) {
     await mkdir(imageDirectory, { recursive: true });
     await page.screenshot({ path: resolve(imageDirectory, 'yard-crew-acquisition-desktop-v1.png'), fullPage: false });
   }
 
-  await page.getByRole('button', { name: 'Set up my provider profile' }).first().click();
+  await page.getByRole('button', { name: 'Create a provider profile' }).first().click();
   check(await page.locator('body').getAttribute('data-stage') === 'path', 'Path: marketing CTA did not open setup');
   check(await page.locator('input[name="providerPath"][value="solo"]').isChecked(), 'Path: owner-operator should be reviewable by default');
   await page.locator('[data-continue-path]').click();
@@ -106,22 +107,24 @@ try {
   await profile.locator('input[name="authority"]').uncheck();
   await profile.locator('button[type="submit"]').click();
   check(await page.locator('[role="alert"]').isVisible(), 'Profile: validation alert is missing');
-  await profile.locator('input[name="providerName"]').fill('Desert & Pine Yard Care');
+  await profile.locator('input[name="providerName"]').fill('Desert & Pine Landscape Services');
   await profile.locator('input[name="authority"]').check();
   await profile.locator('button[type="submit"]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'readiness', 'Profile: valid provider did not continue');
-  check((await page.locator('.readiness-list').innerText()).includes('Document supplied; independent check not simulated'), 'Readiness: precise trust wording is missing');
+  check((await page.locator('.readiness-list').innerText()).includes('Document supplied; independent validation not simulated'), 'Qualification: precise credential wording is missing');
+  check((await page.locator('[data-stage-view]').innerText()).includes('Certificate of insurance'), 'Qualification: professional credential terminology is missing');
   await page.locator('[data-complete-readiness]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'opportunities', 'Readiness: did not open opportunities');
-  check((await page.locator('.opportunity-list').innerText()).includes('Recurring desert-yard upkeep'), 'Opportunities: suitable request is missing');
+  check((await page.locator('.opportunity-list').innerText()).includes('Recurring desert landscape maintenance'), 'Opportunities: suitable service request is missing');
+  check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service opportunity workspace'), 'Opportunities: professional workspace terminology is missing');
   check((await page.locator('.stage-note.private').innerText()).includes('Exact address'), 'Opportunities: preview privacy boundary is missing');
 
   await reviewOpportunityState(page, 'empty');
-  check((await page.locator('.empty-state').innerText()).includes('will not broaden your service area'), 'Opportunities: honest no-result guidance is missing');
-  await page.getByRole('button', { name: 'Clear tree-work filter' }).click();
+  check((await page.locator('.empty-state').innerText()).includes('will not expand your declared service territory'), 'Opportunities: honest no-result guidance is missing');
+  await page.getByRole('button', { name: 'Remove tree-work filter' }).click();
   await page.locator('.opportunity-card [data-go-stage="request"]').first().click();
   check(await page.locator('body').getAttribute('data-disclosure-state') === 'limited', 'Request: disclosure should begin limited');
-  check((await page.locator('.stage-note.private').innerText()).includes('Still private'), 'Request: hidden-data summary is missing');
+  check((await page.locator('.stage-note.private').innerText()).includes('Site details remain private'), 'Request: hidden-data summary is missing');
 
   await page.locator('[data-open-review]').click();
   await page.locator('[data-fail-interest]').check();
@@ -132,15 +135,16 @@ try {
   check(await page.locator('body').getAttribute('data-interest-state') === 'pending', 'Interest: retry did not reach owner-pending state');
   await page.locator('[data-owner-approve]').click();
   check(await page.locator('body').getAttribute('data-disclosure-state') === 'approved', 'Disclosure: owner approval did not load');
-  check((await page.locator('.disclosure-table').innerText()).includes('Gate and pet details'), 'Disclosure: independent access facts are missing');
-  await page.getByRole('button', { name: 'Start yard review' }).click();
+  check((await page.locator('.disclosure-table').innerText()).includes('Gate and animal-control details'), 'Disclosure: independent access facts are missing');
+  await page.getByRole('button', { name: 'Begin site assessment' }).click();
 
   await page.locator('input[name="assessment"][value="onsite"]').check();
   await page.locator('[data-schedule-assessment]').click();
-  check((await page.locator('.stage-note.private').innerText()).includes('assessment, not a service visit'), 'Assessment: no-service boundary is missing');
+  check((await page.locator('.stage-note.private').innerText()).includes('assessment only; it is not a service visit or work order'), 'Assessment: no-service boundary is missing');
   await page.locator('[data-schedule-assessment]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'proposal', 'Assessment: confirmed review did not open proposal');
-  check((await page.locator('.scope-table').innerText()).toLowerCase().includes('not included'), 'Proposal: exclusions are missing');
+  check((await page.locator('.scope-table').innerText()).toLowerCase().includes('exclusions'), 'Proposal: exclusions are missing');
+  check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service estimate and proposal'), 'Proposal: estimating terminology is missing');
   await page.locator('[data-send-proposal]').click();
   check((await page.locator('.stage-card').last().innerText()).includes('asked whether'), 'Proposal: owner question state is missing');
   await page.locator('[data-simulate-acceptance]').click();
@@ -148,10 +152,10 @@ try {
   await page.locator('[data-confirm-action="accept"]').click();
   check(await page.locator('body').getAttribute('data-proposal-state') === 'accepted', 'Proposal: accepted state did not load');
   check((await page.locator('.stage-note.private').innerText()).includes('immutable'), 'Proposal: accepted snapshot boundary is missing');
-  await page.getByRole('button', { name: 'Begin provider setup' }).click();
-  check((await page.locator('[data-stage-view]').innerText()).includes('Accepted does not mean assigned'), 'Setup: acceptance silently implied assignment');
+  await page.getByRole('button', { name: 'Begin service mobilization' }).click();
+  check((await page.locator('[data-stage-view]').innerText()).includes('Proposal approval does not assign production work'), 'Setup: proposal approval silently implied assignment');
   await page.locator('[data-confirm-first-visit]').click();
-  check((await page.locator('[data-stage-view]').innerText()).includes('first visit is confirmed'), 'Setup: confirmed handoff is missing');
+  check((await page.locator('[data-stage-view]').innerText()).includes('initial service work order is confirmed'), 'Setup: confirmed work-order handoff is missing');
   check(desktop.browserErrors.length === 0, `Desktop workflow errors: ${desktop.browserErrors.join('; ')}`);
   await page.close();
 
