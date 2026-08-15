@@ -56,6 +56,9 @@
   roles, provider qualification, service opportunities, site assessment,
   estimating, scope of work, proposal approval, service mobilization, work-order
   release, credential evidence, and specialty-service boundaries
+- Tone-calibrated Yard Crew copy using a warm account-manager voice for setup,
+  opportunity, assessment, proposal, work preparation, invitation, recovery,
+  and support actions without weakening formal lifecycle or privacy boundaries
 - Delivered private Yard Owner workspace and property persistence keyed to the
   authenticated subject, outside provider tenants, with per-owner duplicate
   protection and lifecycle audit coverage

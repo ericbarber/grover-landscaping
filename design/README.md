@@ -164,9 +164,9 @@ renderer or a design-tool account to see a proposed screen.
 
 1. Launch the
    [working Yard Crew acquisition journey](prototypes/yard-crew-acquisition/index.html)
-   and review provider fit, solo/company/invited paths, qualification facts,
-   service opportunity discovery, disclosure, site assessment, proposal,
-   mobilization, work-order handoff, and provider support.
+   and review provider fit, solo/company/invited paths, business readiness,
+   service opportunity discovery, owner-approved details, site assessment,
+   proposal, work preparation, work-order handoff, and provider support.
 2. Review its
    [phased product plan](review/yard-crew-acquisition-plan.md) and
    [production handoff](review/yard-crew-acquisition-handoff.md), then use the

@@ -123,6 +123,12 @@ Current state:
   language is paired with plain-language consequences, and license, insurance,
   certification, irrigation, and tree-work claims retain explicit scope and
   verification boundaries.
+- The Yard Crew tone calibration is complete. Customer-facing headings and
+  actions now use a warmer, direct account-manager voice—get the business ready,
+  ask to assess the property, send a clear proposal, and prepare the first
+  service—while service opportunity, site assessment, scope of work, service
+  cadence, proposal, crew assignment, and work order remain visible where they
+  help providers operate confidently.
 
 Next design work:
 

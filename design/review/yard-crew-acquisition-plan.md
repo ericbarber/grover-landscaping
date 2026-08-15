@@ -22,6 +22,7 @@ matching.
 | 3. Professional validation | Complete | Mobile, desktop, keyboard, text zoom, failure recovery, privacy, and language review |
 | 4. Production handoff | Complete | Contract map, phased adoption plan, gallery references, and open product gates |
 | 5. Industry language review | Complete | Landscape-service terminology, commercial lifecycle verbs, specialty boundaries, and plain-language pairings applied |
+| 6. Tone calibration | Complete | Customer-facing copy softened to a warm account-manager voice while formal lifecycle and record names remain intact |
 
 ## Product definition
 
@@ -76,7 +77,7 @@ service delivery.
 
 ## Experience promise
 
-> Pursue work that fits. Assess the site clearly. Deliver the approved scope.
+> Find work that fits. Assess the property clearly. Deliver a clear scope.
 
 The promise is intentionally operational rather than financial. Grover may help
 eligible providers receive and respond to opportunities, but the design must not

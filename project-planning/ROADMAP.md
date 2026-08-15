@@ -69,6 +69,12 @@ opportunity, preliminary service brief, site assessment, scope of work, service
 proposal, mobilization, and work order. Formal terms remain paired with concise
 plain-language consequences, while irrigation, tree work, licensure, insurance,
 and certification retain precise scope and evidence boundaries.
+The customer-facing tone is now calibrated separately from the formal data
+model. Acquisition headings and actions speak like an experienced account
+manager, using direct phrases such as “get your business ready,” “request
+assessment access,” and “prepare the first service,” while the supporting
+records retain the precise qualification, disclosure, proposal, and work-order
+contracts needed for production.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

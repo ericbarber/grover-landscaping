@@ -1,14 +1,15 @@
 # Yard Crew Industry Language Review
 
 Date: 2026-08-14
-Status: Applied to the validated working design
+Status: Industry terminology retained; customer-facing tone softened and applied
 
 ## Outcome
 
-The Yard Crew acquisition experience now uses the language of landscape service
-operations, site assessment, estimating, scope control, mobilization, and work
-orders. Public copy remains understandable to an owner-operator while company
-operators and crew leaders receive terminology that matches their actual work.
+The Yard Crew acquisition experience uses the language of landscape service
+operations, site assessment, estimating, scope control, and work orders without
+sounding like a policy manual. Public headings and actions use direct,
+conversational language; supporting records preserve the formal terms needed by
+company operators and crew leaders.
 
 The language system does not make broad claims about licensure, certification,
 insurance, safety, or professional qualification. Those facts remain separate,
@@ -16,8 +17,13 @@ sourced records with explicit review states.
 
 ## Voice Standard
 
-- Use the industry term first, followed by a short explanation when the term may
-  be unfamiliar.
+- Use the most familiar accurate phrase in headings and actions. Introduce the
+  industry term in supporting copy where it helps the person make a decision or
+  understand the record.
+- Write like an experienced account manager: direct, calm, respectful, and
+  specific. Prefer “your business,” “your team,” and “the owner” over abstract
+  organizational language.
+- Keep sentences short and lead with what the person can do next.
 - Describe a business as a **landscape service provider** and a person by their
   operating role: **owner-operator**, **company principal**, **operations
   manager**, **crew leader**, or **team member**.
@@ -35,6 +41,26 @@ sourced records with explicit review states.
 - Use **credential record** and a precise status such as provider supplied,
   validation pending, independently validated, expired, or not collected. Never
   collapse those facts into “verified provider.”
+
+## Tone Calibration Applied
+
+| More formal wording | Customer-facing wording | Formal concept retained |
+| --- | --- | --- |
+| Establish provider qualification | Get your business ready | Provider qualification record |
+| Select the correct operating role | Tell us how you work today | Account and role decision |
+| Owner-authorized site disclosure | Owner-approved property details | Provider-specific disclosure receipt |
+| Submit a statement of interest | Request assessment access | Statement-of-interest lifecycle event |
+| Document known conditions and constraints | Confirm what you know and what needs a closer look | Site-assessment record |
+| Mobilize approved service | Prepare the first service | Service mobilization and work-order release |
+| Approved proposal snapshot is immutable | The approved proposal stays on record | Immutable proposal version |
+| Route each operational issue | Get help for the step you’re working on | Contextual support routing |
+
+This is not a retreat from industry language. **Service opportunity**, **site
+assessment**, **scope of work**, **service cadence**, **proposal**, **crew
+assignment**, and **work order** remain visible because they help providers run
+the work. Terms such as **qualification**, **authorization**, **credential
+record**, and **mobilization** move into supporting detail or internal contracts
+unless the distinction itself is the user’s decision.
 
 ## Applied Terminology
 
@@ -95,8 +121,8 @@ No earlier verb implies a later lifecycle state.
 
 - Do not shorten service states to internal abbreviations in owner-operator
   onboarding.
-- Pair a formal term with its immediate operational consequence: “service
-  mobilization—assign a crew and release the work order.”
+- Pair a formal term with its immediate operational consequence when it appears:
+  “prepare the service—assign a crew and create the work order.”
 - Prefer verbs that tell the user what will happen: **issue proposal**, **request
   assessment access**, **assign crew**, **release work order**.
 - Keep privacy and status boundaries in plain language even when surrounding

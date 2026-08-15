@@ -85,10 +85,10 @@ try {
   const page = desktop.page;
   await checkLayout(page, 1440, 'Desktop marketing');
   await checkAccessibleControls(page, 'Desktop marketing');
-  check((await page.locator('.hero h1').innerText()).includes('Pursue work that fits'), 'Marketing: professional operational promise is missing');
-  check((await page.locator('.hero-note').innerText()).includes('does not guarantee referral volume'), 'Marketing: no-guarantee boundary is missing');
-  check((await page.locator('#fit').innerText()).includes('joining an existing provider'), 'Marketing: invited-worker route is missing');
-  check((await page.locator('#how').innerText()).includes('Each commercial decision remains explicit'), 'Marketing: staged commercial lifecycle is missing');
+  check((await page.locator('.hero h1').innerText()).includes('Find work that fits'), 'Marketing: approachable operational promise is missing');
+  check((await page.locator('.hero-note').innerText()).includes('does not guarantee work'), 'Marketing: no-guarantee boundary is missing');
+  check((await page.locator('#fit').innerText()).includes('joining a provider team'), 'Marketing: invited-worker route is missing');
+  check((await page.locator('#how').innerText()).includes('Move forward one clear step at a time'), 'Marketing: staged lifecycle is missing');
   check((await page.locator('#how').innerText()).includes('scope of work') && (await page.locator('#how').innerText()).includes('work order'), 'Marketing: industry lifecycle terminology is incomplete');
   check(await page.locator('[id]').evaluateAll((elements) => new Set(elements.map((element) => element.id)).size === elements.length), 'Document: duplicate IDs detected');
   if (capture) {
@@ -116,11 +116,11 @@ try {
   await page.locator('[data-complete-readiness]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'opportunities', 'Readiness: did not open opportunities');
   check((await page.locator('.opportunity-list').innerText()).includes('Recurring desert landscape maintenance'), 'Opportunities: suitable service request is missing');
-  check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service opportunity workspace'), 'Opportunities: professional workspace terminology is missing');
-  check((await page.locator('.stage-note.private').innerText()).includes('Exact address'), 'Opportunities: preview privacy boundary is missing');
+  check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service opportunities'), 'Opportunities: industry workspace terminology is missing');
+  check((await page.locator('.stage-note.private').innerText()).toLowerCase().includes('exact address'), 'Opportunities: preview privacy boundary is missing');
 
   await reviewOpportunityState(page, 'empty');
-  check((await page.locator('.empty-state').innerText()).includes('will not expand your declared service territory'), 'Opportunities: honest no-result guidance is missing');
+  check((await page.locator('.empty-state').innerText()).includes('will not expand your service area'), 'Opportunities: honest no-result guidance is missing');
   await page.getByRole('button', { name: 'Remove tree-work filter' }).click();
   await page.locator('.opportunity-card [data-go-stage="request"]').first().click();
   check(await page.locator('body').getAttribute('data-disclosure-state') === 'limited', 'Request: disclosure should begin limited');
@@ -135,12 +135,12 @@ try {
   check(await page.locator('body').getAttribute('data-interest-state') === 'pending', 'Interest: retry did not reach owner-pending state');
   await page.locator('[data-owner-approve]').click();
   check(await page.locator('body').getAttribute('data-disclosure-state') === 'approved', 'Disclosure: owner approval did not load');
-  check((await page.locator('.disclosure-table').innerText()).includes('Gate and animal-control details'), 'Disclosure: independent access facts are missing');
+  check((await page.locator('.disclosure-table').innerText()).includes('Gate and pet details'), 'Disclosure: independent access facts are missing');
   await page.getByRole('button', { name: 'Begin site assessment' }).click();
 
   await page.locator('input[name="assessment"][value="onsite"]').check();
   await page.locator('[data-schedule-assessment]').click();
-  check((await page.locator('.stage-note.private').innerText()).includes('assessment only; it is not a service visit or work order'), 'Assessment: no-service boundary is missing');
+  check((await page.locator('.stage-note.private').innerText()).includes('assessment only; no service or work order has been scheduled'), 'Assessment: no-service boundary is missing');
   await page.locator('[data-schedule-assessment]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'proposal', 'Assessment: confirmed review did not open proposal');
   check((await page.locator('.scope-table').innerText()).toLowerCase().includes('exclusions'), 'Proposal: exclusions are missing');
@@ -151,11 +151,11 @@ try {
   check(await page.locator('[data-confirm-dialog]').getAttribute('open') !== null, 'Proposal: acceptance confirmation did not open');
   await page.locator('[data-confirm-action="accept"]').click();
   check(await page.locator('body').getAttribute('data-proposal-state') === 'accepted', 'Proposal: accepted state did not load');
-  check((await page.locator('.stage-note.private').innerText()).includes('immutable'), 'Proposal: accepted snapshot boundary is missing');
-  await page.getByRole('button', { name: 'Begin service mobilization' }).click();
-  check((await page.locator('[data-stage-view]').innerText()).includes('Proposal approval does not assign production work'), 'Setup: proposal approval silently implied assignment');
+  check((await page.locator('.stage-note.private').innerText()).includes('stays on record'), 'Proposal: accepted snapshot boundary is missing');
+  await page.getByRole('button', { name: 'Prepare the service' }).click();
+  check((await page.locator('[data-stage-view]').innerText()).includes('proposal is approved—now prepare the work'), 'Setup: proposal approval silently implied assignment');
   await page.locator('[data-confirm-first-visit]').click();
-  check((await page.locator('[data-stage-view]').innerText()).includes('initial service work order is confirmed'), 'Setup: confirmed work-order handoff is missing');
+  check((await page.locator('[data-stage-view]').innerText()).includes('first service is ready'), 'Setup: confirmed work-order handoff is missing');
   check(desktop.browserErrors.length === 0, `Desktop workflow errors: ${desktop.browserErrors.join('; ')}`);
   await page.close();
 

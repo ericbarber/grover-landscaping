@@ -38,8 +38,10 @@ of interest fail once.
 
 ### Marketing and account fit
 
-- The public promise is operational: pursue work that fits, assess the site
-  clearly, and deliver the approved scope.
+- The public promise is warm and operational: find work that fits, assess the
+  property clearly, and deliver a clear scope.
+- Headings and actions use an experienced account-manager voice; formal terms
+  remain in supporting receipts, lifecycle definitions, and operational records.
 - The page does not guarantee referral volume, contract award, revenue, owner
   selection, route density, territory exclusivity, or availability.
 - Solo operators, multi-crew companies, and invited workers receive distinct
