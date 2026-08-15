@@ -24,9 +24,11 @@ Nothing is persisted or transmitted.
 - [Interactive Yard Crew acquisition journey](../prototypes/yard-crew-acquisition/index.html)
 - [Prototype behavior and boundaries](../prototypes/yard-crew-acquisition/README.md)
 - [Product audit and phased plan](yard-crew-acquisition-plan.md)
+- [Professional workflow review V2](yard-crew-acquisition-professional-review-v2.md)
 - [Industry terminology and voice review](yard-crew-industry-language-review.md)
 - [Desktop marketing reference](../high-fidelity/field/yard-crew-acquisition-desktop-v1.png)
 - [Mobile opportunity reference](../high-fidelity/field/yard-crew-acquisition-mobile-v1.png)
+- [Desktop assessment-to-estimate reference](../high-fidelity/field/yard-crew-acquisition-estimate-desktop-v2.png)
 - [Repeatable browser validator](../tools/validate-yard-crew-acquisition.mjs)
 
 Use **Review journey** to jump to each stage, switch between owner-operator and
@@ -68,9 +70,14 @@ of interest fail once.
 ### Opportunity discovery
 
 - The workspace says **Service opportunities**, not claim jobs.
+- Progress is grouped into **Get started**, **Find the right work**, and **Start
+  service**; Support remains available without appearing as a completion step.
+- Readiness names allowed and restricted services, recurring openings, preferred
+  work, typical crew size, and preferred service days.
 - Opportunity previews contain approximate area, owner-authorized maintenance
-  requirements, service objective/cadence, response window, assessment
-  expectation, and factual alignment reasons.
+  requirements, service objective/cadence, size band, landscape profile,
+  requested start, route impact, response window, assessment expectation, and
+  factual alignment reasons.
 - Exact address, owner contact, photographs, access details, competitor activity,
   rank, budget, and guaranteed value stay hidden before provider-specific owner
   approval.
@@ -87,6 +94,8 @@ of interest fail once.
   contract award, proposal approval, assignment, scheduling, or activation.
 - A failed statement-of-interest submission preserves the provider’s note and
   allows retry.
+- Pending requests show submission, owner-review, disclosure, and expiration
+  states instead of an undifferentiated waiting message.
 - Exact address, in-app contact, photos, and access constraints are independent
   grants recorded in an inspectable disclosure receipt.
 - Site photos and owner answers are context, not measurement, diagnosis, safety
@@ -94,10 +103,15 @@ of interest fail once.
 - The provider can say a desktop assessment is sufficient, require an on-site
   assessment, or decline when the site cannot be safely or credibly assessed.
 - Provider-private notes remain separate from owner-visible observations.
+- A structured checklist covers scope, measurements, access, disposal,
+  irrigation boundaries, hazards, and owner concerns, with field-verification
+  states where evidence remains incomplete.
 - Assessment windows explain that no service visit or work order is authorized.
 
 ### Proposal and operational handoff
 
+- Provider-private crew-hours, equipment, disposal, access, and route
+  assumptions appear beside—but are never included in—the owner proposal.
 - The authorized provider authors versioned scope, exclusions, one-time versus
   recurring work, cadence, price, policies, proof expectations, expiration, and
   mobilization and initial-service prerequisites.
@@ -131,12 +145,13 @@ of interest fail once.
 | Provider organization of one | Combined business-owner/field roles without bypassing organization scope | Organization and access-control contracts |
 | Public provider profile | Customer-facing identity, capabilities, language/contact, assessment, and pause state | Organization profile |
 | Service territory | Coarse regions, postal codes/radius/map, service categories, and fit explanation | Branch and service-territory hierarchy |
+| Capacity and work preferences | Recurring openings, preferred service mix, crew profile, preferred days, pause state, and availability provenance | Availability controls require a provider-acquisition projection |
 | Qualification facts | Requirement policy, source, supplied/validated state, effective date, expiry, correction, and appeal | Organization setup progress; new credential-validation model required |
-| Opportunity eligibility | Owner-authorized preview, coarse matching, allocation, response window, rate limit, fairness, and audit | Yard Owner request/discovery contracts remain planned |
+| Opportunity eligibility | Owner-authorized preview, coarse matching, privacy-safe size/profile/start/route facts, allocation, response window, rate limit, fairness, and audit | Yard Owner request/discovery contracts remain planned |
 | Opportunity actions | Statement of interest, clarification, decline, withdraw, pause, block, report, failure recovery, and notifications | Notification, audit, and operational-exception patterns |
 | Provider disclosure | Owner-specific grants, receipt, withdrawal, access audit, and current visibility | Yard Owner acquisition grants remain planned |
-| Site assessment | Desktop/on-site lifecycle, owner-visible facts, provider-private notes, schedule, uncertainty, and safety stop | Scheduling and activity patterns |
-| Initial service proposal | Versioned scope, exclusions, price, terms, collaboration, expiration, explicit decision, immutable approval | Project-bid lifecycle patterns |
+| Site assessment | Desktop/on-site lifecycle, structured evidence checklist, owner-visible facts, provider-private notes, schedule, uncertainty, and safety stop | Scheduling and activity patterns |
+| Estimate and initial service proposal | Provider-private production basis plus versioned owner scope, exclusions, price, terms, collaboration, expiration, explicit decision, and immutable approval | Project-bid lifecycle patterns; new private-estimate contract required |
 | Operational projection | Idempotent relationship-to-customer/property projection, provenance, responsible manager/crew, initial work order | Accounts, properties, onboarding, assignments, routes |
 | Invited worker | Verified destination, role/scope preview, accept/decline/correct/report, least-privilege entry | Organization invitation and membership contracts |
 | Provider support | Contextual intake, urgency, ownership, response target, audit, correction/appeal, safety and abuse operations | Operational exceptions and platform support require expansion |

@@ -98,6 +98,8 @@ try {
 
   await page.getByRole('button', { name: 'Create a provider profile' }).first().click();
   check(await page.locator('body').getAttribute('data-stage') === 'path', 'Path: marketing CTA did not open setup');
+  check((await page.locator('.stage-group-label').allInnerTexts()).join(' · ').toLowerCase() === 'get started · find the right work · start service', 'Navigation: lifecycle groups are missing or out of order');
+  check(!(await page.locator('.stage-nav').innerText()).includes('Provider support'), 'Navigation: support should not be a numbered acquisition step');
   check(await page.locator('input[name="providerPath"][value="solo"]').isChecked(), 'Path: owner-operator should be reviewable by default');
   await page.locator('[data-continue-path]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'profile', 'Path: owner-operator did not continue');
@@ -113,11 +115,16 @@ try {
   check(await page.locator('body').getAttribute('data-stage') === 'readiness', 'Profile: valid provider did not continue');
   check((await page.locator('.readiness-list').innerText()).includes('Document supplied; independent validation not simulated'), 'Qualification: precise credential wording is missing');
   check((await page.locator('[data-stage-view]').innerText()).includes('Certificate of insurance'), 'Qualification: professional credential terminology is missing');
+  check((await page.locator('.readiness-summary').innerText()).toLowerCase().includes('ready with limits'), 'Readiness: allowed and restricted opportunity state is missing');
+  check((await page.locator('[data-stage-view]').innerText()).includes('Openings for recurring properties'), 'Readiness: provider capacity preference is missing');
   await page.locator('[data-complete-readiness]').click();
   check(await page.locator('body').getAttribute('data-stage') === 'opportunities', 'Readiness: did not open opportunities');
   check((await page.locator('.opportunity-list').innerText()).includes('Recurring desert landscape maintenance'), 'Opportunities: suitable service request is missing');
   check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service opportunities'), 'Opportunities: industry workspace terminology is missing');
   check((await page.locator('.stage-note.private').innerText()).toLowerCase().includes('exact address'), 'Opportunities: preview privacy boundary is missing');
+  check((await page.locator('.capacity-strip').innerText()).includes('2 recurring openings'), 'Opportunities: current capacity summary is missing');
+  check((await page.locator('.opportunity-card').first().innerText()).toLowerCase().includes('owner-supplied size'), 'Opportunities: privacy-safe property size is missing');
+  check((await page.locator('.opportunity-card').first().innerText()).includes('12 minutes'), 'Opportunities: route-impact evidence is missing');
 
   await reviewOpportunityState(page, 'empty');
   check((await page.locator('.empty-state').innerText()).includes('will not expand your service area'), 'Opportunities: honest no-result guidance is missing');
@@ -133,10 +140,14 @@ try {
   check(await page.locator('[role="alert"]').isVisible(), 'Interest: recoverable failure is missing');
   await page.locator('[data-interest]').click();
   check(await page.locator('body').getAttribute('data-interest-state') === 'pending', 'Interest: retry did not reach owner-pending state');
+  check((await page.locator('.request-timeline').innerText()).includes('Owner reviewing'), 'Interest: owner-response tracker is missing');
+  check((await page.locator('[data-stage-view]').innerText()).toLowerCase().includes('expires aug 18'), 'Interest: response expiry is missing');
   await page.locator('[data-owner-approve]').click();
   check(await page.locator('body').getAttribute('data-disclosure-state') === 'approved', 'Disclosure: owner approval did not load');
   check((await page.locator('.disclosure-table').innerText()).includes('Gate and pet details'), 'Disclosure: independent access facts are missing');
   await page.getByRole('button', { name: 'Begin site assessment' }).click();
+  check((await page.locator('.assessment-checklist').innerText()).includes('Debris volume and disposal'), 'Assessment: structured operating checklist is missing');
+  check((await page.locator('.visibility-grid').innerText()).toLowerCase().includes('your business only'), 'Assessment: owner/private information boundary is missing');
 
   await page.locator('input[name="assessment"][value="onsite"]').check();
   await page.locator('[data-schedule-assessment]').click();
@@ -145,6 +156,9 @@ try {
   check(await page.locator('body').getAttribute('data-stage') === 'proposal', 'Assessment: confirmed review did not open proposal');
   check((await page.locator('.scope-table').innerText()).toLowerCase().includes('exclusions'), 'Proposal: exclusions are missing');
   check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service estimate and proposal'), 'Proposal: estimating terminology is missing');
+  check((await page.locator('.private-estimate').innerText()).includes('3 crew-hours'), 'Proposal: provider-private production basis is missing');
+  check((await page.locator('.private-estimate').innerText()).includes('never included in the owner proposal'), 'Proposal: private estimate visibility boundary is missing');
+  if (capture) await page.screenshot({ path: resolve(imageDirectory, 'yard-crew-acquisition-estimate-desktop-v2.png'), fullPage: false });
   await page.locator('[data-send-proposal]').click();
   check((await page.locator('.stage-card').last().innerText()).includes('asked whether'), 'Proposal: owner question state is missing');
   await page.locator('[data-simulate-acceptance]').click();
@@ -169,6 +183,7 @@ try {
   await checkLayout(mobile.page, 390, 'Mobile opportunities');
   await checkMobileTargets(mobile.page, 'Mobile opportunities');
   await checkAccessibleControls(mobile.page, 'Mobile opportunities');
+  check((await mobile.page.locator('[data-mobile-progress]').innerText()) === 'Step 4 of 8', 'Mobile: acquisition progress should exclude Support');
   if (capture) await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-crew-acquisition-mobile-v1.png'), fullPage: false });
   for (const stage of ['path', 'profile', 'readiness', 'request', 'assessment', 'proposal', 'setup', 'support', 'invited']) {
     await mobile.page.goto(`${pageUrl}#${stage}`, { waitUntil: 'load' });

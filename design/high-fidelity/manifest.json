@@ -49,6 +49,13 @@
     "preview": "field/yard-crew-acquisition-mobile-v1.png"
   },
   {
+    "id": "yard-crew-acquisition-estimate-desktop-v2",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html#proposal",
+    "preview": "field/yard-crew-acquisition-estimate-desktop-v2.png"
+  },
+  {
     "id": "schedule-desktop-v1",
     "area": "manager",
     "status": "review",

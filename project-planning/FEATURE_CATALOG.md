@@ -59,6 +59,11 @@
 - Tone-calibrated Yard Crew copy using a warm account-manager voice for setup,
   opportunity, assessment, proposal, work preparation, invitation, recovery,
   and support actions without weakening formal lifecycle or privacy boundaries
+- Professionally reviewed Yard Crew V2 decision workflow with grouped lifecycle
+  navigation, support outside completion, capacity and ready-with-limits states,
+  richer privacy-safe opportunity facts, owner-response tracking, a structured
+  site assessment, and a provider-private production basis beside the owner
+  proposal
 - Delivered private Yard Owner workspace and property persistence keyed to the
   authenticated subject, outside provider tenants, with per-owner duplicate
   protection and lifecycle audit coverage

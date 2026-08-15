@@ -129,6 +129,12 @@ Current state:
   service—while service opportunity, site assessment, scope of work, service
   cadence, proposal, crew assignment, and work order remain visible where they
   help providers operate confidently.
+- The Yard Crew professional V2 review is complete. The working design now
+  groups progress into Get started, Find the right work, and Start service;
+  keeps Support outside completion; exposes capacity and ready-with-limits
+  states; adds privacy-safe property, timing, and route-fit facts; tracks owner
+  response and disclosure; structures site assessment; and separates the
+  provider-private production basis from the owner proposal.
 
 Next design work:
 
@@ -143,11 +149,12 @@ Next design work:
 - Review Yard Owner acquisition for phased production adoption, beginning with
   independent identity/private property, then intake media and known-provider
   connection before curated discovery.
-- Review the Yard Crew acquisition prototype and resolve provider eligibility,
+- Review the Yard Crew acquisition V2 prototype and resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
   levels before production adoption. Begin with public routing and provider
   identity/readiness, then pilot known-owner connections before curated
-  opportunities.
+  opportunities. Follow with the planned owner-notification preview, team-role
+  comparison, and explicit saved-search notification controls.
 - Resume Phase 0 of the broader application working-design plan; within customer
   Phase 5, return to the property-manager portfolio and keep billing product-gated.
 

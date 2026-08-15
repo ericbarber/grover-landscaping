@@ -47,6 +47,8 @@ silently revisit settled product structure.
 | D-040 | Provider support | Include contextual setup, verification, opportunity, assessment/safety, team/access, field recovery, and data/relationship support before marketplace scale. | Accepted for working design | 2026-08-14 | Product/design |
 | D-041 | Yard Crew terminology | Use landscape-service operating language—provider qualification, service opportunity, preliminary service brief, site assessment, scope of work, service proposal, mobilization, and work order—while pairing specialized terms with plain-language consequences and preserving precise credential boundaries. | Accepted after professional language review | 2026-08-14 | Product/design |
 | D-042 | Yard Crew tone | Use a warm, experienced account-manager voice in customer-facing headings and actions while retaining formal industry terminology in supporting explanations, receipts, and operational records. | Accepted after tone calibration | 2026-08-15 | Product/design |
+| D-043 | Yard Crew lifecycle | Group acquisition into Get started, Find the right work, and Start service; keep Support continuously available but outside numbered completion progress. | Accepted after professional V2 review | 2026-08-15 | Product/design |
+| D-044 | Yard Crew decisions | Require explicit readiness/capacity, privacy-safe opportunity facts, owner-response tracking, a structured assessment, and a provider-private production basis before the owner-facing proposal. | Accepted after professional V2 review | 2026-08-15 | Product/design |
 
 ## Open review questions
 

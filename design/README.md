@@ -51,6 +51,7 @@ design/
 │   ├── yard-owner-acquisition-professional-review.md # Workflow, content, and accessibility review
 │   ├── yard-crew-acquisition-plan.md    # Provider acquisition product and trust model
 │   ├── yard-crew-acquisition-handoff.md # Validated provider journey contract map
+│   ├── yard-crew-acquisition-professional-review-v2.md # Prioritized workflow review
 │   ├── yard-crew-industry-language-review.md # Landscape-service terminology and voice
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
@@ -170,6 +171,9 @@ renderer or a design-tool account to see a proposed screen.
 2. Review its
    [phased product plan](review/yard-crew-acquisition-plan.md) and
    [production handoff](review/yard-crew-acquisition-handoff.md), then use the
+   [professional V2 review](review/yard-crew-acquisition-professional-review-v2.md)
+   to assess the prioritized navigation, readiness, decision, assessment, and
+   estimating improvements and the
    [industry language review](review/yard-crew-industry-language-review.md) to
    assess terminology consistency and the open eligibility, trust, privacy,
    role, abuse, support, and monetization gates.

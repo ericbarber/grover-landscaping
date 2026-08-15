@@ -341,6 +341,18 @@ The first working prototype should let a reviewer:
 11. Jump directly to invited-worker, expired credential, unavailable, paused,
     no-opportunity, and report-request states from reviewer controls.
 
+## Professional review delivery
+
+| Phase | Outcome | Status |
+| --- | --- | --- |
+| A — Navigation and readiness | Group lifecycle progress, separate Support, and expose readiness and capacity | Complete |
+| B — Opportunity decision quality | Add privacy-safe property, timing, route, and owner-response facts | Complete |
+| C — Assessment and estimating | Add a structured assessment and provider-private production basis | Complete |
+| D — Operational handoff and support | Preserve explicit assignment/release; add owner notification preview and role comparison in later slices | Core boundary complete; extensions planned |
+
+See the [professional V2 review](yard-crew-acquisition-professional-review-v2.md)
+for findings, dispositions, acceptance criteria, and validation requirements.
+
 ## Production product gates
 
 The following require product, legal/compliance, operations, security, and

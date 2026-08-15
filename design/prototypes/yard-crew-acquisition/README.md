@@ -17,17 +17,19 @@ http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 1. Review the evidence-based Yard Crew marketing promise.
 2. Compare owner-operator, multi-crew provider, and invited-team-member paths.
 3. Build an illustrative provider organization.
-4. Configure service categories, territory, response standard, and precise
-   qualification facts.
-5. Search and filter owner-authorized service opportunities.
+4. Configure service categories, territory, capacity, work preferences,
+   response standard, and precise qualification facts.
+5. Review ready and ready-with-limits states, then search and filter
+   owner-authorized service opportunities.
 6. Recover no-result, unavailable, and paused-request states.
 7. Review a disclosure-limited preliminary service brief and request site-
    assessment access.
-8. Simulate a statement-of-interest write failure, retry, and owner-authorized
-   disclosure.
-9. Complete a desktop assessment and select an on-site assessment when needed.
-10. Issue a provider-authored service proposal and inspect clarification,
-    revision, and approval states.
+8. Simulate a statement-of-interest write failure, retry, track the owner's
+   response, and inspect owner-authorized disclosure.
+9. Complete the structured site checklist and select an on-site assessment when
+   evidence still needs field verification.
+10. Build a provider-private production basis, issue the owner-facing service
+    proposal, and inspect clarification, revision, and approval states.
 11. Keep approved scope distinct from service mobilization, crew assignment,
     work-order release, and initial-service confirmation.
 12. Review contextual provider setup, opportunity, safety, field, access, and
@@ -77,6 +79,8 @@ statement-of-interest submission fail once.
 Review the phased product and trust model in
 [`../../review/yard-crew-acquisition-plan.md`](../../review/yard-crew-acquisition-plan.md).
 The [industry language review](../../review/yard-crew-industry-language-review.md)
-defines the production vocabulary used here. The later production handoff must
-resolve the product gates recorded in the phased plan before opportunity
-discovery or credential language ships.
+defines the production vocabulary used here. The
+[professional V2 review](../../review/yard-crew-acquisition-professional-review-v2.md)
+records the prioritized workflow improvements and their dispositions. The later
+production handoff must resolve the product gates recorded in the phased plan
+before opportunity discovery or credential language ships.
