@@ -158,7 +158,14 @@ try {
   check((await page.locator('.stage-heading').innerText()).toLowerCase().includes('service estimate and proposal'), 'Proposal: estimating terminology is missing');
   check((await page.locator('.private-estimate').innerText()).includes('3 crew-hours'), 'Proposal: provider-private production basis is missing');
   check((await page.locator('.private-estimate').innerText()).includes('never included in the owner proposal'), 'Proposal: private estimate visibility boundary is missing');
-  if (capture) await page.screenshot({ path: resolve(imageDirectory, 'yard-crew-acquisition-estimate-desktop-v2.png'), fullPage: false });
+  if (capture) {
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      window.scrollTo(0, 0);
+    });
+    await page.waitForTimeout(80);
+    await page.screenshot({ path: resolve(imageDirectory, 'yard-crew-acquisition-estimate-desktop-v2.png'), fullPage: false });
+  }
   await page.locator('[data-send-proposal]').click();
   check((await page.locator('.stage-card').last().innerText()).includes('asked whether'), 'Proposal: owner question state is missing');
   await page.locator('[data-simulate-acceptance]').click();

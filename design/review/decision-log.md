@@ -49,6 +49,8 @@ silently revisit settled product structure.
 | D-042 | Yard Crew tone | Use a warm, experienced account-manager voice in customer-facing headings and actions while retaining formal industry terminology in supporting explanations, receipts, and operational records. | Accepted after tone calibration | 2026-08-15 | Product/design |
 | D-043 | Yard Crew lifecycle | Group acquisition into Get started, Find the right work, and Start service; keep Support continuously available but outside numbered completion progress. | Accepted after professional V2 review | 2026-08-15 | Product/design |
 | D-044 | Yard Crew decisions | Require explicit readiness/capacity, privacy-safe opportunity facts, owner-response tracking, a structured assessment, and a provider-private production basis before the owner-facing proposal. | Accepted after professional V2 review | 2026-08-15 | Product/design |
+| D-045 | Cross-product foundation | Load one canonical palette, interface/display type system, uppercase wordmark, control geometry, surface material, prototype disclosure, and focus treatment across every working prototype. | Accepted after consistency review | 2026-08-15 | Product/design |
+| D-046 | Navigation shells | Preserve separate public, acquisition-progress, and authenticated-destination navigation models while using Paper public/context bars, Forest application rails, and Sand active rail items consistently. | Accepted after consistency review | 2026-08-15 | Product/design |
 
 ## Open review questions
 

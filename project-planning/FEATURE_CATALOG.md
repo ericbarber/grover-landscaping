@@ -2,6 +2,13 @@
 
 ## Public Product Experience
 
+- Shared working-design foundation across the public homepage, Yard Crew
+  acquisition, Yard Owner acquisition, and Yard Owner portal, including
+  canonical palette, wordmark, typography roles, banners, controls, surfaces,
+  focus treatment, public headers, and application-rail materials
+- Documented navigation system separating public discovery,
+  acquisition-progress, and authenticated-destination models without changing
+  their common brand treatment
 - Public outcome-led homepage with direct workspace entry
 - Interactive benefit stories for yard owners, property managers, landscaping companies, and crew leads
 - Plan-Care-Proof product narrative and representative workspace preview

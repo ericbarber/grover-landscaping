@@ -5,46 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grover design review</title>
   <style>
-    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f4f0e7; color: #17352f; }
+    :root { color-scheme: light; font-family: Inter, "Segoe UI", Arial, ui-sans-serif, system-ui, sans-serif; background: #f6f2e8; color: #17342d; }
     * { box-sizing: border-box; }
     body { margin: 0; }
-    header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #17352f; color: white; }
+    header { padding: 3rem max(1.25rem, 5vw) 2rem; background: #0f2f28; color: white; }
     header p { max-width: 76ch; color: #d6e3dd; line-height: 1.6; }
     .portal-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: .75rem; }
-    .portal-cta { min-height: 46px; width: fit-content; display: inline-flex; align-items: center; gap: .55rem; border-radius: .7rem; background: #e7d4ac; padding: .7rem 1rem; color: #17352f; font-weight: 900; text-decoration: none; box-shadow: 0 10px 24px rgb(0 0 0 / 16%); }
+    .portal-cta { min-height: 46px; width: fit-content; display: inline-flex; align-items: center; gap: .55rem; border-radius: .75rem; background: #dec79d; padding: .7rem 1rem; color: #0f2f28; font-weight: 900; text-decoration: none; box-shadow: 0 10px 24px rgb(0 0 0 / 16%); }
     .portal-cta.secondary { border: 1px solid #789188; background: transparent; color: white; box-shadow: none; }
-    .portal-cta:hover { background: #f2dfb5; transform: translateY(-1px); }
-    .portal-cta.secondary:hover { background: white; color: #17352f; }
-    .portal-cta:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+    .portal-cta:hover { background: #ead7b2; transform: translateY(-1px); }
+    .portal-cta.secondary:hover { background: white; color: #173f35; }
+    .portal-cta:focus-visible { outline: 3px solid #1685a4; outline-offset: 3px; }
     nav { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
-    nav a { color: #17352f; background: #e7d4ac; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
+    nav a { color: #17342d; background: #dec79d; border-radius: 999px; padding: .55rem .8rem; text-decoration: none; font-weight: 800; }
     main { padding: 2rem max(1.25rem, 5vw) 5rem; }
     section { scroll-margin-top: 1rem; margin-top: 3rem; }
     h1 { margin: 0; font-size: clamp(2rem, 5vw, 4.5rem); }
     h2 { margin-bottom: .35rem; font-size: clamp(1.5rem, 3vw, 2.3rem); }
-    .intro { color: #536962; margin-top: 0; }
+    .intro { color: #5d6e67; margin-top: 0; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
     .featured { grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
     .featured article:first-child { grid-column: 1 / -1; }
     .featured article img { aspect-ratio: 16 / 9; }
     .featured article.mobile img { aspect-ratio: 390 / 520; }
     .working-grid { grid-template-columns: minmax(0, 1.65fr) minmax(280px, .65fr); }
-    .working-grid article { border-color: #8ea795; box-shadow: 0 18px 42px rgb(23 53 47 / 13%); }
+    .working-grid article { border-color: #8ea795; box-shadow: 0 18px 42px rgb(23 63 53 / 13%); }
     .working-grid article img { aspect-ratio: 1440 / 800; object-fit: cover; object-position: top; }
     .working-grid article.mobile img { aspect-ratio: 390 / 600; object-fit: cover; object-position: top; }
     .working-group { margin-top: 2rem; }
     .working-group + .working-group { border-top: 1px solid #bcc8c3; padding-top: 2.5rem; }
-    .working-group > h3 { margin: 0; font-family: Georgia, serif; font-size: 1.45rem; }
-    .working-group > p { max-width: 78ch; margin: .4rem 0 0; color: #61736d; line-height: 1.5; }
-    .working-group > p a { color: #2d6654; font-weight: 800; }
-    article { background: white; border: 1px solid #bcc8c3; border-radius: 1rem; overflow: hidden; box-shadow: 0 12px 28px rgb(23 53 47 / 8%); }
+    .working-group > h3 { margin: 0; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-size: 1.45rem; }
+    .working-group > p { max-width: 78ch; margin: .4rem 0 0; color: #5d6e67; line-height: 1.5; }
+    .working-group > p a { color: #24594a; font-weight: 800; }
+    article { background: #fffdf8; border: 1px solid #d8ddd7; border-radius: 1rem; overflow: hidden; box-shadow: 0 12px 28px rgb(23 63 53 / 8%); }
     article a { color: inherit; text-decoration: none; }
     article img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f7f4ec; border-bottom: 1px solid #d9e0dc; }
     article.mobile img { aspect-ratio: 390 / 520; object-position: top; }
     article div { padding: 1rem; }
     article h3 { margin: 0; }
-    article p { color: #61736d; line-height: 1.45; margin-bottom: 0; }
-    .status { display: inline-block; margin-top: .75rem; color: #2d6654; background: #e8eee9; border-radius: 999px; padding: .35rem .55rem; font-size: .72rem; font-weight: 900; letter-spacing: .04em; }
+    article p { color: #5d6e67; line-height: 1.45; margin-bottom: 0; }
+    .status { display: inline-block; margin-top: .75rem; color: #173f35; background: #dce6de; border-radius: 999px; padding: .35rem .55rem; font-size: .72rem; font-weight: 900; letter-spacing: .04em; }
     footer { padding: 2rem max(1.25rem, 5vw); color: #60736c; }
     @media (max-width: 760px) { .working-grid { grid-template-columns: 1fr; } }
   </style>
@@ -54,7 +54,7 @@
     <p>GROVER · DESIGN REVIEW</p>
     <h1>Care you can see. Operations you can trust.</h1>
     <p>The gallery pairs the complete low-fidelity application map with validated working designs for Yard Crew and Yard Owner acquisition, the connected customer portal, and the public homepage. Start with an interactive journey, then use the high-fidelity concepts and wireframes to review the product as one connected system.</p>
-    <div class="portal-actions"><a class="portal-cta" href="prototypes/yard-crew-acquisition/index.html">Start Yard Crew acquisition <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="prototypes/yard-owner-acquisition/index.html">Start Yard Owner acquisition <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="prototypes/yard-owner-portal/index.html">Open connected portal <span aria-hidden="true">→</span></a></div>
+    <div class="portal-actions"><a class="portal-cta" href="prototypes/yard-crew-acquisition/index.html">Start Yard Crew acquisition <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="prototypes/yard-owner-acquisition/index.html">Start Yard Owner acquisition <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="prototypes/yard-owner-portal/index.html">Open connected portal <span aria-hidden="true">→</span></a><a class="portal-cta secondary" href="review/cross-prototype-visual-consistency-review.md">Review shared visual system <span aria-hidden="true">→</span></a></div>
     <nav aria-label="Artifact groups">
       <a href="#working">Working design</a><a href="#high-fidelity">High fidelity</a><a href="#public">Public</a><a href="#access">Access</a><a href="#field">Field</a><a href="#manager">Manager</a><a href="#customer">Customer</a><a href="#revenue">Revenue</a><a href="#future">Future modes</a>
     </nav>

@@ -33,6 +33,15 @@ Current state:
   iconography, imagery, component patterns, and experience principles.
 - High-fidelity public homepage, crew route, and manager schedule concepts test
   one brand across marketing, mobile field work, and dense office operations.
+- The cross-prototype consistency review is complete. The public homepage, Yard
+  Crew acquisition, Yard Owner acquisition, Yard Owner portal, and design
+  gallery now share one runtime foundation for palette, brand, type roles,
+  banners, headers, application rails, actions, inputs, surfaces, and focus.
+  Public, acquisition-progress, and authenticated-destination navigation remain
+  intentionally distinct information architectures within that shared shell.
+- Computed-style validation now prevents token, wordmark, banner, navigation
+  material, and focus-ring drift in addition to each journey's existing
+  responsive, interaction, accessibility, and recovery checks.
 - Original Southwestern hero photography is stored with its generation brief and
   project-local usage guidance.
 - Professional V2 review retains the split hero and Plan–Care–Proof narrative,

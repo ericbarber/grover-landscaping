@@ -29,12 +29,14 @@ design/
 ├── assets/                            # Original imagery and generation briefs
 ├── components/                        # Reusable UI catalog and state coverage
 ├── foundations/                       # Color, type, spacing, icons, and imagery
+│   └── navigation.md                  # Public, acquisition, and portal shell contract
 ├── high-fidelity/                     # Approved-direction visual concepts
 ├── index.html                         # Browsable visual gallery
 ├── information-architecture.md        # Page model and navigation boundaries
 ├── README.md                          # Workflow and ownership
 ├── prototypes/
 │   ├── public-homepage/                # Responsive working V2 design
+│   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
 │   └── yard-owner-portal/              # Validated customer confidence journey
@@ -53,13 +55,15 @@ design/
 │   ├── yard-crew-acquisition-handoff.md # Validated provider journey contract map
 │   ├── yard-crew-acquisition-professional-review-v2.md # Prioritized workflow review
 │   ├── yard-crew-industry-language-review.md # Landscape-service terminology and voice
+│   ├── cross-prototype-visual-consistency-review.md # Shared foundation audit
 │   └── v1-professional-direction.md   # Current visual review findings
 ├── tools/
 │   ├── render-high-fidelity.mjs        # Professional visual concept renderer
 │   ├── render-wireframes.mjs           # Deterministic SVG renderer
 │   ├── validate-yard-owner-acquisition.mjs # Acquisition workflow checks
 │   ├── validate-yard-crew-acquisition.mjs # Provider acquisition workflow checks
-│   └── validate-yard-owner-portal.mjs  # Responsive customer-flow checks
+│   ├── validate-yard-owner-portal.mjs  # Responsive customer-flow checks
+│   └── validate-prototype-foundation.mjs # Cross-prototype style checks
 └── wireframes/
     ├── public/                         # Homepage, campaigns, conversion, shares
     ├── auth/                           # Sign-in and first-owner onboarding
@@ -158,6 +162,13 @@ references with:
 node design/tools/validate-yard-crew-acquisition.mjs --capture
 ```
 
+Validate canonical colors, typography, brand, banners, navigation materials,
+and focus treatment across every working prototype with:
+
+```bash
+node design/tools/validate-prototype-foundation.mjs
+```
+
 Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
@@ -197,7 +208,9 @@ renderer or a design-tool account to see a proposed screen.
 8. Review the
    [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    and its seven completion gates.
-9. Review the [V1 visual foundation](foundations/visual-system-v1.svg).
+9. Review the [shared visual consistency review](review/cross-prototype-visual-consistency-review.md),
+   [navigation contract](foundations/navigation.md), and
+   [V1 visual foundation](foundations/visual-system-v1.svg).
 10. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
    [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.

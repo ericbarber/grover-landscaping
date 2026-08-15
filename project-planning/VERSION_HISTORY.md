@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-15: Unified all working prototypes and the design gallery on one validated visual foundation for canonical color, typography roles, wordmark, review banners, navigation materials, controls, surfaces, and focus while preserving distinct public, acquisition-progress, and authenticated-destination navigation models.
 - 2026-08-15: Completed the Yard Crew acquisition professional V2 review and implemented grouped lifecycle navigation, explicit readiness and capacity, richer privacy-safe opportunity facts, owner-response tracking, structured site assessment, and a provider-private production basis beside the owner proposal.
 - 2026-08-15: Softened the Yard Crew acquisition voice from policy-heavy language to a warm, direct account-manager tone while preserving service opportunity, site assessment, scope of work, service cadence, proposal, crew assignment, work-order, credential, privacy, and safety distinctions.
 - 2026-08-14: Applied a professional landscape-industry language system to Yard Crew acquisition, replacing generic marketplace terms with provider qualification, service opportunity, preliminary service brief, site assessment, scope of work, service proposal, mobilization, and work-order language while preserving plain-language accessibility and precise credential and specialty-service boundaries.

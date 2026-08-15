@@ -14,7 +14,12 @@ The V1 professional direction now adds foundations for color, typography,
 spacing, iconography, imagery, and components plus high-fidelity homepage, crew
 route, and manager schedule concepts. These screens test a balanced blend of
 premium Southwestern editorial character and operational-console clarity before
-that visual system expands across the product. A validated V2 working homepage
+that visual system expands across the product. The cross-prototype consistency
+review now applies the canonical palette, wordmark, typography roles, controls,
+surfaces, prototype disclosure, focus treatment, public headers, and application
+rail materials to all four working prototypes. Public, acquisition-progress,
+and authenticated-destination navigation remain distinct models under one
+documented shell contract. A validated V2 working homepage
 now applies that direction to the complete public journey with responsive
 composition, persona continuity, interactive Plan-Care-Proof inspection,
 capability-backed credibility, conversion recovery, and success states. The

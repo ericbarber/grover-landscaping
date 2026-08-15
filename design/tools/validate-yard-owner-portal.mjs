@@ -239,6 +239,7 @@ try {
   await desktop.page.waitForTimeout(350);
   if (capture) {
     await mkdir(imageDirectory, { recursive: true });
+    await desktop.page.evaluate(() => window.scrollTo(0, 0));
     await desktop.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-desktop-v2.png'), fullPage: false });
   }
   await desktop.page.close();
@@ -269,6 +270,7 @@ try {
   await applyReviewState(mobile.page, 'default');
   await mobile.page.waitForTimeout(350);
   if (capture) {
+    await mobile.page.evaluate(() => window.scrollTo(0, 0));
     await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-portal-mobile-v2.png'), fullPage: false });
   }
   await mobile.page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
