@@ -56,6 +56,27 @@
     "preview": "field/yard-crew-acquisition-estimate-desktop-v2.png"
   },
   {
+    "id": "yard-crew-opportunity-alerts-desktop-v3",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html#opportunities",
+    "preview": "field/yard-crew-opportunity-alerts-desktop-v3.png"
+  },
+  {
+    "id": "yard-crew-first-service-notification-desktop-v3",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html#setup",
+    "preview": "field/yard-crew-first-service-notification-desktop-v3.png"
+  },
+  {
+    "id": "yard-crew-team-authority-desktop-v3",
+    "area": "field",
+    "status": "validated-working-design",
+    "source": "../prototypes/yard-crew-acquisition/index.html#team",
+    "preview": "field/yard-crew-team-authority-desktop-v3.png"
+  },
+  {
     "id": "schedule-desktop-v1",
     "area": "manager",
     "status": "review",

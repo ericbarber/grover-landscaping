@@ -50,9 +50,9 @@ making the portal more useful as an operating tool:
 | P1 | Support appears as the final success step | Users may read help as required before completion | Keep persistent help access and reviewer access, but remove it from progress | Implemented |
 | P1 | Business capacity is implied only by a pause control | Opportunity fit cannot reflect how much or what kind of work the provider wants | Add recurring-opening, preferred-work, and typical-crew preferences | Implemented |
 | P1 | Opportunity fit is described but not traceable | A “fit” badge can feel like a ranking | Continue showing factual reasons and explicitly avoid score, rank, or guaranteed availability | Retained and expanded |
-| P1 | First-service preparation lacks an owner-facing summary | Internal completion may not equal customer clarity | Add owner notification preview in the next implementation slice | Planned |
-| P1 | Invited personnel cannot inspect alternate valid roles | Wrong-role correction exists, but role comparison is thin | Add role comparison and manager-approval status in the team-administration design slice | Planned |
-| P2 | Saved searches do not define alert behavior | Providers may assume they will be notified | Design explicit saved-search notification controls and quiet hours | Planned |
+| P1 | First-service preparation lacks an owner-facing summary | Internal completion may not equal customer clarity | Add owner notification preview in the next implementation slice | Implemented in V3 |
+| P1 | Invited personnel cannot inspect alternate valid roles | Wrong-role correction exists, but role comparison is thin | Add role comparison and manager-approval status in the team-administration design slice | Implemented in V3 |
+| P2 | Saved searches do not define alert behavior | Providers may assume they will be notified | Design explicit saved-search notification controls and quiet hours | Implemented in V3 |
 | P2 | Marketplace health is invisible | Providers cannot distinguish no owner demand from eligibility, pause, or allocation limits | Add regional availability and marketplace-health language only after governance and measurement exist | Product-gated |
 
 ## V2 journey model
@@ -145,11 +145,12 @@ basis without exposing cost, margin, or staffing details to the owner.
 - Preserve explicit crew assignment and initial work-order release.
 - Keep contextual Support reachable from every stage but outside acquisition
   completion.
-- Add owner notification preview and role comparison in later working-design
-  slices.
+- Preview and receipt the owner update; compare team authority and invitation
+  lifecycle; and expose capacity-aware saved-alert preferences.
 
 Acceptance: approved scope does not appear scheduled until the provider assigns
-a crew and confirms the work order.
+a crew and confirms the work order, and no owner update is sent before its final
+review. See the [V3 extension review](yard-crew-acquisition-extension-review-v3.md).
 
 ## Validation requirements
 

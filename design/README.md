@@ -54,6 +54,7 @@ design/
 │   ├── yard-crew-acquisition-plan.md    # Provider acquisition product and trust model
 │   ├── yard-crew-acquisition-handoff.md # Validated provider journey contract map
 │   ├── yard-crew-acquisition-professional-review-v2.md # Prioritized workflow review
+│   ├── yard-crew-acquisition-extension-review-v3.md # Communication, authority, alerts, and pilot gates
 │   ├── yard-crew-industry-language-review.md # Landscape-service terminology and voice
 │   ├── cross-prototype-visual-consistency-review.md # Shared foundation audit
 │   └── v1-professional-direction.md   # Current visual review findings
@@ -178,13 +179,17 @@ renderer or a design-tool account to see a proposed screen.
    [working Yard Crew acquisition journey](prototypes/yard-crew-acquisition/index.html)
    and review provider fit, solo/company/invited paths, business readiness,
    service opportunity discovery, owner-approved details, site assessment,
-   proposal, work preparation, work-order handoff, and provider support.
+   proposal, work preparation, owner communication, team authority, saved
+   alerts, pilot governance, work-order handoff, and provider support.
 2. Review its
    [phased product plan](review/yard-crew-acquisition-plan.md) and
    [production handoff](review/yard-crew-acquisition-handoff.md), then use the
    [professional V2 review](review/yard-crew-acquisition-professional-review-v2.md)
    to assess the prioritized navigation, readiness, decision, assessment, and
-   estimating improvements and the
+   estimating improvements; the
+   [V3 extension review](review/yard-crew-acquisition-extension-review-v3.md)
+   to assess owner communication, team authority, saved alerts, and pilot
+   governance; and the
    [industry language review](review/yard-crew-industry-language-review.md) to
    assess terminology consistency and the open eligibility, trust, privacy,
    role, abuse, support, and monetization gates.

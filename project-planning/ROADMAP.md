@@ -71,9 +71,12 @@ abuse handling, and regional density.
 The professional V2 review further organizes the journey into clear lifecycle
 phases and adds readiness/capacity, richer privacy-safe opportunity facts,
 owner-response tracking, a structured assessment checklist, and a
-provider-private production basis beside the owner proposal. Owner notification
-preview, team-role comparison, and saved-search alert controls remain planned
-design extensions; marketplace-health claims remain product-gated.
+provider-private production basis beside the owner proposal. The completed V3
+extension adds first-service owner-message preview, recoverable delivery and
+receipt, capability-based team authority and invitation states, capacity-aware
+saved alerts, and a dedicated pilot-governance review. The recommended first
+release remains a known-owner connection; marketplace-health, ranking,
+allocation, lead-volume, earnings, and availability claims remain product-gated.
 The subsequent professional language review replaces generic marketplace terms
 with landscape-service operating language: provider qualification, service
 opportunity, preliminary service brief, site assessment, scope of work, service
@@ -166,7 +169,7 @@ schedule, remaining work, or a completed day.
 
 **Design-ready — Yard Crew acquisition production handoff**
 
-   - Review the validated V2 provider prototype and close the recorded eligibility, pre-consent data, role-authority, and support-level product gates.
+   - Review the validated V3 provider prototype and use its owner-communication, team-authority, saved-alert, and pilot-governance contracts to close the recorded eligibility, pre-consent data, and support-level product gates.
    - Adopt public audience routing and provider identity/readiness first, then connect the known-owner pilot to the Yard Owner invitation flow.
    - Defer curated opportunity discovery until disclosure, safety, abuse, density, and marketplace-governance gates are operationally owned.
 

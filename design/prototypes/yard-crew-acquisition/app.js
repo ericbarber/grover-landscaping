@@ -15,6 +15,7 @@
   const reviewStages = document.querySelector('[data-review-stages]');
   const confirmDialog = document.querySelector('[data-confirm-dialog]');
   const confirmContent = document.querySelector('[data-confirm-content]');
+  const alertDialog = document.querySelector('[data-alert-dialog]');
   const toast = document.querySelector('[data-toast]');
 
   const stages = [
@@ -49,6 +50,16 @@
     assessmentScheduled: false,
     proposal: 'draft',
     setup: 'unassigned',
+    ownerNotification: 'draft',
+    failOwnerNotification: false,
+    alertStatus: 'none',
+    alertFrequency: 'Daily digest',
+    alertChannels: 'In-app + email',
+    alertQuietHours: '7:00 PM–7:00 AM',
+    failAlertSave: false,
+    invitationState: 'draft',
+    teamRole: 'crew-leader',
+    pilotState: 'not-ready',
     profileError: false,
     reportSent: false,
   };
@@ -114,13 +125,15 @@
         <section class="stage-card"><div class="opportunity-top"><div><h2>Business readiness</h2><p class="opportunity-meta">Review each business detail separately so you can see what was supplied, what was checked, and what still needs attention.</p></div><span class="status status-pending">2 need review</span></div>
           <ul class="readiness-list"><li><span class="readiness-icon">✓</span><div><strong>Business identity submitted</strong><small>Legal or trade identity submitted Aug 14, 2026</small></div><span class="status status-info">Provider supplied</span></li><li><span class="readiness-icon">↻</span><div><strong>Certificate of insurance</strong><small>Document supplied; independent validation not simulated</small></div><span class="status status-pending">Validation pending</span></li><li><span class="readiness-icon">✓</span><div><strong>Opportunity response authority</strong><small>${state.path === 'company' ? 'Morgan Reyes · Operations manager' : 'Morgan Reyes · Owner-operator'}</small></div><span class="status status-ready">Assigned</span></li><li><span class="readiness-icon">!</span><div><strong>Tree-work service eligibility</strong><small>Jurisdiction and proposed scope require review</small></div><button class="text-action" type="button" data-open-correction>Review</button></li></ul>
         </section>
-        <div class="stage-actions"><button class="button button-primary" type="button" data-complete-readiness>Finish business readiness</button><button class="button button-secondary" type="button" data-pause-profile>Pause new opportunities</button></div>
+        <div class="stage-actions"><button class="button button-primary" type="button" data-complete-readiness>Finish business readiness</button>${state.path === 'company' ? '<button class="button button-secondary" type="button" data-go-stage="team">Review team authority</button>' : ''}<button class="button button-secondary" type="button" data-pause-profile>Pause new opportunities</button></div>
       </div>`,
     opportunities: () => opportunityView(),
     request: () => requestView(),
     assessment: () => assessmentView(),
     proposal: () => proposalView(),
     setup: () => setupView(),
+    team: () => teamView(),
+    governance: () => governanceView(),
     support: () => supportView(),
     invited: () => invitedView(),
   };
@@ -136,18 +149,25 @@
   function opportunityView() {
     const headingBlock = heading('Service opportunities', 'Find requests that fit your business', 'Each preview shows an approximate service area and the maintenance the owner requested. Ask for assessment access when you want a closer look; this does not accept or schedule the work.');
     if (state.opportunityState === 'unavailable') return `<div class="stage-view">${headingBlock}<div class="empty-state"><span class="empty-icon" aria-hidden="true">↻</span><h2>Service opportunities are temporarily unavailable</h2><p>Your business readiness and filters are safe. Grover cannot confirm current requests right now, so it will not show an old list as if it were current.</p><button class="button button-primary" type="button" data-review-opportunities="ready">Try again</button><button class="button button-secondary" type="button" data-go-stage="support">Get help</button></div></div>`;
-    if (state.opportunityState === 'paused') return `<div class="stage-view">${headingBlock}<div class="empty-state"><span class="empty-icon" aria-hidden="true">Ⅱ</span><h2>New service opportunities are paused</h2><p>Your business profile stays in place, but new opportunities will not appear here. Current owner conversations and approved service are unchanged.</p><button class="button button-primary" type="button" data-resume-opportunities>Resume opportunities</button><button class="button button-secondary" type="button" data-go-stage="support">Review availability settings</button></div></div>`;
-    if (state.opportunityState === 'empty') return `<div class="stage-view">${headingBlock}<div class="opportunity-toolbar"><input class="search-field" aria-label="Search service opportunities" value="tree removal"><button class="button button-secondary" type="button">Filters · 3</button></div><div class="filter-row"><button class="chip selected" type="button">Central Phoenix</button><button class="chip selected" type="button">Tree work</button><button class="chip selected" type="button">12-mile service radius</button></div><div class="empty-state"><span class="empty-icon" aria-hidden="true">⌕</span><h2>No service opportunities match these filters</h2><p>Grover will not expand your service area or reveal private owner requests just to fill the list. Remove a filter, update your services, or check again later.</p><button class="button button-primary" type="button" data-review-opportunities="ready">Remove tree-work filter</button><button class="button button-secondary" type="button" data-save-search>Save this search</button></div></div>`;
+    if (state.opportunityState === 'paused') return `<div class="stage-view">${headingBlock}${alertSummary(true)}<div class="empty-state"><span class="empty-icon" aria-hidden="true">Ⅱ</span><h2>New service opportunities are paused</h2><p>Your business profile stays in place, but new opportunities will not appear here. Current owner conversations and approved service are unchanged.</p><button class="button button-primary" type="button" data-resume-opportunities>Resume opportunities</button><button class="button button-secondary" type="button" data-go-stage="support">Review availability settings</button></div></div>`;
+    if (state.opportunityState === 'empty') return `<div class="stage-view">${headingBlock}<div class="opportunity-toolbar"><input class="search-field" aria-label="Search service opportunities" value="tree removal"><button class="button button-secondary" type="button">Filters · 3</button></div><div class="filter-row"><button class="chip selected" type="button">Central Phoenix</button><button class="chip selected" type="button">Tree work</button><button class="chip selected" type="button">12-mile service radius</button></div>${alertSummary(false)}<div class="empty-state"><span class="empty-icon" aria-hidden="true">⌕</span><h2>No service opportunities match these filters</h2><p>Grover will not expand your service area or reveal private owner requests just to fill the list. Remove a filter, update your services, or check again later.</p><button class="button button-primary" type="button" data-review-opportunities="ready">Remove tree-work filter</button><button class="button button-secondary" type="button" data-save-search>${state.alertStatus === 'none' ? 'Save this search' : 'Manage saved alert'}</button></div></div>`;
     return `<div class="stage-view">${headingBlock}
       <section class="capacity-strip"><div><p class="micro-label">Your current availability</p><strong>2 recurring openings · Weekdays</strong><span>Routine maintenance and cleanup are active. Tree-removal requests are hidden while requirements are reviewed.</span></div><button class="button button-secondary" type="button" data-go-stage="readiness">Edit services &amp; capacity</button></section>
       <div class="opportunity-toolbar"><label><span class="live-region">Search service opportunities</span><input class="search-field" aria-label="Search service opportunities" placeholder="Search service category or approximate area"></label><button class="button button-secondary" type="button" data-review-opportunities="empty">Filters · 2</button></div>
       <div class="filter-row"><button class="chip selected" type="button">Central Phoenix</button><button class="chip selected" type="button">Your services</button><button class="chip" type="button" data-review-opportunities="empty">Tree removal</button></div>
+      ${alertSummary(false)}
       <div class="opportunity-list">
         ${opportunityCard('opp-1', 'Recurring desert landscape maintenance', 'Central Phoenix', 'Routine maintenance + cleanup', 'Provider to recommend', 'On-site assessment requested', 'Good service fit', true)}
         ${opportunityCard('opp-2', 'Initial landscape cleanup and reset', 'Encanto area', 'One-time cleanup', 'One-time service', 'Desktop review permitted', 'Review route impact', false)}
       </div>
       ${note('private', 'Private details stay with the owner', 'The exact address, contact details, photos, access instructions, other providers, and owner budget are not included in the preview.')}
     </div>`;
+  }
+
+  function alertSummary(suppressed) {
+    if (state.alertStatus === 'none') return '';
+    const paused = suppressed || state.alertStatus === 'paused';
+    return `<section class="alert-summary ${paused ? 'suppressed' : ''}" aria-labelledby="saved-alert-title"><div><p class="micro-label">Saved opportunity alert</p><h2 id="saved-alert-title">${paused ? 'Alerts are suppressed' : 'Central Phoenix · Your services'}</h2><p>${paused ? 'No new-match notifications will be sent while opportunity intake or this alert is paused.' : `${state.alertFrequency} · ${state.alertChannels} · Quiet hours ${state.alertQuietHours}`}</p></div><div class="alert-summary-actions"><span class="status ${paused ? 'status-pending' : 'status-ready'}">${paused ? 'Paused' : 'Active'}</span><button class="text-action" type="button" data-save-search>Manage</button><button class="text-action" type="button" data-toggle-alert>${paused ? 'Resume alert' : 'Pause alert'}</button></div><p class="full-width opportunity-meta">Alerts reflect current filters and eligibility. They do not reserve, rank, or guarantee work.</p></section>`;
   }
 
   function opportunityCard(id, title, area, care, cadence, assessment, fit, primary) {
@@ -202,9 +222,55 @@
     const confirmed = state.setup === 'confirmed';
     return `<div class="stage-view">${heading('Prepare service', confirmed ? 'The first service is ready' : 'The proposal is approved—now prepare the work', confirmed ? 'A crew is assigned, the work order is ready, and the owner can see the confirmed service window.' : 'Finish the property setup, turn the approved scope into crew instructions, assign the right crew, and confirm the first service window.')}
       <section class="stage-card"><div class="opportunity-top"><div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Work order ready' : 'Mobilization in progress'}</span><h2>Morgan Reyes · Residential property</h2><p class="opportunity-meta">Approved proposal v1 · Service relationship REL-104</p></div><span class="status status-info">No payment simulated</span></div>
-        <ul class="readiness-list"><li><span class="readiness-icon">✓</span><div><strong>Customer account and service property linked</strong><small>Only owner-approved details were copied, with their source recorded</small></div><span class="status status-ready">Complete</span></li><li><span class="readiness-icon">✓</span><div><strong>Scope turned into crew instructions</strong><small>The approved scope stays separate from private team notes</small></div><span class="status status-ready">Complete</span></li><li><span class="readiness-icon">${confirmed ? '✓' : '3'}</span><div><strong>Responsible landscape maintenance crew</strong><small>${confirmed ? 'Crew 2 · Crew leader: Alex Rivera' : 'Not yet assigned'}</small></div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Assigned' : 'Required'}</span></li><li><span class="readiness-icon">${confirmed ? '✓' : '4'}</span><div><strong>Initial service work order</strong><small>${confirmed ? 'Thursday, Aug 27 · 8:00–10:00 AM' : 'Owner sees setup in progress—not scheduled service'}</small></div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Confirmed' : 'Required'}</span></li></ul>
+        <ul class="readiness-list"><li><span class="readiness-icon">✓</span><div><strong>Customer account and service property linked</strong><small>Only owner-approved details were copied, with their source recorded</small></div><span class="status status-ready">Complete</span></li><li><span class="readiness-icon">✓</span><div><strong>Scope turned into crew instructions</strong><small>The approved scope stays separate from private team notes</small></div><span class="status status-ready">Complete</span></li><li><span class="readiness-icon">${confirmed ? '✓' : '3'}</span><div><strong>Responsible landscape maintenance crew</strong><small>${confirmed ? 'Crew 2 · Crew leader: Alex Rivera' : 'Not yet assigned'}</small></div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Assigned' : 'Required'}</span></li><li><span class="readiness-icon">${confirmed ? '✓' : '4'}</span><div><strong>Initial service work order</strong><small>${confirmed ? 'Thursday, Aug 27 · 8:00–10:00 AM' : 'Owner sees setup in progress—not scheduled service'}</small></div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Confirmed' : 'Required'}</span></li><li><span class="readiness-icon">${confirmed ? '✓' : '5'}</span><div><strong>Owner service update</strong><small>${confirmed ? 'Sent after work-order confirmation · In-app and email' : 'Preview required before anything is sent'}</small></div><span class="status ${confirmed ? 'status-ready' : 'status-pending'}">${confirmed ? 'Sent' : 'Required'}</span></li></ul>
       </section>
-      ${confirmed ? `<section class="stage-card"><h2>Ready for the field</h2><div class="opportunity-facts"><div><span>Route assignment</span><strong>Thursday · Crew 2</strong></div><div><span>Required service evidence</span><strong>Before/after photos + completion report</strong></div><div><span>Site access</span><strong>Available for this work order</strong></div></div><div class="stage-actions"><button class="button button-primary" type="button" data-open-field>Open work-order preview</button><button class="button button-secondary" type="button" data-go-stage="support">Get support</button></div></section>` : `<section class="stage-card form-grid"><label class="field"><span>Responsible crew</span><select><option>Select a crew</option><option>Crew 2 · Alex Rivera</option></select></label><label class="field"><span>First service window</span><select><option>Thursday, Aug 27 · 8–10 AM</option><option>Friday, Aug 28 · 1–3 PM</option></select></label><label class="checkbox-row full"><input type="checkbox" checked><span>I reviewed the site access, known hazards, materials, service evidence, and owner-visible instructions for the first work order.</span></label></section><div class="stage-actions"><button class="button button-primary" type="button" data-confirm-first-visit>Assign crew and confirm service</button><button class="button button-secondary" type="button">Save and finish later</button></div>`}
+      ${confirmed ? `${ownerNotificationReceipt()}<section class="stage-card"><h2>Ready for the field</h2><div class="opportunity-facts"><div><span>Route assignment</span><strong>Thursday · Crew 2</strong></div><div><span>Required service evidence</span><strong>Before/after photos + completion report</strong></div><div><span>Site access</span><strong>Available for this work order</strong></div></div><div class="stage-actions"><button class="button button-primary" type="button" data-open-field>Open work-order preview</button><button class="button button-secondary" type="button" data-go-stage="support">Get support</button></div></section>` : setupDraft()}
+    </div>`;
+  }
+
+  function setupDraft() {
+    if (state.ownerNotification === 'editing') return `<section class="stage-card owner-message-editor"><p class="micro-label">Owner-visible update</p><h2>Edit the first-service message</h2><div class="form-grid"><label class="field"><span>Recipient</span><input value="Morgan Reyes" readonly></label><label class="field"><span>Delivery</span><select><option>In-app and email</option><option>In-app only</option><option>Email only</option></select></label><label class="field"><span>Send timing</span><select><option>After the work order is confirmed</option><option>Save without sending</option></select></label><label class="field"><span>Owner preparation</span><input value="Please unlock the side gate and keep pets inside."></label><label class="field full"><span>Arrival and weather note</span><textarea>We plan to arrive Thursday between 8:00 and 10:00 AM. We’ll contact you if weather or field conditions require a change.</textarea></label></div>${note('private', 'Business-only information stays out', 'Crew names, route position, labor assumptions, margins, internal hazards, and private team notes are not included.')}<div class="stage-actions"><button class="button button-primary" type="button" data-save-owner-message>Save and review message</button><button class="button button-secondary" type="button" data-cancel-owner-message>Cancel</button></div></section>`;
+    const previewReady = state.ownerNotification === 'preview' || state.ownerNotification === 'error';
+    return `<section class="stage-card form-grid"><label class="field"><span>Responsible crew</span><select><option>Crew 2 · Alex Rivera</option><option>Crew 3 · Sam Ortiz</option></select></label><label class="field"><span>First service window</span><select><option>Thursday, Aug 27 · 8–10 AM</option><option>Friday, Aug 28 · 1–3 PM</option></select></label><label class="checkbox-row full"><input type="checkbox" checked><span>I reviewed the site access, known hazards, materials, service evidence, and owner-visible instructions for the first work order.</span></label></section>${previewReady ? ownerNotificationPreview() : ''}${state.ownerNotification === 'error' ? '<div class="form-error" role="alert" tabindex="-1"><strong>The work order and owner update were not confirmed.</strong><span>Your crew, service window, and message are still here. Review them and try again.</span></div>' : ''}<div class="stage-actions">${previewReady ? '<button class="button button-primary" type="button" data-confirm-first-visit>Confirm work order and send owner update</button><button class="button button-secondary" type="button" data-edit-owner-message>Edit owner update</button>' : '<button class="button button-primary" type="button" data-preview-first-visit>Assign crew and preview owner update</button>'}<button class="button button-secondary" type="button">Save and finish later</button></div>`;
+  }
+
+  function ownerNotificationPreview() {
+    return `<section class="owner-notification" aria-labelledby="owner-message-title"><div class="opportunity-top"><div><p class="micro-label">Owner message preview</p><h2 id="owner-message-title">Your first service is confirmed</h2><p class="opportunity-meta">Morgan Reyes · In-app and email · Sends only after work-order confirmation</p></div><span class="status status-pending">Not sent</span></div><p>Desert &amp; Pine will provide recurring desert landscape maintenance on Thursday, Aug 27, with an arrival window of 8:00–10:00 AM.</p><div class="notification-facts"><div><span>Included</span><strong>Approved maintenance scope and initial landscape reset</strong></div><div><span>Please prepare</span><strong>Unlock the side gate and keep pets inside</strong></div><div><span>If plans change</span><strong>We’ll contact you about weather or field delays</strong></div><div><span>Questions</span><strong>Reply in Grover or call the provider office</strong></div></div><aside><strong>Not shown to the owner</strong><span>Crew identity, route position, labor plan, internal hazards, margin, and team notes.</span></aside></section>`;
+  }
+
+  function ownerNotificationReceipt() {
+    return `<section class="owner-notification sent" aria-labelledby="owner-receipt-title"><div class="opportunity-top"><div><p class="micro-label">Owner communication receipt</p><h2 id="owner-receipt-title">First-service update sent</h2><p class="opportunity-meta">Aug 16, 2026 · 10:42 AM · In-app and email</p></div><span class="status status-ready">Delivered</span></div><div class="notification-facts"><div><span>Recipient</span><strong>Morgan Reyes</strong></div><div><span>Confirmed window</span><strong>Thursday · 8:00–10:00 AM</strong></div><div><span>Message version</span><strong>First-service update v1</strong></div><div><span>Owner preparation</span><strong>Gate and pet reminder included</strong></div></div><button class="text-action" type="button" data-view-owner-receipt>View exact message and delivery record</button></section>`;
+  }
+
+  function teamRoleLabel() {
+    return state.teamRole === 'opportunity-manager' ? 'Opportunity manager' : state.teamRole === 'estimator' ? 'Assessor and estimator' : state.teamRole === 'crew-member' ? 'Crew member' : 'Crew leader';
+  }
+
+  function teamView() {
+    const roleLabel = teamRoleLabel();
+    const statusContent = {
+      draft: `<section class="stage-card team-invite-builder"><h2>Prepare an invitation</h2><div class="form-grid"><label class="field"><span>Team member email</span><input type="email" value="alex.rivera@example.com"></label><label class="field"><span>Role</span><select data-team-role><option value="crew-leader" ${state.teamRole === 'crew-leader' ? 'selected' : ''}>Crew leader</option><option value="crew-member" ${state.teamRole === 'crew-member' ? 'selected' : ''}>Crew member</option><option value="estimator" ${state.teamRole === 'estimator' ? 'selected' : ''}>Assessor and estimator</option><option value="opportunity-manager" ${state.teamRole === 'opportunity-manager' ? 'selected' : ''}>Opportunity manager</option></select></label><label class="field"><span>Branch</span><select><option>Central branch</option><option>North branch</option></select></label><label class="field"><span>Approval owner</span><select><option>Morgan Reyes · Business owner</option></select></label></div><div class="role-preview"><div><p class="micro-label">Invitation preview</p><h3>${roleLabel}</h3><p>The recipient sees the company, inviter, role, branch, expiration, included tools, and excluded data before accepting.</p></div><span class="status status-info">Approval required</span></div><div class="stage-actions"><button class="button button-primary" type="button" data-submit-team-invite>Send for owner approval</button><button class="button button-secondary" type="button" data-go-stage="invited">Preview recipient experience</button></div></section>`,
+      approval: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-pending">Awaiting owner approval</span><h2>${roleLabel} invitation</h2><p class="opportunity-meta">alex.rivera@example.com · Central branch</p></div><span class="status status-info">No access granted</span></div><p>The invitation will not be sent until an authorized business owner confirms the role and branch.</p><div class="stage-actions"><button class="button button-primary" type="button" data-approve-team-invite>Approve and send invitation</button><button class="button button-secondary" type="button" data-edit-team-invite>Edit role or branch</button></div></section>`,
+      sent: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-ready">Invitation sent</span><h2>${roleLabel} · Central branch</h2><p class="opportunity-meta">alex.rivera@example.com · Expires Aug 20, 2026</p></div><span class="status status-pending">Awaiting acceptance</span></div><ol class="request-timeline"><li class="complete"><span>✓</span><div><strong>Role approved</strong><small>Morgan Reyes · Aug 16 at 10:20 AM</small></div></li><li class="complete"><span>✓</span><div><strong>Invitation delivered</strong><small>Verified destination · Aug 16 at 10:21 AM</small></div></li><li class="current"><span>3</span><div><strong>Recipient reviewing</strong><small>No company access until acceptance</small></div></li></ol><div class="stage-actions"><button class="button button-secondary" type="button" data-go-stage="invited">Preview recipient experience</button><button class="button button-danger" type="button" data-revoke-team-invite>Revoke invitation</button></div></section>`,
+      correction: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-pending">Correction requested</span><h2>Review the recipient or role</h2><p class="opportunity-meta">alex.rivera@example.com · No access granted</p></div></div><p>The recipient flagged this invitation before accepting it. Confirm the email, branch, and authority, then prepare a replacement invitation.</p><button class="button button-primary" type="button" data-edit-team-invite>Review and correct invitation</button></section>`,
+      expired: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-risk">Invitation expired</span><h2>No access was granted</h2><p class="opportunity-meta">alex.rivera@example.com · Expired Aug 20, 2026</p></div></div><p>The expired invitation cannot be accepted. Preparing another invitation requires a new authority review and approval.</p><button class="button button-primary" type="button" data-new-team-invite>Prepare a new invitation</button></section>`,
+      revoked: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-risk">Invitation revoked</span><h2>No access was granted</h2><p class="opportunity-meta">alex.rivera@example.com · Revoked Aug 16 at 10:36 AM</p></div></div><p>The old invitation cannot be accepted. A new invitation and approval are required if the person still needs access.</p><button class="button button-primary" type="button" data-new-team-invite>Prepare a new invitation</button></section>`,
+      accepted: `<section class="stage-card"><div class="opportunity-top"><div><span class="status status-ready">Access accepted</span><h2>${roleLabel} · Central branch</h2><p class="opportunity-meta">alex.rivera@example.com · Accepted Aug 16 at 11:05 AM</p></div><span class="status status-info">Active access</span></div><p>The accepted role, branch, included tools, and exclusions remain on record. Removing active access is a separate controlled action—not invitation revocation.</p><div class="stage-actions"><button class="button button-secondary" type="button" data-go-stage="invited">Review acceptance receipt</button><button class="button button-secondary" type="button" data-go-stage="support">Review access support</button></div></section>`,
+    }[state.invitationState] || '';
+    return `<div class="stage-view">${heading('Team roles and access', 'Give each person only the access they need', 'Compare authority before inviting someone. Roles control who may review opportunities, assess property, set price, release work, or complete field service.')}
+      <section class="stage-card authority-matrix"><div class="opportunity-top"><div><p class="micro-label">Authority comparison</p><h2>Who can make each decision?</h2></div><span class="status status-info">Business-controlled</span></div><div class="table-scroll" tabindex="0" aria-label="Scrollable role authority comparison"><table><thead><tr><th>Capability</th><th>Owner</th><th>Opportunity manager</th><th>Estimator</th><th>Crew leader</th><th>Crew member</th></tr></thead><tbody><tr><th>Review opportunities</th><td>Yes</td><td>Yes</td><td>View assigned</td><td>No</td><td>No</td></tr><tr><th>Request owner disclosure</th><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr><tr><th>Complete site assessment</th><td>Yes</td><td>Assigned</td><td>Yes</td><td>Field facts</td><td>No</td></tr><tr><th>Set price and send proposal</th><td>Yes</td><td>If granted</td><td>Draft only</td><td>No</td><td>No</td></tr><tr><th>Assign crew and release work</th><td>Yes</td><td>If granted</td><td>No</td><td>No</td><td>No</td></tr><tr><th>Complete assigned field work</th><td>Optional</td><td>No</td><td>No</td><td>Yes</td><td>Yes</td></tr></tbody></table></div><p class="opportunity-meta">Production must make every “if granted” permission explicit, auditable, and revocable. A job title alone must not imply authority.</p></section>
+      ${statusContent}
+      ${note('warning', 'Access changes need a record', 'Approval, delivery, acceptance, correction, expiration, revocation, and role changes should retain actor, time, scope, and previous access.')}
+    </div>`;
+  }
+
+  function governanceView() {
+    const limited = state.pilotState === 'limited';
+    return `<div class="stage-view">${heading('Pilot governance review', limited ? 'A known-owner pilot can move to implementation planning' : 'Close the operating decisions before marketplace launch', limited ? 'Direct provider invitations can validate identity, disclosure, assessment, proposal, support, and handoff without promising an open opportunity marketplace.' : 'The interface cannot safely promise eligibility, ranking, response times, or regional availability until each operating owner and rule is approved.')}
+      <section class="pilot-readiness ${limited ? 'limited' : ''}"><div><p class="micro-label">Recommended release boundary</p><h2>${limited ? 'Known-owner connection only' : 'Not ready for curated opportunity launch'}</h2><p>${limited ? 'Public provider routing and direct owner invitations may proceed to production design. Curated opportunities remain gated.' : 'Continue prototype review while product, operations, trust, support, and legal owners resolve the launch contract.'}</p></div><span class="status ${limited ? 'status-ready' : 'status-risk'}">${limited ? 'Limited pilot candidate' : '6 gates open'}</span></section>
+      <section class="stage-card governance-gates"><h2>Pilot release gates</h2><div class="disclosure-table"><div class="disclosure-row"><div><strong>Provider eligibility by region and service</strong><small>Define minimum facts, source, freshness, expiry, correction, and appeal.</small></div><span class="status ${limited ? 'status-ready' : 'status-pending'}">${limited ? 'Direct pilot rule' : 'Decision needed'}</span></div><div class="disclosure-row"><div><strong>Pre-consent opportunity fields</strong><small>Approve size, landscape profile, service request, timing, and route-impact derivation.</small></div><span class="status ${limited ? 'status-ready' : 'status-pending'}">${limited ? 'Bounded set' : 'Decision needed'}</span></div><div class="disclosure-row"><div><strong>Role authority</strong><small>Name who may request disclosure, assess, price, propose, assign, and release work.</small></div><span class="status ${limited ? 'status-ready' : 'status-pending'}">${limited ? 'Owner-controlled' : 'Decision needed'}</span></div><div class="disclosure-row"><div><strong>Safety, abuse, and support response</strong><small>Separate emergency guidance, safety stop, incident intake, harassment, and product help.</small></div><span class="status status-pending">Operating owner needed</span></div><div class="disclosure-row"><div><strong>Allocation, fairness, and provider density</strong><small>Define response windows, rate limits, measurement, and supported launch region.</small></div><span class="status status-pending">Marketplace-gated</span></div><div class="disclosure-row"><div><strong>Marketplace claims and health</strong><small>No rank, lead-volume, earnings, exclusivity, or demand-health claim without evidence.</small></div><span class="status status-risk">Blocked from promise</span></div></div></section>
+      <div class="visibility-grid"><article><p class="micro-label">Safe to design now</p><h2>Direct connection workflow</h2><p>Provider entry, owner invitation, precise disclosure, assessment, proposal, explicit approval, work preparation, and contextual support.</p></article><article class="private-panel"><p class="micro-label">Keep product-gated</p><h2>Marketplace scale</h2><p>Open discovery, ranking, regional health, sponsored placement, lead fees, availability claims, and performance comparisons.</p></article></div>
+      <div class="stage-actions">${limited ? '<button class="button button-secondary" type="button" data-review-pilot="not-ready">Return to unresolved gates</button>' : '<button class="button button-primary" type="button" data-review-pilot="limited">Review limited pilot boundary</button>'}<button class="button button-secondary" type="button" data-go-stage="support">Review support ownership</button></div>
     </div>`;
   }
 
@@ -220,7 +286,7 @@
         ${supportCard('Business data and customer relationship', 'Pause the profile, export data, review retention or deletion, end a customer relationship, or dispute a record.', 'Review data controls', 'data')}
       </div>
       <section class="stage-card"><h2>Contact provider support</h2><div class="form-grid"><label class="field"><span>What do you need help with?</span><select><option>Choose a topic</option><option>Business profile or document</option><option>Service opportunity or owner contact</option><option>Safety or incident</option><option>Team access</option></select></label><label class="field"><span>How should we respond?</span><select><option>In-app and email</option><option>Email</option><option>Phone call</option></select></label></div><p class="opportunity-meta">Prototype only: support hours, response times, languages, emergency guidance, and escalation ownership still require production decisions.</p></section>
-      <div class="stage-actions"><button class="button button-primary" type="button" data-open-support-request>Start a support request</button><button class="button button-secondary" type="button" data-go-stage="opportunities">Return to opportunities</button></div>
+      <div class="stage-actions"><button class="button button-primary" type="button" data-open-support-request>Start a support request</button><button class="button button-secondary" type="button" data-go-stage="team">Review team authority</button><button class="button button-secondary" type="button" data-go-stage="governance">Review pilot gates</button><button class="button button-secondary" type="button" data-go-stage="opportunities">Return to opportunities</button></div>
     </div>`;
   }
 
@@ -229,11 +295,21 @@
   }
 
   function invitedView() {
-    return `<div class="stage-view">${heading('Team invitation', 'You were invited to join Sonoran Grounds', 'Review the company, your role, your branch, and the tools you can use before accepting. This invitation will not create or claim a new business.')}
-      <section class="stage-card"><div class="opportunity-top"><div><span class="status status-pending">Expires Aug 20, 2026</span><h2>Crew leader</h2><p class="opportunity-meta">Sent to alex.rivera@example.com by Morgan Reyes</p></div><span class="status status-info">Email matches</span></div><div class="opportunity-facts"><div><span>Company</span><strong>Sonoran Grounds</strong></div><div><span>Your role</span><strong>Crew leader</strong></div><div><span>Your branch</span><strong>Central branch</strong></div></div></section>
-      <section class="stage-card"><h2>What this role can access</h2><div class="disclosure-table"><div class="disclosure-row"><div><strong>Assigned routes, work orders, service tasks, and property instructions</strong><small>For the Central branch and your active crew assignments</small></div><span class="status status-ready">Included</span></div><div class="disclosure-row"><div><strong>Field photos, service issues, and completion reports</strong><small>Create and submit them within assigned work orders</small></div><span class="status status-ready">Included</span></div><div class="disclosure-row"><div><strong>Customer pricing, new opportunities, and other crews</strong><small>These are not included with the crew-leader role</small></div><span class="status status-pending">Not included</span></div></div></section>
-      ${note('warning', 'Unexpected invitation?', 'Do not accept it. Report the invitation, request a corrected recipient or role, or let it expire. No company access is granted before acceptance.')}
-      <div class="stage-actions"><button class="button button-primary" type="button" data-accept-invite>Accept and open field work</button><button class="button button-secondary" type="button" data-correct-invite>Request a correction</button><button class="text-action" type="button" data-report-request>Report invitation</button><button class="text-action" type="button" data-go-stage="path">Choose a different path</button></div>
+    const roleLabel = teamRoleLabel();
+    const roleAccess = {
+      'opportunity-manager': ['Owner-approved opportunity previews and disclosure requests', 'For the Central branch and only while opportunity authority remains active', 'Customer price, proposal release, crew assignment, and field-work data', 'These require separate granted capabilities or an assigned field role'],
+      estimator: ['Assigned property details, assessment evidence, and estimate drafts', 'For assigned Central branch assessments only', 'Proposal release, crew assignment, other crews, and business administration', 'Drafting an estimate does not grant authority to issue the proposal'],
+      'crew-member': ['Assigned work orders, service tasks, and property instructions', 'For active Central branch crew assignments only', 'Customer pricing, new opportunities, other crews, and work release', 'These are not included with the crew-member role'],
+      'crew-leader': ['Assigned routes, work orders, service tasks, and property instructions', 'For the Central branch and your active crew assignments', 'Customer pricing, new opportunities, and other crews', 'These are not included with the crew-leader role'],
+    }[state.teamRole];
+    const unavailable = ['correction', 'expired', 'revoked'].includes(state.invitationState);
+    const invitationStatus = state.invitationState === 'correction' ? ['Correction requested', 'status-pending', 'The inviting business is reviewing the role or recipient. No access is available while the invitation is being corrected.'] : state.invitationState === 'expired' ? ['Invitation expired', 'status-risk', 'This invitation can no longer be accepted. Ask Sonoran Grounds to prepare and approve a new invitation.'] : state.invitationState === 'revoked' ? ['Invitation revoked', 'status-risk', 'Sonoran Grounds ended this invitation before acceptance. No company access was granted.'] : state.invitationState === 'accepted' ? ['Access accepted', 'status-ready', `${roleLabel} access is active for the Central branch.`] : ['Expires Aug 20, 2026', 'status-pending', 'Review the role and included tools before accepting.'];
+    return `<div class="stage-view">${heading('Team invitation', state.invitationState === 'accepted' ? `Your ${roleLabel} access is ready` : 'You were invited to join Sonoran Grounds', 'Review the company, your role, your branch, and the tools you can use before accepting. This invitation will not create or claim a new business.')}
+      <section class="stage-card"><div class="opportunity-top"><div><span class="status ${invitationStatus[1]}">${invitationStatus[0]}</span><h2>${roleLabel}</h2><p class="opportunity-meta">Sent to alex.rivera@example.com by Morgan Reyes</p></div><span class="status status-info">Email matches</span></div><p>${invitationStatus[2]}</p><div class="opportunity-facts"><div><span>Company</span><strong>Sonoran Grounds</strong></div><div><span>Your role</span><strong>${roleLabel}</strong></div><div><span>Your branch</span><strong>Central branch</strong></div></div></section>
+      <section class="stage-card"><h2>What this role can access</h2><div class="disclosure-table"><div class="disclosure-row"><div><strong>${roleAccess[0]}</strong><small>${roleAccess[1]}</small></div><span class="status status-ready">Included</span></div><div class="disclosure-row"><div><strong>${roleAccess[2]}</strong><small>${roleAccess[3]}</small></div><span class="status status-pending">Not included</span></div></div></section>
+      <details class="stage-card role-boundary"><summary>Compare this role with other team roles</summary><div class="role-comparison"><div><strong>Opportunity manager</strong><span>May review opportunities and request owner disclosure when granted.</span></div><div><strong>Assessor and estimator</strong><span>May document site facts and draft an estimate; proposal authority is separate.</span></div><div><strong>Crew leader</strong><span>May lead assigned field work and submit service evidence.</span></div><div><strong>Crew member</strong><span>May complete assigned field tasks without customer price or opportunity access.</span></div></div><button class="text-action" type="button" data-go-stage="team">Open the full authority comparison</button></details>
+      ${state.invitationState === 'accepted' ? note('private', 'Acceptance receipt', 'Accepted Aug 16, 2026 at 11:05 AM. Company, inviter, role, branch, destination, included tools, and exclusions remain available to review.') : note('warning', 'Unexpected invitation?', 'Do not accept it. Report the invitation, request a corrected recipient or role, or let it expire. No company access is granted before acceptance.')}
+      <div class="stage-actions">${state.invitationState === 'accepted' ? '<button class="button button-primary" type="button" data-open-field>Open assigned field work</button>' : unavailable ? '<button class="button button-primary" type="button" data-go-stage="team">Review invitation status</button>' : '<button class="button button-primary" type="button" data-accept-invite>Accept and open field work</button><button class="button button-secondary" type="button" data-correct-invite>Request a correction</button>'}<button class="text-action" type="button" data-report-request>Report invitation</button><button class="text-action" type="button" data-go-stage="path">Choose a different path</button></div>
     </div>`;
   }
 
@@ -248,6 +324,8 @@
       assessment: `<section class="context-card"><p class="micro-label">Site assessment</p><h2>Be clear about what is unknown</h2><p>Photos do not confirm dimensions, diagnosis, safe access, production needs, or price.</p></section>`,
       proposal: `<section class="context-card"><p class="micro-label">Owner decision</p><h2>Your scope, clearly recorded</h2><p>Questions and revisions are not approval. The approved proposal stays available to review.</p></section>`,
       setup: `<section class="context-card"><p class="micro-label">Prepare the work</p><h2>Your business assigns the crew</h2><p>The owner approves the proposal; your team controls the crew assignment, work order, and route.</p></section>`,
+      team: `<section class="context-card"><p class="micro-label">Team authority</p><h2>Permission before access</h2><p>Role, branch, approval owner, included tools, and excluded data are explicit before delivery or acceptance.</p></section>`,
+      governance: `<section class="context-card"><p class="micro-label">Pilot boundary</p><h2>Direct connection first</h2><p>Known-owner invitations validate the operating loop with less allocation, density, ranking, and abuse risk.</p></section>`,
       support: `<section class="context-card"><p class="micro-label">Urgency</p><h2>Safety is separate</h2><p>Emergency guidance, safety stop, incident intake, and ordinary product support cannot be one queue.</p></section>`,
       invited: `<section class="context-card"><p class="micro-label">Least privilege</p><h2>Role before access</h2><p>The invitation names organization, inviter, role, scope, expiration, and excluded data before acceptance.</p></section>`,
     };
@@ -269,6 +347,10 @@
     body.dataset.interestState = state.interest;
     body.dataset.disclosureState = state.disclosed ? 'approved' : 'limited';
     body.dataset.proposalState = state.proposal;
+    body.dataset.ownerNotificationState = state.ownerNotification;
+    body.dataset.alertState = state.alertStatus;
+    body.dataset.invitationState = state.invitationState;
+    body.dataset.pilotState = state.pilotState;
     if (state.stage === 'welcome') {
       publicContent.hidden = false;
       publicHeader.hidden = false;
@@ -282,9 +364,10 @@
     stageView.innerHTML = views[state.stage] ? views[state.stage]() : views.path();
     contextRail.innerHTML = contextFor(state.stage);
     providerName.textContent = state.providerName;
-    readinessLabel.textContent = state.stage === 'opportunities' ? 'Service opportunities' : state.stage === 'setup' && state.setup === 'confirmed' ? 'First service ready' : 'Business setup';
+    readinessLabel.textContent = state.stage === 'opportunities' ? 'Service opportunities' : state.stage === 'setup' && state.setup === 'confirmed' ? 'First service ready' : state.stage === 'team' ? 'Team administration' : state.stage === 'governance' ? 'Pilot review' : 'Business setup';
     renderNav();
-    document.title = `${stages.find(([key]) => key === state.stage)?.[1] || 'Crew invitation'} · Grover working design`;
+    const specialTitle = { invited: 'Crew invitation', support: 'Provider support', team: 'Team roles', governance: 'Pilot governance' }[state.stage];
+    document.title = `${stages.find(([key]) => key === state.stage)?.[1] || specialTitle || 'Crew acquisition'} · Grover working design`;
   }
 
   function go(stage, announce = true) {
@@ -321,7 +404,7 @@
     confirmDialog.showModal();
   }
 
-  reviewStages.innerHTML = [...stages, ['support', 'Provider support'], ['invited', 'Invited team member']].map(([key, label]) => `<button type="button" data-review-stage="${key}">${label}</button>`).join('');
+  reviewStages.innerHTML = [...stages, ['team', 'Team roles and access'], ['support', 'Provider support'], ['invited', 'Invited team member'], ['governance', 'Pilot governance']].map(([key, label]) => `<button type="button" data-review-stage="${key}">${label}</button>`).join('');
 
   document.addEventListener('click', (event) => {
     const target = event.target.closest('button, a');
@@ -333,13 +416,18 @@
     if (target.matches('[data-review-stage]')) { reviewDialog.close(); go(target.dataset.reviewStage); return; }
     if (target.matches('[data-review-path]')) { state.path = target.dataset.reviewPath; body.dataset.providerPath = state.path; showToast(`${target.textContent.trim()} path selected.`); return; }
     if (target.matches('[data-review-opportunities]')) { state.opportunityState = target.dataset.reviewOpportunities; body.dataset.opportunityState = state.opportunityState; reviewDialog.open && reviewDialog.close(); go('opportunities'); return; }
+    if (target.matches('[data-review-alert]')) { state.alertStatus = target.dataset.reviewAlert; reviewDialog.open && reviewDialog.close(); go('opportunities'); return; }
+    if (target.matches('[data-review-invite]')) { state.invitationState = target.dataset.reviewInvite; reviewDialog.open && reviewDialog.close(); go('invited'); return; }
+    if (target.matches('[data-review-pilot]')) { state.pilotState = target.dataset.reviewPilot; reviewDialog.open && reviewDialog.close(); go('governance'); return; }
     if (target.matches('[data-continue-path]')) { const selected = document.querySelector('input[name="providerPath"]:checked')?.value || state.path; if (selected === 'invited') go('invited'); else { state.path = selected; complete('path', 'profile'); } return; }
     if (target.matches('[data-show-duplicate]')) { confirmAction('A similar provider may already exist', '“Desert & Pine Landscaping LLC” uses the same contact domain. Request access or confirm that this is a different business before creating another organization.', 'claim', 'Request organization access'); return; }
     if (target.matches('[data-service]')) { const id = target.dataset.service; state.services.has(id) ? state.services.delete(id) : state.services.add(id); target.setAttribute('aria-pressed', String(state.services.has(id))); return; }
     if (target.matches('[data-complete-readiness]')) { complete('readiness', 'opportunities'); return; }
     if (target.matches('[data-pause-profile]')) { confirmAction('Pause new service opportunities?', 'Your business profile remains available where applicable. Active owner conversations and approved service relationships are unchanged.', 'pause', 'Pause opportunities'); return; }
     if (target.matches('[data-resume-opportunities]')) { state.opportunityState = 'ready'; render(); showToast('New service opportunities are on again.'); return; }
-    if (target.matches('[data-save-search]')) { showToast('Illustrative opportunity search saved. No notification will be sent.'); return; }
+    if (target.matches('[data-save-search]')) { alertDialog.showModal(); return; }
+    if (target.matches('[data-close-alert]')) { alertDialog.close(); return; }
+    if (target.matches('[data-toggle-alert]')) { state.alertStatus = state.alertStatus === 'paused' ? 'saved' : 'paused'; render(); live.textContent = state.alertStatus === 'paused' ? 'Saved opportunity alert paused.' : 'Saved opportunity alert resumed.'; return; }
     if (target.matches('[data-interest]')) { if (state.failInterest) { state.failInterest = false; state.interestFailed = true; document.querySelector('[data-fail-interest]').checked = false; render(); requestAnimationFrame(() => document.querySelector('[role="alert"]')?.focus()); } else { state.interestFailed = false; state.interest = 'pending'; render(); live.textContent = 'Assessment request sent. Waiting for the owner to choose what to share.'; } return; }
     if (target.matches('[data-owner-approve]')) { state.disclosed = true; state.completed.add('request'); render(); live.textContent = 'Owner-approved property details loaded.'; return; }
     if (target.matches('[data-withdraw-interest]')) { confirmAction('Withdraw your assessment request?', 'Morgan will see that your business is no longer asking to assess the property. You do not need to provide a reason.', 'withdraw', 'Withdraw request', true); return; }
@@ -354,13 +442,22 @@
     if (target.matches('[data-revise-proposal]')) { showToast('Proposal version 2 draft started. Version 1 remains in revision history.'); return; }
     if (target.matches('[data-simulate-acceptance]')) { confirmAction('Review the approved proposal', 'Morgan approved proposal version 1. Your team can now prepare the service, but payment, crew assignment, the work order, and the service date are not complete yet.', 'accept', 'Load approved proposal'); return; }
     if (target.matches('[data-show-accepted]')) { showToast('Approved proposal version 1 stays unchanged and available to review.'); return; }
-    if (target.matches('[data-confirm-first-visit]')) { state.setup = 'confirmed'; state.completed.add('setup'); render(); live.textContent = 'Crew assigned and first service confirmed.'; return; }
+    if (target.matches('[data-preview-first-visit]')) { state.ownerNotification = 'preview'; render(); live.textContent = 'Owner service update preview ready. Nothing has been sent.'; return; }
+    if (target.matches('[data-edit-owner-message]')) { state.ownerNotification = 'editing'; render(); return; }
+    if (target.matches('[data-save-owner-message]')) { state.ownerNotification = 'preview'; render(); live.textContent = 'Owner update saved for review. Nothing has been sent.'; return; }
+    if (target.matches('[data-cancel-owner-message]')) { state.ownerNotification = 'preview'; render(); return; }
+    if (target.matches('[data-confirm-first-visit]')) { if (state.failOwnerNotification) { state.failOwnerNotification = false; state.ownerNotification = 'error'; document.querySelector('[data-fail-owner-notification]').checked = false; render(); requestAnimationFrame(() => document.querySelector('[role="alert"]')?.focus()); } else { state.setup = 'confirmed'; state.ownerNotification = 'sent'; state.completed.add('setup'); render(); live.textContent = 'Work order confirmed and first-service update delivered to the owner.'; } return; }
+    if (target.matches('[data-view-owner-receipt]')) { confirmAction('First-service communication receipt', 'Sent Aug 16, 2026 at 10:42 AM to Morgan Reyes by in-app message and email. The receipt retains the exact owner-visible scope, service window, preparation, weather note, provider contact, sender, and delivery result.', 'close', 'Done'); return; }
     if (target.matches('[data-open-field]')) { showToast('Production handoff: open the existing mobile Route → Work order → Service evidence workflow.'); return; }
+    if (target.matches('[data-submit-team-invite]')) { state.invitationState = 'approval'; render(); live.textContent = 'Team invitation is waiting for business-owner approval. No access was granted.'; return; }
+    if (target.matches('[data-approve-team-invite]')) { state.invitationState = 'sent'; render(); live.textContent = 'Team invitation approved and delivered. No access until acceptance.'; return; }
+    if (target.matches('[data-edit-team-invite]') || target.matches('[data-new-team-invite]')) { state.invitationState = 'draft'; render(); return; }
+    if (target.matches('[data-revoke-team-invite]')) { confirmAction('Revoke this invitation?', 'The recipient will no longer be able to accept it. No company access has been granted. A later invitation requires a new approval.', 'revoke-invite', 'Revoke invitation', true); return; }
     if (target.matches('[data-support-kind]')) { const kind = target.dataset.supportKind; kind === 'safety' ? confirmAction('Safety and incident support', 'Stop work when needed. Production must distinguish emergencies, immediate hazards, harassment, incidents, and ordinary product support.', 'close', 'Understood') : showToast(`${target.textContent.trim()} reviewed. Production ownership remains a product gate.`); return; }
     if (target.matches('[data-open-support-request]')) { showToast('Illustrative support draft started. No request was sent.'); return; }
     if (target.matches('[data-open-correction]')) { confirmAction('Review eligibility requirement', 'Tree-service eligibility needs a defined regional requirement, source, review owner, freshness rule, expiry, correction route, and appeal policy before launch.', 'close', 'Keep requirement pending'); return; }
-    if (target.matches('[data-accept-invite]')) { showToast('Illustrative invitation accepted. Only the offered crew-leader field-operations workspace would open.'); return; }
-    if (target.matches('[data-correct-invite]')) { showToast('Illustrative correction requested from the inviting organization.'); return; }
+    if (target.matches('[data-accept-invite]')) { state.invitationState = 'accepted'; render(); live.textContent = `${teamRoleLabel()} invitation accepted with Central branch access.`; return; }
+    if (target.matches('[data-correct-invite]')) { state.invitationState = 'correction'; render(); live.textContent = 'Invitation correction requested. No access was granted.'; return; }
     if (target.matches('[data-save-exit]')) { showToast('Private prototype progress saved for review. Nothing was persisted.'); return; }
     if (target.matches('[data-previous-stage]')) { const index = stages.findIndex(([key]) => key === state.stage); if (index > 0) go(stages[index - 1][0]); return; }
     if (target.matches('[data-next-stage]')) { const index = stages.findIndex(([key]) => key === state.stage); if (index >= 0 && index < stages.length - 1) go(stages[index + 1][0]); return; }
@@ -373,6 +470,7 @@
       else if (action === 'decline') { go('opportunities'); showToast('Opportunity marked not a fit. No private business details were shared.'); }
       else if (action === 'report') { state.reportSent = true; go('support'); }
       else if (action === 'accept') { state.proposal = 'accepted'; render(); live.textContent = 'Approved proposal state loaded.'; }
+      else if (action === 'revoke-invite') { state.invitationState = 'revoked'; go('team'); }
       else if (action === 'claim') showToast('Illustrative organization-access request started.');
       else if (action === 'question') showToast('Illustrative question sent without asking for private contact details.');
       return;
@@ -383,9 +481,36 @@
     if (event.target.matches('input[name="providerPath"]')) { state.path = event.target.value; render(); }
     if (event.target.matches('input[name="assessment"]')) state.assessmentMode = event.target.value;
     if (event.target.matches('[data-fail-interest]')) state.failInterest = event.target.checked;
+    if (event.target.matches('[data-fail-owner-notification]')) state.failOwnerNotification = event.target.checked;
+    if (event.target.matches('[data-fail-alert-save]')) state.failAlertSave = event.target.checked;
+    if (event.target.matches('[data-team-role]')) { state.teamRole = event.target.value; render(); }
   });
 
   document.addEventListener('submit', (event) => {
+    if (event.target.matches('[data-alert-form]')) {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const channels = form.getAll('alertChannel');
+      const error = alertDialog.querySelector('[data-alert-error]');
+      if (state.failAlertSave || channels.length === 0) {
+        state.failAlertSave = false;
+        const failureToggle = alertDialog.querySelector('[data-fail-alert-save]');
+        if (failureToggle) failureToggle.checked = false;
+        error.hidden = false;
+        error.querySelector('span').textContent = channels.length === 0 ? 'Choose at least one delivery channel. Your other preferences are still here.' : 'Your frequency, channels, quiet hours, and filters are still here. Try again.';
+        error.focus();
+        return;
+      }
+      state.alertFrequency = String(form.get('alertFrequency') || 'Daily digest');
+      state.alertChannels = channels.join(' + ');
+      state.alertQuietHours = String(form.get('quietHours') || '7:00 PM–7:00 AM');
+      state.alertStatus = 'saved';
+      error.hidden = true;
+      alertDialog.close();
+      render();
+      live.textContent = 'Opportunity alert saved. It does not reserve or guarantee work.';
+      return;
+    }
     if (event.target.id !== 'provider-profile-form') return;
     event.preventDefault();
     const form = new FormData(event.target);
@@ -400,6 +525,7 @@
   });
 
   reviewDialog.addEventListener('close', () => document.querySelector('[data-open-review]')?.focus());
+  alertDialog.addEventListener('close', () => document.querySelector('[data-save-search]')?.focus());
   confirmDialog.addEventListener('click', (event) => { if (event.target === confirmDialog) confirmDialog.close(); });
   window.addEventListener('hashchange', () => {
     const requested = location.hash.slice(1);

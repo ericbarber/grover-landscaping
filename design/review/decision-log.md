@@ -51,6 +51,10 @@ silently revisit settled product structure.
 | D-044 | Yard Crew decisions | Require explicit readiness/capacity, privacy-safe opportunity facts, owner-response tracking, a structured assessment, and a provider-private production basis before the owner-facing proposal. | Accepted after professional V2 review | 2026-08-15 | Product/design |
 | D-045 | Cross-product foundation | Load one canonical palette, interface/display type system, uppercase wordmark, control geometry, surface material, prototype disclosure, and focus treatment across every working prototype. | Accepted after consistency review | 2026-08-15 | Product/design |
 | D-046 | Navigation shells | Preserve separate public, acquisition-progress, and authenticated-destination navigation models while using Paper public/context bars, Forest application rails, and Sand active rail items consistently. | Accepted after consistency review | 2026-08-15 | Product/design |
+| D-047 | First-service communication | Preview the complete owner-visible update before confirming the initial work order; send it only with explicit confirmation and retain an exact delivery receipt and recoverable retry state. | Accepted for V3 working design | 2026-08-16 | Product/design |
+| D-048 | Team authority | Treat role titles as understandable presets while representing disclosure, assessment, pricing, proposal, release, and field-work authority as explicit, auditable, revocable capabilities. | Accepted for V3 working design | 2026-08-16 | Product/design |
+| D-049 | Opportunity alerts | Make saved alerts opt-in, quiet-hour and capacity aware, and explicit that they do not reserve, rank, widen eligibility, reveal private details, or guarantee work. | Accepted for V3 working design | 2026-08-16 | Product/design |
+| D-050 | Provider pilot | Use a known-owner connection as the first provider pilot boundary and keep curated allocation, marketplace health, ranking, and performance claims gated until operating contracts and evidence exist. | Accepted for V3 working design | 2026-08-16 | Product/design |
 
 ## Open review questions
 

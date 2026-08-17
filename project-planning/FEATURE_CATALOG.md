@@ -71,6 +71,9 @@
   richer privacy-safe opportunity facts, owner-response tracking, a structured
   site assessment, and a provider-private production basis beside the owner
   proposal
+- Validated Yard Crew V3 extensions with first-service owner-message preview,
+  recoverable delivery and receipt, team authority and invitation lifecycle,
+  capacity-aware saved opportunity alerts, and explicit known-owner pilot gates
 - Delivered private Yard Owner workspace and property persistence keyed to the
   authenticated subject, outside provider tenants, with per-owner duplicate
   protection and lifecycle audit coverage

@@ -25,16 +25,21 @@ Nothing is persisted or transmitted.
 - [Prototype behavior and boundaries](../prototypes/yard-crew-acquisition/README.md)
 - [Product audit and phased plan](yard-crew-acquisition-plan.md)
 - [Professional workflow review V2](yard-crew-acquisition-professional-review-v2.md)
+- [Extension review V3](yard-crew-acquisition-extension-review-v3.md)
 - [Industry terminology and voice review](yard-crew-industry-language-review.md)
 - [Desktop marketing reference](../high-fidelity/field/yard-crew-acquisition-desktop-v1.png)
 - [Mobile opportunity reference](../high-fidelity/field/yard-crew-acquisition-mobile-v1.png)
 - [Desktop assessment-to-estimate reference](../high-fidelity/field/yard-crew-acquisition-estimate-desktop-v2.png)
+- [Desktop saved-alert reference](../high-fidelity/field/yard-crew-opportunity-alerts-desktop-v3.png)
+- [Desktop first-service communication reference](../high-fidelity/field/yard-crew-first-service-notification-desktop-v3.png)
+- [Desktop team-authority reference](../high-fidelity/field/yard-crew-team-authority-desktop-v3.png)
 - [Repeatable browser validator](../tools/validate-yard-crew-acquisition.mjs)
 
 Use **Review journey** to jump to each stage, switch between owner-operator and
 multi-crew provider paths, open the invited-team-member path, select suitable,
-empty, unavailable, or paused opportunity states, and make the next statement
-of interest fail once.
+empty, unavailable, or paused opportunity states; inspect saved-alert,
+invitation, and pilot states; and make the next statement of interest or owner
+update fail once.
 
 ## Validated experience contract
 
@@ -153,7 +158,10 @@ of interest fail once.
 | Site assessment | Desktop/on-site lifecycle, structured evidence checklist, owner-visible facts, provider-private notes, schedule, uncertainty, and safety stop | Scheduling and activity patterns |
 | Estimate and initial service proposal | Provider-private production basis plus versioned owner scope, exclusions, price, terms, collaboration, expiration, explicit decision, and immutable approval | Project-bid lifecycle patterns; new private-estimate contract required |
 | Operational projection | Idempotent relationship-to-customer/property projection, provenance, responsible manager/crew, initial work order | Accounts, properties, onboarding, assignments, routes |
-| Invited worker | Verified destination, role/scope preview, accept/decline/correct/report, least-privilege entry | Organization invitation and membership contracts |
+| Owner service update | Versioned owner-visible message tied to work-order confirmation, recipient/channel, idempotent send/retry, result, exact receipt, and provider-private exclusions | Notification delivery and audit patterns require an owner-safe projection |
+| Team authority and invited worker | Capability grants by organization/branch, approval authority, verified destination, role/scope preview, accept/decline/correct/expire/revoke/report, active-access lifecycle, and audit | Organization invitation, membership, and access-control contracts require finer capability scope |
+| Saved opportunity alert | Filter snapshot, frequency/channel/quiet hours, capacity and eligibility suppression, pause/resume, delivery history, and no-priority semantics | Notification preferences and delivery patterns require provider-opportunity scope |
+| Pilot governance | Named gate owners, supported region/service boundary, launch checklist, measurement definitions, support/incident readiness, claims review, and rollback | Product and operating governance contract required |
 | Provider support | Contextual intake, urgency, ownership, response target, audit, correction/appeal, safety and abuse operations | Operational exceptions and platform support require expansion |
 
 ## Recommended production design/adoption slices
@@ -214,7 +222,9 @@ journey, precise qualification wording, suitable and no-result opportunity
 states, hidden-data boundaries, one-shot statement-of-interest failure and
 retry, owner-authorized disclosure, on-site assessment, versioned proposal and
 explicit approval, approved-but-unassigned state, initial-work-order handoff,
-mobile layouts at 390 and 320
+owner-message preview/failure/receipt, saved-alert preference failure and
+pause/resume, team-authority approval and invitation terminal states, limited-
+pilot governance, mobile layouts at 390 and 320
 CSS pixels, tablet layout, 200% text, minimum mobile targets, accessible control
 names, one-visible-H1 integrity, horizontal-overflow checks, and browser-error
 checks.

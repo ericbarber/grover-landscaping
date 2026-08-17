@@ -103,13 +103,31 @@
       <section><h3>Jump to a stage</h3><div class="review-stage-grid" data-review-stages></div></section>
       <section><h3>Provider path</h3><div class="review-options"><button type="button" data-review-path="solo">Owner-operator</button><button type="button" data-review-path="company">Multi-crew provider</button><button type="button" data-go-stage="invited">Invited team member</button></div>
         <h3>Opportunity state</h3><div class="review-options"><button type="button" data-review-opportunities="ready">Suitable opportunities</button><button type="button" data-review-opportunities="empty">No results</button><button type="button" data-review-opportunities="unavailable">Unavailable</button><button type="button" data-review-opportunities="paused">Opportunity intake paused</button></div>
+        <h3>Extension states</h3><div class="review-options"><button type="button" data-review-alert="saved">Saved alert</button><button type="button" data-review-alert="paused">Suppressed alert</button><button type="button" data-review-invite="correction">Role correction</button><button type="button" data-review-invite="expired">Expired invitation</button><button type="button" data-review-invite="revoked">Revoked invitation</button><button type="button" data-review-pilot="not-ready">Pilot gates</button></div>
         <label class="review-check"><input type="checkbox" data-fail-interest> Make the next assessment request fail once</label>
+        <label class="review-check"><input type="checkbox" data-fail-owner-notification> Make the next owner update fail once</label>
       </section>
     </div>
     <div class="dialog-footer"><p>All companies, credentials, service requests, site conditions, estimates, dates, and outcomes are illustrative.</p><button class="button button-primary" type="button" data-close-review>Continue reviewing</button></div>
   </dialog>
 
   <dialog class="confirm-dialog" data-confirm-dialog aria-labelledby="confirm-title"><div data-confirm-content></div></dialog>
+  <dialog class="alert-dialog" data-alert-dialog aria-labelledby="alert-title">
+    <div class="dialog-head"><div><p class="micro-label">Opportunity notifications</p><h2 id="alert-title">Save an alert for this search</h2></div><button class="icon-button" type="button" data-close-alert aria-label="Close saved alert preferences">×</button></div>
+    <form data-alert-form novalidate>
+      <div class="alert-dialog-body">
+        <section class="saved-search-scope"><p class="micro-label">Current search</p><h3>Central Phoenix · Tree work · 12-mile service radius</h3><p>Only currently eligible, owner-approved opportunity previews can produce an alert.</p></section>
+        <fieldset class="alert-choice-group"><legend>Notification frequency</legend><label><input type="radio" name="alertFrequency" value="As matches appear"><span><strong>As matches appear</strong><small>Useful for time-sensitive capacity</small></span></label><label><input type="radio" name="alertFrequency" value="Daily digest" checked><span><strong>Daily digest</strong><small>One summary when eligible matches exist</small></span></label></fieldset>
+        <fieldset class="alert-choice-group"><legend>Delivery channels</legend><label><input type="checkbox" name="alertChannel" value="In-app" checked><span><strong>In-app</strong><small>Appears in the provider workspace</small></span></label><label><input type="checkbox" name="alertChannel" value="Email" checked><span><strong>Email</strong><small>Sent to the opportunity contact</small></span></label></fieldset>
+        <div class="form-grid"><label class="field"><span>Quiet hours</span><select name="quietHours"><option>7:00 PM–7:00 AM</option><option>9:00 PM–6:00 AM</option><option>No quiet hours</option></select></label><label class="field"><span>Capacity behavior</span><select><option>Suppress when intake is paused</option><option>Keep alerts active while paused</option></select></label></div>
+        <label class="checkbox-row"><input type="checkbox" checked><span>Pause alerts automatically when the selected service becomes ineligible or recurring capacity reaches zero.</span></label>
+        <label class="review-check"><input type="checkbox" data-fail-alert-save> Simulate one recoverable save failure</label>
+        <div class="form-error" role="alert" tabindex="-1" hidden data-alert-error><strong>The alert was not saved.</strong><span>Your frequency, channels, quiet hours, and filters are still here. Try again.</span></div>
+        <aside class="stage-note private"><span aria-hidden="true">i</span><div><strong>An alert is not a work guarantee.</strong>It does not reserve an opportunity, change ranking, widen eligibility, or reveal private owner details.</div></aside>
+      </div>
+      <div class="dialog-footer"><button class="button button-secondary" type="button" data-close-alert>Cancel</button><button class="button button-primary" type="submit">Save opportunity alert</button></div>
+    </form>
+  </dialog>
   <div class="toast" role="status" aria-live="polite" hidden data-toast></div>
   <script src="app.js"></script>
 </body>

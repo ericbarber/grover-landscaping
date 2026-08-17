@@ -144,6 +144,19 @@ Current state:
   states; adds privacy-safe property, timing, and route-fit facts; tracks owner
   response and disclosure; structures site assessment; and separates the
   provider-private production basis from the owner proposal.
+- The Yard Crew V3 extension phases are complete. First-service preparation now
+  previews the exact owner update before confirmation, retains provider-private
+  exclusions, recovers a failed delivery, and records a sent receipt. Team
+  administration compares authority, requires owner approval, and covers
+  correction, delivery, acceptance, expiry, and revocation. Saved opportunity
+  alerts define frequency, channel, quiet hours, capacity suppression, failure
+  recovery, pause/resume, and no-priority boundaries. Pilot governance limits
+  the recommended first release to known-owner connections while curated
+  marketplace claims remain gated.
+- Yard Crew validation now covers those V3 states in the connected desktop
+  journey and rechecks tablet, 390px, 320px, 200% text, target sizing,
+  accessible naming, focus/recovery, overflow, and browser errors. Three V3
+  review references and an extension handoff are available in the gallery.
 
 Next design work:
 
@@ -158,12 +171,12 @@ Next design work:
 - Review Yard Owner acquisition for phased production adoption, beginning with
   independent identity/private property, then intake media and known-provider
   connection before curated discovery.
-- Review the Yard Crew acquisition V2 prototype and resolve provider eligibility,
+- Review the Yard Crew acquisition V3 prototype and resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
   levels before production adoption. Begin with public routing and provider
   identity/readiness, then pilot known-owner connections before curated
-  opportunities. Follow with the planned owner-notification preview, team-role
-  comparison, and explicit saved-search notification controls.
+  opportunities. Use the completed V3 owner-notification, team-authority,
+  saved-alert, and pilot-governance contracts during that adoption.
 - Resume Phase 0 of the broader application working-design plan; within customer
   Phase 5, return to the property-manager portfolio and keep billing product-gated.
 

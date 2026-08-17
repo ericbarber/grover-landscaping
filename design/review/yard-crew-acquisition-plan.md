@@ -348,10 +348,12 @@ The first working prototype should let a reviewer:
 | A — Navigation and readiness | Group lifecycle progress, separate Support, and expose readiness and capacity | Complete |
 | B — Opportunity decision quality | Add privacy-safe property, timing, route, and owner-response facts | Complete |
 | C — Assessment and estimating | Add a structured assessment and provider-private production basis | Complete |
-| D — Operational handoff and support | Preserve explicit assignment/release; add owner notification preview and role comparison in later slices | Core boundary complete; extensions planned |
+| D — Operational handoff and support | Preserve explicit assignment/release; add owner notification preview, team authority and invitation states, saved alerts, and pilot-governance review | Complete in V3 |
 
 See the [professional V2 review](yard-crew-acquisition-professional-review-v2.md)
-for findings, dispositions, acceptance criteria, and validation requirements.
+for the foundational findings and the
+[V3 extension review](yard-crew-acquisition-extension-review-v3.md) for the
+completed communication, authority, alert, and pilot-governance phases.
 
 ## Production product gates
 
