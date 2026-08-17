@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
 import {
   createOwnerProperty,
+  fetchOwnerYardBrief,
   fetchOwnerProperties,
+  saveOwnerYardBrief,
   saveOwnerWorkspace,
 } from './ownerAcquisitionClient';
 
@@ -60,6 +62,41 @@ describe('Yard Owner acquisition API client', () => {
 
     const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
     expect(body.address_status).toBe('unconfirmed');
+    expect(body).not.toHaveProperty('owner_user_id');
+  });
+
+  it('maps and versions the owner-authored private yard brief', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      brief_id: 'owner_brief_1', owner_user_id: 'owner_1', property_id: 'owner_property_1',
+      version: 2, status: 'ready', yard_areas: ['Front yard'], care_goals: ['Routine upkeep'],
+      cadence_preference: 'every_two_weeks', considerations: 'Keep the side gate closed.',
+      author_source: 'yard_owner', persisted: true,
+    }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchOwnerYardBrief('owner_property_1')).resolves.toEqual(expect.objectContaining({
+      briefId: 'owner_brief_1',
+      propertyId: 'owner_property_1',
+      version: 2,
+      yardAreas: ['Front yard'],
+      authorSource: 'yard_owner',
+    }));
+
+    await saveOwnerYardBrief('owner_property_1', {
+      status: 'ready',
+      yardAreas: ['Front yard'],
+      careGoals: ['Routine upkeep'],
+      cadencePreference: 'every_two_weeks',
+      considerations: 'Keep the side gate closed.',
+    });
+    const body = JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string);
+    expect(body).toEqual({
+      status: 'ready',
+      yard_areas: ['Front yard'],
+      care_goals: ['Routine upkeep'],
+      cadence_preference: 'every_two_weeks',
+      considerations: 'Keep the side gate closed.',
+    });
     expect(body).not.toHaveProperty('owner_user_id');
   });
 });

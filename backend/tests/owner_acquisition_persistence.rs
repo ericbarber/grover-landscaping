@@ -1,6 +1,6 @@
 use grover_landscaping_api::owner_acquisition::{
     CreateOwnerPropertyRequest, OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
-    SaveOwnerWorkspaceRequest,
+    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
 use sqlx::{postgres::PgPoolOptions, Row};
 use std::time::Duration;
@@ -28,6 +28,16 @@ fn property_request(address: &str) -> CreateOwnerPropertyRequest {
     }
 }
 
+fn yard_brief_request(status: &str) -> SaveOwnerYardBriefRequest {
+    SaveOwnerYardBriefRequest {
+        status: status.to_string(),
+        yard_areas: vec!["Front yard".to_string(), "Back yard".to_string()],
+        care_goals: vec!["Routine upkeep".to_string()],
+        cadence_preference: "every_two_weeks".to_string(),
+        considerations: "Keep the side gate closed for the dog.".to_string(),
+    }
+}
+
 #[tokio::test]
 async fn repository_distinguishes_unavailable_owner_storage() {
     let pool = PgPoolOptions::new()
@@ -42,6 +52,12 @@ async fn repository_distinguishes_unavailable_owner_storage() {
     ));
     assert!(matches!(
         repository.list_properties("owner-unavailable").await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .get_latest_yard_brief("owner-unavailable", "property-1")
+            .await,
         OwnerReadResult::Unavailable
     ));
     assert!(matches!(
@@ -132,6 +148,41 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
         OwnerMutationResult::Saved(_)
     ));
 
+    let OwnerMutationResult::Saved(first_brief) = repository
+        .save_yard_brief(
+            owner_a,
+            &owner_a_property.property_id,
+            yard_brief_request("draft"),
+        )
+        .await
+    else {
+        panic!("first yard brief should save");
+    };
+    assert_eq!(first_brief.version, 1);
+    let OwnerMutationResult::Saved(second_brief) = repository
+        .save_yard_brief(
+            owner_a,
+            &owner_a_property.property_id,
+            yard_brief_request("ready"),
+        )
+        .await
+    else {
+        panic!("ready yard brief should save");
+    };
+    assert_eq!(second_brief.version, 2);
+    assert_eq!(
+        repository
+            .get_latest_yard_brief(owner_b, &owner_a_property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    );
+    assert!(matches!(
+        repository
+            .get_latest_yard_brief(owner_a, &owner_a_property.property_id)
+            .await,
+        OwnerReadResult::Loaded(brief) if brief.version == 2 && brief.status == "ready"
+    ));
+
     let event_rows = sqlx::query(
         "SELECT event_kind, event_data
          FROM owner_acquisition_events
@@ -142,13 +193,20 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
     .fetch_all(&pool)
     .await
     .expect("owner acquisition audit events should load");
-    assert_eq!(event_rows.len(), 2);
+    assert_eq!(event_rows.len(), 4);
     assert!(event_rows
         .iter()
         .any(|row| row.get::<String, _>("event_kind") == "workspace_saved"));
     assert!(event_rows
         .iter()
         .any(|row| row.get::<String, _>("event_kind") == "property_created"));
+    assert_eq!(
+        event_rows
+            .iter()
+            .filter(|row| row.get::<String, _>("event_kind") == "yard_brief_saved")
+            .count(),
+        2
+    );
     assert!(event_rows.iter().all(|row| {
         !row.get::<serde_json::Value, _>("event_data")
             .to_string()

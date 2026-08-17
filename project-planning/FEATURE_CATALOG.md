@@ -82,6 +82,9 @@
 - Delivered responsive `/app/yard-owner` production entry with a public
   Yard Owner call to action, verified-email gating, private profile/property
   forms, stale-address reconfirmation, authority consent, and recovery states
+- Delivered append-only private Yard Owner brief versions with owner isolation,
+  areas, goals, cadence, considerations, source provenance, draft/ready status,
+  accessible React editing, and explicit non-diagnostic boundaries
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence

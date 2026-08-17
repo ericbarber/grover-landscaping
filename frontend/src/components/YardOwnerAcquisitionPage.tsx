@@ -4,14 +4,19 @@ import {
   createOwnerProperty,
   fetchOwnerProperties,
   fetchOwnerWorkspace,
+  fetchOwnerYardBrief,
   saveOwnerWorkspace,
+  saveOwnerYardBrief,
   type CreateOwnerPropertyInput,
   type OwnerProperty,
   type OwnerWorkspace,
+  type OwnerYardBrief,
+  type SaveOwnerYardBriefInput,
 } from '../api/ownerAcquisitionClient';
 import { useAuth } from '../auth/AuthProvider';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
+type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
 
 const emptyProperty: PropertyDraft = {
   displayName: 'Home',
@@ -23,6 +28,16 @@ const emptyProperty: PropertyDraft = {
   countryCode: 'US',
   coarseArea: '',
 };
+
+const emptyYardBrief: YardBriefDraft = {
+  yardAreas: [],
+  careGoals: [],
+  cadencePreference: 'provider_recommendation',
+  considerations: '',
+};
+
+const yardAreaOptions = ['Front yard', 'Back yard', 'Side yards', 'Trees and shrubs', 'Irrigation areas'];
+const careGoalOptions = ['Routine upkeep', 'Cleanup and reset', 'Plant health', 'Irrigation concern', 'Seasonal care'];
 
 function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiRequestError) return error.message;
@@ -67,14 +82,14 @@ function Field({
   );
 }
 
-function Progress({ workspace, propertyCount }: { workspace: boolean; propertyCount: number }) {
+function Progress({ workspace, propertyCount, briefReady }: { workspace: boolean; propertyCount: number; briefReady: boolean }) {
   const steps = [
     { label: 'Your details', complete: workspace },
     { label: 'Property', complete: propertyCount > 0 },
-    { label: 'Yard brief', complete: false },
+    { label: 'Yard brief', complete: briefReady },
     { label: 'Connect care', complete: false },
   ];
-  const current = workspace ? (propertyCount > 0 ? 2 : 1) : 0;
+  const current = workspace ? (propertyCount > 0 ? (briefReady ? 3 : 2) : 1) : 0;
   return (
     <ol aria-label="Yard setup progress" className="grid grid-cols-4 gap-1">
       {steps.map((step, index) => (
@@ -111,6 +126,10 @@ export function YardOwnerAcquisitionPage() {
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [authorityAttested, setAuthorityAttested] = useState(false);
   const [showPropertyForm, setShowPropertyForm] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [yardBrief, setYardBrief] = useState<OwnerYardBrief | null>(null);
+  const [yardBriefDraft, setYardBriefDraft] = useState<YardBriefDraft>(emptyYardBrief);
+  const [briefLoading, setBriefLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,6 +220,63 @@ export function YardOwnerAcquisitionPage() {
     }
   }
 
+  async function openYardBrief(propertyId: string) {
+    setSelectedPropertyId(propertyId);
+    setShowPropertyForm(false);
+    setBriefLoading(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const loaded = await fetchOwnerYardBrief(propertyId).catch((loadError: unknown) => {
+        if (isApiErrorCode(loadError, 'owner_yard_brief_not_found')) return null;
+        throw loadError;
+      });
+      setYardBrief(loaded);
+      setYardBriefDraft(loaded ? {
+        yardAreas: loaded.yardAreas,
+        careGoals: loaded.careGoals,
+        cadencePreference: loaded.cadencePreference,
+        considerations: loaded.considerations,
+      } : emptyYardBrief);
+    } catch (loadError) {
+      setError(errorMessage(loadError, 'Your private yard brief could not be loaded.'));
+    } finally {
+      setBriefLoading(false);
+    }
+  }
+
+  function toggleBriefValue(field: 'yardAreas' | 'careGoals', value: string) {
+    setYardBriefDraft((current) => ({
+      ...current,
+      [field]: current[field].includes(value)
+        ? current[field].filter((item) => item !== value)
+        : [...current[field], value],
+    }));
+    setNotice(null);
+  }
+
+  async function saveBrief(status: OwnerYardBrief['status']) {
+    if (!selectedPropertyId) return;
+    if (status === 'ready' && (yardBriefDraft.yardAreas.length === 0 || yardBriefDraft.careGoals.length === 0)) {
+      setError('Choose at least one yard area and one care goal before marking the brief ready.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const saved = await saveOwnerYardBrief(selectedPropertyId, { ...yardBriefDraft, status });
+      setYardBrief(saved);
+      setNotice(status === 'ready'
+        ? `Yard brief version ${saved.version} is ready and still private.`
+        : `Private draft version ${saved.version} is saved.`);
+    } catch (saveError) {
+      setError(errorMessage(saveError, 'Your private yard brief could not be saved.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const inputId = (name: string) => `${prefix}-${name}`;
 
   return (
@@ -229,7 +305,7 @@ export function YardOwnerAcquisitionPage() {
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
         <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/5 sm:p-8" aria-labelledby="yard-setup-title">
-          <Progress workspace={Boolean(workspace)} propertyCount={properties.length} />
+          <Progress workspace={Boolean(workspace)} propertyCount={properties.length} briefReady={yardBrief?.status === 'ready'} />
           <div aria-live="polite" className="mt-6">
             {notice ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-950">{notice}</p> : null}
           </div>
@@ -289,7 +365,7 @@ export function YardOwnerAcquisitionPage() {
                   <p className="mt-2 text-sm text-slate-600">Private to {workspace.displayName} until a provider connection is approved.</p>
                 </div>
                 {properties.length > 0 && !showPropertyForm ? (
-                  <button className="min-h-11 rounded-xl border border-emerald-800 px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-50" onClick={() => setShowPropertyForm(true)} type="button">
+                  <button className="min-h-11 rounded-xl border border-emerald-800 px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-50" onClick={() => { setShowPropertyForm(true); setSelectedPropertyId(null); }} type="button">
                     Add another property
                   </button>
                 ) : null}
@@ -305,6 +381,9 @@ export function YardOwnerAcquisitionPage() {
                       </div>
                       <p className="mt-2 text-sm text-slate-700">{item.addressLine1}{item.addressLine2 ? `, ${item.addressLine2}` : ''}</p>
                       <p className="text-sm text-slate-600">{item.city}, {item.region} {item.postalCode}</p>
+                      <button className="mt-3 min-h-11 rounded-xl border border-emerald-800 px-4 text-sm font-bold text-emerald-900 hover:bg-white" onClick={() => void openYardBrief(item.propertyId)} type="button">
+                        Build or review yard brief
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -343,11 +422,52 @@ export function YardOwnerAcquisitionPage() {
                     ) : null}
                   </div>
                 </form>
+              ) : selectedPropertyId ? (
+                <section className="mt-7 border-t border-slate-200 pt-7" aria-labelledby={inputId('yard-brief-title')}>
+                  {briefLoading ? (
+                    <p className="py-8 font-bold text-slate-600" role="status">Loading your private yard brief…</p>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Step 3 of 4</p>
+                          <h3 className="mt-2 text-2xl font-black" id={inputId('yard-brief-title')}>Describe the yard and the care you want</h3>
+                          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.</p>
+                        </div>
+                        {yardBrief ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-800">Version {yardBrief.version} · {yardBrief.status}</span> : null}
+                      </div>
+                      <fieldset className="mt-6">
+                        <legend className="text-sm font-black text-slate-900">Which areas need care?</legend>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">Choose all that apply. A provider still confirms the actual scope.</p>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {yardAreaOptions.map((option) => <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 hover:bg-slate-50" key={option}><input checked={yardBriefDraft.yardAreas.includes(option)} className="h-5 w-5 accent-emerald-700" onChange={() => toggleBriefValue('yardAreas', option)} type="checkbox" /><span className="text-sm font-semibold">{option}</span></label>)}
+                        </div>
+                      </fieldset>
+                      <fieldset className="mt-6">
+                        <legend className="text-sm font-black text-slate-900">What would you like help with?</legend>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {careGoalOptions.map((option) => <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 hover:bg-slate-50" key={option}><input checked={yardBriefDraft.careGoals.includes(option)} className="h-5 w-5 accent-emerald-700" onChange={() => toggleBriefValue('careGoals', option)} type="checkbox" /><span className="text-sm font-semibold">{option}</span></label>)}
+                        </div>
+                      </fieldset>
+                      <div className="mt-6 grid gap-5">
+                        <label className="block" htmlFor={inputId('cadence')}><span className="text-sm font-bold text-slate-800">Preferred care cadence</span><select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3.5 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('cadence')} onChange={(event) => setYardBriefDraft((current) => ({ ...current, cadencePreference: event.target.value as OwnerYardBrief['cadencePreference'] }))} value={yardBriefDraft.cadencePreference}><option value="provider_recommendation">I’d like a provider recommendation</option><option value="one_time">One-time care</option><option value="weekly">Weekly</option><option value="every_two_weeks">Every two weeks</option><option value="monthly">Monthly</option></select></label>
+                        <label className="block" htmlFor={inputId('considerations')}><span className="text-sm font-bold text-slate-800">Access, pets, concerns, or priorities</span><span className="mt-0.5 block text-xs leading-5 text-slate-500">Optional. Do not include alarm codes or other secrets.</span><textarea className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-base focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id={inputId('considerations')} maxLength={1500} onChange={(event) => setYardBriefDraft((current) => ({ ...current, considerations: event.target.value }))} value={yardBriefDraft.considerations} /></label>
+                      </div>
+                      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950"><strong className="block">Private until you approve a provider</strong>The exact address and this brief remain in your owner workspace. Saving does not request service or share anything.</div>
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <button className="min-h-12 rounded-xl bg-emerald-800 px-6 font-black text-white hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60" disabled={saving} onClick={() => void saveBrief('ready')} type="button">{saving ? 'Saving…' : 'Save brief and continue'}</button>
+                        <button className="min-h-12 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60" disabled={saving} onClick={() => void saveBrief('draft')} type="button">Save private draft</button>
+                        <button className="min-h-12 rounded-xl px-5 font-bold text-slate-700 hover:bg-slate-100" onClick={() => setSelectedPropertyId(null)} type="button">Back to properties</button>
+                      </div>
+                      {yardBrief?.status === 'ready' ? <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"><p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">Next: optional photographs</p><h4 className="mt-2 font-black text-slate-900">Add useful views without diagnosing the yard</h4><p className="mt-1 text-sm leading-6 text-slate-700">Guided, private photo intake is the next delivery slice. Your brief is complete without photos.</p></div> : null}
+                    </>
+                  )}
+                </section>
               ) : properties.length > 0 ? (
                 <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">Next phase</p>
-                  <h3 className="mt-2 font-black text-slate-900">Build the yard care brief</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-700">Goals, care cadence, considerations, and optional photos are coming next. Your saved property remains private.</p>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">Next step</p>
+                  <h3 className="mt-2 font-black text-slate-900">Build the private yard brief</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-700">Choose a saved property to describe its areas, goals, cadence, and considerations. Nothing is shared with a provider.</p>
                 </div>
               ) : null}
             </div>

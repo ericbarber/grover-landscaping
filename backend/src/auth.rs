@@ -500,7 +500,13 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             && (*method == Method::GET || *method == Method::POST);
     }
     if path.starts_with("/owner-properties/") {
-        return principal.verified_email.is_some() && *method == Method::GET;
+        let owner_property_suffix = path.trim_start_matches("/owner-properties/");
+        let segment_count = owner_property_suffix.split('/').count();
+        let supported = (segment_count == 1 && *method == Method::GET)
+            || (segment_count == 2
+                && owner_property_suffix.ends_with("/yard-brief")
+                && (*method == Method::GET || *method == Method::PUT));
+        return principal.verified_email.is_some() && supported;
     }
 
     if principal.roles.is_empty() {
@@ -1547,6 +1553,8 @@ mod tests {
             (Method::GET, "/owner-properties"),
             (Method::POST, "/owner-properties"),
             (Method::GET, "/owner-properties/property-1"),
+            (Method::GET, "/owner-properties/property-1/yard-brief"),
+            (Method::PUT, "/owner-properties/property-1/yard-brief"),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));

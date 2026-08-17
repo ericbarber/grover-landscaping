@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-16: Delivered versioned private Yard Owner briefs with self-scoped persistence and API access, immutable revision history, minimized audit data, draft/ready validation, production React editing and recovery, and browser isolation coverage.
 - 2026-08-16: Completed the Yard Crew acquisition V3 extension phases with preview-before-send first-service communication, delivery recovery and receipt, capability-based team authority and invitation lifecycle, capacity-aware saved opportunity alerts, known-owner pilot governance, responsive validation, and gallery references.
 - 2026-08-15: Unified all working prototypes and the design gallery on one validated visual foundation for canonical color, typography roles, wordmark, review banners, navigation materials, controls, surfaces, and focus while preserving distinct public, acquisition-progress, and authenticated-destination navigation models.
 - 2026-08-15: Completed the Yard Crew acquisition professional V2 review and implemented grouped lifecycle navigation, explicit readiness and capacity, richer privacy-safe opportunity facts, owner-response tracking, structured site assessment, and a provider-private production basis beside the owner proposal.

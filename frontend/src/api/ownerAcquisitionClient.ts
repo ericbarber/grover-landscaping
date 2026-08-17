@@ -28,6 +28,20 @@ interface ApiOwnerProperty {
   persisted: boolean;
 }
 
+interface ApiOwnerYardBrief {
+  brief_id: string;
+  owner_user_id: string;
+  property_id: string;
+  version: number;
+  status: 'draft' | 'ready';
+  yard_areas: string[];
+  care_goals: string[];
+  cadence_preference: OwnerYardBrief['cadencePreference'];
+  considerations: string;
+  author_source: 'yard_owner';
+  persisted: boolean;
+}
+
 export interface OwnerWorkspace {
   ownerUserId: string;
   verifiedEmail: string;
@@ -67,6 +81,28 @@ export interface CreateOwnerPropertyInput {
   authorityAttested: boolean;
 }
 
+export interface OwnerYardBrief {
+  briefId: string;
+  ownerUserId: string;
+  propertyId: string;
+  version: number;
+  status: 'draft' | 'ready';
+  yardAreas: string[];
+  careGoals: string[];
+  cadencePreference: 'provider_recommendation' | 'one_time' | 'weekly' | 'every_two_weeks' | 'monthly';
+  considerations: string;
+  authorSource: 'yard_owner';
+  persisted: boolean;
+}
+
+export interface SaveOwnerYardBriefInput {
+  status: OwnerYardBrief['status'];
+  yardAreas: string[];
+  careGoals: string[];
+  cadencePreference: OwnerYardBrief['cadencePreference'];
+  considerations: string;
+}
+
 function mapWorkspace(workspace: ApiOwnerWorkspace): OwnerWorkspace {
   return {
     ownerUserId: workspace.owner_user_id,
@@ -94,6 +130,22 @@ function mapProperty(property: ApiOwnerProperty): OwnerProperty {
     status: property.status,
     version: property.version,
     persisted: property.persisted,
+  };
+}
+
+function mapYardBrief(brief: ApiOwnerYardBrief): OwnerYardBrief {
+  return {
+    briefId: brief.brief_id,
+    ownerUserId: brief.owner_user_id,
+    propertyId: brief.property_id,
+    version: brief.version,
+    status: brief.status,
+    yardAreas: brief.yard_areas,
+    careGoals: brief.care_goals,
+    cadencePreference: brief.cadence_preference,
+    considerations: brief.considerations,
+    authorSource: brief.author_source,
+    persisted: brief.persisted,
   };
 }
 
@@ -147,4 +199,27 @@ export async function createOwnerProperty(
     }),
   });
   return mapProperty(await response.json() as ApiOwnerProperty);
+}
+
+export async function fetchOwnerYardBrief(propertyId: string): Promise<OwnerYardBrief> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/yard-brief`);
+  return mapYardBrief(await response.json() as ApiOwnerYardBrief);
+}
+
+export async function saveOwnerYardBrief(
+  propertyId: string,
+  input: SaveOwnerYardBriefInput,
+): Promise<OwnerYardBrief> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/yard-brief`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      status: input.status,
+      yard_areas: input.yardAreas,
+      care_goals: input.careGoals,
+      cadence_preference: input.cadencePreference,
+      considerations: input.considerations,
+    }),
+  });
+  return mapYardBrief(await response.json() as ApiOwnerYardBrief);
 }

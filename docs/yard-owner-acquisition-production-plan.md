@@ -21,7 +21,8 @@ The approved experience is defined by:
 | 1A | Delivered | Private owner workspace/property schema, self-scoped repository, duplicate boundary, lifecycle audit, and PostgreSQL isolation coverage |
 | 1B | Delivered | Verified-identity, self-scoped workspace and property API with explicit validation, missing, duplicate, and unavailable outcomes |
 | 1C | Delivered | Production React private entry with public owner CTA, verified-email gate, profile/property recovery, address reconfirmation, authority attestation, and responsive browser coverage |
-| 2 | In progress | Private yard brief and owner-scoped intake media |
+| 2A | Delivered | Append-only private yard briefs with areas, goals, cadence, considerations, source/version provenance, draft/ready state, API isolation, and production React editing |
+| 2B | In progress | Owner-scoped guided intake media with upload, processing, replacement, and deletion lifecycle |
 | 3–7 | Planned | Provider connection through governed pilot convergence |
 
 ## Delivery principles
@@ -87,8 +88,19 @@ and persistence outages are never presented as an empty or successful state.
 
 ## Phase 2 — Yard brief and owner-scoped intake media
 
+### Slice 2A: versioned private yard brief — delivered
+
 - Add versioned yard briefs with areas, goals, cadence, considerations, status,
   and author/source provenance.
+- Expose only the latest owner-scoped version through the acquisition read model
+  while retaining prior versions for audit and recovery.
+- Keep draft saves flexible, but require at least one yard area and care goal
+  before the owner marks a brief ready.
+- Implement the approved brief React stage with explicit privacy and non-
+  diagnostic boundaries.
+
+### Slice 2B: guided private intake media — in progress
+
 - Add owner-intake media records independent of jobs, with guided shot type,
   upload authorization, processing, metadata result, retention, replacement,
   and deletion state.
@@ -96,7 +108,7 @@ and persistence outages are never presented as an empty or successful state.
   recovery primitives without reusing provider job authorization.
 - Add review-before-share snapshots and completeness guidance without a false
   diagnostic or pricing claim.
-- Implement the approved brief and optional-photo React stages.
+- Implement the approved optional-photo React stage.
 
 Exit condition: an owner can create, revise, reload, and delete a private brief
 and optional media; nothing is visible to a provider.
@@ -176,7 +188,7 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 2 — brief and owner-scoped intake media.
+1. Phase 2B — owner-scoped intake media.
 2. Phase 3 — known-provider connection pilot.
 
 Phases 4–7 follow only after the preceding data and authorization boundaries are

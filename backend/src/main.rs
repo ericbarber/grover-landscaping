@@ -84,9 +84,9 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     owner_acquisition::{
-        validate_property_request, validate_workspace_request, CreateOwnerPropertyRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
-        SaveOwnerWorkspaceRequest,
+        validate_property_request, validate_workspace_request, validate_yard_brief_request,
+        CreateOwnerPropertyRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -637,6 +637,10 @@ fn app_with_runtime(
             get(list_owner_properties).post(create_owner_property),
         )
         .route("/owner-properties/{property_id}", get(get_owner_property))
+        .route(
+            "/owner-properties/{property_id}/yard-brief",
+            get(get_owner_yard_brief).put(save_owner_yard_brief),
+        )
         .route(
             "/customer-accounts",
             get(list_customer_accounts).post(create_customer_account),
@@ -1310,6 +1314,63 @@ async fn create_owner_property(
             "owner_property_save_unavailable",
             "Your property could not be saved.",
         ),
+    }
+}
+
+async fn get_owner_yard_brief(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_latest_yard_brief(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(brief) => Json(brief).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_yard_brief_not_found",
+            "A private yard brief has not been saved for this property.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_yard_brief_unavailable",
+            "Your private yard brief could not be loaded.",
+        ),
+    }
+}
+
+async fn save_owner_yard_brief(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+    Json(request): Json<SaveOwnerYardBriefRequest>,
+) -> Response {
+    if !validate_yard_brief_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_yard_brief",
+                message: "Choose at least one yard area and care goal before marking the brief ready; keep each entry concise."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .save_yard_brief(&principal.subject, &property_id, request)
+        .await
+    {
+        OwnerMutationResult::Saved(brief) => Json(brief).into_response(),
+        OwnerMutationResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_yard_brief_save_unavailable",
+            "Your private yard brief could not be saved.",
+        ),
+        OwnerMutationResult::Duplicate => unreachable!("yard brief versions are append-only"),
     }
 }
 
@@ -6960,6 +7021,59 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let properties: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(properties.as_array().unwrap().len(), 1);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/owner-properties/{property_id}/yard-brief"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let brief_payload = serde_json::json!({
+            "status": "ready",
+            "yard_areas": ["Front yard", "Back yard"],
+            "care_goals": ["Routine upkeep"],
+            "cadence_preference": "every_two_weeks",
+            "considerations": "Keep the side gate closed for the dog."
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("PUT")
+                    .uri(format!("/owner-properties/{property_id}/yard-brief"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(brief_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let brief: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(brief["version"], 1);
+        assert_eq!(brief["status"], "ready");
+        assert_eq!(brief["owner_user_id"], "local-development-user");
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/owner-properties/{property_id}/yard-brief"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let brief: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(brief["version"], 1);
 
         let duplicate_payload = serde_json::json!({
             "display_name": "Primary home",

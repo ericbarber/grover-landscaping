@@ -201,8 +201,15 @@ Active slice:
   experience to the production API, the public Yard Owner journey links directly
   to it, and responsive browser coverage proves profile/property recovery,
   address reconfirmation, authority attestation, and privacy wording.
-- Phase 2 is active: add a versioned private yard brief, then owner-scoped guided
-  intake media. Do not add provider invitations until private intake is complete.
+- Phase 2A is delivered: owners can create, revise, and reload append-only private
+  yard-brief versions with areas, goals, cadence, considerations, draft/ready
+  state, owner/source provenance, minimized audit events, and fail-closed owner
+  isolation. The production React journey includes accessible draft and ready
+  recovery without presenting the brief as measurement, diagnosis, price, a
+  work order, or provider instruction.
+- Phase 2B is active: add owner-scoped guided intake media with upload,
+  processing, replacement, and deletion states. Do not add provider invitations
+  until private intake is complete.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.
