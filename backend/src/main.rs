@@ -84,9 +84,10 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     owner_acquisition::{
-        validate_property_request, validate_workspace_request, validate_yard_brief_request,
-        CreateOwnerPropertyRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        validate_intake_media_request, validate_property_request, validate_workspace_request,
+        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
+        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -106,6 +107,7 @@ use grover_landscaping_api::{
         CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
         PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
+    PhotoUploadMetadata as OwnerPhotoUploadMetadata,
 };
 use marketing_events::{
     validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
@@ -417,6 +419,13 @@ struct PhotoCompleteRequest {
     image_height_px: Option<i32>,
 }
 
+#[derive(Debug, Deserialize)]
+struct OwnerIntakeMediaCompleteRequest {
+    file_size_bytes: Option<i64>,
+    image_width_px: Option<i32>,
+    image_height_px: Option<i32>,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), DynError> {
     tracing_subscriber::registry()
@@ -640,6 +649,18 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/yard-brief",
             get(get_owner_yard_brief).put(save_owner_yard_brief),
+        )
+        .route(
+            "/owner-properties/{property_id}/intake-media",
+            get(list_owner_intake_media).post(create_owner_intake_media_upload),
+        )
+        .route(
+            "/owner-properties/{property_id}/intake-media/{media_id}",
+            delete(delete_owner_intake_media),
+        )
+        .route(
+            "/owner-properties/{property_id}/intake-media/{media_id}/complete",
+            post(complete_owner_intake_media_upload),
         )
         .route(
             "/customer-accounts",
@@ -1371,6 +1392,137 @@ async fn save_owner_yard_brief(
             "Your private yard brief could not be saved.",
         ),
         OwnerMutationResult::Duplicate => unreachable!("yard brief versions are append-only"),
+    }
+}
+
+async fn list_owner_intake_media(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_intake_media(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(media) => Json(media).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_intake_media_unavailable",
+            "Your private yard photos could not be loaded.",
+        ),
+    }
+}
+
+async fn create_owner_intake_media_upload(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+    Json(request): Json<CreateOwnerIntakeMediaRequest>,
+) -> Response {
+    if !validate_intake_media_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_intake_media",
+                message: "Choose a supported guided view and a JPEG, PNG, GIF, or WebP image."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .create_intake_media_upload(&principal.subject, &property_id, request)
+        .await
+    {
+        OwnerMutationResult::Saved(upload) => (StatusCode::CREATED, Json(upload)).into_response(),
+        OwnerMutationResult::NotFound => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "ready_owner_yard_brief_required",
+                message: "Save a ready private yard brief before adding photographs.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_intake_media_create_unavailable",
+            "A private photo upload could not be prepared.",
+        ),
+        OwnerMutationResult::Duplicate => unreachable!("intake media IDs are generated"),
+    }
+}
+
+async fn complete_owner_intake_media_upload(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, media_id)): Path<(String, String)>,
+    Json(request): Json<OwnerIntakeMediaCompleteRequest>,
+) -> Response {
+    if request.file_size_bytes.is_some_and(|value| value <= 0)
+        || request.image_width_px.is_some_and(|value| value <= 0)
+        || request.image_height_px.is_some_and(|value| value <= 0)
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_intake_media_metadata",
+                message: "Photo size and dimensions must be greater than zero when supplied."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let has_metadata = request.file_size_bytes.is_some()
+        || request.image_width_px.is_some()
+        || request.image_height_px.is_some();
+    let metadata = OwnerPhotoUploadMetadata {
+        file_size_bytes: request.file_size_bytes,
+        image_width_px: request.image_width_px,
+        image_height_px: request.image_height_px,
+        metadata_source: has_metadata.then(|| "client_reported".to_string()),
+    };
+    match state
+        .owner_acquisition
+        .complete_intake_media_upload(&principal.subject, &property_id, &media_id, metadata)
+        .await
+    {
+        OwnerMutationResult::Saved(media) => Json(media).into_response(),
+        OwnerMutationResult::NotFound => resource_not_found_response(
+            "owner_intake_media_not_found",
+            "The private photo upload was not found or cannot be completed.",
+        ),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_intake_media_completion_unavailable",
+            "The private photo upload could not be completed.",
+        ),
+        OwnerMutationResult::Duplicate => unreachable!("media completion is idempotent"),
+    }
+}
+
+async fn delete_owner_intake_media(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, media_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .delete_intake_media(&principal.subject, &property_id, &media_id)
+        .await
+    {
+        OwnerMutationResult::Saved(media) => Json(media).into_response(),
+        OwnerMutationResult::NotFound => resource_not_found_response(
+            "owner_intake_media_not_found",
+            "The private yard photo was not found.",
+        ),
+        OwnerMutationResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_intake_media_delete_unavailable",
+            "The private yard photo could not be deleted. It remains private and unchanged; try again.",
+        ),
+        OwnerMutationResult::Duplicate => unreachable!("media deletion is idempotent"),
     }
 }
 
@@ -7074,6 +7226,85 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let brief: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(brief["version"], 1);
+
+        let media_payload = serde_json::json!({
+            "file_name": "front-yard.jpg",
+            "content_type": "image/jpeg",
+            "shot_type": "front_yard",
+            "replaces_media_id": null
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!("/owner-properties/{property_id}/intake-media"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(media_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let upload: Value = serde_json::from_slice(&body).unwrap();
+        let media_id = upload["media"]["media_id"].as_str().unwrap();
+        assert_eq!(upload["media"]["status"], "pending_upload");
+        assert!(upload["media"]["object_key"]
+            .as_str()
+            .unwrap()
+            .contains("owner-intake"));
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!(
+                        "/owner-properties/{property_id}/intake-media/{media_id}/complete"
+                    ))
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"file_size_bytes":2048,"image_width_px":1200,"image_height_px":800}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let media: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(media["status"], "ready");
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/owner-properties/{property_id}/intake-media"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let media: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(media.as_array().unwrap().len(), 1);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri(format!(
+                        "/owner-properties/{property_id}/intake-media/{media_id}"
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
 
         let duplicate_payload = serde_json::json!({
             "display_name": "Primary home",

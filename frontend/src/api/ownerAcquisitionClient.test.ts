@@ -1,10 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
 import {
+  completeOwnerIntakeMediaUpload,
   createOwnerProperty,
+  createOwnerIntakeMediaUpload,
+  deleteOwnerIntakeMedia,
+  fetchOwnerIntakeMedia,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
+  uploadOwnerIntakeMediaFile,
   saveOwnerWorkspace,
 } from './ownerAcquisitionClient';
 
@@ -66,12 +71,12 @@ describe('Yard Owner acquisition API client', () => {
   });
 
   it('maps and versions the owner-authored private yard brief', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({
       brief_id: 'owner_brief_1', owner_user_id: 'owner_1', property_id: 'owner_property_1',
       version: 2, status: 'ready', yard_areas: ['Front yard'], care_goals: ['Routine upkeep'],
       cadence_preference: 'every_two_weeks', considerations: 'Keep the side gate closed.',
       author_source: 'yard_owner', persisted: true,
-    }), { status: 200 }));
+    }), { status: 200 })));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(fetchOwnerYardBrief('owner_property_1')).resolves.toEqual(expect.objectContaining({
@@ -98,5 +103,64 @@ describe('Yard Owner acquisition API client', () => {
       considerations: 'Keep the side gate closed.',
     });
     expect(body).not.toHaveProperty('owner_user_id');
+  });
+
+  it('creates an independently scoped guided-media upload without provider identifiers', async () => {
+    const apiMedia = {
+      media_id: 'owner_media_1', owner_user_id: 'owner_1', property_id: 'owner_property_1',
+      brief_id: 'owner_brief_2', shot_type: 'front_yard', file_name: 'front.jpg',
+      content_type: 'image/jpeg', upload_mode: 'local-placeholder',
+      object_key: 'local/owner-intake/private/owner_property_1/front_yard/front.jpg',
+      thumbnail_object_key: null, status: 'pending_upload', file_size_bytes: null,
+      image_width_px: null, image_height_px: null, metadata_source: null,
+      rejection_reason: null, replaces_media_id: null, replaced_by_media_id: null,
+      display_url: null, thumbnail_url: null, persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([apiMedia]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        media: apiMedia,
+        upload_url: 'local://private-upload',
+        thumbnail_upload_url: null,
+        thumbnail_content_type: null,
+        thumbnail_max_dimension_px: null,
+      }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        ...apiMedia,
+        status: 'ready',
+        file_size_bytes: 5,
+        metadata_source: 'client_reported',
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...apiMedia, status: 'deleted' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchOwnerIntakeMedia('owner_property_1')).resolves.toEqual([
+      expect.objectContaining({ mediaId: 'owner_media_1', shotType: 'front_yard' }),
+    ]);
+    const file = new File(['image'], 'front.jpg', { type: 'image/jpeg' });
+    const upload = await createOwnerIntakeMediaUpload('owner_property_1', file, 'front_yard');
+    expect(upload.media.objectKey).toContain('owner-intake');
+    const createBody = JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string);
+    expect(createBody).toEqual({
+      file_name: 'front.jpg',
+      content_type: 'image/jpeg',
+      shot_type: 'front_yard',
+      replaces_media_id: null,
+    });
+    expect(createBody).not.toHaveProperty('job_id');
+    expect(createBody).not.toHaveProperty('organization_id');
+    await uploadOwnerIntakeMediaFile(upload, file);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await expect(completeOwnerIntakeMediaUpload(
+      'owner_property_1',
+      'owner_media_1',
+      file,
+    )).resolves.toEqual(expect.objectContaining({ status: 'ready', fileSizeBytes: 5 }));
+    expect(JSON.parse((fetchMock.mock.calls[2][1] as RequestInit).body as string)).toEqual({
+      file_size_bytes: file.size,
+    });
+    await expect(deleteOwnerIntakeMedia('owner_property_1', 'owner_media_1')).resolves.toEqual(
+      expect.objectContaining({ status: 'deleted' }),
+    );
   });
 });

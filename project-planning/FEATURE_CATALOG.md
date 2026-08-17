@@ -85,6 +85,11 @@
 - Delivered append-only private Yard Owner brief versions with owner isolation,
   areas, goals, cadence, considerations, source provenance, draft/ready status,
   accessible React editing, and explicit non-diagnostic boundaries
+- Delivered optional private Yard Owner intake media independent of provider jobs,
+  including guided views, presigned/local upload modes, server-side inspection,
+  processing and rejection recovery, previews, safe replacement, owner-visible
+  retention, explicit object deletion, owner isolation, and responsive browser
+  coverage
 - Property manager: portfolio service, vendor work, reports, and approvals
 - Crew lead: route execution, crew progress, field exceptions, and completion evidence
 - Crew member: assigned work, job steps, photos, and completion evidence

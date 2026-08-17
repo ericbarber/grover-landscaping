@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { ApiRequestError, isApiErrorCode } from '../api/apiError';
 import {
+  completeOwnerIntakeMediaUpload,
+  createOwnerIntakeMediaUpload,
   createOwnerProperty,
+  deleteOwnerIntakeMedia,
+  fetchOwnerIntakeMedia,
   fetchOwnerProperties,
   fetchOwnerWorkspace,
   fetchOwnerYardBrief,
   saveOwnerWorkspace,
   saveOwnerYardBrief,
+  uploadOwnerIntakeMediaFile,
   type CreateOwnerPropertyInput,
   type OwnerProperty,
+  type OwnerIntakeMedia,
   type OwnerWorkspace,
   type OwnerYardBrief,
   type SaveOwnerYardBriefInput,
@@ -38,6 +44,13 @@ const emptyYardBrief: YardBriefDraft = {
 
 const yardAreaOptions = ['Front yard', 'Back yard', 'Side yards', 'Trees and shrubs', 'Irrigation areas'];
 const careGoalOptions = ['Routine upkeep', 'Cleanup and reset', 'Plant health', 'Irrigation concern', 'Seasonal care'];
+const shotTypeOptions: Array<{ value: OwnerIntakeMedia['shotType']; label: string; guidance: string }> = [
+  { value: 'front_yard', label: 'Front yard overview', guidance: 'Stand back and include the main maintained area.' },
+  { value: 'back_yard', label: 'Back yard overview', guidance: 'Show the broad area without photographing neighboring private spaces.' },
+  { value: 'side_access', label: 'Side access or gate', guidance: 'Show the path width and gate—not keys, codes, or security details.' },
+  { value: 'irrigation_or_concern', label: 'Irrigation or specific concern', guidance: 'Show visible context. A photo does not establish a diagnosis.' },
+  { value: 'other', label: 'Another useful view', guidance: 'Add a view that helps explain the owner-authored brief.' },
+];
 
 function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiRequestError) return error.message;
@@ -130,6 +143,12 @@ export function YardOwnerAcquisitionPage() {
   const [yardBrief, setYardBrief] = useState<OwnerYardBrief | null>(null);
   const [yardBriefDraft, setYardBriefDraft] = useState<YardBriefDraft>(emptyYardBrief);
   const [briefLoading, setBriefLoading] = useState(false);
+  const [intakeMedia, setIntakeMedia] = useState<OwnerIntakeMedia[]>([]);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [shotType, setShotType] = useState<OwnerIntakeMedia['shotType']>('front_yard');
+  const [replacesMediaId, setReplacesMediaId] = useState<string | undefined>();
+  const [mediaSaving, setMediaSaving] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -238,6 +257,9 @@ export function YardOwnerAcquisitionPage() {
         cadencePreference: loaded.cadencePreference,
         considerations: loaded.considerations,
       } : emptyYardBrief);
+      setIntakeMedia(loaded ? await fetchOwnerIntakeMedia(propertyId) : []);
+      setMediaFile(null);
+      setReplacesMediaId(undefined);
     } catch (loadError) {
       setError(errorMessage(loadError, 'Your private yard brief could not be loaded.'));
     } finally {
@@ -267,6 +289,7 @@ export function YardOwnerAcquisitionPage() {
     try {
       const saved = await saveOwnerYardBrief(selectedPropertyId, { ...yardBriefDraft, status });
       setYardBrief(saved);
+      if (status === 'ready') setIntakeMedia(await fetchOwnerIntakeMedia(selectedPropertyId));
       setNotice(status === 'ready'
         ? `Yard brief version ${saved.version} is ready and still private.`
         : `Private draft version ${saved.version} is saved.`);
@@ -274,6 +297,85 @@ export function YardOwnerAcquisitionPage() {
       setError(errorMessage(saveError, 'Your private yard brief could not be saved.'));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function addIntakeMedia() {
+    if (!selectedPropertyId || !mediaFile) {
+      setError('Choose a photograph before adding it to the private yard brief.');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mediaFile.type)) {
+      setError('Choose a JPEG, PNG, GIF, or WebP image.');
+      return;
+    }
+    if (mediaFile.size > 20 * 1024 * 1024) {
+      setError('Choose an image smaller than 20 MB.');
+      return;
+    }
+    setMediaSaving(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const upload = await createOwnerIntakeMediaUpload(
+        selectedPropertyId,
+        mediaFile,
+        shotType,
+        replacesMediaId,
+      );
+      await uploadOwnerIntakeMediaFile(upload, mediaFile);
+      const completed = await completeOwnerIntakeMediaUpload(
+        selectedPropertyId,
+        upload.media.mediaId,
+        mediaFile,
+      );
+      setIntakeMedia(await fetchOwnerIntakeMedia(selectedPropertyId));
+      setMediaFile(null);
+      setReplacesMediaId(undefined);
+      setFileInputKey((current) => current + 1);
+      setNotice(completed.status === 'ready'
+        ? 'The photograph is saved privately. No provider can see it yet.'
+        : 'The photograph is private and still processing. You can leave this page and check again later.');
+    } catch (saveError) {
+      setError(errorMessage(saveError, 'The private photograph could not be saved. Your brief is unchanged.'));
+      if (selectedPropertyId) {
+        try { setIntakeMedia(await fetchOwnerIntakeMedia(selectedPropertyId)); } catch { /* preserve the actionable upload error */ }
+      }
+    } finally {
+      setMediaSaving(false);
+    }
+  }
+
+  async function retryMedia(mediaId: string) {
+    if (!selectedPropertyId) return;
+    setMediaSaving(true);
+    setError(null);
+    try {
+      const media = await completeOwnerIntakeMediaUpload(
+        selectedPropertyId,
+        mediaId,
+      );
+      setIntakeMedia((current) => current.map((item) => item.mediaId === mediaId ? media : item));
+      setNotice(media.status === 'ready' ? 'Photo processing is complete.' : 'The photo is still processing privately.');
+    } catch (retryError) {
+      setError(errorMessage(retryError, 'Photo processing status could not be refreshed.'));
+    } finally {
+      setMediaSaving(false);
+    }
+  }
+
+  async function removeMedia(mediaId: string) {
+    if (!selectedPropertyId || !window.confirm('Delete this private yard photograph? This cannot be undone.')) return;
+    setMediaSaving(true);
+    setError(null);
+    try {
+      await deleteOwnerIntakeMedia(selectedPropertyId, mediaId);
+      setIntakeMedia((current) => current.filter((item) => item.mediaId !== mediaId));
+      setNotice('The private photograph was deleted.');
+    } catch (deleteError) {
+      setError(errorMessage(deleteError, 'The private photograph could not be deleted.'));
+    } finally {
+      setMediaSaving(false);
     }
   }
 
@@ -459,7 +561,199 @@ export function YardOwnerAcquisitionPage() {
                         <button className="min-h-12 rounded-xl border border-slate-300 px-5 font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60" disabled={saving} onClick={() => void saveBrief('draft')} type="button">Save private draft</button>
                         <button className="min-h-12 rounded-xl px-5 font-bold text-slate-700 hover:bg-slate-100" onClick={() => setSelectedPropertyId(null)} type="button">Back to properties</button>
                       </div>
-                      {yardBrief?.status === 'ready' ? <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5"><p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">Next: optional photographs</p><h4 className="mt-2 font-black text-slate-900">Add useful views without diagnosing the yard</h4><p className="mt-1 text-sm leading-6 text-slate-700">Guided, private photo intake is the next delivery slice. Your brief is complete without photos.</p></div> : null}
+                      {yardBrief?.status === 'ready' || intakeMedia.length > 0 ? (
+                        <section
+                          aria-labelledby={inputId('photo-title')}
+                          className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                        >
+                          <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-800">
+                            Optional photographs
+                          </p>
+                          <h4 className="mt-2 text-xl font-black text-slate-900" id={inputId('photo-title')}>
+                            Add useful views without diagnosing the yard
+                          </h4>
+                          <p className="mt-1 text-sm leading-6 text-slate-700">
+                            Photos stay private with this property. They are optional, and you will review them
+                            again before sharing with any provider.
+                          </p>
+
+                          {intakeMedia.length > 0 ? (
+                            <ul aria-label="Private yard photographs" className="mt-5 grid gap-3">
+                              {intakeMedia.map((media) => {
+                                const shot = shotTypeOptions.find((option) => option.value === media.shotType);
+                                const previewUrl = media.uploadMode === 'local-placeholder'
+                                  ? undefined
+                                  : media.thumbnailUrl ?? media.displayUrl;
+                                return (
+                                  <li className="rounded-xl border border-amber-200 bg-white p-4" key={media.mediaId}>
+                                    <div className="grid gap-4 sm:grid-cols-[7rem_minmax(0,1fr)]">
+                                      {previewUrl ? (
+                                        <img
+                                          alt={`${shot?.label ?? 'Yard photograph'} preview`}
+                                          className="h-28 w-full rounded-lg bg-slate-100 object-cover sm:w-28"
+                                          src={previewUrl}
+                                        />
+                                      ) : (
+                                        <div
+                                          aria-hidden="true"
+                                          className="flex h-28 items-center justify-center rounded-lg bg-slate-100 text-3xl text-slate-400 sm:w-28"
+                                        >
+                                          ◫
+                                        </div>
+                                      )}
+                                      <div className="min-w-0">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                          <div className="min-w-0">
+                                            <strong className="block">{shot?.label ?? 'Yard photograph'}</strong>
+                                            <span className="mt-1 block break-all text-xs text-slate-500">{media.fileName}</span>
+                                            <span className="mt-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-slate-700">
+                                              {media.status === 'pending_upload' ? 'Upload incomplete' : media.status}
+                                            </span>
+                                          </div>
+                                          <div className="flex flex-wrap gap-2">
+                                            {media.status === 'ready' && yardBrief?.status === 'ready' ? (
+                                              <button
+                                                className="min-h-11 rounded-lg border border-emerald-800 px-3 text-xs font-bold text-emerald-900"
+                                                onClick={() => {
+                                                  setShotType(media.shotType);
+                                                  setReplacesMediaId(media.mediaId);
+                                                  setMediaFile(null);
+                                                  setFileInputKey((current) => current + 1);
+                                                }}
+                                                type="button"
+                                              >
+                                                Replace
+                                              </button>
+                                            ) : null}
+                                            {media.status === 'processing' ? (
+                                              <button
+                                                className="min-h-11 rounded-lg border border-emerald-800 px-3 text-xs font-bold text-emerald-900"
+                                                disabled={mediaSaving}
+                                                onClick={() => void retryMedia(media.mediaId)}
+                                                type="button"
+                                              >
+                                                Check processing
+                                              </button>
+                                            ) : null}
+                                            <button
+                                              className="min-h-11 rounded-lg border border-rose-300 px-3 text-xs font-bold text-rose-800 hover:bg-rose-50"
+                                              disabled={mediaSaving}
+                                              onClick={() => void removeMedia(media.mediaId)}
+                                              type="button"
+                                            >
+                                              Delete
+                                            </button>
+                                          </div>
+                                        </div>
+                                        {media.status === 'pending_upload' ? (
+                                          <p className="mt-3 text-xs leading-5 text-amber-900">
+                                            The upload did not finish. Delete this entry and add the photo again when ready.
+                                          </p>
+                                        ) : media.status === 'processing' ? (
+                                          <p className="mt-3 text-xs leading-5 text-slate-600">
+                                            Grover is checking the image and preparing a private preview. It is not
+                                            available for sharing.
+                                          </p>
+                                        ) : media.status === 'rejected' ? (
+                                          <p className="mt-3 text-xs leading-5 text-rose-800">
+                                            This file could not be accepted as a safe supported image. Delete it and
+                                            choose another photograph.
+                                          </p>
+                                        ) : media.status === 'replaced' ? (
+                                          <p className="mt-3 text-xs leading-5 text-slate-600">
+                                            This older photo is no longer active. Delete it when you no longer need it.
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="mt-5 rounded-xl border border-dashed border-amber-300 bg-white/60 p-4 text-sm text-slate-700">
+                              No photographs added. Your ready yard brief is complete without them.
+                            </p>
+                          )}
+
+                          {yardBrief?.status !== 'ready' ? (
+                            <p className="mt-5 rounded-xl border border-amber-300 bg-white p-4 text-sm leading-6 text-amber-950">
+                              Your latest brief is a draft. Existing photos remain private and deletable; mark the
+                              current brief ready before adding or replacing a photo.
+                            </p>
+                          ) : (
+                            <><div className="mt-5 grid gap-4 rounded-xl bg-white p-4 sm:grid-cols-2">
+                            <label className="block" htmlFor={inputId('shot-type')}>
+                              <span className="text-sm font-bold text-slate-800">Guided view</span>
+                              <select
+                                className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base"
+                                id={inputId('shot-type')}
+                                onChange={(event) => {
+                                  setShotType(event.target.value as OwnerIntakeMedia['shotType']);
+                                  setReplacesMediaId(undefined);
+                                }}
+                                value={shotType}
+                              >
+                                {shotTypeOptions.map((option) => (
+                                  <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                              </select>
+                              <span className="mt-2 block text-xs leading-5 text-slate-500">
+                                {shotTypeOptions.find((option) => option.value === shotType)?.guidance}
+                              </span>
+                            </label>
+                            <label className="block" htmlFor={inputId('photo-file')}>
+                              <span className="text-sm font-bold text-slate-800">Choose photograph</span>
+                              <input
+                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                className="mt-2 block min-h-12 w-full rounded-xl border border-slate-300 bg-white p-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:font-bold file:text-emerald-900"
+                                id={inputId('photo-file')}
+                                key={fileInputKey}
+                                onChange={(event) => setMediaFile(event.target.files?.[0] ?? null)}
+                                type="file"
+                              />
+                            </label>
+                            </div>
+                          {replacesMediaId ? (
+                            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-amber-900">
+                              <span>The original stays active until its replacement finishes successfully.</span>
+                              <button
+                                className="min-h-11 rounded-lg px-3 text-amber-950 hover:bg-white"
+                                onClick={() => {
+                                  setReplacesMediaId(undefined);
+                                  setMediaFile(null);
+                                  setFileInputKey((current) => current + 1);
+                                }}
+                                type="button"
+                              >
+                                Cancel replacement
+                              </button>
+                            </div>
+                          ) : null}
+                            <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                              className="min-h-12 rounded-xl bg-emerald-800 px-5 font-black text-white disabled:opacity-60"
+                              disabled={mediaSaving || !mediaFile}
+                              onClick={() => void addIntakeMedia()}
+                              type="button"
+                            >
+                              {mediaSaving
+                                ? 'Saving photograph…'
+                                : replacesMediaId
+                                  ? 'Upload replacement'
+                                  : 'Add private photograph'}
+                            </button>
+                            <button
+                              className="min-h-12 rounded-xl px-4 font-bold text-slate-700 hover:bg-white"
+                              onClick={() => setNotice('Private intake is complete. No provider connection or sharing has started.')}
+                              type="button"
+                            >
+                              Finish without more photos
+                            </button>
+                            </div></>
+                          )}
+                        </section>
+                      ) : null}
                     </>
                   )}
                 </section>

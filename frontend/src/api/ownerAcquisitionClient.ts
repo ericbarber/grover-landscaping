@@ -42,6 +42,30 @@ interface ApiOwnerYardBrief {
   persisted: boolean;
 }
 
+interface ApiOwnerIntakeMedia {
+  media_id: string;
+  owner_user_id: string;
+  property_id: string;
+  brief_id: string;
+  shot_type: OwnerIntakeMedia['shotType'];
+  file_name: string;
+  content_type: string;
+  upload_mode: string;
+  object_key: string;
+  thumbnail_object_key?: string | null;
+  status: OwnerIntakeMedia['status'];
+  file_size_bytes?: number | null;
+  image_width_px?: number | null;
+  image_height_px?: number | null;
+  metadata_source?: string | null;
+  rejection_reason?: string | null;
+  replaces_media_id?: string | null;
+  replaced_by_media_id?: string | null;
+  display_url?: string | null;
+  thumbnail_url?: string | null;
+  persisted: boolean;
+}
+
 export interface OwnerWorkspace {
   ownerUserId: string;
   verifiedEmail: string;
@@ -103,6 +127,38 @@ export interface SaveOwnerYardBriefInput {
   considerations: string;
 }
 
+export interface OwnerIntakeMedia {
+  mediaId: string;
+  ownerUserId: string;
+  propertyId: string;
+  briefId: string;
+  shotType: 'front_yard' | 'back_yard' | 'side_access' | 'irrigation_or_concern' | 'other';
+  fileName: string;
+  contentType: string;
+  uploadMode: string;
+  objectKey: string;
+  thumbnailObjectKey?: string;
+  status: 'pending_upload' | 'processing' | 'ready' | 'rejected' | 'replaced' | 'deleted';
+  fileSizeBytes?: number;
+  imageWidthPx?: number;
+  imageHeightPx?: number;
+  metadataSource?: string;
+  rejectionReason?: string;
+  replacesMediaId?: string;
+  replacedByMediaId?: string;
+  displayUrl?: string;
+  thumbnailUrl?: string;
+  persisted: boolean;
+}
+
+export interface OwnerIntakeMediaUpload {
+  media: OwnerIntakeMedia;
+  uploadUrl: string;
+  thumbnailUploadUrl?: string;
+  thumbnailContentType?: string;
+  thumbnailMaxDimensionPx?: number;
+}
+
 function mapWorkspace(workspace: ApiOwnerWorkspace): OwnerWorkspace {
   return {
     ownerUserId: workspace.owner_user_id,
@@ -146,6 +202,32 @@ function mapYardBrief(brief: ApiOwnerYardBrief): OwnerYardBrief {
     considerations: brief.considerations,
     authorSource: brief.author_source,
     persisted: brief.persisted,
+  };
+}
+
+function mapIntakeMedia(media: ApiOwnerIntakeMedia): OwnerIntakeMedia {
+  return {
+    mediaId: media.media_id,
+    ownerUserId: media.owner_user_id,
+    propertyId: media.property_id,
+    briefId: media.brief_id,
+    shotType: media.shot_type,
+    fileName: media.file_name,
+    contentType: media.content_type,
+    uploadMode: media.upload_mode,
+    objectKey: media.object_key,
+    thumbnailObjectKey: media.thumbnail_object_key ?? undefined,
+    status: media.status,
+    fileSizeBytes: media.file_size_bytes ?? undefined,
+    imageWidthPx: media.image_width_px ?? undefined,
+    imageHeightPx: media.image_height_px ?? undefined,
+    metadataSource: media.metadata_source ?? undefined,
+    rejectionReason: media.rejection_reason ?? undefined,
+    replacesMediaId: media.replaces_media_id ?? undefined,
+    replacedByMediaId: media.replaced_by_media_id ?? undefined,
+    displayUrl: media.display_url ?? undefined,
+    thumbnailUrl: media.thumbnail_url ?? undefined,
+    persisted: media.persisted,
   };
 }
 
@@ -222,4 +304,77 @@ export async function saveOwnerYardBrief(
     }),
   });
   return mapYardBrief(await response.json() as ApiOwnerYardBrief);
+}
+
+export async function fetchOwnerIntakeMedia(propertyId: string): Promise<OwnerIntakeMedia[]> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/intake-media`);
+  return ((await response.json()) as ApiOwnerIntakeMedia[]).map(mapIntakeMedia);
+}
+
+export async function createOwnerIntakeMediaUpload(
+  propertyId: string,
+  file: File,
+  shotType: OwnerIntakeMedia['shotType'],
+  replacesMediaId?: string,
+): Promise<OwnerIntakeMediaUpload> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/intake-media`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      file_name: file.name,
+      content_type: file.type || 'application/octet-stream',
+      shot_type: shotType,
+      replaces_media_id: replacesMediaId || null,
+    }),
+  });
+  const upload = await response.json() as {
+    media: ApiOwnerIntakeMedia;
+    upload_url: string;
+    thumbnail_upload_url?: string | null;
+    thumbnail_content_type?: string | null;
+    thumbnail_max_dimension_px?: number | null;
+  };
+  return {
+    media: mapIntakeMedia(upload.media),
+    uploadUrl: upload.upload_url,
+    thumbnailUploadUrl: upload.thumbnail_upload_url ?? undefined,
+    thumbnailContentType: upload.thumbnail_content_type ?? undefined,
+    thumbnailMaxDimensionPx: upload.thumbnail_max_dimension_px ?? undefined,
+  };
+}
+
+export async function uploadOwnerIntakeMediaFile(
+  upload: OwnerIntakeMediaUpload,
+  file: File,
+): Promise<void> {
+  if (upload.media.uploadMode === 'local-placeholder') return;
+  const response = await fetch(upload.uploadUrl, {
+    method: 'PUT',
+    headers: { 'content-type': file.type || upload.media.contentType },
+    body: file,
+  });
+  if (!response.ok) throw new Error(`Private photo upload failed with status ${response.status}.`);
+}
+
+export async function completeOwnerIntakeMediaUpload(
+  propertyId: string,
+  mediaId: string,
+  file?: File,
+): Promise<OwnerIntakeMedia> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/intake-media/${encodeURIComponent(mediaId)}/complete`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ file_size_bytes: file && file.size > 0 ? file.size : undefined }),
+  });
+  return mapIntakeMedia(await response.json() as ApiOwnerIntakeMedia);
+}
+
+export async function deleteOwnerIntakeMedia(
+  propertyId: string,
+  mediaId: string,
+): Promise<OwnerIntakeMedia> {
+  const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/intake-media/${encodeURIComponent(mediaId)}`, {
+    method: 'DELETE',
+  });
+  return mapIntakeMedia(await response.json() as ApiOwnerIntakeMedia);
 }

@@ -505,7 +505,17 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         let supported = (segment_count == 1 && *method == Method::GET)
             || (segment_count == 2
                 && owner_property_suffix.ends_with("/yard-brief")
-                && (*method == Method::GET || *method == Method::PUT));
+                && (*method == Method::GET || *method == Method::PUT))
+            || (segment_count == 2
+                && owner_property_suffix.ends_with("/intake-media")
+                && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 3
+                && owner_property_suffix.contains("/intake-media/")
+                && *method == Method::DELETE)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/intake-media/")
+                && owner_property_suffix.ends_with("/complete")
+                && *method == Method::POST);
         return principal.verified_email.is_some() && supported;
     }
 
@@ -1555,6 +1565,16 @@ mod tests {
             (Method::GET, "/owner-properties/property-1"),
             (Method::GET, "/owner-properties/property-1/yard-brief"),
             (Method::PUT, "/owner-properties/property-1/yard-brief"),
+            (Method::GET, "/owner-properties/property-1/intake-media"),
+            (Method::POST, "/owner-properties/property-1/intake-media"),
+            (
+                Method::POST,
+                "/owner-properties/property-1/intake-media/media-1/complete",
+            ),
+            (
+                Method::DELETE,
+                "/owner-properties/property-1/intake-media/media-1",
+            ),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));

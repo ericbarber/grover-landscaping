@@ -1,7 +1,8 @@
 use grover_landscaping_api::owner_acquisition::{
-    CreateOwnerPropertyRequest, OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
-    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+    CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest, OwnerAcquisitionRepository,
+    OwnerMutationResult, OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
+use grover_landscaping_api::PhotoUploadMetadata;
 use sqlx::{postgres::PgPoolOptions, Row};
 use std::time::Duration;
 
@@ -183,6 +184,59 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
         OwnerReadResult::Loaded(brief) if brief.version == 2 && brief.status == "ready"
     ));
 
+    let OwnerMutationResult::Saved(upload) = repository
+        .create_intake_media_upload(
+            owner_a,
+            &owner_a_property.property_id,
+            CreateOwnerIntakeMediaRequest {
+                file_name: "front-yard.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                shot_type: "front_yard".to_string(),
+                replaces_media_id: None,
+            },
+        )
+        .await
+    else {
+        panic!("private intake media upload should be created");
+    };
+    assert!(upload.media.persisted);
+    assert!(upload.media.object_key.contains("owner-intake"));
+    let media_id = upload.media.media_id;
+    assert!(matches!(
+        repository
+            .complete_intake_media_upload(
+                owner_a,
+                &owner_a_property.property_id,
+                &media_id,
+                PhotoUploadMetadata {
+                    file_size_bytes: Some(2048),
+                    image_width_px: Some(1600),
+                    image_height_px: Some(900),
+                    metadata_source: Some("client_reported".to_string()),
+                },
+            )
+            .await,
+        OwnerMutationResult::Saved(media) if media.status == "ready" && media.persisted
+    ));
+    assert_eq!(
+        repository
+            .list_intake_media(owner_b, &owner_a_property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    );
+    assert!(matches!(
+        repository
+            .list_intake_media(owner_a, &owner_a_property.property_id)
+            .await,
+        OwnerReadResult::Loaded(media) if media.len() == 1 && media[0].media_id == media_id
+    ));
+    assert!(matches!(
+        repository
+            .delete_intake_media(owner_a, &owner_a_property.property_id, &media_id)
+            .await,
+        OwnerMutationResult::Saved(media) if media.status == "deleted"
+    ));
+
     let event_rows = sqlx::query(
         "SELECT event_kind, event_data
          FROM owner_acquisition_events
@@ -193,7 +247,7 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
     .fetch_all(&pool)
     .await
     .expect("owner acquisition audit events should load");
-    assert_eq!(event_rows.len(), 4);
+    assert_eq!(event_rows.len(), 7);
     assert!(event_rows
         .iter()
         .any(|row| row.get::<String, _>("event_kind") == "workspace_saved"));
@@ -207,6 +261,15 @@ async fn repository_persists_private_owner_properties_and_audit_events() {
             .count(),
         2
     );
+    for event_kind in [
+        "intake_media_created",
+        "intake_media_completed",
+        "intake_media_deleted",
+    ] {
+        assert!(event_rows
+            .iter()
+            .any(|row| row.get::<String, _>("event_kind") == event_kind));
+    }
     assert!(event_rows.iter().all(|row| {
         !row.get::<serde_json::Value, _>("event_data")
             .to_string()

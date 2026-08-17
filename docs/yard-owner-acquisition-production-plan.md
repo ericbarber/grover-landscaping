@@ -22,7 +22,7 @@ The approved experience is defined by:
 | 1B | Delivered | Verified-identity, self-scoped workspace and property API with explicit validation, missing, duplicate, and unavailable outcomes |
 | 1C | Delivered | Production React private entry with public owner CTA, verified-email gate, profile/property recovery, address reconfirmation, authority attestation, and responsive browser coverage |
 | 2A | Delivered | Append-only private yard briefs with areas, goals, cadence, considerations, source/version provenance, draft/ready state, API isolation, and production React editing |
-| 2B | In progress | Owner-scoped guided intake media with upload, processing, replacement, and deletion lifecycle |
+| 2B | Delivered | Owner-scoped guided intake media with upload, processing/rejection, preview, replacement, explicit deletion, and responsive React recovery |
 | 3–7 | Planned | Provider connection through governed pilot convergence |
 
 ## Delivery principles
@@ -99,7 +99,7 @@ and persistence outages are never presented as an empty or successful state.
 - Implement the approved brief React stage with explicit privacy and non-
   diagnostic boundaries.
 
-### Slice 2B: guided private intake media — in progress
+### Slice 2B: guided private intake media — delivered
 
 - Add owner-intake media records independent of jobs, with guided shot type,
   upload authorization, processing, metadata result, retention, replacement,
@@ -109,6 +109,13 @@ and persistence outages are never presented as an empty or successful state.
 - Add review-before-share snapshots and completeness guidance without a false
   diagnostic or pricing claim.
 - Implement the approved optional-photo React stage.
+
+Delivered behavior is specified in
+[`owner-private-intake-api.md`](owner-private-intake-api.md). Replaced originals
+remain visible as inactive records until the owner explicitly deletes them;
+they cannot silently disappear while retained. Upload completion is idempotent,
+cross-owner access fails closed, and deletion removes configured object-store
+objects before committing the deleted state.
 
 Exit condition: an owner can create, revise, reload, and delete a private brief
 and optional media; nothing is visible to a provider.
@@ -188,9 +195,9 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 2B — owner-scoped intake media.
-2. Phase 3 — known-provider connection pilot.
+1. Phase 3 — known-provider connection pilot.
+2. Phase 4 — assessment, proposal, and activation.
 
-Phases 4–7 follow only after the preceding data and authorization boundaries are
+Phases 5–7 follow only after the preceding data and authorization boundaries are
 validated. No external address, messaging, identity-fact, or marketplace vendor
 is selected by this plan; those choices require separate operational review.

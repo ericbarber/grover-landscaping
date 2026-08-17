@@ -107,10 +107,46 @@ impl PhotoStorageConfig {
         safe_file_name: &str,
         content_type: &str,
     ) -> PhotoStorageTicket {
+        self.scoped_upload_ticket(
+            &format!("jobs/{job_id}"),
+            photo_type,
+            upload_nonce,
+            safe_file_name,
+            content_type,
+        )
+    }
+
+    pub fn owner_intake_upload_ticket(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        shot_type: &str,
+        upload_nonce: u128,
+        safe_file_name: &str,
+        content_type: &str,
+    ) -> PhotoStorageTicket {
+        let owner_scope = format!("{:x}", Sha256::digest(owner_user_id.as_bytes()));
+        self.scoped_upload_ticket(
+            &format!("owner-intake/{}/{property_id}", &owner_scope[..24]),
+            shot_type,
+            upload_nonce,
+            safe_file_name,
+            content_type,
+        )
+    }
+
+    fn scoped_upload_ticket(
+        &self,
+        scope: &str,
+        photo_type: &str,
+        upload_nonce: u128,
+        safe_file_name: &str,
+        content_type: &str,
+    ) -> PhotoStorageTicket {
         match self {
             Self::Local => {
                 let object_key =
-                    format!("local/jobs/{job_id}/{photo_type}/{upload_nonce}_{safe_file_name}");
+                    format!("local/{scope}/{photo_type}/{upload_nonce}_{safe_file_name}");
                 PhotoStorageTicket {
                     upload_mode: "local-placeholder",
                     upload_url: format!("local://{object_key}?content_type={content_type}"),
@@ -123,9 +159,13 @@ impl PhotoStorageConfig {
             }
             Self::S3(config) => {
                 let object_key =
-                    config.object_key(job_id, photo_type, upload_nonce, safe_file_name);
-                let thumbnail_object_key =
-                    config.thumbnail_object_key(job_id, photo_type, upload_nonce, safe_file_name);
+                    config.scoped_object_key(scope, photo_type, upload_nonce, safe_file_name);
+                let thumbnail_object_key = config.scoped_thumbnail_object_key(
+                    scope,
+                    photo_type,
+                    upload_nonce,
+                    safe_file_name,
+                );
                 let upload_url =
                     config.presigned_url("PUT", &object_key, config.upload_expires_seconds);
                 let thumbnail_upload_url = config.presigned_url(
@@ -236,24 +276,24 @@ impl PhotoStorageConfig {
 }
 
 impl S3PhotoStorageConfig {
-    fn object_key(
+    fn scoped_object_key(
         &self,
-        job_id: &str,
+        scope: &str,
         photo_type: &str,
         upload_nonce: u128,
         safe_file_name: &str,
     ) -> String {
         let prefix = self.key_prefix.trim_matches('/');
         if prefix.is_empty() {
-            format!("jobs/{job_id}/{photo_type}/{upload_nonce}_{safe_file_name}")
+            format!("{scope}/{photo_type}/{upload_nonce}_{safe_file_name}")
         } else {
-            format!("{prefix}/jobs/{job_id}/{photo_type}/{upload_nonce}_{safe_file_name}")
+            format!("{prefix}/{scope}/{photo_type}/{upload_nonce}_{safe_file_name}")
         }
     }
 
-    fn thumbnail_object_key(
+    fn scoped_thumbnail_object_key(
         &self,
-        job_id: &str,
+        scope: &str,
         photo_type: &str,
         upload_nonce: u128,
         safe_file_name: &str,
@@ -261,11 +301,9 @@ impl S3PhotoStorageConfig {
         let prefix = self.key_prefix.trim_matches('/');
         let thumbnail_file_name = thumbnail_file_name(safe_file_name);
         if prefix.is_empty() {
-            format!("thumbnails/jobs/{job_id}/{photo_type}/{upload_nonce}_{thumbnail_file_name}")
+            format!("thumbnails/{scope}/{photo_type}/{upload_nonce}_{thumbnail_file_name}")
         } else {
-            format!(
-                "{prefix}/thumbnails/jobs/{job_id}/{photo_type}/{upload_nonce}_{thumbnail_file_name}"
-            )
+            format!("{prefix}/thumbnails/{scope}/{photo_type}/{upload_nonce}_{thumbnail_file_name}")
         }
     }
 
@@ -776,6 +814,23 @@ mod tests {
         assert_eq!(ticket.thumbnail_object_key, None);
         assert_eq!(ticket.thumbnail_content_type, None);
         assert_eq!(ticket.thumbnail_max_dimension_px, None);
+    }
+
+    #[test]
+    fn owner_intake_ticket_uses_a_private_non_job_scope() {
+        let ticket = PhotoStorageConfig::Local.owner_intake_upload_ticket(
+            "cognito|private-owner",
+            "owner_property_1",
+            "front_yard",
+            456,
+            "front-yard.jpg",
+            "image/jpeg",
+        );
+
+        assert!(ticket.object_key.starts_with("local/owner-intake/"));
+        assert!(ticket.object_key.contains("/owner_property_1/front_yard/"));
+        assert!(!ticket.object_key.contains("cognito|private-owner"));
+        assert!(!ticket.object_key.contains("/jobs/"));
     }
 
     #[test]

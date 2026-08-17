@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test('a verified owner creates a private profile and reconfirms a changed address', async ({ page }) => {
   let yardBriefVersion = 0;
+  let mediaVersion = 0;
+  let mediaRecords: Array<Record<string, unknown>> = [];
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -98,6 +100,77 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       }),
     });
   });
+  await page.route('**/owner-properties/owner_property_1/intake-media', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(mediaRecords) });
+      return;
+    }
+    const request = route.request().postDataJSON();
+    mediaVersion += 1;
+    const record = {
+      media_id: `owner_media_${mediaVersion}`,
+      owner_user_id: 'local-development-user',
+      property_id: 'owner_property_1',
+      brief_id: `owner_brief_${yardBriefVersion}`,
+      shot_type: request.shot_type,
+      file_name: request.file_name,
+      content_type: request.content_type,
+      upload_mode: 'local-placeholder',
+      object_key: `owner-intake/private/owner_media_${mediaVersion}.jpg`,
+      thumbnail_object_key: null,
+      status: 'pending_upload',
+      file_size_bytes: null,
+      image_width_px: null,
+      image_height_px: null,
+      metadata_source: null,
+      rejection_reason: null,
+      replaces_media_id: request.replaces_media_id,
+      replaced_by_media_id: null,
+      display_url: null,
+      thumbnail_url: null,
+      persisted: true,
+    };
+    mediaRecords = [record, ...mediaRecords];
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({ media: record, upload_url: '/api/photo-placeholder' }),
+    });
+  });
+  await page.route('**/owner-properties/owner_property_1/intake-media/*/complete', async (route) => {
+    const mediaId = route.request().url().split('/').at(-2);
+    const replacement = mediaRecords.find((record) => record.media_id === mediaId);
+    if (replacement?.replaces_media_id) {
+      mediaRecords = mediaRecords.map((record) => record.media_id === replacement.replaces_media_id
+        ? { ...record, status: 'replaced', replaced_by_media_id: mediaId }
+        : record);
+    }
+    mediaRecords = mediaRecords.map((record) => record.media_id === mediaId
+      ? {
+          ...record,
+          status: 'ready',
+          file_size_bytes: route.request().postDataJSON().file_size_bytes ?? 64,
+          metadata_source: 'client_reported',
+        }
+      : record);
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(mediaRecords.find((record) => record.media_id === mediaId)),
+    });
+  });
+  await page.route('**/owner-properties/owner_property_1/intake-media/*', async (route) => {
+    if (route.request().method() !== 'DELETE') {
+      await route.fallback();
+      return;
+    }
+    const mediaId = route.request().url().split('/').at(-1);
+    const deleted = mediaRecords.find((record) => record.media_id === mediaId);
+    mediaRecords = mediaRecords.filter((record) => record.media_id !== mediaId);
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ ...deleted, status: 'deleted', display_url: null, thumbnail_url: null }),
+    });
+  });
 
   await page.goto('/for-yard-owners');
   await expect(page.getByRole('link', { name: 'Set up my yard' })).toBeVisible();
@@ -135,6 +208,41 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Yard brief version 2 is ready and still private.')).toBeVisible();
   await expect(page.getByText('Version 2 · ready')).toBeVisible();
   await expect(page.getByText('This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Add useful views without diagnosing the yard' })).toBeVisible();
+  await page.getByLabel('Choose photograph').setInputFiles({
+    name: 'front-yard.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('private-yard-photo'),
+  });
+  await page.getByRole('button', { name: 'Add private photograph' }).click();
+  await expect(page.getByText('The photograph is saved privately. No provider can see it yet.')).toBeVisible();
+  await expect(page.getByText('front-yard.jpg')).toBeVisible();
+  await expect(page.getByText('ready', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Replace' }).click();
+  await expect(page.getByText('The original stays active until its replacement finishes successfully.')).toBeVisible();
+  await page.getByLabel('Choose photograph').setInputFiles({
+    name: 'front-yard-new.jpg',
+    mimeType: 'image/jpeg',
+    buffer: Buffer.from('replacement-private-yard-photo'),
+  });
+  await page.getByRole('button', { name: 'Upload replacement' }).click();
+  await expect(page.getByText('front-yard-new.jpg')).toBeVisible();
+  await expect(page.getByText('replaced', { exact: true })).toBeVisible();
+  await expect(page.getByText('This older photo is no longer active. Delete it when you no longer need it.')).toBeVisible();
+  await page.getByRole('button', { name: 'Save private draft' }).click();
+  await expect(page.getByText('Private draft version 3 is saved.')).toBeVisible();
+  await expect(page.getByText('Your latest brief is a draft. Existing photos remain private and deletable; mark the current brief ready before adding or replacing a photo.')).toBeVisible();
+  await expect(page.getByText('front-yard-new.jpg')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Replace' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Save brief and continue' }).click();
+  await expect(page.getByText('Yard brief version 4 is ready and still private.')).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Delete' }).last().click();
+  await expect(page.getByText('The private photograph was deleted.')).toBeVisible();
+  await expect(page.getByText('front-yard.jpg')).not.toBeVisible();
+  await page.getByRole('button', { name: 'Finish without more photos' }).click();
+  await expect(page.getByText('Private intake is complete. No provider connection or sharing has started.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.setViewportSize({ width: 1440, height: 900 });

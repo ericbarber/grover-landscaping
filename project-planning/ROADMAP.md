@@ -165,7 +165,8 @@ schedule, remaining work, or a completed day.
 
    - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
    - Delivered the self-scoped verified-identity APIs and responsive production React private entry.
-   - Versioned private yard briefs are delivered; add owner-intake media next, before known-provider invitations, and defer curated discovery until the direct connection loop is safe.
+   - Versioned private yard briefs and optional owner-scoped guided media are delivered with upload, processing, replacement, explicit deletion, owner isolation, and responsive recovery.
+   - Build the known-provider invitation and per-provider disclosure pilot next; defer curated discovery until the direct connection loop is safe.
 
 **Design-ready — Yard Crew acquisition production handoff**
 

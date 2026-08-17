@@ -1,7 +1,12 @@
+use crate::{photo_storage::PhotoStorageConfig, PhotoUploadMetadata};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::{PgPool, Row};
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -76,6 +81,48 @@ pub struct OwnerYardBriefRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerIntakeMediaRequest {
+    pub file_name: String,
+    pub content_type: String,
+    pub shot_type: String,
+    pub replaces_media_id: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerIntakeMediaRecord {
+    pub media_id: String,
+    pub owner_user_id: String,
+    pub property_id: String,
+    pub brief_id: String,
+    pub shot_type: String,
+    pub file_name: String,
+    pub content_type: String,
+    pub upload_mode: String,
+    pub object_key: String,
+    pub thumbnail_object_key: Option<String>,
+    pub status: String,
+    pub file_size_bytes: Option<i64>,
+    pub image_width_px: Option<i32>,
+    pub image_height_px: Option<i32>,
+    pub metadata_source: Option<String>,
+    pub rejection_reason: Option<String>,
+    pub replaces_media_id: Option<String>,
+    pub replaced_by_media_id: Option<String>,
+    pub display_url: Option<String>,
+    pub thumbnail_url: Option<String>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerIntakeMediaUploadRecord {
+    pub media: OwnerIntakeMediaRecord,
+    pub upload_url: String,
+    pub thumbnail_upload_url: Option<String>,
+    pub thumbnail_content_type: Option<String>,
+    pub thumbnail_max_dimension_px: Option<u32>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
@@ -96,6 +143,7 @@ struct LocalOwnerState {
     workspaces: HashMap<String, OwnerWorkspaceRecord>,
     properties: HashMap<String, OwnerPropertyRecord>,
     yard_briefs: HashMap<String, Vec<OwnerYardBriefRecord>>,
+    intake_media: HashMap<String, OwnerIntakeMediaRecord>,
 }
 
 #[derive(Clone, Default)]
@@ -383,6 +431,232 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_intake_media(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerIntakeMediaRecord>> {
+        let Some(pool) = &self.pool else {
+            let local = self.local.read().await;
+            if !local
+                .properties
+                .get(property_id)
+                .is_some_and(|property| property.owner_user_id == owner_user_id)
+            {
+                return OwnerReadResult::NotFound;
+            }
+            let mut media: Vec<_> = local
+                .intake_media
+                .values()
+                .filter(|media| {
+                    media.owner_user_id == owner_user_id
+                        && media.property_id == property_id
+                        && media.status != "deleted"
+                })
+                .cloned()
+                .collect();
+            media.sort_by(|left, right| left.media_id.cmp(&right.media_id));
+            return OwnerReadResult::Loaded(media);
+        };
+
+        match list_intake_media(pool, owner_user_id, property_id).await {
+            Ok(Some(media)) => OwnerReadResult::Loaded(media),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner intake media list failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_intake_media_upload(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        request: CreateOwnerIntakeMediaRequest,
+    ) -> OwnerMutationResult<OwnerIntakeMediaUploadRecord> {
+        let upload_nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or(0);
+        let safe_file_name = safe_media_file_name(&request.file_name);
+        let storage_ticket = PhotoStorageConfig::from_env().owner_intake_upload_ticket(
+            owner_user_id,
+            property_id,
+            &request.shot_type,
+            upload_nonce,
+            &safe_file_name,
+            &request.content_type,
+        );
+
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            if !local
+                .properties
+                .get(property_id)
+                .is_some_and(|property| property.owner_user_id == owner_user_id)
+            {
+                return OwnerMutationResult::NotFound;
+            }
+            let Some(brief_id) = local
+                .yard_briefs
+                .get(property_id)
+                .and_then(|versions| versions.last())
+                .filter(|brief| brief.status == "ready")
+                .map(|brief| brief.brief_id.clone())
+            else {
+                return OwnerMutationResult::NotFound;
+            };
+            if request.replaces_media_id.as_ref().is_some_and(|media_id| {
+                !local.intake_media.get(media_id).is_some_and(|media| {
+                    media.owner_user_id == owner_user_id
+                        && media.property_id == property_id
+                        && media.status == "ready"
+                })
+            }) {
+                return OwnerMutationResult::NotFound;
+            }
+            let media = new_owner_intake_media_record(
+                owner_user_id,
+                property_id,
+                &brief_id,
+                request,
+                &safe_file_name,
+                &storage_ticket,
+                false,
+            );
+            local
+                .intake_media
+                .insert(media.media_id.clone(), media.clone());
+            return OwnerMutationResult::Saved(owner_media_upload_record(media, storage_ticket));
+        };
+
+        match create_intake_media_upload(
+            pool,
+            owner_user_id,
+            property_id,
+            request,
+            &safe_file_name,
+            storage_ticket,
+        )
+        .await
+        {
+            Ok(Some(saved)) => OwnerMutationResult::Saved(saved),
+            Ok(None) => OwnerMutationResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner intake media create failed");
+                OwnerMutationResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn complete_intake_media_upload(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        media_id: &str,
+        metadata: PhotoUploadMetadata,
+    ) -> OwnerMutationResult<OwnerIntakeMediaRecord> {
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let Some(existing) = local.intake_media.get(media_id).cloned().filter(|media| {
+                media.owner_user_id == owner_user_id && media.property_id == property_id
+            }) else {
+                return OwnerMutationResult::NotFound;
+            };
+            if existing.status == "ready" {
+                return OwnerMutationResult::Saved(existing);
+            }
+            if !matches!(existing.status.as_str(), "pending_upload" | "processing") {
+                return OwnerMutationResult::NotFound;
+            }
+            let updated = completed_local_media(existing, metadata);
+            if let Some(replaced_id) = updated.replaces_media_id.as_deref() {
+                if let Some(replaced) = local.intake_media.get_mut(replaced_id) {
+                    replaced.status = "replaced".to_string();
+                    replaced.replaced_by_media_id = Some(updated.media_id.clone());
+                }
+            }
+            local
+                .intake_media
+                .insert(updated.media_id.clone(), updated.clone());
+            return OwnerMutationResult::Saved(updated);
+        };
+
+        match complete_intake_media_upload(pool, owner_user_id, property_id, media_id, metadata)
+            .await
+        {
+            Ok(Some(saved)) => OwnerMutationResult::Saved(saved),
+            Ok(None) => OwnerMutationResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, media_id, "owner intake media completion failed");
+                OwnerMutationResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn delete_intake_media(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        media_id: &str,
+    ) -> OwnerMutationResult<OwnerIntakeMediaRecord> {
+        let existing = match self.pool.as_ref() {
+            Some(pool) => {
+                match get_intake_media(pool, owner_user_id, property_id, media_id).await {
+                    Ok(Some(media)) => media,
+                    Ok(None) => return OwnerMutationResult::NotFound,
+                    Err(error) => {
+                        tracing::error!(%error, owner_user_id, property_id, media_id, "owner intake media delete lookup failed");
+                        return OwnerMutationResult::Unavailable;
+                    }
+                }
+            }
+            None => {
+                let local = self.local.read().await;
+                let Some(media) = local.intake_media.get(media_id).cloned().filter(|media| {
+                    media.owner_user_id == owner_user_id && media.property_id == property_id
+                }) else {
+                    return OwnerMutationResult::NotFound;
+                };
+                media
+            }
+        };
+        if existing.status == "deleted" {
+            return OwnerMutationResult::Saved(existing);
+        }
+        let mut object_keys = vec![existing.object_key.clone()];
+        if let Some(thumbnail) = existing.thumbnail_object_key.clone() {
+            object_keys.push(thumbnail);
+        }
+        let deletion = PhotoStorageConfig::from_env()
+            .delete_objects(&object_keys)
+            .await;
+        if !deletion.failed_object_keys.is_empty() {
+            return OwnerMutationResult::Unavailable;
+        }
+
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let media = local
+                .intake_media
+                .get_mut(media_id)
+                .expect("scoped local media was checked before deletion");
+            media.status = "deleted".to_string();
+            media.display_url = None;
+            media.thumbnail_url = None;
+            return OwnerMutationResult::Saved(media.clone());
+        };
+        match mark_intake_media_deleted(pool, owner_user_id, property_id, media_id).await {
+            Ok(Some(saved)) => OwnerMutationResult::Saved(saved),
+            Ok(None) => OwnerMutationResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, media_id, "owner intake media delete save failed");
+                OwnerMutationResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -433,6 +707,100 @@ pub fn validate_yard_brief_request(request: &SaveOwnerYardBriefRequest) -> bool 
         && request.considerations.trim().chars().count() <= 1_500
         && (request.status == "draft"
             || (!request.yard_areas.is_empty() && !request.care_goals.is_empty()))
+}
+
+pub fn validate_intake_media_request(request: &CreateOwnerIntakeMediaRequest) -> bool {
+    let content_type = request
+        .content_type
+        .split(';')
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_lowercase();
+    (1..=180).contains(&request.file_name.trim().chars().count())
+        && matches!(
+            content_type.as_str(),
+            "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+        )
+        && matches!(
+            request.shot_type.as_str(),
+            "front_yard" | "back_yard" | "side_access" | "irrigation_or_concern" | "other"
+        )
+        && request
+            .replaces_media_id
+            .as_deref()
+            .is_none_or(|value| (3..=180).contains(&value.trim().chars().count()))
+}
+
+fn safe_media_file_name(value: &str) -> String {
+    value.trim().replace(['/', '\\'], "-")
+}
+
+fn new_owner_intake_media_record(
+    owner_user_id: &str,
+    property_id: &str,
+    brief_id: &str,
+    request: CreateOwnerIntakeMediaRequest,
+    safe_file_name: &str,
+    ticket: &crate::photo_storage::PhotoStorageTicket,
+    persisted: bool,
+) -> OwnerIntakeMediaRecord {
+    OwnerIntakeMediaRecord {
+        media_id: format!("owner_media_{}", Uuid::new_v4()),
+        owner_user_id: owner_user_id.to_string(),
+        property_id: property_id.to_string(),
+        brief_id: brief_id.to_string(),
+        shot_type: request.shot_type,
+        file_name: safe_file_name.to_string(),
+        content_type: request.content_type,
+        upload_mode: ticket.upload_mode.to_string(),
+        object_key: ticket.object_key.clone(),
+        thumbnail_object_key: ticket.thumbnail_object_key.clone(),
+        status: "pending_upload".to_string(),
+        file_size_bytes: None,
+        image_width_px: None,
+        image_height_px: None,
+        metadata_source: None,
+        rejection_reason: None,
+        replaces_media_id: request.replaces_media_id,
+        replaced_by_media_id: None,
+        display_url: None,
+        thumbnail_url: None,
+        persisted,
+    }
+}
+
+fn owner_media_upload_record(
+    media: OwnerIntakeMediaRecord,
+    ticket: crate::photo_storage::PhotoStorageTicket,
+) -> OwnerIntakeMediaUploadRecord {
+    OwnerIntakeMediaUploadRecord {
+        media,
+        upload_url: ticket.upload_url,
+        thumbnail_upload_url: ticket.thumbnail_upload_url,
+        thumbnail_content_type: ticket.thumbnail_content_type.map(str::to_string),
+        thumbnail_max_dimension_px: ticket.thumbnail_max_dimension_px,
+    }
+}
+
+fn completed_local_media(
+    mut media: OwnerIntakeMediaRecord,
+    metadata: PhotoUploadMetadata,
+) -> OwnerIntakeMediaRecord {
+    media.status = "ready".to_string();
+    media.file_size_bytes = metadata.file_size_bytes;
+    media.image_width_px = metadata.image_width_px;
+    media.image_height_px = metadata.image_height_px;
+    media.metadata_source = Some(
+        metadata
+            .metadata_source
+            .unwrap_or_else(|| "client_reported".to_string()),
+    );
+    let storage = PhotoStorageConfig::from_env();
+    media.display_url = Some(storage.display_url(&media.upload_mode, &media.object_key));
+    media.thumbnail_url =
+        storage.thumbnail_url(&media.upload_mode, media.thumbnail_object_key.as_deref());
+    media
 }
 
 fn normalized_property(
@@ -695,6 +1063,337 @@ async fn save_yard_brief(
     Ok(Some(yard_brief_from_row(&row, true)))
 }
 
+async fn create_intake_media_upload(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    request: CreateOwnerIntakeMediaRequest,
+    safe_file_name: &str,
+    storage_ticket: crate::photo_storage::PhotoStorageTicket,
+) -> Result<Option<OwnerIntakeMediaUploadRecord>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let brief_id = sqlx::query_scalar::<_, String>(
+        "SELECT b.id
+         FROM owner_yard_briefs b
+         JOIN owner_properties p ON p.id = b.property_id
+         WHERE b.owner_user_id = $1 AND b.property_id = $2
+           AND b.status = 'ready' AND p.status <> 'archived'
+         ORDER BY b.version DESC
+         LIMIT 1",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(brief_id) = brief_id else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    if let Some(replaces_media_id) = request.replaces_media_id.as_deref() {
+        let replacement_exists = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(
+                 SELECT 1 FROM owner_intake_media
+                 WHERE id = $1 AND owner_user_id = $2 AND property_id = $3 AND status = 'ready'
+             )",
+        )
+        .bind(replaces_media_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+        if !replacement_exists {
+            transaction.rollback().await?;
+            return Ok(None);
+        }
+    }
+
+    let media = new_owner_intake_media_record(
+        owner_user_id,
+        property_id,
+        &brief_id,
+        request,
+        safe_file_name,
+        &storage_ticket,
+        true,
+    );
+    let row = sqlx::query(
+        "INSERT INTO owner_intake_media (
+             id, owner_user_id, property_id, brief_id, shot_type, file_name,
+             content_type, upload_mode, object_key, thumbnail_object_key, status,
+             replaces_media_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending_upload', $11)
+         RETURNING id, owner_user_id, property_id, brief_id, shot_type, file_name,
+                   content_type, upload_mode, object_key, thumbnail_object_key, status,
+                   file_size_bytes, image_width_px, image_height_px, metadata_source,
+                   rejection_reason, replaces_media_id, replaced_by_media_id",
+    )
+    .bind(&media.media_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(&brief_id)
+    .bind(&media.shot_type)
+    .bind(safe_file_name)
+    .bind(&media.content_type)
+    .bind(&media.upload_mode)
+    .bind(&media.object_key)
+    .bind(&media.thumbnail_object_key)
+    .bind(&media.replaces_media_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'intake_media_created', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(serde_json::json!({
+        "media_id": media.media_id,
+        "brief_id": brief_id,
+        "shot_type": media.shot_type,
+        "status": "pending_upload",
+        "replaces_media_id": media.replaces_media_id,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(Some(owner_media_upload_record(
+        owner_media_from_row(&row, true),
+        storage_ticket,
+    )))
+}
+
+async fn list_intake_media(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerIntakeMediaRecord>>, sqlx::Error> {
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_properties
+             WHERE id = $1 AND owner_user_id = $2 AND status <> 'archived'
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !property_exists {
+        return Ok(None);
+    }
+    let rows = sqlx::query(
+        "SELECT id, owner_user_id, property_id, brief_id, shot_type, file_name,
+                content_type, upload_mode, object_key, thumbnail_object_key, status,
+                file_size_bytes, image_width_px, image_height_px, metadata_source,
+                rejection_reason, replaces_media_id, replaced_by_media_id
+         FROM owner_intake_media
+         WHERE owner_user_id = $1 AND property_id = $2
+           AND status <> 'deleted'
+         ORDER BY created_at DESC, id",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(Some(
+        rows.iter()
+            .map(|row| owner_media_from_row(row, true))
+            .collect(),
+    ))
+}
+
+async fn get_intake_media(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    media_id: &str,
+) -> Result<Option<OwnerIntakeMediaRecord>, sqlx::Error> {
+    sqlx::query(
+        "SELECT id, owner_user_id, property_id, brief_id, shot_type, file_name,
+                content_type, upload_mode, object_key, thumbnail_object_key, status,
+                file_size_bytes, image_width_px, image_height_px, metadata_source,
+                rejection_reason, replaces_media_id, replaced_by_media_id
+         FROM owner_intake_media
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3",
+    )
+    .bind(media_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(pool)
+    .await
+    .map(|row| row.as_ref().map(|row| owner_media_from_row(row, true)))
+}
+
+async fn complete_intake_media_upload(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    media_id: &str,
+    client_metadata: PhotoUploadMetadata,
+) -> Result<Option<OwnerIntakeMediaRecord>, sqlx::Error> {
+    let Some(existing) = get_intake_media(pool, owner_user_id, property_id, media_id).await? else {
+        return Ok(None);
+    };
+    if existing.status == "ready" {
+        return Ok(Some(existing));
+    }
+    if !matches!(existing.status.as_str(), "pending_upload" | "processing") {
+        return Ok(None);
+    }
+
+    let storage = PhotoStorageConfig::from_env();
+    let (status, metadata, rejection_reason) = match storage
+        .uploaded_photo_inspection(&existing.upload_mode, &existing.object_key)
+        .await
+    {
+        crate::photo_storage::UploadedPhotoInspection::Extracted(metadata) => {
+            if let Some(thumbnail_object_key) = existing.thumbnail_object_key.as_deref() {
+                let _ = storage
+                    .generate_uploaded_thumbnail(
+                        &existing.upload_mode,
+                        &existing.object_key,
+                        thumbnail_object_key,
+                    )
+                    .await;
+            }
+            ("ready", metadata, None)
+        }
+        crate::photo_storage::UploadedPhotoInspection::Rejected(reason) => {
+            ("rejected", PhotoUploadMetadata::default(), Some(reason))
+        }
+        crate::photo_storage::UploadedPhotoInspection::Unavailable
+            if existing.upload_mode == "s3-presigned" =>
+        {
+            ("processing", client_metadata, None)
+        }
+        crate::photo_storage::UploadedPhotoInspection::Unavailable => {
+            ("ready", client_metadata, None)
+        }
+    };
+
+    let mut transaction = pool.begin().await?;
+    let metadata_source = if status == "rejected" {
+        None
+    } else {
+        metadata
+            .metadata_source
+            .as_deref()
+            .or(Some("client_reported"))
+    };
+    let row = sqlx::query(
+        "UPDATE owner_intake_media
+         SET status = $4,
+             file_size_bytes = $5,
+             image_width_px = $6,
+             image_height_px = $7,
+             metadata_source = $8,
+             rejection_reason = $9,
+             uploaded_at = CASE WHEN $4 IN ('ready', 'processing') THEN NOW() ELSE uploaded_at END,
+             updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         RETURNING id, owner_user_id, property_id, brief_id, shot_type, file_name,
+                   content_type, upload_mode, object_key, thumbnail_object_key, status,
+                   file_size_bytes, image_width_px, image_height_px, metadata_source,
+                   rejection_reason, replaces_media_id, replaced_by_media_id",
+    )
+    .bind(media_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(status)
+    .bind(metadata.file_size_bytes)
+    .bind(metadata.image_width_px)
+    .bind(metadata.image_height_px)
+    .bind(metadata_source)
+    .bind(rejection_reason)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let updated = owner_media_from_row(&row, true);
+    if status == "ready" {
+        if let Some(replaces_media_id) = updated.replaces_media_id.as_deref() {
+            sqlx::query(
+                "UPDATE owner_intake_media
+                 SET status = 'replaced', replaced_by_media_id = $1, updated_at = NOW()
+                 WHERE id = $2 AND owner_user_id = $3 AND property_id = $4 AND status = 'ready'",
+            )
+            .bind(media_id)
+            .bind(replaces_media_id)
+            .bind(owner_user_id)
+            .bind(property_id)
+            .execute(&mut *transaction)
+            .await?;
+        }
+    }
+    let event_kind = if status == "rejected" {
+        "intake_media_rejected"
+    } else {
+        "intake_media_completed"
+    };
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(event_kind)
+    .bind(serde_json::json!({
+        "media_id": media_id,
+        "shot_type": updated.shot_type,
+        "status": status,
+        "metadata_source": updated.metadata_source,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(Some(updated))
+}
+
+async fn mark_intake_media_deleted(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    media_id: &str,
+) -> Result<Option<OwnerIntakeMediaRecord>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        "UPDATE owner_intake_media
+         SET status = 'deleted', deleted_at = NOW(), updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         RETURNING id, owner_user_id, property_id, brief_id, shot_type, file_name,
+                   content_type, upload_mode, object_key, thumbnail_object_key, status,
+                   file_size_bytes, image_width_px, image_height_px, metadata_source,
+                   rejection_reason, replaces_media_id, replaced_by_media_id",
+    )
+    .bind(media_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'intake_media_deleted', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(serde_json::json!({ "media_id": media_id, "status": "deleted" }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(Some(owner_media_from_row(&row, true)))
+}
+
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {
     OwnerWorkspaceRecord {
         owner_user_id: row.get("owner_user_id"),
@@ -737,6 +1436,40 @@ fn yard_brief_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerYar
         cadence_preference: row.get("cadence_preference"),
         considerations: row.get("considerations"),
         author_source: row.get("author_source"),
+        persisted,
+    }
+}
+
+fn owner_media_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerIntakeMediaRecord {
+    let upload_mode: String = row.get("upload_mode");
+    let object_key: String = row.get("object_key");
+    let thumbnail_object_key: Option<String> = row.get("thumbnail_object_key");
+    let status: String = row.get("status");
+    let storage = PhotoStorageConfig::from_env();
+    let visible = matches!(status.as_str(), "ready" | "replaced");
+    OwnerIntakeMediaRecord {
+        media_id: row.get("id"),
+        owner_user_id: row.get("owner_user_id"),
+        property_id: row.get("property_id"),
+        brief_id: row.get("brief_id"),
+        shot_type: row.get("shot_type"),
+        file_name: row.get("file_name"),
+        content_type: row.get("content_type"),
+        upload_mode: upload_mode.clone(),
+        object_key: object_key.clone(),
+        thumbnail_object_key: thumbnail_object_key.clone(),
+        status,
+        file_size_bytes: row.get("file_size_bytes"),
+        image_width_px: row.get("image_width_px"),
+        image_height_px: row.get("image_height_px"),
+        metadata_source: row.get("metadata_source"),
+        rejection_reason: row.get("rejection_reason"),
+        replaces_media_id: row.get("replaces_media_id"),
+        replaced_by_media_id: row.get("replaced_by_media_id"),
+        display_url: visible.then(|| storage.display_url(&upload_mode, &object_key)),
+        thumbnail_url: visible
+            .then(|| storage.thumbnail_url(&upload_mode, thumbnail_object_key.as_deref()))
+            .flatten(),
         persisted,
     }
 }
@@ -784,6 +1517,18 @@ mod tests {
         }
     }
 
+    fn intake_media_request(
+        shot_type: &str,
+        replaces_media_id: Option<String>,
+    ) -> CreateOwnerIntakeMediaRequest {
+        CreateOwnerIntakeMediaRequest {
+            file_name: "front-yard.jpg".to_string(),
+            content_type: "image/jpeg".to_string(),
+            shot_type: shot_type.to_string(),
+            replaces_media_id,
+        }
+    }
+
     #[test]
     fn validates_workspace_and_property_boundaries() {
         assert!(validate_workspace_request(&SaveOwnerWorkspaceRequest {
@@ -801,6 +1546,15 @@ mod tests {
         assert!(!validate_yard_brief_request(&invalid_brief));
         invalid_brief.status = "draft".to_string();
         assert!(validate_yard_brief_request(&invalid_brief));
+        assert!(validate_intake_media_request(&intake_media_request(
+            "front_yard",
+            None
+        )));
+        let mut invalid_media = intake_media_request("street_view", None);
+        assert!(!validate_intake_media_request(&invalid_media));
+        invalid_media.shot_type = "front_yard".to_string();
+        invalid_media.content_type = "application/pdf".to_string();
+        assert!(!validate_intake_media_request(&invalid_media));
         invalid.authority_attested = true;
         invalid.address_status = "verified".to_string();
         assert!(!validate_property_request(&invalid));
@@ -893,6 +1647,94 @@ mod tests {
                 .get_latest_yard_brief("owner-a", &property.property_id)
                 .await,
             OwnerReadResult::Loaded(brief) if brief.version == 2 && brief.status == "ready"
+        ));
+
+        let OwnerMutationResult::Saved(upload) = repository
+            .create_intake_media_upload(
+                "owner-a",
+                &property.property_id,
+                intake_media_request("front_yard", None),
+            )
+            .await
+        else {
+            panic!("owner intake media upload should be created");
+        };
+        assert_eq!(upload.media.status, "pending_upload");
+        assert!(upload.media.object_key.contains("owner-intake"));
+        let first_media_id = upload.media.media_id;
+        let OwnerMutationResult::Saved(ready) = repository
+            .complete_intake_media_upload(
+                "owner-a",
+                &property.property_id,
+                &first_media_id,
+                PhotoUploadMetadata {
+                    file_size_bytes: Some(1024),
+                    image_width_px: Some(1200),
+                    image_height_px: Some(800),
+                    metadata_source: Some("client_reported".to_string()),
+                },
+            )
+            .await
+        else {
+            panic!("owner intake media upload should complete");
+        };
+        assert_eq!(ready.status, "ready");
+        assert_eq!(
+            repository
+                .list_intake_media("owner-b", &property.property_id)
+                .await,
+            OwnerReadResult::NotFound
+        );
+
+        let OwnerMutationResult::Saved(replacement_upload) = repository
+            .create_intake_media_upload(
+                "owner-a",
+                &property.property_id,
+                intake_media_request("front_yard", Some(first_media_id.clone())),
+            )
+            .await
+        else {
+            panic!("replacement upload should be created");
+        };
+        let replacement_id = replacement_upload.media.media_id;
+        assert!(matches!(
+            repository
+                .complete_intake_media_upload(
+                    "owner-a",
+                    &property.property_id,
+                    &replacement_id,
+                    PhotoUploadMetadata::default(),
+                )
+                .await,
+            OwnerMutationResult::Saved(media) if media.status == "ready"
+        ));
+        assert!(matches!(
+            repository
+                .list_intake_media("owner-a", &property.property_id)
+                .await,
+            OwnerReadResult::Loaded(media) if media.len() == 2
+                && media.iter().any(|item| item.media_id == replacement_id && item.status == "ready")
+                && media.iter().any(|item| item.media_id == first_media_id && item.status == "replaced")
+        ));
+        assert!(matches!(
+            repository
+                .delete_intake_media("owner-a", &property.property_id, &replacement_id)
+                .await,
+            OwnerMutationResult::Saved(media) if media.status == "deleted"
+        ));
+        assert!(matches!(
+            repository
+                .list_intake_media("owner-a", &property.property_id)
+                .await,
+            OwnerReadResult::Loaded(media) if media.len() == 1
+                && media[0].media_id == first_media_id
+                && media[0].status == "replaced"
+        ));
+        assert!(matches!(
+            repository
+                .delete_intake_media("owner-a", &property.property_id, &first_media_id)
+                .await,
+            OwnerMutationResult::Saved(media) if media.status == "deleted"
         ));
     }
 }

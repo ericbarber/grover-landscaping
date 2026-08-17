@@ -207,16 +207,20 @@ Active slice:
   isolation. The production React journey includes accessible draft and ready
   recovery without presenting the brief as measurement, diagnosis, price, a
   work order, or provider instruction.
-- Phase 2B is active: add owner-scoped guided intake media with upload,
-  processing, replacement, and deletion states. Do not add provider invitations
-  until private intake is complete.
+- Phase 2B is delivered: owners can add, reload, replace, and delete optional
+  guided photographs through owner-scoped upload and processing states. Media
+  remains independent of jobs and provider organizations, replaced originals
+  stay visible for explicit deletion, and provider access is not created.
+- Phase 3 is next: add the known-provider connection pilot with an explicit,
+  provider-specific disclosure and consent boundary.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.
 
-Exit condition: a verified signed-in owner can create and reload only their own
-private property without creating a provider customer, property, job, contract,
-route, or crew assignment.
+Exit condition: a verified signed-in owner can complete and reload their own
+private profile, property, yard brief, and optional guided photographs without
+creating a provider customer, service property, job, contract, route, crew
+assignment, public listing, or provider-access grant.
 
 ### Operational exception activity integration
 
