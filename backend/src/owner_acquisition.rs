@@ -185,6 +185,14 @@ pub enum OwnerProviderInvitationCreateResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationMutationResult {
+    Saved(OwnerProviderInvitationRecord),
+    NotFound,
+    InvalidState(OwnerProviderInvitationRecord),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
     NotFound,
@@ -764,6 +772,36 @@ impl OwnerAcquisitionRepository {
         }
     }
 
+    pub async fn get_provider_invitation(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        invitation_id: &str,
+    ) -> OwnerReadResult<OwnerProviderInvitationRecord> {
+        let Some(pool) = &self.pool else {
+            return self
+                .local
+                .read()
+                .await
+                .provider_invitations
+                .get(invitation_id)
+                .filter(|invitation| {
+                    invitation.record.owner_user_id == owner_user_id
+                        && invitation.record.property_id == property_id
+                })
+                .map(|invitation| OwnerReadResult::Loaded(invitation.record.clone()))
+                .unwrap_or(OwnerReadResult::NotFound);
+        };
+        match get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id).await {
+            Ok(Some(invitation)) => OwnerReadResult::Loaded(invitation),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider invitation read failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
     pub async fn create_provider_invitation(
         &self,
         owner_user_id: &str,
@@ -886,6 +924,65 @@ impl OwnerAcquisitionRepository {
             Err(error) => {
                 tracing::error!(%error, owner_user_id, property_id, "owner provider invitation create failed");
                 OwnerProviderInvitationCreateResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn revoke_provider_invitation(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        invitation_id: &str,
+    ) -> OwnerProviderInvitationMutationResult {
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let Some(invitation) =
+                local
+                    .provider_invitations
+                    .get_mut(invitation_id)
+                    .filter(|invitation| {
+                        invitation.record.owner_user_id == owner_user_id
+                            && invitation.record.property_id == property_id
+                    })
+            else {
+                return OwnerProviderInvitationMutationResult::NotFound;
+            };
+            if invitation.record.status == "revoked" {
+                return OwnerProviderInvitationMutationResult::Saved(invitation.record.clone());
+            }
+            if invitation.record.expires_at_epoch_seconds <= current_epoch_seconds() {
+                invitation.record.status = "expired".to_string();
+                return OwnerProviderInvitationMutationResult::InvalidState(
+                    invitation.record.clone(),
+                );
+            }
+            if !matches!(
+                invitation.record.status.as_str(),
+                "pending_delivery" | "delivered" | "opened"
+            ) {
+                return OwnerProviderInvitationMutationResult::InvalidState(
+                    invitation.record.clone(),
+                );
+            }
+            invitation.record.status = "revoked".to_string();
+            return OwnerProviderInvitationMutationResult::Saved(invitation.record.clone());
+        };
+
+        match revoke_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+            .await
+        {
+            Ok(PersistedInvitationMutationOutcome::Saved(invitation)) => {
+                OwnerProviderInvitationMutationResult::Saved(invitation)
+            }
+            Ok(PersistedInvitationMutationOutcome::NotFound) => {
+                OwnerProviderInvitationMutationResult::NotFound
+            }
+            Ok(PersistedInvitationMutationOutcome::InvalidState(invitation)) => {
+                OwnerProviderInvitationMutationResult::InvalidState(invitation)
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider invitation revoke failed");
+                OwnerProviderInvitationMutationResult::Unavailable
             }
         }
     }
@@ -1733,6 +1830,47 @@ async fn list_owner_provider_invitations(
     ))
 }
 
+async fn get_owner_provider_invitation(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    invitation_id: &str,
+) -> Result<Option<OwnerProviderInvitationRecord>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT invitation.id, invitation.owner_user_id, invitation.property_id,
+                invitation.brief_id, invitation.brief_version, invitation.provider_name,
+                invitation.recipient_email, invitation.purpose,
+                invitation.owner_name_snapshot, invitation.coarse_area_snapshot,
+                invitation.care_goals_snapshot, invitation.cadence_snapshot,
+                CASE
+                    WHEN invitation.status IN ('pending_delivery', 'delivered', 'opened')
+                         AND invitation.expires_at <= NOW()
+                    THEN 'expired'
+                    ELSE invitation.status
+                END AS status,
+                EXTRACT(EPOCH FROM invitation.expires_at)::BIGINT AS expires_at_epoch_seconds,
+                COALESCE(delivery.status, 'pending') AS delivery_status,
+                COALESCE(delivery.attempt_count, 0)::INTEGER AS delivery_attempt_count
+         FROM owner_provider_invitations invitation
+         LEFT JOIN LATERAL (
+             SELECT attempt.status, COUNT(*) OVER () AS attempt_count
+             FROM owner_provider_invitation_delivery_attempts attempt
+             WHERE attempt.invitation_id = invitation.id
+             ORDER BY attempt.attempt_number DESC
+             LIMIT 1
+         ) delivery ON TRUE
+         WHERE invitation.id = $1
+           AND invitation.owner_user_id = $2
+           AND invitation.property_id = $3",
+    )
+    .bind(invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|row| owner_provider_invitation_from_row(&row, true)))
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn create_owner_provider_invitation(
     pool: &PgPool,
@@ -1968,6 +2106,102 @@ async fn create_owner_provider_invitation(
     invitation.delivery_status = "pending".to_string();
     invitation.delivery_attempt_count = 1;
     Ok(PersistedInvitationCreateOutcome::Created(invitation))
+}
+
+enum PersistedInvitationMutationOutcome {
+    Saved(OwnerProviderInvitationRecord),
+    NotFound,
+    InvalidState(OwnerProviderInvitationRecord),
+}
+
+async fn revoke_owner_provider_invitation(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    invitation_id: &str,
+) -> Result<PersistedInvitationMutationOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, expires_at <= NOW() AS expired
+         FROM owner_provider_invitations
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         FOR UPDATE",
+    )
+    .bind(invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationMutationOutcome::NotFound);
+    };
+    let status: String = current.get("status");
+    let expired: bool = current.get("expired");
+    if status == "revoked" {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::Saved(invitation));
+    }
+    let (next_status, event_kind, valid_revoke) =
+        if expired && matches!(status.as_str(), "pending_delivery" | "delivered" | "opened") {
+            ("expired", "provider_invitation_expired", false)
+        } else if matches!(status.as_str(), "pending_delivery" | "delivered" | "opened") {
+            ("revoked", "provider_invitation_revoked", true)
+        } else {
+            transaction.commit().await?;
+            let invitation =
+                get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+                    .await?
+                    .ok_or(sqlx::Error::RowNotFound)?;
+            return Ok(PersistedInvitationMutationOutcome::InvalidState(invitation));
+        };
+
+    sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET status = $4, terminal_at = NOW(), updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3",
+    )
+    .bind(invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(next_status)
+    .execute(&mut *transaction)
+    .await?;
+    if next_status == "revoked" {
+        sqlx::query(
+            "UPDATE owner_provider_invitation_delivery_attempts
+             SET status = 'suppressed', failure_code = 'owner_revoked', completed_at = NOW()
+             WHERE invitation_id = $1 AND status = 'pending'",
+        )
+        .bind(invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(event_kind)
+    .bind(serde_json::json!({ "invitation_id": invitation_id }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    let invitation = get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)?;
+    if valid_revoke {
+        Ok(PersistedInvitationMutationOutcome::Saved(invitation))
+    } else {
+        Ok(PersistedInvitationMutationOutcome::InvalidState(invitation))
+    }
 }
 
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {

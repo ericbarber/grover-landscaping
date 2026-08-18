@@ -1,7 +1,8 @@
 use grover_landscaping_api::owner_acquisition::{
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderInvitationCreateResult, OwnerReadResult,
-    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+    OwnerMutationResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationMutationResult, OwnerReadResult, SaveOwnerWorkspaceRequest,
+    SaveOwnerYardBriefRequest,
 };
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -59,6 +60,16 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .get_provider_invitation(
+                "owner-unavailable",
+                "property-unavailable",
+                "invitation-unavailable",
+            )
+            .await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .create_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -66,6 +77,16 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderInvitationCreateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .revoke_provider_invitation(
+                "owner-unavailable",
+                "property-unavailable",
+                "invitation-unavailable",
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::Unavailable
     ));
 }
 
@@ -253,6 +274,60 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             && !data.contains(created.delivery_token())
             && !data.contains("0199")
     }));
+
+    assert!(matches!(
+        repository
+            .revoke_provider_invitation(
+                owner_b,
+                &property.property_id,
+                &created.invitation.invitation_id,
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .revoke_provider_invitation(
+                owner_a,
+                &property.property_id,
+                &created.invitation.invitation_id,
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::Saved(invitation)
+            if invitation.status == "revoked" && invitation.delivery_status == "suppressed"
+    ));
+    assert!(matches!(
+        repository
+            .revoke_provider_invitation(
+                owner_a,
+                &property.property_id,
+                &created.invitation.invitation_id,
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::Saved(invitation)
+            if invitation.status == "revoked"
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_acquisition_events
+             WHERE owner_user_id = $1 AND event_kind = 'provider_invitation_revoked'",
+        )
+        .bind(owner_a)
+        .fetch_one(&pool)
+        .await
+        .expect("revoke event count should load"),
+        1
+    );
+    assert!(matches!(
+        repository
+            .create_provider_invitation(
+                owner_a,
+                &property.property_id,
+                invitation_request(recipient, "provider-invite-after-revoke"),
+            )
+            .await,
+        OwnerProviderInvitationCreateResult::Created(_)
+    ));
 
     sqlx::query(
         "INSERT INTO owner_provider_recipient_suppressions (

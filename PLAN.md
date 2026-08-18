@@ -242,9 +242,14 @@ Active slice:
   replay-safe idempotency, live-recipient duplicate protection, suppression,
   pending delivery attempts, expiry projection, minimized audit events, and
   owner-isolation coverage. No delivery is represented as successful yet.
-- Slice 3A2 is next: expose the verified-owner invitation API and implement
-  delivery outcomes, expiry, revoke, retry, opt-out, and abuse lifecycle
-  operations before provider recipient entry begins.
+- Slice 3A2 is delivered: verified owners can create, list, inspect, and revoke
+  self-scoped invitations through validated APIs. Responses distinguish new,
+  replayed, conflicting, suppressed, missing, closed, and unavailable outcomes;
+  neither bearer tokens nor hashes enter API JSON, and revoke atomically closes
+  pending delivery.
+- Slice 3A3 is next: implement delivery outcomes, durable expiry, retry token
+  rotation, recipient opt-out, and abuse lifecycle operations before provider
+  recipient entry begins.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

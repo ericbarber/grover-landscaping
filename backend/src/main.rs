@@ -84,10 +84,12 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     owner_acquisition::{
-        validate_intake_media_request, validate_property_request, validate_workspace_request,
+        validate_intake_media_request, validate_property_request,
+        validate_provider_invitation_request, validate_workspace_request,
         validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerReadResult,
-        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -661,6 +663,18 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/intake-media/{media_id}/complete",
             post(complete_owner_intake_media_upload),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-invitations",
+            get(list_owner_provider_invitations).post(create_owner_provider_invitation),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-invitations/{invitation_id}",
+            get(get_owner_provider_invitation),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-invitations/{invitation_id}/revoke",
+            post(revoke_owner_provider_invitation),
         )
         .route(
             "/customer-accounts",
@@ -1523,6 +1537,149 @@ async fn delete_owner_intake_media(
             "The private yard photo could not be deleted. It remains private and unchanged; try again.",
         ),
         OwnerMutationResult::Duplicate => unreachable!("media deletion is idempotent"),
+    }
+}
+
+async fn list_owner_provider_invitations(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_provider_invitations(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(invitations) => Json(invitations).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_invitations_unavailable",
+            "Your provider invitations could not be loaded.",
+        ),
+    }
+}
+
+async fn get_owner_provider_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, invitation_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_provider_invitation(&principal.subject, &property_id, &invitation_id)
+        .await
+    {
+        OwnerReadResult::Loaded(invitation) => Json(invitation).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_provider_invitation_not_found",
+            "The requested provider invitation was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_invitation_unavailable",
+            "The provider invitation could not be loaded.",
+        ),
+    }
+}
+
+async fn create_owner_provider_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+    Json(request): Json<CreateOwnerProviderInvitationRequest>,
+) -> Response {
+    if !validate_provider_invitation_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_owner_provider_invitation",
+                message: "Enter the provider's name and business email, choose a 7-, 14-, or 30-day invitation window, and submit a valid request key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .create_provider_invitation(&principal.subject, &property_id, request)
+        .await
+    {
+        OwnerProviderInvitationCreateResult::Created(creation) => {
+            (StatusCode::ACCEPTED, Json(creation.invitation)).into_response()
+        }
+        OwnerProviderInvitationCreateResult::Replayed(invitation) => {
+            Json(invitation).into_response()
+        }
+        OwnerProviderInvitationCreateResult::NotFound => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "ready_owner_yard_brief_required",
+                message: "Save a ready private yard brief for this property before inviting a provider."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationCreateResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "active_owner_provider_invitation_exists",
+                message: "An active invitation already exists for this property and recipient. Review its status before creating another."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationCreateResult::Suppressed => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_recipient_suppressed",
+                message: "An invitation cannot be sent to this business email because of its delivery or contact preference. Choose another legitimate provider contact."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationCreateResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_invitation_create_unavailable",
+                "The provider invitation could not be prepared. No delivery was confirmed.",
+            )
+        }
+    }
+}
+
+async fn revoke_owner_provider_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, invitation_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .revoke_provider_invitation(&principal.subject, &property_id, &invitation_id)
+        .await
+    {
+        OwnerProviderInvitationMutationResult::Saved(invitation) => {
+            Json(invitation).into_response()
+        }
+        OwnerProviderInvitationMutationResult::NotFound => resource_not_found_response(
+            "owner_provider_invitation_not_found",
+            "The requested provider invitation was not found.",
+        ),
+        OwnerProviderInvitationMutationResult::InvalidState(_) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_invitation_not_revocable",
+                message: "This invitation is already closed and cannot be revoked. Review its current status before choosing another action."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationMutationResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_invitation_revoke_unavailable",
+                "The invitation could not be revoked. Its prior access state remains unchanged.",
+            )
+        }
     }
 }
 
@@ -7226,6 +7383,83 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let brief: Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(brief["version"], 1);
+
+        let invitation_payload = serde_json::json!({
+            "provider_name": "Sonoran Yard Care",
+            "recipient_business_email": "dispatch@sonoranyard.example",
+            "expires_in_days": 7,
+            "idempotency_key": "owner-provider-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!(
+                        "/owner-properties/{property_id}/provider-invitations"
+                    ))
+                    .header("content-type", "application/json")
+                    .body(Body::from(invitation_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::ACCEPTED);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let invitation: Value = serde_json::from_slice(&body).unwrap();
+        let invitation_id = invitation["invitation_id"].as_str().unwrap();
+        assert_eq!(invitation["status"], "pending_delivery");
+        assert_eq!(invitation["delivery_status"], "pending");
+        assert!(invitation.get("delivery_token").is_none());
+        assert!(invitation.get("token_hash").is_none());
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!(
+                        "/owner-properties/{property_id}/provider-invitations"
+                    ))
+                    .header("content-type", "application/json")
+                    .body(Body::from(invitation_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!(
+                        "/owner-properties/{property_id}/provider-invitations/{invitation_id}"
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(format!(
+                        "/owner-properties/{property_id}/provider-invitations/{invitation_id}/revoke"
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let invitation: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(invitation["status"], "revoked");
 
         let media_payload = serde_json::json!({
             "file_name": "front-yard.jpg",

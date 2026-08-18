@@ -64,8 +64,10 @@ immutable provider-specific access receipt. Yard Crew marketing and the design
 gallery link directly into the reciprocal recipient experience. This completes
 the design. Production Phase 3 is now active: its first persistence slice stores
 only the limited invitation snapshot, hashes recipient bearer tokens, separates
-pending delivery from success, enforces owner isolation and replay-safe
-creation, and leaves API/lifecycle adoption as the next review unit.
+pending delivery from success, and enforces owner isolation and replay-safe
+creation. Its verified-owner API now creates, lists, inspects, and revokes those
+records without exposing token material; delivery and recipient lifecycle
+transitions are the next review unit.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
