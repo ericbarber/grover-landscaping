@@ -35,15 +35,28 @@ Use this checklist for each page or connected workflow.
 
 - Are touch targets at least 44 by 44 CSS pixels?
 - Does essential context survive narrow widths and text zoom?
+- Does the workflow reflow at the 320px equivalent of 400% browser zoom and at
+  200% text resize without horizontal scrolling?
 - Is meaning independent of color?
+- Do selected, disabled, error, and focus states survive forced colors/high
+  contrast and reduced motion?
 - Are focus order, headings, labels, and announcements defined?
 - Does fixed navigation respect safe areas and avoid covering actions?
+- Do refresh, deep links, browser Back/Forward, duplicated tabs, expired
+  sessions, and stale decisions fail safely?
 
 ## Approval record
 
 - Reviewer:
 - Artifact and version:
+- Commit and environment:
 - Decision: Open / Revise / Approved
+- P0/P1/P2/P3 findings:
 - Required changes:
 - Interaction states still needed:
+- Automated evidence:
+- Physical-device evidence:
+- Assistive-technology evidence:
+- Participant/usability evidence:
+- Privacy/security and operations signoff:
 - High-fidelity handoff owner:

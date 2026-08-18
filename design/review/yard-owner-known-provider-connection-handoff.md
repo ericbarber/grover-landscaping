@@ -12,6 +12,10 @@ that messaging, provider verification, authorization, consent persistence, or
 support operations are implemented in production. Phase 3 of the production
 delivery plan remains the next adoption slice.
 
+The subsequent finding dispositions, advanced browser evidence, human review
+protocols, and external-signoff status are recorded in
+[`yard-owner-acquisition-professional-assurance.md`](yard-owner-acquisition-professional-assurance.md).
+
 Review the prototype at:
 
 ```text

@@ -116,6 +116,22 @@ Current state:
   connection support, fully affirmative disclosure categories, immutable access
   receipts, and confirmed future-access revocation. The reciprocal entry is
   linked from Yard Crew acquisition and the design gallery.
+- The professional product-assurance cycle is complete at repository/design
+  level. Ten P1/P2 findings were remediated across provider questions and
+  decline, browser history, deep-linked receipts, affirmative directory
+  disclosure, zero-photo prevention, trust wording, session recovery, keyboard
+  focus, forced colors, and expanded resilience validation. No design P0/P1
+  findings remain open.
+- Executable human evidence protocols now cover owner/provider moderated
+  usability, comprehension, VoiceOver, TalkBack, NVDA, keyboard, physical
+  devices, 400% zoom-equivalent reflow, and session/device evidence. These real-
+  person and physical-device signoffs remain explicitly unsigned rather than
+  being simulated.
+- The known-provider pilot operations runbook defines proposed responsibility,
+  severity, recovery, minimized evidence, monitoring, incident, opt-out,
+  identity-dispute, revocation, and go/no-go contracts. Operational staffing,
+  service levels, privacy/security approval, and launch rehearsal remain future
+  production gates.
 - The Yard Crew acquisition design is complete as a connected, validated journey
   for solo owner-operators, multi-crew provider companies, and invited workers.
   "Yard Crew" remains the audience language while provider organizations remain
@@ -177,6 +193,10 @@ Next design work:
 - Adopt the design-complete Yard Owner known-provider connection as production
   Phase 3, using the authority, visibility, receipt, lifecycle, support, and
   acceptance gates in the V2 handoff; keep curated discovery deferred.
+- Execute the prepared owner/provider usability, assistive-technology, physical-
+  device, privacy/security, and support/operations signoff sessions against the
+  committed assurance build; treat any critical disclosure misunderstanding as
+  a release-blocking P1.
 - Review the Yard Crew acquisition V3 prototype and resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
   levels before production adoption. Begin with public routing and provider

@@ -63,6 +63,12 @@ connection support, entirely affirmative disclosure categories, and an
 immutable provider-specific access receipt. Yard Crew marketing and the design
 gallery link directly into the reciprocal recipient experience. This completes
 the design; production Phase 3 remains the active delivery slice.
+The subsequent professional assurance cycle found and fixed the remaining
+workflow, consent, content, session, keyboard, forced-colors, history, and deep-
+link defects. A second validator covers contrast, motion, high-risk states, and
+eight responsive viewport classes. Human usability, real assistive-technology,
+physical-device, privacy/security, and operational signatures have complete
+execution protocols but remain honestly unsigned until performed.
 The Yard Crew acquisition slice is now complete as a validated working design.
 It routes solo owner-operators into a provider organization of one, multi-crew
 companies into provider setup, and workers into invitation-only membership. The
@@ -175,6 +181,7 @@ schedule, remaining work, or a completed day.
    - Versioned private yard briefs and optional owner-scoped guided media are delivered with upload, processing, replacement, explicit deletion, owner isolation, and responsive recovery.
    - Build the known-provider invitation and per-provider disclosure pilot next from the completed V2 handoff; defer curated discovery until the direct connection loop is safe.
    - Preserve recipient-specific tokens, separate provider relationship/capability checks, immutable disclosure receipts, terminal invitation states, and fail-closed identity/safety support.
+   - Implement Phase 3 in five reviewable slices: invitation/delivery; provider claim/authority; bounded response/read models; versioned grants/receipts/revocation; then pilot hardening and signed human/operational evidence.
 
 **Design-ready — Yard Crew acquisition production handoff**
 

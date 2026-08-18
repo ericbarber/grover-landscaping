@@ -42,14 +42,14 @@ Severity model:
 | Phase | Repository evidence | External evidence | Status |
 | --- | --- | --- | --- |
 | 0 — baseline | Scenario matrix, severity model, finding register | None | Complete |
-| 1 — workflow | Connected owner/provider validator and lifecycle assertions | Product walkthrough | In progress |
-| 2 — content | Terminology and consequence review | Yard owner and landscape-operator comprehension | Planned |
-| 3 — trust | Visibility, capability, receipt, terminal-state, and abuse review | Privacy/security approval | Planned |
-| 4 — accessibility | Keyboard, semantics, focus, zoom, forced-colors, motion checks | VoiceOver, TalkBack, NVDA sessions | Planned |
-| 5 — device/resilience | Multi-viewport, history, refresh, deep-link, failure checks | Physical iOS, Android, tablet sessions | Planned |
-| 6 — usability | Expert heuristic disposition and moderated research kit | Five to eight owner and five provider sessions | Planned |
-| 7 — operations | Service blueprint and runbook acceptance matrix | Support/operations approval and service levels | Planned |
-| 8 — closure | Passing suites, zero open design P0/P1, roadmap and release record | Cross-functional signatures | Planned |
+| 1 — workflow | Connected owner/provider validator, question/decline remediation, lifecycle assertions | Product walkthrough | Repository complete; external unsigned |
+| 2 — content | Terminology, trust-claim, and consequence review with remediated copy | Owner/operator comprehension | Repository complete; external unsigned |
+| 3 — trust | Visibility, capability, receipt, terminal-state, abuse, and threat review | Privacy/security approval | Repository complete; external unsigned |
+| 4 — accessibility | Keyboard, semantics, focus, 320px reflow, 200% text, contrast, forced-colors, motion | VoiceOver, TalkBack, NVDA | Repository complete; external unsigned |
+| 5 — device/resilience | Eight viewport classes, history, refresh, deep-link, session, failure checks | Physical iOS, Android, tablet | Repository complete; external unsigned |
+| 6 — usability | Expert heuristic disposition and moderated owner/provider research kit | Five to eight owner and five provider sessions | Repository complete; external unsigned |
+| 7 — operations | Responsibility, severity, recovery, monitoring, and pilot go/no-go runbook | Support/operations approval and staffing | Repository complete; external unsigned |
+| 8 — closure | Passing suites, zero open design P0/P1, roadmap and release record | Cross-functional signatures | Repository complete; external unsigned |
 
 ## Critical scenario matrix
 
@@ -73,19 +73,108 @@ Severity model:
 
 | ID | Severity | Finding | Planned disposition | Status |
 | --- | --- | --- | --- | --- |
-| WF-01 | P1 | Provider “Ask a preliminary question” records success without collecting a question | Add an explicit question composer, validation, cancel, and send-without-disclosure result | Open |
-| WF-02 | P1 | Provider decline closes a request without a confirmation step | Add explicit decline confirmation and terminal-state feedback | Open |
-| WF-03 | P1 | Browser navigation uses `replaceState`, so Back cannot return through the journey | Add history entries for user navigation and a `popstate` renderer | Open |
-| WF-04 | P1 | Direct access-receipt deep links show “Nothing selected,” contradicting the gallery’s completed receipt | Seed a clear historical example for direct review without preselecting the consent form | Open |
-| DS-01 | P1 | Directory disclosure preselects yard brief and email, conflicting with the V2 affirmative-consent contract | Remove all preselected directory categories and update validation | Open |
-| DS-02 | P2 | Photo disclosure can be selected when the brief contains zero photos | Disable the category until a photo exists and explain the recovery | Open |
-| CT-01 | P2 | “Identity checked” and “immutable snapshot” are broader or more technical than the underlying fact | Use precise business-contact and saved-receipt language | Open |
-| CT-02 | P2 | Exact-address copy implies disclosure itself can be revoked, although only future access can end | State the future-access and historical-receipt consequence precisely | Open |
-| RC-01 | P1 | No explicit expired-session recovery state exists | Add a protected session-expired state with sign-in/return guidance | Open |
-| AT-01 | P1 | 400% text, forced-colors, systematic keyboard order, and focus visibility are not yet covered | Add CSS treatment and repeatable professional assurance validation | Open |
-| RS-01 | P2 | Physical-device and assistive-technology evidence cannot be produced by browser automation | Publish executable matrices; retain external status until real sessions occur | Open external evidence |
-| US-01 | P2 | Moderated owner/provider comprehension evidence requires real participants | Publish scripts, tasks, metrics, consent-free note template, and stop rules | Open external evidence |
-| OP-01 | P1 | Prototype support paths do not yet define production ownership, severity, service levels, or evidence boundaries | Publish operational service blueprint and pilot gates | Open |
+| WF-01 | P1 | Provider “Ask a preliminary question” records success without collecting a question | Added composer, validation, cancel, focus, associated error, and limited-data result | Fixed and validated |
+| WF-02 | P1 | Provider decline closes a request without a confirmation step | Added explicit confirmation, customer-safe consequence, and closed competing actions | Fixed and validated |
+| WF-03 | P1 | Browser navigation uses `replaceState`, so Back cannot return through the journey | Added push/replace history contract and `popstate` rendering | Fixed and validated |
+| WF-04 | P1 | Direct access-receipt deep links show “Nothing selected,” contradicting the gallery’s completed receipt | Added a historical example receipt while keeping all consent inputs unselected | Fixed and validated |
+| DS-01 | P1 | Directory disclosure preselects yard brief and email, conflicting with the V2 affirmative-consent contract | Removed all defaults and added explicit guidance and assertions | Fixed and validated |
+| DS-02 | P2 | Photo disclosure can be selected when the brief contains zero photos | Disabled zero-photo categories and enabled them only after photo intake | Fixed and validated |
+| CT-01 | P2 | “Identity checked” and “immutable snapshot” are broader or more technical than the underlying fact | Replaced with precise business-contact and saved-receipt language | Fixed and validated |
+| CT-02 | P2 | Exact-address copy implies disclosure itself can be revoked, although only future access can end | Clarified future access and historical receipt consequence | Fixed and validated |
+| RC-01 | P1 | No explicit expired-session recovery state exists | Added protected session-expired state and successful sign-in return | Fixed and validated |
+| AT-01 | P1 | 400% text, forced-colors, systematic keyboard order, and focus visibility are not yet covered | Added group focus, forced-colors treatment, contrast/reflow/motion checks, and assurance suite | Fixed and validated |
+| RS-01 | P2 | Physical-device and assistive-technology evidence cannot be produced by browser automation | Published executable device and AT matrices with evidence template | Ready; external evidence unsigned |
+| US-01 | P2 | Moderated owner/provider comprehension evidence requires real participants | Published recruitment, scripts, tasks, metrics, stop rules, and evidence template | Ready; external evidence unsigned |
+| OP-01 | P1 | Prototype support paths do not yet define production ownership, severity, service levels, or evidence boundaries | Published proposed responsibility, severity, recovery, monitoring, and launch-blocking runbook | Design fixed; operational approval unsigned |
+
+## Workflow and lifecycle review
+
+The completed walkthrough verifies that every consequential action states both
+what happened and what did not happen. Invitation, response, disclosure,
+assessment, proposal, provider setup, crew assignment, work-order release, and
+first-visit confirmation remain separate transitions.
+
+Key dispositions:
+
+- provider questions now require question content and stay inside the limited
+  request;
+- provider decline requires confirmation and closes conflicting actions;
+- invitation failure preserves the owner’s recipient and disclosure input;
+- direct hash routes, refresh, browser Back, and expired-session recovery render
+  an understandable private state;
+- known-provider and directory disclosure both start with zero selected data
+  categories;
+- a historical receipt deep link contains an internally consistent approved and
+  withheld example without preselecting the consent form.
+
+## Content and terminology review
+
+| Term | Approved meaning | Required boundary |
+| --- | --- | --- |
+| Yard brief | Owner-described goals, areas, cadence, and optional context | Not measurement, diagnosis, scope, price, schedule, or work instruction |
+| Limited invitation | Recipient-specific owner name, coarse area, goal, and timing | No address, photos, phone, or access notes |
+| Business contact checked | Dated relationship between recipient and provider organization | Not quality, licensure, insurance, availability, or universal authority |
+| Opportunity-response authority | Review, preliminary question, safe decline, report/block, disclosure request | No price, proposal, crew assignment, work release, or field work |
+| Assessment access | Provider may view only approved categories for the stated purpose | Not customer creation, proposal acceptance, visit scheduling, or service |
+| Service proposal | Provider-authored scope, exclusions, cadence, policy, and price version | Not accepted until the owner decides explicitly |
+| Provider setup | Post-acceptance operational preparation | Not a confirmed visit or silent crew assignment |
+| First visit confirmed | Provider supplied date and arrival window | Only then may the design transition to active portal expectations |
+
+The review removed broad “Identity checked” UI language and technical
+“immutable snapshot” customer copy. Technical contracts may still use immutable
+when describing append-only receipt storage to implementation teams.
+
+## Privacy, authorization, and abuse review
+
+| Threat or misuse | Design control | Production proof still required |
+| --- | --- | --- |
+| Forwarded/replayed invitation | Recipient-specific, expiring, revocable language; closed terminal states | Hashed single-purpose tokens, replay prevention, rate limits |
+| Wrong provider claim | Separate recipient, organization, and capability checks; identity-dispute pause | Duplicate prevention, evidence policy, appeal, fail-closed authorization |
+| Overbroad provider role | Opportunity-response capability names permitted and forbidden actions | Server-enforced capability checks on every read/write |
+| Unintended owner disclosure | All categories unselected; approved/withheld receipt; provider/purpose shown | Versioned category grants and atomic immutable audit |
+| Access after revoke | Explicit confirmation and historical/future distinction | Immediate deny, cache/media reconciliation, alerting, idempotent retry |
+| Opt-out resend | Closed opt-out state and different-recipient recovery | Durable scoped suppression and monitoring |
+| Harassment or impersonation | Separate report/block and owner/provider support paths | Restricted evidence, response ownership, appeal, retention |
+| Support overexposure | Issue-specific support paths and no-additional-sharing language | Role-minimized support views and audited break-glass access |
+| Stale/duplicate decision | History/refresh safety and explicit confirmation | Server versions, idempotency keys, stale-tab conflict handling |
+
+No privacy/security approval is inferred from this expert review. The production
+threat model and implementation evidence remain cross-functional gates.
+
+## Expert usability heuristic disposition
+
+| Heuristic | Result |
+| --- | --- |
+| Visibility of status | Pass — persistent stage, privacy/save state, lifecycle, receipts, and results |
+| Match with user language | Pass after content remediation |
+| User control and freedom | Pass — cancel, back/history, revoke, decline/report confirmation, finish later |
+| Consistency | Pass — owner/provider action hierarchy and shared design foundation |
+| Error prevention | Pass after opt-in, zero-photo, decline, receipt, and session fixes |
+| Recognition over recall | Pass — summaries repeat provider, property, purpose, approved and withheld data |
+| Efficiency | Pass for prototype — review controller and deep links remain reviewer-only aids |
+| Minimalism | Pass — normal path separates advanced support and lifecycle review |
+| Error recovery | Pass — invalid, failure, expiry, opt-out, revoke, unavailable, and session states |
+| Help and support | Pass at design level; operational promises remain unsigned |
+
+The moderated protocol is in
+[`yard-owner-acquisition-human-validation-protocol.md`](yard-owner-acquisition-human-validation-protocol.md).
+The pilot operations contract is in
+[`../../docs/yard-owner-acquisition-pilot-operations-runbook.md`](../../docs/yard-owner-acquisition-pilot-operations-runbook.md).
+
+## Repository validation evidence
+
+```bash
+node design/tools/validate-yard-owner-acquisition.mjs
+node design/tools/validate-yard-owner-professional-assurance.mjs
+node design/tools/validate-prototype-foundation.mjs
+node design/tools/validate-yard-crew-acquisition.mjs
+```
+
+The assurance suite covers history, refresh, direct receipts, session expiry,
+question/decline consequences, fully affirmative disclosure, zero-photo
+prevention, contrast samples, skip/focus behavior, reduced motion, forced colors,
+320px reflow as the 400% zoom-equivalent layout, 200% text, and high-risk states
+across 320, 360, 390, 412, 768 portrait, 1024 landscape, 1366, and 1920 widths.
 
 ## Evidence integrity
 
@@ -95,3 +184,20 @@ stand in for a person using a screen reader, a physical device, a moderated
 participant, legal/privacy counsel, or an operating support team. Those items
 will be prepared to execution quality and remain explicitly unsigned until the
 appropriate people complete them.
+
+## Final assurance decision
+
+Repository/design decision: **Approved as a signoff-ready working design.**
+
+- Open design P0 findings: 0
+- Open design P1 findings: 0
+- Open design P2 findings: 0
+- External evidence tasks: prepared and unsigned
+- Production Phase 3: planned, not delivered
+- Pilot operations: designed, not staffed or approved
+
+This decision means the prototype, review contracts, automated evidence, human
+protocols, and operational blueprint meet the repository’s professional design
+standard. It does not authorize production launch. Launch still requires real
+participant, device, assistive-technology, privacy/security, support/operations,
+and implementation evidence recorded in the linked protocols and runbook.

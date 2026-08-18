@@ -14,6 +14,9 @@ The approved experience is defined by:
 - [`../design/review/yard-owner-acquisition-professional-review.md`](../design/review/yard-owner-acquisition-professional-review.md)
 - [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
 - [`../design/review/yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md)
+- [`../design/review/yard-owner-acquisition-professional-assurance.md`](../design/review/yard-owner-acquisition-professional-assurance.md)
+- [`../design/review/yard-owner-acquisition-human-validation-protocol.md`](../design/review/yard-owner-acquisition-human-validation-protocol.md)
+- [`yard-owner-acquisition-pilot-operations-runbook.md`](yard-owner-acquisition-pilot-operations-runbook.md)
 
 ## Delivery status
 
@@ -213,6 +216,19 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 1. Phase 3 — known-provider connection pilot.
 2. Phase 4 — assessment, proposal, and activation.
+
+Phase 3 should proceed in these implementation slices:
+
+1. Recipient-specific invitation persistence, token security, delivery mapping,
+   suppression, expiry, revoke, retry, and audit.
+2. Existing-provider inbox plus duplicate-safe organization claim/bootstrap and
+   explicit opportunity-response capability.
+3. Provider question/interest/decline/report writes and owner/provider progress
+   read models with fail-closed authorization.
+4. Versioned provider-specific grants and approved/withheld disclosure receipts,
+   followed by revocation reconciliation and support views.
+5. Pilot hardening: idempotency, stale-tab conflict, monitoring, runbooks,
+   human/AT/device evidence, cross-functional signoff, and launch rehearsal.
 
 Phases 5–7 follow only after the preceding data and authorization boundaries are
 validated. No external address, messaging, identity-fact, or marketplace vendor

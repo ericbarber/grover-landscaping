@@ -113,6 +113,7 @@ From an environment with frontend dependencies installed:
 
 ```bash
 node design/tools/validate-yard-owner-acquisition.mjs
+node design/tools/validate-yard-owner-professional-assurance.mjs
 ```
 
 Pass `--capture` to refresh the desktop and mobile gallery references. The
@@ -126,3 +127,6 @@ text, and overflow.
 
 The completed connection contract is recorded in
 [`../../review/yard-owner-known-provider-connection-handoff.md`](../../review/yard-owner-known-provider-connection-handoff.md).
+The final professional review, finding dispositions, external evidence status,
+and validation commands are recorded in
+[`../../review/yard-owner-acquisition-professional-assurance.md`](../../review/yard-owner-acquisition-professional-assurance.md).

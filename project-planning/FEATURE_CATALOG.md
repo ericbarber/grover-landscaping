@@ -55,6 +55,11 @@
   preliminary provider response, complete invitation lifecycle and support,
   unselected-by-default provider disclosure, approved/withheld access receipts,
   and reciprocal Yard Crew/gallery entry
+- Professional Yard Owner acquisition assurance with remediated workflow and
+  consent defects, browser history and session recovery, precise trust language,
+  keyboard/group focus, forced-colors and reduced-motion treatment, contrast and
+  eight-viewport resilience validation, moderated owner/provider research and
+  assistive-technology/device protocols, and pilot operations runbook
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard
