@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sqlx::{PgPool, Row};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
+    fmt,
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -123,6 +124,66 @@ pub struct OwnerIntakeMediaUploadRecord {
     pub thumbnail_max_dimension_px: Option<u32>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerProviderInvitationRequest {
+    pub provider_name: String,
+    pub recipient_business_email: String,
+    pub expires_in_days: i32,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInvitationRecord {
+    pub invitation_id: String,
+    pub owner_user_id: String,
+    pub property_id: String,
+    pub brief_id: String,
+    pub brief_version: i64,
+    pub provider_name: String,
+    pub recipient_business_email: String,
+    pub purpose: String,
+    pub owner_name_snapshot: String,
+    pub coarse_area_snapshot: String,
+    pub care_goals_snapshot: Vec<String>,
+    pub cadence_snapshot: String,
+    pub status: String,
+    pub expires_at_epoch_seconds: i64,
+    pub delivery_status: String,
+    pub delivery_attempt_count: i32,
+    pub persisted: bool,
+}
+
+pub struct OwnerProviderInvitationCreation {
+    pub invitation: OwnerProviderInvitationRecord,
+    delivery_token: String,
+}
+
+impl OwnerProviderInvitationCreation {
+    pub fn delivery_token(&self) -> &str {
+        &self.delivery_token
+    }
+}
+
+impl fmt::Debug for OwnerProviderInvitationCreation {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("OwnerProviderInvitationCreation")
+            .field("invitation", &self.invitation)
+            .field("delivery_token", &"[REDACTED]")
+            .finish()
+    }
+}
+
+#[derive(Debug)]
+pub enum OwnerProviderInvitationCreateResult {
+    Created(OwnerProviderInvitationCreation),
+    Replayed(OwnerProviderInvitationRecord),
+    NotFound,
+    Conflict,
+    Suppressed,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
@@ -144,6 +205,14 @@ struct LocalOwnerState {
     properties: HashMap<String, OwnerPropertyRecord>,
     yard_briefs: HashMap<String, Vec<OwnerYardBriefRecord>>,
     intake_media: HashMap<String, OwnerIntakeMediaRecord>,
+    provider_invitations: HashMap<String, LocalOwnerProviderInvitation>,
+    provider_recipient_suppressions: HashSet<String>,
+}
+
+struct LocalOwnerProviderInvitation {
+    record: OwnerProviderInvitationRecord,
+    _token_hash: String,
+    idempotency_key: String,
 }
 
 #[derive(Clone, Default)]
@@ -657,6 +726,169 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_provider_invitations(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderInvitationRecord>> {
+        let Some(pool) = &self.pool else {
+            let local = self.local.read().await;
+            if !local
+                .properties
+                .get(property_id)
+                .is_some_and(|property| property.owner_user_id == owner_user_id)
+            {
+                return OwnerReadResult::NotFound;
+            }
+            let mut invitations: Vec<_> = local
+                .provider_invitations
+                .values()
+                .filter(|invitation| {
+                    invitation.record.owner_user_id == owner_user_id
+                        && invitation.record.property_id == property_id
+                })
+                .map(|invitation| invitation.record.clone())
+                .collect();
+            invitations.sort_by(|left, right| right.invitation_id.cmp(&left.invitation_id));
+            return OwnerReadResult::Loaded(invitations);
+        };
+
+        match list_owner_provider_invitations(pool, owner_user_id, property_id).await {
+            Ok(Some(invitations)) => OwnerReadResult::Loaded(invitations),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner provider invitation list failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_provider_invitation(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        request: CreateOwnerProviderInvitationRequest,
+    ) -> OwnerProviderInvitationCreateResult {
+        let recipient_email = normalize_email(&request.recipient_business_email);
+        let recipient_fingerprint = email_fingerprint(&recipient_email);
+        let delivery_token = new_owner_provider_invitation_token();
+        let token_hash = invitation_token_hash(&delivery_token);
+
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            if let Some(existing) = local.provider_invitations.values().find(|invitation| {
+                invitation.record.owner_user_id == owner_user_id
+                    && invitation.idempotency_key == request.idempotency_key.trim()
+            }) {
+                return OwnerProviderInvitationCreateResult::Replayed(existing.record.clone());
+            }
+            let Some(property) = local.properties.get(property_id).filter(|property| {
+                property.owner_user_id == owner_user_id && property.status != "archived"
+            }) else {
+                return OwnerProviderInvitationCreateResult::NotFound;
+            };
+            let Some(workspace) = local.workspaces.get(owner_user_id) else {
+                return OwnerProviderInvitationCreateResult::NotFound;
+            };
+            let Some(brief) = local
+                .yard_briefs
+                .get(property_id)
+                .and_then(|versions| versions.last())
+                .filter(|brief| brief.status == "ready")
+            else {
+                return OwnerProviderInvitationCreateResult::NotFound;
+            };
+            if local
+                .provider_recipient_suppressions
+                .contains(&recipient_fingerprint)
+            {
+                return OwnerProviderInvitationCreateResult::Suppressed;
+            }
+            if local.provider_invitations.values().any(|invitation| {
+                invitation.record.property_id == property_id
+                    && email_fingerprint(&invitation.record.recipient_business_email)
+                        == recipient_fingerprint
+                    && matches!(
+                        invitation.record.status.as_str(),
+                        "pending_delivery" | "delivered" | "opened"
+                    )
+            }) {
+                return OwnerProviderInvitationCreateResult::Conflict;
+            }
+            let expires_at_epoch_seconds =
+                current_epoch_seconds().saturating_add(i64::from(request.expires_in_days) * 86_400);
+            let record = OwnerProviderInvitationRecord {
+                invitation_id: format!("owner_provider_invitation_{}", Uuid::new_v4().simple()),
+                owner_user_id: owner_user_id.to_string(),
+                property_id: property_id.to_string(),
+                brief_id: brief.brief_id.clone(),
+                brief_version: brief.version,
+                provider_name: request.provider_name.trim().to_string(),
+                recipient_business_email: recipient_email,
+                purpose: "yard_assessment".to_string(),
+                owner_name_snapshot: workspace.display_name.clone(),
+                coarse_area_snapshot: property.coarse_area.clone(),
+                care_goals_snapshot: brief.care_goals.clone(),
+                cadence_snapshot: brief.cadence_preference.clone(),
+                status: "pending_delivery".to_string(),
+                expires_at_epoch_seconds,
+                delivery_status: "pending".to_string(),
+                delivery_attempt_count: 1,
+                persisted: false,
+            };
+            local.provider_invitations.insert(
+                record.invitation_id.clone(),
+                LocalOwnerProviderInvitation {
+                    record: record.clone(),
+                    _token_hash: token_hash,
+                    idempotency_key: request.idempotency_key.trim().to_string(),
+                },
+            );
+            return OwnerProviderInvitationCreateResult::Created(OwnerProviderInvitationCreation {
+                invitation: record,
+                delivery_token,
+            });
+        };
+
+        match create_owner_provider_invitation(
+            pool,
+            owner_user_id,
+            property_id,
+            request,
+            &recipient_email,
+            &recipient_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedInvitationCreateOutcome::Created(invitation)) => {
+                OwnerProviderInvitationCreateResult::Created(OwnerProviderInvitationCreation {
+                    invitation,
+                    delivery_token,
+                })
+            }
+            Ok(PersistedInvitationCreateOutcome::Replayed(invitation)) => {
+                OwnerProviderInvitationCreateResult::Replayed(invitation)
+            }
+            Ok(PersistedInvitationCreateOutcome::NotFound) => {
+                OwnerProviderInvitationCreateResult::NotFound
+            }
+            Ok(PersistedInvitationCreateOutcome::Conflict) => {
+                OwnerProviderInvitationCreateResult::Conflict
+            }
+            Ok(PersistedInvitationCreateOutcome::Suppressed) => {
+                OwnerProviderInvitationCreateResult::Suppressed
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInvitationCreateResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner provider invitation create failed");
+                OwnerProviderInvitationCreateResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -730,6 +962,27 @@ pub fn validate_intake_media_request(request: &CreateOwnerIntakeMediaRequest) ->
             .replaces_media_id
             .as_deref()
             .is_none_or(|value| (3..=180).contains(&value.trim().chars().count()))
+}
+
+pub fn validate_provider_invitation_request(
+    request: &CreateOwnerProviderInvitationRequest,
+) -> bool {
+    let provider_name_length = request.provider_name.trim().chars().count();
+    let email = request.recipient_business_email.trim();
+    let idempotency_key_length = request.idempotency_key.trim().chars().count();
+    (2..=160).contains(&provider_name_length)
+        && (3..=254).contains(&email.chars().count())
+        && !email.chars().any(char::is_whitespace)
+        && email
+            .split_once('@')
+            .is_some_and(|(local, domain)| !local.is_empty() && domain.contains('.'))
+        && matches!(request.expires_in_days, 7 | 14 | 30)
+        && (8..=128).contains(&idempotency_key_length)
+        && request
+            .idempotency_key
+            .trim()
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn safe_media_file_name(value: &str) -> String {
@@ -866,6 +1119,29 @@ fn normalized_yard_brief(
 
 fn normalize_email(value: &str) -> String {
     value.trim().to_ascii_lowercase()
+}
+
+fn email_fingerprint(value: &str) -> String {
+    format!("{:x}", Sha256::digest(normalize_email(value).as_bytes()))
+}
+
+fn new_owner_provider_invitation_token() -> String {
+    format!(
+        "owner_provider_{}{}",
+        Uuid::new_v4().simple(),
+        Uuid::new_v4().simple()
+    )
+}
+
+fn invitation_token_hash(value: &str) -> String {
+    format!("{:x}", Sha256::digest(value.as_bytes()))
+}
+
+fn current_epoch_seconds() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| i64::try_from(duration.as_secs()).unwrap_or(i64::MAX))
+        .unwrap_or(0)
 }
 
 fn address_fingerprint(property: &OwnerPropertyRecord) -> String {
@@ -1394,6 +1670,306 @@ async fn mark_intake_media_deleted(
     Ok(Some(owner_media_from_row(&row, true)))
 }
 
+enum PersistedInvitationCreateOutcome {
+    Created(OwnerProviderInvitationRecord),
+    Replayed(OwnerProviderInvitationRecord),
+    NotFound,
+    Conflict,
+    Suppressed,
+}
+
+async fn list_owner_provider_invitations(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerProviderInvitationRecord>>, sqlx::Error> {
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_properties
+             WHERE id = $1 AND owner_user_id = $2 AND status <> 'archived'
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !property_exists {
+        return Ok(None);
+    }
+    let rows = sqlx::query(
+        "SELECT invitation.id, invitation.owner_user_id, invitation.property_id,
+                invitation.brief_id, invitation.brief_version, invitation.provider_name,
+                invitation.recipient_email, invitation.purpose,
+                invitation.owner_name_snapshot, invitation.coarse_area_snapshot,
+                invitation.care_goals_snapshot, invitation.cadence_snapshot,
+                CASE
+                    WHEN invitation.status IN ('pending_delivery', 'delivered', 'opened')
+                         AND invitation.expires_at <= NOW()
+                    THEN 'expired'
+                    ELSE invitation.status
+                END AS status,
+                EXTRACT(EPOCH FROM invitation.expires_at)::BIGINT AS expires_at_epoch_seconds,
+                COALESCE(delivery.status, 'pending') AS delivery_status,
+                COALESCE(delivery.attempt_count, 0)::INTEGER AS delivery_attempt_count
+         FROM owner_provider_invitations invitation
+         LEFT JOIN LATERAL (
+             SELECT attempt.status, COUNT(*) OVER () AS attempt_count
+             FROM owner_provider_invitation_delivery_attempts attempt
+             WHERE attempt.invitation_id = invitation.id
+             ORDER BY attempt.attempt_number DESC
+             LIMIT 1
+         ) delivery ON TRUE
+         WHERE invitation.owner_user_id = $1 AND invitation.property_id = $2
+         ORDER BY invitation.created_at DESC, invitation.id",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(Some(
+        rows.iter()
+            .map(|row| owner_provider_invitation_from_row(row, true))
+            .collect(),
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn create_owner_provider_invitation(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    request: CreateOwnerProviderInvitationRequest,
+    recipient_email: &str,
+    recipient_fingerprint: &str,
+    token_hash: &str,
+) -> Result<PersistedInvitationCreateOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtext($1))")
+        .bind(format!(
+            "owner-provider-invitation:{owner_user_id}:{property_id}:{recipient_fingerprint}"
+        ))
+        .execute(&mut *transaction)
+        .await?;
+
+    let replay = sqlx::query(
+        "SELECT invitation.id, invitation.owner_user_id, invitation.property_id,
+                invitation.brief_id, invitation.brief_version, invitation.provider_name,
+                invitation.recipient_email, invitation.purpose,
+                invitation.owner_name_snapshot, invitation.coarse_area_snapshot,
+                invitation.care_goals_snapshot, invitation.cadence_snapshot,
+                CASE
+                    WHEN invitation.status IN ('pending_delivery', 'delivered', 'opened')
+                         AND invitation.expires_at <= NOW()
+                    THEN 'expired'
+                    ELSE invitation.status
+                END AS status,
+                EXTRACT(EPOCH FROM invitation.expires_at)::BIGINT AS expires_at_epoch_seconds,
+                COALESCE(delivery.status, 'pending') AS delivery_status,
+                COALESCE(delivery.attempt_count, 0)::INTEGER AS delivery_attempt_count
+         FROM owner_provider_invitations invitation
+         LEFT JOIN LATERAL (
+             SELECT attempt.status, COUNT(*) OVER () AS attempt_count
+             FROM owner_provider_invitation_delivery_attempts attempt
+             WHERE attempt.invitation_id = invitation.id
+             ORDER BY attempt.attempt_number DESC
+             LIMIT 1
+         ) delivery ON TRUE
+         WHERE invitation.owner_user_id = $1 AND invitation.idempotency_key = $2",
+    )
+    .bind(owner_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(row) = replay {
+        transaction.commit().await?;
+        return Ok(PersistedInvitationCreateOutcome::Replayed(
+            owner_provider_invitation_from_row(&row, true),
+        ));
+    }
+
+    let snapshot = sqlx::query(
+        "SELECT workspace.display_name AS owner_name_snapshot,
+                property.coarse_area AS coarse_area_snapshot,
+                brief.id AS brief_id, brief.version AS brief_version,
+                brief.care_goals AS care_goals_snapshot,
+                brief.cadence_preference AS cadence_snapshot
+         FROM owner_workspaces workspace
+         JOIN owner_properties property
+           ON property.owner_user_id = workspace.owner_user_id
+          AND property.id = $2
+          AND property.status <> 'archived'
+         JOIN LATERAL (
+             SELECT id, version, status, care_goals, cadence_preference
+             FROM owner_yard_briefs
+             WHERE owner_user_id = workspace.owner_user_id AND property_id = property.id
+             ORDER BY version DESC
+             LIMIT 1
+         ) brief ON brief.status = 'ready'
+         WHERE workspace.owner_user_id = $1 AND workspace.status = 'active'",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(snapshot) = snapshot else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationCreateOutcome::NotFound);
+    };
+
+    let suppressed = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_recipient_suppressions
+             WHERE recipient_email_fingerprint = $1
+         )",
+    )
+    .bind(recipient_fingerprint)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if suppressed {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationCreateOutcome::Suppressed);
+    }
+
+    let expired_ids = sqlx::query_scalar::<_, String>(
+        "UPDATE owner_provider_invitations
+         SET status = 'expired', terminal_at = NOW(), updated_at = NOW()
+         WHERE property_id = $1
+           AND recipient_email_fingerprint = $2
+           AND status IN ('pending_delivery', 'delivered', 'opened')
+           AND expires_at <= NOW()
+         RETURNING id",
+    )
+    .bind(property_id)
+    .bind(recipient_fingerprint)
+    .fetch_all(&mut *transaction)
+    .await?;
+    for invitation_id in expired_ids {
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_expired', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(owner_user_id)
+        .bind(property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+    }
+
+    let live_invitation_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_invitations
+             WHERE property_id = $1
+               AND recipient_email_fingerprint = $2
+               AND status IN ('pending_delivery', 'delivered', 'opened')
+         )",
+    )
+    .bind(property_id)
+    .bind(recipient_fingerprint)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if live_invitation_exists {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationCreateOutcome::Conflict);
+    }
+
+    let invitation_id = format!("owner_provider_invitation_{}", Uuid::new_v4().simple());
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_invitations (
+             id, owner_user_id, property_id, brief_id, brief_version,
+             provider_name, recipient_email, recipient_email_fingerprint,
+             token_hash, idempotency_key, purpose, owner_name_snapshot,
+             coarse_area_snapshot, care_goals_snapshot, cadence_snapshot,
+             status, expires_at
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+             'yard_assessment', $11, $12, $13, $14, 'pending_delivery',
+             NOW() + ($15::INTEGER * INTERVAL '1 day')
+         )
+         RETURNING id, owner_user_id, property_id, brief_id, brief_version,
+                   provider_name, recipient_email, purpose, owner_name_snapshot,
+                   coarse_area_snapshot, care_goals_snapshot, cadence_snapshot,
+                   status, EXTRACT(EPOCH FROM expires_at)::BIGINT AS expires_at_epoch_seconds",
+    )
+    .bind(&invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(snapshot.get::<String, _>("brief_id"))
+    .bind(snapshot.get::<i64, _>("brief_version"))
+    .bind(request.provider_name.trim())
+    .bind(recipient_email)
+    .bind(recipient_fingerprint)
+    .bind(token_hash)
+    .bind(request.idempotency_key.trim())
+    .bind(snapshot.get::<String, _>("owner_name_snapshot"))
+    .bind(snapshot.get::<String, _>("coarse_area_snapshot"))
+    .bind(snapshot.get::<Vec<String>, _>("care_goals_snapshot"))
+    .bind(snapshot.get::<String, _>("cadence_snapshot"))
+    .bind(request.expires_in_days)
+    .fetch_one(&mut *transaction)
+    .await?;
+
+    sqlx::query(
+        "INSERT INTO owner_provider_invitation_delivery_attempts (
+             id, invitation_id, attempt_number, status
+         ) VALUES ($1, $2, 1, 'pending')",
+    )
+    .bind(format!(
+        "owner_provider_delivery_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+
+    for (event_kind, event_data) in [
+        (
+            "provider_invitation_created",
+            serde_json::json!({
+                "invitation_id": invitation_id,
+                "brief_version": snapshot.get::<i64, _>("brief_version"),
+                "purpose": "yard_assessment",
+                "limited_categories": ["owner_name", "coarse_area", "care_goals", "cadence"]
+            }),
+        ),
+        (
+            "provider_invitation_delivery_requested",
+            serde_json::json!({ "invitation_id": invitation_id, "attempt_number": 1 }),
+        ),
+    ] {
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, $4, $5)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(owner_user_id)
+        .bind(property_id)
+        .bind(event_kind)
+        .bind(event_data)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "UPDATE owner_properties
+         SET status = CASE WHEN status = 'profile_ready' THEN 'connection_in_progress' ELSE status END,
+             version = version + 1,
+             updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+
+    let mut invitation = owner_provider_invitation_from_row(&row, true);
+    invitation.delivery_status = "pending".to_string();
+    invitation.delivery_attempt_count = 1;
+    Ok(PersistedInvitationCreateOutcome::Created(invitation))
+}
+
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {
     OwnerWorkspaceRecord {
         owner_user_id: row.get("owner_user_id"),
@@ -1470,6 +2046,33 @@ fn owner_media_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerIn
         thumbnail_url: visible
             .then(|| storage.thumbnail_url(&upload_mode, thumbnail_object_key.as_deref()))
             .flatten(),
+        persisted,
+    }
+}
+
+fn owner_provider_invitation_from_row(
+    row: &sqlx::postgres::PgRow,
+    persisted: bool,
+) -> OwnerProviderInvitationRecord {
+    OwnerProviderInvitationRecord {
+        invitation_id: row.get("id"),
+        owner_user_id: row.get("owner_user_id"),
+        property_id: row.get("property_id"),
+        brief_id: row.get("brief_id"),
+        brief_version: row.get("brief_version"),
+        provider_name: row.get("provider_name"),
+        recipient_business_email: row.get("recipient_email"),
+        purpose: row.get("purpose"),
+        owner_name_snapshot: row.get("owner_name_snapshot"),
+        coarse_area_snapshot: row.get("coarse_area_snapshot"),
+        care_goals_snapshot: row.get("care_goals_snapshot"),
+        cadence_snapshot: row.get("cadence_snapshot"),
+        status: row.get("status"),
+        expires_at_epoch_seconds: row.get("expires_at_epoch_seconds"),
+        delivery_status: row
+            .try_get("delivery_status")
+            .unwrap_or_else(|_| "pending".to_string()),
+        delivery_attempt_count: row.try_get("delivery_attempt_count").unwrap_or(1),
         persisted,
     }
 }
@@ -1558,6 +2161,19 @@ mod tests {
         invalid.authority_attested = true;
         invalid.address_status = "verified".to_string();
         assert!(!validate_property_request(&invalid));
+        let invitation = CreateOwnerProviderInvitationRequest {
+            provider_name: "Sonoran Yard Care".to_string(),
+            recipient_business_email: "dispatch@sonoranyard.example".to_string(),
+            expires_in_days: 7,
+            idempotency_key: "provider-invite-001".to_string(),
+        };
+        assert!(validate_provider_invitation_request(&invitation));
+        let mut invalid_invitation = invitation.clone();
+        invalid_invitation.recipient_business_email = "not-an-email".to_string();
+        assert!(!validate_provider_invitation_request(&invalid_invitation));
+        invalid_invitation = invitation;
+        invalid_invitation.expires_in_days = 365;
+        assert!(!validate_provider_invitation_request(&invalid_invitation));
     }
 
     #[tokio::test]
@@ -1735,6 +2351,51 @@ mod tests {
                 .delete_intake_media("owner-a", &property.property_id, &first_media_id)
                 .await,
             OwnerMutationResult::Saved(media) if media.status == "deleted"
+        ));
+
+        let invitation_request = CreateOwnerProviderInvitationRequest {
+            provider_name: "Sonoran Yard Care".to_string(),
+            recipient_business_email: " Dispatch@SonoranYard.Example ".to_string(),
+            expires_in_days: 7,
+            idempotency_key: "provider-invite-local-001".to_string(),
+        };
+        let OwnerProviderInvitationCreateResult::Created(created) = repository
+            .create_provider_invitation(
+                "owner-a",
+                &property.property_id,
+                invitation_request.clone(),
+            )
+            .await
+        else {
+            panic!("provider invitation should be created");
+        };
+        assert_eq!(
+            created.invitation.recipient_business_email,
+            "dispatch@sonoranyard.example"
+        );
+        assert!(!format!("{created:?}").contains(created.delivery_token()));
+        assert!(matches!(
+            repository
+                .create_provider_invitation(
+                    "owner-a",
+                    &property.property_id,
+                    invitation_request,
+                )
+                .await,
+            OwnerProviderInvitationCreateResult::Replayed(invitation)
+                if invitation.invitation_id == created.invitation.invitation_id
+        ));
+        assert_eq!(
+            repository
+                .list_provider_invitations("owner-b", &property.property_id)
+                .await,
+            OwnerReadResult::NotFound
+        );
+        assert!(matches!(
+            repository
+                .list_provider_invitations("owner-a", &property.property_id)
+                .await,
+            OwnerReadResult::Loaded(invitations) if invitations.len() == 1
         ));
     }
 }

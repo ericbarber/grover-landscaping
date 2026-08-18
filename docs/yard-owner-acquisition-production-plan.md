@@ -27,7 +27,9 @@ The approved experience is defined by:
 | 1C | Delivered | Production React private entry with public owner CTA, verified-email gate, profile/property recovery, address reconfirmation, authority attestation, and responsive browser coverage |
 | 2A | Delivered | Append-only private yard briefs with areas, goals, cadence, considerations, source/version provenance, draft/ready state, API isolation, and production React editing |
 | 2B | Delivered | Owner-scoped guided intake media with upload, processing/rejection, preview, replacement, explicit deletion, and responsive React recovery |
-| 3 | Design complete; production planned | Recipient-specific known-provider connection, authority, response, disclosure receipt, lifecycle, and support contract validated in the prototype |
+| 3A1 | Delivered | Recipient-specific known-provider invitation schema and repository creation/list foundation with limited immutable snapshots, hashed bearer tokens, replay-safe idempotency, live-recipient duplicate protection, suppression checks, pending delivery attempts, minimized audit, expiry projection, and owner isolation |
+| 3A2–3A3 | In progress | Owner invitation API plus delivery outcome, expiry, revoke, retry, opt-out, and abuse lifecycle operations |
+| 3B–3E | Planned | Provider claim/authority, bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles
@@ -127,7 +129,9 @@ and optional media; nothing is visible to a provider.
 
 ## Phase 3 — Known-provider connection pilot
 
-Design status: complete and browser validated. Production status: not started.
+Design status: complete and browser validated. Production status: in progress;
+the 3A1 persistence foundation is delivered while owner APIs and invitation
+lifecycle operations remain active work.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
@@ -220,7 +224,8 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 Phase 3 should proceed in these implementation slices:
 
 1. Recipient-specific invitation persistence, token security, delivery mapping,
-   suppression, expiry, revoke, retry, and audit.
+   suppression, expiry, revoke, retry, and audit. The creation/list foundation
+   is delivered; API and lifecycle transitions are next.
 2. Existing-provider inbox plus duplicate-safe organization claim/bootstrap and
    explicit opportunity-response capability.
 3. Provider question/interest/decline/report writes and owner/provider progress

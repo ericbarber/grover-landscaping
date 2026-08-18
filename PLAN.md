@@ -237,12 +237,18 @@ Active slice:
   guided photographs through owner-scoped upload and processing states. Media
   remains independent of jobs and provider organizations, replaced originals
   stay visible for explicit deletion, and provider access is not created.
-- Phase 3 is next: add the known-provider connection pilot with an explicit,
-  provider-specific disclosure and consent boundary.
+- Phase 3 is in progress. Slice 3A1 delivers recipient-specific invitation
+  persistence with a server-derived limited snapshot, hashed bearer tokens,
+  replay-safe idempotency, live-recipient duplicate protection, suppression,
+  pending delivery attempts, expiry projection, minimized audit events, and
+  owner-isolation coverage. No delivery is represented as successful yet.
+- Slice 3A2 is next: expose the verified-owner invitation API and implement
+  delivery outcomes, expiry, revoke, retry, opt-out, and abuse lifecycle
+  operations before provider recipient entry begins.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
-  delivery status remains planned until server authorization, messaging,
-  versioned grants/receipts, audit, opt-out, abuse, and support behavior ship.
+  overall delivery remains incomplete until server authorization, messaging,
+  versioned grants/receipts, opt-out, abuse, and support behavior ship.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.
