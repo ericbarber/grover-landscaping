@@ -19,8 +19,13 @@ const stepDefinitions = {
   share: { title: 'Choose how to connect', eyebrow: 'Your choice', progress: 'connect', save: ['Brief ready', 'Nothing shared'] },
   invite: { title: 'Invite my provider', eyebrow: 'Direct connection', progress: 'connect', save: ['Review sharing', 'Nothing sent'] },
   connection: { title: 'Connection progress', eyebrow: 'Provider invitation', progress: 'connect', save: ['Request sent', 'Limited details'] },
-  provider: { title: 'Provider request preview', eyebrow: 'Provider side', progress: 'connect', save: ['Provider preview', 'No service created'] },
+  'connection-recovery': { title: 'Invitation activity', eyebrow: 'Connection recovery', progress: 'connect', save: ['Request protected', 'Limited details'] },
+  'connection-support': { title: 'Connection support', eyebrow: 'Safe recovery', progress: 'connect', save: ['Request protected', 'No additional sharing'] },
+  'provider-entry': { title: 'Review owner invitation', eyebrow: 'Provider recipient', progress: 'connect', save: ['Limited invitation', 'Private data withheld'] },
+  'provider-claim': { title: 'Verify provider organization', eyebrow: 'Provider identity', progress: 'connect', save: ['Provider verification', 'Private data withheld'] },
+  provider: { title: 'Provider connection inbox', eyebrow: 'Provider side', progress: 'connect', save: ['Authorized response', 'No service created'] },
   'access-approval': { title: 'Approve provider access', eyebrow: 'Your consent', progress: 'connect', save: ['Review sharing', 'Full access pending'] },
+  'access-receipt': { title: 'Provider access receipt', eyebrow: 'Disclosure recorded', progress: 'connect', save: ['Access recorded', 'Provider-specific'] },
   directory: { title: 'Find a provider', eyebrow: 'Curated discovery', progress: 'connect', save: ['Brief private', 'Coarse matching only'] },
   'directory-share': { title: 'Review assessment requests', eyebrow: 'Your consent', progress: 'connect', save: ['Review sharing', 'Nothing sent'] },
   assessment: { title: 'Plan the assessment', eyebrow: 'Verify the yard', progress: 'proposal', save: ['Provider connected', 'Assessment only'] },
@@ -37,6 +42,8 @@ let currentStep = 'welcome';
 let addressVerified = false;
 let selectedProviders = [];
 let currentProposal = 'desert';
+let invitationStatus = 'delivered';
+let approvedAccessItems = [];
 
 function addReviewOption(value, title, description, beforeValue) {
   if (reviewDialog.querySelector(`input[name="review-step"][value="${value}"]`)) return;
@@ -57,6 +64,11 @@ function addReviewOption(value, title, description, beforeValue) {
 }
 
 addReviewOption('verify', 'Email verification', 'Code, resend, and recovery', 'property');
+addReviewOption('connection-recovery', 'Invitation activity', 'Delivery, terminal states, recovery', 'provider');
+addReviewOption('connection-support', 'Connection support', 'Delivery, identity, and safety help', 'provider');
+addReviewOption('provider-entry', 'Provider recipient entry', 'Limited invite and recipient controls', 'provider');
+addReviewOption('provider-claim', 'Provider organization claim', 'Identity, relationship, and authority', 'provider');
+addReviewOption('access-receipt', 'Disclosure receipt', 'Immutable provider-specific snapshot', 'directory');
 addReviewOption('directory-share', 'Directory disclosure', 'Separate provider requests', 'assessment');
 addReviewOption('saved', 'Private draft saved', 'No-provider finish-later state', 'unavailable');
 document.querySelectorAll('[data-provider-card]').forEach((card) => {
@@ -90,7 +102,7 @@ function showStep(step, { moveFocus = true, updateHash = true } = {}) {
   const next = Object.hasOwn(stepDefinitions, step) ? step : 'welcome';
   currentStep = next;
   body.dataset.step = next;
-  body.dataset.persona = next === 'provider' ? 'provider' : 'owner';
+  body.dataset.persona = ['provider-entry', 'provider-claim', 'provider'].includes(next) ? 'provider' : 'owner';
   document.querySelectorAll('[data-step-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.stepPanel !== next;
   });
@@ -351,7 +363,7 @@ document.querySelector('[data-invite-form]').addEventListener('submit', (event) 
   announce('Connection invitation delivered in the working design. Exact address and photos remain private.');
 });
 
-document.querySelector('[data-preview-provider]').addEventListener('click', () => showStep('provider'));
+document.querySelector('[data-preview-recipient]').addEventListener('click', () => showStep('provider-entry'));
 document.querySelector('[data-revoke-invite]').addEventListener('click', () => {
   const button = document.querySelector('[data-revoke-invite]');
   if (!button.dataset.confirming) {
@@ -363,14 +375,170 @@ document.querySelector('[data-revoke-invite]').addEventListener('click', () => {
   }
   document.querySelector('[data-connection-status]').textContent = 'Invitation revoked';
   document.querySelector('[data-connection-result]').textContent = 'Future invitation access was revoked in this design. No yard details were shared.';
-  document.querySelector('[data-preview-provider]').disabled = true;
+  document.querySelector('[data-preview-recipient]').disabled = true;
   button.disabled = true;
+  invitationStatus = 'revoked';
   announce('Invitation revoked.');
+});
+
+const invitationStates = {
+  delivered: {
+    status: 'Delivered', eyebrow: 'Recipient verification pending',
+    title: 'Invitation delivered to the business email',
+    copy: 'The recipient can open the limited request until August 19. Exact address, photographs, phone number, and access notes remain private.',
+    event: 'Delivered · Aug 12 at 9:14 AM', access: 'Limited invitation only', action: 'Wait, revoke, or resend after the cooldown', primary: 'Resend after cooldown',
+    result: 'Resend remains unavailable until the cooldown ends. The original invitation is still active.',
+  },
+  opened: {
+    status: 'Opened', eyebrow: 'Recipient reviewing', title: 'The recipient opened the limited invitation',
+    copy: 'Opening the link did not reveal the exact address, photographs, phone number, or access notes. Provider identity and authority are still required.',
+    event: 'Opened · Aug 12 at 9:38 AM', access: 'Limited invitation only', action: 'Wait for verification, revoke, or get support', primary: 'Return to connection', target: 'connection',
+  },
+  failed: {
+    status: 'Delivery failed', eyebrow: 'No recipient access', title: 'The business email could not receive the invitation',
+    copy: 'No recipient opened the request and no additional yard information was exposed. Your provider details and disclosure choices were preserved.',
+    event: 'Hard bounce · Aug 12 at 9:15 AM', access: 'No recipient access', action: 'Correct the address and create a new invitation', primary: 'Correct recipient', target: 'invite',
+  },
+  expired: {
+    status: 'Expired', eyebrow: 'Invitation closed', title: 'The invitation expired without a provider response',
+    copy: 'The recipient-specific link can no longer be used. A new invitation requires a fresh recipient and disclosure review.',
+    event: 'Expired · Aug 19 at 9:14 AM', access: 'Historical limited receipt only', action: 'Review and send a new invitation', primary: 'Prepare new invitation', target: 'invite',
+  },
+  declined: {
+    status: 'Declined', eyebrow: 'Provider response recorded', title: 'Desert Bloom is not taking this request',
+    copy: 'The owner receives a customer-safe decline. Internal capacity details and provider notes remain private, and no additional yard access was granted.',
+    event: 'Declined · Aug 12 at 10:02 AM', access: 'Limited invitation only', action: 'Invite another provider or use governed discovery', primary: 'Choose another path', target: 'share',
+  },
+  'opted-out': {
+    status: 'Opted out', eyebrow: 'Recipient contact preference', title: 'This recipient opted out of future invitations',
+    copy: 'The open invitation is closed. Grover will not automatically resend to this recipient; an owner can choose a different legitimate business contact.',
+    event: 'Opted out · Aug 12 at 9:42 AM', access: 'Historical limited receipt only', action: 'Use another authorized recipient or provider', primary: 'Choose another provider', target: 'share',
+  },
+  revoked: {
+    status: 'Revoked', eyebrow: 'Owner withdrawal recorded', title: 'Morgan withdrew the invitation',
+    copy: 'The recipient-specific link is closed and cannot be reopened. Historical delivery events remain available for accountability.',
+    event: 'Revoked · Aug 12 at 9:46 AM', access: 'Historical limited receipt only', action: 'Create a new reviewed invitation if needed', primary: 'Start a new invitation', target: 'invite',
+  },
+};
+
+function renderInvitationState(state) {
+  const definition = invitationStates[state] || invitationStates.delivered;
+  invitationStatus = state;
+  document.querySelector('[data-lifecycle-status]').textContent = definition.status;
+  document.querySelector('[data-lifecycle-eyebrow]').textContent = definition.eyebrow;
+  document.querySelector('[data-lifecycle-title]').textContent = definition.title;
+  document.querySelector('[data-lifecycle-copy]').textContent = definition.copy;
+  document.querySelector('[data-lifecycle-event]').textContent = definition.event;
+  document.querySelector('[data-lifecycle-access]').textContent = definition.access;
+  document.querySelector('[data-lifecycle-action]').textContent = definition.action;
+  document.querySelector('[data-lifecycle-primary]').textContent = definition.primary;
+  document.querySelector('[data-lifecycle-result]').textContent = '';
+  document.querySelectorAll('[data-set-invitation-state]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.setInvitationState === state);
+    button.setAttribute('aria-pressed', String(button.dataset.setInvitationState === state));
+  });
+}
+
+document.querySelectorAll('[data-set-invitation-state]').forEach((button) => {
+  button.addEventListener('click', () => {
+    renderInvitationState(button.dataset.setInvitationState);
+    announce(`${invitationStates[button.dataset.setInvitationState].status} invitation state opened.`);
+  });
+});
+
+document.querySelector('[data-lifecycle-primary]').addEventListener('click', () => {
+  const definition = invitationStates[invitationStatus];
+  if (definition.target) showStep(definition.target);
+  else {
+    document.querySelector('[data-lifecycle-result]').textContent = definition.result;
+    announce(definition.result);
+  }
+});
+
+document.querySelectorAll('[data-support-path]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const results = {
+      delivery: 'Delivery recovery opened: review the event, correct the recipient, and create a new invitation without widening access.',
+      identity: 'The connection is paused for provider-identity review. No additional owner information can be approved while the dispute is open.',
+      safety: 'Confirm block and report to close the invitation and prevent future contact from this recipient.',
+      revoke: 'Access controls opened: withdraw the invitation now, or review provider-specific access receipts after disclosure.',
+    };
+    if (button.dataset.supportPath === 'safety' && !button.dataset.confirming) {
+      button.dataset.confirming = 'true';
+      button.textContent = 'Confirm block and report';
+      document.querySelector('[data-support-result]').textContent = results.safety;
+      announce(results.safety);
+      return;
+    }
+    if (button.dataset.supportPath === 'safety') {
+      button.disabled = true;
+      document.querySelector('[data-support-result]').textContent = 'Recipient blocked and illustrative safety report recorded. No additional yard information was shared.';
+      announce('Recipient blocked and report recorded.');
+      return;
+    }
+    document.querySelector('[data-support-result]').textContent = results[button.dataset.supportPath];
+    announce(results[button.dataset.supportPath]);
+  });
+});
+
+document.querySelector('[data-existing-provider]').addEventListener('click', () => {
+  showStep('provider');
+  announce('Existing provider session restored with opportunity-response authority. Private owner data remains withheld.');
+});
+document.querySelector('[data-new-provider]').addEventListener('click', () => showStep('provider-claim'));
+document.querySelector('[data-recipient-opt-out]').addEventListener('click', () => {
+  document.querySelector('[data-recipient-result]').textContent = 'Invitation closed and future invitation email opted out for this recipient. No private yard access was granted.';
+  announce('Recipient opted out of future invitation email.');
+});
+document.querySelector('[data-recipient-report]').addEventListener('click', () => {
+  document.querySelector('[data-recipient-result]').textContent = 'Suspicious-contact report opened with the limited invitation identifier. Owner-private fields remain excluded.';
+  announce('Suspicious contact report opened.');
+});
+
+document.querySelector('[data-provider-claim-form]').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const organization = form.querySelector('input[name="provider-claim"]:checked');
+  const authority = form.elements['claim-authority'];
+  const error = document.querySelector('[data-provider-claim-error]');
+  organization?.setAttribute('aria-invalid', 'false');
+  authority.setAttribute('aria-invalid', String(!authority.checked));
+  if (!organization || !authority.checked) {
+    error.hidden = false;
+    document.querySelector('[data-provider-claim-error-copy]').textContent = !organization
+      ? 'Select the provider organization. No organization access or owner data was granted.'
+      : 'Confirm your authority for new-customer requests. No organization access or owner data was granted.';
+    (!organization ? form.querySelector('input[name="provider-claim"]') : authority).focus();
+    announce('Review the provider organization and response authority.');
+    return;
+  }
+  error.hidden = true;
+  showStep('provider');
+  announce('Provider relationship and opportunity-response authority confirmed for this working design.');
 });
 
 document.querySelector('[data-provider-decline]').addEventListener('click', () => {
   document.querySelector('[data-provider-result]').textContent = 'The request was declined with a customer-safe “not taking this request” response. No private yard access was granted.';
   announce('Provider declined the request without exposing internal details.');
+});
+
+document.querySelector('[data-provider-question]').addEventListener('click', () => {
+  document.querySelector('[data-provider-result]').textContent = 'Preliminary question sent within the limited request. No exact address, photographs, phone number, or access notes were disclosed.';
+  announce('Preliminary provider question sent without widening access.');
+});
+
+document.querySelector('[data-provider-report]').addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  if (!button.dataset.confirming) {
+    button.dataset.confirming = 'true';
+    button.textContent = 'Confirm report and block';
+    document.querySelector('[data-provider-result]').textContent = 'Confirm to block this owner request and record an illustrative trust-and-safety report.';
+    announce('Confirm report and block for this request.');
+    return;
+  }
+  button.disabled = true;
+  document.querySelector('[data-provider-result]').textContent = 'Request blocked and illustrative report recorded. The provider received no additional owner information.';
+  announce('Owner request blocked and report recorded.');
 });
 
 document.querySelector('[data-provider-interest]').addEventListener('click', () => {
@@ -382,19 +550,43 @@ document.querySelector('[data-access-form]').addEventListener('submit', (event) 
   event.preventDefault();
   const form = event.currentTarget;
   const confirm = form.elements['approve-confirm'];
-  const selected = form.querySelectorAll('input[name="approve-item"]:checked').length;
+  const selectedInputs = [...form.querySelectorAll('input[name="approve-item"]:checked')];
   const error = document.querySelector('[data-access-error]');
   const errorCopy = document.querySelector('[data-access-error-copy]');
-  if (!selected || !confirm.checked) {
+  if (!selectedInputs.length || !confirm.checked) {
     error.hidden = false;
-    errorCopy.textContent = !selected ? 'Choose at least one item to share. Nothing has been shared yet.' : 'Confirm this provider-specific disclosure. Nothing has been shared yet.';
-    (!selected ? form.querySelector('input[name="approve-item"]') : confirm).focus();
+    errorCopy.textContent = !selectedInputs.length ? 'Choose at least one item to share. Nothing has been shared yet.' : 'Confirm this provider-specific disclosure. Nothing has been shared yet.';
+    (!selectedInputs.length ? form.querySelector('input[name="approve-item"]') : confirm).focus();
     announce('Confirm the provider-specific disclosure. Nothing has been shared.');
     return;
   }
   error.hidden = true;
-  showStep('assessment');
-  announce('Assessment access approved for Desert Bloom in this working design.');
+  approvedAccessItems = selectedInputs.map((input) => input.value);
+  const allItems = [...form.querySelectorAll('input[name="approve-item"]')].map((input) => input.value);
+  document.querySelector('[data-receipt-approved]').textContent = approvedAccessItems.join(', ');
+  document.querySelector('[data-receipt-withheld]').textContent = allItems.filter((item) => !approvedAccessItems.includes(item)).join(', ') || 'Nothing withheld';
+  showStep('access-receipt');
+  announce('Assessment access approved and a provider-specific receipt was created. No service was scheduled.');
+});
+
+document.querySelector('[data-download-receipt]').addEventListener('click', () => {
+  document.querySelector('[data-receipt-result]').textContent = 'Receipt GRV-AC-0812-DB prepared for download in this working design.';
+  announce('Provider access receipt prepared for download.');
+});
+
+document.querySelector('[data-revoke-access-receipt]').addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  if (!button.dataset.confirming) {
+    button.dataset.confirming = 'true';
+    button.textContent = 'Confirm future access revocation';
+    document.querySelector('[data-receipt-result]').textContent = 'Confirm to end future assessment access. This historical receipt will remain available.';
+    announce('Confirm future assessment access revocation.');
+    return;
+  }
+  button.disabled = true;
+  document.querySelector('[data-step-panel="access-receipt"] [data-go-step="assessment"]').disabled = true;
+  document.querySelector('[data-receipt-result]').textContent = `Future access to ${approvedAccessItems.join(', ')} was revoked. The historical disclosure receipt was not rewritten.`;
+  announce('Future provider assessment access revoked.');
 });
 
 function updateDirectorySelection() {

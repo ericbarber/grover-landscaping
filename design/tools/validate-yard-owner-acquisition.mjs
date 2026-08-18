@@ -89,7 +89,10 @@ async function openReview(page) {
 
 async function jumpTo(page, step) {
   await openReview(page);
-  await page.locator(`input[name="review-step"][value="${step}"]`).check();
+  await page.locator(`input[name="review-step"][value="${step}"]`).evaluate((input) => {
+    input.checked = true;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   await page.locator('[data-apply-review]').click();
   await page.waitForFunction((value) => document.body.dataset.step === value, step);
 }
@@ -180,22 +183,41 @@ try {
   check((await inviteForm.locator('input[name="provider-email"]').inputValue()) === 'care@desertbloom.example', 'Invitation: failed send did not preserve provider');
   await inviteForm.locator('button[type="submit"]').click();
   check(await page.locator('body').getAttribute('data-step') === 'connection', 'Invitation: retry did not reach connection progress');
-  check((await page.locator('.access-receipt').innerText()).includes('Exact street address'), 'Connection: staged access receipt is missing');
+  check((await page.locator('[data-step-panel="connection"] .access-receipt').innerText()).includes('Exact street address'), 'Connection: staged access receipt is missing');
 
-  await page.locator('[data-preview-provider]').click();
-  check(await page.locator('body').getAttribute('data-persona') === 'provider', 'Provider: provider-side mode is not exposed');
+  await page.locator('[data-preview-recipient]').click();
+  check(await page.locator('body').getAttribute('data-persona') === 'provider', 'Provider recipient: provider-side mode is not exposed');
+  check((await page.locator('[data-step-panel="provider-entry"]').innerText()).includes('Still private'), 'Provider recipient: withheld owner information is not explicit');
+  await page.locator('[data-new-provider]').click();
+  check(await page.locator('body').getAttribute('data-step') === 'provider-claim', 'Provider recipient: setup path did not open organization claim');
+  const providerClaim = page.locator('[data-provider-claim-form]');
+  await providerClaim.locator('button[type="submit"]').click();
+  check(await page.locator('[data-provider-claim-error]').isVisible(), 'Provider claim: organization and authority validation is missing');
+  await providerClaim.locator('input[name="provider-claim"][value="existing"]').check();
+  await providerClaim.locator('input[name="claim-authority"]').check();
+  await providerClaim.locator('button[type="submit"]').click();
+  check(await page.locator('body').getAttribute('data-step') === 'provider', 'Provider claim: verified organization did not reach authorized inbox');
+  await page.locator('[data-provider-question]').click();
+  check((await page.locator('[data-provider-result]').innerText()).includes('No exact address'), 'Provider: preliminary question widened access or lacks disclosure feedback');
   await page.locator('[data-provider-decline]').click();
   check((await page.locator('[data-provider-result]').innerText()).includes('declined'), 'Provider: safe decline state is missing');
   await page.locator('[data-provider-interest]').click();
   check(await page.locator('body').getAttribute('data-step') === 'access-approval', 'Provider: interest did not return to owner approval');
   const accessForm = page.locator('[data-access-form]');
-  check(!(await accessForm.locator('input[value="Exact address"]').isChecked()), 'Access: exact address consent is preselected');
-  check(!(await accessForm.locator('input[value="Yard photos"]').isChecked()), 'Access: photo consent is preselected');
+  check(await accessForm.locator('input[name="approve-item"]:checked').count() === 0, 'Access: an affirmative disclosure choice is preselected');
   await accessForm.locator('button[type="submit"]').click();
   check(await page.locator('[data-access-error]').isVisible(), 'Access: explicit consent validation is missing');
+  await accessForm.locator('input[name="approve-item"][value="Yard brief"]').check();
+  await accessForm.locator('input[name="approve-item"][value="Email"]').check();
   await accessForm.locator('input[name="approve-confirm"]').check();
   await accessForm.locator('button[type="submit"]').click();
-  check(await page.locator('body').getAttribute('data-step') === 'assessment', 'Access: approved sharing did not continue');
+  check(await page.locator('body').getAttribute('data-step') === 'access-receipt', 'Access: approved sharing did not create a receipt');
+  check((await page.locator('[data-receipt-approved]').innerText()).includes('Yard brief'), 'Access receipt: approved categories are missing');
+  check((await page.locator('[data-receipt-withheld]').innerText()).includes('Exact address'), 'Access receipt: withheld categories are missing');
+  await page.locator('[data-download-receipt]').click();
+  check((await page.locator('[data-receipt-result]').innerText()).includes('prepared for download'), 'Access receipt: download feedback is missing');
+  await page.locator('[data-step-panel="access-receipt"] [data-go-step="assessment"]').click();
+  check(await page.locator('body').getAttribute('data-step') === 'assessment', 'Access receipt: assessment continuation is missing');
   check((await page.locator('.assessment-boundary').innerText()).includes('No service is booked yet'), 'Assessment: no-service boundary is missing');
   await page.locator('[data-confirm-assessment]').click();
   check(await page.locator('body').getAttribute('data-step') === 'proposals', 'Assessment: confirmation did not open proposals');
@@ -274,13 +296,25 @@ try {
   await page.locator('[data-revoke-invite]').click();
   check((await page.locator('[data-connection-result]').innerText()).includes('Confirm'), 'Connection: invitation revocation confirmation is missing');
   await page.locator('[data-revoke-invite]').click();
-  check(await page.locator('[data-preview-provider]').isDisabled(), 'Connection: revoked invitation still allows provider response');
+  check(await page.locator('[data-preview-recipient]').isDisabled(), 'Connection: revoked invitation still allows provider response');
+
+  await jumpTo(page, 'connection-recovery');
+  for (const state of ['opened', 'failed', 'expired', 'declined', 'opted-out', 'revoked']) {
+    await page.locator(`[data-set-invitation-state="${state}"]`).click();
+    check((await page.locator('[data-lifecycle-status]').innerText()).length > 0, `Invitation recovery: ${state} status is missing`);
+    check((await page.locator('[data-lifecycle-access]').innerText()).length > 0, `Invitation recovery: ${state} access boundary is missing`);
+  }
+  await jumpTo(page, 'connection-support');
+  await page.locator('[data-support-path="identity"]').click();
+  check((await page.locator('[data-support-result]').innerText()).includes('paused'), 'Connection support: identity-dispute recovery is missing');
 
   await jumpTo(page, 'welcome');
   await page.waitForTimeout(200);
   if (capture) {
     await mkdir(imageDirectory, { recursive: true });
     await page.screenshot({ path: resolve(imageDirectory, 'yard-owner-acquisition-desktop-v1.png'), fullPage: false });
+    await jumpTo(page, 'access-receipt');
+    await page.screenshot({ path: resolve(imageDirectory, 'yard-owner-known-provider-desktop-v2.png'), fullPage: false });
   }
   await page.close();
 
@@ -292,7 +326,7 @@ try {
   const mobile = await openPage(browser, { width: 390, height: 844 });
   await checkLayout(mobile.page, 390, 'Mobile welcome');
   await checkMobileTargets(mobile.page, 'Mobile welcome');
-  const mobileStages = ['verify', 'property', 'photos', 'share', 'invite', 'directory', 'directory-share', 'proposals', 'activation', 'relationship'];
+  const mobileStages = ['verify', 'property', 'photos', 'share', 'invite', 'connection-recovery', 'connection-support', 'provider-entry', 'provider-claim', 'provider', 'access-approval', 'access-receipt', 'directory', 'directory-share', 'proposals', 'activation', 'relationship'];
   for (const step of mobileStages) {
     await jumpTo(mobile.page, step);
     await checkLayout(mobile.page, 390, `Mobile ${step}`);
@@ -303,6 +337,8 @@ try {
   await mobile.page.waitForTimeout(200);
   if (capture) {
     await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-acquisition-mobile-v1.png'), fullPage: false });
+    await jumpTo(mobile.page, 'provider-entry');
+    await mobile.page.screenshot({ path: resolve(imageDirectory, 'yard-owner-known-provider-mobile-v2.png'), fullPage: false });
   }
   await mobile.page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   await mobile.page.waitForTimeout(100);
