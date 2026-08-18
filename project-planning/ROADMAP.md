@@ -66,8 +66,10 @@ the design. Production Phase 3 is now active: its first persistence slice stores
 only the limited invitation snapshot, hashes recipient bearer tokens, separates
 pending delivery from success, and enforces owner isolation and replay-safe
 creation. Its verified-owner API now creates, lists, inspects, and revokes those
-records without exposing token material; delivery and recipient lifecycle
-transitions are the next review unit.
+records without exposing token material. Internal delivery operations now map
+failed/successful outcomes, rotate retry tokens, reject stale attempts, and
+materialize expiry; authenticated adapter integration plus recipient opt-out
+and abuse transitions are the next review unit.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

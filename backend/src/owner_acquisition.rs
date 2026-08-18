@@ -133,6 +133,19 @@ pub struct CreateOwnerProviderInvitationRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct RetryOwnerProviderInvitationRequest {
+    pub expires_in_days: i32,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct RecordOwnerProviderInvitationDeliveryRequest {
+    pub outcome: String,
+    pub provider_message_id: Option<String>,
+    pub failure_code: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecord {
     pub invitation_id: String,
     pub owner_user_id: String,
@@ -184,10 +197,35 @@ pub enum OwnerProviderInvitationCreateResult {
     Unavailable,
 }
 
+#[derive(Debug)]
+pub enum OwnerProviderInvitationRetryResult {
+    Created(OwnerProviderInvitationCreation),
+    Replayed(OwnerProviderInvitationRecord),
+    NotFound,
+    InvalidState(OwnerProviderInvitationRecord),
+    Suppressed,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerProviderInvitationMutationResult {
     Saved(OwnerProviderInvitationRecord),
     NotFound,
+    InvalidState(OwnerProviderInvitationRecord),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationExpiryResult {
+    Completed(usize),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationDeliveryResult {
+    Saved(OwnerProviderInvitationRecord),
+    NotFound,
+    Invalid,
     InvalidState(OwnerProviderInvitationRecord),
     Unavailable,
 }
@@ -221,6 +259,7 @@ struct LocalOwnerProviderInvitation {
     record: OwnerProviderInvitationRecord,
     _token_hash: String,
     idempotency_key: String,
+    delivery_idempotency_keys: HashSet<String>,
 }
 
 #[derive(Clone, Default)]
@@ -881,6 +920,10 @@ impl OwnerAcquisitionRepository {
                     record: record.clone(),
                     _token_hash: token_hash,
                     idempotency_key: request.idempotency_key.trim().to_string(),
+                    delivery_idempotency_keys: HashSet::from([format!(
+                        "initial:{}",
+                        request.idempotency_key.trim()
+                    )]),
                 },
             );
             return OwnerProviderInvitationCreateResult::Created(OwnerProviderInvitationCreation {
@@ -986,6 +1029,188 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn retry_provider_invitation(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        invitation_id: &str,
+        request: RetryOwnerProviderInvitationRequest,
+    ) -> OwnerProviderInvitationRetryResult {
+        let delivery_token = new_owner_provider_invitation_token();
+        let token_hash = invitation_token_hash(&delivery_token);
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let Some(existing) =
+                local
+                    .provider_invitations
+                    .get(invitation_id)
+                    .filter(|invitation| {
+                        invitation.record.owner_user_id == owner_user_id
+                            && invitation.record.property_id == property_id
+                    })
+            else {
+                return OwnerProviderInvitationRetryResult::NotFound;
+            };
+            if existing
+                .delivery_idempotency_keys
+                .contains(request.idempotency_key.trim())
+            {
+                return OwnerProviderInvitationRetryResult::Replayed(existing.record.clone());
+            }
+            if existing.record.status != "failed" {
+                return OwnerProviderInvitationRetryResult::InvalidState(existing.record.clone());
+            }
+            let recipient_fingerprint =
+                email_fingerprint(&existing.record.recipient_business_email);
+            if local
+                .provider_recipient_suppressions
+                .contains(&recipient_fingerprint)
+            {
+                return OwnerProviderInvitationRetryResult::Suppressed;
+            }
+            let Some(invitation) = local.provider_invitations.get_mut(invitation_id) else {
+                return OwnerProviderInvitationRetryResult::NotFound;
+            };
+            invitation.record.status = "pending_delivery".to_string();
+            invitation.record.delivery_status = "pending".to_string();
+            invitation.record.delivery_attempt_count += 1;
+            invitation.record.expires_at_epoch_seconds =
+                current_epoch_seconds().saturating_add(i64::from(request.expires_in_days) * 86_400);
+            invitation._token_hash = token_hash;
+            invitation
+                .delivery_idempotency_keys
+                .insert(request.idempotency_key.trim().to_string());
+            return OwnerProviderInvitationRetryResult::Created(OwnerProviderInvitationCreation {
+                invitation: invitation.record.clone(),
+                delivery_token,
+            });
+        };
+
+        match retry_owner_provider_invitation(
+            pool,
+            owner_user_id,
+            property_id,
+            invitation_id,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedInvitationRetryOutcome::Created(invitation)) => {
+                OwnerProviderInvitationRetryResult::Created(OwnerProviderInvitationCreation {
+                    invitation,
+                    delivery_token,
+                })
+            }
+            Ok(PersistedInvitationRetryOutcome::Replayed(invitation)) => {
+                OwnerProviderInvitationRetryResult::Replayed(invitation)
+            }
+            Ok(PersistedInvitationRetryOutcome::NotFound) => {
+                OwnerProviderInvitationRetryResult::NotFound
+            }
+            Ok(PersistedInvitationRetryOutcome::InvalidState(invitation)) => {
+                OwnerProviderInvitationRetryResult::InvalidState(invitation)
+            }
+            Ok(PersistedInvitationRetryOutcome::Suppressed) => {
+                OwnerProviderInvitationRetryResult::Suppressed
+            }
+            Err(error) if is_unique_violation(&error) => {
+                tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider invitation retry idempotency race");
+                OwnerProviderInvitationRetryResult::Unavailable
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider invitation retry failed");
+                OwnerProviderInvitationRetryResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn record_provider_invitation_delivery(
+        &self,
+        invitation_id: &str,
+        attempt_number: i32,
+        request: RecordOwnerProviderInvitationDeliveryRequest,
+    ) -> OwnerProviderInvitationDeliveryResult {
+        if !validate_provider_invitation_delivery_request(&request) || attempt_number <= 0 {
+            return OwnerProviderInvitationDeliveryResult::Invalid;
+        }
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let Some(invitation) = local.provider_invitations.get_mut(invitation_id) else {
+                return OwnerProviderInvitationDeliveryResult::NotFound;
+            };
+            if invitation.record.delivery_attempt_count != attempt_number
+                || invitation.record.delivery_status != "pending"
+                || invitation.record.status != "pending_delivery"
+            {
+                return OwnerProviderInvitationDeliveryResult::InvalidState(
+                    invitation.record.clone(),
+                );
+            }
+            invitation.record.delivery_status = request.outcome.clone();
+            invitation.record.status = request.outcome;
+            return OwnerProviderInvitationDeliveryResult::Saved(invitation.record.clone());
+        };
+        match record_owner_provider_invitation_delivery(
+            pool,
+            invitation_id,
+            attempt_number,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedInvitationMutationOutcome::Saved(invitation)) => {
+                OwnerProviderInvitationDeliveryResult::Saved(invitation)
+            }
+            Ok(PersistedInvitationMutationOutcome::NotFound) => {
+                OwnerProviderInvitationDeliveryResult::NotFound
+            }
+            Ok(PersistedInvitationMutationOutcome::InvalidState(invitation)) => {
+                OwnerProviderInvitationDeliveryResult::InvalidState(invitation)
+            }
+            Err(error) => {
+                tracing::error!(%error, invitation_id, attempt_number, "owner provider invitation delivery outcome failed");
+                OwnerProviderInvitationDeliveryResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn expire_provider_invitations(
+        &self,
+        limit: i64,
+    ) -> OwnerProviderInvitationExpiryResult {
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let now = current_epoch_seconds();
+            let mut expired = 0usize;
+            for invitation in local.provider_invitations.values_mut() {
+                if expired >= limit.max(1) as usize {
+                    break;
+                }
+                if invitation.record.expires_at_epoch_seconds <= now
+                    && matches!(
+                        invitation.record.status.as_str(),
+                        "pending_delivery" | "delivered" | "opened"
+                    )
+                {
+                    invitation.record.status = "expired".to_string();
+                    if invitation.record.delivery_status == "pending" {
+                        invitation.record.delivery_status = "suppressed".to_string();
+                    }
+                    expired += 1;
+                }
+            }
+            return OwnerProviderInvitationExpiryResult::Completed(expired);
+        };
+        match expire_owner_provider_invitations(pool, limit.clamp(1, 500)).await {
+            Ok(expired) => OwnerProviderInvitationExpiryResult::Completed(expired),
+            Err(error) => {
+                tracing::error!(%error, "owner provider invitation expiry sweep failed");
+                OwnerProviderInvitationExpiryResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1080,6 +1305,34 @@ pub fn validate_provider_invitation_request(
             .trim()
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_invitation_retry_request(
+    request: &RetryOwnerProviderInvitationRequest,
+) -> bool {
+    let key = request.idempotency_key.trim();
+    matches!(request.expires_in_days, 7 | 14 | 30)
+        && (8..=128).contains(&key.chars().count())
+        && key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_invitation_delivery_request(
+    request: &RecordOwnerProviderInvitationDeliveryRequest,
+) -> bool {
+    matches!(request.outcome.as_str(), "delivered" | "failed")
+        && request
+            .provider_message_id
+            .as_deref()
+            .is_none_or(|value| (1..=200).contains(&value.trim().chars().count()))
+        && request.failure_code.as_deref().is_none_or(|value| {
+            (1..=80).contains(&value.trim().chars().count())
+                && value.trim().chars().all(|character| {
+                    character.is_ascii_alphanumeric() || matches!(character, '-' | '_')
+                })
+        })
+        && (request.outcome == "delivered" || request.failure_code.is_some())
 }
 
 fn safe_media_file_name(value: &str) -> String {
@@ -2050,14 +2303,15 @@ async fn create_owner_provider_invitation(
 
     sqlx::query(
         "INSERT INTO owner_provider_invitation_delivery_attempts (
-             id, invitation_id, attempt_number, status
-         ) VALUES ($1, $2, 1, 'pending')",
+             id, invitation_id, attempt_number, status, idempotency_key
+         ) VALUES ($1, $2, 1, 'pending', $3)",
     )
     .bind(format!(
         "owner_provider_delivery_{}",
         Uuid::new_v4().simple()
     ))
     .bind(&invitation_id)
+    .bind(format!("initial:{}", request.idempotency_key.trim()))
     .execute(&mut *transaction)
     .await?;
 
@@ -2202,6 +2456,302 @@ async fn revoke_owner_provider_invitation(
     } else {
         Ok(PersistedInvitationMutationOutcome::InvalidState(invitation))
     }
+}
+
+enum PersistedInvitationRetryOutcome {
+    Created(OwnerProviderInvitationRecord),
+    Replayed(OwnerProviderInvitationRecord),
+    NotFound,
+    InvalidState(OwnerProviderInvitationRecord),
+    Suppressed,
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn retry_owner_provider_invitation(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    invitation_id: &str,
+    request: RetryOwnerProviderInvitationRequest,
+    token_hash: &str,
+) -> Result<PersistedInvitationRetryOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT status, recipient_email_fingerprint
+         FROM owner_provider_invitations
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         FOR UPDATE",
+    )
+    .bind(invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationRetryOutcome::NotFound);
+    };
+    let replayed = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_invitation_delivery_attempts
+             WHERE invitation_id = $1 AND idempotency_key = $2
+         )",
+    )
+    .bind(invitation_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    if replayed {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationRetryOutcome::Replayed(invitation));
+    }
+    let status: String = current.get("status");
+    if status != "failed" {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationRetryOutcome::InvalidState(invitation));
+    }
+    let recipient_fingerprint: String = current.get("recipient_email_fingerprint");
+    let suppressed = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_recipient_suppressions
+             WHERE recipient_email_fingerprint = $1
+         )",
+    )
+    .bind(&recipient_fingerprint)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if suppressed {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationRetryOutcome::Suppressed);
+    }
+    let next_attempt = sqlx::query_scalar::<_, i32>(
+        "SELECT COALESCE(MAX(attempt_number), 0)::INTEGER + 1
+         FROM owner_provider_invitation_delivery_attempts
+         WHERE invitation_id = $1",
+    )
+    .bind(invitation_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET token_hash = $4,
+             status = 'pending_delivery',
+             expires_at = NOW() + ($5::INTEGER * INTERVAL '1 day'),
+             terminal_at = NULL,
+             delivered_at = NULL,
+             opened_at = NULL,
+             updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3",
+    )
+    .bind(invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(token_hash)
+    .bind(request.expires_in_days)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_invitation_delivery_attempts (
+             id, invitation_id, attempt_number, status, idempotency_key
+         ) VALUES ($1, $2, $3, 'pending', $4)",
+    )
+    .bind(format!(
+        "owner_provider_delivery_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(invitation_id)
+    .bind(next_attempt)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_delivery_retried', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "attempt_number": next_attempt,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    let invitation = get_owner_provider_invitation(pool, owner_user_id, property_id, invitation_id)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)?;
+    Ok(PersistedInvitationRetryOutcome::Created(invitation))
+}
+
+async fn record_owner_provider_invitation_delivery(
+    pool: &PgPool,
+    invitation_id: &str,
+    attempt_number: i32,
+    request: RecordOwnerProviderInvitationDeliveryRequest,
+) -> Result<PersistedInvitationMutationOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT invitation.owner_user_id, invitation.property_id,
+                invitation.status AS invitation_status,
+                attempt.status AS attempt_status,
+                attempt.attempt_number = (
+                    SELECT MAX(latest.attempt_number)
+                    FROM owner_provider_invitation_delivery_attempts latest
+                    WHERE latest.invitation_id = invitation.id
+                ) AS latest_attempt
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_delivery_attempts attempt
+           ON attempt.invitation_id = invitation.id AND attempt.attempt_number = $2
+         WHERE invitation.id = $1
+         FOR UPDATE OF invitation, attempt",
+    )
+    .bind(invitation_id)
+    .bind(attempt_number)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationMutationOutcome::NotFound);
+    };
+    let owner_user_id: String = current.get("owner_user_id");
+    let property_id: String = current.get("property_id");
+    let invitation_status: String = current.get("invitation_status");
+    let attempt_status: String = current.get("attempt_status");
+    let latest_attempt: bool = current.get("latest_attempt");
+    if attempt_status == request.outcome && invitation_status == request.outcome {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, &owner_user_id, &property_id, invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::Saved(invitation));
+    }
+    if attempt_status != "pending" || invitation_status != "pending_delivery" || !latest_attempt {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, &owner_user_id, &property_id, invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::InvalidState(invitation));
+    }
+    sqlx::query(
+        "UPDATE owner_provider_invitation_delivery_attempts
+         SET status = $3,
+             provider_message_id = $4,
+             failure_code = $5,
+             attempted_at = COALESCE(attempted_at, NOW()),
+             completed_at = NOW()
+         WHERE invitation_id = $1 AND attempt_number = $2",
+    )
+    .bind(invitation_id)
+    .bind(attempt_number)
+    .bind(&request.outcome)
+    .bind(request.provider_message_id.as_deref().map(str::trim))
+    .bind(request.failure_code.as_deref().map(str::trim))
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET status = $2,
+             delivered_at = CASE WHEN $2 = 'delivered' THEN NOW() ELSE delivered_at END,
+             terminal_at = CASE WHEN $2 = 'failed' THEN NOW() ELSE NULL END,
+             updated_at = NOW()
+         WHERE id = $1",
+    )
+    .bind(invitation_id)
+    .bind(&request.outcome)
+    .execute(&mut *transaction)
+    .await?;
+    let event_kind = if request.outcome == "delivered" {
+        "provider_invitation_delivered"
+    } else {
+        "provider_invitation_failed"
+    };
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(event_kind)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "attempt_number": attempt_number,
+        "failure_code": request.failure_code,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    let invitation =
+        get_owner_provider_invitation(pool, &owner_user_id, &property_id, invitation_id)
+            .await?
+            .ok_or(sqlx::Error::RowNotFound)?;
+    Ok(PersistedInvitationMutationOutcome::Saved(invitation))
+}
+
+async fn expire_owner_provider_invitations(
+    pool: &PgPool,
+    limit: i64,
+) -> Result<usize, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let expired = sqlx::query(
+        "SELECT id, owner_user_id, property_id
+         FROM owner_provider_invitations
+         WHERE status IN ('pending_delivery', 'delivered', 'opened')
+           AND expires_at <= NOW()
+         ORDER BY expires_at, id
+         FOR UPDATE SKIP LOCKED
+         LIMIT $1",
+    )
+    .bind(limit)
+    .fetch_all(&mut *transaction)
+    .await?;
+    for row in &expired {
+        let invitation_id: String = row.get("id");
+        let owner_user_id: String = row.get("owner_user_id");
+        let property_id: String = row.get("property_id");
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'expired', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE owner_provider_invitation_delivery_attempts
+             SET status = 'suppressed', failure_code = 'invitation_expired', completed_at = NOW()
+             WHERE invitation_id = $1 AND status = 'pending'",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_expired', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+    }
+    transaction.commit().await?;
+    Ok(expired.len())
 }
 
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {
@@ -2408,6 +2958,26 @@ mod tests {
         invalid_invitation = invitation;
         invalid_invitation.expires_in_days = 365;
         assert!(!validate_provider_invitation_request(&invalid_invitation));
+        assert!(validate_provider_invitation_retry_request(
+            &RetryOwnerProviderInvitationRequest {
+                expires_in_days: 14,
+                idempotency_key: "retry-request-001".to_string(),
+            }
+        ));
+        assert!(validate_provider_invitation_delivery_request(
+            &RecordOwnerProviderInvitationDeliveryRequest {
+                outcome: "delivered".to_string(),
+                provider_message_id: Some("provider-message-1".to_string()),
+                failure_code: None,
+            }
+        ));
+        assert!(!validate_provider_invitation_delivery_request(
+            &RecordOwnerProviderInvitationDeliveryRequest {
+                outcome: "failed".to_string(),
+                provider_message_id: None,
+                failure_code: None,
+            }
+        ));
     }
 
     #[tokio::test]

@@ -1,8 +1,10 @@
 use grover_landscaping_api::owner_acquisition::{
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository,
     OwnerMutationResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationMutationResult, OwnerReadResult, SaveOwnerWorkspaceRequest,
-    SaveOwnerYardBriefRequest,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationRetryResult, OwnerReadResult,
+    RecordOwnerProviderInvitationDeliveryRequest, RetryOwnerProviderInvitationRequest,
+    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -88,6 +90,38 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             .await,
         OwnerProviderInvitationMutationResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .retry_provider_invitation(
+                "owner-unavailable",
+                "property-unavailable",
+                "invitation-unavailable",
+                RetryOwnerProviderInvitationRequest {
+                    expires_in_days: 7,
+                    idempotency_key: "retry-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInvitationRetryResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                "invitation-unavailable",
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "failed".to_string(),
+                    provider_message_id: None,
+                    failure_code: Some("provider_unavailable".to_string()),
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Unavailable
+    ));
+    assert_eq!(
+        repository.expire_provider_invitations(25).await,
+        OwnerProviderInvitationExpiryResult::Unavailable
+    );
 }
 
 #[tokio::test]
@@ -277,6 +311,81 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
 
     assert!(matches!(
         repository
+            .record_provider_invitation_delivery(
+                &created.invitation.invitation_id,
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "failed".to_string(),
+                    provider_message_id: None,
+                    failure_code: Some("mailbox_unavailable".to_string()),
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Saved(invitation)
+            if invitation.status == "failed" && invitation.delivery_status == "failed"
+    ));
+    let retry_request = RetryOwnerProviderInvitationRequest {
+        expires_in_days: 14,
+        idempotency_key: "provider-invite-retry-001".to_string(),
+    };
+    let OwnerProviderInvitationRetryResult::Created(retry) = repository
+        .retry_provider_invitation(
+            owner_a,
+            &property.property_id,
+            &created.invitation.invitation_id,
+            retry_request.clone(),
+        )
+        .await
+    else {
+        panic!("failed invitation should prepare a retry");
+    };
+    assert_ne!(retry.delivery_token(), created.delivery_token());
+    assert_eq!(retry.invitation.delivery_attempt_count, 2);
+    assert_eq!(retry.invitation.status, "pending_delivery");
+    assert!(matches!(
+        repository
+            .retry_provider_invitation(
+                owner_a,
+                &property.property_id,
+                &created.invitation.invitation_id,
+                retry_request,
+            )
+            .await,
+        OwnerProviderInvitationRetryResult::Replayed(invitation)
+            if invitation.delivery_attempt_count == 2
+    ));
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                &created.invitation.invitation_id,
+                2,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "delivered".to_string(),
+                    provider_message_id: Some("message-2002".to_string()),
+                    failure_code: None,
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Saved(invitation)
+            if invitation.status == "delivered" && invitation.delivery_status == "delivered"
+    ));
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                &created.invitation.invitation_id,
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "delivered".to_string(),
+                    provider_message_id: Some("stale-message".to_string()),
+                    failure_code: None,
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::InvalidState(_)
+    ));
+
+    assert!(matches!(
+        repository
             .revoke_provider_invitation(
                 owner_b,
                 &property.property_id,
@@ -294,7 +403,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             )
             .await,
         OwnerProviderInvitationMutationResult::Saved(invitation)
-            if invitation.status == "revoked" && invitation.delivery_status == "suppressed"
+            if invitation.status == "revoked" && invitation.delivery_status == "delivered"
     ));
     assert!(matches!(
         repository
@@ -328,6 +437,44 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         OwnerProviderInvitationCreateResult::Created(_)
     ));
+
+    let OwnerProviderInvitationCreateResult::Created(expiring) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request("seasonal@sonoranyard.example", "provider-invite-expiry-001"),
+        )
+        .await
+    else {
+        panic!("expiring invitation should be created");
+    };
+    sqlx::query(
+        "UPDATE owner_provider_invitations SET expires_at = NOW() - INTERVAL '1 minute'
+         WHERE id = $1",
+    )
+    .bind(&expiring.invitation.invitation_id)
+    .execute(&pool)
+    .await
+    .expect("test invitation should be made expired");
+    assert_eq!(
+        repository.expire_provider_invitations(25).await,
+        OwnerProviderInvitationExpiryResult::Completed(1)
+    );
+    assert!(matches!(
+        repository
+            .get_provider_invitation(
+                owner_a,
+                &property.property_id,
+                &expiring.invitation.invitation_id,
+            )
+            .await,
+        OwnerReadResult::Loaded(invitation)
+            if invitation.status == "expired" && invitation.delivery_status == "suppressed"
+    ));
+    assert_eq!(
+        repository.expire_provider_invitations(25).await,
+        OwnerProviderInvitationExpiryResult::Completed(0)
+    );
 
     sqlx::query(
         "INSERT INTO owner_provider_recipient_suppressions (

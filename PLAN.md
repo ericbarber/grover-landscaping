@@ -247,9 +247,14 @@ Active slice:
   replayed, conflicting, suppressed, missing, closed, and unavailable outcomes;
   neither bearer tokens nor hashes enter API JSON, and revoke atomically closes
   pending delivery.
-- Slice 3A3 is next: implement delivery outcomes, durable expiry, retry token
-  rotation, recipient opt-out, and abuse lifecycle operations before provider
-  recipient entry begins.
+- Slice 3A3 is delivered: internal service operations map delivered and failed
+  attempts, reject stale outcomes, rotate and hash retry tokens, enforce
+  per-attempt idempotency, and materialize expiry with atomic delivery closure
+  and lifecycle audit. No public callback is exposed without an authentication
+  contract.
+- Slice 3A4 is next: connect an authenticated delivery adapter, then implement
+  recipient opt-out and abuse lifecycle operations before provider recipient
+  entry begins.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
