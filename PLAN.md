@@ -110,6 +110,12 @@ Current state:
   sensitive-data defaults, email-code recovery, address mutation, filtering,
   no-result recovery, destructive confirmation, and the revised known-provider
   and directory journeys across responsive and 200% text layouts.
+- Yard Owner acquisition V2 now completes the known-provider design contract:
+  recipient-specific entry, separate email/organization/authority checks,
+  authorized provider questions and responses, all invitation lifecycle states,
+  connection support, fully affirmative disclosure categories, immutable access
+  receipts, and confirmed future-access revocation. The reciprocal entry is
+  linked from Yard Crew acquisition and the design gallery.
 - The Yard Crew acquisition design is complete as a connected, validated journey
   for solo owner-operators, multi-crew provider companies, and invited workers.
   "Yard Crew" remains the audience language while provider organizations remain
@@ -168,9 +174,9 @@ Next design work:
 - Review the Yard Owner V2 package remotely, then adopt it in the production
   React portal through the documented privacy/read-model, service-day, proof,
   conversation, recommendation, and preference slices.
-- Review Yard Owner acquisition for phased production adoption, beginning with
-  independent identity/private property, then intake media and known-provider
-  connection before curated discovery.
+- Adopt the design-complete Yard Owner known-provider connection as production
+  Phase 3, using the authority, visibility, receipt, lifecycle, support, and
+  acceptance gates in the V2 handoff; keep curated discovery deferred.
 - Review the Yard Crew acquisition V3 prototype and resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
   levels before production adoption. Begin with public routing and provider
@@ -213,6 +219,10 @@ Active slice:
   stay visible for explicit deletion, and provider access is not created.
 - Phase 3 is next: add the known-provider connection pilot with an explicit,
   provider-specific disclosure and consent boundary.
+- The Phase 3 working design and production acceptance contract are complete in
+  [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
+  delivery status remains planned until server authorization, messaging,
+  versioned grants/receipts, audit, opt-out, abuse, and support behavior ship.
 - Use [`docs/yard-owner-acquisition-production-plan.md`](docs/yard-owner-acquisition-production-plan.md)
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.

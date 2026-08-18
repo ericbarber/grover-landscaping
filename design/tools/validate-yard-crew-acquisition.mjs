@@ -260,6 +260,7 @@ try {
   await page.locator('[data-review-pilot="limited"]').click();
   check(await page.locator('body').getAttribute('data-pilot-state') === 'limited', 'Governance: limited pilot state did not load');
   check((await page.locator('.pilot-readiness').innerText()).toLowerCase().includes('known-owner connection only'), 'Governance: limited pilot boundary is missing');
+  check((await page.locator('a[href="../yard-owner-acquisition/index.html#provider-entry"]').count()) === 1, 'Marketing: reciprocal owner-invitation entry is missing');
   check((await page.locator('.visibility-grid').innerText()).toLowerCase().includes('keep product-gated'), 'Governance: marketplace scope is not kept gated');
   check(desktop.browserErrors.length === 0, `Desktop workflow errors: ${desktop.browserErrors.join('; ')}`);
   await page.close();

@@ -13,6 +13,7 @@ The approved experience is defined by:
 - [`../design/prototypes/yard-owner-acquisition/index.html`](../design/prototypes/yard-owner-acquisition/index.html)
 - [`../design/review/yard-owner-acquisition-professional-review.md`](../design/review/yard-owner-acquisition-professional-review.md)
 - [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
+- [`../design/review/yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md)
 
 ## Delivery status
 
@@ -23,7 +24,8 @@ The approved experience is defined by:
 | 1C | Delivered | Production React private entry with public owner CTA, verified-email gate, profile/property recovery, address reconfirmation, authority attestation, and responsive browser coverage |
 | 2A | Delivered | Append-only private yard briefs with areas, goals, cadence, considerations, source/version provenance, draft/ready state, API isolation, and production React editing |
 | 2B | Delivered | Owner-scoped guided intake media with upload, processing/rejection, preview, replacement, explicit deletion, and responsive React recovery |
-| 3–7 | Planned | Provider connection through governed pilot convergence |
+| 3 | Design complete; production planned | Recipient-specific known-provider connection, authority, response, disclosure receipt, lifecycle, and support contract validated in the prototype |
+| 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles
 
@@ -122,14 +124,28 @@ and optional media; nothing is visible to a provider.
 
 ## Phase 3 — Known-provider connection pilot
 
+Design status: complete and browser validated. Production status: not started.
+The precise interaction, visibility, authority, recovery, and receipt contract is
+recorded in the
+[`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
+
 - Add provider-connection invitations distinct from organization-membership
   invitations.
 - Reuse verified recipient, expiry, delivery, retry, revoke, opt-out, abuse
   report, and audit patterns.
+- Keep delivered, opened, failed, expired, declined, opted-out, and revoked
+  outcomes distinct; closed links cannot be reopened and corrections create new
+  invitation records.
 - Route an existing recipient to an authorized provider inbox; route a new
   recipient through provider organization claim/bootstrap.
+- Evaluate recipient email, organization relationship, and explicit opportunity-
+  response capability separately; do not infer price, proposal, assignment,
+  work-release, or field authority.
 - Add limited invitation disclosure, provider interest/decline, identity fact
   review, and owner-approved per-provider access grants.
+- Persist immutable provider-, property-, purpose-, category-, and version-
+  specific receipts containing both approved and withheld categories. Record
+  later revocation as a new event rather than rewriting historical consent.
 - Implement owner and provider progress/read models and recovery states.
 
 Exit condition: an owner can connect a known provider for assessment without

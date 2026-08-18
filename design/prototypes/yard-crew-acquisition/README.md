@@ -16,6 +16,8 @@ http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 
 1. Review the evidence-based Yard Crew marketing promise.
 2. Compare owner-operator, multi-crew provider, and invited-team-member paths.
+   Providers arriving from a direct customer request can instead open
+   **Review an owner invitation** and inspect the reciprocal Yard Owner flow.
 3. Build an illustrative provider organization.
 4. Configure service categories, territory, capacity, work preferences,
    response standard, and precise qualification facts.
@@ -100,3 +102,7 @@ records first-service communication, team authority, saved alerts, pilot
 governance, and their production contracts. The production handoff must resolve
 the product gates recorded in the phased plan before curated opportunity
 discovery or credential language ships.
+
+The reciprocal known-owner invitation, provider-organization claim, response
+authority, and disclosure receipt are defined in the
+[Yard Owner known-provider handoff](../../review/yard-owner-known-provider-connection-handoff.md).

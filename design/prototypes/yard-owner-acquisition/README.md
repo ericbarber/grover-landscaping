@@ -24,17 +24,22 @@ http://<vpn-ip>:5173/design/prototypes/yard-owner-acquisition/
 7. Review the complete yard brief before sharing.
 8. Invite an existing provider, finish later, or browse and filter suitable
    providers without revealing the exact address.
-9. Review the provider-side request and explicit identity/access handoff.
-10. Choose and approve provider-specific information for assessment; sensitive
-    address and photograph access is not preselected.
-11. Select an assessment window and ask a contextual question.
-12. Compare neutral proposals by scope, exclusions, cadence, policies, and
+9. Track delivered, opened, failed, expired, declined, opted-out, and revoked
+   invitation outcomes, each with a protected recovery path.
+10. Enter through the recipient-specific provider invitation, choose an existing
+    provider or claim/bootstrap one, and confirm limited opportunity authority.
+11. Ask a preliminary question, express interest, safely decline, or report the
+    request without widening access.
+12. Choose and affirm provider-specific assessment information with no category
+    selected by default, then inspect the immutable access receipt.
+13. Select an assessment window and ask a contextual question.
+14. Compare neutral proposals by scope, exclusions, cadence, policies, and
     annualized cost—not provider ranking.
-13. Ask for clarification or a revision without making a decision.
-14. Confirm proposal acceptance, inspect write failure/retry, and enter provider
+15. Ask for clarification or a revision without making a decision.
+16. Confirm proposal acceptance, inspect write failure/retry, and enter provider
     setup without silently scheduling service.
-15. Confirm the first visit and continue to the Yard Owner V2 portal.
-16. Review active-provider access, confirm future photo-access revocation,
+17. Confirm the first visit and continue to the Yard Owner V2 portal.
+18. Review active-provider access, confirm future photo-access revocation,
     change/end care, and request export or unused-intake deletion.
 
 ## Review journey
@@ -53,8 +58,12 @@ The prototype includes these major states:
 | Yard brief | Areas, goal, cadence, constraints, “not sure” path |
 | Photos | Zero-photo completion, add/remove, processing result, metadata notice |
 | Sharing | Private summary, per-provider disclosure, no-provider finish-later |
-| Invitation | Invalid, unconfirmed, simulated failure, preserved retry, delivered, revoked |
-| Provider response | Identity gate, interested, declined, assessment-only meaning |
+| Invitation | Invalid, unconfirmed, simulated failure, preserved retry, delivered, opened, failed, expired, declined, opted out, revoked |
+| Connection support | Delivery correction, identity dispute, safety report/block, withdrawal and access controls |
+| Provider entry | Recipient-specific limited request, existing sign-in, organization claim/bootstrap, opt-out, abuse report |
+| Provider authority | Separate email, organization relationship, and opportunity-response capability checks |
+| Provider response | Preliminary question, interested, customer-safe decline, report/block, assessment-only meaning |
+| Disclosure receipt | All categories initially unselected, explicit affirmation, approved/withheld snapshot, download, confirmed future revoke |
 | Directory | Functional filters, no results, fit reasons, precise trust facts, shortlist, provider detail, bounded requests |
 | Assessment | Time selection, question, confirmation, no-service boundary |
 | Proposal | Scope comparison, detail, question/change request, decline, confirm, failure/retry, accepted snapshot |
@@ -74,6 +83,9 @@ The prototype includes these major states:
   operational service plan, or schedule.
 - Identity and insurance labels demonstrate precise trust language but do not
   represent real verification.
+- Recipient email verification, provider-organization relationship, and action
+  authority are separate checks; none implies licensure, insurance, quality, or
+  authorization to price, propose, assign crews, or release work.
 - No AI diagnosis/training, instant booking, payment, marketplace fee, ranking,
   review score, sponsorship, or guaranteed availability is simulated.
 - Production implementation requires the contracts in
@@ -107,5 +119,10 @@ Pass `--capture` to refresh the desktop and mobile gallery references. The
 validator covers the connected known-provider and directory paths, email
 verification, stale-address recovery, functional directory filters and no-result
 guidance, neutral proposal language, affirmative consent defaults, destructive
-confirmation, programmatic control names and error associations, semantic
-progress, focus behavior, compact touch targets, 200% text, and overflow.
+confirmation, every invitation terminal state, recipient entry, provider claim,
+provider-specific access receipts, programmatic control names and error
+associations, semantic progress, focus behavior, compact touch targets, 200%
+text, and overflow.
+
+The completed connection contract is recorded in
+[`../../review/yard-owner-known-provider-connection-handoff.md`](../../review/yard-owner-known-provider-connection-handoff.md).

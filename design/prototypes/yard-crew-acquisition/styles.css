@@ -203,7 +203,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .capacity-strip span { color: var(--slate); font-size: .75rem; line-height: 1.45; }
 .filter-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
 .opportunity-list { display: grid; gap: .85rem; margin-top: 1rem; }
-.opportunity-card { border: 1px solid var(--line); border-radius: 1rem; background: var(--paper); padding: 1rem; box-shadow: 0 7px 18px rgb(15 47 40 / 5%); }
+.opportunity-card { min-width: 0; overflow-wrap: anywhere; border: 1px solid var(--line); border-radius: 1rem; background: var(--paper); padding: 1rem; box-shadow: 0 7px 18px rgb(15 47 40 / 5%); }
 .opportunity-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .opportunity-top > * { min-width: 0; }
 .opportunity-card h2 { margin: .4rem 0 .2rem; font-family: var(--serif); font-size: 1.45rem; }

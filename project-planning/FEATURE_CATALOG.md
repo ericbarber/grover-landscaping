@@ -50,6 +50,11 @@
   affirmative sensitive-data consent, accessible error/progress semantics,
   functional provider filters, assessment continuity, neutral proposal
   comparison, and confirmed access-reducing actions
+- Validated Yard Owner acquisition V2 known-provider connection with recipient-
+  specific invitation entry, separate email/organization/action authority,
+  preliminary provider response, complete invitation lifecycle and support,
+  unselected-by-default provider disclosure, approved/withheld access receipts,
+  and reciprocal Yard Crew/gallery entry
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard
