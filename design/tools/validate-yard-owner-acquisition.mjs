@@ -198,9 +198,18 @@ try {
   await providerClaim.locator('button[type="submit"]').click();
   check(await page.locator('body').getAttribute('data-step') === 'provider', 'Provider claim: verified organization did not reach authorized inbox');
   await page.locator('[data-provider-question]').click();
+  check(await page.locator('[data-provider-question-composer]').isVisible(), 'Provider: preliminary question composer is missing');
+  await page.locator('[data-send-provider-question]').click();
+  check((await page.locator('[data-provider-question-error]').innerText()).includes('specific question'), 'Provider: preliminary question validation is missing');
+  await page.locator('[data-provider-question-copy]').fill('Would you like the first assessment to be remote or on site?');
+  await page.locator('[data-send-provider-question]').click();
   check((await page.locator('[data-provider-result]').innerText()).includes('No exact address'), 'Provider: preliminary question widened access or lacks disclosure feedback');
   await page.locator('[data-provider-decline]').click();
+  check((await page.locator('[data-provider-result]').innerText()).includes('Confirm'), 'Provider: decline confirmation is missing');
+  await page.locator('[data-provider-decline]').click();
   check((await page.locator('[data-provider-result]').innerText()).includes('declined'), 'Provider: safe decline state is missing');
+  await page.reload({ waitUntil: 'load' });
+  check(await page.locator('body').getAttribute('data-step') === 'provider', 'Provider: refresh did not preserve the provider deep link');
   await page.locator('[data-provider-interest]').click();
   check(await page.locator('body').getAttribute('data-step') === 'access-approval', 'Provider: interest did not return to owner approval');
   const accessForm = page.locator('[data-access-form]');
@@ -277,10 +286,11 @@ try {
   check(await page.locator('body').getAttribute('data-step') === 'directory-share', 'Directory: shortlist did not reach disclosure review');
   check(await page.locator('[data-selected-provider-list] article').count() === 2, 'Directory: selected providers are missing from disclosure review');
   const directoryShare = page.locator('[data-directory-share-form]');
-  check(!(await directoryShare.locator('input[value="Exact address"]').isChecked()), 'Directory disclosure: exact address is preselected');
-  check(!(await directoryShare.locator('input[value="Yard photos"]').isChecked()), 'Directory disclosure: photographs are preselected');
+  check(await directoryShare.locator('input[name="directory-item"]:checked').count() === 0, 'Directory disclosure: an affirmative category is preselected');
   await directoryShare.locator('button[type="submit"]').click();
   check(await page.locator('[data-directory-share-error]').isVisible(), 'Directory: disclosure confirmation validation is missing');
+  await directoryShare.locator('input[name="directory-item"][value="Yard brief"]').check();
+  await directoryShare.locator('input[name="directory-item"][value="Email"]').check();
   await directoryShare.locator('input[name="directory-confirm"]').check();
   await directoryShare.locator('button[type="submit"]').click();
   check(await page.locator('body').getAttribute('data-step') === 'assessment', 'Directory: approved requests skipped provider assessment');
@@ -326,7 +336,7 @@ try {
   const mobile = await openPage(browser, { width: 390, height: 844 });
   await checkLayout(mobile.page, 390, 'Mobile welcome');
   await checkMobileTargets(mobile.page, 'Mobile welcome');
-  const mobileStages = ['verify', 'property', 'photos', 'share', 'invite', 'connection-recovery', 'connection-support', 'provider-entry', 'provider-claim', 'provider', 'access-approval', 'access-receipt', 'directory', 'directory-share', 'proposals', 'activation', 'relationship'];
+  const mobileStages = ['verify', 'property', 'photos', 'share', 'invite', 'connection-recovery', 'connection-support', 'provider-entry', 'provider-claim', 'provider', 'access-approval', 'access-receipt', 'directory', 'directory-share', 'proposals', 'activation', 'relationship', 'session-expired'];
   for (const step of mobileStages) {
     await jumpTo(mobile.page, step);
     await checkLayout(mobile.page, 390, `Mobile ${step}`);

@@ -34,6 +34,7 @@ const stepDefinitions = {
   ready: { title: 'Care connected', eyebrow: 'First visit confirmed', progress: 'ready', save: ['Active care', 'Provider connected'] },
   relationship: { title: 'Account and privacy', eyebrow: 'Your controls', progress: 'ready', save: ['Active care', 'Sharing controlled'] },
   saved: { title: 'Private draft saved', eyebrow: 'Finish later', progress: null, save: ['Private draft', 'Nothing shared'] },
+  'session-expired': { title: 'Sign in again', eyebrow: 'Protected session', progress: null, save: ['Private draft protected', 'No action submitted'] },
   unavailable: { title: 'Yard setup unavailable', eyebrow: 'Protected recovery', progress: null, save: ['Protected', 'Nothing shared'] },
 };
 
@@ -43,7 +44,7 @@ let addressVerified = false;
 let selectedProviders = [];
 let currentProposal = 'desert';
 let invitationStatus = 'delivered';
-let approvedAccessItems = [];
+let approvedAccessItems = ['Yard brief', 'Email'];
 
 function addReviewOption(value, title, description, beforeValue) {
   if (reviewDialog.querySelector(`input[name="review-step"][value="${value}"]`)) return;
@@ -71,6 +72,7 @@ addReviewOption('provider-claim', 'Provider organization claim', 'Identity, rela
 addReviewOption('access-receipt', 'Disclosure receipt', 'Immutable provider-specific snapshot', 'directory');
 addReviewOption('directory-share', 'Directory disclosure', 'Separate provider requests', 'assessment');
 addReviewOption('saved', 'Private draft saved', 'No-provider finish-later state', 'unavailable');
+addReviewOption('session-expired', 'Session expired', 'Protected sign-in recovery', 'unavailable');
 document.querySelectorAll('[data-provider-card]').forEach((card) => {
   card.querySelector('.select-provider input').setAttribute('aria-label', `Select ${card.querySelector('h3').textContent}`);
 });
@@ -98,7 +100,7 @@ function renderProgress(active) {
   });
 }
 
-function showStep(step, { moveFocus = true, updateHash = true } = {}) {
+function showStep(step, { moveFocus = true, updateHash = true, replaceHistory = false } = {}) {
   const next = Object.hasOwn(stepDefinitions, step) ? step : 'welcome';
   currentStep = next;
   body.dataset.step = next;
@@ -114,13 +116,21 @@ function showStep(step, { moveFocus = true, updateHash = true } = {}) {
   renderProgress(definition.progress);
   document.querySelector(`input[name="review-step"][value="${next}"]`)?.setAttribute('checked', '');
   document.querySelectorAll('input[name="review-step"]').forEach((input) => { input.checked = input.value === next; });
-  if (updateHash) window.history.replaceState(null, '', `#${next}`);
+  if (updateHash && window.location.hash !== `#${next}`) {
+    const method = replaceHistory ? 'replaceState' : 'pushState';
+    window.history[method]({ step: next }, '', `#${next}`);
+  }
   if (moveFocus) {
     window.scrollTo({ top: 0, behavior: 'auto' });
     pageTitle.focus({ preventScroll: true });
     announce(`${definition.title} opened.`);
   }
 }
+
+window.addEventListener('popstate', () => {
+  const historyStep = window.location.hash.slice(1);
+  showStep(Object.hasOwn(stepDefinitions, historyStep) ? historyStep : 'welcome', { updateHash: false });
+});
 
 function openDialog(dialog, trigger) {
   if (!dialog || dialog.open) return;
@@ -162,6 +172,10 @@ document.querySelectorAll('[data-error-for]').forEach((error) => {
   describedBy.add(error.id);
   input.setAttribute('aria-describedby', [...describedBy].join(' '));
 });
+
+const providerQuestionError = document.querySelector('[data-provider-question-error]');
+providerQuestionError.id = 'provider-question-error';
+document.querySelector('[data-provider-question-copy]').setAttribute('aria-describedby', providerQuestionError.id);
 
 document.querySelector('[data-account-form]').addEventListener('submit', (event) => {
   event.preventDefault();
@@ -311,6 +325,18 @@ function updatePhotoSummary() {
   document.querySelector('[data-invite-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
   document.querySelector('[data-access-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
   document.querySelector('[data-directory-photo-count]').textContent = `${count} photo${count === 1 ? '' : 's'}`;
+  const accessPhotoInput = document.querySelector('input[name="approve-item"][value="Yard photos"]');
+  const directoryPhotoInput = document.querySelector('input[name="directory-item"][value="Yard photos"]');
+  accessPhotoInput.disabled = count === 0;
+  directoryPhotoInput.disabled = count === 0;
+  if (!count) {
+    accessPhotoInput.checked = false;
+    directoryPhotoInput.checked = false;
+  }
+  document.querySelector('[data-access-photo-item]').classList.toggle('is-disabled', count === 0);
+  document.querySelector('[data-access-photo-count]').nextSibling.nodeValue = count
+    ? ' · assessment use only'
+    : ' · add a photo before sharing this category';
   document.querySelector('[data-continue-photos]').textContent = count ? 'Review my yard brief' : 'Continue without photos';
   document.querySelector('[data-upload-state]').textContent = count
     ? `${count} private photo${count === 1 ? '' : 's'} processed for this design. Location metadata removed.`
@@ -517,14 +543,51 @@ document.querySelector('[data-provider-claim-form]').addEventListener('submit', 
   announce('Provider relationship and opportunity-response authority confirmed for this working design.');
 });
 
-document.querySelector('[data-provider-decline]').addEventListener('click', () => {
-  document.querySelector('[data-provider-result]').textContent = 'The request was declined with a customer-safe “not taking this request” response. No private yard access was granted.';
-  announce('Provider declined the request without exposing internal details.');
+document.querySelector('[data-provider-question]').addEventListener('click', () => {
+  const composer = document.querySelector('[data-provider-question-composer]');
+  composer.hidden = false;
+  document.querySelector('[data-provider-question-copy]').focus();
+  document.querySelector('[data-provider-result]').textContent = 'Write a question needed to decide whether to assess this yard. No additional owner information is available.';
+  announce('Preliminary question composer opened. No additional owner information was disclosed.');
 });
 
-document.querySelector('[data-provider-question]').addEventListener('click', () => {
-  document.querySelector('[data-provider-result]').textContent = 'Preliminary question sent within the limited request. No exact address, photographs, phone number, or access notes were disclosed.';
+document.querySelector('[data-cancel-provider-question]').addEventListener('click', () => {
+  document.querySelector('[data-provider-question-composer]').hidden = true;
+  document.querySelector('[data-provider-question-error]').textContent = '';
+  document.querySelector('[data-provider-question]').focus();
+  announce('Preliminary question canceled.');
+});
+
+document.querySelector('[data-send-provider-question]').addEventListener('click', () => {
+  const question = document.querySelector('[data-provider-question-copy]');
+  const error = document.querySelector('[data-provider-question-error]');
+  const invalid = question.value.trim().length < 10;
+  question.setAttribute('aria-invalid', String(invalid));
+  error.textContent = invalid ? 'Enter a specific question of at least 10 characters.' : '';
+  if (invalid) {
+    question.focus();
+    announce('Enter a specific preliminary question before sending.');
+    return;
+  }
+  document.querySelector('[data-provider-question-composer]').hidden = true;
+  document.querySelector('[data-provider-result]').textContent = 'Preliminary question sent inside the limited request. No exact address, photographs, phone number, or access notes were disclosed.';
   announce('Preliminary provider question sent without widening access.');
+});
+
+document.querySelector('[data-provider-decline]').addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  if (!button.dataset.confirming) {
+    button.dataset.confirming = 'true';
+    button.textContent = 'Confirm decline request';
+    document.querySelector('[data-provider-result]').textContent = 'Confirm to close this opportunity with a customer-safe “not taking this request” response. No internal reason will be shared.';
+    announce('Confirm provider decline.');
+    return;
+  }
+  button.disabled = true;
+  document.querySelector('[data-provider-question]').disabled = true;
+  document.querySelector('[data-provider-interest]').disabled = true;
+  document.querySelector('[data-provider-result]').textContent = 'The request was declined with a customer-safe “not taking this request” response. No private yard access was granted.';
+  announce('Provider declined the request without exposing internal details.');
 });
 
 document.querySelector('[data-provider-report]').addEventListener('click', (event) => {
@@ -546,6 +609,12 @@ document.querySelector('[data-provider-interest]').addEventListener('click', () 
   announce('Provider expressed assessment interest. Owner approval is still required.');
 });
 
+function renderAccessReceipt() {
+  const allItems = [...document.querySelectorAll('input[name="approve-item"]')].map((input) => input.value);
+  document.querySelector('[data-receipt-approved]').textContent = approvedAccessItems.join(', ');
+  document.querySelector('[data-receipt-withheld]').textContent = allItems.filter((item) => !approvedAccessItems.includes(item)).join(', ') || 'Nothing withheld';
+}
+
 document.querySelector('[data-access-form]').addEventListener('submit', (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -562,9 +631,7 @@ document.querySelector('[data-access-form]').addEventListener('submit', (event) 
   }
   error.hidden = true;
   approvedAccessItems = selectedInputs.map((input) => input.value);
-  const allItems = [...form.querySelectorAll('input[name="approve-item"]')].map((input) => input.value);
-  document.querySelector('[data-receipt-approved]').textContent = approvedAccessItems.join(', ');
-  document.querySelector('[data-receipt-withheld]').textContent = allItems.filter((item) => !approvedAccessItems.includes(item)).join(', ') || 'Nothing withheld';
+  renderAccessReceipt();
   showStep('access-receipt');
   announce('Assessment access approved and a provider-specific receipt was created. No service was scheduled.');
 });
@@ -826,6 +893,12 @@ document.querySelector('[data-retry-load]').addEventListener('click', () => {
   announce('Private yard brief restored in the design.');
 });
 
+document.querySelector('[data-restore-session]').addEventListener('click', () => {
+  document.querySelector('[data-session-result]').textContent = 'Illustrative sign-in restored. Your private yard brief is ready to continue.';
+  showStep('share');
+  announce('Sign-in restored in the working design. Private yard brief opened.');
+});
+
 document.querySelector('[data-apply-review]').addEventListener('click', () => {
   const step = reviewDialog.querySelector('input[name="review-step"]:checked')?.value || 'welcome';
   closeDialog(reviewDialog);
@@ -834,5 +907,7 @@ document.querySelector('[data-apply-review]').addEventListener('click', () => {
 
 const initialHash = window.location.hash.slice(1);
 showStep(Object.hasOwn(stepDefinitions, initialHash) ? initialHash : 'welcome', { moveFocus: false, updateHash: false });
+window.history.replaceState({ step: currentStep }, '', `#${currentStep}`);
 document.querySelector('[data-brief-complete]').textContent = document.querySelectorAll('input[name="area"]:checked').length ? 'Ready to continue' : 'Tell us what you know';
 updatePhotoSummary();
+renderAccessReceipt();

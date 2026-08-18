@@ -38,6 +38,7 @@ button { color: inherit; }
 a { color: inherit; }
 button:disabled { cursor: not-allowed; opacity: .5; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex="-1"]:focus-visible { outline: 3px solid #1685a4; outline-offset: 3px; }
+.choice-grid label:has(input:focus-visible), .select-provider:has(input:focus-visible) { outline: 3px solid #1685a4; outline-offset: 3px; }
 
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; }
 .skip-link { position: fixed; z-index: 300; top: .4rem; left: .4rem; transform: translateY(-160%); border-radius: .5rem; background: white; padding: .8rem 1rem; font-weight: 850; box-shadow: var(--shadow-md); }
@@ -252,6 +253,11 @@ fieldset legend { margin-bottom: .75rem; font-family: Georgia, serif; font-size:
 .authority-summary small { color: #aac6bb; font-size: .5rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
 .authority-summary strong { color: white; font-size: .7rem; }
 .authority-summary span { color: #b6cbc3; font-size: .55rem; line-height: 1.4; }
+.provider-question-composer { margin-top: 1rem; border: 1px solid #b7c9c0; border-radius: .75rem; background: var(--evergreen-50); padding: 1rem; }
+.provider-question-composer > label { display: grid; gap: .4rem; font-size: .68rem; font-weight: 800; }
+.provider-question-composer .field-help { margin: .5rem 0 0; }
+.share-fieldset label.is-disabled { background: #f1f0eb; color: var(--muted); cursor: not-allowed; opacity: .78; }
+.share-fieldset label.is-disabled input { cursor: not-allowed; }
 .disclosure-receipt { border-top: 4px solid var(--evergreen-700); }
 .disclosure-receipt .card-heading { align-items: flex-start; }
 .disclosure-receipt h3 { margin: .35rem 0 0; font-family: Georgia, serif; font-size: 1.55rem; }
@@ -318,3 +324,14 @@ dialog::backdrop { background: rgb(9 29 25 / 70%); backdrop-filter: blur(3px); }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+@media (forced-colors: active) {
+  * { box-shadow: none !important; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex="-1"]:focus-visible,
+  .choice-grid label:has(input:focus-visible), .select-provider:has(input:focus-visible) { outline: 3px solid Highlight; }
+  .choice-grid label:has(input:checked), .radio-fieldset label:has(input:checked), .share-fieldset label:has(input:checked),
+  .date-options label:has(input:checked), .claim-options label:has(input:checked), .provider-card:has(.select-provider input:checked),
+  .review-options label:has(input:checked), .lifecycle-picker button.is-active { border: 2px solid Highlight; }
+  .status-pill, .privacy-pill, .completion-pill, .match-count, .time-note { border: 1px solid CanvasText; }
+  button:disabled, input:disabled { color: GrayText; opacity: 1; }
+}
