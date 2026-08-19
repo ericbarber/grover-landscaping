@@ -284,6 +284,11 @@ Active slice:
   membership, claim provenance, and access audit. Concurrent same-name claims
   create at most one organization; the other returns to non-disclosing Provider
   Operations review. Slice 3B2c dispute operations is next.
+- Phase 3B2c now has a legal-transition and data-minimization contract for the
+  support-only review queue, append-only restricted-evidence references,
+  controlled dispositions, recipient appeals, separation of duties, SLA aging,
+  and identifier-free monitoring. Slice 3B2c1 queue and dispositions is the next
+  implementation unit.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

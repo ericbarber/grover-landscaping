@@ -36,7 +36,7 @@ The approved experience is defined by:
 | 3B1b | Delivered | Authenticated verified-mailbox recipient binding with one account per invitation, idempotent replay, cross-account dispute conflict, minimized audit, and no implied organization relationship or response capability |
 | 3B2a | Delivered | Checked-recipient own-membership options, server-rechecked existing relationships, authority-attested new-provider claims, normalized duplicate-safe readiness, non-disclosing operations routing, idempotency, isolation, and no implied response authority |
 | 3B2b | Delivered | Versioned fingerprint-locked final duplicate rescan, atomic yard-care organization and owner-membership creation, claim provenance, access audit, replay, and same-name concurrency validation with no response authority |
-| 3B2c | Implementation next | Provider Operations duplicate/dispute queue, restricted evidence reference, disposition, appeal, aging, and monitoring |
+| 3B2c | Contract complete; implementation next | Support-only minimized review queue, append-only restricted-evidence references, controlled legal transitions, recipient appeal and separation of duties, SLA aging, and identifier-free monitoring |
 | 3B3 | Planned | Explicit opportunity-response capability and authorized provider inbox |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |

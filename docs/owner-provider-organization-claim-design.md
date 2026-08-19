@@ -64,6 +64,75 @@ after approval.
 
 An appeal never reopens invitation access or grants capability automatically.
 
+## Provider Operations review contract
+
+### Authorization and queue visibility
+
+- Only an authenticated `support_admin` acting in the `provider_operations`
+  function may list or mutate organization-claim reviews.
+- The general queue contains claim identifier, proposed display name, claim
+  kind, customer-safe status/reason, assigned function, version, created and
+  updated times, and an age/SLA band.
+- The queue never includes owner identity, property/address, yard photographs,
+  access notes, recipient email, membership roster, customers, services, or a
+  possible duplicate organization identifier.
+- Candidate comparison and evidence use a separately authorized restricted
+  record. General queue and audit responses carry only its opaque reference.
+
+### Append-only review record
+
+`owner_provider_organization_claim_review_events` records:
+
+- review event, claim, authenticated support actor, and actor function;
+- action: `review_started`, `cleared_for_bootstrap`, `rejected`,
+  `dispute_paused`, `appeal_submitted`, or `appeal_decided`;
+- prior and resulting status, controlled reason code, optional restricted
+  evidence reference, expected claim version, and timestamp;
+- actor-scoped idempotency key.
+
+Evidence content and internal notes do not belong in this table. Corrections
+append another event and increment the claim version; they never alter prior
+events.
+
+### Legal transitions
+
+| Action | From | To | Required facts |
+| --- | --- | --- | --- |
+| Start review | `duplicate_review` | `under_review` | Provider Operations actor and current version |
+| Clear distinct organization | `duplicate_review` or `under_review` | `bootstrap_ready` | `distinct_organization` reason and restricted evidence reference |
+| Reject claim | `duplicate_review` or `under_review` | `rejected` | controlled rejection reason and restricted evidence reference |
+| Pause linked relationship | `relationship_checked` or `claimed` | `disputed` | identity/safety reason and restricted evidence reference |
+| Submit appeal | `rejected` | `under_review` | original checked recipient, active appeal category, and new restricted evidence reference |
+| Decide appeal | `under_review` | `bootstrap_ready` or `rejected` | different support actor from the appellant, current version, reason, and evidence reference |
+
+Clearing a claim does not create an organization. The recipient must invoke the
+versioned atomic bootstrap again, which repeats the duplicate scan. Rejecting,
+pausing, appealing, or deciding never grants response authority.
+
+### Reason codes and customer wording
+
+- Clear: `distinct_organization`.
+- Reject: `existing_organization_relationship_required`,
+  `authority_not_supported`, `identity_evidence_incomplete`, or
+  `policy_ineligible`.
+- Pause: `identity_dispute`, `unsafe_contact`, or `suspected_impersonation`.
+- Appeal: `new_identity_evidence`, `relationship_correction`, or
+  `decision_correction`.
+
+Internal investigation labels are mapped to these stable customer-safe codes;
+raw notes are never returned to the recipient.
+
+### Aging and monitoring
+
+- `duplicate_review` becomes due after one business day and overdue after two.
+- `under_review` becomes due after two business days and overdue after three.
+- `disputed` is immediately priority and remains so until disposition.
+- Monitor queue depth, oldest age, transition failures, replay conflicts,
+  evidence-reference failures, and overdue counts without recipient or owner
+  identifiers in metric labels.
+- Alert Provider Operations on overdue review growth and Trust & Safety on any
+  unassigned `disputed` claim.
+
 ## Proposed persistence
 
 `owner_provider_invitation_organization_claims`:
@@ -137,7 +206,8 @@ supports the exact statement.
    isolation.
 2. **3B2b — atomic bootstrap (delivered):** fingerprint lock, final duplicate
    rescan, organization/membership creation, provenance, and concurrency tests.
-3. **3B2c — dispute operations:** Provider Operations queue, restricted evidence
-   reference, disposition/appeal, aging, and monitoring.
+3. **3B2c — dispute operations (contract complete; implementation next):**
+   Provider Operations queue, restricted evidence reference,
+   disposition/appeal, aging, and monitoring.
 4. **3B3 — response capability:** explicitly grant and enforce only the bounded
    opportunity-response actions after relationship checks.
