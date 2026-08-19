@@ -30,7 +30,8 @@ The approved experience is defined by:
 | 3A1 | Delivered | Recipient-specific known-provider invitation schema and repository creation/list foundation with limited immutable snapshots, hashed bearer tokens, replay-safe idempotency, live-recipient duplicate protection, suppression checks, pending delivery attempts, minimized audit, expiry projection, and owner isolation |
 | 3A2 | Delivered | Verified-owner create/list/detail/revoke API with validation, explicit accepted/replayed/conflict/suppressed/unavailable outcomes, no token disclosure, idempotent revoke, and atomic pending-delivery suppression |
 | 3A3 | Delivered | Internal delivery outcome mapping, durable batched expiry, retry token rotation, per-attempt idempotency, stale-attempt rejection, and lifecycle audit; no unauthenticated callback is exposed |
-| 3A4 | In progress | Verified-recipient opt-out is delivered with body-carried token validation, mailbox matching, terminal transition, durable suppression, idempotency, and audit; authenticated delivery adapter/callback and abuse reporting remain |
+| 3A4 | Delivered | Verified-recipient opt-out plus idempotent block/report with body-carried token validation, mailbox matching, minimized Trust & Safety cases, severity routing, terminal transition, durable suppression, and audit separation |
+| 3A5 | Integration pending | Select and threat-review an authenticated delivery adapter/callback; no vendor is selected and pending delivery is not represented as success |
 | 3B–3E | Planned | Provider claim/authority, bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -133,8 +134,9 @@ and optional media; nothing is visible to a provider.
 
 Design status: complete and browser validated. Production status: in progress;
 the 3A1 persistence foundation, 3A2 verified-owner API, and 3A3 internal
-delivery lifecycle are delivered. Verified-recipient opt-out is also delivered;
-adapter authentication and abuse lifecycle operations remain active work.
+delivery lifecycle and recipient opt-out/report safety boundary are delivered.
+Adapter authentication remains an external integration decision, while
+recipient-safe entry is the next local implementation slice.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
@@ -229,8 +231,9 @@ Phase 3 should proceed in these implementation slices:
 1. Recipient-specific invitation persistence, token security, delivery mapping,
    suppression, expiry, revoke, retry, and audit. The creation/list foundation
    verified-owner API, internal outcome mapping, expiry, and retry foundations
-   are delivered, together with verified-recipient opt-out and durable
-   suppression. Authenticated delivery integration and abuse reporting are next.
+   are delivered, together with verified-recipient opt-out, block/report,
+   durable suppression, and minimized case intake. Authenticated delivery
+   integration remains pending; recipient-safe invitation entry is next.
 2. Existing-provider inbox plus duplicate-safe organization claim/bootstrap and
    explicit opportunity-response capability.
 3. Provider question/interest/decline/report writes and owner/provider progress

@@ -6,7 +6,9 @@ This runbook defines the operating design required before a known-provider Yard
 Owner acquisition pilot can open. It is an approval contract, not evidence that
 the services, staffing, monitoring, or response targets exist today.
 
-Repository status: design complete.
+Repository status: design complete. Verified-recipient opt-out and minimized
+block/report intake are implemented; Trust & Safety queue operations, named
+staffing, evidence controls, retention, monitoring, and approval remain pending.
 
 Operational status: proposed and unsigned. Product Operations, Trust & Safety,
 Privacy/Security, Support, and Engineering must assign accountable people and

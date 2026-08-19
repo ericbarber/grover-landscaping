@@ -69,8 +69,10 @@ creation. Its verified-owner API now creates, lists, inspects, and revokes those
 records without exposing token material. Internal delivery operations now map
 failed/successful outcomes, rotate retry tokens, reject stale attempts, and
 materialize expiry. Verified-recipient opt-out now ships with mailbox matching
-and durable suppression; authenticated adapter integration and abuse reporting
-are the next review unit.
+and durable suppression. Minimized, severity-routed block/report intake now
+closes the scoped contact path without copying case descriptions into general
+audit data. Authenticated adapter integration remains external; recipient-safe
+entry is the next local review unit.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

@@ -1,10 +1,11 @@
 use grover_landscaping_api::owner_acquisition::{
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
-    OwnerProviderInvitationMutationResult, OwnerProviderInvitationRetryResult, OwnerReadResult,
-    RecordOwnerProviderInvitationDeliveryRequest, RetryOwnerProviderInvitationRequest,
-    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+    OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationDeliveryResult,
+    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
+    OwnerProviderInvitationRetryResult, OwnerReadResult,
+    RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
+    RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, Row};
@@ -92,6 +93,22 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .report_provider_invitation_abuse(
+                "reporter-unavailable",
+                "provider@example.com",
+                ReportOwnerProviderInvitationAbuseRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    category: "spam".to_string(),
+                    customer_safe_description: None,
+                    block_future_invitations: true,
+                    idempotency_key: "report-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInvitationAbuseReportResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .retry_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -153,6 +170,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let recipient = "dispatch@sonoranyard.example";
     let suppressed_recipient = "optout@sonoranyard.example";
     let opt_out_recipient = "preferences@sonoranyard.example";
+    let abuse_recipient = "safety@sonoranyard.example";
+    let abuse_reporter = "provider_abuse_reporter";
     sqlx::query("DELETE FROM owner_workspaces WHERE owner_user_id = ANY($1)")
         .bind(vec![owner_a, owner_b])
         .execute(&pool)
@@ -160,6 +179,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .expect("test owners should reset");
     let suppressed_fingerprint = format!("{:x}", Sha256::digest(suppressed_recipient.as_bytes()));
     let opt_out_fingerprint = format!("{:x}", Sha256::digest(opt_out_recipient.as_bytes()));
+    let abuse_fingerprint = format!("{:x}", Sha256::digest(abuse_recipient.as_bytes()));
+    sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
+        .bind(abuse_reporter)
+        .execute(&pool)
+        .await
+        .expect("test abuse reports should reset");
     sqlx::query(
         "DELETE FROM owner_provider_recipient_suppressions
          WHERE recipient_email_fingerprint = ANY($1)",
@@ -167,6 +192,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .bind(vec![
         suppressed_fingerprint.clone(),
         opt_out_fingerprint.clone(),
+        abuse_fingerprint.clone(),
     ])
     .execute(&pool)
     .await
@@ -535,6 +561,107 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationCreateResult::Suppressed
     ));
 
+    let OwnerProviderInvitationCreateResult::Created(abuse_invitation) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request(abuse_recipient, "provider-invite-abuse-001"),
+        )
+        .await
+    else {
+        panic!("abuse-report invitation should be created");
+    };
+    let abuse_request = ReportOwnerProviderInvitationAbuseRequest {
+        token: abuse_invitation.delivery_token().to_string(),
+        category: "impersonation".to_string(),
+        customer_safe_description: Some(
+            "The sender claimed to represent a company I do not recognize.".to_string(),
+        ),
+        block_future_invitations: true,
+        idempotency_key: "provider-abuse-report-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .report_provider_invitation_abuse(
+                abuse_reporter,
+                "wrong@sonoranyard.example",
+                abuse_request.clone(),
+            )
+            .await,
+        OwnerProviderInvitationAbuseReportResult::NotFound
+    ));
+    let OwnerProviderInvitationAbuseReportResult::Created(abuse_report) = repository
+        .report_provider_invitation_abuse(abuse_reporter, abuse_recipient, abuse_request.clone())
+        .await
+    else {
+        panic!("verified recipient abuse report should save");
+    };
+    assert!(abuse_report.persisted);
+    assert_eq!(abuse_report.severity, "S1");
+    assert_eq!(abuse_report.assigned_function, "trust_and_safety");
+    assert_eq!(abuse_report.status, "submitted");
+    assert!(abuse_report.block_future_invitations);
+    assert!(matches!(
+        repository
+            .report_provider_invitation_abuse(
+                abuse_reporter,
+                abuse_recipient,
+                abuse_request.clone(),
+            )
+            .await,
+        OwnerProviderInvitationAbuseReportResult::Replayed(report)
+            if report.report_id == abuse_report.report_id
+    ));
+    let mut duplicate_report = abuse_request;
+    duplicate_report.idempotency_key = "provider-abuse-report-002".to_string();
+    assert!(matches!(
+        repository
+            .report_provider_invitation_abuse(abuse_reporter, abuse_recipient, duplicate_report,)
+            .await,
+        OwnerProviderInvitationAbuseReportResult::Conflict
+    ));
+    let abuse_state = sqlx::query(
+        "SELECT invitation.status, suppression.reason, report.customer_safe_description
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_recipient_suppressions suppression
+           ON suppression.source_invitation_id = invitation.id
+         JOIN owner_provider_invitation_abuse_reports report
+           ON report.invitation_id = invitation.id
+         WHERE invitation.id = $1",
+    )
+    .bind(&abuse_invitation.invitation.invitation_id)
+    .fetch_one(&pool)
+    .await
+    .expect("abuse block state should load");
+    assert_eq!(abuse_state.get::<String, _>("status"), "opted_out");
+    assert_eq!(abuse_state.get::<String, _>("reason"), "abuse_block");
+    assert_eq!(
+        abuse_state.get::<String, _>("customer_safe_description"),
+        "The sender claimed to represent a company I do not recognize."
+    );
+    let abuse_event_data = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE owner_user_id = $1 AND event_kind = 'provider_invitation_abuse_reported'
+         ORDER BY occurred_at DESC LIMIT 1",
+    )
+    .bind(owner_a)
+    .fetch_one(&pool)
+    .await
+    .expect("abuse audit event should load")
+    .to_string();
+    assert!(!abuse_event_data.contains(abuse_recipient));
+    assert!(!abuse_event_data.contains("company I do not recognize"));
+    assert!(matches!(
+        repository
+            .create_provider_invitation(
+                owner_a,
+                &property.property_id,
+                invitation_request(abuse_recipient, "provider-invite-abuse-002"),
+            )
+            .await,
+        OwnerProviderInvitationCreateResult::Suppressed
+    ));
+
     sqlx::query(
         "INSERT INTO owner_provider_recipient_suppressions (
              recipient_email_fingerprint, recipient_email, reason
@@ -561,11 +688,20 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .execute(&pool)
         .await
         .expect("test owners should clean up");
+    sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
+        .bind(abuse_reporter)
+        .execute(&pool)
+        .await
+        .expect("test abuse reports should clean up");
     sqlx::query(
         "DELETE FROM owner_provider_recipient_suppressions
          WHERE recipient_email_fingerprint = ANY($1)",
     )
-    .bind(vec![suppressed_fingerprint, opt_out_fingerprint])
+    .bind(vec![
+        suppressed_fingerprint,
+        opt_out_fingerprint,
+        abuse_fingerprint,
+    ])
     .execute(&pool)
     .await
     .expect("test suppression should clean up");

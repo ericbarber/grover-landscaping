@@ -85,12 +85,15 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
+        validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_request,
         validate_workspace_request, validate_yard_brief_request, CreateOwnerIntakeMediaRequest,
         CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
         OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerReadResult,
+        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
+        SaveOwnerYardBriefRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -680,6 +683,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/opt-out",
             post(opt_out_owner_provider_invitation),
+        )
+        .route(
+            "/provider-invitations/report",
+            post(report_owner_provider_invitation_abuse),
         )
         .route(
             "/customer-accounts",
@@ -1741,6 +1748,75 @@ async fn opt_out_owner_provider_invitation(
             persisted_resource_unavailable_response(
                 "provider_invitation_opt_out_unavailable",
                 "The invitation preference could not be changed. Try again before relying on the update.",
+            )
+        }
+    }
+}
+
+async fn report_owner_provider_invitation_abuse(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<ReportOwnerProviderInvitationAbuseRequest>,
+) -> Response {
+    if !validate_provider_invitation_abuse_report_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_provider_invitation_abuse_report",
+                message: "Choose a report category, confirm future invitations should be blocked, and keep the description to 500 characters or fewer."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before reporting this invitation."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .report_provider_invitation_abuse(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderInvitationAbuseReportResult::Created(report) => {
+            (StatusCode::CREATED, Json(report)).into_response()
+        }
+        OwnerProviderInvitationAbuseReportResult::Replayed(report) => {
+            Json(report).into_response()
+        }
+        OwnerProviderInvitationAbuseReportResult::NotFound => resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation was not found for this verified email.",
+        ),
+        OwnerProviderInvitationAbuseReportResult::Invalid => (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_provider_invitation_abuse_report",
+                message: "The safety report did not pass validation and was not submitted."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationAbuseReportResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_invitation_abuse_report_exists",
+                message: "A safety report already exists for this invitation. Future invitations remain blocked."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationAbuseReportResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_invitation_abuse_report_unavailable",
+                "The report could not be submitted and blocking was not confirmed. Try again or use the approved support channel.",
             )
         }
     }

@@ -151,6 +151,27 @@ pub struct OptOutOwnerProviderInvitationRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ReportOwnerProviderInvitationAbuseRequest {
+    pub token: String,
+    pub category: String,
+    pub customer_safe_description: Option<String>,
+    pub block_future_invitations: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInvitationAbuseReportRecord {
+    pub report_id: String,
+    pub invitation_id: String,
+    pub category: String,
+    pub severity: String,
+    pub assigned_function: String,
+    pub status: String,
+    pub block_future_invitations: bool,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecord {
     pub invitation_id: String,
     pub owner_user_id: String,
@@ -236,6 +257,16 @@ pub enum OwnerProviderInvitationDeliveryResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationAbuseReportResult {
+    Created(OwnerProviderInvitationAbuseReportRecord),
+    Replayed(OwnerProviderInvitationAbuseReportRecord),
+    NotFound,
+    Invalid,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
     NotFound,
@@ -258,6 +289,7 @@ struct LocalOwnerState {
     intake_media: HashMap<String, OwnerIntakeMediaRecord>,
     provider_invitations: HashMap<String, LocalOwnerProviderInvitation>,
     provider_recipient_suppressions: HashSet<String>,
+    provider_abuse_reports: HashMap<String, LocalOwnerProviderAbuseReport>,
 }
 
 struct LocalOwnerProviderInvitation {
@@ -265,6 +297,12 @@ struct LocalOwnerProviderInvitation {
     _token_hash: String,
     idempotency_key: String,
     delivery_idempotency_keys: HashSet<String>,
+}
+
+struct LocalOwnerProviderAbuseReport {
+    record: OwnerProviderInvitationAbuseReportRecord,
+    reporter_user_id: String,
+    idempotency_key: String,
 }
 
 #[derive(Clone, Default)]
@@ -1293,6 +1331,113 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn report_provider_invitation_abuse(
+        &self,
+        reporter_user_id: &str,
+        verified_email: &str,
+        request: ReportOwnerProviderInvitationAbuseRequest,
+    ) -> OwnerProviderInvitationAbuseReportResult {
+        if !validate_provider_invitation_abuse_report_request(&request) {
+            return OwnerProviderInvitationAbuseReportResult::Invalid;
+        }
+        let normalized_email = normalize_email(verified_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            if let Some(existing) = local.provider_abuse_reports.values().find(|report| {
+                report.reporter_user_id == reporter_user_id
+                    && report.idempotency_key == request.idempotency_key.trim()
+            }) {
+                return OwnerProviderInvitationAbuseReportResult::Replayed(existing.record.clone());
+            }
+            let invitation_id = local
+                .provider_invitations
+                .iter()
+                .find(|(_, invitation)| {
+                    invitation._token_hash == token_hash
+                        && invitation.record.recipient_business_email == normalized_email
+                })
+                .map(|(id, _)| id.clone());
+            let Some(invitation_id) = invitation_id else {
+                return OwnerProviderInvitationAbuseReportResult::NotFound;
+            };
+            if local.provider_abuse_reports.values().any(|report| {
+                report.reporter_user_id == reporter_user_id
+                    && report.record.invitation_id == invitation_id
+            }) {
+                return OwnerProviderInvitationAbuseReportResult::Conflict;
+            }
+            let recipient_fingerprint;
+            {
+                let Some(invitation) = local.provider_invitations.get_mut(&invitation_id) else {
+                    return OwnerProviderInvitationAbuseReportResult::NotFound;
+                };
+                recipient_fingerprint =
+                    email_fingerprint(&invitation.record.recipient_business_email);
+                if matches!(
+                    invitation.record.status.as_str(),
+                    "pending_delivery" | "delivered" | "opened"
+                ) {
+                    invitation.record.status = "opted_out".to_string();
+                }
+                if invitation.record.delivery_status == "pending" {
+                    invitation.record.delivery_status = "suppressed".to_string();
+                }
+            }
+            local
+                .provider_recipient_suppressions
+                .insert(recipient_fingerprint);
+            let record = OwnerProviderInvitationAbuseReportRecord {
+                report_id: format!("owner_provider_abuse_{}", Uuid::new_v4().simple()),
+                invitation_id,
+                category: request.category.clone(),
+                severity: abuse_report_severity(&request.category).to_string(),
+                assigned_function: "trust_and_safety".to_string(),
+                status: "submitted".to_string(),
+                block_future_invitations: true,
+                persisted: false,
+            };
+            local.provider_abuse_reports.insert(
+                record.report_id.clone(),
+                LocalOwnerProviderAbuseReport {
+                    record: record.clone(),
+                    reporter_user_id: reporter_user_id.to_string(),
+                    idempotency_key: request.idempotency_key.trim().to_string(),
+                },
+            );
+            return OwnerProviderInvitationAbuseReportResult::Created(record);
+        };
+        match report_owner_provider_invitation_abuse(
+            pool,
+            reporter_user_id,
+            &normalized_email,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedAbuseReportOutcome::Created(report)) => {
+                OwnerProviderInvitationAbuseReportResult::Created(report)
+            }
+            Ok(PersistedAbuseReportOutcome::Replayed(report)) => {
+                OwnerProviderInvitationAbuseReportResult::Replayed(report)
+            }
+            Ok(PersistedAbuseReportOutcome::NotFound) => {
+                OwnerProviderInvitationAbuseReportResult::NotFound
+            }
+            Ok(PersistedAbuseReportOutcome::Conflict) => {
+                OwnerProviderInvitationAbuseReportResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInvitationAbuseReportResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, reporter_user_id, "owner provider invitation abuse report failed");
+                OwnerProviderInvitationAbuseReportResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1426,6 +1571,39 @@ pub fn validate_provider_invitation_opt_out_request(
         && token
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_invitation_abuse_report_request(
+    request: &ReportOwnerProviderInvitationAbuseRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    validate_provider_invitation_opt_out_request(&OptOutOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && matches!(
+        request.category.as_str(),
+        "spam"
+            | "harassment"
+            | "impersonation"
+            | "suspicious_contact"
+            | "unsafe_contact"
+            | "wrong_recipient"
+    ) && request
+        .customer_safe_description
+        .as_deref()
+        .is_none_or(|value| value.trim().chars().count() <= 500)
+        && request.block_future_invitations
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+fn abuse_report_severity(category: &str) -> &'static str {
+    if matches!(category, "harassment" | "impersonation" | "unsafe_contact") {
+        "S1"
+    } else {
+        "S2"
+    }
 }
 
 fn safe_media_file_name(value: &str) -> String {
@@ -2963,6 +3141,163 @@ async fn opt_out_owner_provider_invitation(
     Ok(PersistedInvitationMutationOutcome::Saved(invitation))
 }
 
+enum PersistedAbuseReportOutcome {
+    Created(OwnerProviderInvitationAbuseReportRecord),
+    Replayed(OwnerProviderInvitationAbuseReportRecord),
+    NotFound,
+    Conflict,
+}
+
+async fn report_owner_provider_invitation_abuse(
+    pool: &PgPool,
+    reporter_user_id: &str,
+    verified_email: &str,
+    request: ReportOwnerProviderInvitationAbuseRequest,
+    token_hash: &str,
+) -> Result<PersistedAbuseReportOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay = sqlx::query(
+        "SELECT report.id, report.invitation_id, report.category, report.severity,
+                report.assigned_function, report.status, report.block_future_invitations
+         FROM owner_provider_invitation_abuse_reports report
+         JOIN owner_provider_invitations invitation ON invitation.id = report.invitation_id
+         WHERE report.reporter_user_id = $1
+           AND report.idempotency_key = $2
+           AND invitation.token_hash = $3
+           AND LOWER(invitation.recipient_email) = LOWER($4)",
+    )
+    .bind(reporter_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(row) = replay {
+        transaction.commit().await?;
+        return Ok(PersistedAbuseReportOutcome::Replayed(
+            owner_provider_abuse_report_from_row(&row, true),
+        ));
+    }
+    let invitation = sqlx::query(
+        "SELECT id, owner_user_id, property_id, recipient_email, status
+         FROM owner_provider_invitations
+         WHERE token_hash = $1 AND LOWER(recipient_email) = LOWER($2)
+         FOR UPDATE",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(invitation) = invitation else {
+        transaction.rollback().await?;
+        return Ok(PersistedAbuseReportOutcome::NotFound);
+    };
+    let invitation_id: String = invitation.get("id");
+    let owner_user_id: String = invitation.get("owner_user_id");
+    let property_id: String = invitation.get("property_id");
+    let recipient_email: String = invitation.get("recipient_email");
+    let invitation_status: String = invitation.get("status");
+    let existing_report = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_invitation_abuse_reports
+             WHERE invitation_id = $1 AND reporter_user_id = $2
+         )",
+    )
+    .bind(&invitation_id)
+    .bind(reporter_user_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if existing_report {
+        transaction.rollback().await?;
+        return Ok(PersistedAbuseReportOutcome::Conflict);
+    }
+    let report_id = format!("owner_provider_abuse_{}", Uuid::new_v4().simple());
+    let severity = abuse_report_severity(&request.category);
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_invitation_abuse_reports (
+             id, invitation_id, invitation_reference_hash, reporter_user_id,
+             reporter_email_fingerprint, category, customer_safe_description,
+             block_future_invitations, severity, assigned_function, status,
+             idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, TRUE, $8,
+             'trust_and_safety', 'submitted', $9
+         )
+         RETURNING id, invitation_id, category, severity, assigned_function,
+                   status, block_future_invitations",
+    )
+    .bind(&report_id)
+    .bind(&invitation_id)
+    .bind(format!("{:x}", Sha256::digest(invitation_id.as_bytes())))
+    .bind(reporter_user_id)
+    .bind(email_fingerprint(&recipient_email))
+    .bind(&request.category)
+    .bind(
+        request
+            .customer_safe_description
+            .as_deref()
+            .map(str::trim)
+            .unwrap_or_default(),
+    )
+    .bind(severity)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    if matches!(
+        invitation_status.as_str(),
+        "pending_delivery" | "delivered" | "opened"
+    ) {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'opted_out', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "UPDATE owner_provider_invitation_delivery_attempts
+         SET status = 'suppressed', failure_code = 'abuse_block', completed_at = NOW()
+         WHERE invitation_id = $1 AND status = 'pending'",
+    )
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_recipient_suppressions (
+             recipient_email_fingerprint, recipient_email, reason, source_invitation_id
+         ) VALUES ($1, $2, 'abuse_block', $3)
+         ON CONFLICT (recipient_email_fingerprint) DO NOTHING",
+    )
+    .bind(email_fingerprint(&recipient_email))
+    .bind(&recipient_email)
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_abuse_reported', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "report_id": report_id,
+        "category": request.category,
+        "severity": severity,
+        "blocked": true,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAbuseReportOutcome::Created(
+        owner_provider_abuse_report_from_row(&row, true),
+    ))
+}
+
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {
     OwnerWorkspaceRecord {
         owner_user_id: row.get("owner_user_id"),
@@ -3066,6 +3401,24 @@ fn owner_provider_invitation_from_row(
             .try_get("delivery_status")
             .unwrap_or_else(|_| "pending".to_string()),
         delivery_attempt_count: row.try_get("delivery_attempt_count").unwrap_or(1),
+        persisted,
+    }
+}
+
+fn owner_provider_abuse_report_from_row(
+    row: &sqlx::postgres::PgRow,
+    persisted: bool,
+) -> OwnerProviderInvitationAbuseReportRecord {
+    OwnerProviderInvitationAbuseReportRecord {
+        report_id: row.get("id"),
+        invitation_id: row
+            .get::<Option<String>, _>("invitation_id")
+            .unwrap_or_default(),
+        category: row.get("category"),
+        severity: row.get("severity"),
+        assigned_function: row.get("assigned_function"),
+        status: row.get("status"),
+        block_future_invitations: row.get("block_future_invitations"),
         persisted,
     }
 }
@@ -3191,6 +3544,21 @@ mod tests {
             &OptOutOwnerProviderInvitationRequest {
                 token: new_owner_provider_invitation_token(),
             }
+        ));
+        let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
+            token: new_owner_provider_invitation_token(),
+            category: "impersonation".to_string(),
+            customer_safe_description: Some("The sender's identity looks wrong.".to_string()),
+            block_future_invitations: true,
+            idempotency_key: "abuse-report-001".to_string(),
+        };
+        assert!(validate_provider_invitation_abuse_report_request(
+            &abuse_report
+        ));
+        let mut invalid_abuse_report = abuse_report;
+        invalid_abuse_report.block_future_invitations = false;
+        assert!(!validate_provider_invitation_abuse_report_request(
+            &invalid_abuse_report
         ));
     }
 

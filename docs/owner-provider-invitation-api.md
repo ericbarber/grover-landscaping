@@ -1,0 +1,99 @@
+# Owner–Provider Invitation API
+
+## Scope
+
+This contract covers the delivered production foundation for a Yard Owner to
+invite a known yard-care provider. It does not create a provider organization,
+customer, service agreement, proposal, crew assignment, schedule, or data-access
+grant.
+
+All owner routes derive the owner subject from authentication. Recipient safety
+routes require a verified email matching the invited business mailbox. Bearer
+tokens are carried in request bodies for recipient mutations and are never
+returned by owner APIs or placed in recipient mutation URLs.
+
+## Owner routes
+
+| Method and route | Outcome |
+| --- | --- |
+| `POST /owner-properties/{property_id}/provider-invitations` | Creates a pending-delivery invitation from the latest ready brief, or safely replays the same idempotency key |
+| `GET /owner-properties/{property_id}/provider-invitations` | Lists owner-scoped invitation and latest-delivery state |
+| `GET /owner-properties/{property_id}/provider-invitations/{invitation_id}` | Loads one owner-scoped invitation receipt |
+| `POST /owner-properties/{property_id}/provider-invitations/{invitation_id}/revoke` | Idempotently closes an active invitation and suppresses a pending delivery attempt |
+
+The server derives the limited invitation snapshot. Request JSON cannot add the
+exact address, photographs, owner contact details, or access considerations.
+
+## Verified-recipient safety routes
+
+### Opt out
+
+`POST /provider-invitations/opt-out`
+
+```json
+{
+  "token": "recipient token from the invitation"
+}
+```
+
+The verified mailbox must match the invitation recipient. Success closes the
+invitation, suppresses future invitations to that address, closes a pending
+delivery attempt, and records a minimized audit event.
+
+### Block and report
+
+`POST /provider-invitations/report`
+
+```json
+{
+  "token": "recipient token from the invitation",
+  "category": "impersonation",
+  "customer_safe_description": "The sender claimed to represent a company I do not recognize.",
+  "block_future_invitations": true,
+  "idempotency_key": "client-generated-request-key"
+}
+```
+
+Allowed categories are `spam`, `harassment`, `impersonation`,
+`suspicious_contact`, `unsafe_contact`, and `wrong_recipient`. Reporting always
+requires explicit block confirmation. Harassment, impersonation, and unsafe
+contact enter the proposed S1 queue; other categories enter S2.
+
+One report is accepted per authenticated reporter and invitation. The
+customer-safe description is limited to 500 characters and is stored only in
+the restricted case record—not in general acquisition audit data. Evidence is
+represented by a separate restricted reference and is not accepted by this
+public endpoint.
+
+## Delivery and token boundaries
+
+- Tokens use high-entropy random material and only SHA-256 hashes are persisted.
+- Retry rotates the token and creates a new idempotent delivery attempt.
+- Delivered, failed, expired, opted-out, and revoked outcomes remain distinct.
+- Stale delivery outcomes cannot reopen or overwrite a newer attempt.
+- Expiry and revocation close pending delivery atomically.
+- `pending_delivery` does not mean a message was delivered.
+
+The repository includes internal delivered/failed mapping, retry, and expiry
+operations. An authenticated messaging adapter/callback is not yet selected or
+exposed; production must not claim delivery until that integration records it.
+
+## Error semantics
+
+- `400` — invalid fields, category, token format, or missing block affirmation;
+- `403` — a verified email is required;
+- `404` — invitation/token and verified mailbox do not match;
+- `409` — active duplicate, suppression, closed-state conflict, or an existing
+  safety report;
+- `503` — persistence was unavailable and the requested mutation is not
+  confirmed.
+
+## Remaining adoption work
+
+1. Select and threat-review an authenticated delivery adapter and callback.
+2. Add recipient-safe limited invitation entry without granting provider action
+   authority.
+3. Add duplicate-safe provider organization claim/bootstrap and dispute review.
+4. Add explicit opportunity-response capabilities before provider responses.
+5. Add Trust & Safety queue authorization, assignment, disposition, evidence,
+   retention, and monitoring before pilot launch.

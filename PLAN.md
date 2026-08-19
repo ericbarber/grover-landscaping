@@ -252,11 +252,16 @@ Active slice:
   per-attempt idempotency, and materialize expiry with atomic delivery closure
   and lifecycle audit. No public callback is exposed without an authentication
   contract.
-- Slice 3A4 is in progress. Verified recipients can opt out through a protected
+- Slice 3A4 is delivered. Verified recipients can opt out through a protected
   body-token endpoint that matches the invited mailbox, closes the invitation,
   suppresses future invitations, and audits the transition idempotently without
-  placing the bearer token in the URL. An authenticated delivery adapter and
-  abuse-report lifecycle remain before provider recipient entry begins.
+  placing the bearer token in the URL. They can also explicitly block and report
+  spam, harassment, impersonation, suspicious contact, unsafe contact, or a
+  wrong recipient through minimized, severity-routed Trust & Safety case intake.
+- Slice 3A5 requires a selected, authenticated delivery adapter/callback and
+  remains an integration dependency. No pending message is represented as
+  delivered. Phase 3B1 recipient-safe limited invitation entry is the next local
+  implementation slice.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
