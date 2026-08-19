@@ -136,6 +136,11 @@ status, safe progress and closure, and fixed withheld-data context. Route/client
 tests, typecheck, and production build pass; both Phase 3C browser scenarios
 await a Chromium runtime with the required system libraries. Phase 3C is
 implementation complete and Phase 3D disclosure grants/receipts is next.
+The Phase 3D0 contract now defines owner-only transactional prerequisites,
+independent categories and photo selection, no-default affirmation, complete
+approved/withheld receipts, a separately revocable current grant, enforced
+category/media reads, honest revocation, minimized audit, and fail-closed tests.
+Phase 3D1 owner review and receipt/grant creation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

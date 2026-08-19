@@ -374,6 +374,13 @@ Active slice:
   scenario is committed but shares the pending compatible-Chromium rerun.
   Phase 3C is implementation complete. Phase 3D versioned provider-specific
   grants and immutable disclosure receipts is next.
+- Phase 3D0 is delivered as the provider-specific disclosure contract. It fixes
+  owner-only transactional prerequisites, five independently selected category
+  semantics, per-photo selection, no-default affirmation, complete approved/
+  withheld partitioning, immutable receipt versus revocable current grant,
+  category-filtered provider reads, short-lived media authorization, versioned
+  revocation, minimized audit, and fail-closed acceptance criteria. Phase 3D1
+  owner review and transactional receipt/grant creation is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
