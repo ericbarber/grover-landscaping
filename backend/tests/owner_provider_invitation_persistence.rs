@@ -180,6 +180,12 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .list_provider_connection_progress("owner-unavailable", "property-unavailable")
+            .await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .get_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -1120,6 +1126,42 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!response_audit.contains(recipient));
     assert!(!response_audit.contains("421 Private Canyon Road"));
     assert!(!response_audit.contains("0199"));
+    assert!(matches!(
+        repository
+            .list_provider_connection_progress(owner_b, &property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(connection_progress) = repository
+        .list_provider_connection_progress(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner connection progress should load");
+    };
+    let active_progress = connection_progress
+        .iter()
+        .find(|entry| entry.invitation_id == retry.invitation.invitation_id)
+        .expect("active invitation progress should be present");
+    assert_eq!(active_progress.progress_stage, "disclosure_decision");
+    assert_eq!(
+        active_progress.status_label,
+        "Provider is interested in the next owner-approved review"
+    );
+    assert!(active_progress.owner_action_required);
+    assert_eq!(active_progress.next_action, "review_disclosure");
+    assert_eq!(
+        active_progress.latest_response_action.as_deref(),
+        Some("express_interest")
+    );
+    assert!(active_progress.responded_at_epoch_seconds.is_some());
+    let progress_json =
+        serde_json::to_string(&connection_progress).expect("connection progress should serialize");
+    assert!(!progress_json.contains(recipient));
+    assert!(!progress_json.contains(&capability.capability_id));
+    assert!(!progress_json.contains("capacity_unavailable"));
+    assert!(!progress_json.contains("unsafe_contact"));
+    assert!(!progress_json.contains("421 Private Canyon Road"));
+    assert!(!progress_json.contains("0199"));
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
@@ -2009,6 +2051,39 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         report_state.get::<String, _>("assigned_function"),
         "trust_and_safety"
     );
+    let OwnerReadResult::Loaded(terminal_progress) = repository
+        .list_provider_connection_progress(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("terminal owner connection progress should load");
+    };
+    let declined_progress = terminal_progress
+        .iter()
+        .find(|entry| entry.invitation_id == decline_invitation.invitation.invitation_id)
+        .expect("declined progress should be present");
+    assert_eq!(declined_progress.progress_stage, "declined");
+    assert_eq!(
+        declined_progress.latest_response_action.as_deref(),
+        Some("decline")
+    );
+    assert_eq!(
+        declined_progress.response_label.as_deref(),
+        Some("Not available for this request")
+    );
+    let closed_progress = terminal_progress
+        .iter()
+        .find(|entry| entry.invitation_id == report_invitation.invitation.invitation_id)
+        .expect("closed contact progress should be present");
+    assert_eq!(closed_progress.progress_stage, "contact_closed");
+    assert_eq!(closed_progress.status_label, "Recipient contact closed");
+    assert!(closed_progress.latest_response_action.is_none());
+    assert!(closed_progress.response_label.is_none());
+    assert!(closed_progress.responded_at_epoch_seconds.is_none());
+    let terminal_progress_json =
+        serde_json::to_string(&terminal_progress).expect("terminal progress should serialize");
+    assert!(!terminal_progress_json.contains("capacity_unavailable"));
+    assert!(!terminal_progress_json.contains("unsafe_contact"));
+    assert!(!terminal_progress_json.contains("trust_and_safety"));
 
     let OwnerProviderInvitationCreateResult::Created(expiring) = repository
         .create_provider_invitation(

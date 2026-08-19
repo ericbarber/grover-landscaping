@@ -344,6 +344,13 @@ Active slice:
   customer-safe response mapping, status-only closure, controlled recovery,
   accessibility wording, outage distinction, and visibility tests. Phase 3C1
   owner/property-scoped connection progress is the next implementation slice.
+- Phase 3C1 is delivered. Verified owners can load a property-scoped connection
+  collection derived from invitation, delivery, and bounded-response facts.
+  Deterministic stages and customer-safe labels expose question and interest,
+  generalize decline, collapse opt-out and safety report into contact closure,
+  and omit recipient email, capability/member identifiers, raw capacity/safety
+  codes, private yard data, and competitors. Missing property, empty history,
+  and outage remain distinct. Phase 3C2 provider progress is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -65,9 +65,9 @@ code maps to the general label “Not available for this request”; raw capacit
 fit codes are provider-private. A report is never identified as a report and
 its category, severity, case ID, and evidence are never exposed.
 
-`owner_action_required` is true only for `question_received` and
-`disclosure_decision`. It does not imply that the provider was selected or that
-the owner has granted additional data.
+`owner_action_required` is true only for `delivery_failed`,
+`question_received`, and `disclosure_decision`. It does not imply that the
+provider was selected or that the owner has granted additional data.
 
 ## Provider progress model
 
@@ -144,4 +144,3 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
 - Empty collection and unavailable storage are distinct.
 - Projection order and labels remain deterministic across replay and stale-tab
   scenarios.
-

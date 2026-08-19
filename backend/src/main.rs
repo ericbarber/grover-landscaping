@@ -692,6 +692,10 @@ fn app_with_runtime(
             get(list_owner_provider_invitations).post(create_owner_provider_invitation),
         )
         .route(
+            "/owner-properties/{property_id}/provider-connection-progress",
+            get(list_owner_provider_connection_progress),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-invitations/{invitation_id}",
             get(get_owner_provider_invitation),
         )
@@ -1637,6 +1641,28 @@ async fn list_owner_provider_invitations(
         OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
             "owner_provider_invitations_unavailable",
             "Your provider invitations could not be loaded.",
+        ),
+    }
+}
+
+async fn list_owner_provider_connection_progress(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_provider_connection_progress(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(entries) => Json(entries).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_connection_progress_unavailable",
+            "Provider connection progress could not be loaded. Existing invitations and responses are unchanged.",
         ),
     }
 }

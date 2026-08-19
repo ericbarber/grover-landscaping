@@ -247,6 +247,25 @@ persistence is `503`. General audit contains response/action identifiers and
 state only, never recipient email, response evidence, private address, photos,
 access notes, or owner contact.
 
+## Owner connection progress
+
+`GET /owner-properties/{property_id}/provider-connection-progress` is restricted
+to the authenticated owner of the active private property. It returns
+connections newest first with provider/invitation snapshots, delivery state,
+one stable progress stage, a customer-safe status label, one controlled next
+action, expiry, and—only when safe—the latest bounded response kind and time.
+
+Question topics map to customer-safe labels. Interest is described only as a
+request for the next owner-approved review. Decline always maps to “Not
+available for this request,” never its raw provider-private fit or capacity
+code. Opt-out and safety-report outcomes share `contact_closed`; report action,
+category, severity, case, and evidence are never returned. The collection does
+not contain recipient email, capability or membership identifiers, address,
+photos, contact details, access notes, or competing requests.
+
+A missing/cross-owner property returns `404`; persistence outage returns `503`
+rather than an empty collection.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

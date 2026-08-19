@@ -570,6 +570,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             || (segment_count == 2
                 && owner_property_suffix.ends_with("/provider-invitations")
                 && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 2
+                && owner_property_suffix.ends_with("/provider-connection-progress")
+                && *method == Method::GET)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1639,6 +1642,10 @@ mod tests {
             (
                 Method::GET,
                 "/owner-properties/property-1/provider-invitations",
+            ),
+            (
+                Method::GET,
+                "/owner-properties/property-1/provider-connection-progress",
             ),
             (
                 Method::POST,

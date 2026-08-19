@@ -114,6 +114,11 @@ are next. The Phase 3C0 contract now fixes separate projections, deterministic
 terminal/response precedence, customer-safe question/interest/decline/closure
 language, status-only provider recovery, isolation, and outage behavior. The
 owner/property-scoped projection is the next implementation slice.
+The Phase 3C1 owner projection is now delivered with property isolation,
+deterministic state precedence, safe question and interest details, generalized
+decline, indistinguishable opt-out/safety closure, controlled next actions, and
+outage-distinct handling. The checked-recipient provider progress projection is
+next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

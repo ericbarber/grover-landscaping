@@ -387,6 +387,23 @@ pub struct OwnerProviderInvitationRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderConnectionProgressEntry {
+    pub invitation_id: String,
+    pub provider_name: String,
+    pub invitation_status: String,
+    pub delivery_status: String,
+    pub progress_stage: String,
+    pub status_label: String,
+    pub owner_action_required: bool,
+    pub next_action: String,
+    pub latest_response_action: Option<String>,
+    pub response_label: Option<String>,
+    pub expires_at_epoch_seconds: i64,
+    pub responded_at_epoch_seconds: Option<i64>,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -1197,6 +1214,54 @@ impl OwnerAcquisitionRepository {
             Ok(None) => OwnerReadResult::NotFound,
             Err(error) => {
                 tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider invitation read failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn list_provider_connection_progress(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderConnectionProgressEntry>> {
+        let Some(pool) = &self.pool else {
+            let local = self.local.read().await;
+            if !local
+                .properties
+                .get(property_id)
+                .is_some_and(|property| property.owner_user_id == owner_user_id)
+            {
+                return OwnerReadResult::NotFound;
+            }
+            let mut entries: Vec<_> = local
+                .provider_invitations
+                .values()
+                .filter(|invitation| {
+                    invitation.record.owner_user_id == owner_user_id
+                        && invitation.record.property_id == property_id
+                })
+                .map(|invitation| {
+                    owner_provider_connection_progress_entry(
+                        &invitation.record.invitation_id,
+                        &invitation.record.provider_name,
+                        &invitation.record.status,
+                        &invitation.record.delivery_status,
+                        invitation.record.expires_at_epoch_seconds,
+                        None,
+                        None,
+                        None,
+                        false,
+                    )
+                })
+                .collect();
+            entries.sort_by(|left, right| right.invitation_id.cmp(&left.invitation_id));
+            return OwnerReadResult::Loaded(entries);
+        };
+        match list_owner_provider_connection_progress(pool, owner_user_id, property_id).await {
+            Ok(Some(entries)) => OwnerReadResult::Loaded(entries),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner provider connection progress read failed");
                 OwnerReadResult::Unavailable
             }
         }
@@ -3615,6 +3680,207 @@ async fn list_owner_provider_invitations(
             .map(|row| owner_provider_invitation_from_row(row, true))
             .collect(),
     ))
+}
+
+async fn list_owner_provider_connection_progress(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerProviderConnectionProgressEntry>>, sqlx::Error> {
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_properties
+             WHERE id = $1 AND owner_user_id = $2 AND status <> 'archived'
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !property_exists {
+        return Ok(None);
+    }
+    let rows = sqlx::query(
+        "SELECT invitation.id, invitation.provider_name,
+                CASE
+                    WHEN invitation.status IN ('pending_delivery', 'delivered', 'opened')
+                         AND invitation.expires_at <= NOW()
+                    THEN 'expired'
+                    ELSE invitation.status
+                END AS invitation_status,
+                COALESCE(delivery.status, 'pending') AS delivery_status,
+                EXTRACT(EPOCH FROM invitation.expires_at)::BIGINT AS expires_at_epoch_seconds,
+                response.action AS response_action,
+                response.response_code,
+                response.responded_at_epoch_seconds
+         FROM owner_provider_invitations invitation
+         LEFT JOIN LATERAL (
+             SELECT attempt.status
+             FROM owner_provider_invitation_delivery_attempts attempt
+             WHERE attempt.invitation_id = invitation.id
+             ORDER BY attempt.attempt_number DESC
+             LIMIT 1
+         ) delivery ON TRUE
+         LEFT JOIN LATERAL (
+             SELECT opportunity.action, opportunity.response_code,
+                    EXTRACT(EPOCH FROM opportunity.created_at)::BIGINT
+                        AS responded_at_epoch_seconds
+             FROM owner_provider_opportunity_responses opportunity
+             WHERE opportunity.invitation_id = invitation.id
+             ORDER BY CASE opportunity.action
+                        WHEN 'express_interest' THEN 1
+                        WHEN 'preliminary_question' THEN 2
+                        WHEN 'decline' THEN 3
+                        ELSE 4
+                      END,
+                      opportunity.created_at DESC, opportunity.id
+             LIMIT 1
+         ) response ON TRUE
+         WHERE invitation.owner_user_id = $1 AND invitation.property_id = $2
+         ORDER BY invitation.created_at DESC, invitation.id",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(Some(
+        rows.iter()
+            .map(|row| {
+                owner_provider_connection_progress_entry(
+                    &row.get::<String, _>("id"),
+                    &row.get::<String, _>("provider_name"),
+                    &row.get::<String, _>("invitation_status"),
+                    &row.get::<String, _>("delivery_status"),
+                    row.get("expires_at_epoch_seconds"),
+                    row.get("response_action"),
+                    row.get("response_code"),
+                    row.get("responded_at_epoch_seconds"),
+                    true,
+                )
+            })
+            .collect(),
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn owner_provider_connection_progress_entry(
+    invitation_id: &str,
+    provider_name: &str,
+    invitation_status: &str,
+    delivery_status: &str,
+    expires_at_epoch_seconds: i64,
+    response_action: Option<String>,
+    response_code: Option<String>,
+    responded_at_epoch_seconds: Option<i64>,
+    persisted: bool,
+) -> OwnerProviderConnectionProgressEntry {
+    let (progress_stage, status_label, owner_action_required, next_action) = match invitation_status
+    {
+        "revoked" => (
+            "withdrawn",
+            "Invitation withdrawn",
+            false,
+            "start_new_invitation",
+        ),
+        "opted_out" => (
+            "contact_closed",
+            "Recipient contact closed",
+            false,
+            "choose_another_provider",
+        ),
+        "declined" => (
+            "declined",
+            "Provider not available for this request",
+            false,
+            "choose_another_provider",
+        ),
+        "expired" => (
+            "expired",
+            "Invitation expired",
+            false,
+            "start_new_invitation",
+        ),
+        "failed" => (
+            "delivery_failed",
+            "Invitation was not delivered",
+            true,
+            "review_recipient",
+        ),
+        "opened" if response_action.as_deref() == Some("express_interest") => (
+            "disclosure_decision",
+            "Provider is interested in the next owner-approved review",
+            true,
+            "review_disclosure",
+        ),
+        "opened" if response_action.as_deref() == Some("preliminary_question") => (
+            "question_received",
+            "Provider asked a preliminary question",
+            true,
+            "review_question",
+        ),
+        "opened" => (
+            "provider_reviewing",
+            "Provider is reviewing the limited request",
+            false,
+            "wait_or_withdraw",
+        ),
+        "delivered" => (
+            "awaiting_open",
+            "Invitation delivered",
+            false,
+            "wait_or_withdraw",
+        ),
+        _ => ("sending", "Sending invitation", false, "wait"),
+    };
+    let safe_response_action = match invitation_status {
+        "declined" => Some("decline".to_string()),
+        "opened"
+            if matches!(
+                response_action.as_deref(),
+                Some("express_interest" | "preliminary_question")
+            ) =>
+        {
+            response_action
+        }
+        _ => None,
+    };
+    let response_label = match safe_response_action.as_deref() {
+        Some("express_interest") => {
+            Some("Interested in reviewing the next owner-approved details".to_string())
+        }
+        Some("preliminary_question") => Some(
+            match response_code.as_deref() {
+                Some("service_fit") => {
+                    "Asked whether the requested care fits the provider's services"
+                }
+                Some("coarse_area_fit") => "Asked whether the general service area is a fit",
+                Some("cadence_support") => "Asked whether the requested cadence is supported",
+                Some("assessment_method") => "Asked how the yard assessment would be completed",
+                _ => "Asked a preliminary question",
+            }
+            .to_string(),
+        ),
+        Some("decline") => Some("Not available for this request".to_string()),
+        _ => None,
+    };
+    let safe_responded_at = safe_response_action
+        .as_ref()
+        .and(responded_at_epoch_seconds);
+    OwnerProviderConnectionProgressEntry {
+        invitation_id: invitation_id.to_string(),
+        provider_name: provider_name.to_string(),
+        invitation_status: invitation_status.to_string(),
+        delivery_status: delivery_status.to_string(),
+        progress_stage: progress_stage.to_string(),
+        status_label: status_label.to_string(),
+        owner_action_required,
+        next_action: next_action.to_string(),
+        latest_response_action: safe_response_action,
+        response_label,
+        expires_at_epoch_seconds,
+        responded_at_epoch_seconds: safe_responded_at,
+        persisted,
+    }
 }
 
 async fn get_owner_provider_invitation(

@@ -44,7 +44,8 @@ The approved experience is defined by:
 | 3B3b | Delivered | Protected body-token inbox with effective recipient/capability/invitation/claim/organization/membership/expiry rechecks, limited snapshot, explicit withholding, privacy-safe status-only closure, and reconciliation |
 | 3B3c | Delivered | Transactionally authorized preliminary question, interest, decline, and safety-report writes with controlled codes, replay/version protection, explicit terminal behavior, and minimized audit |
 | 3C0 | Delivered | Separate owner/provider progress contract with deterministic precedence, safe response mapping, status-only closure, recovery language, and isolation acceptance criteria |
-| 3C1–3C3 | Implementation next | Owner projection, provider projection, and responsive interface adoption without expanding visibility |
+| 3C1 | Delivered | Owner/property-scoped connection progress with deterministic stages, customer-safe response mapping, isolation, and outage distinction |
+| 3C2–3C3 | Implementation next | Provider projection and responsive interface adoption without expanding visibility |
 | 3D–3E | Planned | Grants/receipts/revocation and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
