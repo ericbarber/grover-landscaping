@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-18: Defined the known-provider opportunity-response capability contract with transactional recipient/organization prerequisites, immutable invitation and brief scope, four bounded pre-disclosure actions, explicit withheld categories, expiry/revocation reconciliation, authorized inbox boundaries, minimized audit, and phased persistence/UI/action delivery.
 - 2026-08-18: Completed provider claim review operations with support-only identifier-free SLA metrics for queue states, due/overdue/priority counts and oldest age, explicit outage handling, privacy-safe serialization coverage, and a runbook for access, escalation, replay, correction, rollback, and live operational validation.
 - 2026-08-18: Delivered independent provider claim appeal decisions with original-rejector exclusion, ordinary-disposition bypass prevention, controlled approval/rejection, append-only appeal linkage, idempotent replay, approval routed back through final duplicate rescan, and no opportunity-response authority.
 - 2026-08-18: Delivered checked-recipient provider claim appeals for rejected claims with active invitation/mailbox binding, controlled appeal categories, restricted evidence references, append-only rejection linkage, version and replay safety, minimized general audit, outage handling, and response authority kept false.

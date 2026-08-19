@@ -311,6 +311,11 @@ Active slice:
   operations runbook defines access, SLA response, escalation, outage, replay,
   correction, rollback, and live-signoff evidence. Phase 3B2 is complete; Phase
   3B3 bounded opportunity-response capability is next.
+- Phase 3B3 now has a production capability contract covering transactional
+  issuance prerequisites, immutable invitation/brief/organization scope, four
+  allowed pre-disclosure actions, withheld categories, expiry and revocation,
+  server-side enforcement, audit minimization, and separate inbox/action slices.
+  Slice 3B3a capability issuance is the next implementation unit.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
