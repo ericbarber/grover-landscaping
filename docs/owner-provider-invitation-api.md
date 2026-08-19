@@ -216,6 +216,14 @@ invitation expiry, replay is idempotent, and invitation revoke/opt-out/expiry
 atomically reconciles active capability state. Issuance does not itself record a
 provider response.
 
+`POST /provider-invitations/inbox` accepts the body token and requires the
+authenticated checked recipient with matching verified mailbox. Every read
+rechecks effective capability, invitation, claim, organization, membership, and
+expiry state. Active access returns only the limited invitation snapshot, the
+actor's linked organization, four actions, and withheld categories. A changed
+or closed prerequisite reconciles active capability state and returns `410`
+with status/recovery only; no owner, organization, yard, or action data remains.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

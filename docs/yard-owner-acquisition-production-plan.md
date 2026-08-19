@@ -41,8 +41,8 @@ The approved experience is defined by:
 | 3B2c2b | Delivered | Dedicated appeal approval/rejection, original-rejector exclusion, ordinary-disposition bypass prevention, append-only appeal linkage, replay safety, and approval back to final duplicate rescan |
 | 3B2c2c | Delivered | Support-only identifier-free queue/SLA aggregates, outage-distinct handling, oldest-age signal, alert/escalation guidance, recovery/rollback, and live validation checklist |
 | 3B3a | Delivered | Transactionally issued response capability with checked recipient, eligible claim, active yard-care organization/membership, explicit withholding acknowledgement, immutable brief/invitation scope, four fixed actions, replay/conflict/outage handling, and invitation reconciliation |
-| 3B3b | Implementation next | Authorized provider inbox with effective capability rechecks, limited snapshot, withheld-category clarity, and recovery states |
-| 3B3c | Planned | Bounded preliminary question, interest, decline, and report writes with controlled content and minimized audit |
+| 3B3b | Delivered | Protected body-token inbox with effective recipient/capability/invitation/claim/organization/membership/expiry rechecks, limited snapshot, explicit withholding, privacy-safe status-only closure, and reconciliation |
+| 3B3c | Implementation next | Bounded preliminary question, interest, decline, and report writes with controlled content and minimized audit |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 

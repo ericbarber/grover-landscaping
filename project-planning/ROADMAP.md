@@ -104,7 +104,9 @@ separate authorized inbox/action slices.
 Capability persistence is now delivered with transactional identity,
 relationship, organization, membership, acknowledgement, scope, expiry,
 idempotency, and invitation-reconciliation checks. The authorized provider inbox
-is next.
+is now delivered with effective authority rechecks, limited snapshot and
+withholding clarity, and privacy-safe status-only recovery. Bounded response
+writes are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

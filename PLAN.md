@@ -322,7 +322,13 @@ Active slice:
   actor membership plus explicit withheld-data acknowledgement. The capability
   is brief-version and invitation-expiry scoped, fixes the four allowed actions,
   fails closed on conflict/outage, and is revoked or expired atomically with the
-  invitation. Phase 3B3b authorized inbox is next.
+  invitation.
+- Phase 3B3b is delivered. The protected body-token inbox rechecks recipient,
+  capability, invitation, claim, organization, membership, and expiry on every
+  read. Effective access returns only the approved limited snapshot, own
+  organization context, four actions, and withheld categories. Changed or
+  closed authority is reconciled and returns status-only recovery with no owner,
+  organization, or action data. Phase 3B3c bounded response writes are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

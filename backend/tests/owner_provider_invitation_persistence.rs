@@ -2,10 +2,11 @@ use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
     CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-    IssueOwnerProviderResponseCapabilityRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-    OwnerProviderClaimReviewMetricsResult, OwnerProviderInvitationAbuseReportResult,
+    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderInboxRequest,
+    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
     OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
     OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
@@ -287,6 +288,18 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderResponseCapabilityResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .open_provider_inbox(
+                "recipient-unavailable",
+                "provider@example.com",
+                OpenOwnerProviderInboxRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInboxResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -882,6 +895,45 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!capability_audit.contains(recipient));
     assert!(!capability_audit.contains("421 Private Canyon Road"));
     assert!(!capability_audit.contains("0199"));
+    assert!(matches!(
+        repository
+            .open_provider_inbox(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                OpenOwnerProviderInboxRequest {
+                    token: retry.delivery_token().to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInboxResult::NotFound
+    ));
+    let OwnerProviderInboxResult::Loaded(inbox_entry) = repository
+        .open_provider_inbox(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("effectively authorized provider inbox should load");
+    };
+    assert_eq!(inbox_entry.status, "active");
+    assert!(inbox_entry.can_review_limited_request);
+    assert!(inbox_entry.opportunity_response_capability);
+    assert_eq!(inbox_entry.owner_name.as_deref(), Some("Morgan Reyes"));
+    assert_eq!(inbox_entry.coarse_area.as_deref(), Some("Central Phoenix"));
+    assert_eq!(inbox_entry.care_goals, ["Routine upkeep"]);
+    assert_eq!(
+        inbox_entry.organization_name.as_deref(),
+        Some("Recipient Owned Yard Care")
+    );
+    assert!(inbox_entry.recovery_action.is_none());
+    let inbox_json = serde_json::to_string(&inbox_entry).expect("inbox should serialize");
+    assert!(!inbox_json.contains(recipient));
+    assert!(!inbox_json.contains("421 Private Canyon Road"));
+    assert!(!inbox_json.contains("0199"));
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
@@ -1614,6 +1666,28 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .await
         .expect("revoked capability status should load"),
         "revoked"
+    );
+    let OwnerProviderInboxResult::Closed(closed_inbox) = repository
+        .open_provider_inbox(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("revoked invitation should return status-only inbox recovery");
+    };
+    assert_eq!(closed_inbox.status, "revoked");
+    assert!(!closed_inbox.can_review_limited_request);
+    assert!(!closed_inbox.opportunity_response_capability);
+    assert!(closed_inbox.owner_name.is_none());
+    assert!(closed_inbox.organization_id.is_none());
+    assert!(closed_inbox.allowed_actions.is_empty());
+    assert_eq!(
+        closed_inbox.recovery_action.as_deref(),
+        Some("review_invitation_status")
     );
     assert_eq!(
         sqlx::query_scalar::<_, i64>(

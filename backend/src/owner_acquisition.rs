@@ -242,6 +242,11 @@ pub struct IssueOwnerProviderResponseCapabilityRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OpenOwnerProviderInboxRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderResponseCapabilityRecord {
     pub capability_id: String,
     pub invitation_id: String,
@@ -256,6 +261,24 @@ pub struct OwnerProviderResponseCapabilityRecord {
     pub version: i64,
     pub opportunity_response_capability: bool,
     pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInboxEntry {
+    pub invitation_id: String,
+    pub status: String,
+    pub can_review_limited_request: bool,
+    pub organization_id: Option<String>,
+    pub organization_name: Option<String>,
+    pub provider_name: Option<String>,
+    pub owner_name: Option<String>,
+    pub coarse_area: Option<String>,
+    pub care_goals: Vec<String>,
+    pub cadence: Option<String>,
+    pub allowed_actions: Vec<String>,
+    pub withheld_categories: Vec<String>,
+    pub opportunity_response_capability: bool,
+    pub recovery_action: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -498,6 +521,15 @@ pub enum OwnerProviderResponseCapabilityResult {
     NotFound,
     InvalidState,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInboxResult {
+    Loaded(OwnerProviderInboxEntry),
+    Closed(OwnerProviderInboxEntry),
+    NotFound,
+    InvalidState,
     Unavailable,
 }
 
@@ -2291,6 +2323,47 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn open_provider_inbox(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        request: OpenOwnerProviderInboxRequest,
+    ) -> OwnerProviderInboxResult {
+        if !validate_provider_inbox_request(&request) {
+            return OwnerProviderInboxResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderInboxResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match open_owner_provider_inbox(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedProviderInboxOutcome::Loaded(entry)) => {
+                OwnerProviderInboxResult::Loaded(entry)
+            }
+            Ok(PersistedProviderInboxOutcome::Closed(entry)) => {
+                OwnerProviderInboxResult::Closed(entry)
+            }
+            Ok(PersistedProviderInboxOutcome::NotFound) => OwnerProviderInboxResult::NotFound,
+            Ok(PersistedProviderInboxOutcome::InvalidState) => {
+                OwnerProviderInboxResult::InvalidState
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider inbox open failed");
+                OwnerProviderInboxResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -2604,6 +2677,12 @@ pub fn validate_provider_response_capability_request(
         && idempotency_key
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_inbox_request(request: &OpenOwnerProviderInboxRequest) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    })
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -5719,6 +5798,170 @@ fn owner_provider_response_capability_from_row(
     }
 }
 
+enum PersistedProviderInboxOutcome {
+    Loaded(OwnerProviderInboxEntry),
+    Closed(OwnerProviderInboxEntry),
+    NotFound,
+    InvalidState,
+}
+
+async fn open_owner_provider_inbox(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+) -> Result<PersistedProviderInboxOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        "SELECT invitation.id AS invitation_id, invitation.owner_user_id,
+                invitation.property_id, invitation.provider_name,
+                invitation.owner_name_snapshot, invitation.coarse_area_snapshot,
+                invitation.care_goals_snapshot, invitation.cadence_snapshot,
+                invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS invitation_expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status,
+                claim.status AS claim_status, claim.organization_id,
+                organization.display_name AS organization_name,
+                organization.status AS organization_status,
+                organization.organization_type,
+                capability.id AS capability_id, capability.status AS capability_status,
+                capability.expires_at <= NOW() AS capability_expired,
+                capability.allowed_actions, capability.withheld_categories,
+                EXISTS (
+                    SELECT 1 FROM organization_memberships membership
+                    WHERE membership.organization_id = claim.organization_id
+                      AND membership.user_id = $3 AND membership.status = 'active'
+                ) AS active_membership
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         LEFT JOIN owner_provider_invitation_organization_claims claim
+           ON claim.invitation_id = invitation.id
+          AND claim.status IN ('relationship_checked', 'claimed', 'disputed',
+                               'duplicate_review', 'under_review', 'bootstrap_ready')
+         LEFT JOIN organizations organization ON organization.id = claim.organization_id
+         LEFT JOIN owner_provider_invitation_response_capabilities capability
+           ON capability.invitation_id = invitation.id AND capability.actor_user_id = $3
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)
+         ORDER BY claim.created_at DESC NULLS LAST LIMIT 1
+         FOR UPDATE OF invitation",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(recipient_user_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(PersistedProviderInboxOutcome::NotFound);
+    };
+    let recipient_checked = row.get::<String, _>("recipient_user_id") == recipient_user_id
+        && row.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && row.get::<String, _>("recipient_check_status") == "checked";
+    if !recipient_checked {
+        transaction.rollback().await?;
+        return Ok(PersistedProviderInboxOutcome::InvalidState);
+    }
+    let capability_id: Option<String> = row.get("capability_id");
+    if capability_id.is_none() {
+        transaction.rollback().await?;
+        return Ok(PersistedProviderInboxOutcome::InvalidState);
+    }
+    let invitation_status: String = row.get("invitation_status");
+    let invitation_expired: bool = row.get("invitation_expired");
+    let capability_status: String = row.get("capability_status");
+    let capability_expired: bool = row.get("capability_expired");
+    let claim_status: Option<String> = row.get("claim_status");
+    let relationship_active = claim_status
+        .as_deref()
+        .is_some_and(|status| matches!(status, "relationship_checked" | "claimed"));
+    let organization_active = row
+        .try_get::<String, _>("organization_status")
+        .is_ok_and(|status| status == "active")
+        && row
+            .try_get::<String, _>("organization_type")
+            .is_ok_and(|kind| kind == "yard_care_company")
+        && row.get::<bool, _>("active_membership");
+    let effective = invitation_status == "opened"
+        && !invitation_expired
+        && capability_status == "active"
+        && !capability_expired
+        && relationship_active
+        && organization_active;
+    if !effective {
+        let (next_status, recovery_action, reason) = if invitation_expired || capability_expired {
+            ("expired", "request_new_invitation", "capability_expired")
+        } else if invitation_status != "opened" {
+            ("revoked", "review_invitation_status", "invitation_closed")
+        } else {
+            (
+                "suspended",
+                "resolve_provider_relationship",
+                "provider_relationship_inactive",
+            )
+        };
+        if capability_status == "active" {
+            reconcile_owner_provider_response_capability(
+                &mut transaction,
+                &row.get::<String, _>("invitation_id"),
+                &row.get::<String, _>("owner_user_id"),
+                &row.get::<String, _>("property_id"),
+                next_status,
+                reason,
+            )
+            .await?;
+        }
+        transaction.commit().await?;
+        return Ok(PersistedProviderInboxOutcome::Closed(
+            OwnerProviderInboxEntry {
+                invitation_id: row.get("invitation_id"),
+                status: next_status.to_string(),
+                can_review_limited_request: false,
+                organization_id: None,
+                organization_name: None,
+                provider_name: None,
+                owner_name: None,
+                coarse_area: None,
+                care_goals: Vec::new(),
+                cadence: None,
+                allowed_actions: Vec::new(),
+                withheld_categories: vec![
+                    "exact_address".to_string(),
+                    "yard_photos".to_string(),
+                    "owner_contact".to_string(),
+                    "access_considerations".to_string(),
+                    "pricing_and_work_authority".to_string(),
+                ],
+                opportunity_response_capability: false,
+                recovery_action: Some(recovery_action.to_string()),
+            },
+        ));
+    }
+    transaction.commit().await?;
+    Ok(PersistedProviderInboxOutcome::Loaded(
+        OwnerProviderInboxEntry {
+            invitation_id: row.get("invitation_id"),
+            status: "active".to_string(),
+            can_review_limited_request: true,
+            organization_id: row.get("organization_id"),
+            organization_name: row.get("organization_name"),
+            provider_name: Some(row.get("provider_name")),
+            owner_name: Some(row.get("owner_name_snapshot")),
+            coarse_area: Some(row.get("coarse_area_snapshot")),
+            care_goals: row.get("care_goals_snapshot"),
+            cadence: Some(row.get("cadence_snapshot")),
+            allowed_actions: row.get("allowed_actions"),
+            withheld_categories: row.get("withheld_categories"),
+            opportunity_response_capability: true,
+            recovery_action: None,
+        },
+    ))
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -6234,6 +6477,11 @@ mod tests {
         invalid_capability.withheld_categories_acknowledged = false;
         assert!(!validate_provider_response_capability_request(
             &invalid_capability
+        ));
+        assert!(validate_provider_inbox_request(
+            &OpenOwnerProviderInboxRequest {
+                token: new_owner_provider_invitation_token(),
+            }
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),

@@ -86,7 +86,7 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
-        validate_provider_invitation_abuse_report_request,
+        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_organization_bootstrap_request,
@@ -99,10 +99,11 @@ use grover_landscaping_api::{
         CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
         CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
         IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-        OwnerProviderClaimReviewMetricsResult, OwnerProviderInvitationAbuseReportResult,
+        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
+        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
         OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
         OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
@@ -719,6 +720,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/organization-claims",
             post(create_owner_provider_organization_claim),
+        )
+        .route(
+            "/provider-invitations/inbox",
+            post(open_owner_provider_inbox),
         )
         .route(
             "/provider-invitation-organization-claims/{claim_id}/bootstrap",
@@ -2332,6 +2337,57 @@ async fn issue_owner_provider_response_capability(
                 "The bounded response capability could not be confirmed. No response authority was granted.",
             )
         }
+    }
+}
+
+async fn open_owner_provider_inbox(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<OpenOwnerProviderInboxRequest>,
+) -> Response {
+    if !validate_provider_inbox_request(&request) {
+        return resource_not_found_response(
+            "provider_inbox_not_found",
+            "The provider invitation is invalid or no longer available.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before opening the provider inbox."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .open_provider_inbox(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderInboxResult::Loaded(entry) => Json(entry).into_response(),
+        OwnerProviderInboxResult::Closed(entry) => {
+            (StatusCode::GONE, Json(entry)).into_response()
+        }
+        OwnerProviderInboxResult::NotFound => resource_not_found_response(
+            "provider_inbox_not_found",
+            "The provider invitation is not available to this verified account.",
+        ),
+        OwnerProviderInboxResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_inbox_not_ready",
+                message: "Complete recipient, organization, and bounded response authorization before opening the provider inbox."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInboxResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_inbox_unavailable",
+            "The provider inbox could not be loaded. No additional yard information was shown.",
+        ),
     }
 }
 
