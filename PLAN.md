@@ -292,8 +292,13 @@ Active slice:
   duplicate/under-review/disputed queue and apply versioned, replay-safe legal
   transitions backed by append-only review events and opaque restricted
   evidence references. General audit excludes evidence and candidate data.
-  Slice 3B2c2 recipient appeal, separation-of-duties enforcement, and monitoring
-  is next.
+- Phase 3B2c2a is delivered. The original checked recipient can appeal only a
+  rejected claim through the active body-token invitation, one of three
+  controlled categories, a restricted evidence reference, current version, and
+  actor-scoped idempotency key. Appeals reopen `under_review`, retain response
+  capability as false, link append-only to the rejection, and keep evidence,
+  recipient email, and private owner data out of general audit. Independent
+  appeal decisions are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -1,7 +1,8 @@
 use grover_landscaping_api::owner_acquisition::{
-    BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerPropertyRequest,
-    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
-    DecideOwnerProviderClaimReviewRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
+    CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
+    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
+    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
     OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
     OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
@@ -247,6 +248,23 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderClaimReviewDecisionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .appeal_provider_organization_claim(
+                "recipient-unavailable",
+                "provider@example.com",
+                "claim-unavailable",
+                AppealOwnerProviderOrganizationClaimRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    expected_version: 1,
+                    category: "decision_correction".to_string(),
+                    evidence_reference: "restricted://provider-claims/outage".to_string(),
+                    idempotency_key: "appeal-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderClaimAppealResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -916,6 +934,129 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .to_string();
     assert!(!general_review_audit.contains("evidence-001"));
     assert!(!general_review_audit.contains("org_provider_claim_private_duplicate"));
+
+    let appeal_recipient = "appeal@sonoranyard.example";
+    let appeal_invitation = ready_checked_invitation(
+        &repository,
+        owner_a,
+        &property.property_id,
+        appeal_recipient,
+        "recipient-user-appeal",
+        "provider-invite-appeal-001",
+    )
+    .await;
+    let OwnerProviderOrganizationClaimResult::Created(appeal_claim) = repository
+        .create_provider_organization_claim(
+            "recipient-user-appeal",
+            appeal_recipient,
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: appeal_invitation.delivery_token().to_string(),
+                claim_kind: "new_organization".to_string(),
+                organization_id: None,
+                provider_display_name: Some("Desert Duplicate Care".to_string()),
+                authority_attested: true,
+                idempotency_key: "provider-org-claim-appeal-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("appeal test claim should enter duplicate review");
+    };
+    let OwnerProviderClaimReviewDecisionResult::Updated(rejected_claim) = repository
+        .decide_provider_organization_claim_review(
+            "support-provider-operations-rejector",
+            &appeal_claim.claim_id,
+            DecideOwnerProviderClaimReviewRequest {
+                action: "rejected".to_string(),
+                expected_version: appeal_claim.version,
+                reason_code: Some("identity_evidence_incomplete".to_string()),
+                evidence_reference: Some("restricted://provider-claims/rejection-001".to_string()),
+                idempotency_key: "provider-claim-review-reject-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("provider operations should reject the incomplete claim");
+    };
+    assert_eq!(rejected_claim.status, "rejected");
+    let appeal_request = AppealOwnerProviderOrganizationClaimRequest {
+        token: appeal_invitation.delivery_token().to_string(),
+        expected_version: rejected_claim.version,
+        category: "new_identity_evidence".to_string(),
+        evidence_reference: "restricted://provider-claims/appeal-001".to_string(),
+        idempotency_key: "provider-claim-appeal-submit-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .appeal_provider_organization_claim(
+                "recipient-user-appeal",
+                "wrong@sonoranyard.example",
+                &appeal_claim.claim_id,
+                appeal_request.clone(),
+            )
+            .await,
+        OwnerProviderClaimAppealResult::NotFound
+    ));
+    let OwnerProviderClaimAppealResult::Submitted(appealed_claim) = repository
+        .appeal_provider_organization_claim(
+            "recipient-user-appeal",
+            appeal_recipient,
+            &appeal_claim.claim_id,
+            appeal_request.clone(),
+        )
+        .await
+    else {
+        panic!("checked recipient should submit a controlled appeal");
+    };
+    assert_eq!(appealed_claim.status, "under_review");
+    assert_eq!(appealed_claim.version, rejected_claim.version + 1);
+    assert!(!appealed_claim.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .appeal_provider_organization_claim(
+                "recipient-user-appeal",
+                appeal_recipient,
+                &appeal_claim.claim_id,
+                appeal_request,
+            )
+            .await,
+        OwnerProviderClaimAppealResult::Replayed(review)
+            if review.status == "under_review"
+    ));
+    let appeal_event = sqlx::query(
+        "SELECT actor_function, action, appeal_of_review_event_id, evidence_reference
+         FROM owner_provider_organization_claim_review_events
+         WHERE claim_id = $1 AND action = 'appeal_submitted'",
+    )
+    .bind(&appeal_claim.claim_id)
+    .fetch_one(&pool)
+    .await
+    .expect("appeal history should load");
+    assert_eq!(
+        appeal_event.get::<String, _>("actor_function"),
+        "checked_recipient"
+    );
+    assert!(appeal_event
+        .get::<Option<String>, _>("appeal_of_review_event_id")
+        .is_some());
+    assert_eq!(
+        appeal_event
+            .get::<Option<String>, _>("evidence_reference")
+            .as_deref(),
+        Some("restricted://provider-claims/appeal-001")
+    );
+    let general_appeal_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_invitation_organization_appealed'
+           AND event_data->>'claim_id' = $1",
+    )
+    .bind(&appeal_claim.claim_id)
+    .fetch_one(&pool)
+    .await
+    .expect("general appeal audit should load")
+    .to_string();
+    assert!(!general_appeal_audit.contains("appeal-001"));
+    assert!(!general_appeal_audit.contains(appeal_recipient));
 
     let unique_recipient = "unique@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(unique_invitation) = repository

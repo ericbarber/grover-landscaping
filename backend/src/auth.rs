@@ -527,6 +527,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
+    if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/appeals") {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
     if path == "/provider-organization-claim-reviews" {
         return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::GET;
     }
@@ -1643,6 +1646,10 @@ mod tests {
             (
                 Method::POST,
                 "/provider-invitation-organization-claims/claim-1/bootstrap",
+            ),
+            (
+                Method::POST,
+                "/provider-invitation-organization-claims/claim-1/appeals",
             ),
         ] {
             assert!(is_protected_api_path(path));

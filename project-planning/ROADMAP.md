@@ -88,7 +88,10 @@ restricted evidence, controlled dispositions and appeals, separation of duties,
 customer-safe reasons, and overdue monitoring. Its first implementation slice
 now delivers the queue, SLA age bands, versioned dispositions, append-only
 review history, replay, and evidence-free general audit. Recipient appeal and
-monitoring are next.
+monitoring are next. Checked-recipient appeal intake is now delivered with
+active invitation/mailbox binding, controlled categories, restricted evidence,
+rejection linkage, and no response authority. Independent appeal decisions are
+the next slice.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

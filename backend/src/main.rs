@@ -90,13 +90,15 @@ use grover_landscaping_api::{
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_organization_bootstrap_request,
+        validate_provider_organization_claim_appeal_request,
         validate_provider_organization_claim_request,
         validate_provider_organization_options_request, validate_workspace_request,
-        validate_yard_brief_request, BootstrapOwnerProviderOrganizationClaimRequest,
-        CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
-        DecideOwnerProviderClaimReviewRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
+        BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
+        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
+        CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
+        ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
         OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
         OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
@@ -719,6 +721,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitation-organization-claims/{claim_id}/bootstrap",
             post(bootstrap_owner_provider_organization_claim),
+        )
+        .route(
+            "/provider-invitation-organization-claims/{claim_id}/appeals",
+            post(appeal_owner_provider_organization_claim),
         )
         .route(
             "/provider-organization-claim-reviews",
@@ -2168,6 +2174,78 @@ async fn bootstrap_owner_provider_organization_claim(
                 "Final provider setup could not be confirmed. No opportunity-response authority was granted.",
             )
         }
+    }
+}
+
+async fn appeal_owner_provider_organization_claim(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(claim_id): Path<String>,
+    Json(request): Json<AppealOwnerProviderOrganizationClaimRequest>,
+) -> Response {
+    if claim_id.trim().is_empty() || !validate_provider_organization_claim_appeal_request(&request)
+    {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_appeal_invalid",
+                message: "Choose an appeal category and attach an approved restricted evidence reference."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before appealing this decision."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .appeal_provider_organization_claim(
+            &principal.subject,
+            verified_email,
+            claim_id.trim(),
+            request,
+        )
+        .await
+    {
+        OwnerProviderClaimAppealResult::Submitted(review) => {
+            (StatusCode::CREATED, Json(review)).into_response()
+        }
+        OwnerProviderClaimAppealResult::Replayed(review) => Json(review).into_response(),
+        OwnerProviderClaimAppealResult::NotFound => resource_not_found_response(
+            "provider_organization_claim_not_found",
+            "The provider organization claim is not available to this verified account.",
+        ),
+        OwnerProviderClaimAppealResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_appeal_not_available",
+                message: "Only a current rejected claim may be appealed by its checked recipient."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderClaimAppealResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_appeal_conflict",
+                message: "The claim changed before the appeal was recorded. Reload its status before trying again."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderClaimAppealResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_organization_claim_appeal_unavailable",
+            "The appeal could not be confirmed. The claim was not reported as reopened.",
+        ),
     }
 }
 

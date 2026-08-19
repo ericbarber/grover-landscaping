@@ -171,6 +171,21 @@ body-token invitation, and its persisted recipient check.
   audit receives claim/action/status only and never evidence, recipient email,
   owner-private facts, or a duplicate candidate identifier.
 
+## Checked-recipient claim appeal
+
+`POST /provider-invitation-organization-claims/{claim_id}/appeals` requires the
+authenticated checked recipient, matching verified invited mailbox, active
+opened body-token invitation, rejected claim, current version, and an
+actor-scoped idempotency key. The payload accepts only
+`new_identity_evidence`, `relationship_correction`, or `decision_correction`
+plus an opaque restricted evidence reference.
+
+A successful appeal moves the claim to `under_review`, links append-only to the
+rejection event, assigns Provider Operations, and returns
+`opportunity_response_capability: false`. It does not create or restore an
+organization, expose a duplicate candidate, reopen a closed invitation, or
+authorize an opportunity response.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

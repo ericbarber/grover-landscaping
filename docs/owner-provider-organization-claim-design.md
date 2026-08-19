@@ -209,7 +209,10 @@ supports the exact statement.
 3. **3B2c1 — dispute operations (delivered):** Provider Operations minimized
    queue, age bands, restricted evidence references, append-only review events,
    and controlled review/clear/reject/pause dispositions.
-4. **3B2c2 — appeal and monitoring:** checked-recipient appeal, reviewer
-   separation of duties, overdue metrics/alerts, and runbook validation.
-5. **3B3 — response capability:** explicitly grant and enforce only the bounded
+4. **3B2c2a — recipient appeal (delivered):** checked-recipient rejected-claim
+   appeal with controlled category, restricted evidence, rejection linkage,
+   versioning, replay, and minimized audit.
+5. **3B2c2b–c — decision and monitoring:** independent appeal decisions,
+   overdue metrics/alerts, and runbook validation.
+6. **3B3 — response capability:** explicitly grant and enforce only the bounded
    opportunity-response actions after relationship checks.

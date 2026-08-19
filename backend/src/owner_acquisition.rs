@@ -226,6 +226,15 @@ pub struct DecideOwnerProviderClaimReviewRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct AppealOwnerProviderOrganizationClaimRequest {
+    pub token: String,
+    pub expected_version: i64,
+    pub category: String,
+    pub evidence_reference: String,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderClaimReviewRecord {
     pub claim_id: String,
     pub claim_kind: String,
@@ -236,6 +245,7 @@ pub struct OwnerProviderClaimReviewRecord {
     pub version: i64,
     pub age_band: String,
     pub updated_at_epoch_seconds: i64,
+    pub opportunity_response_capability: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -422,6 +432,16 @@ pub enum OwnerProviderClaimReviewListResult {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerProviderClaimReviewDecisionResult {
     Updated(OwnerProviderClaimReviewRecord),
+    Replayed(OwnerProviderClaimReviewRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderClaimAppealResult {
+    Submitted(OwnerProviderClaimReviewRecord),
     Replayed(OwnerProviderClaimReviewRecord),
     NotFound,
     InvalidState,
@@ -2106,6 +2126,52 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn appeal_provider_organization_claim(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        claim_id: &str,
+        request: AppealOwnerProviderOrganizationClaimRequest,
+    ) -> OwnerProviderClaimAppealResult {
+        if !validate_provider_organization_claim_appeal_request(&request) {
+            return OwnerProviderClaimAppealResult::InvalidState;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderClaimAppealResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match appeal_owner_provider_organization_claim(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            claim_id,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedClaimAppealOutcome::Submitted(review)) => {
+                OwnerProviderClaimAppealResult::Submitted(review)
+            }
+            Ok(PersistedClaimAppealOutcome::Replayed(review)) => {
+                OwnerProviderClaimAppealResult::Replayed(review)
+            }
+            Ok(PersistedClaimAppealOutcome::NotFound) => OwnerProviderClaimAppealResult::NotFound,
+            Ok(PersistedClaimAppealOutcome::InvalidState) => {
+                OwnerProviderClaimAppealResult::InvalidState
+            }
+            Ok(PersistedClaimAppealOutcome::Conflict) => OwnerProviderClaimAppealResult::Conflict,
+            Err(error) if is_unique_violation(&error) => OwnerProviderClaimAppealResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, claim_id, "provider claim appeal failed");
+                OwnerProviderClaimAppealResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -2384,6 +2450,28 @@ pub fn validate_provider_claim_review_decision_request(
         _ => false,
     };
     request.expected_version > 0 && replay_key_valid && action_valid
+}
+
+pub fn validate_provider_organization_claim_appeal_request(
+    request: &AppealOwnerProviderOrganizationClaimRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    let evidence_reference = request.evidence_reference.trim();
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.expected_version > 0
+        && matches!(
+            request.category.as_str(),
+            "new_identity_evidence" | "relationship_correction" | "decision_correction"
+        )
+        && (8..=240).contains(&evidence_reference.chars().count())
+        && evidence_reference.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | ':' | '/')
+        })
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -4839,6 +4927,7 @@ fn owner_provider_claim_review_from_row(
         version: row.get("version"),
         age_band: row.get("age_band"),
         updated_at_epoch_seconds: row.get("updated_at_epoch_seconds"),
+        opportunity_response_capability: false,
     }
 }
 
@@ -4973,6 +5062,163 @@ async fn decide_owner_provider_organization_claim_review(
         match get_owner_provider_organization_claim_review(pool, claim_id).await? {
             Some(review) => PersistedClaimReviewDecisionOutcome::Updated(review),
             None => PersistedClaimReviewDecisionOutcome::NotFound,
+        },
+    )
+}
+
+enum PersistedClaimAppealOutcome {
+    Submitted(OwnerProviderClaimReviewRecord),
+    Replayed(OwnerProviderClaimReviewRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn appeal_owner_provider_organization_claim(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    claim_id: &str,
+    request: AppealOwnerProviderOrganizationClaimRequest,
+    token_hash: &str,
+) -> Result<PersistedClaimAppealOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay_claim_id = sqlx::query_scalar::<_, String>(
+        "SELECT event.claim_id
+         FROM owner_provider_organization_claim_review_events event
+         JOIN owner_provider_invitation_organization_claims claim ON claim.id = event.claim_id
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         WHERE event.actor_user_id = $1 AND event.idempotency_key = $2
+           AND event.action = 'appeal_submitted'
+           AND invitation.token_hash = $3
+           AND LOWER(invitation.recipient_email) = LOWER($4)",
+    )
+    .bind(recipient_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay_claim_id) = replay_claim_id {
+        transaction.commit().await?;
+        if replay_claim_id != claim_id {
+            return Ok(PersistedClaimAppealOutcome::Conflict);
+        }
+        return Ok(
+            match get_owner_provider_organization_claim_review(pool, claim_id).await? {
+                Some(review) => PersistedClaimAppealOutcome::Replayed(review),
+                None => PersistedClaimAppealOutcome::NotFound,
+            },
+        );
+    }
+    let claim = sqlx::query(
+        "SELECT claim.status, claim.version, claim.invitation_id,
+                invitation.owner_user_id, invitation.property_id,
+                invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status,
+                rejection.id AS rejection_event_id
+         FROM owner_provider_invitation_organization_claims claim
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.id = claim.recipient_check_id
+         LEFT JOIN LATERAL (
+             SELECT event.id
+             FROM owner_provider_organization_claim_review_events event
+             WHERE event.claim_id = claim.id
+               AND event.resulting_status = 'rejected'
+             ORDER BY event.occurred_at DESC, event.id DESC LIMIT 1
+         ) rejection ON TRUE
+         WHERE claim.id = $1 AND invitation.token_hash = $2
+           AND LOWER(invitation.recipient_email) = LOWER($3)
+         FOR UPDATE OF claim, invitation",
+    )
+    .bind(claim_id)
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(claim) = claim else {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimAppealOutcome::NotFound);
+    };
+    let recipient_checked = claim.get::<String, _>("recipient_user_id") == recipient_user_id
+        && claim.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && claim.get::<String, _>("recipient_check_status") == "checked";
+    if !recipient_checked
+        || claim.get::<String, _>("invitation_status") != "opened"
+        || claim.get::<bool, _>("expired")
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimAppealOutcome::InvalidState);
+    }
+    if claim.get::<String, _>("status") != "rejected" {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimAppealOutcome::InvalidState);
+    }
+    if claim.get::<i64, _>("version") != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimAppealOutcome::Conflict);
+    }
+    let rejection_event_id: Option<String> = claim.get("rejection_event_id");
+    let Some(rejection_event_id) = rejection_event_id else {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimAppealOutcome::InvalidState);
+    };
+    sqlx::query(
+        "UPDATE owner_provider_invitation_organization_claims
+         SET status = 'under_review', reason_code = $2,
+             assigned_function = 'provider_operations', version = version + 1,
+             updated_at = NOW() WHERE id = $1",
+    )
+    .bind(claim_id)
+    .bind(&request.category)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_organization_claim_review_events (
+             id, claim_id, actor_user_id, actor_function, action, prior_status,
+             resulting_status, reason_code, evidence_reference,
+             expected_claim_version, idempotency_key, appeal_of_review_event_id
+         ) VALUES (
+             $1, $2, $3, 'checked_recipient', 'appeal_submitted', 'rejected',
+             'under_review', $4, $5, $6, $7, $8
+         )",
+    )
+    .bind(format!("provider_claim_appeal_{}", Uuid::new_v4().simple()))
+    .bind(claim_id)
+    .bind(recipient_user_id)
+    .bind(&request.category)
+    .bind(request.evidence_reference.trim())
+    .bind(request.expected_version)
+    .bind(request.idempotency_key.trim())
+    .bind(&rejection_event_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_organization_appealed', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(claim.get::<String, _>("owner_user_id"))
+    .bind(claim.get::<String, _>("property_id"))
+    .bind(serde_json::json!({
+        "invitation_id": claim.get::<String, _>("invitation_id"),
+        "claim_id": claim_id,
+        "status": "under_review",
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(
+        match get_owner_provider_organization_claim_review(pool, claim_id).await? {
+            Some(review) => PersistedClaimAppealOutcome::Submitted(review),
+            None => PersistedClaimAppealOutcome::NotFound,
         },
     )
 }
@@ -5453,6 +5699,21 @@ mod tests {
         invalid_review_decision.evidence_reference = None;
         assert!(!validate_provider_claim_review_decision_request(
             &invalid_review_decision
+        ));
+        let appeal_request = AppealOwnerProviderOrganizationClaimRequest {
+            token: new_owner_provider_invitation_token(),
+            expected_version: 3,
+            category: "new_identity_evidence".to_string(),
+            evidence_reference: "restricted://provider-claims/appeal-1".to_string(),
+            idempotency_key: "provider-claim-appeal-001".to_string(),
+        };
+        assert!(validate_provider_organization_claim_appeal_request(
+            &appeal_request
+        ));
+        let mut invalid_appeal = appeal_request;
+        invalid_appeal.category = "please_reconsider".to_string();
+        assert!(!validate_provider_organization_claim_appeal_request(
+            &invalid_appeal
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),
