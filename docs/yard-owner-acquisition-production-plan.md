@@ -34,7 +34,9 @@ The approved experience is defined by:
 | 3A5 | Integration pending | Select and threat-review an authenticated delivery adapter/callback; no vendor is selected and pending delivery is not represented as success |
 | 3B1a | Delivered | Public body-token limited preview for delivered/opened invitations with masked recipient hint, one-time application-open audit, explicit withheld categories, false identity/organization/capability flags, pending denial, and status-only closed links |
 | 3B1b | Delivered | Authenticated verified-mailbox recipient binding with one account per invitation, idempotent replay, cross-account dispute conflict, minimized audit, and no implied organization relationship or response capability |
-| 3B2 | Design complete; implementation next | Own-membership options, existing-relationship checks, normalized duplicate-safe readiness, atomic bootstrap rescan, non-disclosing review/dispute lifecycle, and no implied response authority |
+| 3B2a | Delivered | Checked-recipient own-membership options, server-rechecked existing relationships, authority-attested new-provider claims, normalized duplicate-safe readiness, non-disclosing operations routing, idempotency, isolation, and no implied response authority |
+| 3B2b | Implementation next | Fingerprint-locked final duplicate rescan, atomic organization/owner-membership bootstrap, claim provenance, and concurrency validation |
+| 3B2c | Planned | Provider Operations duplicate/dispute queue, restricted evidence reference, disposition, appeal, aging, and monitoring |
 | 3B3 | Planned | Explicit opportunity-response capability and authorized provider inbox |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
@@ -140,8 +142,9 @@ Design status: complete and browser validated. Production status: in progress;
 the 3A1 persistence foundation, 3A2 verified-owner API, and 3A3 internal
 delivery lifecycle and recipient opt-out/report safety boundary are delivered.
 Adapter authentication remains an external integration decision, while
-the limited recipient-safe entry and authenticated recipient binding are
-delivered; duplicate-safe provider organization claim/bootstrap is next.
+the limited recipient-safe entry, authenticated recipient binding, and
+duplicate-safe claim assessment are delivered; atomic organization bootstrap is
+next.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
@@ -242,8 +245,9 @@ Phase 3 should proceed in these implementation slices:
    are delivered, together with verified-recipient opt-out, block/report,
    durable suppression, and minimized case intake. Authenticated delivery
    integration remains pending; recipient-safe invitation entry is next.
-2. Existing-provider inbox plus duplicate-safe organization claim/bootstrap and
-   explicit opportunity-response capability.
+2. Complete the fingerprint-locked organization bootstrap and dispute workflow,
+   then add the existing-provider inbox and explicit opportunity-response
+   capability. Claim assessment and own-membership selection are delivered.
 3. Provider question/interest/decline/report writes and owner/provider progress
    read models with fail-closed authorization.
 4. Versioned provider-specific grants and approved/withheld disclosure receipts,

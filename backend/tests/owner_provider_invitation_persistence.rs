@@ -1,10 +1,11 @@
 use grover_landscaping_api::owner_acquisition::{
-    CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
-    OwnerProviderInvitationCreateResult, OwnerProviderInvitationDeliveryResult,
-    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-    OwnerProviderInvitationRetryResult, OwnerReadResult,
+    CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
+    CreateOwnerProviderOrganizationClaimRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -128,6 +129,33 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .list_provider_organization_options(
+                "recipient-unavailable",
+                "provider@example.com",
+                "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .await,
+        OwnerProviderOrganizationOptionsResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_organization_claim(
+                "recipient-unavailable",
+                "provider@example.com",
+                CreateOwnerProviderOrganizationClaimRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    claim_kind: "new_organization".to_string(),
+                    organization_id: None,
+                    provider_display_name: Some("Unavailable Yard Care".to_string()),
+                    authority_attested: true,
+                    idempotency_key: "claim-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderOrganizationClaimResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .retry_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -196,6 +224,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .execute(&pool)
         .await
         .expect("test owners should reset");
+    sqlx::query(
+        "DELETE FROM organizations
+         WHERE id = ANY($1)",
+    )
+    .bind(vec![
+        "org_provider_claim_owned",
+        "org_provider_claim_private_duplicate",
+    ])
+    .execute(&pool)
+    .await
+    .expect("test provider organizations should reset");
     let suppressed_fingerprint = format!("{:x}", Sha256::digest(suppressed_recipient.as_bytes()));
     let opt_out_fingerprint = format!("{:x}", Sha256::digest(opt_out_recipient.as_bytes()));
     let abuse_fingerprint = format!("{:x}", Sha256::digest(abuse_recipient.as_bytes()));
@@ -525,6 +564,229 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!recipient_check_events[0]
         .to_string()
         .contains("recipient-user-1"));
+
+    sqlx::query(
+        "INSERT INTO organizations (id, display_name, organization_type, status)
+         VALUES
+           ('org_provider_claim_owned', 'Recipient Owned Yard Care', 'yard_care_company', 'active'),
+           ('org_provider_claim_private_duplicate', 'Desert Duplicate Care', 'yard_care_company', 'active')",
+    )
+    .execute(&pool)
+    .await
+    .expect("test provider organizations should save");
+    sqlx::query(
+        "INSERT INTO organization_memberships (
+             id, organization_id, user_id, role, status, scope_type, scope_id
+         ) VALUES (
+             'membership_provider_claim_owned', 'org_provider_claim_owned',
+             'recipient-user-1', 'manager', 'active', 'organization',
+             'org_provider_claim_owned'
+         )",
+    )
+    .execute(&pool)
+    .await
+    .expect("eligible provider membership should save");
+    assert!(matches!(
+        repository
+            .list_provider_organization_options(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                retry.delivery_token(),
+            )
+            .await,
+        OwnerProviderOrganizationOptionsResult::NotFound
+    ));
+    let OwnerProviderOrganizationOptionsResult::Loaded(options) = repository
+        .list_provider_organization_options("recipient-user-1", recipient, retry.delivery_token())
+        .await
+    else {
+        panic!("verified recipient organization options should load");
+    };
+    assert_eq!(options.len(), 1);
+    assert_eq!(options[0].organization_id, "org_provider_claim_owned");
+    assert_eq!(options[0].membership_role, "manager");
+    assert!(options[0].relationship_checked);
+    assert!(!serde_json::to_string(&options)
+        .expect("options should serialize")
+        .contains("org_provider_claim_private_duplicate"));
+    let existing_claim_request = CreateOwnerProviderOrganizationClaimRequest {
+        token: retry.delivery_token().to_string(),
+        claim_kind: "existing_relationship".to_string(),
+        organization_id: Some("org_provider_claim_owned".to_string()),
+        provider_display_name: None,
+        authority_attested: false,
+        idempotency_key: "provider-org-claim-existing-001".to_string(),
+    };
+    let OwnerProviderOrganizationClaimResult::Created(existing_claim) = repository
+        .create_provider_organization_claim(
+            "recipient-user-1",
+            recipient,
+            existing_claim_request.clone(),
+        )
+        .await
+    else {
+        panic!("eligible existing organization relationship should be recorded");
+    };
+    assert_eq!(existing_claim.status, "relationship_checked");
+    assert_eq!(
+        existing_claim.organization_id.as_deref(),
+        Some("org_provider_claim_owned")
+    );
+    assert!(existing_claim.organization_relationship_checked);
+    assert!(!existing_claim.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .create_provider_organization_claim(
+                "recipient-user-1",
+                recipient,
+                existing_claim_request,
+            )
+            .await,
+        OwnerProviderOrganizationClaimResult::Replayed(claim)
+            if claim.claim_id == existing_claim.claim_id
+    ));
+
+    let duplicate_recipient = "duplicate@sonoranyard.example";
+    let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request(duplicate_recipient, "provider-invite-duplicate-claim-001"),
+        )
+        .await
+    else {
+        panic!("duplicate-review invitation should be created");
+    };
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                &duplicate_invitation.invitation.invitation_id,
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "delivered".to_string(),
+                    provider_message_id: Some("message-duplicate-claim".to_string()),
+                    failure_code: None,
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Saved(_)
+    ));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(duplicate_invitation.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::Opened(_)
+    ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-user-duplicate",
+                duplicate_recipient,
+                duplicate_invitation.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Checked(_)
+    ));
+    let OwnerProviderOrganizationClaimResult::Created(duplicate_claim) = repository
+        .create_provider_organization_claim(
+            "recipient-user-duplicate",
+            duplicate_recipient,
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: duplicate_invitation.delivery_token().to_string(),
+                claim_kind: "new_organization".to_string(),
+                organization_id: None,
+                provider_display_name: Some("  DESERT   duplicate care  ".to_string()),
+                authority_attested: true,
+                idempotency_key: "provider-org-claim-duplicate-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("possible duplicate should enter private operations review");
+    };
+    assert_eq!(duplicate_claim.status, "duplicate_review");
+    assert_eq!(
+        duplicate_claim.assigned_function.as_deref(),
+        Some("provider_operations")
+    );
+    assert!(duplicate_claim.organization_id.is_none());
+    assert!(!duplicate_claim.organization_relationship_checked);
+    assert!(!duplicate_claim.opportunity_response_capability);
+    let duplicate_event_data = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_invitation_organization_duplicate_review'
+           AND event_data->>'claim_id' = $1",
+    )
+    .bind(&duplicate_claim.claim_id)
+    .fetch_one(&pool)
+    .await
+    .expect("duplicate review audit should load")
+    .to_string();
+    assert!(!duplicate_event_data.contains("org_provider_claim_private_duplicate"));
+    assert!(!duplicate_event_data.contains(duplicate_recipient));
+
+    let unique_recipient = "unique@sonoranyard.example";
+    let OwnerProviderInvitationCreateResult::Created(unique_invitation) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request(unique_recipient, "provider-invite-unique-claim-001"),
+        )
+        .await
+    else {
+        panic!("unique provider invitation should be created");
+    };
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                &unique_invitation.invitation.invitation_id,
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "delivered".to_string(),
+                    provider_message_id: Some("message-unique-claim".to_string()),
+                    failure_code: None,
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Saved(_)
+    ));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(unique_invitation.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::Opened(_)
+    ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-user-unique",
+                unique_recipient,
+                unique_invitation.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Checked(_)
+    ));
+    let OwnerProviderOrganizationClaimResult::Created(unique_claim) = repository
+        .create_provider_organization_claim(
+            "recipient-user-unique",
+            unique_recipient,
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: unique_invitation.delivery_token().to_string(),
+                claim_kind: "new_organization".to_string(),
+                organization_id: None,
+                provider_display_name: Some("Cactus Bloom Groundskeeping".to_string()),
+                authority_attested: true,
+                idempotency_key: "provider-org-claim-unique-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("unique organization name should be ready for guarded bootstrap");
+    };
+    assert_eq!(unique_claim.status, "bootstrap_ready");
+    assert!(unique_claim.organization_id.is_none());
+    assert!(!unique_claim.opportunity_response_capability);
+
     assert!(matches!(
         repository
             .record_provider_invitation_delivery(
@@ -814,6 +1076,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .execute(&pool)
         .await
         .expect("test owners should clean up");
+    sqlx::query(
+        "DELETE FROM organizations
+         WHERE id = ANY($1)",
+    )
+    .bind(vec![
+        "org_provider_claim_owned",
+        "org_provider_claim_private_duplicate",
+    ])
+    .execute(&pool)
+    .await
+    .expect("test provider organizations should clean up");
     sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
         .bind(abuse_reporter)
         .execute(&pool)

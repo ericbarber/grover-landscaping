@@ -271,11 +271,13 @@ Active slice:
   account fails closed into an identity conflict, audit excludes email/account
   identifiers, and organization relationship plus response capability remain
   false.
-- Phase 3B2 now has a production design contract for own-membership options,
-  existing-relationship checks, normalized duplicate-safe readiness, atomic
-  bootstrap rescan, non-disclosing duplicate review, dispute lifecycle, and
-  explicit separation from response capability. Slice 3B2a claim assessment is
-  the next implementation unit.
+- Phase 3B2a is delivered. A checked invitation recipient can list only their
+  own active yard-care memberships, select a server-rechecked existing
+  relationship, or submit an authority-attested new-provider name. Normalized
+  possible duplicates enter non-disclosing Provider Operations review; unique
+  names become bootstrap-ready. Replay, wrong-mailbox, cross-account, closed,
+  outage, and active-claim boundaries fail closed, and response capability
+  remains false. Slice 3B2b atomic bootstrap is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -440,6 +440,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-invitations/opt-out"
         || path == "/provider-invitations/report"
         || path == "/provider-invitations/verify-recipient"
+        || path == "/provider-invitations/organization-options"
+        || path == "/provider-invitations/organization-claims"
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -510,6 +512,12 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path == "/provider-invitations/verify-recipient" {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    if matches!(
+        path,
+        "/provider-invitations/organization-options" | "/provider-invitations/organization-claims"
+    ) {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/owner-properties/") {
@@ -1617,6 +1625,8 @@ mod tests {
             (Method::POST, "/provider-invitations/opt-out"),
             (Method::POST, "/provider-invitations/report"),
             (Method::POST, "/provider-invitations/verify-recipient"),
+            (Method::POST, "/provider-invitations/organization-options"),
+            (Method::POST, "/provider-invitations/organization-claims"),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));
@@ -1661,6 +1671,12 @@ mod tests {
         assert!(is_protected_api_path("/provider-invitations/report"));
         assert!(is_protected_api_path(
             "/provider-invitations/verify-recipient"
+        ));
+        assert!(is_protected_api_path(
+            "/provider-invitations/organization-options"
+        ));
+        assert!(is_protected_api_path(
+            "/provider-invitations/organization-claims"
         ));
     }
 

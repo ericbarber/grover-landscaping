@@ -88,15 +88,18 @@ use grover_landscaping_api::{
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
-        validate_workspace_request, validate_yard_brief_request, CreateOwnerIntakeMediaRequest,
-        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-        OwnerProviderInvitationRecipientCheckResult, OwnerReadResult,
-        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
-        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
-        VerifyOwnerProviderInvitationRecipientRequest,
+        validate_provider_organization_claim_request,
+        validate_provider_organization_options_request, validate_workspace_request,
+        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
+        ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        OwnerReadResult, PreviewOwnerProviderInvitationRequest,
+        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
+        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -698,6 +701,14 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/verify-recipient",
             post(verify_owner_provider_invitation_recipient),
+        )
+        .route(
+            "/provider-invitations/organization-options",
+            post(list_owner_provider_organization_options),
+        )
+        .route(
+            "/provider-invitations/organization-claims",
+            post(create_owner_provider_organization_claim),
         )
         .route(
             "/customer-accounts",
@@ -1939,6 +1950,128 @@ async fn verify_owner_provider_invitation_recipient(
             persisted_resource_unavailable_response(
                 "provider_invitation_recipient_check_unavailable",
                 "Recipient verification could not be confirmed. No provider authority was granted.",
+            )
+        }
+    }
+}
+
+async fn list_owner_provider_organization_options(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<ListOwnerProviderOrganizationOptionsRequest>,
+) -> Response {
+    if !validate_provider_organization_options_request(&request) {
+        return resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation link is invalid or no longer available.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message:
+                    "Verify the invited business email before selecting a provider organization."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .list_provider_organization_options(
+            &principal.subject,
+            verified_email,
+            request.token.trim(),
+        )
+        .await
+    {
+        OwnerProviderOrganizationOptionsResult::Loaded(options) => Json(options).into_response(),
+        OwnerProviderOrganizationOptionsResult::NotFound => resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation was not found for this verified email.",
+        ),
+        OwnerProviderOrganizationOptionsResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_options_not_ready",
+                message: "Verify the active invitation recipient before selecting a provider organization."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOrganizationOptionsResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_organization_options_unavailable",
+                "Eligible provider organizations could not be loaded. No organization access was changed.",
+            )
+        }
+    }
+}
+
+async fn create_owner_provider_organization_claim(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateOwnerProviderOrganizationClaimRequest>,
+) -> Response {
+    if !validate_provider_organization_claim_request(&request) {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_invalid",
+                message: "Choose an eligible organization or provide a business name and confirm your authority."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before continuing provider setup."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_organization_claim(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderOrganizationClaimResult::Created(claim) => {
+            (StatusCode::CREATED, Json(claim)).into_response()
+        }
+        OwnerProviderOrganizationClaimResult::Replayed(claim) => Json(claim).into_response(),
+        OwnerProviderOrganizationClaimResult::NotFound => resource_not_found_response(
+            "provider_organization_not_available",
+            "The invitation or selected organization is not available to this verified account.",
+        ),
+        OwnerProviderOrganizationClaimResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_not_ready",
+                message: "Verify the active invitation recipient before continuing provider setup."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOrganizationClaimResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_claim_conflict",
+                message: "An active organization selection already exists for this invitation. Review that selection or contact Provider Operations."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOrganizationClaimResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_organization_claim_unavailable",
+                "Provider organization setup could not be recorded. No organization or opportunity access was granted.",
             )
         }
     }

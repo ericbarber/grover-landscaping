@@ -115,6 +115,26 @@ The repository includes internal delivered/failed mapping, retry, and expiry
 operations. An authenticated messaging adapter/callback is not yet selected or
 exposed; production must not claim delivery until that integration records it.
 
+## Checked-recipient organization assessment
+
+After recipient binding, both organization routes require an authenticated
+account whose verified email matches the invitation, the active opened
+body-token invitation, and its persisted recipient check.
+
+- `POST /provider-invitations/organization-options` accepts `{ "token": "…" }`
+  and returns only the actor's own active memberships in active
+  `yard_care_company` organizations. It is not a provider directory.
+- `POST /provider-invitations/organization-claims` accepts the token, an
+  actor-scoped idempotency key, and either `existing_relationship` with an
+  eligible organization identifier or `new_organization` with a display name
+  and authority affirmation.
+- Existing relationships are rechecked server-side and return
+  `relationship_checked`. Unique new names return `bootstrap_ready`; a
+  normalized possible match returns `duplicate_review` assigned to Provider
+  Operations without a candidate identifier.
+- Every outcome keeps `opportunity_response_capability` false. Final atomic
+  organization bootstrap and response authorization are separate operations.
+
 ## Error semantics
 
 - `400` — invalid fields, category, token format, or missing block affirmation;
@@ -128,8 +148,9 @@ exposed; production must not claim delivery until that integration records it.
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
-2. Add duplicate-safe provider organization claim/bootstrap and dispute review.
-3. Connect the checked recipient to that separately evaluated relationship.
+2. Complete fingerprint-locked provider organization bootstrap and dispute
+   review; claim assessment is delivered.
+3. Connect the checked recipient to the separately evaluated relationship.
 4. Add explicit opportunity-response capabilities before provider responses.
 5. Add Trust & Safety queue authorization, assignment, disposition, evidence,
    retention, and monitoring before pilot launch.

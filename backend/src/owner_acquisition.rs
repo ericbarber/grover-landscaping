@@ -182,6 +182,44 @@ pub struct VerifyOwnerProviderInvitationRecipientRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderOrganizationOption {
+    pub organization_id: String,
+    pub display_name: String,
+    pub membership_role: String,
+    pub relationship_checked: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ListOwnerProviderOrganizationOptionsRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerProviderOrganizationClaimRequest {
+    pub token: String,
+    pub claim_kind: String,
+    pub organization_id: Option<String>,
+    pub provider_display_name: Option<String>,
+    pub authority_attested: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderOrganizationClaimRecord {
+    pub claim_id: String,
+    pub invitation_id: String,
+    pub claim_kind: String,
+    pub proposed_display_name: String,
+    pub organization_id: Option<String>,
+    pub status: String,
+    pub assigned_function: Option<String>,
+    pub version: i64,
+    pub organization_relationship_checked: bool,
+    pub opportunity_response_capability: bool,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecipientEntry {
     pub invitation_id: String,
     pub status: String,
@@ -313,6 +351,24 @@ pub enum OwnerProviderInvitationRecipientCheckResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderOrganizationOptionsResult {
+    Loaded(Vec<OwnerProviderOrganizationOption>),
+    NotFound,
+    InvalidState,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderOrganizationClaimResult {
+    Created(OwnerProviderOrganizationClaimRecord),
+    Replayed(OwnerProviderOrganizationClaimRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
     NotFound,
@@ -337,6 +393,7 @@ struct LocalOwnerState {
     provider_recipient_suppressions: HashSet<String>,
     provider_abuse_reports: HashMap<String, LocalOwnerProviderAbuseReport>,
     provider_recipient_checks: HashMap<String, LocalOwnerProviderRecipientCheck>,
+    provider_organization_claims: HashMap<String, LocalOwnerProviderOrganizationClaim>,
 }
 
 struct LocalOwnerProviderInvitation {
@@ -355,6 +412,12 @@ struct LocalOwnerProviderAbuseReport {
 struct LocalOwnerProviderRecipientCheck {
     recipient_user_id: String,
     verified_email_fingerprint: String,
+}
+
+struct LocalOwnerProviderOrganizationClaim {
+    record: OwnerProviderOrganizationClaimRecord,
+    actor_user_id: String,
+    idempotency_key: String,
 }
 
 #[derive(Clone, Default)]
@@ -1637,6 +1700,178 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_provider_organization_options(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        token: &str,
+    ) -> OwnerProviderOrganizationOptionsResult {
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(token);
+        let Some(pool) = &self.pool else {
+            let local = self.local.read().await;
+            let invitation = local.provider_invitations.iter().find(|(_, invitation)| {
+                invitation._token_hash == token_hash
+                    && invitation.record.recipient_business_email == normalized_email
+            });
+            let Some((invitation_id, invitation)) = invitation else {
+                return OwnerProviderOrganizationOptionsResult::NotFound;
+            };
+            let checked = local
+                .provider_recipient_checks
+                .get(invitation_id)
+                .is_some_and(|check| {
+                    check.recipient_user_id == recipient_user_id
+                        && check.verified_email_fingerprint == email_fingerprint
+                });
+            if invitation.record.status != "opened" || !checked {
+                return OwnerProviderOrganizationOptionsResult::InvalidState;
+            }
+            return OwnerProviderOrganizationOptionsResult::Loaded(Vec::new());
+        };
+        match list_owner_provider_organization_options(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedOrganizationOptionsOutcome::Loaded(options)) => {
+                OwnerProviderOrganizationOptionsResult::Loaded(options)
+            }
+            Ok(PersistedOrganizationOptionsOutcome::NotFound) => {
+                OwnerProviderOrganizationOptionsResult::NotFound
+            }
+            Ok(PersistedOrganizationOptionsOutcome::InvalidState) => {
+                OwnerProviderOrganizationOptionsResult::InvalidState
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider organization options failed");
+                OwnerProviderOrganizationOptionsResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_provider_organization_claim(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        request: CreateOwnerProviderOrganizationClaimRequest,
+    ) -> OwnerProviderOrganizationClaimResult {
+        if !validate_provider_organization_claim_request(&request) {
+            return OwnerProviderOrganizationClaimResult::InvalidState;
+        }
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let invitation_id = local
+                .provider_invitations
+                .iter()
+                .find(|(_, invitation)| {
+                    invitation._token_hash == token_hash
+                        && invitation.record.recipient_business_email == normalized_email
+                })
+                .map(|(id, _)| id.clone());
+            let Some(invitation_id) = invitation_id else {
+                return OwnerProviderOrganizationClaimResult::NotFound;
+            };
+            if let Some(existing) = local.provider_organization_claims.values().find(|claim| {
+                claim.actor_user_id == recipient_user_id
+                    && claim.idempotency_key == request.idempotency_key.trim()
+                    && claim.record.invitation_id == invitation_id
+            }) {
+                return OwnerProviderOrganizationClaimResult::Replayed(existing.record.clone());
+            }
+            let checked = local
+                .provider_recipient_checks
+                .get(&invitation_id)
+                .is_some_and(|check| {
+                    check.recipient_user_id == recipient_user_id
+                        && check.verified_email_fingerprint == email_fingerprint
+                });
+            let active_invitation = local
+                .provider_invitations
+                .get(&invitation_id)
+                .is_some_and(|invitation| invitation.record.status == "opened");
+            if !checked || !active_invitation {
+                return OwnerProviderOrganizationClaimResult::InvalidState;
+            }
+            if local.provider_organization_claims.values().any(|claim| {
+                claim.record.invitation_id == invitation_id
+                    && !matches!(claim.record.status.as_str(), "rejected" | "withdrawn")
+            }) {
+                return OwnerProviderOrganizationClaimResult::Conflict;
+            }
+            if request.claim_kind == "existing_relationship" {
+                return OwnerProviderOrganizationClaimResult::NotFound;
+            }
+            let record = OwnerProviderOrganizationClaimRecord {
+                claim_id: format!("owner_provider_claim_{}", Uuid::new_v4().simple()),
+                invitation_id,
+                claim_kind: request.claim_kind,
+                proposed_display_name: request
+                    .provider_display_name
+                    .unwrap_or_default()
+                    .trim()
+                    .to_string(),
+                organization_id: None,
+                status: "bootstrap_ready".to_string(),
+                assigned_function: None,
+                version: 1,
+                organization_relationship_checked: false,
+                opportunity_response_capability: false,
+                persisted: false,
+            };
+            local.provider_organization_claims.insert(
+                record.claim_id.clone(),
+                LocalOwnerProviderOrganizationClaim {
+                    record: record.clone(),
+                    actor_user_id: recipient_user_id.to_string(),
+                    idempotency_key: request.idempotency_key.trim().to_string(),
+                },
+            );
+            return OwnerProviderOrganizationClaimResult::Created(record);
+        };
+        match create_owner_provider_organization_claim(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedOrganizationClaimOutcome::Created(claim)) => {
+                OwnerProviderOrganizationClaimResult::Created(claim)
+            }
+            Ok(PersistedOrganizationClaimOutcome::Replayed(claim)) => {
+                OwnerProviderOrganizationClaimResult::Replayed(claim)
+            }
+            Ok(PersistedOrganizationClaimOutcome::NotFound) => {
+                OwnerProviderOrganizationClaimResult::NotFound
+            }
+            Ok(PersistedOrganizationClaimOutcome::InvalidState) => {
+                OwnerProviderOrganizationClaimResult::InvalidState
+            }
+            Ok(PersistedOrganizationClaimOutcome::Conflict) => {
+                OwnerProviderOrganizationClaimResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderOrganizationClaimResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider organization claim failed");
+                OwnerProviderOrganizationClaimResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1813,6 +2048,47 @@ pub fn validate_provider_invitation_recipient_check_request(
     })
 }
 
+pub fn validate_provider_organization_options_request(
+    request: &ListOwnerProviderOrganizationOptionsRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    })
+}
+
+pub fn validate_provider_organization_claim_request(
+    request: &CreateOwnerProviderOrganizationClaimRequest,
+) -> bool {
+    let token_valid =
+        validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+            token: request.token.clone(),
+        });
+    let idempotency_key = request.idempotency_key.trim();
+    let idempotency_valid = (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'));
+    let claim_valid = match request.claim_kind.as_str() {
+        "existing_relationship" => {
+            request
+                .organization_id
+                .as_deref()
+                .is_some_and(|value| (3..=180).contains(&value.trim().chars().count()))
+                && request.provider_display_name.is_none()
+        }
+        "new_organization" => {
+            request.organization_id.is_none()
+                && request
+                    .provider_display_name
+                    .as_deref()
+                    .is_some_and(|value| (2..=160).contains(&value.trim().chars().count()))
+                && request.authority_attested
+        }
+        _ => false,
+    };
+    token_valid && idempotency_valid && claim_valid
+}
+
 fn abuse_report_severity(category: &str) -> &'static str {
     if matches!(category, "harassment" | "impersonation" | "unsafe_contact") {
         "S1"
@@ -1827,6 +2103,15 @@ fn recipient_email_hint(email: &str) -> String {
     };
     let first = local.chars().next().unwrap_or('•');
     format!("{first}•••@{domain}")
+}
+
+fn provider_name_fingerprint(value: &str) -> String {
+    let normalized = value
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_ascii_lowercase();
+    format!("{:x}", Sha256::digest(normalized.as_bytes()))
 }
 
 fn recipient_entry_from_invitation(
@@ -3653,6 +3938,341 @@ async fn verify_owner_provider_invitation_recipient(
     Ok(PersistedRecipientCheckOutcome::Checked(entry))
 }
 
+enum PersistedOrganizationOptionsOutcome {
+    Loaded(Vec<OwnerProviderOrganizationOption>),
+    NotFound,
+    InvalidState,
+}
+
+async fn list_owner_provider_organization_options(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+) -> Result<PersistedOrganizationOptionsOutcome, sqlx::Error> {
+    let invitation = sqlx::query(
+        "SELECT invitation.id, invitation.status,
+                invitation.expires_at <= NOW() AS expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status
+         FROM owner_provider_invitations invitation
+         LEFT JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(pool)
+    .await?;
+    let Some(invitation) = invitation else {
+        return Ok(PersistedOrganizationOptionsOutcome::NotFound);
+    };
+    let recipient_checked = invitation
+        .try_get::<String, _>("recipient_user_id")
+        .is_ok_and(|value| value == recipient_user_id)
+        && invitation
+            .try_get::<String, _>("verified_email_fingerprint")
+            .is_ok_and(|value| value == verified_email_fingerprint)
+        && invitation
+            .try_get::<String, _>("recipient_check_status")
+            .is_ok_and(|value| value == "checked");
+    if invitation.get::<String, _>("status") != "opened"
+        || invitation.get::<bool, _>("expired")
+        || !recipient_checked
+    {
+        return Ok(PersistedOrganizationOptionsOutcome::InvalidState);
+    }
+    let rows = sqlx::query(
+        "SELECT organization.id, organization.display_name, membership.role
+         FROM organization_memberships membership
+         JOIN organizations organization ON organization.id = membership.organization_id
+         WHERE membership.user_id = $1
+           AND membership.status = 'active'
+           AND organization.status = 'active'
+           AND organization.organization_type = 'yard_care_company'
+         ORDER BY organization.display_name, organization.id, membership.role",
+    )
+    .bind(recipient_user_id)
+    .fetch_all(pool)
+    .await?;
+    let mut options = Vec::new();
+    let mut seen_organizations = HashSet::new();
+    for row in rows {
+        let organization_id: String = row.get("id");
+        if seen_organizations.insert(organization_id.clone()) {
+            options.push(OwnerProviderOrganizationOption {
+                organization_id,
+                display_name: row.get("display_name"),
+                membership_role: row.get("role"),
+                relationship_checked: true,
+            });
+        }
+    }
+    Ok(PersistedOrganizationOptionsOutcome::Loaded(options))
+}
+
+enum PersistedOrganizationClaimOutcome {
+    Created(OwnerProviderOrganizationClaimRecord),
+    Replayed(OwnerProviderOrganizationClaimRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+async fn create_owner_provider_organization_claim(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    request: CreateOwnerProviderOrganizationClaimRequest,
+    token_hash: &str,
+) -> Result<PersistedOrganizationClaimOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay = sqlx::query(
+        "SELECT claim.id, claim.invitation_id, claim.claim_kind,
+                claim.proposed_display_name, claim.organization_id, claim.status,
+                claim.assigned_function, claim.version
+         FROM owner_provider_invitation_organization_claims claim
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         WHERE claim.actor_user_id = $1
+           AND claim.idempotency_key = $2
+           AND invitation.token_hash = $3
+           AND LOWER(invitation.recipient_email) = LOWER($4)",
+    )
+    .bind(recipient_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(row) = replay {
+        transaction.commit().await?;
+        return Ok(PersistedOrganizationClaimOutcome::Replayed(
+            owner_provider_organization_claim_from_row(&row, true),
+        ));
+    }
+    let invitation = sqlx::query(
+        "SELECT invitation.id, invitation.owner_user_id, invitation.property_id,
+                invitation.status, invitation.expires_at <= NOW() AS expired,
+                recipient_check.id AS recipient_check_id,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status
+         FROM owner_provider_invitations invitation
+         LEFT JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)
+         FOR UPDATE OF invitation",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(invitation) = invitation else {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationClaimOutcome::NotFound);
+    };
+    let invitation_id: String = invitation.get("id");
+    let recipient_checked = invitation
+        .try_get::<String, _>("recipient_user_id")
+        .is_ok_and(|value| value == recipient_user_id)
+        && invitation
+            .try_get::<String, _>("verified_email_fingerprint")
+            .is_ok_and(|value| value == verified_email_fingerprint)
+        && invitation
+            .try_get::<String, _>("recipient_check_status")
+            .is_ok_and(|value| value == "checked");
+    if invitation.get::<String, _>("status") != "opened"
+        || invitation.get::<bool, _>("expired")
+        || !recipient_checked
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationClaimOutcome::InvalidState);
+    }
+    let active_claim_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_invitation_organization_claims
+             WHERE invitation_id = $1
+               AND status IN (
+                   'relationship_checked', 'bootstrap_ready', 'duplicate_review',
+                   'under_review', 'claimed', 'disputed'
+               )
+         )",
+    )
+    .bind(&invitation_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if active_claim_exists {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationClaimOutcome::Conflict);
+    }
+
+    let (display_name, name_fingerprint, organization_id, status, assigned_function, reason_code) =
+        if request.claim_kind == "existing_relationship" {
+            let requested_organization_id = request.organization_id.as_deref().unwrap_or_default();
+            let relationship = sqlx::query(
+                "SELECT organization.id, organization.display_name
+                 FROM organization_memberships membership
+                 JOIN organizations organization ON organization.id = membership.organization_id
+                 WHERE membership.user_id = $1
+                   AND membership.organization_id = $2
+                   AND membership.status = 'active'
+                   AND organization.status = 'active'
+                   AND organization.organization_type = 'yard_care_company'
+                 ORDER BY membership.role
+                 LIMIT 1",
+            )
+            .bind(recipient_user_id)
+            .bind(requested_organization_id.trim())
+            .fetch_optional(&mut *transaction)
+            .await?;
+            let Some(relationship) = relationship else {
+                transaction.rollback().await?;
+                return Ok(PersistedOrganizationClaimOutcome::NotFound);
+            };
+            let display_name: String = relationship.get("display_name");
+            (
+                display_name.clone(),
+                provider_name_fingerprint(&display_name),
+                Some(relationship.get::<String, _>("id")),
+                "relationship_checked",
+                None,
+                None,
+            )
+        } else {
+            let display_name = request
+                .provider_display_name
+                .as_deref()
+                .unwrap_or_default()
+                .trim()
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ");
+            let name_fingerprint = provider_name_fingerprint(&display_name);
+            let existing_names = sqlx::query_scalar::<_, String>(
+                "SELECT display_name FROM organizations
+                 WHERE status = 'active' AND organization_type = 'yard_care_company'",
+            )
+            .fetch_all(&mut *transaction)
+            .await?;
+            let possible_duplicate = existing_names
+                .iter()
+                .any(|name| provider_name_fingerprint(name) == name_fingerprint);
+            if possible_duplicate {
+                (
+                    display_name,
+                    name_fingerprint,
+                    None,
+                    "duplicate_review",
+                    Some("provider_operations"),
+                    Some("possible_duplicate"),
+                )
+            } else {
+                (
+                    display_name,
+                    name_fingerprint,
+                    None,
+                    "bootstrap_ready",
+                    None,
+                    None,
+                )
+            }
+        };
+    let claim_id = format!("owner_provider_claim_{}", Uuid::new_v4().simple());
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_invitation_organization_claims (
+             id, invitation_id, recipient_check_id, actor_user_id, claim_kind,
+             proposed_display_name, normalized_name_fingerprint, organization_id,
+             status, authority_attested_at, reason_code, assigned_function,
+             idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9,
+             CASE WHEN $10 THEN NOW() ELSE NULL END, $11, $12, $13
+         )
+         RETURNING id, invitation_id, claim_kind, proposed_display_name,
+                   organization_id, status, assigned_function, version",
+    )
+    .bind(&claim_id)
+    .bind(&invitation_id)
+    .bind(invitation.get::<String, _>("recipient_check_id"))
+    .bind(recipient_user_id)
+    .bind(&request.claim_kind)
+    .bind(&display_name)
+    .bind(&name_fingerprint)
+    .bind(organization_id.as_deref())
+    .bind(status)
+    .bind(request.authority_attested)
+    .bind(reason_code)
+    .bind(assigned_function)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    let owner_user_id: String = invitation.get("owner_user_id");
+    let property_id: String = invitation.get("property_id");
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_organization_claim_created', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "claim_id": claim_id,
+        "claim_kind": request.claim_kind,
+        "status": status,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    if status == "duplicate_review" {
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_organization_duplicate_review', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({
+            "invitation_id": invitation_id,
+            "claim_id": claim_id,
+            "status": status,
+            "assigned_function": "provider_operations",
+        }))
+        .execute(&mut *transaction)
+        .await?;
+    }
+    transaction.commit().await?;
+    Ok(PersistedOrganizationClaimOutcome::Created(
+        owner_provider_organization_claim_from_row(&row, true),
+    ))
+}
+
+fn owner_provider_organization_claim_from_row(
+    row: &sqlx::postgres::PgRow,
+    persisted: bool,
+) -> OwnerProviderOrganizationClaimRecord {
+    let claim_kind: String = row.get("claim_kind");
+    OwnerProviderOrganizationClaimRecord {
+        claim_id: row.get("id"),
+        invitation_id: row.get("invitation_id"),
+        claim_kind: claim_kind.clone(),
+        proposed_display_name: row.get("proposed_display_name"),
+        organization_id: row.get("organization_id"),
+        status: row.get("status"),
+        assigned_function: row.get("assigned_function"),
+        version: row.get("version"),
+        organization_relationship_checked: claim_kind == "existing_relationship",
+        opportunity_response_capability: false,
+        persisted,
+    }
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -4059,6 +4679,38 @@ mod tests {
             &VerifyOwnerProviderInvitationRecipientRequest {
                 token: new_owner_provider_invitation_token(),
             }
+        ));
+        let existing_relationship_claim = CreateOwnerProviderOrganizationClaimRequest {
+            token: new_owner_provider_invitation_token(),
+            claim_kind: "existing_relationship".to_string(),
+            organization_id: Some("org_existing_provider".to_string()),
+            provider_display_name: None,
+            authority_attested: false,
+            idempotency_key: "provider-org-claim-001".to_string(),
+        };
+        assert!(validate_provider_organization_claim_request(
+            &existing_relationship_claim
+        ));
+        let mut invalid_claim = existing_relationship_claim;
+        invalid_claim.provider_display_name = Some("Untrusted name override".to_string());
+        assert!(!validate_provider_organization_claim_request(
+            &invalid_claim
+        ));
+        let new_organization_claim = CreateOwnerProviderOrganizationClaimRequest {
+            token: new_owner_provider_invitation_token(),
+            claim_kind: "new_organization".to_string(),
+            organization_id: None,
+            provider_display_name: Some("Sonoran Yard Care".to_string()),
+            authority_attested: true,
+            idempotency_key: "provider-org-claim-002".to_string(),
+        };
+        assert!(validate_provider_organization_claim_request(
+            &new_organization_claim
+        ));
+        let mut invalid_new_claim = new_organization_claim;
+        invalid_new_claim.authority_attested = false;
+        assert!(!validate_provider_organization_claim_request(
+            &invalid_new_claim
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),

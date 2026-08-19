@@ -74,13 +74,12 @@ closes the scoped contact path without copying case descriptions into general
 audit data. Authenticated adapter integration remains external; recipient-safe
 limited entry now opens delivered body-token invitations without granting email,
 organization, or response authority and keeps closed links status-only.
-Authenticated recipient binding now admits one verified-mailbox account,
-fails closed on cross-account conflict, and still grants no organization or
-response authority. Duplicate-safe provider claim/bootstrap is next.
-The Phase 3B2 production claim contract now limits options to the recipient’s
-own memberships, treats name similarity as a non-disclosing review signal,
-requires an atomic duplicate rescan before bootstrap, and keeps organization
-relationship separate from response capability.
+Authenticated recipient binding now admits one verified-mailbox account and
+fails closed on cross-account conflict. Phase 3B2a now lists only that actor’s
+active yard-care memberships, rechecks an existing relationship, and records
+new-provider readiness with normalized, non-disclosing duplicate review.
+Organization selection still grants no response authority. Atomic final
+bootstrap with a fingerprint lock and duplicate rescan is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
