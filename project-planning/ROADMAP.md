@@ -141,6 +141,11 @@ independent categories and photo selection, no-default affirmation, complete
 approved/withheld receipts, a separately revocable current grant, enforced
 category/media reads, honest revocation, minimized audit, and fail-closed tests.
 Phase 3D1 owner review and receipt/grant creation is next.
+Phase 3D1a now delivers the persistence split for append-only receipts,
+revocable current grants, and immutable events with complete category
+partitioning, selected-photo consistency, lifecycle/version/replay constraints,
+and one active grant per invitation. Server-derived owner review and atomic
+creation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

@@ -49,7 +49,8 @@ The approved experience is defined by:
 | 3C3a | Delivered; browser rerun pending | Production Yard Owner progress UI with independent loading, empty/unavailable/action states, responsive layout, tested client mapping, passing typecheck/build, and an updated browser scenario awaiting a compatible Chromium runtime |
 | 3C3b | Delivered; browser rerun pending | Authenticated provider progress UI with one-time fragment consumption/removal, body-only token submission, verified-mailbox status, status-only closure, fixed withholding, passing route/client/type/build checks, and a browser scenario awaiting a compatible runtime |
 | 3D0 | Delivered | Provider-specific disclosure contract with affirmative category/media selection, immutable receipt/current grant split, enforced reads, revocation, and audit boundaries |
-| 3D1–3E | Planned | Grant/receipt implementation, revocation, interface adoption, and pilot hardening |
+| 3D1a | Delivered | Append-only receipt, revocable current grant, immutable event history, complete category partition, selected-photo, lifecycle, replay, and active-grant constraints |
+| 3D1b–3E | Planned | Owner grant creation, provider reads, revocation, interface adoption, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles

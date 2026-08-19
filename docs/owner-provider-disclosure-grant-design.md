@@ -151,14 +151,17 @@ evidence is not stored on receipt or grant rows.
 1. **3D0 — contract (delivered):** prerequisites, category semantics,
    affirmation, immutable receipt/current grant split, read enforcement,
    revocation, audit, and acceptance criteria.
-2. **3D1 — owner review and creation:** server-derived review model,
+2. **3D1a — persistence foundation (delivered):** append-only receipt,
+   revocable current grant, event history, category partition, selected-photo,
+   lifecycle, active-invitation uniqueness, and audit-event constraints.
+3. **3D1b — owner review and creation:** server-derived review model,
    receipt/grant/event schema, transactional creation API, replay/conflict/
    outage behavior, and owner isolation tests.
-3. **3D2 — provider access:** category-filtered read model, short-lived selected
+4. **3D2 — provider access:** category-filtered read model, short-lived selected
    media authorization, status-only closure, and cross-provider tests.
-4. **3D3 — revocation:** versioned owner revoke API, access/cache
+5. **3D3 — revocation:** versioned owner revoke API, access/cache
    reconciliation, immutable history, support visibility, and recovery tests.
-5. **3D4 — interface adoption:** unselected owner approval, receipt views,
+6. **3D4 — interface adoption:** unselected owner approval, receipt views,
    provider access, revoke confirmation, responsive/accessibility/browser
    evidence, and content review.
 
@@ -177,4 +180,3 @@ evidence is not stored on receipt or grant rows.
   historical erasure.
 - Interest, disclosure, assessment, proposal, activation, crew assignment, and
   service scheduling remain distinct states in API and interface wording.
-

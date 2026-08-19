@@ -381,6 +381,12 @@ Active slice:
   category-filtered provider reads, short-lived media authorization, versioned
   revocation, minimized audit, and fail-closed acceptance criteria. Phase 3D1
   owner review and transactional receipt/grant creation is next.
+- Phase 3D1a is delivered. PostgreSQL now separates append-only disclosure
+  receipts, current revocable grants, and immutable grant events; constrains the
+  full five-category approved/withheld partition, selected-photo consistency,
+  purpose, versions, lifecycle, replay keys, and one active grant per
+  invitation; and admits minimized grant create/revoke audit kinds. Phase 3D1b
+  server-derived owner review and atomic creation is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
