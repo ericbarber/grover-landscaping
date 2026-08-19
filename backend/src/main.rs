@@ -109,10 +109,11 @@ use grover_landscaping_api::{
         OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
         OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
         OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-        OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityResult,
-        OwnerReadResult, PreviewOwnerProviderInvitationRequest,
-        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
-        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
+        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+        OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
+        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -730,6 +731,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/inbox",
             post(open_owner_provider_inbox),
+        )
+        .route(
+            "/provider-invitations/progress",
+            post(get_owner_provider_progress),
         )
         .route(
             "/provider-opportunity-responses",
@@ -2419,6 +2424,53 @@ async fn open_owner_provider_inbox(
         OwnerProviderInboxResult::Unavailable => persisted_resource_unavailable_response(
             "provider_inbox_unavailable",
             "The provider inbox could not be loaded. No additional yard information was shown.",
+        ),
+    }
+}
+
+async fn get_owner_provider_progress(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<OpenOwnerProviderInboxRequest>,
+) -> Response {
+    if !validate_provider_inbox_request(&request) {
+        return resource_not_found_response(
+            "provider_progress_not_found",
+            "The provider invitation is invalid or no longer available.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before viewing progress.".to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .provider_invitation_progress(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderProgressResult::Loaded(progress) => Json(progress).into_response(),
+        OwnerProviderProgressResult::NotFound => resource_not_found_response(
+            "provider_progress_not_found",
+            "The provider invitation is not available to this verified account.",
+        ),
+        OwnerProviderProgressResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_progress_not_ready",
+                message: "Complete invited-recipient verification before viewing provider progress."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderProgressResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_progress_unavailable",
+            "Provider progress could not be loaded. Existing authorization and responses are unchanged.",
         ),
     }
 }

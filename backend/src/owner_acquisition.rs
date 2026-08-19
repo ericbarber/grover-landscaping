@@ -404,6 +404,21 @@ pub struct OwnerProviderConnectionProgressEntry {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderProgressEntry {
+    pub invitation_id: String,
+    pub progress_stage: String,
+    pub status_label: String,
+    pub next_action: String,
+    pub recipient_email_checked: bool,
+    pub organization_relationship_checked: bool,
+    pub opportunity_response_capability: bool,
+    pub response_action: Option<String>,
+    pub response_label: Option<String>,
+    pub responded_at_epoch_seconds: Option<i64>,
+    pub closed: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -584,6 +599,14 @@ pub enum OwnerProviderOpportunityResponseResult {
     NotFound,
     InvalidState,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderProgressResult {
+    Loaded(OwnerProviderProgressEntry),
+    NotFound,
+    InvalidState,
     Unavailable,
 }
 
@@ -1263,6 +1286,40 @@ impl OwnerAcquisitionRepository {
             Err(error) => {
                 tracing::error!(%error, owner_user_id, property_id, "owner provider connection progress read failed");
                 OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn provider_invitation_progress(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        request: OpenOwnerProviderInboxRequest,
+    ) -> OwnerProviderProgressResult {
+        if !validate_provider_inbox_request(&request) {
+            return OwnerProviderProgressResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderProgressResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match get_owner_provider_progress(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(Some(progress)) => OwnerProviderProgressResult::Loaded(progress),
+            Ok(None) => OwnerProviderProgressResult::NotFound,
+            Err(sqlx::Error::RowNotFound) => OwnerProviderProgressResult::InvalidState,
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider invitation progress read failed");
+                OwnerProviderProgressResult::Unavailable
             }
         }
     }
@@ -3881,6 +3938,245 @@ fn owner_provider_connection_progress_entry(
         responded_at_epoch_seconds: safe_responded_at,
         persisted,
     }
+}
+
+async fn get_owner_provider_progress(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+) -> Result<Option<OwnerProviderProgressEntry>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        "SELECT invitation.id AS invitation_id, invitation.owner_user_id,
+                invitation.property_id, invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS invitation_expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status,
+                claim.status AS claim_status, claim.organization_id,
+                organization.status AS organization_status,
+                organization.organization_type,
+                capability.status AS capability_status,
+                capability.expires_at <= NOW() AS capability_expired,
+                response.action AS response_action,
+                response.response_code,
+                response.responded_at_epoch_seconds,
+                EXISTS (
+                    SELECT 1 FROM organization_memberships membership
+                    WHERE membership.organization_id = claim.organization_id
+                      AND membership.user_id = $3 AND membership.status = 'active'
+                ) AS active_membership
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         LEFT JOIN owner_provider_invitation_organization_claims claim
+           ON claim.invitation_id = invitation.id
+         LEFT JOIN organizations organization ON organization.id = claim.organization_id
+         LEFT JOIN LATERAL (
+             SELECT candidate.status, candidate.expires_at
+             FROM owner_provider_invitation_response_capabilities candidate
+             WHERE candidate.invitation_id = invitation.id
+               AND candidate.actor_user_id = $3
+             ORDER BY CASE WHEN candidate.status = 'active' THEN 0 ELSE 1 END,
+                      candidate.created_at DESC, candidate.id
+             LIMIT 1
+         ) capability ON TRUE
+         LEFT JOIN LATERAL (
+             SELECT opportunity.action, opportunity.response_code,
+                    EXTRACT(EPOCH FROM opportunity.created_at)::BIGINT
+                        AS responded_at_epoch_seconds
+             FROM owner_provider_opportunity_responses opportunity
+             WHERE opportunity.invitation_id = invitation.id
+               AND opportunity.actor_user_id = $3
+             ORDER BY CASE opportunity.action
+                        WHEN 'express_interest' THEN 1
+                        WHEN 'preliminary_question' THEN 2
+                        ELSE 3
+                      END,
+                      opportunity.created_at DESC, opportunity.id
+             LIMIT 1
+         ) response ON TRUE
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)
+         ORDER BY claim.created_at DESC NULLS LAST LIMIT 1
+         FOR UPDATE OF invitation",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(recipient_user_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let recipient_checked = row.get::<String, _>("recipient_user_id") == recipient_user_id
+        && row.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && row.get::<String, _>("recipient_check_status") == "checked";
+    if !recipient_checked {
+        transaction.rollback().await?;
+        return Err(sqlx::Error::RowNotFound);
+    }
+    let invitation_id: String = row.get("invitation_id");
+    let owner_user_id: String = row.get("owner_user_id");
+    let property_id: String = row.get("property_id");
+    let invitation_status: String = row.get("invitation_status");
+    let invitation_expired: bool = row.get("invitation_expired");
+    let claim_status: Option<String> = row.get("claim_status");
+    let relationship_checked = claim_status
+        .as_deref()
+        .is_some_and(|status| matches!(status, "relationship_checked" | "claimed"));
+    let organization_active = row
+        .try_get::<String, _>("organization_status")
+        .is_ok_and(|status| status == "active")
+        && row
+            .try_get::<String, _>("organization_type")
+            .is_ok_and(|kind| kind == "yard_care_company")
+        && row.get::<bool, _>("active_membership");
+    let capability_status: Option<String> = row.get("capability_status");
+    let capability_expired = row
+        .try_get::<bool, _>("capability_expired")
+        .unwrap_or(false);
+    let response_action: Option<String> = row.get("response_action");
+    let response_code: Option<String> = row.get("response_code");
+    let responded_at: Option<i64> = row.get("responded_at_epoch_seconds");
+    let terminal_status = if invitation_expired
+        && matches!(
+            invitation_status.as_str(),
+            "pending_delivery" | "delivered" | "opened"
+        ) {
+        "expired"
+    } else {
+        invitation_status.as_str()
+    };
+    let relationship_effective = relationship_checked && organization_active;
+    let capability_effective = capability_status.as_deref() == Some("active")
+        && !capability_expired
+        && terminal_status == "opened"
+        && relationship_effective;
+    if capability_status.as_deref() == Some("active") && !capability_effective {
+        let (next_status, reason) = if terminal_status == "expired" || capability_expired {
+            ("expired", "capability_expired")
+        } else if terminal_status != "opened" {
+            ("revoked", "invitation_closed")
+        } else {
+            ("suspended", "provider_relationship_inactive")
+        };
+        reconcile_owner_provider_response_capability(
+            &mut transaction,
+            &invitation_id,
+            &owner_user_id,
+            &property_id,
+            next_status,
+            reason,
+        )
+        .await?;
+    }
+    let own_report = response_action.as_deref() == Some("report");
+    let terminal = matches!(
+        terminal_status,
+        "failed" | "expired" | "declined" | "opted_out" | "revoked"
+    );
+    let progress = if terminal {
+        let (stage, label, next_action) = match terminal_status {
+            "declined" => ("closed", "Response recorded and invitation closed", "none"),
+            "opted_out" if own_report => {
+                ("closed", "Safety item routed and contact blocked", "none")
+            }
+            "opted_out" => ("closed", "Recipient contact is closed", "none"),
+            "revoked" => ("closed", "Owner withdrew this invitation", "none"),
+            "expired" => ("closed", "Invitation expired", "request_new_invitation"),
+            _ => ("closed", "Invitation delivery failed", "none"),
+        };
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: stage.to_string(),
+            status_label: label.to_string(),
+            next_action: next_action.to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: false,
+            opportunity_response_capability: false,
+            response_action: None,
+            response_label: None,
+            responded_at_epoch_seconds: None,
+            closed: true,
+        }
+    } else if !relationship_effective {
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "organization_check_required".to_string(),
+            status_label: "Provider organization relationship required".to_string(),
+            next_action: "complete_organization_check".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: false,
+            opportunity_response_capability: false,
+            response_action: None,
+            response_label: None,
+            responded_at_epoch_seconds: None,
+            closed: false,
+        }
+    } else if !capability_effective {
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "response_authorization_required".to_string(),
+            status_label: "Limited response acknowledgement required".to_string(),
+            next_action: "acknowledge_withheld_data".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: true,
+            opportunity_response_capability: false,
+            response_action: None,
+            response_label: None,
+            responded_at_epoch_seconds: None,
+            closed: false,
+        }
+    } else if matches!(
+        response_action.as_deref(),
+        Some("express_interest" | "preliminary_question")
+    ) {
+        let label = if response_action.as_deref() == Some("express_interest") {
+            "Interest recorded; waiting for the owner's next decision".to_string()
+        } else {
+            match response_code.as_deref() {
+                Some("service_fit") => "Service-fit question recorded",
+                Some("coarse_area_fit") => "General-area question recorded",
+                Some("cadence_support") => "Cadence question recorded",
+                Some("assessment_method") => "Assessment-method question recorded",
+                _ => "Preliminary question recorded",
+            }
+            .to_string()
+        };
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "response_recorded".to_string(),
+            status_label: label.clone(),
+            next_action: "wait_for_owner".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: true,
+            opportunity_response_capability: true,
+            response_action,
+            response_label: Some(label),
+            responded_at_epoch_seconds: responded_at,
+            closed: false,
+        }
+    } else {
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "response_ready".to_string(),
+            status_label: "Limited request ready for response".to_string(),
+            next_action: "respond_to_limited_request".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: true,
+            opportunity_response_capability: true,
+            response_action: None,
+            response_label: None,
+            responded_at_epoch_seconds: None,
+            closed: false,
+        }
+    };
+    transaction.commit().await?;
+    Ok(Some(progress))
 }
 
 async fn get_owner_provider_invitation(

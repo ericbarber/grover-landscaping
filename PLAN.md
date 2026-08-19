@@ -351,6 +351,13 @@ Active slice:
   and omit recipient email, capability/member identifiers, raw capacity/safety
   codes, private yard data, and competitors. Missing property, empty history,
   and outage remain distinct. Phase 3C2 provider progress is next.
+- Phase 3C2 is delivered. The checked recipient can load a protected body-token
+  progress projection that rechecks mailbox, invitation, provider relationship,
+  organization, membership, capability, and expiry. It exposes gate recovery,
+  the actor's own safe question/interest confirmation while authority remains
+  effective, and status-only terminal confirmation; it repeats no owner/yard
+  snapshot, disclosure choice, capability ID, other response, or safety case.
+  Phase 3C3 production interface adoption is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

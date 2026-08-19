@@ -119,6 +119,11 @@ deterministic state precedence, safe question and interest details, generalized
 decline, indistinguishable opt-out/safety closure, controlled next actions, and
 outage-distinct handling. The checked-recipient provider progress projection is
 next.
+The Phase 3C2 provider projection is now delivered with verified mailbox and
+body-token scoping, current relationship/capability rechecks, stale-authority
+reconciliation, gate recovery, own safe response confirmation, and status-only
+closure without repeating the yard snapshot or pre-grant owner choices. Phase
+3C3 production interface adoption is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

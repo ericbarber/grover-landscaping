@@ -123,9 +123,9 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
    customer-safe wording, recovery actions, and acceptance criteria.
 2. **3C1 — owner projection:** owner/property-scoped collection, safe response
    mapping, outage distinction, API, and persistence coverage.
-3. **3C2 — provider projection:** checked-recipient body-token progress,
-   status-only closure, own-response confirmation, API, and persistence
-   coverage.
+3. **3C2 — provider projection (delivered):** checked-recipient body-token
+   progress, effective relationship/capability rechecks, status-only closure,
+   own-response confirmation, API, and persistence coverage.
 4. **3C3 — interface adoption:** connect the production Yard Owner and provider
    acquisition surfaces to these models with loading, empty, unavailable,
    stale-tab, narrow-screen, zoom, and assistive-technology validation.
@@ -144,3 +144,6 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
 - Empty collection and unavailable storage are distinct.
 - Projection order and labels remain deterministic across replay and stale-tab
   scenarios.
+
+Phase 3C3 interface adoption is next. The API delivery is not evidence that the
+production React surfaces have adopted either projection.

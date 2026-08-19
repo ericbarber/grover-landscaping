@@ -266,6 +266,21 @@ photos, contact details, access notes, or competing requests.
 A missing/cross-owner property returns `404`; persistence outage returns `503`
 rather than an empty collection.
 
+`POST /provider-invitations/progress` accepts the body token and requires the
+authenticated checked recipient with the matching verified mailbox. It returns
+gate progress before response authorization, the actor's own customer-safe
+question or interest confirmation while authority remains effective, and
+status-only closure after decline, opt-out/report, owner revoke, failure, or
+expiry. It rechecks invitation, relationship, active yard-care organization,
+membership, capability status, and expiry, and reconciles stale active
+capabilities without reopening access.
+
+The provider progress model never repeats owner name, location, goals, cadence,
+photos, contact, or access considerations. It never exposes owner disclosure
+choices before a Phase 3D grant, capability IDs, other actors' responses, or
+safety case details. Wrong actor/mailbox/token returns `404`, unchecked identity
+returns `409`, and unavailable persistence returns `503`.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

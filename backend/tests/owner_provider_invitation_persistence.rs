@@ -13,8 +13,8 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
     OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
     OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityRecord,
-    OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -363,6 +363,18 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderInboxResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .provider_invitation_progress(
+                "recipient-unavailable",
+                "provider@example.com",
+                OpenOwnerProviderInboxRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderProgressResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1095,6 +1107,34 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(interest.action, "express_interest");
     assert!(interest.opportunity_response_capability);
     assert_eq!(interest.capability_version, capability.version);
+    let OwnerProviderProgressResult::Loaded(provider_progress) = repository
+        .provider_invitation_progress(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("checked provider progress should load");
+    };
+    assert_eq!(provider_progress.progress_stage, "response_recorded");
+    assert_eq!(provider_progress.next_action, "wait_for_owner");
+    assert_eq!(
+        provider_progress.response_action.as_deref(),
+        Some("express_interest")
+    );
+    assert!(provider_progress.recipient_email_checked);
+    assert!(provider_progress.organization_relationship_checked);
+    assert!(provider_progress.opportunity_response_capability);
+    assert!(!provider_progress.closed);
+    let provider_progress_json =
+        serde_json::to_string(&provider_progress).expect("provider progress should serialize");
+    assert!(!provider_progress_json.contains("Morgan Reyes"));
+    assert!(!provider_progress_json.contains("421 Private Canyon Road"));
+    assert!(!provider_progress_json.contains("0199"));
+    assert!(!provider_progress_json.contains(&capability.capability_id));
     assert!(matches!(
         repository
             .create_provider_opportunity_response(
@@ -1917,6 +1957,28 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         closed_inbox.recovery_action.as_deref(),
         Some("review_invitation_status")
     );
+    let OwnerProviderProgressResult::Loaded(closed_provider_progress) = repository
+        .provider_invitation_progress(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("revoked provider progress should return status-only closure");
+    };
+    assert!(closed_provider_progress.closed);
+    assert_eq!(closed_provider_progress.progress_stage, "closed");
+    assert_eq!(
+        closed_provider_progress.status_label,
+        "Owner withdrew this invitation"
+    );
+    assert!(closed_provider_progress.response_action.is_none());
+    assert!(closed_provider_progress.response_label.is_none());
+    assert!(!closed_provider_progress.organization_relationship_checked);
+    assert!(!closed_provider_progress.opportunity_response_capability);
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM owner_acquisition_events
