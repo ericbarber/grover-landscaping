@@ -443,6 +443,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-invitations/organization-options"
         || path == "/provider-invitations/organization-claims"
         || path.starts_with("/provider-invitation-organization-claims/")
+        || path == "/provider-organization-claim-reviews"
+        || path.starts_with("/provider-organization-claim-reviews/")
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -524,6 +526,12 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
     {
         return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    if path == "/provider-organization-claim-reviews" {
+        return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::GET;
+    }
+    if path.starts_with("/provider-organization-claim-reviews/") && path.ends_with("/decisions") {
+        return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::POST;
     }
     if path.starts_with("/owner-properties/") {
         let owner_property_suffix = path.trim_start_matches("/owner-properties/");
@@ -1690,6 +1698,23 @@ mod tests {
         assert!(is_protected_api_path(
             "/provider-invitation-organization-claims/claim-1/bootstrap"
         ));
+    }
+
+    #[test]
+    fn provider_claim_review_routes_are_support_admin_only() {
+        let support = principal(AccessRole::SupportAdmin);
+        let owner = principal(AccessRole::OrganizationOwner);
+        for (method, path) in [
+            (Method::GET, "/provider-organization-claim-reviews"),
+            (
+                Method::POST,
+                "/provider-organization-claim-reviews/claim-1/decisions",
+            ),
+        ] {
+            assert!(is_protected_api_path(path));
+            assert!(is_authorized(&support, &method, path));
+            assert!(!is_authorized(&owner, &method, path));
+        }
     }
 
     #[test]

@@ -206,8 +206,10 @@ supports the exact statement.
    isolation.
 2. **3B2b — atomic bootstrap (delivered):** fingerprint lock, final duplicate
    rescan, organization/membership creation, provenance, and concurrency tests.
-3. **3B2c — dispute operations (contract complete; implementation next):**
-   Provider Operations queue, restricted evidence reference,
-   disposition/appeal, aging, and monitoring.
-4. **3B3 — response capability:** explicitly grant and enforce only the bounded
+3. **3B2c1 — dispute operations (delivered):** Provider Operations minimized
+   queue, age bands, restricted evidence references, append-only review events,
+   and controlled review/clear/reject/pause dispositions.
+4. **3B2c2 — appeal and monitoring:** checked-recipient appeal, reviewer
+   separation of duties, overdue metrics/alerts, and runbook validation.
+5. **3B3 — response capability:** explicitly grant and enforce only the bounded
    opportunity-response actions after relationship checks.

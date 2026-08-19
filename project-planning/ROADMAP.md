@@ -83,11 +83,12 @@ bootstrap now locks the fingerprint, rescans, and creates the organization,
 owner membership, provenance, and audit as one unit; same-name concurrency
 creates only one organization. Provider Operations duplicate/dispute handling
 is next.
-The Phase 3B2c operations contract now defines support-only minimized queue
-visibility, append-only review events, restricted evidence references,
-controlled dispositions and appeals, separation of duties, customer-safe reason
-codes, and overdue monitoring. Queue and disposition persistence is the next
-delivery slice.
+The Phase 3B2c operations contract defines support-only minimized visibility,
+restricted evidence, controlled dispositions and appeals, separation of duties,
+customer-safe reasons, and overdue monitoring. Its first implementation slice
+now delivers the queue, SLA age bands, versioned dispositions, append-only
+review history, replay, and evidence-free general audit. Recipient appeal and
+monitoring are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

@@ -85,6 +85,7 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
+        validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
@@ -94,8 +95,10 @@ use grover_landscaping_api::{
         validate_yard_brief_request, BootstrapOwnerProviderOrganizationClaimRequest,
         CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
         CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
-        ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+        DecideOwnerProviderClaimReviewRequest, ListOwnerProviderOrganizationOptionsRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+        OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
         OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
         OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
@@ -716,6 +719,14 @@ fn app_with_runtime(
         .route(
             "/provider-invitation-organization-claims/{claim_id}/bootstrap",
             post(bootstrap_owner_provider_organization_claim),
+        )
+        .route(
+            "/provider-organization-claim-reviews",
+            get(list_owner_provider_organization_claim_reviews),
+        )
+        .route(
+            "/provider-organization-claim-reviews/{claim_id}/decisions",
+            post(decide_owner_provider_organization_claim_review),
         )
         .route(
             "/customer-accounts",
@@ -2155,6 +2166,90 @@ async fn bootstrap_owner_provider_organization_claim(
             persisted_resource_unavailable_response(
                 "provider_organization_bootstrap_unavailable",
                 "Final provider setup could not be confirmed. No opportunity-response authority was granted.",
+            )
+        }
+    }
+}
+
+async fn list_owner_provider_organization_claim_reviews(
+    State(state): State<Arc<AppState>>,
+    Query(filter): Query<OwnerProviderClaimReviewFilter>,
+) -> Response {
+    if !validate_provider_claim_review_filter(&filter) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_claim_review_filter_invalid",
+                message: "Choose duplicate_review, under_review, or disputed.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .list_provider_organization_claim_reviews(filter)
+        .await
+    {
+        OwnerProviderClaimReviewListResult::Loaded(reviews) => Json(reviews).into_response(),
+        OwnerProviderClaimReviewListResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_claim_review_queue_unavailable",
+            "Provider claim reviews could not be loaded.",
+        ),
+    }
+}
+
+async fn decide_owner_provider_organization_claim_review(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(claim_id): Path<String>,
+    Json(request): Json<DecideOwnerProviderClaimReviewRequest>,
+) -> Response {
+    if claim_id.trim().is_empty() || !validate_provider_claim_review_decision_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_claim_review_decision_invalid",
+                message: "Choose an allowed review action, current version, controlled reason, and restricted evidence reference."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .decide_provider_organization_claim_review(&principal.subject, claim_id.trim(), request)
+        .await
+    {
+        OwnerProviderClaimReviewDecisionResult::Updated(review) => {
+            (StatusCode::CREATED, Json(review)).into_response()
+        }
+        OwnerProviderClaimReviewDecisionResult::Replayed(review) => Json(review).into_response(),
+        OwnerProviderClaimReviewDecisionResult::NotFound => resource_not_found_response(
+            "provider_claim_review_not_found",
+            "The provider organization claim was not found.",
+        ),
+        OwnerProviderClaimReviewDecisionResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_claim_review_transition_invalid",
+                message: "That review action is not allowed from the claim's current state."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderClaimReviewDecisionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_claim_review_conflict",
+                message: "The claim changed before this decision was recorded. Reload the queue before trying again."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderClaimReviewDecisionResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_claim_review_decision_unavailable",
+                "The review decision could not be confirmed. The claim status was not reported as changed.",
             )
         }
     }

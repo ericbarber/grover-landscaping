@@ -287,8 +287,13 @@ Active slice:
 - Phase 3B2c now has a legal-transition and data-minimization contract for the
   support-only review queue, append-only restricted-evidence references,
   controlled dispositions, recipient appeals, separation of duties, SLA aging,
-  and identifier-free monitoring. Slice 3B2c1 queue and dispositions is the next
-  implementation unit.
+  and identifier-free monitoring.
+- Phase 3B2c1 is delivered. Support administrators can load a minimized
+  duplicate/under-review/disputed queue and apply versioned, replay-safe legal
+  transitions backed by append-only review events and opaque restricted
+  evidence references. General audit excludes evidence and candidate data.
+  Slice 3B2c2 recipient appeal, separation-of-duties enforcement, and monitoring
+  is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -1,7 +1,9 @@
 use grover_landscaping_api::owner_acquisition::{
     BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerPropertyRequest,
     CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
-    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+    DecideOwnerProviderClaimReviewRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
     OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
     OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
@@ -221,6 +223,30 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderOrganizationBootstrapResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_provider_organization_claim_reviews(OwnerProviderClaimReviewFilter {
+                status: None,
+            })
+            .await,
+        OwnerProviderClaimReviewListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .decide_provider_organization_claim_review(
+                "support-unavailable",
+                "claim-unavailable",
+                DecideOwnerProviderClaimReviewRequest {
+                    action: "review_started".to_string(),
+                    expected_version: 1,
+                    reason_code: None,
+                    evidence_reference: None,
+                    idempotency_key: "review-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderClaimReviewDecisionResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -793,6 +819,103 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .to_string();
     assert!(!duplicate_event_data.contains("org_provider_claim_private_duplicate"));
     assert!(!duplicate_event_data.contains(duplicate_recipient));
+    let OwnerProviderClaimReviewListResult::Loaded(review_queue) = repository
+        .list_provider_organization_claim_reviews(OwnerProviderClaimReviewFilter {
+            status: Some("duplicate_review".to_string()),
+        })
+        .await
+    else {
+        panic!("provider operations duplicate queue should load");
+    };
+    let queued_duplicate = review_queue
+        .iter()
+        .find(|review| review.claim_id == duplicate_claim.claim_id)
+        .expect("duplicate claim should be present in minimized queue");
+    assert_eq!(queued_duplicate.status, "duplicate_review");
+    let review_queue_json = serde_json::to_string(&review_queue).expect("queue should serialize");
+    assert!(!review_queue_json.contains(duplicate_recipient));
+    assert!(!review_queue_json.contains("org_provider_claim_private_duplicate"));
+    assert!(!review_queue_json.contains("421 Private Canyon Road"));
+    let start_review_request = DecideOwnerProviderClaimReviewRequest {
+        action: "review_started".to_string(),
+        expected_version: duplicate_claim.version,
+        reason_code: None,
+        evidence_reference: None,
+        idempotency_key: "provider-claim-review-start-001".to_string(),
+    };
+    let OwnerProviderClaimReviewDecisionResult::Updated(started_review) = repository
+        .decide_provider_organization_claim_review(
+            "support-provider-operations-1",
+            &duplicate_claim.claim_id,
+            start_review_request.clone(),
+        )
+        .await
+    else {
+        panic!("provider operations should start duplicate review");
+    };
+    assert_eq!(started_review.status, "under_review");
+    assert_eq!(started_review.version, duplicate_claim.version + 1);
+    assert!(matches!(
+        repository
+            .decide_provider_organization_claim_review(
+                "support-provider-operations-1",
+                &duplicate_claim.claim_id,
+                start_review_request,
+            )
+            .await,
+        OwnerProviderClaimReviewDecisionResult::Replayed(review)
+            if review.status == "under_review"
+    ));
+    let OwnerProviderClaimReviewDecisionResult::Updated(cleared_review) = repository
+        .decide_provider_organization_claim_review(
+            "support-provider-operations-1",
+            &duplicate_claim.claim_id,
+            DecideOwnerProviderClaimReviewRequest {
+                action: "cleared_for_bootstrap".to_string(),
+                expected_version: started_review.version,
+                reason_code: Some("distinct_organization".to_string()),
+                evidence_reference: Some("restricted://provider-claims/evidence-001".to_string()),
+                idempotency_key: "provider-claim-review-clear-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("reviewed distinct organization should return to bootstrap-ready");
+    };
+    assert_eq!(cleared_review.status, "bootstrap_ready");
+    assert_eq!(cleared_review.version, started_review.version + 1);
+    assert!(cleared_review.assigned_function.is_none());
+    let review_history = sqlx::query(
+        "SELECT action, evidence_reference FROM owner_provider_organization_claim_review_events
+         WHERE claim_id = $1 ORDER BY occurred_at, id",
+    )
+    .bind(&duplicate_claim.claim_id)
+    .fetch_all(&pool)
+    .await
+    .expect("append-only claim review history should load");
+    assert_eq!(review_history.len(), 2);
+    assert_eq!(
+        review_history[0].get::<String, _>("action"),
+        "review_started"
+    );
+    assert_eq!(
+        review_history[1]
+            .get::<Option<String>, _>("evidence_reference")
+            .as_deref(),
+        Some("restricted://provider-claims/evidence-001")
+    );
+    let general_review_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_invitation_organization_review_dispositioned'
+           AND event_data->>'claim_id' = $1",
+    )
+    .bind(&duplicate_claim.claim_id)
+    .fetch_one(&pool)
+    .await
+    .expect("general review audit should load")
+    .to_string();
+    assert!(!general_review_audit.contains("evidence-001"));
+    assert!(!general_review_audit.contains("org_provider_claim_private_duplicate"));
 
     let unique_recipient = "unique@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(unique_invitation) = repository

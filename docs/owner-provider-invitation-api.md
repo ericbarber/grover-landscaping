@@ -153,6 +153,24 @@ body-token invitation, and its persisted recipient check.
 - `503` — persistence was unavailable and the requested mutation is not
   confirmed.
 
+## Provider Operations claim review
+
+- `GET /provider-organization-claim-reviews` is restricted to
+  `support_admin`. Its optional `status` filter accepts `duplicate_review`,
+  `under_review`, or `disputed`. Results contain only the proposed provider
+  name, claim kind/status/reason, assigned function, version, update time, and
+  SLA age band.
+- `POST /provider-organization-claim-reviews/{claim_id}/decisions` is restricted
+  to `support_admin` and accepts a current version, actor-scoped idempotency key,
+  controlled action/reason, and opaque restricted evidence reference where
+  required.
+- Supported transitions are review start, clear for bootstrap, reject, and
+  pause for dispute. Clearing does not create an organization; the recipient
+  must invoke atomic bootstrap again.
+- Evidence references remain in append-only review history. General acquisition
+  audit receives claim/action/status only and never evidence, recipient email,
+  owner-private facts, or a duplicate candidate identifier.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

@@ -212,6 +212,33 @@ pub struct BootstrapOwnerProviderOrganizationClaimRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderClaimReviewFilter {
+    pub status: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct DecideOwnerProviderClaimReviewRequest {
+    pub action: String,
+    pub expected_version: i64,
+    pub reason_code: Option<String>,
+    pub evidence_reference: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderClaimReviewRecord {
+    pub claim_id: String,
+    pub claim_kind: String,
+    pub proposed_display_name: String,
+    pub status: String,
+    pub reason_code: Option<String>,
+    pub assigned_function: Option<String>,
+    pub version: i64,
+    pub age_band: String,
+    pub updated_at_epoch_seconds: i64,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderOrganizationClaimRecord {
     pub claim_id: String,
     pub invitation_id: String,
@@ -380,6 +407,22 @@ pub enum OwnerProviderOrganizationBootstrapResult {
     Bootstrapped(OwnerProviderOrganizationClaimRecord),
     Replayed(OwnerProviderOrganizationClaimRecord),
     DuplicateReview(OwnerProviderOrganizationClaimRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderClaimReviewListResult {
+    Loaded(Vec<OwnerProviderClaimReviewRecord>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderClaimReviewDecisionResult {
+    Updated(OwnerProviderClaimReviewRecord),
+    Replayed(OwnerProviderClaimReviewRecord),
     NotFound,
     InvalidState,
     Conflict,
@@ -1999,6 +2042,70 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_provider_organization_claim_reviews(
+        &self,
+        filter: OwnerProviderClaimReviewFilter,
+    ) -> OwnerProviderClaimReviewListResult {
+        if !validate_provider_claim_review_filter(&filter) {
+            return OwnerProviderClaimReviewListResult::Loaded(Vec::new());
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderClaimReviewListResult::Unavailable;
+        };
+        match list_owner_provider_organization_claim_reviews(pool, filter.status.as_deref()).await {
+            Ok(reviews) => OwnerProviderClaimReviewListResult::Loaded(reviews),
+            Err(error) => {
+                tracing::error!(%error, "provider organization claim review queue failed");
+                OwnerProviderClaimReviewListResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn decide_provider_organization_claim_review(
+        &self,
+        actor_user_id: &str,
+        claim_id: &str,
+        request: DecideOwnerProviderClaimReviewRequest,
+    ) -> OwnerProviderClaimReviewDecisionResult {
+        if !validate_provider_claim_review_decision_request(&request) {
+            return OwnerProviderClaimReviewDecisionResult::InvalidState;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderClaimReviewDecisionResult::Unavailable;
+        };
+        match decide_owner_provider_organization_claim_review(
+            pool,
+            actor_user_id,
+            claim_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedClaimReviewDecisionOutcome::Updated(review)) => {
+                OwnerProviderClaimReviewDecisionResult::Updated(review)
+            }
+            Ok(PersistedClaimReviewDecisionOutcome::Replayed(review)) => {
+                OwnerProviderClaimReviewDecisionResult::Replayed(review)
+            }
+            Ok(PersistedClaimReviewDecisionOutcome::NotFound) => {
+                OwnerProviderClaimReviewDecisionResult::NotFound
+            }
+            Ok(PersistedClaimReviewDecisionOutcome::InvalidState) => {
+                OwnerProviderClaimReviewDecisionResult::InvalidState
+            }
+            Ok(PersistedClaimReviewDecisionOutcome::Conflict) => {
+                OwnerProviderClaimReviewDecisionResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderClaimReviewDecisionResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, actor_user_id, claim_id, "provider claim review decision failed");
+                OwnerProviderClaimReviewDecisionResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -2227,6 +2334,56 @@ pub fn validate_provider_organization_bootstrap_request(
         && idempotency_key
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_claim_review_filter(filter: &OwnerProviderClaimReviewFilter) -> bool {
+    filter
+        .status
+        .as_deref()
+        .is_none_or(|status| matches!(status, "duplicate_review" | "under_review" | "disputed"))
+}
+
+pub fn validate_provider_claim_review_decision_request(
+    request: &DecideOwnerProviderClaimReviewRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    let replay_key_valid = (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'));
+    let evidence_valid = request.evidence_reference.as_deref().is_some_and(|value| {
+        (8..=240).contains(&value.trim().chars().count())
+            && value.chars().all(|character| {
+                character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | ':' | '/')
+            })
+    });
+    let action_valid = match request.action.as_str() {
+        "review_started" => request.reason_code.is_none() && request.evidence_reference.is_none(),
+        "cleared_for_bootstrap" => {
+            request.reason_code.as_deref() == Some("distinct_organization") && evidence_valid
+        }
+        "rejected" => {
+            request.reason_code.as_deref().is_some_and(|reason| {
+                matches!(
+                    reason,
+                    "existing_organization_relationship_required"
+                        | "authority_not_supported"
+                        | "identity_evidence_incomplete"
+                        | "policy_ineligible"
+                )
+            }) && evidence_valid
+        }
+        "dispute_paused" => {
+            request.reason_code.as_deref().is_some_and(|reason| {
+                matches!(
+                    reason,
+                    "identity_dispute" | "unsafe_contact" | "suspected_impersonation"
+                )
+            }) && evidence_valid
+        }
+        _ => false,
+    };
+    request.expected_version > 0 && replay_key_valid && action_valid
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -4620,6 +4777,206 @@ async fn bootstrap_owner_provider_organization_claim(
     ))
 }
 
+async fn list_owner_provider_organization_claim_reviews(
+    pool: &PgPool,
+    status: Option<&str>,
+) -> Result<Vec<OwnerProviderClaimReviewRecord>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT id, claim_kind, proposed_display_name, status, reason_code,
+                assigned_function, version,
+                EXTRACT(EPOCH FROM updated_at)::BIGINT AS updated_at_epoch_seconds,
+                CASE
+                  WHEN status = 'disputed' THEN 'priority'
+                  WHEN status = 'duplicate_review' AND updated_at <= NOW() - INTERVAL '2 days' THEN 'overdue'
+                  WHEN status = 'duplicate_review' AND updated_at <= NOW() - INTERVAL '1 day' THEN 'due'
+                  WHEN status = 'under_review' AND updated_at <= NOW() - INTERVAL '3 days' THEN 'overdue'
+                  WHEN status = 'under_review' AND updated_at <= NOW() - INTERVAL '2 days' THEN 'due'
+                  ELSE 'fresh'
+                END AS age_band
+         FROM owner_provider_invitation_organization_claims
+         WHERE status IN ('duplicate_review', 'under_review', 'disputed')
+           AND ($1::TEXT IS NULL OR status = $1)
+         ORDER BY
+           CASE status WHEN 'disputed' THEN 0 WHEN 'duplicate_review' THEN 1 ELSE 2 END,
+           updated_at, id",
+    )
+    .bind(status)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .iter()
+        .map(owner_provider_claim_review_from_row)
+        .collect())
+}
+
+async fn get_owner_provider_organization_claim_review(
+    pool: &PgPool,
+    claim_id: &str,
+) -> Result<Option<OwnerProviderClaimReviewRecord>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT id, claim_kind, proposed_display_name, status, reason_code,
+                assigned_function, version,
+                EXTRACT(EPOCH FROM updated_at)::BIGINT AS updated_at_epoch_seconds,
+                CASE WHEN status = 'disputed' THEN 'priority' ELSE 'fresh' END AS age_band
+         FROM owner_provider_invitation_organization_claims WHERE id = $1",
+    )
+    .bind(claim_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.as_ref().map(owner_provider_claim_review_from_row))
+}
+
+fn owner_provider_claim_review_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderClaimReviewRecord {
+    OwnerProviderClaimReviewRecord {
+        claim_id: row.get("id"),
+        claim_kind: row.get("claim_kind"),
+        proposed_display_name: row.get("proposed_display_name"),
+        status: row.get("status"),
+        reason_code: row.get("reason_code"),
+        assigned_function: row.get("assigned_function"),
+        version: row.get("version"),
+        age_band: row.get("age_band"),
+        updated_at_epoch_seconds: row.get("updated_at_epoch_seconds"),
+    }
+}
+
+enum PersistedClaimReviewDecisionOutcome {
+    Updated(OwnerProviderClaimReviewRecord),
+    Replayed(OwnerProviderClaimReviewRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+async fn decide_owner_provider_organization_claim_review(
+    pool: &PgPool,
+    actor_user_id: &str,
+    claim_id: &str,
+    request: DecideOwnerProviderClaimReviewRequest,
+) -> Result<PersistedClaimReviewDecisionOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay_claim_id = sqlx::query_scalar::<_, String>(
+        "SELECT claim_id FROM owner_provider_organization_claim_review_events
+         WHERE actor_user_id = $1 AND idempotency_key = $2",
+    )
+    .bind(actor_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay_claim_id) = replay_claim_id {
+        transaction.commit().await?;
+        if replay_claim_id != claim_id {
+            return Ok(PersistedClaimReviewDecisionOutcome::Conflict);
+        }
+        return Ok(
+            match get_owner_provider_organization_claim_review(pool, claim_id).await? {
+                Some(review) => PersistedClaimReviewDecisionOutcome::Replayed(review),
+                None => PersistedClaimReviewDecisionOutcome::NotFound,
+            },
+        );
+    }
+    let claim = sqlx::query(
+        "SELECT claim.status, claim.version, invitation.owner_user_id,
+                invitation.property_id, claim.invitation_id
+         FROM owner_provider_invitation_organization_claims claim
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         WHERE claim.id = $1 FOR UPDATE OF claim",
+    )
+    .bind(claim_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(claim) = claim else {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimReviewDecisionOutcome::NotFound);
+    };
+    if claim.get::<i64, _>("version") != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimReviewDecisionOutcome::Conflict);
+    }
+    let prior_status: String = claim.get("status");
+    let resulting_status = match (request.action.as_str(), prior_status.as_str()) {
+        ("review_started", "duplicate_review") => "under_review",
+        ("cleared_for_bootstrap", "duplicate_review" | "under_review") => "bootstrap_ready",
+        ("rejected", "duplicate_review" | "under_review") => "rejected",
+        ("dispute_paused", "relationship_checked" | "claimed") => "disputed",
+        _ => {
+            transaction.rollback().await?;
+            return Ok(PersistedClaimReviewDecisionOutcome::InvalidState);
+        }
+    };
+    let assigned_function = match resulting_status {
+        "bootstrap_ready" | "rejected" => None,
+        _ => Some("provider_operations"),
+    };
+    let resulting_reason_code = if request.action == "review_started" {
+        Some("possible_duplicate")
+    } else {
+        request.reason_code.as_deref()
+    };
+    sqlx::query(
+        "UPDATE owner_provider_invitation_organization_claims
+         SET status = $2, reason_code = $3, assigned_function = $4,
+             version = version + 1, updated_at = NOW()
+         WHERE id = $1",
+    )
+    .bind(claim_id)
+    .bind(resulting_status)
+    .bind(resulting_reason_code)
+    .bind(assigned_function)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_organization_claim_review_events (
+             id, claim_id, actor_user_id, actor_function, action, prior_status,
+             resulting_status, reason_code, evidence_reference,
+             expected_claim_version, idempotency_key
+         ) VALUES ($1, $2, $3, 'provider_operations', $4, $5, $6, $7, $8, $9, $10)",
+    )
+    .bind(format!("provider_claim_review_{}", Uuid::new_v4().simple()))
+    .bind(claim_id)
+    .bind(actor_user_id)
+    .bind(&request.action)
+    .bind(&prior_status)
+    .bind(resulting_status)
+    .bind(request.reason_code.as_deref())
+    .bind(request.evidence_reference.as_deref())
+    .bind(request.expected_version)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    let event_kind = if request.action == "review_started" {
+        "provider_invitation_organization_review_started"
+    } else {
+        "provider_invitation_organization_review_dispositioned"
+    };
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(claim.get::<String, _>("owner_user_id"))
+    .bind(claim.get::<String, _>("property_id"))
+    .bind(event_kind)
+    .bind(serde_json::json!({
+        "invitation_id": claim.get::<String, _>("invitation_id"),
+        "claim_id": claim_id,
+        "action": request.action,
+        "status": resulting_status,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(
+        match get_owner_provider_organization_claim_review(pool, claim_id).await? {
+            Some(review) => PersistedClaimReviewDecisionOutcome::Updated(review),
+            None => PersistedClaimReviewDecisionOutcome::NotFound,
+        },
+    )
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -5071,6 +5428,31 @@ mod tests {
         invalid_bootstrap.expected_version = 0;
         assert!(!validate_provider_organization_bootstrap_request(
             &invalid_bootstrap
+        ));
+        assert!(validate_provider_claim_review_filter(
+            &OwnerProviderClaimReviewFilter {
+                status: Some("duplicate_review".to_string()),
+            }
+        ));
+        assert!(!validate_provider_claim_review_filter(
+            &OwnerProviderClaimReviewFilter {
+                status: Some("claimed".to_string()),
+            }
+        ));
+        let review_decision = DecideOwnerProviderClaimReviewRequest {
+            action: "cleared_for_bootstrap".to_string(),
+            expected_version: 2,
+            reason_code: Some("distinct_organization".to_string()),
+            evidence_reference: Some("restricted://provider-claims/evidence-1".to_string()),
+            idempotency_key: "provider-review-decision-001".to_string(),
+        };
+        assert!(validate_provider_claim_review_decision_request(
+            &review_decision
+        ));
+        let mut invalid_review_decision = review_decision;
+        invalid_review_decision.evidence_reference = None;
+        assert!(!validate_provider_claim_review_decision_request(
+            &invalid_review_decision
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),
