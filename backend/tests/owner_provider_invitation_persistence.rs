@@ -122,6 +122,15 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
         repository.expire_provider_invitations(25).await,
         OwnerProviderInvitationExpiryResult::Unavailable
     );
+    assert!(matches!(
+        repository
+            .opt_out_provider_invitation(
+                "provider@example.com",
+                "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::Unavailable
+    ));
 }
 
 #[tokio::test]
@@ -143,16 +152,22 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let owner_b = "owner_provider_invitation_b";
     let recipient = "dispatch@sonoranyard.example";
     let suppressed_recipient = "optout@sonoranyard.example";
+    let opt_out_recipient = "preferences@sonoranyard.example";
     sqlx::query("DELETE FROM owner_workspaces WHERE owner_user_id = ANY($1)")
         .bind(vec![owner_a, owner_b])
         .execute(&pool)
         .await
         .expect("test owners should reset");
     let suppressed_fingerprint = format!("{:x}", Sha256::digest(suppressed_recipient.as_bytes()));
+    let opt_out_fingerprint = format!("{:x}", Sha256::digest(opt_out_recipient.as_bytes()));
     sqlx::query(
-        "DELETE FROM owner_provider_recipient_suppressions WHERE recipient_email_fingerprint = $1",
+        "DELETE FROM owner_provider_recipient_suppressions
+         WHERE recipient_email_fingerprint = ANY($1)",
     )
-    .bind(&suppressed_fingerprint)
+    .bind(vec![
+        suppressed_fingerprint.clone(),
+        opt_out_fingerprint.clone(),
+    ])
     .execute(&pool)
     .await
     .expect("test suppression should reset");
@@ -476,6 +491,50 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationExpiryResult::Completed(0)
     );
 
+    let OwnerProviderInvitationCreateResult::Created(opt_out_invitation) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request(opt_out_recipient, "provider-invite-opt-out-001"),
+        )
+        .await
+    else {
+        panic!("opt-out invitation should be created");
+    };
+    assert!(matches!(
+        repository
+            .opt_out_provider_invitation(
+                "wrong@sonoranyard.example",
+                opt_out_invitation.delivery_token()
+            )
+            .await,
+        OwnerProviderInvitationMutationResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .opt_out_provider_invitation(opt_out_recipient, opt_out_invitation.delivery_token())
+            .await,
+        OwnerProviderInvitationMutationResult::Saved(invitation)
+            if invitation.status == "opted_out" && invitation.delivery_status == "suppressed"
+    ));
+    assert!(matches!(
+        repository
+            .opt_out_provider_invitation(opt_out_recipient, opt_out_invitation.delivery_token())
+            .await,
+        OwnerProviderInvitationMutationResult::Saved(invitation)
+            if invitation.status == "opted_out"
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_invitation(
+                owner_a,
+                &property.property_id,
+                invitation_request(opt_out_recipient, "provider-invite-opt-out-002"),
+            )
+            .await,
+        OwnerProviderInvitationCreateResult::Suppressed
+    ));
+
     sqlx::query(
         "INSERT INTO owner_provider_recipient_suppressions (
              recipient_email_fingerprint, recipient_email, reason
@@ -503,9 +562,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .await
         .expect("test owners should clean up");
     sqlx::query(
-        "DELETE FROM owner_provider_recipient_suppressions WHERE recipient_email_fingerprint = $1",
+        "DELETE FROM owner_provider_recipient_suppressions
+         WHERE recipient_email_fingerprint = ANY($1)",
     )
-    .bind(&suppressed_fingerprint)
+    .bind(vec![suppressed_fingerprint, opt_out_fingerprint])
     .execute(&pool)
     .await
     .expect("test suppression should clean up");

@@ -85,9 +85,10 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
-        validate_provider_invitation_request, validate_workspace_request,
-        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-        CreateOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        validate_provider_invitation_opt_out_request, validate_provider_invitation_request,
+        validate_workspace_request, validate_yard_brief_request, CreateOwnerIntakeMediaRequest,
+        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
         OwnerReadResult, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
     },
@@ -675,6 +676,10 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/provider-invitations/{invitation_id}/revoke",
             post(revoke_owner_provider_invitation),
+        )
+        .route(
+            "/provider-invitations/opt-out",
+            post(opt_out_owner_provider_invitation),
         )
         .route(
             "/customer-accounts",
@@ -1678,6 +1683,64 @@ async fn revoke_owner_provider_invitation(
             persisted_resource_unavailable_response(
                 "owner_provider_invitation_revoke_unavailable",
                 "The invitation could not be revoked. Its prior access state remains unchanged.",
+            )
+        }
+    }
+}
+
+async fn opt_out_owner_provider_invitation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<OptOutOwnerProviderInvitationRequest>,
+) -> Response {
+    if !validate_provider_invitation_opt_out_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_provider_invitation_opt_out",
+                message: "The invitation reference is invalid. Open the original invitation and try again."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message:
+                    "Verify the invited business email before changing its invitation preferences."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .opt_out_provider_invitation(verified_email, request.token.trim())
+        .await
+    {
+        OwnerProviderInvitationMutationResult::Saved(_) => {
+            Json(serde_json::json!({ "status": "opted_out" })).into_response()
+        }
+        OwnerProviderInvitationMutationResult::NotFound => resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation was not found for this verified email.",
+        ),
+        OwnerProviderInvitationMutationResult::InvalidState(_) => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_invitation_already_closed",
+                message: "This invitation is already closed. No contact preference was changed."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationMutationResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_invitation_opt_out_unavailable",
+                "The invitation preference could not be changed. Try again before relying on the update.",
             )
         }
     }

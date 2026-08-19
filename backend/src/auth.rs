@@ -437,6 +437,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/owner-workspace"
         || path == "/owner-properties"
         || path.starts_with("/owner-properties/")
+        || path == "/provider-invitations/opt-out"
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -498,6 +499,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path == "/owner-properties" {
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::POST);
+    }
+    if path == "/provider-invitations/opt-out" {
+        return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/owner-properties/") {
         let owner_property_suffix = path.trim_start_matches("/owner-properties/");
@@ -1601,6 +1605,7 @@ mod tests {
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations/invitation-1/revoke",
             ),
+            (Method::POST, "/provider-invitations/opt-out"),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));

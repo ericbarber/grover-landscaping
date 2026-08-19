@@ -146,6 +146,11 @@ pub struct RecordOwnerProviderInvitationDeliveryRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OptOutOwnerProviderInvitationRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecord {
     pub invitation_id: String,
     pub owner_user_id: String,
@@ -1211,6 +1216,83 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn opt_out_provider_invitation(
+        &self,
+        verified_email: &str,
+        token: &str,
+    ) -> OwnerProviderInvitationMutationResult {
+        let normalized_email = normalize_email(verified_email);
+        let token_hash = invitation_token_hash(token);
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let invitation_id = local
+                .provider_invitations
+                .iter()
+                .find(|(_, invitation)| {
+                    invitation._token_hash == token_hash
+                        && invitation.record.recipient_business_email == normalized_email
+                })
+                .map(|(id, _)| id.clone());
+            let Some(invitation_id) = invitation_id else {
+                return OwnerProviderInvitationMutationResult::NotFound;
+            };
+            let recipient_fingerprint;
+            {
+                let invitation = local
+                    .provider_invitations
+                    .get_mut(&invitation_id)
+                    .expect("matched local invitation should remain available");
+                if invitation.record.status == "opted_out" {
+                    return OwnerProviderInvitationMutationResult::Saved(invitation.record.clone());
+                }
+                if invitation.record.expires_at_epoch_seconds <= current_epoch_seconds() {
+                    invitation.record.status = "expired".to_string();
+                    return OwnerProviderInvitationMutationResult::InvalidState(
+                        invitation.record.clone(),
+                    );
+                }
+                if !matches!(
+                    invitation.record.status.as_str(),
+                    "pending_delivery" | "delivered" | "opened"
+                ) {
+                    return OwnerProviderInvitationMutationResult::InvalidState(
+                        invitation.record.clone(),
+                    );
+                }
+                invitation.record.status = "opted_out".to_string();
+                if invitation.record.delivery_status == "pending" {
+                    invitation.record.delivery_status = "suppressed".to_string();
+                }
+                recipient_fingerprint =
+                    email_fingerprint(&invitation.record.recipient_business_email);
+            }
+            local
+                .provider_recipient_suppressions
+                .insert(recipient_fingerprint);
+            let record = local
+                .provider_invitations
+                .get(&invitation_id)
+                .map(|invitation| invitation.record.clone())
+                .expect("opted-out local invitation should remain available");
+            return OwnerProviderInvitationMutationResult::Saved(record);
+        };
+        match opt_out_owner_provider_invitation(pool, &normalized_email, &token_hash).await {
+            Ok(PersistedInvitationMutationOutcome::Saved(invitation)) => {
+                OwnerProviderInvitationMutationResult::Saved(invitation)
+            }
+            Ok(PersistedInvitationMutationOutcome::NotFound) => {
+                OwnerProviderInvitationMutationResult::NotFound
+            }
+            Ok(PersistedInvitationMutationOutcome::InvalidState(invitation)) => {
+                OwnerProviderInvitationMutationResult::InvalidState(invitation)
+            }
+            Err(error) => {
+                tracing::error!(%error, "owner provider invitation opt-out failed");
+                OwnerProviderInvitationMutationResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1333,6 +1415,17 @@ pub fn validate_provider_invitation_delivery_request(
                 })
         })
         && (request.outcome == "delivered" || request.failure_code.is_some())
+}
+
+pub fn validate_provider_invitation_opt_out_request(
+    request: &OptOutOwnerProviderInvitationRequest,
+) -> bool {
+    let token = request.token.trim();
+    token.starts_with("owner_provider_")
+        && (64..=160).contains(&token.chars().count())
+        && token
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn safe_media_file_name(value: &str) -> String {
@@ -2754,6 +2847,122 @@ async fn expire_owner_provider_invitations(
     Ok(expired.len())
 }
 
+async fn opt_out_owner_provider_invitation(
+    pool: &PgPool,
+    verified_email: &str,
+    token_hash: &str,
+) -> Result<PersistedInvitationMutationOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT id, owner_user_id, property_id, recipient_email, status,
+                expires_at <= NOW() AS expired
+         FROM owner_provider_invitations
+         WHERE token_hash = $1 AND LOWER(recipient_email) = LOWER($2)
+         FOR UPDATE",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationMutationOutcome::NotFound);
+    };
+    let invitation_id: String = current.get("id");
+    let owner_user_id: String = current.get("owner_user_id");
+    let property_id: String = current.get("property_id");
+    let recipient_email: String = current.get("recipient_email");
+    let status: String = current.get("status");
+    let expired: bool = current.get("expired");
+    if status == "opted_out" {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, &owner_user_id, &property_id, &invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::Saved(invitation));
+    }
+    if expired && matches!(status.as_str(), "pending_delivery" | "delivered" | "opened") {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'expired', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_expired', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, &owner_user_id, &property_id, &invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::InvalidState(invitation));
+    }
+    if !matches!(status.as_str(), "pending_delivery" | "delivered" | "opened") {
+        transaction.commit().await?;
+        let invitation =
+            get_owner_provider_invitation(pool, &owner_user_id, &property_id, &invitation_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?;
+        return Ok(PersistedInvitationMutationOutcome::InvalidState(invitation));
+    }
+    sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET status = 'opted_out', terminal_at = NOW(), updated_at = NOW()
+         WHERE id = $1",
+    )
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "UPDATE owner_provider_invitation_delivery_attempts
+         SET status = 'suppressed', failure_code = 'recipient_opt_out', completed_at = NOW()
+         WHERE invitation_id = $1 AND status = 'pending'",
+    )
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_recipient_suppressions (
+             recipient_email_fingerprint, recipient_email, reason, source_invitation_id
+         ) VALUES ($1, $2, 'recipient_opt_out', $3)
+         ON CONFLICT (recipient_email_fingerprint) DO NOTHING",
+    )
+    .bind(email_fingerprint(&recipient_email))
+    .bind(&recipient_email)
+    .bind(&invitation_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_opted_out', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({ "invitation_id": invitation_id }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    let invitation =
+        get_owner_provider_invitation(pool, &owner_user_id, &property_id, &invitation_id)
+            .await?
+            .ok_or(sqlx::Error::RowNotFound)?;
+    Ok(PersistedInvitationMutationOutcome::Saved(invitation))
+}
+
 fn workspace_from_row(row: &sqlx::postgres::PgRow, persisted: bool) -> OwnerWorkspaceRecord {
     OwnerWorkspaceRecord {
         owner_user_id: row.get("owner_user_id"),
@@ -2976,6 +3185,11 @@ mod tests {
                 outcome: "failed".to_string(),
                 provider_message_id: None,
                 failure_code: None,
+            }
+        ));
+        assert!(validate_provider_invitation_opt_out_request(
+            &OptOutOwnerProviderInvitationRequest {
+                token: new_owner_provider_invitation_token(),
             }
         ));
     }
