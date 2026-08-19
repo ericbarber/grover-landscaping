@@ -135,8 +135,8 @@ supports the exact statement.
 1. **3B2a — claim assessment (delivered):** schema, own-membership options,
    existing relationship checks, duplicate-safe readiness, idempotency, and
    isolation.
-2. **3B2b — atomic bootstrap:** fingerprint lock, final duplicate rescan,
-   organization/membership creation, provenance, and concurrency tests.
+2. **3B2b — atomic bootstrap (delivered):** fingerprint lock, final duplicate
+   rescan, organization/membership creation, provenance, and concurrency tests.
 3. **3B2c — dispute operations:** Provider Operations queue, restricted evidence
    reference, disposition/appeal, aging, and monitoring.
 4. **3B3 — response capability:** explicitly grant and enforce only the bounded

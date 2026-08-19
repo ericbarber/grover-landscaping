@@ -134,6 +134,13 @@ body-token invitation, and its persisted recipient check.
   Operations without a candidate identifier.
 - Every outcome keeps `opportunity_response_capability` false. Final atomic
   organization bootstrap and response authorization are separate operations.
+- `POST /provider-invitation-organization-claims/{claim_id}/bootstrap` accepts
+  the body token, expected claim version, and a separate idempotency key. It
+  locks the normalized provider name and repeats duplicate detection before any
+  organization write. A clear result atomically creates the active
+  `yard_care_company`, active `organization_owner` membership, claim provenance,
+  and access audit; a late match returns `duplicate_review` without a candidate
+  identifier or partial organization.
 
 ## Error semantics
 
@@ -142,14 +149,15 @@ body-token invitation, and its persisted recipient check.
 - `404` — invitation/token and verified mailbox do not match;
 - `409` — active duplicate, suppression, closed-state conflict, or an existing
   safety report;
+- `422` — an organization claim/bootstrap payload is incomplete or invalid;
 - `503` — persistence was unavailable and the requested mutation is not
   confirmed.
 
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
-2. Complete fingerprint-locked provider organization bootstrap and dispute
-   review; claim assessment is delivered.
+2. Complete Provider Operations duplicate/dispute review; claim assessment and
+   fingerprint-locked atomic bootstrap are delivered.
 3. Connect the checked recipient to the separately evaluated relationship.
 4. Add explicit opportunity-response capabilities before provider responses.
 5. Add Trust & Safety queue authorization, assignment, disposition, evidence,

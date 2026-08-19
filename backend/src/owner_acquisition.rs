@@ -205,6 +205,13 @@ pub struct CreateOwnerProviderOrganizationClaimRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct BootstrapOwnerProviderOrganizationClaimRequest {
+    pub token: String,
+    pub expected_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderOrganizationClaimRecord {
     pub claim_id: String,
     pub invitation_id: String,
@@ -369,6 +376,17 @@ pub enum OwnerProviderOrganizationClaimResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderOrganizationBootstrapResult {
+    Bootstrapped(OwnerProviderOrganizationClaimRecord),
+    Replayed(OwnerProviderOrganizationClaimRecord),
+    DuplicateReview(OwnerProviderOrganizationClaimRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
     NotFound,
@@ -418,6 +436,7 @@ struct LocalOwnerProviderOrganizationClaim {
     record: OwnerProviderOrganizationClaimRecord,
     actor_user_id: String,
     idempotency_key: String,
+    bootstrap_idempotency_key: Option<String>,
 }
 
 #[derive(Clone, Default)]
@@ -1834,6 +1853,7 @@ impl OwnerAcquisitionRepository {
                     record: record.clone(),
                     actor_user_id: recipient_user_id.to_string(),
                     idempotency_key: request.idempotency_key.trim().to_string(),
+                    bootstrap_idempotency_key: None,
                 },
             );
             return OwnerProviderOrganizationClaimResult::Created(record);
@@ -1869,6 +1889,113 @@ impl OwnerAcquisitionRepository {
             Err(error) => {
                 tracing::error!(%error, recipient_user_id, "provider organization claim failed");
                 OwnerProviderOrganizationClaimResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn bootstrap_provider_organization_claim(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        claim_id: &str,
+        request: BootstrapOwnerProviderOrganizationClaimRequest,
+    ) -> OwnerProviderOrganizationBootstrapResult {
+        if !validate_provider_organization_bootstrap_request(&request) {
+            return OwnerProviderOrganizationBootstrapResult::InvalidState;
+        }
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let Some(claim) = local.provider_organization_claims.get(claim_id) else {
+                return OwnerProviderOrganizationBootstrapResult::NotFound;
+            };
+            if claim.actor_user_id != recipient_user_id {
+                return OwnerProviderOrganizationBootstrapResult::NotFound;
+            }
+            let replay = claim
+                .bootstrap_idempotency_key
+                .as_deref()
+                .is_some_and(|key| key == request.idempotency_key.trim())
+                && claim.record.status == "claimed";
+            if replay {
+                return OwnerProviderOrganizationBootstrapResult::Replayed(claim.record.clone());
+            }
+            let invitation_id = claim.record.invitation_id.clone();
+            let invitation_valid =
+                local
+                    .provider_invitations
+                    .get(&invitation_id)
+                    .is_some_and(|invitation| {
+                        invitation._token_hash == token_hash
+                            && invitation.record.recipient_business_email == normalized_email
+                            && invitation.record.status == "opened"
+                    });
+            let recipient_valid = local
+                .provider_recipient_checks
+                .get(&invitation_id)
+                .is_some_and(|check| {
+                    check.recipient_user_id == recipient_user_id
+                        && check.verified_email_fingerprint == email_fingerprint
+                });
+            if !invitation_valid || !recipient_valid {
+                return OwnerProviderOrganizationBootstrapResult::InvalidState;
+            }
+            if claim.record.claim_kind != "new_organization"
+                || claim.record.status != "bootstrap_ready"
+            {
+                return OwnerProviderOrganizationBootstrapResult::InvalidState;
+            }
+            if claim.record.version != request.expected_version {
+                return OwnerProviderOrganizationBootstrapResult::Conflict;
+            }
+            let claim = local
+                .provider_organization_claims
+                .get_mut(claim_id)
+                .expect("checked local claim should remain present while locked");
+            claim.record.organization_id =
+                Some(format!("org_provider_{}", Uuid::new_v4().simple()));
+            claim.record.status = "claimed".to_string();
+            claim.record.version += 1;
+            claim.bootstrap_idempotency_key = Some(request.idempotency_key.trim().to_string());
+            return OwnerProviderOrganizationBootstrapResult::Bootstrapped(claim.record.clone());
+        };
+        match bootstrap_owner_provider_organization_claim(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            claim_id,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedOrganizationBootstrapOutcome::Bootstrapped(claim)) => {
+                OwnerProviderOrganizationBootstrapResult::Bootstrapped(claim)
+            }
+            Ok(PersistedOrganizationBootstrapOutcome::Replayed(claim)) => {
+                OwnerProviderOrganizationBootstrapResult::Replayed(claim)
+            }
+            Ok(PersistedOrganizationBootstrapOutcome::DuplicateReview(claim)) => {
+                OwnerProviderOrganizationBootstrapResult::DuplicateReview(claim)
+            }
+            Ok(PersistedOrganizationBootstrapOutcome::NotFound) => {
+                OwnerProviderOrganizationBootstrapResult::NotFound
+            }
+            Ok(PersistedOrganizationBootstrapOutcome::InvalidState) => {
+                OwnerProviderOrganizationBootstrapResult::InvalidState
+            }
+            Ok(PersistedOrganizationBootstrapOutcome::Conflict) => {
+                OwnerProviderOrganizationBootstrapResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderOrganizationBootstrapResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, claim_id, "provider organization bootstrap failed");
+                OwnerProviderOrganizationBootstrapResult::Unavailable
             }
         }
     }
@@ -2087,6 +2214,19 @@ pub fn validate_provider_organization_claim_request(
         _ => false,
     };
     token_valid && idempotency_valid && claim_valid
+}
+
+pub fn validate_provider_organization_bootstrap_request(
+    request: &BootstrapOwnerProviderOrganizationClaimRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.expected_version > 0
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -4273,6 +4413,213 @@ fn owner_provider_organization_claim_from_row(
     }
 }
 
+enum PersistedOrganizationBootstrapOutcome {
+    Bootstrapped(OwnerProviderOrganizationClaimRecord),
+    Replayed(OwnerProviderOrganizationClaimRecord),
+    DuplicateReview(OwnerProviderOrganizationClaimRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn bootstrap_owner_provider_organization_claim(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    claim_id: &str,
+    request: BootstrapOwnerProviderOrganizationClaimRequest,
+    token_hash: &str,
+) -> Result<PersistedOrganizationBootstrapOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let claim = sqlx::query(
+        "SELECT claim.id, claim.invitation_id, claim.claim_kind,
+                claim.proposed_display_name, claim.normalized_name_fingerprint,
+                claim.organization_id, claim.status, claim.assigned_function,
+                claim.version, claim.actor_user_id, claim.bootstrap_idempotency_key,
+                invitation.owner_user_id, invitation.property_id,
+                invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status
+         FROM owner_provider_invitation_organization_claims claim
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.id = claim.recipient_check_id
+         WHERE claim.id = $1
+           AND invitation.token_hash = $2
+           AND LOWER(invitation.recipient_email) = LOWER($3)
+         FOR UPDATE OF claim, invitation",
+    )
+    .bind(claim_id)
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(claim) = claim else {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::NotFound);
+    };
+    let recipient_checked = claim.get::<String, _>("actor_user_id") == recipient_user_id
+        && claim.get::<String, _>("recipient_user_id") == recipient_user_id
+        && claim.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && claim.get::<String, _>("recipient_check_status") == "checked";
+    if claim.get::<String, _>("invitation_status") != "opened"
+        || claim.get::<bool, _>("expired")
+        || !recipient_checked
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::InvalidState);
+    }
+    let status: String = claim.get("status");
+    let existing_bootstrap_key: Option<String> = claim.get("bootstrap_idempotency_key");
+    if status == "claimed"
+        && existing_bootstrap_key.as_deref() == Some(request.idempotency_key.trim())
+    {
+        transaction.commit().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::Replayed(
+            owner_provider_organization_claim_from_row(&claim, true),
+        ));
+    }
+    if claim.get::<String, _>("claim_kind") != "new_organization" || status != "bootstrap_ready" {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::InvalidState);
+    }
+    if claim.get::<i64, _>("version") != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::Conflict);
+    }
+    let name_fingerprint: String = claim.get("normalized_name_fingerprint");
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(&name_fingerprint)
+        .execute(&mut *transaction)
+        .await?;
+    let existing_names = sqlx::query_scalar::<_, String>(
+        "SELECT display_name FROM organizations
+         WHERE status = 'active' AND organization_type = 'yard_care_company'",
+    )
+    .fetch_all(&mut *transaction)
+    .await?;
+    let possible_duplicate = existing_names
+        .iter()
+        .any(|name| provider_name_fingerprint(name) == name_fingerprint);
+    let owner_user_id: String = claim.get("owner_user_id");
+    let property_id: String = claim.get("property_id");
+    let invitation_id: String = claim.get("invitation_id");
+    if possible_duplicate {
+        let row = sqlx::query(
+            "UPDATE owner_provider_invitation_organization_claims
+             SET status = 'duplicate_review', reason_code = 'possible_duplicate',
+                 assigned_function = 'provider_operations', version = version + 1,
+                 updated_at = NOW()
+             WHERE id = $1
+             RETURNING id, invitation_id, claim_kind, proposed_display_name,
+                       organization_id, status, assigned_function, version",
+        )
+        .bind(claim_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_organization_duplicate_review', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({
+            "invitation_id": invitation_id,
+            "claim_id": claim_id,
+            "status": "duplicate_review",
+            "assigned_function": "provider_operations",
+            "source": "final_bootstrap_rescan",
+        }))
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+        return Ok(PersistedOrganizationBootstrapOutcome::DuplicateReview(
+            owner_provider_organization_claim_from_row(&row, true),
+        ));
+    }
+
+    let organization_id = format!("org_provider_{}", Uuid::new_v4().simple());
+    let membership_id = format!("membership_provider_{}", Uuid::new_v4().simple());
+    let display_name: String = claim.get("proposed_display_name");
+    sqlx::query(
+        "INSERT INTO organizations (id, display_name, organization_type, status)
+         VALUES ($1, $2, 'yard_care_company', 'active')",
+    )
+    .bind(&organization_id)
+    .bind(&display_name)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO organization_memberships (
+             id, organization_id, user_id, display_name, role, status,
+             scope_type, scope_id
+         ) VALUES (
+             $1, $2, $3, $3, 'organization_owner', 'active',
+             'organization', $2
+         )",
+    )
+    .bind(&membership_id)
+    .bind(&organization_id)
+    .bind(recipient_user_id)
+    .execute(&mut *transaction)
+    .await?;
+    let row = sqlx::query(
+        "UPDATE owner_provider_invitation_organization_claims
+         SET organization_id = $2, status = 'claimed', reason_code = NULL,
+             assigned_function = NULL, bootstrap_membership_id = $3,
+             bootstrap_idempotency_key = $4, bootstrapped_at = NOW(),
+             version = version + 1, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, invitation_id, claim_kind, proposed_display_name,
+                   organization_id, status, assigned_function, version",
+    )
+    .bind(claim_id)
+    .bind(&organization_id)
+    .bind(&membership_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO access_audit_events (
+             id, actor_user_id, organization_id, event_kind, target_id, occurred_at
+         ) VALUES ($1, $2, $3, 'organization_bootstrapped', $3, NOW())",
+    )
+    .bind(format!(
+        "audit_organization_bootstrapped_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(recipient_user_id)
+    .bind(&organization_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_organization_bootstrapped', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "claim_id": claim_id,
+        "organization_id": organization_id,
+        "status": "claimed",
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedOrganizationBootstrapOutcome::Bootstrapped(
+        owner_provider_organization_claim_from_row(&row, true),
+    ))
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -4711,6 +5058,19 @@ mod tests {
         invalid_new_claim.authority_attested = false;
         assert!(!validate_provider_organization_claim_request(
             &invalid_new_claim
+        ));
+        let bootstrap_request = BootstrapOwnerProviderOrganizationClaimRequest {
+            token: new_owner_provider_invitation_token(),
+            expected_version: 1,
+            idempotency_key: "provider-org-bootstrap-001".to_string(),
+        };
+        assert!(validate_provider_organization_bootstrap_request(
+            &bootstrap_request
+        ));
+        let mut invalid_bootstrap = bootstrap_request;
+        invalid_bootstrap.expected_version = 0;
+        assert!(!validate_provider_organization_bootstrap_request(
+            &invalid_bootstrap
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),

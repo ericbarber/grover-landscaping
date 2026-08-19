@@ -79,7 +79,10 @@ fails closed on cross-account conflict. Phase 3B2a now lists only that actor’s
 active yard-care memberships, rechecks an existing relationship, and records
 new-provider readiness with normalized, non-disclosing duplicate review.
 Organization selection still grants no response authority. Atomic final
-bootstrap with a fingerprint lock and duplicate rescan is next.
+bootstrap now locks the fingerprint, rescans, and creates the organization,
+owner membership, provenance, and audit as one unit; same-name concurrency
+creates only one organization. Provider Operations duplicate/dispute handling
+is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

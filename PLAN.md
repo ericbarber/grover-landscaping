@@ -277,7 +277,13 @@ Active slice:
   possible duplicates enter non-disclosing Provider Operations review; unique
   names become bootstrap-ready. Replay, wrong-mailbox, cross-account, closed,
   outage, and active-claim boundaries fail closed, and response capability
-  remains false. Slice 3B2b atomic bootstrap is next.
+  remains false.
+- Phase 3B2b is delivered. Final bootstrap version-checks and locks the
+  normalized name, repeats duplicate detection inside the transaction, and
+  atomically creates one active yard-care organization, organization-owner
+  membership, claim provenance, and access audit. Concurrent same-name claims
+  create at most one organization; the other returns to non-disclosing Provider
+  Operations review. Slice 3B2c dispute operations is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

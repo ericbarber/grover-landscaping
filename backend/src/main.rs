@@ -88,18 +88,21 @@ use grover_landscaping_api::{
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
+        validate_provider_organization_bootstrap_request,
         validate_provider_organization_claim_request,
         validate_provider_organization_options_request, validate_workspace_request,
-        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+        validate_yard_brief_request, BootstrapOwnerProviderOrganizationClaimRequest,
+        CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
         CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
         ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
         OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
         OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-        OwnerReadResult, PreviewOwnerProviderInvitationRequest,
-        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
-        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
+        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+        OwnerProviderOrganizationOptionsResult, OwnerReadResult,
+        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
+        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -709,6 +712,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/organization-claims",
             post(create_owner_provider_organization_claim),
+        )
+        .route(
+            "/provider-invitation-organization-claims/{claim_id}/bootstrap",
+            post(bootstrap_owner_provider_organization_claim),
         )
         .route(
             "/customer-accounts",
@@ -2072,6 +2079,82 @@ async fn create_owner_provider_organization_claim(
             persisted_resource_unavailable_response(
                 "provider_organization_claim_unavailable",
                 "Provider organization setup could not be recorded. No organization or opportunity access was granted.",
+            )
+        }
+    }
+}
+
+async fn bootstrap_owner_provider_organization_claim(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(claim_id): Path<String>,
+    Json(request): Json<BootstrapOwnerProviderOrganizationClaimRequest>,
+) -> Response {
+    if claim_id.trim().is_empty() || !validate_provider_organization_bootstrap_request(&request) {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Json(ErrorResponse {
+                error: "provider_organization_bootstrap_invalid",
+                message: "The provider setup request is incomplete or no longer current."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before final provider setup."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .bootstrap_provider_organization_claim(
+            &principal.subject,
+            verified_email,
+            claim_id.trim(),
+            request,
+        )
+        .await
+    {
+        OwnerProviderOrganizationBootstrapResult::Bootstrapped(claim) => {
+            (StatusCode::CREATED, Json(claim)).into_response()
+        }
+        OwnerProviderOrganizationBootstrapResult::Replayed(claim)
+        | OwnerProviderOrganizationBootstrapResult::DuplicateReview(claim) => {
+            Json(claim).into_response()
+        }
+        OwnerProviderOrganizationBootstrapResult::NotFound => resource_not_found_response(
+            "provider_organization_claim_not_found",
+            "The provider setup claim is not available to this verified account.",
+        ),
+        OwnerProviderOrganizationBootstrapResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_bootstrap_not_ready",
+                message: "This provider setup is not ready for final creation. Review its current status or contact Provider Operations."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOrganizationBootstrapResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_organization_bootstrap_conflict",
+                message: "The provider setup changed before it could be completed. Reload the claim before trying again."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOrganizationBootstrapResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_organization_bootstrap_unavailable",
+                "Final provider setup could not be confirmed. No opportunity-response authority was granted.",
             )
         }
     }

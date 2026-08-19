@@ -442,6 +442,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-invitations/verify-recipient"
         || path == "/provider-invitations/organization-options"
         || path == "/provider-invitations/organization-claims"
+        || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -518,6 +519,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         path,
         "/provider-invitations/organization-options" | "/provider-invitations/organization-claims"
     ) {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
+    {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/owner-properties/") {
@@ -1627,6 +1632,10 @@ mod tests {
             (Method::POST, "/provider-invitations/verify-recipient"),
             (Method::POST, "/provider-invitations/organization-options"),
             (Method::POST, "/provider-invitations/organization-claims"),
+            (
+                Method::POST,
+                "/provider-invitation-organization-claims/claim-1/bootstrap",
+            ),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));
@@ -1677,6 +1686,9 @@ mod tests {
         ));
         assert!(is_protected_api_path(
             "/provider-invitations/organization-claims"
+        ));
+        assert!(is_protected_api_path(
+            "/provider-invitation-organization-claims/claim-1/bootstrap"
         ));
     }
 

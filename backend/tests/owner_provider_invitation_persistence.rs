@@ -1,11 +1,13 @@
 use grover_landscaping_api::owner_acquisition::{
-    CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-    CreateOwnerProviderOrganizationClaimRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerPropertyRequest,
+    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOrganizationClaimRequest,
+    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
     OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
     OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
     OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
-    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult, OwnerReadResult,
+    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+    OwnerProviderOrganizationOptionsResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -47,6 +49,57 @@ fn invitation_request(email: &str, idempotency_key: &str) -> CreateOwnerProvider
         expires_in_days: 7,
         idempotency_key: idempotency_key.to_string(),
     }
+}
+
+async fn ready_checked_invitation(
+    repository: &OwnerAcquisitionRepository,
+    owner_user_id: &str,
+    property_id: &str,
+    recipient_email: &str,
+    recipient_user_id: &str,
+    idempotency_key: &str,
+) -> OwnerProviderInvitationCreation {
+    let OwnerProviderInvitationCreateResult::Created(invitation) = repository
+        .create_provider_invitation(
+            owner_user_id,
+            property_id,
+            invitation_request(recipient_email, idempotency_key),
+        )
+        .await
+    else {
+        panic!("provider bootstrap test invitation should be created");
+    };
+    assert!(matches!(
+        repository
+            .record_provider_invitation_delivery(
+                &invitation.invitation.invitation_id,
+                1,
+                RecordOwnerProviderInvitationDeliveryRequest {
+                    outcome: "delivered".to_string(),
+                    provider_message_id: Some(format!("message-{idempotency_key}")),
+                    failure_code: None,
+                },
+            )
+            .await,
+        OwnerProviderInvitationDeliveryResult::Saved(_)
+    ));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(invitation.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::Opened(_)
+    ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                recipient_user_id,
+                recipient_email,
+                invitation.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Checked(_)
+    ));
+    invitation
 }
 
 #[tokio::test]
@@ -156,6 +209,21 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .bootstrap_provider_organization_claim(
+                "recipient-unavailable",
+                "provider@example.com",
+                "claim-unavailable",
+                BootstrapOwnerProviderOrganizationClaimRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    expected_version: 1,
+                    idempotency_key: "bootstrap-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderOrganizationBootstrapResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .retry_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -203,7 +271,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         return;
     };
     let pool = PgPoolOptions::new()
-        .max_connections(1)
+        .max_connections(5)
         .connect(&config.database_url)
         .await
         .expect("test pool should connect");
@@ -226,7 +294,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .expect("test owners should reset");
     sqlx::query(
         "DELETE FROM organizations
-         WHERE id = ANY($1)",
+         WHERE id = ANY($1)
+            OR display_name IN ('Cactus Bloom Groundskeeping', 'Concurrent Mesa Care')",
     )
     .bind(vec![
         "org_provider_claim_owned",
@@ -786,6 +855,193 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(unique_claim.status, "bootstrap_ready");
     assert!(unique_claim.organization_id.is_none());
     assert!(!unique_claim.opportunity_response_capability);
+    let unique_bootstrap_request = BootstrapOwnerProviderOrganizationClaimRequest {
+        token: unique_invitation.delivery_token().to_string(),
+        expected_version: unique_claim.version,
+        idempotency_key: "provider-org-bootstrap-unique-001".to_string(),
+    };
+    let mut stale_bootstrap_request = unique_bootstrap_request.clone();
+    stale_bootstrap_request.expected_version += 1;
+    assert!(matches!(
+        repository
+            .bootstrap_provider_organization_claim(
+                "recipient-user-unique",
+                unique_recipient,
+                &unique_claim.claim_id,
+                stale_bootstrap_request,
+            )
+            .await,
+        OwnerProviderOrganizationBootstrapResult::Conflict
+    ));
+    let OwnerProviderOrganizationBootstrapResult::Bootstrapped(bootstrapped_claim) = repository
+        .bootstrap_provider_organization_claim(
+            "recipient-user-unique",
+            unique_recipient,
+            &unique_claim.claim_id,
+            unique_bootstrap_request.clone(),
+        )
+        .await
+    else {
+        panic!("duplicate-clear provider organization should bootstrap atomically");
+    };
+    assert_eq!(bootstrapped_claim.status, "claimed");
+    assert_eq!(bootstrapped_claim.version, unique_claim.version + 1);
+    assert!(bootstrapped_claim.organization_id.is_some());
+    assert!(!bootstrapped_claim.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .bootstrap_provider_organization_claim(
+                "recipient-user-unique",
+                unique_recipient,
+                &unique_claim.claim_id,
+                unique_bootstrap_request,
+            )
+            .await,
+        OwnerProviderOrganizationBootstrapResult::Replayed(claim)
+            if claim.claim_id == bootstrapped_claim.claim_id
+    ));
+    let bootstrapped_organization_id = bootstrapped_claim
+        .organization_id
+        .as_deref()
+        .expect("bootstrapped organization id should be present");
+    let bootstrap_state = sqlx::query(
+        "SELECT organization.display_name, membership.role, membership.status,
+                claim.bootstrap_membership_id,
+                EXISTS(
+                    SELECT 1 FROM access_audit_events audit
+                    WHERE audit.organization_id = organization.id
+                      AND audit.actor_user_id = $2
+                      AND audit.event_kind = 'organization_bootstrapped'
+                ) AS audited
+         FROM organizations organization
+         JOIN organization_memberships membership
+           ON membership.organization_id = organization.id AND membership.user_id = $2
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.organization_id = organization.id
+         WHERE organization.id = $1",
+    )
+    .bind(bootstrapped_organization_id)
+    .bind("recipient-user-unique")
+    .fetch_one(&pool)
+    .await
+    .expect("atomic bootstrap state should load");
+    assert_eq!(
+        bootstrap_state.get::<String, _>("display_name"),
+        "Cactus Bloom Groundskeeping"
+    );
+    assert_eq!(
+        bootstrap_state.get::<String, _>("role"),
+        "organization_owner"
+    );
+    assert_eq!(bootstrap_state.get::<String, _>("status"), "active");
+    assert!(bootstrap_state
+        .get::<Option<String>, _>("bootstrap_membership_id")
+        .is_some());
+    assert!(bootstrap_state.get::<bool, _>("audited"));
+
+    let concurrent_a = ready_checked_invitation(
+        &repository,
+        owner_a,
+        &property.property_id,
+        "concurrent-a@sonoranyard.example",
+        "recipient-user-concurrent-a",
+        "provider-invite-concurrent-a-001",
+    )
+    .await;
+    let concurrent_b = ready_checked_invitation(
+        &repository,
+        owner_a,
+        &property.property_id,
+        "concurrent-b@sonoranyard.example",
+        "recipient-user-concurrent-b",
+        "provider-invite-concurrent-b-001",
+    )
+    .await;
+    let OwnerProviderOrganizationClaimResult::Created(concurrent_claim_a) = repository
+        .create_provider_organization_claim(
+            "recipient-user-concurrent-a",
+            "concurrent-a@sonoranyard.example",
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: concurrent_a.delivery_token().to_string(),
+                claim_kind: "new_organization".to_string(),
+                organization_id: None,
+                provider_display_name: Some("Concurrent Mesa Care".to_string()),
+                authority_attested: true,
+                idempotency_key: "provider-org-claim-concurrent-a-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("first concurrent claim should be bootstrap-ready");
+    };
+    let OwnerProviderOrganizationClaimResult::Created(concurrent_claim_b) = repository
+        .create_provider_organization_claim(
+            "recipient-user-concurrent-b",
+            "concurrent-b@sonoranyard.example",
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: concurrent_b.delivery_token().to_string(),
+                claim_kind: "new_organization".to_string(),
+                organization_id: None,
+                provider_display_name: Some("  CONCURRENT   mesa care ".to_string()),
+                authority_attested: true,
+                idempotency_key: "provider-org-claim-concurrent-b-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("second concurrent claim should be bootstrap-ready before final rescan");
+    };
+    let (concurrent_result_a, concurrent_result_b) = tokio::join!(
+        repository.bootstrap_provider_organization_claim(
+            "recipient-user-concurrent-a",
+            "concurrent-a@sonoranyard.example",
+            &concurrent_claim_a.claim_id,
+            BootstrapOwnerProviderOrganizationClaimRequest {
+                token: concurrent_a.delivery_token().to_string(),
+                expected_version: concurrent_claim_a.version,
+                idempotency_key: "provider-org-bootstrap-concurrent-a-001".to_string(),
+            },
+        ),
+        repository.bootstrap_provider_organization_claim(
+            "recipient-user-concurrent-b",
+            "concurrent-b@sonoranyard.example",
+            &concurrent_claim_b.claim_id,
+            BootstrapOwnerProviderOrganizationClaimRequest {
+                token: concurrent_b.delivery_token().to_string(),
+                expected_version: concurrent_claim_b.version,
+                idempotency_key: "provider-org-bootstrap-concurrent-b-001".to_string(),
+            },
+        )
+    );
+    let concurrent_outcomes = [&concurrent_result_a, &concurrent_result_b];
+    assert_eq!(
+        concurrent_outcomes
+            .iter()
+            .filter(|result| matches!(
+                result,
+                OwnerProviderOrganizationBootstrapResult::Bootstrapped(_)
+            ))
+            .count(),
+        1
+    );
+    assert_eq!(
+        concurrent_outcomes
+            .iter()
+            .filter(|result| matches!(result, OwnerProviderOrganizationBootstrapResult::DuplicateReview(claim) if claim.organization_id.is_none()))
+            .count(),
+        1
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM organizations
+             WHERE organization_type = 'yard_care_company'
+               AND LOWER(REGEXP_REPLACE(TRIM(display_name), '\\s+', ' ', 'g')) = 'concurrent mesa care'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("concurrent organization count should load"),
+        1
+    );
 
     assert!(matches!(
         repository
@@ -1078,7 +1334,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .expect("test owners should clean up");
     sqlx::query(
         "DELETE FROM organizations
-         WHERE id = ANY($1)",
+         WHERE id = ANY($1)
+            OR display_name IN ('Cactus Bloom Groundskeeping', 'Concurrent Mesa Care')",
     )
     .bind(vec![
         "org_provider_claim_owned",
