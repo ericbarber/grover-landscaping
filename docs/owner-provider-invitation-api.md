@@ -186,6 +186,12 @@ rejection event, assigns Provider Operations, and returns
 organization, expose a duplicate candidate, reopen a closed invitation, or
 authorize an opportunity response.
 
+An active appeal may be decided only with `appeal_approved` or
+`appeal_rejected` through the support decision endpoint. The reviewer who
+recorded the appealed rejection cannot decide it, and ordinary clear/reject
+actions are blocked while the appeal is active. Approval returns the claim to
+`bootstrap_ready`; it does not skip the final locked duplicate rescan.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

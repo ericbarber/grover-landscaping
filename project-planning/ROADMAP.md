@@ -91,7 +91,9 @@ review history, replay, and evidence-free general audit. Recipient appeal and
 monitoring are next. Checked-recipient appeal intake is now delivered with
 active invitation/mailbox binding, controlled categories, restricted evidence,
 rejection linkage, and no response authority. Independent appeal decisions are
-the next slice.
+now delivered with original-reviewer exclusion, bypass prevention, append-only
+decision linkage, and approval routed back through final duplicate rescan.
+Aggregate monitoring and the operations runbook are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

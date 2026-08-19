@@ -38,8 +38,8 @@ The approved experience is defined by:
 | 3B2b | Delivered | Versioned fingerprint-locked final duplicate rescan, atomic yard-care organization and owner-membership creation, claim provenance, access audit, replay, and same-name concurrency validation with no response authority |
 | 3B2c1 | Delivered | Support-admin-only minimized review queue, SLA age bands, versioned and idempotent review/clear/reject/pause transitions, append-only restricted-evidence references, and evidence-free general audit |
 | 3B2c2a | Delivered | Checked-recipient rejected-claim appeal with active body-token identity binding, controlled categories, restricted evidence reference, version/replay safety, append-only rejection linkage, and no response authority |
-| 3B2c2b | Implementation next | Independent appeal decision that excludes the original rejecting reviewer and preserves final duplicate rescan |
-| 3B2c2c | Planned | Aggregate overdue metrics/alerts and operational runbook validation |
+| 3B2c2b | Delivered | Dedicated appeal approval/rejection, original-rejector exclusion, ordinary-disposition bypass prevention, append-only appeal linkage, replay safety, and approval back to final duplicate rescan |
+| 3B2c2c | Implementation next | Aggregate overdue metrics/alerts and operational runbook validation |
 | 3B3 | Planned | Explicit opportunity-response capability and authorized provider inbox |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |

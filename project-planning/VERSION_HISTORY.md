@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-18: Delivered independent provider claim appeal decisions with original-rejector exclusion, ordinary-disposition bypass prevention, controlled approval/rejection, append-only appeal linkage, idempotent replay, approval routed back through final duplicate rescan, and no opportunity-response authority.
 - 2026-08-18: Delivered checked-recipient provider claim appeals for rejected claims with active invitation/mailbox binding, controlled appeal categories, restricted evidence references, append-only rejection linkage, version and replay safety, minimized general audit, outage handling, and response authority kept false.
 - 2026-08-18: Delivered support-admin provider claim review with a minimized status/SLA queue, versioned and replay-safe review/clear/reject/pause transitions, append-only restricted-evidence references, controlled reason codes, persistence outage handling, and general audit that excludes evidence and duplicate-candidate data.
 - 2026-08-18: Defined the provider organization claim operations contract for support-only minimized queues, restricted evidence references, append-only review events, legal disposition and appeal transitions, separation of duties, customer-safe reason codes, SLA aging, and identifier-free monitoring.

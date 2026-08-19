@@ -1057,6 +1057,78 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .to_string();
     assert!(!general_appeal_audit.contains("appeal-001"));
     assert!(!general_appeal_audit.contains(appeal_recipient));
+    let appeal_decision_request = DecideOwnerProviderClaimReviewRequest {
+        action: "appeal_approved".to_string(),
+        expected_version: appealed_claim.version,
+        reason_code: Some("distinct_organization".to_string()),
+        evidence_reference: Some("restricted://provider-claims/appeal-decision-001".to_string()),
+        idempotency_key: "provider-claim-appeal-decision-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .decide_provider_organization_claim_review(
+                "support-provider-operations-rejector",
+                &appeal_claim.claim_id,
+                appeal_decision_request.clone(),
+            )
+            .await,
+        OwnerProviderClaimReviewDecisionResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .decide_provider_organization_claim_review(
+                "support-provider-operations-independent",
+                &appeal_claim.claim_id,
+                DecideOwnerProviderClaimReviewRequest {
+                    action: "rejected".to_string(),
+                    expected_version: appealed_claim.version,
+                    reason_code: Some("identity_evidence_incomplete".to_string()),
+                    evidence_reference: Some("restricted://provider-claims/bypass".to_string()),
+                    idempotency_key: "provider-claim-appeal-bypass-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderClaimReviewDecisionResult::InvalidState
+    ));
+    let OwnerProviderClaimReviewDecisionResult::Updated(appeal_approved) = repository
+        .decide_provider_organization_claim_review(
+            "support-provider-operations-independent",
+            &appeal_claim.claim_id,
+            appeal_decision_request.clone(),
+        )
+        .await
+    else {
+        panic!("an independent reviewer should decide the appeal");
+    };
+    assert_eq!(appeal_approved.status, "bootstrap_ready");
+    assert!(!appeal_approved.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .decide_provider_organization_claim_review(
+                "support-provider-operations-independent",
+                &appeal_claim.claim_id,
+                appeal_decision_request,
+            )
+            .await,
+        OwnerProviderClaimReviewDecisionResult::Replayed(review)
+            if review.status == "bootstrap_ready"
+    ));
+    let appeal_decision_event = sqlx::query(
+        "SELECT action, actor_user_id, appeal_of_review_event_id
+         FROM owner_provider_organization_claim_review_events
+         WHERE claim_id = $1 AND action = 'appeal_decided'",
+    )
+    .bind(&appeal_claim.claim_id)
+    .fetch_one(&pool)
+    .await
+    .expect("appeal decision history should load");
+    assert_eq!(
+        appeal_decision_event.get::<String, _>("actor_user_id"),
+        "support-provider-operations-independent"
+    );
+    assert!(appeal_decision_event
+        .get::<Option<String>, _>("appeal_of_review_event_id")
+        .is_some());
 
     let unique_recipient = "unique@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(unique_invitation) = repository

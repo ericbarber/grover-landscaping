@@ -2425,10 +2425,10 @@ pub fn validate_provider_claim_review_decision_request(
     });
     let action_valid = match request.action.as_str() {
         "review_started" => request.reason_code.is_none() && request.evidence_reference.is_none(),
-        "cleared_for_bootstrap" => {
+        "cleared_for_bootstrap" | "appeal_approved" => {
             request.reason_code.as_deref() == Some("distinct_organization") && evidence_valid
         }
-        "rejected" => {
+        "rejected" | "appeal_rejected" => {
             request.reason_code.as_deref().is_some_and(|reason| {
                 matches!(
                     reason,
@@ -4968,9 +4968,24 @@ async fn decide_owner_provider_organization_claim_review(
     }
     let claim = sqlx::query(
         "SELECT claim.status, claim.version, invitation.owner_user_id,
-                invitation.property_id, claim.invitation_id
+                invitation.property_id, claim.invitation_id,
+                active_appeal.id AS active_appeal_id,
+                active_appeal.rejecting_actor_user_id
          FROM owner_provider_invitation_organization_claims claim
          JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         LEFT JOIN LATERAL (
+             SELECT appeal.id, rejection.actor_user_id AS rejecting_actor_user_id
+             FROM owner_provider_organization_claim_review_events appeal
+             JOIN owner_provider_organization_claim_review_events rejection
+               ON rejection.id = appeal.appeal_of_review_event_id
+             WHERE appeal.claim_id = claim.id AND appeal.action = 'appeal_submitted'
+               AND NOT EXISTS (
+                   SELECT 1 FROM owner_provider_organization_claim_review_events decision
+                   WHERE decision.action = 'appeal_decided'
+                     AND decision.appeal_of_review_event_id = appeal.id
+               )
+             ORDER BY appeal.occurred_at DESC, appeal.id DESC LIMIT 1
+         ) active_appeal ON TRUE
          WHERE claim.id = $1 FOR UPDATE OF claim",
     )
     .bind(claim_id)
@@ -4985,11 +5000,29 @@ async fn decide_owner_provider_organization_claim_review(
         return Ok(PersistedClaimReviewDecisionOutcome::Conflict);
     }
     let prior_status: String = claim.get("status");
+    let active_appeal_id: Option<String> = claim.get("active_appeal_id");
+    let rejecting_actor_user_id: Option<String> = claim.get("rejecting_actor_user_id");
+    let appeal_action = matches!(
+        request.action.as_str(),
+        "appeal_approved" | "appeal_rejected"
+    );
+    if appeal_action && rejecting_actor_user_id.as_deref() == Some(actor_user_id) {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimReviewDecisionOutcome::Conflict);
+    }
+    if (appeal_action && active_appeal_id.is_none())
+        || (!appeal_action && active_appeal_id.is_some())
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedClaimReviewDecisionOutcome::InvalidState);
+    }
     let resulting_status = match (request.action.as_str(), prior_status.as_str()) {
         ("review_started", "duplicate_review") => "under_review",
         ("cleared_for_bootstrap", "duplicate_review" | "under_review") => "bootstrap_ready",
         ("rejected", "duplicate_review" | "under_review") => "rejected",
         ("dispute_paused", "relationship_checked" | "claimed") => "disputed",
+        ("appeal_approved", "under_review") => "bootstrap_ready",
+        ("appeal_rejected", "under_review") => "rejected",
         _ => {
             transaction.rollback().await?;
             return Ok(PersistedClaimReviewDecisionOutcome::InvalidState);
@@ -5016,26 +5049,34 @@ async fn decide_owner_provider_organization_claim_review(
     .bind(assigned_function)
     .execute(&mut *transaction)
     .await?;
+    let stored_action = if appeal_action {
+        "appeal_decided"
+    } else {
+        request.action.as_str()
+    };
     sqlx::query(
         "INSERT INTO owner_provider_organization_claim_review_events (
              id, claim_id, actor_user_id, actor_function, action, prior_status,
              resulting_status, reason_code, evidence_reference,
-             expected_claim_version, idempotency_key
-         ) VALUES ($1, $2, $3, 'provider_operations', $4, $5, $6, $7, $8, $9, $10)",
+             expected_claim_version, idempotency_key, appeal_of_review_event_id
+         ) VALUES ($1, $2, $3, 'provider_operations', $4, $5, $6, $7, $8, $9, $10, $11)",
     )
     .bind(format!("provider_claim_review_{}", Uuid::new_v4().simple()))
     .bind(claim_id)
     .bind(actor_user_id)
-    .bind(&request.action)
+    .bind(stored_action)
     .bind(&prior_status)
     .bind(resulting_status)
     .bind(request.reason_code.as_deref())
     .bind(request.evidence_reference.as_deref())
     .bind(request.expected_version)
     .bind(request.idempotency_key.trim())
+    .bind(active_appeal_id.as_deref())
     .execute(&mut *transaction)
     .await?;
-    let event_kind = if request.action == "review_started" {
+    let event_kind = if appeal_action {
+        "provider_invitation_organization_appeal_decided"
+    } else if request.action == "review_started" {
         "provider_invitation_organization_review_started"
     } else {
         "provider_invitation_organization_review_dispositioned"
@@ -5699,6 +5740,17 @@ mod tests {
         invalid_review_decision.evidence_reference = None;
         assert!(!validate_provider_claim_review_decision_request(
             &invalid_review_decision
+        ));
+        assert!(validate_provider_claim_review_decision_request(
+            &DecideOwnerProviderClaimReviewRequest {
+                action: "appeal_approved".to_string(),
+                expected_version: 3,
+                reason_code: Some("distinct_organization".to_string()),
+                evidence_reference: Some(
+                    "restricted://provider-claims/appeal-decision-1".to_string(),
+                ),
+                idempotency_key: "provider-appeal-decision-001".to_string(),
+            }
         ));
         let appeal_request = AppealOwnerProviderOrganizationClaimRequest {
             token: new_owner_provider_invitation_token(),

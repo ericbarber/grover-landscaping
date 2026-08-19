@@ -212,7 +212,10 @@ supports the exact statement.
 4. **3B2c2a — recipient appeal (delivered):** checked-recipient rejected-claim
    appeal with controlled category, restricted evidence, rejection linkage,
    versioning, replay, and minimized audit.
-5. **3B2c2b–c — decision and monitoring:** independent appeal decisions,
-   overdue metrics/alerts, and runbook validation.
-6. **3B3 — response capability:** explicitly grant and enforce only the bounded
+5. **3B2c2b — independent appeal decision (delivered):** original-rejector
+   exclusion, bypass prevention, controlled approval/rejection, append-only
+   linkage, and final duplicate-rescan preservation.
+6. **3B2c2c — monitoring:** aggregate overdue metrics/alerts and runbook
+   validation.
+7. **3B3 — response capability:** explicitly grant and enforce only the bounded
    opportunity-response actions after relationship checks.

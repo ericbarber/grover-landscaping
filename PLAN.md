@@ -299,6 +299,12 @@ Active slice:
   capability as false, link append-only to the rejection, and keep evidence,
   recipient email, and private owner data out of general audit. Independent
   appeal decisions are next.
+- Phase 3B2c2b is delivered. An active appeal can be decided only through the
+  dedicated approved/rejected actions, the original rejecting reviewer is
+  excluded, ordinary dispositions cannot bypass the appeal, replay is
+  idempotent, and the decision links append-only to the appeal. Approval returns
+  to `bootstrap_ready` for the mandatory final duplicate rescan and still grants
+  no response capability. Aggregate monitoring and runbook validation are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
