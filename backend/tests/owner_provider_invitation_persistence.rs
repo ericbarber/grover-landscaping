@@ -2,15 +2,16 @@ use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
     CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
-    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-    OwnerProviderInvitationRetryResult, OwnerProviderOrganizationBootstrapResult,
-    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult, OwnerReadResult,
+    IssueOwnerProviderResponseCapabilityRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+    OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -271,6 +272,21 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderClaimAppealResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .issue_provider_response_capability(
+                "recipient-unavailable",
+                "provider@example.com",
+                "claim-unavailable",
+                IssueOwnerProviderResponseCapabilityRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    withheld_categories_acknowledged: true,
+                    idempotency_key: "capability-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderResponseCapabilityResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -764,6 +780,108 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderOrganizationClaimResult::Replayed(claim)
             if claim.claim_id == existing_claim.claim_id
     ));
+    let capability_request = IssueOwnerProviderResponseCapabilityRequest {
+        token: retry.delivery_token().to_string(),
+        withheld_categories_acknowledged: true,
+        idempotency_key: "provider-response-capability-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .issue_provider_response_capability(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                &existing_claim.claim_id,
+                capability_request.clone(),
+            )
+            .await,
+        OwnerProviderResponseCapabilityResult::NotFound
+    ));
+    let OwnerProviderResponseCapabilityResult::Issued(capability) = repository
+        .issue_provider_response_capability(
+            "recipient-user-1",
+            recipient,
+            &existing_claim.claim_id,
+            capability_request.clone(),
+        )
+        .await
+    else {
+        panic!("checked active provider relationship should receive bounded response authority");
+    };
+    assert!(capability.persisted);
+    assert_eq!(capability.status, "active");
+    assert!(capability.opportunity_response_capability);
+    assert_eq!(
+        capability.allowed_actions,
+        [
+            "preliminary_question",
+            "express_interest",
+            "decline",
+            "report"
+        ]
+    );
+    assert_eq!(capability.withheld_categories.len(), 5);
+    assert!(capability
+        .withheld_categories
+        .contains(&"pricing_and_work_authority".to_string()));
+    let capability_json = serde_json::to_string(&capability).expect("capability should serialize");
+    assert!(!capability_json.contains(owner_a));
+    assert!(!capability_json.contains(recipient));
+    assert!(!capability_json.contains("421 Private Canyon Road"));
+    assert!(!capability_json.contains("0199"));
+    assert!(matches!(
+        repository
+            .issue_provider_response_capability(
+                "recipient-user-1",
+                recipient,
+                &existing_claim.claim_id,
+                capability_request,
+            )
+            .await,
+        OwnerProviderResponseCapabilityResult::Replayed(replayed)
+            if replayed.capability_id == capability.capability_id
+    ));
+    assert!(matches!(
+        repository
+            .issue_provider_response_capability(
+                "recipient-user-1",
+                recipient,
+                &existing_claim.claim_id,
+                IssueOwnerProviderResponseCapabilityRequest {
+                    token: retry.delivery_token().to_string(),
+                    withheld_categories_acknowledged: true,
+                    idempotency_key: "provider-response-capability-002".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderResponseCapabilityResult::Conflict
+    ));
+    let persisted_capability = sqlx::query(
+        "SELECT capability.status, capability.allowed_actions,
+                capability.withheld_categories,
+                capability.expires_at = invitation.expires_at AS expiry_scoped
+         FROM owner_provider_invitation_response_capabilities capability
+         JOIN owner_provider_invitations invitation ON invitation.id = capability.invitation_id
+         WHERE capability.id = $1",
+    )
+    .bind(&capability.capability_id)
+    .fetch_one(&pool)
+    .await
+    .expect("persisted response capability should load");
+    assert_eq!(persisted_capability.get::<String, _>("status"), "active");
+    assert!(persisted_capability.get::<bool, _>("expiry_scoped"));
+    let capability_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_invitation_response_capability_issued'
+           AND event_data->>'capability_id' = $1",
+    )
+    .bind(&capability.capability_id)
+    .fetch_one(&pool)
+    .await
+    .expect("capability audit should load")
+    .to_string();
+    assert!(!capability_audit.contains(recipient));
+    assert!(!capability_audit.contains("421 Private Canyon Road"));
+    assert!(!capability_audit.contains("0199"));
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
@@ -1485,6 +1603,28 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .fetch_one(&pool)
         .await
         .expect("revoke event count should load"),
+        1
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, String>(
+            "SELECT status FROM owner_provider_invitation_response_capabilities WHERE id = $1",
+        )
+        .bind(&capability.capability_id)
+        .fetch_one(&pool)
+        .await
+        .expect("revoked capability status should load"),
+        "revoked"
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_acquisition_events
+             WHERE event_kind = 'provider_invitation_response_capability_reconciled'
+               AND event_data->>'invitation_id' = $1",
+        )
+        .bind(&created.invitation.invitation_id)
+        .fetch_one(&pool)
+        .await
+        .expect("capability reconciliation audit should load"),
         1
     );
     assert!(matches!(

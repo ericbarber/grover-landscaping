@@ -235,6 +235,30 @@ pub struct AppealOwnerProviderOrganizationClaimRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct IssueOwnerProviderResponseCapabilityRequest {
+    pub token: String,
+    pub withheld_categories_acknowledged: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderResponseCapabilityRecord {
+    pub capability_id: String,
+    pub invitation_id: String,
+    pub claim_id: String,
+    pub organization_id: String,
+    pub brief_version: i64,
+    pub purpose: String,
+    pub allowed_actions: Vec<String>,
+    pub withheld_categories: Vec<String>,
+    pub status: String,
+    pub expires_at_epoch_seconds: i64,
+    pub version: i64,
+    pub opportunity_response_capability: bool,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderClaimReviewRecord {
     pub claim_id: String,
     pub claim_kind: String,
@@ -461,6 +485,16 @@ pub enum OwnerProviderClaimReviewDecisionResult {
 pub enum OwnerProviderClaimAppealResult {
     Submitted(OwnerProviderClaimReviewRecord),
     Replayed(OwnerProviderClaimReviewRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderResponseCapabilityResult {
+    Issued(OwnerProviderResponseCapabilityRecord),
+    Replayed(OwnerProviderResponseCapabilityRecord),
     NotFound,
     InvalidState,
     Conflict,
@@ -2205,6 +2239,58 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn issue_provider_response_capability(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        claim_id: &str,
+        request: IssueOwnerProviderResponseCapabilityRequest,
+    ) -> OwnerProviderResponseCapabilityResult {
+        if !validate_provider_response_capability_request(&request) {
+            return OwnerProviderResponseCapabilityResult::InvalidState;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderResponseCapabilityResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match issue_owner_provider_response_capability(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            claim_id,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedResponseCapabilityOutcome::Issued(capability)) => {
+                OwnerProviderResponseCapabilityResult::Issued(capability)
+            }
+            Ok(PersistedResponseCapabilityOutcome::Replayed(capability)) => {
+                OwnerProviderResponseCapabilityResult::Replayed(capability)
+            }
+            Ok(PersistedResponseCapabilityOutcome::NotFound) => {
+                OwnerProviderResponseCapabilityResult::NotFound
+            }
+            Ok(PersistedResponseCapabilityOutcome::InvalidState) => {
+                OwnerProviderResponseCapabilityResult::InvalidState
+            }
+            Ok(PersistedResponseCapabilityOutcome::Conflict) => {
+                OwnerProviderResponseCapabilityResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderResponseCapabilityResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, claim_id, "provider response capability issuance failed");
+                OwnerProviderResponseCapabilityResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -2501,6 +2587,19 @@ pub fn validate_provider_organization_claim_appeal_request(
         && evidence_reference.chars().all(|character| {
             character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | ':' | '/')
         })
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_response_capability_request(
+    request: &IssueOwnerProviderResponseCapabilityRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.withheld_categories_acknowledged
         && (8..=128).contains(&idempotency_key.chars().count())
         && idempotency_key
             .chars()
@@ -3594,6 +3693,43 @@ enum PersistedInvitationMutationOutcome {
     InvalidState(OwnerProviderInvitationRecord),
 }
 
+async fn reconcile_owner_provider_response_capability(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    invitation_id: &str,
+    owner_user_id: &str,
+    property_id: &str,
+    next_status: &str,
+    reason: &str,
+) -> Result<(), sqlx::Error> {
+    let updated = sqlx::query(
+        "UPDATE owner_provider_invitation_response_capabilities
+         SET status = $2, version = version + 1, updated_at = NOW()
+         WHERE invitation_id = $1 AND status = 'active'",
+    )
+    .bind(invitation_id)
+    .bind(next_status)
+    .execute(&mut **transaction)
+    .await?;
+    if updated.rows_affected() > 0 {
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_response_capability_reconciled', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(owner_user_id)
+        .bind(property_id)
+        .bind(serde_json::json!({
+            "invitation_id": invitation_id,
+            "status": next_status,
+            "reason": reason,
+        }))
+        .execute(&mut **transaction)
+        .await?;
+    }
+    Ok(())
+}
+
 async fn revoke_owner_provider_invitation(
     pool: &PgPool,
     owner_user_id: &str,
@@ -3661,6 +3797,23 @@ async fn revoke_owner_provider_invitation(
         .execute(&mut *transaction)
         .await?;
     }
+    reconcile_owner_provider_response_capability(
+        &mut transaction,
+        invitation_id,
+        owner_user_id,
+        property_id,
+        if next_status == "expired" {
+            "expired"
+        } else {
+            "revoked"
+        },
+        if next_status == "expired" {
+            "invitation_expired"
+        } else {
+            "owner_revoked"
+        },
+    )
+    .await?;
     sqlx::query(
         "INSERT INTO owner_acquisition_events (
              id, owner_user_id, property_id, event_kind, event_data
@@ -3956,6 +4109,15 @@ async fn expire_owner_provider_invitations(
         .bind(&invitation_id)
         .execute(&mut *transaction)
         .await?;
+        reconcile_owner_provider_response_capability(
+            &mut transaction,
+            &invitation_id,
+            &owner_user_id,
+            &property_id,
+            "expired",
+            "invitation_expired",
+        )
+        .await?;
         sqlx::query(
             "UPDATE owner_provider_invitation_delivery_attempts
              SET status = 'suppressed', failure_code = 'invitation_expired', completed_at = NOW()
@@ -4057,6 +4219,15 @@ async fn opt_out_owner_provider_invitation(
     )
     .bind(&invitation_id)
     .execute(&mut *transaction)
+    .await?;
+    reconcile_owner_provider_response_capability(
+        &mut transaction,
+        &invitation_id,
+        &owner_user_id,
+        &property_id,
+        "revoked",
+        "recipient_opt_out",
+    )
     .await?;
     sqlx::query(
         "UPDATE owner_provider_invitation_delivery_attempts
@@ -5122,6 +5293,17 @@ async fn decide_owner_provider_organization_claim_review(
     .bind(assigned_function)
     .execute(&mut *transaction)
     .await?;
+    if resulting_status == "disputed" {
+        reconcile_owner_provider_response_capability(
+            &mut transaction,
+            &claim.get::<String, _>("invitation_id"),
+            &claim.get::<String, _>("owner_user_id"),
+            &claim.get::<String, _>("property_id"),
+            "suspended",
+            "claim_disputed",
+        )
+        .await?;
+    }
     let stored_action = if appeal_action {
         "appeal_decided"
     } else {
@@ -5335,6 +5517,206 @@ async fn appeal_owner_provider_organization_claim(
             None => PersistedClaimAppealOutcome::NotFound,
         },
     )
+}
+
+enum PersistedResponseCapabilityOutcome {
+    Issued(OwnerProviderResponseCapabilityRecord),
+    Replayed(OwnerProviderResponseCapabilityRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn issue_owner_provider_response_capability(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    claim_id: &str,
+    request: IssueOwnerProviderResponseCapabilityRequest,
+    token_hash: &str,
+) -> Result<PersistedResponseCapabilityOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay = sqlx::query(
+        "SELECT capability.id, capability.invitation_id, capability.claim_id,
+                capability.organization_id, capability.brief_version,
+                capability.purpose, capability.allowed_actions,
+                capability.withheld_categories, capability.status,
+                EXTRACT(EPOCH FROM capability.expires_at)::BIGINT AS expires_at_epoch_seconds,
+                capability.version
+         FROM owner_provider_invitation_response_capabilities capability
+         JOIN owner_provider_invitation_organization_claims claim ON claim.id = capability.claim_id
+         JOIN owner_provider_invitations invitation ON invitation.id = capability.invitation_id
+         WHERE capability.actor_user_id = $1 AND capability.idempotency_key = $2
+           AND claim.id = $3 AND invitation.token_hash = $4
+           AND LOWER(invitation.recipient_email) = LOWER($5)",
+    )
+    .bind(recipient_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(claim_id)
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        transaction.commit().await?;
+        return Ok(PersistedResponseCapabilityOutcome::Replayed(
+            owner_provider_response_capability_from_row(&replay, true),
+        ));
+    }
+    let eligibility = sqlx::query(
+        "SELECT claim.invitation_id, claim.organization_id, claim.status AS claim_status,
+                claim.actor_user_id, invitation.owner_user_id, invitation.property_id,
+                invitation.brief_id, invitation.brief_version,
+                invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS expired,
+                recipient_check.id AS recipient_check_id,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status,
+                organization.status AS organization_status,
+                organization.organization_type,
+                EXISTS (
+                    SELECT 1 FROM organization_memberships membership
+                    WHERE membership.organization_id = claim.organization_id
+                      AND membership.user_id = $4 AND membership.status = 'active'
+                ) AS active_membership,
+                EXISTS (
+                    SELECT 1 FROM owner_provider_invitation_response_capabilities capability
+                    WHERE capability.invitation_id = invitation.id AND capability.status = 'active'
+                ) AS active_capability
+         FROM owner_provider_invitation_organization_claims claim
+         JOIN owner_provider_invitations invitation ON invitation.id = claim.invitation_id
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.id = claim.recipient_check_id
+         LEFT JOIN organizations organization ON organization.id = claim.organization_id
+         WHERE claim.id = $1 AND invitation.token_hash = $2
+           AND LOWER(invitation.recipient_email) = LOWER($3)
+         FOR UPDATE OF claim, invitation",
+    )
+    .bind(claim_id)
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(recipient_user_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(eligibility) = eligibility else {
+        transaction.rollback().await?;
+        return Ok(PersistedResponseCapabilityOutcome::NotFound);
+    };
+    let actor_checked = eligibility.get::<String, _>("actor_user_id") == recipient_user_id
+        && eligibility.get::<String, _>("recipient_user_id") == recipient_user_id
+        && eligibility.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && eligibility.get::<String, _>("recipient_check_status") == "checked";
+    let relationship_checked = matches!(
+        eligibility.get::<String, _>("claim_status").as_str(),
+        "relationship_checked" | "claimed"
+    );
+    let organization_active = eligibility
+        .try_get::<String, _>("organization_status")
+        .is_ok_and(|status| status == "active")
+        && eligibility
+            .try_get::<String, _>("organization_type")
+            .is_ok_and(|kind| kind == "yard_care_company");
+    if !actor_checked
+        || !relationship_checked
+        || !organization_active
+        || !eligibility.get::<bool, _>("active_membership")
+        || eligibility.get::<String, _>("invitation_status") != "opened"
+        || eligibility.get::<bool, _>("expired")
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedResponseCapabilityOutcome::InvalidState);
+    }
+    if eligibility.get::<bool, _>("active_capability") {
+        transaction.rollback().await?;
+        return Ok(PersistedResponseCapabilityOutcome::Conflict);
+    }
+    let organization_id: Option<String> = eligibility.get("organization_id");
+    let Some(organization_id) = organization_id else {
+        transaction.rollback().await?;
+        return Ok(PersistedResponseCapabilityOutcome::InvalidState);
+    };
+    let invitation_id: String = eligibility.get("invitation_id");
+    let capability_id = format!("owner_provider_capability_{}", Uuid::new_v4().simple());
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_invitation_response_capabilities (
+             id, invitation_id, recipient_check_id, claim_id, organization_id,
+             actor_user_id, owner_user_id, property_id, brief_id, brief_version,
+             purpose, allowed_actions, withheld_categories, status,
+             withheld_acknowledged_at, expires_at, idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+             'known_provider_yard_assessment_response',
+             ARRAY['preliminary_question', 'express_interest', 'decline', 'report']::TEXT[],
+             ARRAY['exact_address', 'yard_photos', 'owner_contact',
+                   'access_considerations', 'pricing_and_work_authority']::TEXT[],
+             'active', NOW(),
+             (SELECT expires_at FROM owner_provider_invitations WHERE id = $2), $11
+         )
+         RETURNING id, invitation_id, claim_id, organization_id, brief_version,
+                   purpose, allowed_actions, withheld_categories, status,
+                   EXTRACT(EPOCH FROM expires_at)::BIGINT AS expires_at_epoch_seconds,
+                   version",
+    )
+    .bind(&capability_id)
+    .bind(&invitation_id)
+    .bind(eligibility.get::<String, _>("recipient_check_id"))
+    .bind(claim_id)
+    .bind(&organization_id)
+    .bind(recipient_user_id)
+    .bind(eligibility.get::<String, _>("owner_user_id"))
+    .bind(eligibility.get::<String, _>("property_id"))
+    .bind(eligibility.get::<String, _>("brief_id"))
+    .bind(eligibility.get::<i64, _>("brief_version"))
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_response_capability_issued', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(eligibility.get::<String, _>("owner_user_id"))
+    .bind(eligibility.get::<String, _>("property_id"))
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "claim_id": claim_id,
+        "capability_id": capability_id,
+        "organization_id": organization_id,
+        "purpose": "known_provider_yard_assessment_response",
+        "allowed_actions": ["preliminary_question", "express_interest", "decline", "report"],
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedResponseCapabilityOutcome::Issued(
+        owner_provider_response_capability_from_row(&row, true),
+    ))
+}
+
+fn owner_provider_response_capability_from_row(
+    row: &sqlx::postgres::PgRow,
+    persisted: bool,
+) -> OwnerProviderResponseCapabilityRecord {
+    let status: String = row.get("status");
+    OwnerProviderResponseCapabilityRecord {
+        capability_id: row.get("id"),
+        invitation_id: row.get("invitation_id"),
+        claim_id: row.get("claim_id"),
+        organization_id: row.get("organization_id"),
+        brief_version: row.get("brief_version"),
+        purpose: row.get("purpose"),
+        allowed_actions: row.get("allowed_actions"),
+        withheld_categories: row.get("withheld_categories"),
+        status: status.clone(),
+        expires_at_epoch_seconds: row.get("expires_at_epoch_seconds"),
+        version: row.get("version"),
+        opportunity_response_capability: status == "active",
+        persisted,
+    }
 }
 
 async fn report_owner_provider_invitation_abuse(
@@ -5839,6 +6221,19 @@ mod tests {
         invalid_appeal.category = "please_reconsider".to_string();
         assert!(!validate_provider_organization_claim_appeal_request(
             &invalid_appeal
+        ));
+        let capability_request = IssueOwnerProviderResponseCapabilityRequest {
+            token: new_owner_provider_invitation_token(),
+            withheld_categories_acknowledged: true,
+            idempotency_key: "provider-response-capability-001".to_string(),
+        };
+        assert!(validate_provider_response_capability_request(
+            &capability_request
+        ));
+        let mut invalid_capability = capability_request;
+        invalid_capability.withheld_categories_acknowledged = false;
+        assert!(!validate_provider_response_capability_request(
+            &invalid_capability
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {
             token: new_owner_provider_invitation_token(),

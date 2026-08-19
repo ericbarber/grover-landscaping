@@ -92,19 +92,21 @@ use grover_landscaping_api::{
         validate_provider_organization_bootstrap_request,
         validate_provider_organization_claim_appeal_request,
         validate_provider_organization_claim_request,
-        validate_provider_organization_options_request, validate_workspace_request,
+        validate_provider_organization_options_request,
+        validate_provider_response_capability_request, validate_workspace_request,
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
         CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
         CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-        ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOrganizationBootstrapResult,
-        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+        OwnerProviderClaimReviewMetricsResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+        OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityResult,
         OwnerReadResult, PreviewOwnerProviderInvitationRequest,
         ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
         SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
@@ -725,6 +727,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitation-organization-claims/{claim_id}/appeals",
             post(appeal_owner_provider_organization_claim),
+        )
+        .route(
+            "/provider-invitation-organization-claims/{claim_id}/response-capabilities",
+            post(issue_owner_provider_response_capability),
         )
         .route(
             "/provider-organization-claim-reviews",
@@ -2250,6 +2256,82 @@ async fn appeal_owner_provider_organization_claim(
             "provider_organization_claim_appeal_unavailable",
             "The appeal could not be confirmed. The claim was not reported as reopened.",
         ),
+    }
+}
+
+async fn issue_owner_provider_response_capability(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(claim_id): Path<String>,
+    Json(request): Json<IssueOwnerProviderResponseCapabilityRequest>,
+) -> Response {
+    if claim_id.trim().is_empty() || !validate_provider_response_capability_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_response_capability_request_invalid",
+                message:
+                    "Acknowledge the withheld information before opening the bounded response path."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before opening the response path."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .issue_provider_response_capability(
+            &principal.subject,
+            verified_email,
+            claim_id.trim(),
+            request,
+        )
+        .await
+    {
+        OwnerProviderResponseCapabilityResult::Issued(capability) => {
+            (StatusCode::CREATED, Json(capability)).into_response()
+        }
+        OwnerProviderResponseCapabilityResult::Replayed(capability) => {
+            Json(capability).into_response()
+        }
+        OwnerProviderResponseCapabilityResult::NotFound => resource_not_found_response(
+            "provider_response_capability_not_found",
+            "The invitation or provider relationship is not available to this verified account.",
+        ),
+        OwnerProviderResponseCapabilityResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_response_capability_not_ready",
+                message: "The invitation, provider relationship, organization membership, or expiry state is not eligible for responses."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderResponseCapabilityResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_response_capability_conflict",
+                message: "An active response capability already exists. Reload the provider inbox before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderResponseCapabilityResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_response_capability_unavailable",
+                "The bounded response capability could not be confirmed. No response authority was granted.",
+            )
+        }
     }
 }
 

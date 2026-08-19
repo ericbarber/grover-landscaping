@@ -100,7 +100,11 @@ Phase 3B2 is complete; bounded opportunity-response capability is next.
 The Phase 3B3 contract now defines transactional capability issuance,
 immutable invitation/brief/provider scope, preliminary question/interest/
 decline/report only, explicit withheld data, lifecycle reconciliation, and
-separate authorized inbox/action slices. Capability persistence is next.
+separate authorized inbox/action slices.
+Capability persistence is now delivered with transactional identity,
+relationship, organization, membership, acknowledgement, scope, expiry,
+idempotency, and invitation-reconciliation checks. The authorized provider inbox
+is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

@@ -201,6 +201,21 @@ Persistence unavailability returns `503` rather than a misleading zero queue.
 Operational handling is defined in
 [`provider-organization-claim-review-runbook.md`](provider-organization-claim-review-runbook.md).
 
+## Bounded opportunity-response capability
+
+`POST /provider-invitation-organization-claims/{claim_id}/response-capabilities`
+requires the checked recipient, verified invited mailbox, body token, active
+opened invitation, eligible linked claim, active yard-care organization, active
+actor membership, and explicit acknowledgement of withheld categories.
+
+Issuance persists one invitation- and brief-version-scoped capability whose
+only allowed actions are `preliminary_question`, `express_interest`, `decline`,
+and `report`. Exact address, photographs, owner contact, access considerations,
+and pricing/work authority remain explicitly withheld. Capability expiry equals
+invitation expiry, replay is idempotent, and invitation revoke/opt-out/expiry
+atomically reconciles active capability state. Issuance does not itself record a
+provider response.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

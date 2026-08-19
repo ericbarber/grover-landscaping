@@ -132,7 +132,7 @@ and current lifecycle checks. Capability identifiers are not bearer tokens.
 
 ## Delivery slices
 
-1. **3B3a — capability issuance:** schema, prerequisite transaction,
+1. **3B3a — capability issuance (delivered):** schema, prerequisite transaction,
    acknowledgement, idempotency, expiry, isolation, reconciliation flags, and
    outage/concurrency coverage.
 2. **3B3b — provider inbox:** limited authorized entry, progress/recovery states,

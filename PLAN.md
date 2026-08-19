@@ -316,6 +316,13 @@ Active slice:
   allowed pre-disclosure actions, withheld categories, expiry and revocation,
   server-side enforcement, audit minimization, and separate inbox/action slices.
   Slice 3B3a capability issuance is the next implementation unit.
+- Phase 3B3a is delivered. A checked recipient may request one persisted
+  response capability only after an atomic recheck of active invitation,
+  mailbox binding, eligible claim, active yard-care organization, and active
+  actor membership plus explicit withheld-data acknowledgement. The capability
+  is brief-version and invitation-expiry scoped, fixes the four allowed actions,
+  fails closed on conflict/outage, and is revoked or expired atomically with the
+  invitation. Phase 3B3b authorized inbox is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
