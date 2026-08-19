@@ -132,9 +132,13 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
    refresh behavior. Client tests, type checking, and production build pass;
    the updated browser scenario is committed but could not execute in the
    available container because the installed browser lacked `libnspr4`.
-5. **3C3b — provider interface adoption:** connect the checked-recipient
-   acquisition surface to provider progress with loading, recovery,
-   status-only closure, narrow-screen, zoom, and assistive-technology coverage.
+5. **3C3b — provider interface adoption (delivered; browser rerun pending):**
+   the authenticated `/app/provider-invitation` surface consumes a fragment
+   token once, removes it from the address, sends it only in the protected body,
+   and presents verified-mailbox, progress, recovery, closed, and fixed
+   withholding states. Route/client tests, type checking, and production build
+   pass. Its browser scenario is committed alongside the owner scenario and
+   awaits a compatible Chromium runtime.
 
 ## Acceptance criteria
 
@@ -151,5 +155,6 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
 - Projection order and labels remain deterministic across replay and stale-tab
   scenarios.
 
-Phase 3C3b provider interface adoption is next. The provider-progress API is not
-evidence that a production recipient interface has adopted it.
+Phase 3C is implementation complete, with the compatible-browser rerun plus
+human zoom and assistive-technology validation still pending. Phase 3D
+provider-specific disclosure grants and immutable receipts is next.

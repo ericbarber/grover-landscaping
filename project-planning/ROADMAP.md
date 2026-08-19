@@ -130,6 +130,12 @@ limited-access and interest boundaries, client coverage, passing typecheck, and
 a passing production build. The updated responsive browser scenario remains
 pending because the available Chromium container lacked `libnspr4`; provider
 recipient interface adoption is next.
+Phase 3C3b now adds the authenticated provider invitation route with one-time
+fragment consumption/removal, body-only token submission, verified-mailbox
+status, safe progress and closure, and fixed withheld-data context. Route/client
+tests, typecheck, and production build pass; both Phase 3C browser scenarios
+await a Chromium runtime with the required system libraries. Phase 3C is
+implementation complete and Phase 3D disclosure grants/receipts is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

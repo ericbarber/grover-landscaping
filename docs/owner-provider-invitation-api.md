@@ -281,6 +281,14 @@ choices before a Phase 3D grant, capability IDs, other actors' responses, or
 safety case details. Wrong actor/mailbox/token returns `404`, unchecked identity
 returns `409`, and unavailable persistence returns `503`.
 
+The production recipient entry is `/app/provider-invitation`. An email link may
+place the bearer value in the `#invitation=` fragment, which is not sent in the
+HTTP request; the page consumes it once, immediately removes the fragment with
+`history.replaceState`, retains it only in component memory, and submits it in
+the protected JSON body. Manual code entry is the recovery path. The page never
+places the token in a path, query string, storage API, visible status text, or
+analytics event.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.

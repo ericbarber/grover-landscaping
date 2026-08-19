@@ -366,6 +366,14 @@ Active slice:
   committed but could not run in the available Node container because Chromium
   lacked `libnspr4`; this remains validation pending, not a passing claim.
   Phase 3C3b provider recipient interface adoption is next.
+- Phase 3C3b is delivered. The authenticated provider invitation surface can
+  consume a bearer token once from the URL fragment, immediately remove it from
+  the address, send it only in the protected request body, and show verified-
+  mailbox progress or status-only closure plus the fixed withholding boundary.
+  Route/client tests, TypeScript, and production build pass; the browser
+  scenario is committed but shares the pending compatible-Chromium rerun.
+  Phase 3C is implementation complete. Phase 3D versioned provider-specific
+  grants and immutable disclosure receipts is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
