@@ -33,7 +33,8 @@ The approved experience is defined by:
 | 3A4 | Delivered | Verified-recipient opt-out plus idempotent block/report with body-carried token validation, mailbox matching, minimized Trust & Safety cases, severity routing, terminal transition, durable suppression, and audit separation |
 | 3A5 | Integration pending | Select and threat-review an authenticated delivery adapter/callback; no vendor is selected and pending delivery is not represented as success |
 | 3B1a | Delivered | Public body-token limited preview for delivered/opened invitations with masked recipient hint, one-time application-open audit, explicit withheld categories, false identity/organization/capability flags, pending denial, and status-only closed links |
-| 3B1b–3B3 | In progress | Authenticated recipient binding, duplicate-safe provider claim/bootstrap, dispute handling, and explicit opportunity-response capability |
+| 3B1b | Delivered | Authenticated verified-mailbox recipient binding with one account per invitation, idempotent replay, cross-account dispute conflict, minimized audit, and no implied organization relationship or response capability |
+| 3B2–3B3 | In progress | Duplicate-safe provider claim/bootstrap, dispute handling, and explicit opportunity-response capability |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -138,8 +139,8 @@ Design status: complete and browser validated. Production status: in progress;
 the 3A1 persistence foundation, 3A2 verified-owner API, and 3A3 internal
 delivery lifecycle and recipient opt-out/report safety boundary are delivered.
 Adapter authentication remains an external integration decision, while
-the limited recipient-safe entry foundation is delivered and authenticated
-recipient binding is the next local implementation slice.
+the limited recipient-safe entry and authenticated recipient binding are
+delivered; duplicate-safe provider organization claim/bootstrap is next.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).

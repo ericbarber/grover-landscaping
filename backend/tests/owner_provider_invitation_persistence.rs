@@ -3,7 +3,8 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationDeliveryResult,
     OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRetryResult, OwnerReadResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+    OwnerProviderInvitationRetryResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -114,6 +115,16 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderInvitationPreviewResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-unavailable",
+                "provider@example.com",
+                "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -450,6 +461,46 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationPreviewResult::Opened(invitation)
             if invitation.status == "opened"
     ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                retry.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::NotFound
+    ));
+    let OwnerProviderInvitationRecipientCheckResult::Checked(checked_entry) = repository
+        .verify_provider_invitation_recipient("recipient-user-1", recipient, retry.delivery_token())
+        .await
+    else {
+        panic!("verified invited mailbox should bind the recipient account");
+    };
+    assert!(checked_entry.recipient_email_checked);
+    assert!(!checked_entry.organization_relationship_checked);
+    assert!(!checked_entry.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-user-1",
+                recipient,
+                retry.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Replayed(invitation)
+            if invitation.recipient_email_checked
+    ));
+    assert!(matches!(
+        repository
+            .verify_provider_invitation_recipient(
+                "recipient-user-2",
+                recipient,
+                retry.delivery_token(),
+            )
+            .await,
+        OwnerProviderInvitationRecipientCheckResult::Conflict
+    ));
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM owner_acquisition_events
@@ -461,6 +512,19 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .expect("opened event count should load"),
         1
     );
+    let recipient_check_events = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE owner_user_id = $1 AND event_kind = 'provider_invitation_recipient_checked'",
+    )
+    .bind(owner_a)
+    .fetch_all(&pool)
+    .await
+    .expect("recipient check events should load");
+    assert_eq!(recipient_check_events.len(), 1);
+    assert!(!recipient_check_events[0].to_string().contains(recipient));
+    assert!(!recipient_check_events[0]
+        .to_string()
+        .contains("recipient-user-1"));
     assert!(matches!(
         repository
             .record_provider_invitation_delivery(

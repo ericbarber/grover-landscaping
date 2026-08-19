@@ -49,6 +49,20 @@ Pending delivery returns no preview. Failed, expired, declined, opted-out, and
 revoked tokens return status-only with HTTP `410 Gone`; closed links cannot
 reopen the limited request.
 
+### Verify the invitation recipient
+
+`POST /provider-invitations/verify-recipient` is authenticated and accepts the
+token in the request body. The authenticated account must have a verified email
+matching the invited business mailbox, and the limited invitation must already
+be open.
+
+The first matching account creates the invitation’s recipient check. Repeating
+the request from that account is idempotent. A different account cannot replace
+the binding even if it presents the token; the result is an identity conflict
+for Provider Operations review. The response sets only
+`recipient_email_checked` to true. Organization relationship and opportunity-
+response capability remain false.
+
 ### Opt out
 
 `POST /provider-invitations/opt-out`
@@ -114,9 +128,8 @@ exposed; production must not claim delivery until that integration records it.
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
-2. Bind an authenticated verified recipient to the invitation without implying
-   provider organization or response authority.
-3. Add duplicate-safe provider organization claim/bootstrap and dispute review.
+2. Add duplicate-safe provider organization claim/bootstrap and dispute review.
+3. Connect the checked recipient to that separately evaluated relationship.
 4. Add explicit opportunity-response capabilities before provider responses.
 5. Add Trust & Safety queue authorization, assignment, disposition, evidence,
    retention, and monitoring before pilot launch.

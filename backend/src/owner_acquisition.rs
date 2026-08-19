@@ -177,6 +177,11 @@ pub struct PreviewOwnerProviderInvitationRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct VerifyOwnerProviderInvitationRecipientRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecipientEntry {
     pub invitation_id: String,
     pub status: String,
@@ -298,6 +303,16 @@ pub enum OwnerProviderInvitationPreviewResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationRecipientCheckResult {
+    Checked(OwnerProviderInvitationRecipientEntry),
+    Replayed(OwnerProviderInvitationRecipientEntry),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerReadResult<T> {
     Loaded(T),
     NotFound,
@@ -321,6 +336,7 @@ struct LocalOwnerState {
     provider_invitations: HashMap<String, LocalOwnerProviderInvitation>,
     provider_recipient_suppressions: HashSet<String>,
     provider_abuse_reports: HashMap<String, LocalOwnerProviderAbuseReport>,
+    provider_recipient_checks: HashMap<String, LocalOwnerProviderRecipientCheck>,
 }
 
 struct LocalOwnerProviderInvitation {
@@ -334,6 +350,11 @@ struct LocalOwnerProviderAbuseReport {
     record: OwnerProviderInvitationAbuseReportRecord,
     reporter_user_id: String,
     idempotency_key: String,
+}
+
+struct LocalOwnerProviderRecipientCheck {
+    recipient_user_id: String,
+    verified_email_fingerprint: String,
 }
 
 #[derive(Clone, Default)]
@@ -1533,6 +1554,89 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn verify_provider_invitation_recipient(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        token: &str,
+    ) -> OwnerProviderInvitationRecipientCheckResult {
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(token);
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let invitation_id = local
+                .provider_invitations
+                .iter()
+                .find(|(_, invitation)| {
+                    invitation._token_hash == token_hash
+                        && invitation.record.recipient_business_email == normalized_email
+                })
+                .map(|(id, _)| id.clone());
+            let Some(invitation_id) = invitation_id else {
+                return OwnerProviderInvitationRecipientCheckResult::NotFound;
+            };
+            let Some(invitation) = local.provider_invitations.get(&invitation_id) else {
+                return OwnerProviderInvitationRecipientCheckResult::NotFound;
+            };
+            if invitation.record.status != "opened" {
+                return OwnerProviderInvitationRecipientCheckResult::InvalidState;
+            }
+            if let Some(existing) = local.provider_recipient_checks.get(&invitation_id) {
+                if existing.recipient_user_id != recipient_user_id
+                    || existing.verified_email_fingerprint != email_fingerprint
+                {
+                    return OwnerProviderInvitationRecipientCheckResult::Conflict;
+                }
+                let mut entry = recipient_entry_from_invitation(&invitation.record, true);
+                entry.recipient_email_checked = true;
+                return OwnerProviderInvitationRecipientCheckResult::Replayed(entry);
+            }
+            let mut entry = recipient_entry_from_invitation(&invitation.record, true);
+            entry.recipient_email_checked = true;
+            local.provider_recipient_checks.insert(
+                invitation_id,
+                LocalOwnerProviderRecipientCheck {
+                    recipient_user_id: recipient_user_id.to_string(),
+                    verified_email_fingerprint: email_fingerprint,
+                },
+            );
+            return OwnerProviderInvitationRecipientCheckResult::Checked(entry);
+        };
+        match verify_owner_provider_invitation_recipient(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedRecipientCheckOutcome::Checked(entry)) => {
+                OwnerProviderInvitationRecipientCheckResult::Checked(entry)
+            }
+            Ok(PersistedRecipientCheckOutcome::Replayed(entry)) => {
+                OwnerProviderInvitationRecipientCheckResult::Replayed(entry)
+            }
+            Ok(PersistedRecipientCheckOutcome::NotFound) => {
+                OwnerProviderInvitationRecipientCheckResult::NotFound
+            }
+            Ok(PersistedRecipientCheckOutcome::InvalidState) => {
+                OwnerProviderInvitationRecipientCheckResult::InvalidState
+            }
+            Ok(PersistedRecipientCheckOutcome::Conflict) => {
+                OwnerProviderInvitationRecipientCheckResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInvitationRecipientCheckResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "owner provider invitation recipient check failed");
+                OwnerProviderInvitationRecipientCheckResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1697,6 +1801,14 @@ pub fn validate_provider_invitation_preview_request(
     request: &PreviewOwnerProviderInvitationRequest,
 ) -> bool {
     validate_provider_invitation_opt_out_request(&OptOutOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    })
+}
+
+pub fn validate_provider_invitation_recipient_check_request(
+    request: &VerifyOwnerProviderInvitationRecipientRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
         token: request.token.clone(),
     })
 }
@@ -3424,6 +3536,123 @@ fn recipient_entry_from_preview_row(
     }
 }
 
+enum PersistedRecipientCheckOutcome {
+    Checked(OwnerProviderInvitationRecipientEntry),
+    Replayed(OwnerProviderInvitationRecipientEntry),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+async fn verify_owner_provider_invitation_recipient(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+) -> Result<PersistedRecipientCheckOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let invitation = sqlx::query(
+        "SELECT id, owner_user_id, property_id, provider_name, recipient_email,
+                owner_name_snapshot, coarse_area_snapshot, care_goals_snapshot,
+                cadence_snapshot, status, expires_at <= NOW() AS expired
+         FROM owner_provider_invitations
+         WHERE token_hash = $1 AND LOWER(recipient_email) = LOWER($2)
+         FOR UPDATE",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(invitation) = invitation else {
+        transaction.rollback().await?;
+        return Ok(PersistedRecipientCheckOutcome::NotFound);
+    };
+    let invitation_id: String = invitation.get("id");
+    let owner_user_id: String = invitation.get("owner_user_id");
+    let property_id: String = invitation.get("property_id");
+    let status: String = invitation.get("status");
+    let expired: bool = invitation.get("expired");
+    if expired && status == "opened" {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'expired', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_expired', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+        transaction.commit().await?;
+        return Ok(PersistedRecipientCheckOutcome::InvalidState);
+    }
+    if status != "opened" {
+        transaction.commit().await?;
+        return Ok(PersistedRecipientCheckOutcome::InvalidState);
+    }
+    let existing = sqlx::query(
+        "SELECT recipient_user_id, verified_email_fingerprint, status
+         FROM owner_provider_invitation_recipient_checks
+         WHERE invitation_id = $1",
+    )
+    .bind(&invitation_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(existing) = existing {
+        let same_binding = existing.get::<String, _>("recipient_user_id") == recipient_user_id
+            && existing.get::<String, _>("verified_email_fingerprint")
+                == verified_email_fingerprint
+            && existing.get::<String, _>("status") == "checked";
+        transaction.commit().await?;
+        if !same_binding {
+            return Ok(PersistedRecipientCheckOutcome::Conflict);
+        }
+        let mut entry = recipient_entry_from_preview_row(&invitation, "opened", true);
+        entry.recipient_email_checked = true;
+        return Ok(PersistedRecipientCheckOutcome::Replayed(entry));
+    }
+    let check_id = format!("owner_provider_recipient_check_{}", Uuid::new_v4().simple());
+    sqlx::query(
+        "INSERT INTO owner_provider_invitation_recipient_checks (
+             id, invitation_id, recipient_user_id, verified_email_fingerprint, status
+         ) VALUES ($1, $2, $3, $4, 'checked')",
+    )
+    .bind(&check_id)
+    .bind(&invitation_id)
+    .bind(recipient_user_id)
+    .bind(verified_email_fingerprint)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_recipient_checked', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "recipient_check_id": check_id,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    let mut entry = recipient_entry_from_preview_row(&invitation, "opened", true);
+    entry.recipient_email_checked = true;
+    Ok(PersistedRecipientCheckOutcome::Checked(entry))
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -3823,6 +4052,11 @@ mod tests {
         ));
         assert!(validate_provider_invitation_preview_request(
             &PreviewOwnerProviderInvitationRequest {
+                token: new_owner_provider_invitation_token(),
+            }
+        ));
+        assert!(validate_provider_invitation_recipient_check_request(
+            &VerifyOwnerProviderInvitationRecipientRequest {
                 token: new_owner_provider_invitation_token(),
             }
         ));

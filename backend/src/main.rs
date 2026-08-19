@@ -87,14 +87,16 @@ use grover_landscaping_api::{
         validate_intake_media_request, validate_property_request,
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
-        validate_provider_invitation_request, validate_workspace_request,
-        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-        CreateOwnerProviderInvitationRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerReadResult,
+        validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
+        validate_workspace_request, validate_yard_brief_request, CreateOwnerIntakeMediaRequest,
+        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
         SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -692,6 +694,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/preview",
             post(preview_owner_provider_invitation),
+        )
+        .route(
+            "/provider-invitations/verify-recipient",
+            post(verify_owner_provider_invitation_recipient),
         )
         .route(
             "/customer-accounts",
@@ -1865,6 +1871,74 @@ async fn preview_owner_provider_invitation(
             persisted_resource_unavailable_response(
                 "provider_invitation_preview_unavailable",
                 "The limited invitation could not be loaded. No additional yard information was shown.",
+            )
+        }
+    }
+}
+
+async fn verify_owner_provider_invitation_recipient(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<VerifyOwnerProviderInvitationRecipientRequest>,
+) -> Response {
+    if !validate_provider_invitation_recipient_check_request(&request) {
+        return resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation link is invalid or no longer available.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before continuing to provider setup."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .verify_provider_invitation_recipient(
+            &principal.subject,
+            verified_email,
+            request.token.trim(),
+        )
+        .await
+    {
+        OwnerProviderInvitationRecipientCheckResult::Checked(invitation) => {
+            (StatusCode::CREATED, Json(invitation)).into_response()
+        }
+        OwnerProviderInvitationRecipientCheckResult::Replayed(invitation) => {
+            Json(invitation).into_response()
+        }
+        OwnerProviderInvitationRecipientCheckResult::NotFound => resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation was not found for this verified email.",
+        ),
+        OwnerProviderInvitationRecipientCheckResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_invitation_not_ready_for_recipient_check",
+                message: "Review the active limited invitation before verifying the recipient account. Closed invitations cannot continue."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationRecipientCheckResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_invitation_recipient_conflict",
+                message: "This invitation is already linked to another recipient account. Provider Operations must review the identity dispute before access can continue."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationRecipientCheckResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_invitation_recipient_check_unavailable",
+                "Recipient verification could not be confirmed. No provider authority was granted.",
             )
         }
     }

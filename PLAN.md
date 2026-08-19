@@ -265,7 +265,12 @@ Active slice:
   invitations, exposes the approved limited snapshot with a masked recipient
   hint, records application-open once, keeps recipient/organization/capability
   checks false, denies pending delivery, and returns status-only for closed
-  links. Phase 3B1b authenticated verified-recipient binding is next.
+  links.
+- Phase 3B1b is delivered: the invited verified mailbox may bind one
+  authenticated account after limited review. Replay is idempotent, a second
+  account fails closed into an identity conflict, audit excludes email/account
+  identifiers, and organization relationship plus response capability remain
+  false. Phase 3B2 duplicate-safe provider claim/bootstrap is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

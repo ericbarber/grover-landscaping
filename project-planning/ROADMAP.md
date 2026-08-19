@@ -74,7 +74,9 @@ closes the scoped contact path without copying case descriptions into general
 audit data. Authenticated adapter integration remains external; recipient-safe
 limited entry now opens delivered body-token invitations without granting email,
 organization, or response authority and keeps closed links status-only.
-Authenticated recipient binding is the next local review unit.
+Authenticated recipient binding now admits one verified-mailbox account,
+fails closed on cross-account conflict, and still grants no organization or
+response authority. Duplicate-safe provider claim/bootstrap is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

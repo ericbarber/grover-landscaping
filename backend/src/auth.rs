@@ -439,6 +439,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/owner-properties/")
         || path == "/provider-invitations/opt-out"
         || path == "/provider-invitations/report"
+        || path == "/provider-invitations/verify-recipient"
         || path == "/operational-activity"
         || path == "/operational-exceptions"
         || path.starts_with("/operational-exceptions/")
@@ -506,6 +507,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path == "/provider-invitations/report" {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    if path == "/provider-invitations/verify-recipient" {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/owner-properties/") {
@@ -1612,6 +1616,7 @@ mod tests {
             ),
             (Method::POST, "/provider-invitations/opt-out"),
             (Method::POST, "/provider-invitations/report"),
+            (Method::POST, "/provider-invitations/verify-recipient"),
         ] {
             assert!(is_protected_api_path(path));
             assert!(is_authorized(&owner, &method, path));
@@ -1654,6 +1659,9 @@ mod tests {
         ));
         assert!(is_protected_api_path("/provider-invitations/opt-out"));
         assert!(is_protected_api_path("/provider-invitations/report"));
+        assert!(is_protected_api_path(
+            "/provider-invitations/verify-recipient"
+        ));
     }
 
     #[test]
