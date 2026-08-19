@@ -339,6 +339,11 @@ Active slice:
   minimized Trust & Safety case. Replay, stale version, duplicate action,
   changed authority, wrong mailbox, and outage remain distinct. Phase 3B3 is
   complete; Phase 3C owner/provider progress read models are next.
+- Phase 3C0 is delivered as a production read-model contract. Owner and provider
+  progress are separate projections with explicit state precedence,
+  customer-safe response mapping, status-only closure, controlled recovery,
+  accessibility wording, outage distinction, and visibility tests. Phase 3C1
+  owner/property-scoped connection progress is the next implementation slice.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -110,7 +110,10 @@ writes are now delivered with controlled codes, capability-version and
 effective-authority checks, replay protection, distinct non-terminal and
 terminal behavior, durable suppression for safety reports, and minimized audit.
 Phase 3B3 is complete; privacy-preserving owner/provider progress read models
-are next.
+are next. The Phase 3C0 contract now fixes separate projections, deterministic
+terminal/response precedence, customer-safe question/interest/decline/closure
+language, status-only provider recovery, isolation, and outage behavior. The
+owner/property-scoped projection is the next implementation slice.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
