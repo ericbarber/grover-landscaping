@@ -34,7 +34,8 @@ The approved experience is defined by:
 | 3A5 | Integration pending | Select and threat-review an authenticated delivery adapter/callback; no vendor is selected and pending delivery is not represented as success |
 | 3B1a | Delivered | Public body-token limited preview for delivered/opened invitations with masked recipient hint, one-time application-open audit, explicit withheld categories, false identity/organization/capability flags, pending denial, and status-only closed links |
 | 3B1b | Delivered | Authenticated verified-mailbox recipient binding with one account per invitation, idempotent replay, cross-account dispute conflict, minimized audit, and no implied organization relationship or response capability |
-| 3B2–3B3 | In progress | Duplicate-safe provider claim/bootstrap, dispute handling, and explicit opportunity-response capability |
+| 3B2 | Design complete; implementation next | Own-membership options, existing-relationship checks, normalized duplicate-safe readiness, atomic bootstrap rescan, non-disclosing review/dispute lifecycle, and no implied response authority |
+| 3B3 | Planned | Explicit opportunity-response capability and authorized provider inbox |
 | 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -144,6 +145,9 @@ delivered; duplicate-safe provider organization claim/bootstrap is next.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
+The provider organization claim and duplicate-review implementation contract is
+recorded in
+[`owner-provider-organization-claim-design.md`](owner-provider-organization-claim-design.md).
 
 - Add provider-connection invitations distinct from organization-membership
   invitations.

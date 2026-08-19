@@ -270,7 +270,12 @@ Active slice:
   authenticated account after limited review. Replay is idempotent, a second
   account fails closed into an identity conflict, audit excludes email/account
   identifiers, and organization relationship plus response capability remain
-  false. Phase 3B2 duplicate-safe provider claim/bootstrap is next.
+  false.
+- Phase 3B2 now has a production design contract for own-membership options,
+  existing-relationship checks, normalized duplicate-safe readiness, atomic
+  bootstrap rescan, non-disclosing duplicate review, dispute lifecycle, and
+  explicit separation from response capability. Slice 3B2a claim assessment is
+  the next implementation unit.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
