@@ -247,6 +247,33 @@ pub struct OpenOwnerProviderInboxRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerProviderOpportunityResponseRequest {
+    pub token: String,
+    pub capability_id: String,
+    pub expected_capability_version: i64,
+    pub action: String,
+    pub response_code: String,
+    pub block_future_invitations: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderOpportunityResponseRecord {
+    pub response_id: String,
+    pub capability_id: String,
+    pub invitation_id: String,
+    pub organization_id: String,
+    pub action: String,
+    pub response_code: String,
+    pub status: String,
+    pub assigned_function: Option<String>,
+    pub capability_status: String,
+    pub capability_version: i64,
+    pub opportunity_response_capability: bool,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderResponseCapabilityRecord {
     pub capability_id: String,
     pub invitation_id: String,
@@ -530,6 +557,16 @@ pub enum OwnerProviderInboxResult {
     Closed(OwnerProviderInboxEntry),
     NotFound,
     InvalidState,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderOpportunityResponseResult {
+    Recorded(OwnerProviderOpportunityResponseRecord),
+    Replayed(OwnerProviderOpportunityResponseRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
     Unavailable,
 }
 
@@ -2364,6 +2401,56 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn create_provider_opportunity_response(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        request: CreateOwnerProviderOpportunityResponseRequest,
+    ) -> OwnerProviderOpportunityResponseResult {
+        if !validate_provider_opportunity_response_request(&request) {
+            return OwnerProviderOpportunityResponseResult::InvalidState;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderOpportunityResponseResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match create_owner_provider_opportunity_response(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            request,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedOpportunityResponseOutcome::Recorded(response)) => {
+                OwnerProviderOpportunityResponseResult::Recorded(response)
+            }
+            Ok(PersistedOpportunityResponseOutcome::Replayed(response)) => {
+                OwnerProviderOpportunityResponseResult::Replayed(response)
+            }
+            Ok(PersistedOpportunityResponseOutcome::NotFound) => {
+                OwnerProviderOpportunityResponseResult::NotFound
+            }
+            Ok(PersistedOpportunityResponseOutcome::InvalidState) => {
+                OwnerProviderOpportunityResponseResult::InvalidState
+            }
+            Ok(PersistedOpportunityResponseOutcome::Conflict) => {
+                OwnerProviderOpportunityResponseResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderOpportunityResponseResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider opportunity response failed");
+                OwnerProviderOpportunityResponseResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -2683,6 +2770,49 @@ pub fn validate_provider_inbox_request(request: &OpenOwnerProviderInboxRequest) 
     validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
         token: request.token.clone(),
     })
+}
+
+pub fn validate_provider_opportunity_response_request(
+    request: &CreateOwnerProviderOpportunityResponseRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    let response_valid = match request.action.as_str() {
+        "preliminary_question" => {
+            matches!(
+                request.response_code.as_str(),
+                "service_fit" | "coarse_area_fit" | "cadence_support" | "assessment_method"
+            ) && !request.block_future_invitations
+        }
+        "express_interest" => {
+            request.response_code == "ready_for_owner_disclosure"
+                && !request.block_future_invitations
+        }
+        "decline" => {
+            matches!(
+                request.response_code.as_str(),
+                "service_area_mismatch"
+                    | "capacity_unavailable"
+                    | "service_fit_mismatch"
+                    | "not_accepting_assessments"
+            ) && !request.block_future_invitations
+        }
+        "report" => {
+            matches!(
+                request.response_code.as_str(),
+                "suspicious_contact" | "unsafe_contact" | "wrong_recipient" | "impersonation"
+            ) && request.block_future_invitations
+        }
+        _ => false,
+    };
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && (8..=180).contains(&request.capability_id.trim().chars().count())
+        && request.expected_capability_version > 0
+        && response_valid
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -5805,6 +5935,14 @@ enum PersistedProviderInboxOutcome {
     InvalidState,
 }
 
+enum PersistedOpportunityResponseOutcome {
+    Recorded(OwnerProviderOpportunityResponseRecord),
+    Replayed(OwnerProviderOpportunityResponseRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
 async fn open_owner_provider_inbox(
     pool: &PgPool,
     recipient_user_id: &str,
@@ -5960,6 +6098,373 @@ async fn open_owner_provider_inbox(
             recovery_action: None,
         },
     ))
+}
+
+async fn create_owner_provider_opportunity_response(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    request: CreateOwnerProviderOpportunityResponseRequest,
+    token_hash: &str,
+) -> Result<PersistedOpportunityResponseOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay = sqlx::query(
+        "SELECT response.id, response.capability_id, response.invitation_id,
+                response.organization_id, response.action, response.response_code,
+                response.expected_capability_version,
+                response.status, response.assigned_function,
+                capability.status AS capability_status,
+                capability.version AS capability_version
+         FROM owner_provider_opportunity_responses response
+         JOIN owner_provider_invitation_response_capabilities capability
+           ON capability.id = response.capability_id
+         JOIN owner_provider_invitations invitation ON invitation.id = response.invitation_id
+         WHERE response.actor_user_id = $1 AND response.idempotency_key = $2
+           AND response.capability_id = $3 AND invitation.token_hash = $4
+           AND LOWER(invitation.recipient_email) = LOWER($5)",
+    )
+    .bind(recipient_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(request.capability_id.trim())
+    .bind(token_hash)
+    .bind(verified_email)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(row) = replay {
+        let exact_replay = row.get::<String, _>("action") == request.action
+            && row.get::<String, _>("response_code") == request.response_code
+            && row.get::<i64, _>("expected_capability_version")
+                == request.expected_capability_version;
+        if !exact_replay {
+            transaction.rollback().await?;
+            return Ok(PersistedOpportunityResponseOutcome::Conflict);
+        }
+        transaction.commit().await?;
+        return Ok(PersistedOpportunityResponseOutcome::Replayed(
+            owner_provider_opportunity_response_from_row(&row, true),
+        ));
+    }
+
+    let eligibility = sqlx::query(
+        "SELECT capability.id AS capability_id, capability.invitation_id,
+                capability.organization_id, capability.owner_user_id,
+                capability.property_id, capability.status AS capability_status,
+                capability.version AS capability_version,
+                capability.expires_at <= NOW() AS capability_expired,
+                capability.allowed_actions,
+                invitation.recipient_email, invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS invitation_expired,
+                recipient_check.recipient_user_id,
+                recipient_check.verified_email_fingerprint,
+                recipient_check.status AS recipient_check_status,
+                claim.status AS claim_status,
+                organization.status AS organization_status,
+                organization.organization_type,
+                EXISTS (
+                    SELECT 1 FROM organization_memberships membership
+                    WHERE membership.organization_id = capability.organization_id
+                      AND membership.user_id = $4 AND membership.status = 'active'
+                ) AS active_membership
+         FROM owner_provider_invitation_response_capabilities capability
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = capability.invitation_id
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.id = capability.recipient_check_id
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.id = capability.claim_id
+         JOIN organizations organization ON organization.id = capability.organization_id
+         WHERE capability.id = $1 AND invitation.token_hash = $2
+           AND LOWER(invitation.recipient_email) = LOWER($3)
+           AND capability.actor_user_id = $4
+         FOR UPDATE OF capability, invitation",
+    )
+    .bind(request.capability_id.trim())
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(recipient_user_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(eligibility) = eligibility else {
+        transaction.rollback().await?;
+        return Ok(PersistedOpportunityResponseOutcome::NotFound);
+    };
+    let recipient_checked = eligibility.get::<String, _>("recipient_user_id") == recipient_user_id
+        && eligibility.get::<String, _>("verified_email_fingerprint") == verified_email_fingerprint
+        && eligibility.get::<String, _>("recipient_check_status") == "checked";
+    if !recipient_checked {
+        transaction.rollback().await?;
+        return Ok(PersistedOpportunityResponseOutcome::InvalidState);
+    }
+    if eligibility.get::<i64, _>("capability_version") != request.expected_capability_version {
+        transaction.rollback().await?;
+        return Ok(PersistedOpportunityResponseOutcome::Conflict);
+    }
+    let invitation_status: String = eligibility.get("invitation_status");
+    let invitation_expired: bool = eligibility.get("invitation_expired");
+    let capability_status: String = eligibility.get("capability_status");
+    let capability_expired: bool = eligibility.get("capability_expired");
+    let claim_status: String = eligibility.get("claim_status");
+    let allowed_actions: Vec<String> = eligibility.get("allowed_actions");
+    let relationship_active = matches!(claim_status.as_str(), "relationship_checked" | "claimed");
+    let organization_active = eligibility.get::<String, _>("organization_status") == "active"
+        && eligibility.get::<String, _>("organization_type") == "yard_care_company"
+        && eligibility.get::<bool, _>("active_membership");
+    let effective = invitation_status == "opened"
+        && !invitation_expired
+        && capability_status == "active"
+        && !capability_expired
+        && relationship_active
+        && organization_active
+        && allowed_actions
+            .iter()
+            .any(|action| action == &request.action);
+    if !effective {
+        if capability_status == "active" {
+            let (next_status, reason) = if invitation_expired || capability_expired {
+                ("expired", "capability_expired")
+            } else if invitation_status != "opened" {
+                ("revoked", "invitation_closed")
+            } else {
+                ("suspended", "provider_relationship_inactive")
+            };
+            reconcile_owner_provider_response_capability(
+                &mut transaction,
+                &eligibility.get::<String, _>("invitation_id"),
+                &eligibility.get::<String, _>("owner_user_id"),
+                &eligibility.get::<String, _>("property_id"),
+                next_status,
+                reason,
+            )
+            .await?;
+            transaction.commit().await?;
+        } else {
+            transaction.rollback().await?;
+        }
+        return Ok(PersistedOpportunityResponseOutcome::InvalidState);
+    }
+    let duplicate_action = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_opportunity_responses
+             WHERE capability_id = $1 AND action = $2
+         )",
+    )
+    .bind(request.capability_id.trim())
+    .bind(&request.action)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if duplicate_action {
+        transaction.rollback().await?;
+        return Ok(PersistedOpportunityResponseOutcome::Conflict);
+    }
+
+    let invitation_id: String = eligibility.get("invitation_id");
+    let organization_id: String = eligibility.get("organization_id");
+    let owner_user_id: String = eligibility.get("owner_user_id");
+    let property_id: String = eligibility.get("property_id");
+    let response_id = format!("owner_provider_response_{}", Uuid::new_v4().simple());
+    let assigned_function = (request.action == "report").then_some("trust_and_safety");
+    let response_status = if request.action == "report" {
+        "routed"
+    } else {
+        "recorded"
+    };
+    sqlx::query(
+        "INSERT INTO owner_provider_opportunity_responses (
+             id, capability_id, invitation_id, organization_id, actor_user_id,
+             action, response_code, expected_capability_version,
+             assigned_function, status, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+    )
+    .bind(&response_id)
+    .bind(request.capability_id.trim())
+    .bind(&invitation_id)
+    .bind(&organization_id)
+    .bind(recipient_user_id)
+    .bind(&request.action)
+    .bind(&request.response_code)
+    .bind(request.expected_capability_version)
+    .bind(assigned_function)
+    .bind(response_status)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+
+    if request.action == "decline" {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'declined', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        reconcile_owner_provider_response_capability(
+            &mut transaction,
+            &invitation_id,
+            &owner_user_id,
+            &property_id,
+            "declined",
+            "provider_declined_limited_request",
+        )
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_declined', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+    } else if request.action == "report" {
+        let existing_report = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(
+                 SELECT 1 FROM owner_provider_invitation_abuse_reports
+                 WHERE invitation_id = $1 AND reporter_user_id = $2
+             )",
+        )
+        .bind(&invitation_id)
+        .bind(recipient_user_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+        if existing_report {
+            transaction.rollback().await?;
+            return Ok(PersistedOpportunityResponseOutcome::Conflict);
+        }
+        let recipient_email: String = eligibility.get("recipient_email");
+        let report_id = format!("owner_provider_abuse_{}", Uuid::new_v4().simple());
+        let severity = abuse_report_severity(&request.response_code);
+        sqlx::query(
+            "INSERT INTO owner_provider_invitation_abuse_reports (
+                 id, invitation_id, invitation_reference_hash, reporter_user_id,
+                 reporter_email_fingerprint, category, customer_safe_description,
+                 block_future_invitations, severity, assigned_function, status,
+                 idempotency_key
+             ) VALUES ($1, $2, $3, $4, $5, $6, '', TRUE, $7,
+                       'trust_and_safety', 'submitted', $8)",
+        )
+        .bind(&report_id)
+        .bind(&invitation_id)
+        .bind(format!("{:x}", Sha256::digest(invitation_id.as_bytes())))
+        .bind(recipient_user_id)
+        .bind(email_fingerprint(&recipient_email))
+        .bind(&request.response_code)
+        .bind(severity)
+        .bind(request.idempotency_key.trim())
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'opted_out', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE owner_provider_invitation_delivery_attempts
+             SET status = 'suppressed', failure_code = 'abuse_block', completed_at = NOW()
+             WHERE invitation_id = $1 AND status = 'pending'",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_provider_recipient_suppressions (
+                 recipient_email_fingerprint, recipient_email, reason, source_invitation_id
+             ) VALUES ($1, $2, 'abuse_block', $3)
+             ON CONFLICT (recipient_email_fingerprint) DO NOTHING",
+        )
+        .bind(email_fingerprint(&recipient_email))
+        .bind(&recipient_email)
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        reconcile_owner_provider_response_capability(
+            &mut transaction,
+            &invitation_id,
+            &owner_user_id,
+            &property_id,
+            "revoked",
+            "provider_safety_reported",
+        )
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_abuse_reported', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({
+            "invitation_id": invitation_id,
+            "report_id": report_id,
+            "severity": severity,
+            "blocked": true,
+        }))
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_invitation_opportunity_response_recorded', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(&owner_user_id)
+    .bind(&property_id)
+    .bind(serde_json::json!({
+        "invitation_id": invitation_id,
+        "capability_id": request.capability_id.trim(),
+        "response_id": response_id,
+        "action": request.action,
+        "status": response_status,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    let row = sqlx::query(
+        "SELECT response.id, response.capability_id, response.invitation_id,
+                response.organization_id, response.action, response.response_code,
+                response.status, response.assigned_function,
+                capability.status AS capability_status,
+                capability.version AS capability_version
+         FROM owner_provider_opportunity_responses response
+         JOIN owner_provider_invitation_response_capabilities capability
+           ON capability.id = response.capability_id
+         WHERE response.id = $1",
+    )
+    .bind(&response_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedOpportunityResponseOutcome::Recorded(
+        owner_provider_opportunity_response_from_row(&row, true),
+    ))
+}
+
+fn owner_provider_opportunity_response_from_row(
+    row: &sqlx::postgres::PgRow,
+    persisted: bool,
+) -> OwnerProviderOpportunityResponseRecord {
+    let capability_status: String = row.get("capability_status");
+    OwnerProviderOpportunityResponseRecord {
+        response_id: row.get("id"),
+        capability_id: row.get("capability_id"),
+        invitation_id: row.get("invitation_id"),
+        organization_id: row.get("organization_id"),
+        action: row.get("action"),
+        response_code: row.get("response_code"),
+        status: row.get("status"),
+        assigned_function: row.get("assigned_function"),
+        capability_status: capability_status.clone(),
+        capability_version: row.get("capability_version"),
+        opportunity_response_capability: capability_status == "active",
+        persisted,
+    }
 }
 
 async fn report_owner_provider_invitation_abuse(
@@ -6481,6 +6986,47 @@ mod tests {
         assert!(validate_provider_inbox_request(
             &OpenOwnerProviderInboxRequest {
                 token: new_owner_provider_invitation_token(),
+            }
+        ));
+        let opportunity_response = CreateOwnerProviderOpportunityResponseRequest {
+            token: new_owner_provider_invitation_token(),
+            capability_id: "owner_provider_capability_001".to_string(),
+            expected_capability_version: 1,
+            action: "preliminary_question".to_string(),
+            response_code: "service_fit".to_string(),
+            block_future_invitations: false,
+            idempotency_key: "provider-opportunity-response-001".to_string(),
+        };
+        assert!(validate_provider_opportunity_response_request(
+            &opportunity_response
+        ));
+        for (action, response_code, block_future_invitations) in [
+            ("express_interest", "ready_for_owner_disclosure", false),
+            ("decline", "capacity_unavailable", false),
+            ("report", "unsafe_contact", true),
+        ] {
+            assert!(validate_provider_opportunity_response_request(
+                &CreateOwnerProviderOpportunityResponseRequest {
+                    action: action.to_string(),
+                    response_code: response_code.to_string(),
+                    block_future_invitations,
+                    ..opportunity_response.clone()
+                }
+            ));
+        }
+        assert!(!validate_provider_opportunity_response_request(
+            &CreateOwnerProviderOpportunityResponseRequest {
+                action: "submit_proposal".to_string(),
+                response_code: "ready_for_owner_disclosure".to_string(),
+                ..opportunity_response.clone()
+            }
+        ));
+        assert!(!validate_provider_opportunity_response_request(
+            &CreateOwnerProviderOpportunityResponseRequest {
+                action: "report".to_string(),
+                response_code: "unsafe_contact".to_string(),
+                block_future_invitations: false,
+                ..opportunity_response
             }
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {

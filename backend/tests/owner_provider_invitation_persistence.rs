@@ -1,18 +1,20 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
     CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderInboxRequest,
-    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
-    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
-    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderInboxResult,
+    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
+    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
     OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityRecord,
+    OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -105,6 +107,61 @@ async fn ready_checked_invitation(
         OwnerProviderInvitationRecipientCheckResult::Checked(_)
     ));
     invitation
+}
+
+async fn authorized_response_capability(
+    repository: &OwnerAcquisitionRepository,
+    owner_user_id: &str,
+    property_id: &str,
+    recipient_email: &str,
+    recipient_user_id: &str,
+    key_suffix: &str,
+) -> (
+    OwnerProviderInvitationCreation,
+    OwnerProviderResponseCapabilityRecord,
+) {
+    let invitation = ready_checked_invitation(
+        repository,
+        owner_user_id,
+        property_id,
+        recipient_email,
+        recipient_user_id,
+        &format!("provider-response-invite-{key_suffix}"),
+    )
+    .await;
+    let OwnerProviderOrganizationClaimResult::Created(claim) = repository
+        .create_provider_organization_claim(
+            recipient_user_id,
+            recipient_email,
+            CreateOwnerProviderOrganizationClaimRequest {
+                token: invitation.delivery_token().to_string(),
+                claim_kind: "existing_relationship".to_string(),
+                organization_id: Some("org_provider_claim_owned".to_string()),
+                provider_display_name: None,
+                authority_attested: true,
+                idempotency_key: format!("provider-response-claim-{key_suffix}"),
+            },
+        )
+        .await
+    else {
+        panic!("terminal response provider relationship should be checked");
+    };
+    let OwnerProviderResponseCapabilityResult::Issued(capability) = repository
+        .issue_provider_response_capability(
+            recipient_user_id,
+            recipient_email,
+            &claim.claim_id,
+            IssueOwnerProviderResponseCapabilityRequest {
+                token: invitation.delivery_token().to_string(),
+                withheld_categories_acknowledged: true,
+                idempotency_key: format!("provider-response-capability-{key_suffix}"),
+            },
+        )
+        .await
+    else {
+        panic!("terminal response capability should be issued");
+    };
+    (invitation, capability)
 }
 
 #[tokio::test]
@@ -303,6 +360,24 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .create_provider_opportunity_response(
+                "recipient-unavailable",
+                "provider@example.com",
+                CreateOwnerProviderOpportunityResponseRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    capability_id: "owner_provider_capability_unavailable".to_string(),
+                    expected_capability_version: 1,
+                    action: "express_interest".to_string(),
+                    response_code: "ready_for_owner_disclosure".to_string(),
+                    block_future_invitations: false,
+                    idempotency_key: "response-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderOpportunityResponseResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .retry_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -386,6 +461,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let suppressed_fingerprint = format!("{:x}", Sha256::digest(suppressed_recipient.as_bytes()));
     let opt_out_fingerprint = format!("{:x}", Sha256::digest(opt_out_recipient.as_bytes()));
     let abuse_fingerprint = format!("{:x}", Sha256::digest(abuse_recipient.as_bytes()));
+    let recipient_fingerprint = format!("{:x}", Sha256::digest(recipient.as_bytes()));
     sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
         .bind(abuse_reporter)
         .execute(&pool)
@@ -399,6 +475,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         suppressed_fingerprint.clone(),
         opt_out_fingerprint.clone(),
         abuse_fingerprint.clone(),
+        recipient_fingerprint.clone(),
     ])
     .execute(&pool)
     .await
@@ -934,6 +1011,115 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!inbox_json.contains(recipient));
     assert!(!inbox_json.contains("421 Private Canyon Road"));
     assert!(!inbox_json.contains("0199"));
+    let question_request = CreateOwnerProviderOpportunityResponseRequest {
+        token: retry.delivery_token().to_string(),
+        capability_id: capability.capability_id.clone(),
+        expected_capability_version: capability.version,
+        action: "preliminary_question".to_string(),
+        response_code: "assessment_method".to_string(),
+        block_future_invitations: false,
+        idempotency_key: "provider-opportunity-question-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_provider_opportunity_response(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                question_request.clone(),
+            )
+            .await,
+        OwnerProviderOpportunityResponseResult::NotFound
+    ));
+    let OwnerProviderOpportunityResponseResult::Recorded(question) = repository
+        .create_provider_opportunity_response(
+            "recipient-user-1",
+            recipient,
+            question_request.clone(),
+        )
+        .await
+    else {
+        panic!("authorized provider question should be recorded");
+    };
+    assert_eq!(question.action, "preliminary_question");
+    assert_eq!(question.response_code, "assessment_method");
+    assert_eq!(question.status, "recorded");
+    assert!(question.assigned_function.is_none());
+    assert_eq!(question.capability_status, "active");
+    assert_eq!(question.capability_version, capability.version);
+    assert!(question.opportunity_response_capability);
+    assert!(matches!(
+        repository
+            .create_provider_opportunity_response(
+                "recipient-user-1",
+                recipient,
+                question_request.clone(),
+            )
+            .await,
+        OwnerProviderOpportunityResponseResult::Replayed(replayed)
+            if replayed.response_id == question.response_id
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_opportunity_response(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderOpportunityResponseRequest {
+                    response_code: "service_fit".to_string(),
+                    ..question_request
+                },
+            )
+            .await,
+        OwnerProviderOpportunityResponseResult::Conflict
+    ));
+    let interest_request = CreateOwnerProviderOpportunityResponseRequest {
+        token: retry.delivery_token().to_string(),
+        capability_id: capability.capability_id.clone(),
+        expected_capability_version: capability.version,
+        action: "express_interest".to_string(),
+        response_code: "ready_for_owner_disclosure".to_string(),
+        block_future_invitations: false,
+        idempotency_key: "provider-opportunity-interest-001".to_string(),
+    };
+    let OwnerProviderOpportunityResponseResult::Recorded(interest) = repository
+        .create_provider_opportunity_response("recipient-user-1", recipient, interest_request)
+        .await
+    else {
+        panic!("authorized provider interest should be recorded");
+    };
+    assert_eq!(interest.action, "express_interest");
+    assert!(interest.opportunity_response_capability);
+    assert_eq!(interest.capability_version, capability.version);
+    assert!(matches!(
+        repository
+            .create_provider_opportunity_response(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderOpportunityResponseRequest {
+                    token: retry.delivery_token().to_string(),
+                    capability_id: capability.capability_id.clone(),
+                    expected_capability_version: capability.version,
+                    action: "express_interest".to_string(),
+                    response_code: "ready_for_owner_disclosure".to_string(),
+                    block_future_invitations: false,
+                    idempotency_key: "provider-opportunity-interest-002".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderOpportunityResponseResult::Conflict
+    ));
+    let response_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_invitation_opportunity_response_recorded'
+           AND event_data->>'response_id' = $1",
+    )
+    .bind(&question.response_id)
+    .fetch_one(&pool)
+    .await
+    .expect("provider response audit should load")
+    .to_string();
+    assert!(!response_audit.contains(recipient));
+    assert!(!response_audit.contains("421 Private Canyon Road"));
+    assert!(!response_audit.contains("0199"));
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
@@ -1712,6 +1898,118 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationCreateResult::Created(_)
     ));
 
+    let (decline_invitation, decline_capability) = authorized_response_capability(
+        &repository,
+        owner_a,
+        &property.property_id,
+        recipient,
+        "recipient-user-1",
+        "decline-001",
+    )
+    .await;
+    let OwnerProviderOpportunityResponseResult::Recorded(decline) = repository
+        .create_provider_opportunity_response(
+            "recipient-user-1",
+            recipient,
+            CreateOwnerProviderOpportunityResponseRequest {
+                token: decline_invitation.delivery_token().to_string(),
+                capability_id: decline_capability.capability_id.clone(),
+                expected_capability_version: decline_capability.version,
+                action: "decline".to_string(),
+                response_code: "capacity_unavailable".to_string(),
+                block_future_invitations: false,
+                idempotency_key: "provider-opportunity-decline-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("authorized decline should be recorded");
+    };
+    assert_eq!(decline.capability_status, "declined");
+    assert_eq!(decline.capability_version, decline_capability.version + 1);
+    assert!(!decline.opportunity_response_capability);
+    assert_eq!(
+        sqlx::query_scalar::<_, String>(
+            "SELECT status FROM owner_provider_invitations WHERE id = $1",
+        )
+        .bind(&decline_invitation.invitation.invitation_id)
+        .fetch_one(&pool)
+        .await
+        .expect("declined invitation status should load"),
+        "declined"
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_provider_recipient_suppressions
+             WHERE recipient_email_fingerprint = $1",
+        )
+        .bind(&recipient_fingerprint)
+        .fetch_one(&pool)
+        .await
+        .expect("decline suppression count should load"),
+        0
+    );
+
+    let (report_invitation, report_capability) = authorized_response_capability(
+        &repository,
+        owner_a,
+        &property.property_id,
+        recipient,
+        "recipient-user-1",
+        "report-001",
+    )
+    .await;
+    let OwnerProviderOpportunityResponseResult::Recorded(report) = repository
+        .create_provider_opportunity_response(
+            "recipient-user-1",
+            recipient,
+            CreateOwnerProviderOpportunityResponseRequest {
+                token: report_invitation.delivery_token().to_string(),
+                capability_id: report_capability.capability_id.clone(),
+                expected_capability_version: report_capability.version,
+                action: "report".to_string(),
+                response_code: "unsafe_contact".to_string(),
+                block_future_invitations: true,
+                idempotency_key: "provider-opportunity-report-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("authorized safety report should be routed");
+    };
+    assert_eq!(report.status, "routed");
+    assert_eq!(
+        report.assigned_function.as_deref(),
+        Some("trust_and_safety")
+    );
+    assert_eq!(report.capability_status, "revoked");
+    assert!(!report.opportunity_response_capability);
+    let report_state = sqlx::query(
+        "SELECT invitation.status, suppression.reason, abuse.category,
+                abuse.customer_safe_description, abuse.assigned_function
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_recipient_suppressions suppression
+           ON suppression.source_invitation_id = invitation.id
+         JOIN owner_provider_invitation_abuse_reports abuse
+           ON abuse.invitation_id = invitation.id
+         WHERE invitation.id = $1",
+    )
+    .bind(&report_invitation.invitation.invitation_id)
+    .fetch_one(&pool)
+    .await
+    .expect("routed safety response state should load");
+    assert_eq!(report_state.get::<String, _>("status"), "opted_out");
+    assert_eq!(report_state.get::<String, _>("reason"), "abuse_block");
+    assert_eq!(report_state.get::<String, _>("category"), "unsafe_contact");
+    assert_eq!(
+        report_state.get::<String, _>("customer_safe_description"),
+        ""
+    );
+    assert_eq!(
+        report_state.get::<String, _>("assigned_function"),
+        "trust_and_safety"
+    );
+
     let OwnerProviderInvitationCreateResult::Created(expiring) = repository
         .create_provider_invitation(
             owner_a,
@@ -1946,6 +2244,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         suppressed_fingerprint,
         opt_out_fingerprint,
         abuse_fingerprint,
+        recipient_fingerprint,
     ])
     .execute(&pool)
     .await

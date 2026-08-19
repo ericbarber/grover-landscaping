@@ -42,8 +42,9 @@ The approved experience is defined by:
 | 3B2c2c | Delivered | Support-only identifier-free queue/SLA aggregates, outage-distinct handling, oldest-age signal, alert/escalation guidance, recovery/rollback, and live validation checklist |
 | 3B3a | Delivered | Transactionally issued response capability with checked recipient, eligible claim, active yard-care organization/membership, explicit withholding acknowledgement, immutable brief/invitation scope, four fixed actions, replay/conflict/outage handling, and invitation reconciliation |
 | 3B3b | Delivered | Protected body-token inbox with effective recipient/capability/invitation/claim/organization/membership/expiry rechecks, limited snapshot, explicit withholding, privacy-safe status-only closure, and reconciliation |
-| 3B3c | Implementation next | Bounded preliminary question, interest, decline, and report writes with controlled content and minimized audit |
-| 3C–3E | Planned | Bounded responses/read models, grants/receipts/revocation, and pilot hardening |
+| 3B3c | Delivered | Transactionally authorized preliminary question, interest, decline, and safety-report writes with controlled codes, replay/version protection, explicit terminal behavior, and minimized audit |
+| 3C | Implementation next | Owner/provider progress read models derived from bounded response and invitation facts without expanding visibility |
+| 3D–3E | Planned | Grants/receipts/revocation and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles
@@ -149,7 +150,8 @@ delivery lifecycle and recipient opt-out/report safety boundary are delivered.
 Adapter authentication remains an external integration decision, while
 the limited recipient-safe entry, authenticated recipient binding,
 duplicate-safe claim assessment, and atomic organization bootstrap are
-delivered; duplicate/dispute operations are next.
+delivered, and the bounded response-capability sequence is complete. Separate
+owner/provider progress read models are next.
 The precise interaction, visibility, authority, recovery, and receipt contract is
 recorded in the
 [`yard-owner-known-provider-connection-handoff.md`](../design/review/yard-owner-known-provider-connection-handoff.md).
@@ -250,11 +252,10 @@ Phase 3 should proceed in these implementation slices:
    are delivered, together with verified-recipient opt-out, block/report,
    durable suppression, and minimized case intake. Authenticated delivery
    integration remains pending; recipient-safe invitation entry is next.
-2. Complete the Provider Operations duplicate/dispute workflow, then add the
-   existing-provider inbox and explicit opportunity-response capability. Claim
-   assessment, own-membership selection, and atomic bootstrap are delivered.
-3. Provider question/interest/decline/report writes and owner/provider progress
-   read models with fail-closed authorization.
+2. The Provider Operations duplicate/dispute workflow, existing-provider inbox,
+   and explicit opportunity-response capability are delivered.
+3. Provider question/interest/decline/report writes are delivered; build the
+   owner/provider progress read models with fail-closed authorization next.
 4. Versioned provider-specific grants and approved/withheld disclosure receipts,
    followed by revocation reconciliation and support views.
 5. Pilot hardening: idempotency, stale-tab conflict, monitoring, runbooks,

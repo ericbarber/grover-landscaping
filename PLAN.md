@@ -328,7 +328,17 @@ Active slice:
   read. Effective access returns only the approved limited snapshot, own
   organization context, four actions, and withheld categories. Changed or
   closed authority is reconciled and returns status-only recovery with no owner,
-  organization, or action data. Phase 3B3c bounded response writes are next.
+  organization, or action data.
+- Phase 3B3c is delivered. The verified provider may submit only one controlled
+  preliminary question, express assessment interest, decline this invitation,
+  or route a safety report under the active capability. Every write rechecks
+  mailbox, invitation, capability version/expiry, claim, organization, active
+  membership, and allowed action in one transaction. Questions and interest
+  preserve the bounded capability; decline closes only this invitation; report
+  revokes authority, opts out and suppresses the recipient, and creates a
+  minimized Trust & Safety case. Replay, stale version, duplicate action,
+  changed authority, wrong mailbox, and outage remain distinct. Phase 3B3 is
+  complete; Phase 3C owner/provider progress read models are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

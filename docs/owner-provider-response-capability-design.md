@@ -135,7 +135,15 @@ and current lifecycle checks. Capability identifiers are not bearer tokens.
 1. **3B3a — capability issuance (delivered):** schema, prerequisite transaction,
    acknowledgement, idempotency, expiry, isolation, reconciliation flags, and
    outage/concurrency coverage.
-2. **3B3b — provider inbox (delivered):** limited authorized entry, progress/recovery states,
-   withheld-category clarity, and responsive production UI.
-3. **3B3c — bounded actions:** preliminary question, interest, decline, report,
-   controlled content, idempotency, lifecycle closure, and minimized audit.
+2. **3B3b — provider inbox (delivered):** limited authorized entry,
+   progress/recovery states, withheld-category clarity, and a production API
+   contract ready for interface adoption.
+3. **3B3c — bounded actions (delivered):** preliminary question, interest,
+   decline, and report use controlled codes, actor-scoped idempotency,
+   capability-version checks, transactional authority rechecks, action-level
+   uniqueness, explicit terminal behavior, and minimized audit. No action can
+   submit pricing, a proposal, assignment, work release, or field work.
+
+Phase 3B3 is complete. Phase 3C must project these append-only response and
+invitation facts into separate owner and provider progress read models without
+expanding either party's visibility.

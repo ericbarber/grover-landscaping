@@ -224,12 +224,36 @@ actor's linked organization, four actions, and withheld categories. A changed
 or closed prerequisite reconciles active capability state and returns `410`
 with status/recovery only; no owner, organization, yard, or action data remains.
 
+`POST /provider-opportunity-responses` requires the same authenticated checked
+recipient and matching verified mailbox plus the body token, capability ID,
+current capability version, one allowed action, one controlled response code,
+and an idempotency key. It rechecks the complete effective-authority chain in a
+single transaction.
+
+- `preliminary_question` records only `service_fit`, `coarse_area_fit`,
+  `cadence_support`, or `assessment_method`; it carries no free text and leaves
+  the capability active.
+- `express_interest` records `ready_for_owner_disclosure`; it requests the next
+  owner decision and does not claim work or authorize disclosure.
+- `decline` records a controlled fit/capacity reason, closes this invitation,
+  and declines its capability without suppressing future invitations.
+- `report` requires a controlled safety category and affirmative future block;
+  it routes a minimized Trust & Safety case, opts out the invitation, suppresses
+  future invitations to the recipient, and revokes the capability.
+
+Success is `201`; exact replay is `200`; wrong actor/mailbox/token is `404`;
+stale version, duplicate action, or changed authority is `409`; unavailable
+persistence is `503`. General audit contains response/action identifiers and
+state only, never recipient email, response evidence, private address, photos,
+access notes, or owner contact.
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
-2. Complete Provider Operations duplicate/dispute review; claim assessment and
-   fingerprint-locked atomic bootstrap are delivered.
-3. Connect the checked recipient to the separately evaluated relationship.
-4. Add explicit opportunity-response capabilities before provider responses.
+2. Build the owner/provider progress read models from the delivered response
+   facts without expanding pre-disclosure visibility.
+3. Add versioned owner-approved disclosure grants and immutable receipts.
+4. Select and validate customer-safe preliminary-question routing before adding
+   any free-form conversation surface.
 5. Add Trust & Safety queue authorization, assignment, disposition, evidence,
    retention, and monitoring before pilot launch.

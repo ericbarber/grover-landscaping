@@ -106,7 +106,11 @@ relationship, organization, membership, acknowledgement, scope, expiry,
 idempotency, and invitation-reconciliation checks. The authorized provider inbox
 is now delivered with effective authority rechecks, limited snapshot and
 withholding clarity, and privacy-safe status-only recovery. Bounded response
-writes are next.
+writes are now delivered with controlled codes, capability-version and
+effective-authority checks, replay protection, distinct non-terminal and
+terminal behavior, durable suppression for safety reports, and minimized audit.
+Phase 3B3 is complete; privacy-preserving owner/provider progress read models
+are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

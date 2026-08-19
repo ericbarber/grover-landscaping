@@ -89,6 +89,7 @@ use grover_landscaping_api::{
         validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
+        validate_provider_opportunity_response_request,
         validate_provider_organization_bootstrap_request,
         validate_provider_organization_claim_appeal_request,
         validate_provider_organization_claim_request,
@@ -97,15 +98,16 @@ use grover_landscaping_api::{
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
         CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-        CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderInboxRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+        OwnerProviderClaimReviewMetricsResult, OwnerProviderInboxResult,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
         OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
         OwnerProviderOrganizationOptionsResult, OwnerProviderResponseCapabilityResult,
         OwnerReadResult, PreviewOwnerProviderInvitationRequest,
@@ -724,6 +726,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/inbox",
             post(open_owner_provider_inbox),
+        )
+        .route(
+            "/provider-opportunity-responses",
+            post(create_owner_provider_opportunity_response),
         )
         .route(
             "/provider-invitation-organization-claims/{claim_id}/bootstrap",
@@ -2388,6 +2394,76 @@ async fn open_owner_provider_inbox(
             "provider_inbox_unavailable",
             "The provider inbox could not be loaded. No additional yard information was shown.",
         ),
+    }
+}
+
+async fn create_owner_provider_opportunity_response(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateOwnerProviderOpportunityResponseRequest>,
+) -> Response {
+    if !validate_provider_opportunity_response_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_opportunity_response_invalid",
+                message:
+                    "Choose one available response and its supported reason before continuing."
+                        .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before responding to this request."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_opportunity_response(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderOpportunityResponseResult::Recorded(response) => {
+            (StatusCode::CREATED, Json(response)).into_response()
+        }
+        OwnerProviderOpportunityResponseResult::Replayed(response) => {
+            Json(response).into_response()
+        }
+        OwnerProviderOpportunityResponseResult::NotFound => resource_not_found_response(
+            "provider_opportunity_response_not_found",
+            "The invitation or response authority is not available to this verified account.",
+        ),
+        OwnerProviderOpportunityResponseResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_opportunity_response_not_ready",
+                message: "This response path is no longer active. Reload the provider inbox before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOpportunityResponseResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_opportunity_response_conflict",
+                message: "This response was already recorded or the response path changed. Reload the provider inbox."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderOpportunityResponseResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_opportunity_response_unavailable",
+                "The response could not be confirmed. Please retry before leaving this page.",
+            )
+        }
     }
 }
 
