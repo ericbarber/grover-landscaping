@@ -444,6 +444,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-invitations/organization-claims"
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
+        || path == "/provider-organization-claim-review-metrics"
         || path.starts_with("/provider-organization-claim-reviews/")
         || path == "/operational-activity"
         || path == "/operational-exceptions"
@@ -531,6 +532,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path == "/provider-organization-claim-reviews" {
+        return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::GET;
+    }
+    if path == "/provider-organization-claim-review-metrics" {
         return principal.roles.contains(&AccessRole::SupportAdmin) && *method == Method::GET;
     }
     if path.starts_with("/provider-organization-claim-reviews/") && path.ends_with("/decisions") {
@@ -1713,6 +1717,7 @@ mod tests {
         let owner = principal(AccessRole::OrganizationOwner);
         for (method, path) in [
             (Method::GET, "/provider-organization-claim-reviews"),
+            (Method::GET, "/provider-organization-claim-review-metrics"),
             (
                 Method::POST,
                 "/provider-organization-claim-reviews/claim-1/decisions",

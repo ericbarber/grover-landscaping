@@ -4,13 +4,13 @@ use grover_landscaping_api::owner_acquisition::{
     CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
     OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
     OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
-    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
-    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
-    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
-    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerReadResult,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
+    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+    OwnerProviderInvitationRetryResult, OwnerProviderOrganizationBootstrapResult,
+    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -232,6 +232,12 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             })
             .await,
         OwnerProviderClaimReviewListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .provider_organization_claim_review_metrics()
+            .await,
+        OwnerProviderClaimReviewMetricsResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1378,6 +1384,39 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .expect("concurrent organization count should load"),
         1
     );
+    let overdue_claim_id = concurrent_outcomes
+        .iter()
+        .find_map(|result| match result {
+            OwnerProviderOrganizationBootstrapResult::DuplicateReview(claim) => {
+                Some(claim.claim_id.as_str())
+            }
+            _ => None,
+        })
+        .expect("one concurrent claim should require duplicate review");
+    sqlx::query(
+        "UPDATE owner_provider_invitation_organization_claims
+         SET updated_at = NOW() - INTERVAL '3 days' WHERE id = $1",
+    )
+    .bind(overdue_claim_id)
+    .execute(&pool)
+    .await
+    .expect("test review should become overdue");
+    let OwnerProviderClaimReviewMetricsResult::Loaded(review_metrics) = repository
+        .provider_organization_claim_review_metrics()
+        .await
+    else {
+        panic!("aggregate provider review metrics should load");
+    };
+    assert!(review_metrics.duplicate_review_count >= 1);
+    assert!(review_metrics.overdue_count >= 1);
+    assert!(review_metrics
+        .oldest_age_seconds
+        .is_some_and(|age| age >= 259_000));
+    assert_eq!(review_metrics.priority_count, review_metrics.disputed_count);
+    let metrics_json = serde_json::to_string(&review_metrics).expect("metrics should serialize");
+    assert!(!metrics_json.contains(overdue_claim_id));
+    assert!(!metrics_json.contains("Concurrent Mesa Care"));
+    assert!(!metrics_json.contains("sonoranyard.example"));
 
     assert!(matches!(
         repository

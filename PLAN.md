@@ -304,7 +304,13 @@ Active slice:
   excluded, ordinary dispositions cannot bypass the appeal, replay is
   idempotent, and the decision links append-only to the appeal. Approval returns
   to `bootstrap_ready` for the mandatory final duplicate rescan and still grants
-  no response capability. Aggregate monitoring and runbook validation are next.
+  no response capability.
+- Phase 3B2c2c is delivered. Support administrators have identifier-free
+  aggregate counts for duplicate, under-review, disputed, due, overdue,
+  priority, and oldest-age states; unavailable remains distinct from zero. The
+  operations runbook defines access, SLA response, escalation, outage, replay,
+  correction, rollback, and live-signoff evidence. Phase 3B2 is complete; Phase
+  3B3 bounded opportunity-response capability is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

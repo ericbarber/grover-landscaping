@@ -100,14 +100,14 @@ use grover_landscaping_api::{
         ListOwnerProviderOrganizationOptionsRequest, OptOutOwnerProviderInvitationRequest,
         OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
         OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-        OwnerProviderClaimReviewListResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-        OwnerProviderOrganizationOptionsResult, OwnerReadResult,
-        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
-        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
-        VerifyOwnerProviderInvitationRecipientRequest,
+        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOrganizationBootstrapResult,
+        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        OwnerReadResult, PreviewOwnerProviderInvitationRequest,
+        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
+        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -729,6 +729,10 @@ fn app_with_runtime(
         .route(
             "/provider-organization-claim-reviews",
             get(list_owner_provider_organization_claim_reviews),
+        )
+        .route(
+            "/provider-organization-claim-review-metrics",
+            get(owner_provider_organization_claim_review_metrics),
         )
         .route(
             "/provider-organization-claim-reviews/{claim_id}/decisions",
@@ -2273,6 +2277,24 @@ async fn list_owner_provider_organization_claim_reviews(
             "provider_claim_review_queue_unavailable",
             "Provider claim reviews could not be loaded.",
         ),
+    }
+}
+
+async fn owner_provider_organization_claim_review_metrics(
+    State(state): State<Arc<AppState>>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .provider_organization_claim_review_metrics()
+        .await
+    {
+        OwnerProviderClaimReviewMetricsResult::Loaded(metrics) => Json(metrics).into_response(),
+        OwnerProviderClaimReviewMetricsResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_claim_review_metrics_unavailable",
+                "Provider claim review metrics could not be loaded.",
+            )
+        }
     }
 }
 

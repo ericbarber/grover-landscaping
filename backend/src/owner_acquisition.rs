@@ -249,6 +249,18 @@ pub struct OwnerProviderClaimReviewRecord {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderClaimReviewMetrics {
+    pub generated_at_epoch_seconds: i64,
+    pub duplicate_review_count: i64,
+    pub under_review_count: i64,
+    pub disputed_count: i64,
+    pub due_count: i64,
+    pub overdue_count: i64,
+    pub priority_count: i64,
+    pub oldest_age_seconds: Option<i64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderOrganizationClaimRecord {
     pub claim_id: String,
     pub invitation_id: String,
@@ -426,6 +438,12 @@ pub enum OwnerProviderOrganizationBootstrapResult {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OwnerProviderClaimReviewListResult {
     Loaded(Vec<OwnerProviderClaimReviewRecord>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderClaimReviewMetricsResult {
+    Loaded(OwnerProviderClaimReviewMetrics),
     Unavailable,
 }
 
@@ -2078,6 +2096,21 @@ impl OwnerAcquisitionRepository {
             Err(error) => {
                 tracing::error!(%error, "provider organization claim review queue failed");
                 OwnerProviderClaimReviewListResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn provider_organization_claim_review_metrics(
+        &self,
+    ) -> OwnerProviderClaimReviewMetricsResult {
+        let Some(pool) = &self.pool else {
+            return OwnerProviderClaimReviewMetricsResult::Unavailable;
+        };
+        match owner_provider_organization_claim_review_metrics(pool).await {
+            Ok(metrics) => OwnerProviderClaimReviewMetricsResult::Loaded(metrics),
+            Err(error) => {
+                tracing::error!(%error, "provider organization claim review metrics failed");
+                OwnerProviderClaimReviewMetricsResult::Unavailable
             }
         }
     }
@@ -4895,6 +4928,46 @@ async fn list_owner_provider_organization_claim_reviews(
         .iter()
         .map(owner_provider_claim_review_from_row)
         .collect())
+}
+
+async fn owner_provider_organization_claim_review_metrics(
+    pool: &PgPool,
+) -> Result<OwnerProviderClaimReviewMetrics, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT
+           EXTRACT(EPOCH FROM NOW())::BIGINT AS generated_at_epoch_seconds,
+           COUNT(*) FILTER (WHERE status = 'duplicate_review')::BIGINT AS duplicate_review_count,
+           COUNT(*) FILTER (WHERE status = 'under_review')::BIGINT AS under_review_count,
+           COUNT(*) FILTER (WHERE status = 'disputed')::BIGINT AS disputed_count,
+           COUNT(*) FILTER (
+             WHERE (status = 'duplicate_review'
+                       AND updated_at <= NOW() - INTERVAL '1 day'
+                       AND updated_at > NOW() - INTERVAL '2 days')
+                OR (status = 'under_review'
+                       AND updated_at <= NOW() - INTERVAL '2 days'
+                       AND updated_at > NOW() - INTERVAL '3 days')
+           )::BIGINT AS due_count,
+           COUNT(*) FILTER (
+             WHERE (status = 'duplicate_review' AND updated_at <= NOW() - INTERVAL '2 days')
+                OR (status = 'under_review' AND updated_at <= NOW() - INTERVAL '3 days')
+           )::BIGINT AS overdue_count,
+           COUNT(*) FILTER (WHERE status = 'disputed')::BIGINT AS priority_count,
+           EXTRACT(EPOCH FROM (NOW() - MIN(updated_at)))::BIGINT AS oldest_age_seconds
+         FROM owner_provider_invitation_organization_claims
+         WHERE status IN ('duplicate_review', 'under_review', 'disputed')",
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(OwnerProviderClaimReviewMetrics {
+        generated_at_epoch_seconds: row.get("generated_at_epoch_seconds"),
+        duplicate_review_count: row.get("duplicate_review_count"),
+        under_review_count: row.get("under_review_count"),
+        disputed_count: row.get("disputed_count"),
+        due_count: row.get("due_count"),
+        overdue_count: row.get("overdue_count"),
+        priority_count: row.get("priority_count"),
+        oldest_age_seconds: row.get("oldest_age_seconds"),
+    })
 }
 
 async fn get_owner_provider_organization_claim_review(

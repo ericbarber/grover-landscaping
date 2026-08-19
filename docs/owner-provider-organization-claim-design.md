@@ -215,7 +215,8 @@ supports the exact statement.
 5. **3B2c2b — independent appeal decision (delivered):** original-rejector
    exclusion, bypass prevention, controlled approval/rejection, append-only
    linkage, and final duplicate-rescan preservation.
-6. **3B2c2c — monitoring:** aggregate overdue metrics/alerts and runbook
-   validation.
+6. **3B2c2c — monitoring (delivered):** identifier-free aggregate SLA metrics,
+   outage distinction, alert/escalation guidance, recovery, rollback, and live
+   validation checklist.
 7. **3B3 — response capability:** explicitly grant and enforce only the bounded
    opportunity-response actions after relationship checks.

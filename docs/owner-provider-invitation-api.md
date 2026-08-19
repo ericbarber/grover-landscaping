@@ -192,6 +192,15 @@ recorded the appealed rejection cannot decide it, and ordinary clear/reject
 actions are blocked while the appeal is active. Approval returns the claim to
 `bootstrap_ready`; it does not skip the final locked duplicate rescan.
 
+`GET /provider-organization-claim-review-metrics` is restricted to
+`support_admin` and returns only generated time; duplicate, under-review,
+disputed, due, overdue, and priority counts; and the oldest active age. It never
+returns claim, organization, recipient, owner, property, or evidence identifiers.
+Persistence unavailability returns `503` rather than a misleading zero queue.
+
+Operational handling is defined in
+[`provider-organization-claim-review-runbook.md`](provider-organization-claim-review-runbook.md).
+
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
