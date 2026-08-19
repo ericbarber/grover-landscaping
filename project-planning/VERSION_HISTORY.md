@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-18: Added recipient-safe known-provider invitation preview as a public body-token operation with delivered/opened gating, a minimized limited snapshot, masked recipient hint, explicit withheld categories, one-time application-open audit, false identity/organization/capability flags, pending denial, status-only terminal links, and PostgreSQL coverage.
 - 2026-08-18: Added verified-recipient invitation block/report with mailbox-matched body tokens, explicit block affirmation, controlled safety categories, minimized restricted case descriptions, S1/S2 Trust & Safety routing, idempotent replay, durable suppression, separated audit data, outage handling, and an owner/provider invitation API contract.
 - 2026-08-18: Added verified-recipient known-provider invitation opt-out with a protected body-token endpoint, invited-mailbox matching, hashed lookup, terminal transition, durable future suppression, idempotent replay, minimized audit, outage handling, and cross-email rejection.
 - 2026-08-18: Added the internal known-provider delivery lifecycle with delivered/failed outcome mapping, stale-attempt rejection, retry token rotation and hashing, per-attempt idempotency, durable batched expiry, pending-attempt closure, lifecycle audit, and PostgreSQL coverage while keeping delivery callbacks private until authenticated integration exists.

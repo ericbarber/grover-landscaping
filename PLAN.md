@@ -260,8 +260,12 @@ Active slice:
   wrong recipient through minimized, severity-routed Trust & Safety case intake.
 - Slice 3A5 requires a selected, authenticated delivery adapter/callback and
   remains an integration dependency. No pending message is represented as
-  delivered. Phase 3B1 recipient-safe limited invitation entry is the next local
-  implementation slice.
+  delivered.
+- Phase 3B1a is delivered: a public body-token preview opens only delivered
+  invitations, exposes the approved limited snapshot with a masked recipient
+  hint, records application-open once, keeps recipient/organization/capability
+  checks false, denies pending delivery, and returns status-only for closed
+  links. Phase 3B1b authenticated verified-recipient binding is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

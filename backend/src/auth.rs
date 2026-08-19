@@ -474,6 +474,7 @@ fn is_public_path(path: &str, method: &Method) -> bool {
         path,
         "/health" | "/health/live" | "/health/ready" | "/auth/config"
     ) || (*method == Method::POST && matches!(path, "/marketing-leads" | "/marketing-events"))
+        || (*method == Method::POST && path == "/provider-invitations/preview")
         || (*method == Method::GET && path.starts_with("/reports/"))
         || (path.starts_with("/shared-bids/")
             && (*method == Method::GET || *method == Method::POST))
@@ -1639,6 +1640,20 @@ mod tests {
             "/shared-bids/token-1/decision",
             &Method::POST
         ));
+    }
+
+    #[test]
+    fn provider_invitation_preview_is_a_public_body_token_operation() {
+        assert!(is_public_path(
+            "/provider-invitations/preview",
+            &Method::POST
+        ));
+        assert!(!is_public_path(
+            "/provider-invitations/preview",
+            &Method::GET
+        ));
+        assert!(is_protected_api_path("/provider-invitations/opt-out"));
+        assert!(is_protected_api_path("/provider-invitations/report"));
     }
 
     #[test]

@@ -172,6 +172,28 @@ pub struct OwnerProviderInvitationAbuseReportRecord {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct PreviewOwnerProviderInvitationRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInvitationRecipientEntry {
+    pub invitation_id: String,
+    pub status: String,
+    pub can_review_limited_request: bool,
+    pub provider_name: Option<String>,
+    pub owner_name: Option<String>,
+    pub coarse_area: Option<String>,
+    pub care_goals: Vec<String>,
+    pub cadence: Option<String>,
+    pub recipient_email_hint: Option<String>,
+    pub still_private_categories: Vec<String>,
+    pub recipient_email_checked: bool,
+    pub organization_relationship_checked: bool,
+    pub opportunity_response_capability: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderInvitationRecord {
     pub invitation_id: String,
     pub owner_user_id: String,
@@ -263,6 +285,15 @@ pub enum OwnerProviderInvitationAbuseReportResult {
     NotFound,
     Invalid,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInvitationPreviewResult {
+    Opened(OwnerProviderInvitationRecipientEntry),
+    Closed(OwnerProviderInvitationRecipientEntry),
+    NotReady,
+    NotFound,
     Unavailable,
 }
 
@@ -1438,6 +1469,70 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn preview_provider_invitation(
+        &self,
+        token: &str,
+    ) -> OwnerProviderInvitationPreviewResult {
+        let token_hash = invitation_token_hash(token);
+        let Some(pool) = &self.pool else {
+            let mut local = self.local.write().await;
+            let invitation = local
+                .provider_invitations
+                .values_mut()
+                .find(|invitation| invitation._token_hash == token_hash);
+            let Some(invitation) = invitation else {
+                return OwnerProviderInvitationPreviewResult::NotFound;
+            };
+            if invitation.record.expires_at_epoch_seconds <= current_epoch_seconds()
+                && matches!(
+                    invitation.record.status.as_str(),
+                    "pending_delivery" | "delivered" | "opened"
+                )
+            {
+                invitation.record.status = "expired".to_string();
+                invitation.record.delivery_status =
+                    if invitation.record.delivery_status == "pending" {
+                        "suppressed".to_string()
+                    } else {
+                        invitation.record.delivery_status.clone()
+                    };
+            }
+            if invitation.record.status == "pending_delivery" {
+                return OwnerProviderInvitationPreviewResult::NotReady;
+            }
+            if invitation.record.status == "delivered" {
+                invitation.record.status = "opened".to_string();
+            }
+            if invitation.record.status == "opened" {
+                return OwnerProviderInvitationPreviewResult::Opened(
+                    recipient_entry_from_invitation(&invitation.record, true),
+                );
+            }
+            return OwnerProviderInvitationPreviewResult::Closed(recipient_entry_from_invitation(
+                &invitation.record,
+                false,
+            ));
+        };
+        match preview_owner_provider_invitation(pool, &token_hash).await {
+            Ok(PersistedInvitationPreviewOutcome::Opened(invitation)) => {
+                OwnerProviderInvitationPreviewResult::Opened(invitation)
+            }
+            Ok(PersistedInvitationPreviewOutcome::Closed(invitation)) => {
+                OwnerProviderInvitationPreviewResult::Closed(invitation)
+            }
+            Ok(PersistedInvitationPreviewOutcome::NotReady) => {
+                OwnerProviderInvitationPreviewResult::NotReady
+            }
+            Ok(PersistedInvitationPreviewOutcome::NotFound) => {
+                OwnerProviderInvitationPreviewResult::NotFound
+            }
+            Err(error) => {
+                tracing::error!(%error, "owner provider invitation preview failed");
+                OwnerProviderInvitationPreviewResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -1598,11 +1693,56 @@ pub fn validate_provider_invitation_abuse_report_request(
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
+pub fn validate_provider_invitation_preview_request(
+    request: &PreviewOwnerProviderInvitationRequest,
+) -> bool {
+    validate_provider_invitation_opt_out_request(&OptOutOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    })
+}
+
 fn abuse_report_severity(category: &str) -> &'static str {
     if matches!(category, "harassment" | "impersonation" | "unsafe_contact") {
         "S1"
     } else {
         "S2"
+    }
+}
+
+fn recipient_email_hint(email: &str) -> String {
+    let Some((local, domain)) = email.split_once('@') else {
+        return "•••".to_string();
+    };
+    let first = local.chars().next().unwrap_or('•');
+    format!("{first}•••@{domain}")
+}
+
+fn recipient_entry_from_invitation(
+    invitation: &OwnerProviderInvitationRecord,
+    include_limited_request: bool,
+) -> OwnerProviderInvitationRecipientEntry {
+    OwnerProviderInvitationRecipientEntry {
+        invitation_id: invitation.invitation_id.clone(),
+        status: invitation.status.clone(),
+        can_review_limited_request: include_limited_request,
+        provider_name: include_limited_request.then(|| invitation.provider_name.clone()),
+        owner_name: include_limited_request.then(|| invitation.owner_name_snapshot.clone()),
+        coarse_area: include_limited_request.then(|| invitation.coarse_area_snapshot.clone()),
+        care_goals: include_limited_request
+            .then(|| invitation.care_goals_snapshot.clone())
+            .unwrap_or_default(),
+        cadence: include_limited_request.then(|| invitation.cadence_snapshot.clone()),
+        recipient_email_hint: include_limited_request
+            .then(|| recipient_email_hint(&invitation.recipient_business_email)),
+        still_private_categories: vec![
+            "exact_address".to_string(),
+            "yard_photos".to_string(),
+            "owner_contact".to_string(),
+            "access_considerations".to_string(),
+        ],
+        recipient_email_checked: false,
+        organization_relationship_checked: false,
+        opportunity_response_capability: false,
     }
 }
 
@@ -3148,6 +3288,142 @@ enum PersistedAbuseReportOutcome {
     Conflict,
 }
 
+enum PersistedInvitationPreviewOutcome {
+    Opened(OwnerProviderInvitationRecipientEntry),
+    Closed(OwnerProviderInvitationRecipientEntry),
+    NotReady,
+    NotFound,
+}
+
+async fn preview_owner_provider_invitation(
+    pool: &PgPool,
+    token_hash: &str,
+) -> Result<PersistedInvitationPreviewOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let row = sqlx::query(
+        "SELECT id, owner_user_id, property_id, provider_name, recipient_email,
+                owner_name_snapshot, coarse_area_snapshot, care_goals_snapshot,
+                cadence_snapshot, status, expires_at <= NOW() AS expired
+         FROM owner_provider_invitations
+         WHERE token_hash = $1
+         FOR UPDATE",
+    )
+    .bind(token_hash)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(PersistedInvitationPreviewOutcome::NotFound);
+    };
+    let invitation_id: String = row.get("id");
+    let owner_user_id: String = row.get("owner_user_id");
+    let property_id: String = row.get("property_id");
+    let current_status: String = row.get("status");
+    let expired: bool = row.get("expired");
+    let status = if expired
+        && matches!(
+            current_status.as_str(),
+            "pending_delivery" | "delivered" | "opened"
+        ) {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'expired', terminal_at = NOW(), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "UPDATE owner_provider_invitation_delivery_attempts
+             SET status = 'suppressed', failure_code = 'invitation_expired', completed_at = NOW()
+             WHERE invitation_id = $1 AND status = 'pending'",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_expired', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+        "expired".to_string()
+    } else {
+        current_status
+    };
+    if status == "pending_delivery" {
+        transaction.commit().await?;
+        return Ok(PersistedInvitationPreviewOutcome::NotReady);
+    }
+    if status == "delivered" {
+        sqlx::query(
+            "UPDATE owner_provider_invitations
+             SET status = 'opened', opened_at = COALESCE(opened_at, NOW()), updated_at = NOW()
+             WHERE id = $1",
+        )
+        .bind(&invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query(
+            "INSERT INTO owner_acquisition_events (
+                 id, owner_user_id, property_id, event_kind, event_data
+             ) VALUES ($1, $2, $3, 'provider_invitation_opened', $4)",
+        )
+        .bind(format!("owner_event_{}", Uuid::new_v4()))
+        .bind(&owner_user_id)
+        .bind(&property_id)
+        .bind(serde_json::json!({ "invitation_id": invitation_id }))
+        .execute(&mut *transaction)
+        .await?;
+        let entry = recipient_entry_from_preview_row(&row, "opened", true);
+        transaction.commit().await?;
+        return Ok(PersistedInvitationPreviewOutcome::Opened(entry));
+    }
+    let include_limited_request = status == "opened";
+    let entry = recipient_entry_from_preview_row(&row, &status, include_limited_request);
+    transaction.commit().await?;
+    if include_limited_request {
+        Ok(PersistedInvitationPreviewOutcome::Opened(entry))
+    } else {
+        Ok(PersistedInvitationPreviewOutcome::Closed(entry))
+    }
+}
+
+fn recipient_entry_from_preview_row(
+    row: &sqlx::postgres::PgRow,
+    status: &str,
+    include_limited_request: bool,
+) -> OwnerProviderInvitationRecipientEntry {
+    OwnerProviderInvitationRecipientEntry {
+        invitation_id: row.get("id"),
+        status: status.to_string(),
+        can_review_limited_request: include_limited_request,
+        provider_name: include_limited_request.then(|| row.get("provider_name")),
+        owner_name: include_limited_request.then(|| row.get("owner_name_snapshot")),
+        coarse_area: include_limited_request.then(|| row.get("coarse_area_snapshot")),
+        care_goals: include_limited_request
+            .then(|| row.get("care_goals_snapshot"))
+            .unwrap_or_default(),
+        cadence: include_limited_request.then(|| row.get("cadence_snapshot")),
+        recipient_email_hint: include_limited_request
+            .then(|| recipient_email_hint(&row.get::<String, _>("recipient_email"))),
+        still_private_categories: vec![
+            "exact_address".to_string(),
+            "yard_photos".to_string(),
+            "owner_contact".to_string(),
+            "access_considerations".to_string(),
+        ],
+        recipient_email_checked: false,
+        organization_relationship_checked: false,
+        opportunity_response_capability: false,
+    }
+}
+
 async fn report_owner_provider_invitation_abuse(
     pool: &PgPool,
     reporter_user_id: &str,
@@ -3542,6 +3818,11 @@ mod tests {
         ));
         assert!(validate_provider_invitation_opt_out_request(
             &OptOutOwnerProviderInvitationRequest {
+                token: new_owner_provider_invitation_token(),
+            }
+        ));
+        assert!(validate_provider_invitation_preview_request(
+            &PreviewOwnerProviderInvitationRequest {
                 token: new_owner_provider_invitation_token(),
             }
         ));

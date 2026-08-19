@@ -86,14 +86,15 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
         validate_provider_invitation_abuse_report_request,
-        validate_provider_invitation_opt_out_request, validate_provider_invitation_request,
-        validate_workspace_request, validate_yard_brief_request, CreateOwnerIntakeMediaRequest,
-        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerReadResult,
-        ReportOwnerProviderInvitationAbuseRequest, SaveOwnerWorkspaceRequest,
-        SaveOwnerYardBriefRequest,
+        validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
+        validate_provider_invitation_request, validate_workspace_request,
+        validate_yard_brief_request, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+        CreateOwnerProviderInvitationRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerReadResult,
+        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
+        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -687,6 +688,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/report",
             post(report_owner_provider_invitation_abuse),
+        )
+        .route(
+            "/provider-invitations/preview",
+            post(preview_owner_provider_invitation),
         )
         .route(
             "/customer-accounts",
@@ -1817,6 +1822,49 @@ async fn report_owner_provider_invitation_abuse(
             persisted_resource_unavailable_response(
                 "provider_invitation_abuse_report_unavailable",
                 "The report could not be submitted and blocking was not confirmed. Try again or use the approved support channel.",
+            )
+        }
+    }
+}
+
+async fn preview_owner_provider_invitation(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<PreviewOwnerProviderInvitationRequest>,
+) -> Response {
+    if !validate_provider_invitation_preview_request(&request) {
+        return resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation link is invalid or no longer available.",
+        );
+    }
+    match state
+        .owner_acquisition
+        .preview_provider_invitation(request.token.trim())
+        .await
+    {
+        OwnerProviderInvitationPreviewResult::Opened(invitation) => {
+            Json(invitation).into_response()
+        }
+        OwnerProviderInvitationPreviewResult::Closed(invitation) => {
+            (StatusCode::GONE, Json(invitation)).into_response()
+        }
+        OwnerProviderInvitationPreviewResult::NotReady => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_invitation_not_delivered",
+                message: "This invitation is not available for recipient review. No additional yard information was shown."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInvitationPreviewResult::NotFound => resource_not_found_response(
+            "provider_invitation_not_found",
+            "The invitation link is invalid or no longer available.",
+        ),
+        OwnerProviderInvitationPreviewResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_invitation_preview_unavailable",
+                "The limited invitation could not be loaded. No additional yard information was shown.",
             )
         }
     }

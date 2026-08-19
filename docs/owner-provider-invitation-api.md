@@ -26,6 +26,29 @@ exact address, photographs, owner contact details, or access considerations.
 
 ## Verified-recipient safety routes
 
+### Limited invitation preview
+
+`POST /provider-invitations/preview` is a public body-token operation. The
+browser should retain the token in a URL fragment or other approved transient
+location and send it in JSON rather than placing it in an API path.
+
+```json
+{
+  "token": "recipient token from the invitation"
+}
+```
+
+Only a delivered or previously opened invitation returns its limited snapshot:
+provider name, owner name, coarse area, care goals, cadence, and a masked
+recipient hint. Exact address, photos, owner contact details, and access
+considerations remain explicitly listed as private. Preview records one
+application-open event and never establishes recipient email control, an
+organization relationship, or opportunity-response capability.
+
+Pending delivery returns no preview. Failed, expired, declined, opted-out, and
+revoked tokens return status-only with HTTP `410 Gone`; closed links cannot
+reopen the limited request.
+
 ### Opt out
 
 `POST /provider-invitations/opt-out`
@@ -91,8 +114,8 @@ exposed; production must not claim delivery until that integration records it.
 ## Remaining adoption work
 
 1. Select and threat-review an authenticated delivery adapter and callback.
-2. Add recipient-safe limited invitation entry without granting provider action
-   authority.
+2. Bind an authenticated verified recipient to the invitation without implying
+   provider organization or response authority.
 3. Add duplicate-safe provider organization claim/bootstrap and dispute review.
 4. Add explicit opportunity-response capabilities before provider responses.
 5. Add Trust & Safety queue authorization, assignment, disposition, evidence,

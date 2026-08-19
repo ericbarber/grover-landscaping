@@ -3,7 +3,7 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerMutationResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationDeliveryResult,
     OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationRetryResult, OwnerReadResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRetryResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -106,6 +106,14 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderInvitationAbuseReportResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(
+                "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            )
+            .await,
+        OwnerProviderInvitationPreviewResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -247,6 +255,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(created.invitation.coarse_area_snapshot, "Central Phoenix");
     assert_eq!(created.invitation.care_goals_snapshot, ["Routine upkeep"]);
     assert!(!created.delivery_token().contains(recipient));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(created.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::NotReady
+    ));
 
     let stored_token_hash = sqlx::query_scalar::<_, String>(
         "SELECT token_hash FROM owner_provider_invitations WHERE id = $1",
@@ -410,6 +424,43 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationDeliveryResult::Saved(invitation)
             if invitation.status == "delivered" && invitation.delivery_status == "delivered"
     ));
+    let OwnerProviderInvitationPreviewResult::Opened(recipient_entry) = repository
+        .preview_provider_invitation(retry.delivery_token())
+        .await
+    else {
+        panic!("delivered invitation should open the limited recipient entry");
+    };
+    assert_eq!(recipient_entry.status, "opened");
+    assert!(recipient_entry.can_review_limited_request);
+    assert_eq!(recipient_entry.owner_name.as_deref(), Some("Morgan Reyes"));
+    assert_eq!(
+        recipient_entry.coarse_area.as_deref(),
+        Some("Central Phoenix")
+    );
+    assert_eq!(recipient_entry.care_goals, ["Routine upkeep"]);
+    assert!(recipient_entry.recipient_email_hint.is_some());
+    assert!(!recipient_entry.recipient_email_checked);
+    assert!(!recipient_entry.organization_relationship_checked);
+    assert!(!recipient_entry.opportunity_response_capability);
+    assert_eq!(recipient_entry.still_private_categories.len(), 4);
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(retry.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::Opened(invitation)
+            if invitation.status == "opened"
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_acquisition_events
+             WHERE owner_user_id = $1 AND event_kind = 'provider_invitation_opened'",
+        )
+        .bind(owner_a)
+        .fetch_one(&pool)
+        .await
+        .expect("opened event count should load"),
+        1
+    );
     assert!(matches!(
         repository
             .record_provider_invitation_delivery(
@@ -456,6 +507,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         OwnerProviderInvitationMutationResult::Saved(invitation)
             if invitation.status == "revoked"
+    ));
+    assert!(matches!(
+        repository
+            .preview_provider_invitation(retry.delivery_token())
+            .await,
+        OwnerProviderInvitationPreviewResult::Closed(invitation)
+            if invitation.status == "revoked"
+                && !invitation.can_review_limited_request
+                && invitation.owner_name.is_none()
+                && invitation.coarse_area.is_none()
+                && invitation.care_goals.is_empty()
     ));
     assert_eq!(
         sqlx::query_scalar::<_, i64>(

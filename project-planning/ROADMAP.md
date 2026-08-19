@@ -72,7 +72,9 @@ materialize expiry. Verified-recipient opt-out now ships with mailbox matching
 and durable suppression. Minimized, severity-routed block/report intake now
 closes the scoped contact path without copying case descriptions into general
 audit data. Authenticated adapter integration remains external; recipient-safe
-entry is the next local review unit.
+limited entry now opens delivered body-token invitations without granting email,
+organization, or response authority and keeps closed links status-only.
+Authenticated recipient binding is the next local review unit.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
