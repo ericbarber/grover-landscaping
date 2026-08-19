@@ -6,6 +6,7 @@ import {
   createOwnerIntakeMediaUpload,
   deleteOwnerIntakeMedia,
   fetchOwnerIntakeMedia,
+  fetchOwnerProviderConnectionProgress,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
@@ -103,6 +104,33 @@ describe('Yard Owner acquisition API client', () => {
       considerations: 'Keep the side gate closed.',
     });
     expect(body).not.toHaveProperty('owner_user_id');
+  });
+
+  it('maps customer-safe provider connection progress without private authority data', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify([{
+      invitation_id: 'invitation_1', provider_name: 'Desert Bloom Yard Care',
+      invitation_status: 'opened', delivery_status: 'delivered',
+      progress_stage: 'disclosure_decision',
+      status_label: 'Provider is interested in the next owner-approved review',
+      owner_action_required: true, next_action: 'review_disclosure',
+      latest_response_action: 'express_interest',
+      response_label: 'Interested in reviewing the next owner-approved details',
+      expires_at_epoch_seconds: 1_800_000_000, responded_at_epoch_seconds: 1_799_000_000,
+      persisted: true,
+    }]), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchOwnerProviderConnectionProgress('owner_property_1')).resolves.toEqual([
+      expect.objectContaining({
+        invitationId: 'invitation_1',
+        progressStage: 'disclosure_decision',
+        ownerActionRequired: true,
+        latestResponseAction: 'express_interest',
+      }),
+    ]);
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      '/owner-properties/owner_property_1/provider-connection-progress',
+    );
   });
 
   it('creates an independently scoped guided-media upload without provider identifiers', async () => {

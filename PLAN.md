@@ -358,6 +358,14 @@ Active slice:
   effective, and status-only terminal confirmation; it repeats no owner/yard
   snapshot, disclosure choice, capability ID, other response, or safety case.
   Phase 3C3 production interface adoption is next.
+- Phase 3C3a is delivered. The production Yard Owner property flow now loads
+  connection progress independently from private brief/media state and renders
+  accessible loading, empty, unavailable, refresh, action-needed, safe-next-
+  step, limited-access, and interest-boundary states. Client tests, TypeScript,
+  and the production build pass. The updated mobile browser scenario is
+  committed but could not run in the available Node container because Chromium
+  lacked `libnspr4`; this remains validation pending, not a passing claim.
+  Phase 3C3b provider recipient interface adoption is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

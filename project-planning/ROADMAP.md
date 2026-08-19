@@ -124,6 +124,12 @@ body-token scoping, current relationship/capability rechecks, stale-authority
 reconciliation, gate recovery, own safe response confirmation, and status-only
 closure without repeating the yard snapshot or pre-grant owner choices. Phase
 3C3 production interface adoption is next.
+Phase 3C3a now adopts the owner projection in the production private-property
+flow with independent loading, safe empty/error/refresh/action states, clear
+limited-access and interest boundaries, client coverage, passing typecheck, and
+a passing production build. The updated responsive browser scenario remains
+pending because the available Chromium container lacked `libnspr4`; provider
+recipient interface adoption is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

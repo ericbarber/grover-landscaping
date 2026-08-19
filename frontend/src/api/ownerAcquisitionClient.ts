@@ -66,6 +66,22 @@ interface ApiOwnerIntakeMedia {
   persisted: boolean;
 }
 
+interface ApiOwnerProviderConnectionProgress {
+  invitation_id: string;
+  provider_name: string;
+  invitation_status: string;
+  delivery_status: string;
+  progress_stage: OwnerProviderConnectionProgress['progressStage'];
+  status_label: string;
+  owner_action_required: boolean;
+  next_action: string;
+  latest_response_action?: string | null;
+  response_label?: string | null;
+  expires_at_epoch_seconds: number;
+  responded_at_epoch_seconds?: number | null;
+  persisted: boolean;
+}
+
 export interface OwnerWorkspace {
   ownerUserId: string;
   verifiedEmail: string;
@@ -159,6 +175,24 @@ export interface OwnerIntakeMediaUpload {
   thumbnailMaxDimensionPx?: number;
 }
 
+export interface OwnerProviderConnectionProgress {
+  invitationId: string;
+  providerName: string;
+  invitationStatus: string;
+  deliveryStatus: string;
+  progressStage: 'sending' | 'delivery_failed' | 'awaiting_open' | 'provider_reviewing'
+    | 'question_received' | 'disclosure_decision' | 'declined' | 'contact_closed'
+    | 'withdrawn' | 'expired';
+  statusLabel: string;
+  ownerActionRequired: boolean;
+  nextAction: string;
+  latestResponseAction?: string;
+  responseLabel?: string;
+  expiresAtEpochSeconds: number;
+  respondedAtEpochSeconds?: number;
+  persisted: boolean;
+}
+
 function mapWorkspace(workspace: ApiOwnerWorkspace): OwnerWorkspace {
   return {
     ownerUserId: workspace.owner_user_id,
@@ -228,6 +262,26 @@ function mapIntakeMedia(media: ApiOwnerIntakeMedia): OwnerIntakeMedia {
     displayUrl: media.display_url ?? undefined,
     thumbnailUrl: media.thumbnail_url ?? undefined,
     persisted: media.persisted,
+  };
+}
+
+function mapProviderConnectionProgress(
+  progress: ApiOwnerProviderConnectionProgress,
+): OwnerProviderConnectionProgress {
+  return {
+    invitationId: progress.invitation_id,
+    providerName: progress.provider_name,
+    invitationStatus: progress.invitation_status,
+    deliveryStatus: progress.delivery_status,
+    progressStage: progress.progress_stage,
+    statusLabel: progress.status_label,
+    ownerActionRequired: progress.owner_action_required,
+    nextAction: progress.next_action,
+    latestResponseAction: progress.latest_response_action ?? undefined,
+    responseLabel: progress.response_label ?? undefined,
+    expiresAtEpochSeconds: progress.expires_at_epoch_seconds,
+    respondedAtEpochSeconds: progress.responded_at_epoch_seconds ?? undefined,
+    persisted: progress.persisted,
   };
 }
 
@@ -309,6 +363,16 @@ export async function saveOwnerYardBrief(
 export async function fetchOwnerIntakeMedia(propertyId: string): Promise<OwnerIntakeMedia[]> {
   const response = await ownerRequest(`/owner-properties/${encodeURIComponent(propertyId)}/intake-media`);
   return ((await response.json()) as ApiOwnerIntakeMedia[]).map(mapIntakeMedia);
+}
+
+export async function fetchOwnerProviderConnectionProgress(
+  propertyId: string,
+): Promise<OwnerProviderConnectionProgress[]> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-connection-progress`,
+  );
+  return ((await response.json()) as ApiOwnerProviderConnectionProgress[])
+    .map(mapProviderConnectionProgress);
 }
 
 export async function createOwnerIntakeMediaUpload(

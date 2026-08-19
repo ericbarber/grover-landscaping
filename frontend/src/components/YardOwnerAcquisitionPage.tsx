@@ -6,6 +6,7 @@ import {
   createOwnerProperty,
   deleteOwnerIntakeMedia,
   fetchOwnerIntakeMedia,
+  fetchOwnerProviderConnectionProgress,
   fetchOwnerProperties,
   fetchOwnerWorkspace,
   fetchOwnerYardBrief,
@@ -15,6 +16,7 @@ import {
   type CreateOwnerPropertyInput,
   type OwnerProperty,
   type OwnerIntakeMedia,
+  type OwnerProviderConnectionProgress,
   type OwnerWorkspace,
   type OwnerYardBrief,
   type SaveOwnerYardBriefInput,
@@ -129,6 +131,80 @@ function Progress({ workspace, propertyCount, briefReady }: { workspace: boolean
   );
 }
 
+function connectionNextActionLabel(nextAction: string): string {
+  return {
+    wait: 'Wait for delivery',
+    review_recipient: 'Review the recipient before creating a new invitation',
+    wait_or_withdraw: 'Wait or withdraw this invitation',
+    review_question: 'Review the provider’s question',
+    review_disclosure: 'Review what you want to share next',
+    choose_another_provider: 'Choose another provider',
+    start_new_invitation: 'Review and create a new invitation',
+  }[nextAction] ?? 'Review connection details';
+}
+
+function ConnectionProgress({
+  entries,
+  loading,
+  error,
+  onRefresh,
+}: {
+  entries: OwnerProviderConnectionProgress[];
+  loading: boolean;
+  error: string | null;
+  onRefresh: () => void;
+}) {
+  return (
+    <section aria-labelledby="provider-connection-title" className="mt-7 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">Step 4 of 4</p>
+          <h4 className="mt-2 text-xl font-black text-slate-950" id="provider-connection-title">Provider connection progress</h4>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-700">Track invitations without exposing your exact address, photographs, contact details, or access notes.</p>
+        </div>
+        <button className="min-h-11 rounded-lg border border-emerald-700 bg-white px-4 text-sm font-bold text-emerald-900 hover:bg-emerald-100 disabled:opacity-60" disabled={loading} onClick={onRefresh} type="button">
+          {loading ? 'Refreshing…' : 'Refresh progress'}
+        </button>
+      </div>
+      {error ? (
+        <div className="mt-4 rounded-xl border border-rose-300 bg-white p-4" role="alert">
+          <strong className="text-rose-950">Connection progress is unavailable.</strong>
+          <p className="mt-1 text-sm leading-6 text-rose-900">{error} Existing invitations and responses are unchanged.</p>
+        </div>
+      ) : loading && entries.length === 0 ? (
+        <p className="mt-4 rounded-xl bg-white p-4 text-sm font-semibold text-slate-600" role="status">Loading provider connection progress…</p>
+      ) : entries.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-dashed border-emerald-300 bg-white/70 p-4">
+          <strong className="text-slate-900">No provider connection has started.</strong>
+          <p className="mt-1 text-sm leading-6 text-slate-600">Your ready brief and photographs remain private. A future invitation will require a separate review before anything is shared.</p>
+        </div>
+      ) : (
+        <ol aria-label="Provider connections" className="mt-5 grid gap-3">
+          {entries.map((entry) => (
+            <li className={`rounded-xl border bg-white p-4 ${entry.ownerActionRequired ? 'border-amber-400 shadow-sm' : 'border-emerald-200'}`} key={entry.invitationId}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <strong className="text-base text-slate-950">{entry.providerName}</strong>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">{entry.statusLabel}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${entry.ownerActionRequired ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'}`}>
+                  {entry.ownerActionRequired ? 'Your review needed' : 'No action needed'}
+                </span>
+              </div>
+              {entry.responseLabel ? <p className="mt-3 text-sm leading-6 text-slate-700">{entry.responseLabel}</p> : null}
+              <dl className="mt-4 grid gap-2 border-t border-slate-200 pt-3 text-xs sm:grid-cols-2">
+                <div><dt className="font-bold uppercase tracking-wide text-slate-500">Safe next step</dt><dd className="mt-1 font-semibold text-slate-800">{connectionNextActionLabel(entry.nextAction)}</dd></div>
+                <div><dt className="font-bold uppercase tracking-wide text-slate-500">Invitation access</dt><dd className="mt-1 font-semibold text-slate-800">{entry.progressStage === 'contact_closed' || entry.progressStage === 'withdrawn' || entry.progressStage === 'expired' || entry.progressStage === 'declined' ? 'Closed' : 'Limited details only'}</dd></div>
+              </dl>
+              {entry.progressStage === 'disclosure_decision' ? <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>Nothing new is shared yet.</strong> Provider interest is not a proposal, selection, crew assignment, or permission to start work.</p> : null}
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
 export function YardOwnerAcquisitionPage() {
   const auth = useAuth();
   const prefix = useId();
@@ -144,6 +220,9 @@ export function YardOwnerAcquisitionPage() {
   const [yardBriefDraft, setYardBriefDraft] = useState<YardBriefDraft>(emptyYardBrief);
   const [briefLoading, setBriefLoading] = useState(false);
   const [intakeMedia, setIntakeMedia] = useState<OwnerIntakeMedia[]>([]);
+  const [connectionProgress, setConnectionProgress] = useState<OwnerProviderConnectionProgress[]>([]);
+  const [connectionLoading, setConnectionLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [shotType, setShotType] = useState<OwnerIntakeMedia['shotType']>('front_yard');
   const [replacesMediaId, setReplacesMediaId] = useState<string | undefined>();
@@ -245,7 +324,15 @@ export function YardOwnerAcquisitionPage() {
     setBriefLoading(true);
     setError(null);
     setNotice(null);
+    setConnectionLoading(true);
+    setConnectionError(null);
     try {
+      const progressPromise = fetchOwnerProviderConnectionProgress(propertyId)
+        .then(setConnectionProgress)
+        .catch((progressError: unknown) => {
+          setConnectionProgress([]);
+          setConnectionError(errorMessage(progressError, 'Try again when your connection is available.'));
+        });
       const loaded = await fetchOwnerYardBrief(propertyId).catch((loadError: unknown) => {
         if (isApiErrorCode(loadError, 'owner_yard_brief_not_found')) return null;
         throw loadError;
@@ -258,12 +345,27 @@ export function YardOwnerAcquisitionPage() {
         considerations: loaded.considerations,
       } : emptyYardBrief);
       setIntakeMedia(loaded ? await fetchOwnerIntakeMedia(propertyId) : []);
+      await progressPromise;
       setMediaFile(null);
       setReplacesMediaId(undefined);
     } catch (loadError) {
       setError(errorMessage(loadError, 'Your private yard brief could not be loaded.'));
     } finally {
       setBriefLoading(false);
+      setConnectionLoading(false);
+    }
+  }
+
+  async function refreshConnectionProgress() {
+    if (!selectedPropertyId) return;
+    setConnectionLoading(true);
+    setConnectionError(null);
+    try {
+      setConnectionProgress(await fetchOwnerProviderConnectionProgress(selectedPropertyId));
+    } catch (loadError) {
+      setConnectionError(errorMessage(loadError, 'Try again when your connection is available.'));
+    } finally {
+      setConnectionLoading(false);
     }
   }
 
@@ -754,6 +856,7 @@ export function YardOwnerAcquisitionPage() {
                           )}
                         </section>
                       ) : null}
+                      <ConnectionProgress entries={connectionProgress} error={connectionError} loading={connectionLoading} onRefresh={() => void refreshConnectionProgress()} />
                     </>
                   )}
                 </section>

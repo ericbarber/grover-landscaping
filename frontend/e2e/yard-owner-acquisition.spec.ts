@@ -137,6 +137,10 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       body: JSON.stringify({ media: record, upload_url: '/api/photo-placeholder' }),
     });
   });
+  await page.route('**/owner-properties/owner_property_1/provider-connection-progress', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
   await page.route('**/owner-properties/owner_property_1/intake-media/*/complete', async (route) => {
     const mediaId = route.request().url().split('/').at(-2);
     const replacement = mediaRecords.find((record) => record.media_id === mediaId);
@@ -197,6 +201,8 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Private draft')).toBeVisible();
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
+  await expect(page.getByText('No provider connection has started.')).toBeVisible();
   await page.getByLabel('Front yard').check();
   await page.getByLabel('Routine upkeep').check();
   await page.getByLabel('Preferred care cadence').selectOption('every_two_weeks');

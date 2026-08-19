@@ -46,7 +46,8 @@ The approved experience is defined by:
 | 3C0 | Delivered | Separate owner/provider progress contract with deterministic precedence, safe response mapping, status-only closure, recovery language, and isolation acceptance criteria |
 | 3C1 | Delivered | Owner/property-scoped connection progress with deterministic stages, customer-safe response mapping, isolation, and outage distinction |
 | 3C2 | Delivered | Checked-recipient provider progress with effective authority rechecks, gate recovery, own-response confirmation, and status-only closure |
-| 3C3 | Implementation next | Responsive production interface adoption without expanding visibility |
+| 3C3a | Delivered; browser rerun pending | Production Yard Owner progress UI with independent loading, empty/unavailable/action states, responsive layout, tested client mapping, passing typecheck/build, and an updated browser scenario awaiting a compatible Chromium runtime |
+| 3C3b | Implementation next | Checked-recipient provider progress interface without expanding visibility |
 | 3D–3E | Planned | Grants/receipts/revocation and pilot hardening |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 

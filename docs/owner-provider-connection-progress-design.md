@@ -126,9 +126,15 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
 3. **3C2 — provider projection (delivered):** checked-recipient body-token
    progress, effective relationship/capability rechecks, status-only closure,
    own-response confirmation, API, and persistence coverage.
-4. **3C3 — interface adoption:** connect the production Yard Owner and provider
-   acquisition surfaces to these models with loading, empty, unavailable,
-   stale-tab, narrow-screen, zoom, and assistive-technology validation.
+4. **3C3a — owner interface adoption (delivered):** the production Yard Owner
+   property flow loads progress independently from private brief/media state and
+   presents accessible loading, empty, unavailable, action-needed, privacy, and
+   refresh behavior. Client tests, type checking, and production build pass;
+   the updated browser scenario is committed but could not execute in the
+   available container because the installed browser lacked `libnspr4`.
+5. **3C3b — provider interface adoption:** connect the checked-recipient
+   acquisition surface to provider progress with loading, recovery,
+   status-only closure, narrow-screen, zoom, and assistive-technology coverage.
 
 ## Acceptance criteria
 
@@ -145,5 +151,5 @@ snapshot. It never infers delivery, response, or owner action from elapsed time.
 - Projection order and labels remain deterministic across replay and stale-tab
   scenarios.
 
-Phase 3C3 interface adoption is next. The API delivery is not evidence that the
-production React surfaces have adopted either projection.
+Phase 3C3b provider interface adoption is next. The provider-progress API is not
+evidence that a production recipient interface has adopted it.
