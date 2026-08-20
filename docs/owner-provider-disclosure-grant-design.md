@@ -173,6 +173,20 @@ The confirmation says that future access ends, while information already
 viewed, immutable consent history, accepted proposals, delivered work records,
 or legally retained evidence are not falsely represented as erased.
 
+`GET /owner-properties/{property_id}/provider-disclosure-receipts` returns the
+owner's append-only receipt history with provider/property labels, complete
+approved and withheld partitions, selected-photo labels, policy/brief/grant
+versions, current status, and latest event. It never grants provider access.
+
+`POST /owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke`
+requires the current projection version, a controlled reason, explicit owner
+confirmation, and an idempotency key. It locks the owner-scoped grant, updates
+only the current projection, appends the immutable revocation event and
+minimized acquisition audit, and returns the preserved receipt view. Exact
+replay succeeds; stale version or changed reuse conflicts. Provider reads then
+return status-only `revoked` recovery, while the invitation remains a separate
+relationship state.
+
 ## Audit and privacy
 
 General audit may include receipt/grant/invitation/property/provider IDs,
@@ -194,7 +208,7 @@ evidence is not stored on receipt or grant rows.
    outage behavior, and owner isolation tests.
 4. **3D2 — provider access (delivered):** category-filtered read model, short-lived selected
    media authorization, status-only closure, and cross-provider tests.
-5. **3D3 — revocation:** versioned owner revoke API, access/cache
+5. **3D3 — revocation (delivered):** versioned owner revoke API, access/cache
    reconciliation, immutable history, support visibility, and recovery tests.
 6. **3D4 — interface adoption:** unselected owner approval, receipt views,
    provider access, revoke confirmation, responsive/accessibility/browser

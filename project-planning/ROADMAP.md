@@ -150,7 +150,10 @@ authority and media rechecks, owner isolation, replay/conflict handling, and
 minimized audit. Phase 3D2 now delivers checked-recipient, category-filtered
 provider access with omitted withheld fields, grant-bounded selected-media
 authorization, current-authority reconciliation, safe progress, cross-provider
-isolation, and status-only closure. Owner receipt history and revocation is next.
+isolation, and status-only closure. Phase 3D3 now delivers owner-isolated
+immutable receipt history and confirmed, controlled, versioned, replay-safe
+revocation with preserved consent evidence and access-ended progress. Production
+interface adoption and assurance is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

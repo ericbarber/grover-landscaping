@@ -562,6 +562,49 @@ pub struct OwnerProviderDisclosureAccess {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct RevokeOwnerProviderDisclosureGrantRequest {
+    pub expected_version: i64,
+    pub reason_code: String,
+    pub owner_confirmed: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderDisclosureReceiptPhoto {
+    pub media_id: String,
+    pub file_label: String,
+    pub shot_type: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderDisclosureReceiptView {
+    pub receipt_id: String,
+    pub grant_id: String,
+    pub invitation_id: String,
+    pub property_id: String,
+    pub property_name: String,
+    pub organization_id: String,
+    pub organization_name: String,
+    pub purpose: String,
+    pub approved_categories: Vec<String>,
+    pub withheld_categories: Vec<String>,
+    pub selected_photos: Vec<OwnerProviderDisclosureReceiptPhoto>,
+    pub brief_version: i64,
+    pub consent_text_version: String,
+    pub retention_notice_version: String,
+    pub grant_version: i64,
+    pub affirmed_at_epoch_seconds: i64,
+    pub status: String,
+    pub effective_at_epoch_seconds: i64,
+    pub expires_at_epoch_seconds: i64,
+    pub version: i64,
+    pub latest_event_kind: String,
+    pub latest_reason_code: Option<String>,
+    pub latest_event_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -777,6 +820,16 @@ pub enum OwnerProviderDisclosureAccessResult {
     Closed(OwnerProviderDisclosureAccess),
     NotFound,
     InvalidState,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderDisclosureGrantRevokeResult {
+    Revoked(OwnerProviderDisclosureReceiptView),
+    Replayed(OwnerProviderDisclosureReceiptView),
+    NotFound,
+    InvalidState(OwnerProviderDisclosureReceiptView),
+    Conflict,
     Unavailable,
 }
 
@@ -1443,7 +1496,7 @@ impl OwnerAcquisitionRepository {
                         None,
                         None,
                         None,
-                        false,
+                        None,
                         false,
                     )
                 })
@@ -2862,6 +2915,71 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_provider_disclosure_receipts(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderDisclosureReceiptView>> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match list_owner_provider_disclosure_receipts(pool, owner_user_id, property_id).await {
+            Ok(Some(receipts)) => OwnerReadResult::Loaded(receipts),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner provider disclosure receipt list failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn revoke_provider_disclosure_grant(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        grant_id: &str,
+        request: RevokeOwnerProviderDisclosureGrantRequest,
+    ) -> OwnerProviderDisclosureGrantRevokeResult {
+        if !validate_provider_disclosure_revoke_request(&request) {
+            return OwnerProviderDisclosureGrantRevokeResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderDisclosureGrantRevokeResult::Unavailable;
+        };
+        match revoke_owner_provider_disclosure_grant(
+            pool,
+            owner_user_id,
+            property_id,
+            grant_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedDisclosureRevokeOutcome::Revoked(receipt)) => {
+                OwnerProviderDisclosureGrantRevokeResult::Revoked(receipt)
+            }
+            Ok(PersistedDisclosureRevokeOutcome::Replayed(receipt)) => {
+                OwnerProviderDisclosureGrantRevokeResult::Replayed(receipt)
+            }
+            Ok(PersistedDisclosureRevokeOutcome::NotFound) => {
+                OwnerProviderDisclosureGrantRevokeResult::NotFound
+            }
+            Ok(PersistedDisclosureRevokeOutcome::InvalidState(receipt)) => {
+                OwnerProviderDisclosureGrantRevokeResult::InvalidState(receipt)
+            }
+            Ok(PersistedDisclosureRevokeOutcome::Conflict) => {
+                OwnerProviderDisclosureGrantRevokeResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderDisclosureGrantRevokeResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, grant_id, "owner provider disclosure revoke failed");
+                OwnerProviderDisclosureGrantRevokeResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3278,6 +3396,26 @@ pub fn validate_provider_disclosure_access_request(
     validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
         token: request.token.clone(),
     })
+}
+
+pub fn validate_provider_disclosure_revoke_request(
+    request: &RevokeOwnerProviderDisclosureGrantRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    request.owner_confirmed
+        && request.expected_version > 0
+        && matches!(
+            request.reason_code.as_str(),
+            "owner_choice"
+                | "assessment_complete"
+                | "provider_changed"
+                | "incorrect_details"
+                | "privacy_concern"
+        )
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -4113,12 +4251,18 @@ async fn list_owner_provider_connection_progress(
                 response.action AS response_action,
                 response.response_code,
                 response.responded_at_epoch_seconds,
-                EXISTS (
-                    SELECT 1 FROM owner_provider_disclosure_grants disclosure_grant
+                (
+                    SELECT CASE
+                        WHEN disclosure_grant.status = 'active'
+                             AND disclosure_grant.expires_at <= NOW() THEN 'expired'
+                        ELSE disclosure_grant.status
+                    END
+                    FROM owner_provider_disclosure_grants disclosure_grant
+                    JOIN owner_provider_disclosure_receipts disclosure_receipt
+                      ON disclosure_receipt.id = disclosure_grant.receipt_id
                     WHERE disclosure_grant.invitation_id = invitation.id
-                      AND disclosure_grant.status = 'active'
-                      AND disclosure_grant.expires_at > NOW()
-                ) AS disclosure_active
+                    ORDER BY disclosure_receipt.grant_version DESC LIMIT 1
+                ) AS disclosure_status
          FROM owner_provider_invitations invitation
          LEFT JOIN LATERAL (
              SELECT attempt.status
@@ -4161,7 +4305,7 @@ async fn list_owner_provider_connection_progress(
                     row.get("response_action"),
                     row.get("response_code"),
                     row.get("responded_at_epoch_seconds"),
-                    row.get("disclosure_active"),
+                    row.get("disclosure_status"),
                     true,
                 )
             })
@@ -4179,7 +4323,7 @@ fn owner_provider_connection_progress_entry(
     response_action: Option<String>,
     response_code: Option<String>,
     responded_at_epoch_seconds: Option<i64>,
-    disclosure_active: bool,
+    disclosure_status: Option<String>,
     persisted: bool,
 ) -> OwnerProviderConnectionProgressEntry {
     let (progress_stage, status_label, owner_action_required, next_action) = match invitation_status
@@ -4214,12 +4358,26 @@ fn owner_provider_connection_progress_entry(
             true,
             "review_recipient",
         ),
-        "opened" if response_action.as_deref() == Some("express_interest") && disclosure_active => {
+        "opened"
+            if response_action.as_deref() == Some("express_interest")
+                && disclosure_status.as_deref() == Some("active") =>
+        {
             (
                 "assessment_access_approved",
                 "Assessment access approved for this provider",
                 false,
                 "wait_for_assessment",
+            )
+        }
+        "opened"
+            if response_action.as_deref() == Some("express_interest")
+                && disclosure_status.is_some() =>
+        {
+            (
+                "assessment_access_ended",
+                "Assessment access has ended",
+                false,
+                "review_connection",
             )
         }
         "opened" if response_action.as_deref() == Some("express_interest") => (
@@ -4322,13 +4480,19 @@ async fn get_owner_provider_progress(
                 response.action AS response_action,
                 response.response_code,
                 response.responded_at_epoch_seconds,
-                EXISTS (
-                    SELECT 1 FROM owner_provider_disclosure_grants disclosure_grant
+                (
+                    SELECT CASE
+                        WHEN disclosure_grant.status = 'active'
+                             AND disclosure_grant.expires_at <= NOW() THEN 'expired'
+                        ELSE disclosure_grant.status
+                    END
+                    FROM owner_provider_disclosure_grants disclosure_grant
+                    JOIN owner_provider_disclosure_receipts disclosure_receipt
+                      ON disclosure_receipt.id = disclosure_grant.receipt_id
                     WHERE disclosure_grant.invitation_id = invitation.id
                       AND disclosure_grant.recipient_actor_user_id = $3
-                      AND disclosure_grant.status = 'active'
-                      AND disclosure_grant.expires_at > NOW()
-                ) AS disclosure_active,
+                    ORDER BY disclosure_receipt.grant_version DESC LIMIT 1
+                ) AS disclosure_status,
                 EXISTS (
                     SELECT 1 FROM organization_memberships membership
                     WHERE membership.organization_id = claim.organization_id
@@ -4408,7 +4572,7 @@ async fn get_owner_provider_progress(
     let response_action: Option<String> = row.get("response_action");
     let response_code: Option<String> = row.get("response_code");
     let responded_at: Option<i64> = row.get("responded_at_epoch_seconds");
-    let disclosure_active: bool = row.get("disclosure_active");
+    let disclosure_status: Option<String> = row.get("disclosure_status");
     let terminal_status = if invitation_expired
         && matches!(
             invitation_status.as_str(),
@@ -4498,7 +4662,9 @@ async fn get_owner_provider_progress(
             responded_at_epoch_seconds: None,
             closed: false,
         }
-    } else if disclosure_active && response_action.as_deref() == Some("express_interest") {
+    } else if disclosure_status.as_deref() == Some("active")
+        && response_action.as_deref() == Some("express_interest")
+    {
         OwnerProviderProgressEntry {
             invitation_id,
             progress_stage: "assessment_access_ready".to_string(),
@@ -4510,6 +4676,23 @@ async fn get_owner_provider_progress(
             response_action: Some("express_interest".to_string()),
             response_label: Some(
                 "Interest recorded; the owner approved selected assessment details".to_string(),
+            ),
+            responded_at_epoch_seconds: responded_at,
+            closed: false,
+        }
+    } else if disclosure_status.is_some() && response_action.as_deref() == Some("express_interest")
+    {
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "assessment_access_closed".to_string(),
+            status_label: "Owner-approved assessment access has ended".to_string(),
+            next_action: "contact_owner".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: true,
+            opportunity_response_capability: true,
+            response_action: Some("express_interest".to_string()),
+            response_label: Some(
+                "Interest remains recorded; assessment details are no longer available".to_string(),
             ),
             responded_at_epoch_seconds: responded_at,
             closed: false,
@@ -6909,6 +7092,14 @@ enum PersistedDisclosureAccessOutcome {
     InvalidState,
 }
 
+enum PersistedDisclosureRevokeOutcome {
+    Revoked(OwnerProviderDisclosureReceiptView),
+    Replayed(OwnerProviderDisclosureReceiptView),
+    NotFound,
+    InvalidState(OwnerProviderDisclosureReceiptView),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -7736,6 +7927,296 @@ async fn open_owner_provider_disclosure(
     };
     transaction.commit().await?;
     Ok(PersistedDisclosureAccessOutcome::Loaded(access))
+}
+
+const DISCLOSURE_RECEIPT_SELECT: &str = "SELECT receipt.id AS receipt_id, grant.id AS grant_id,
+            receipt.invitation_id, receipt.property_id,
+            property.display_name AS property_name, receipt.organization_id,
+            organization.display_name AS organization_name, receipt.purpose,
+            receipt.approved_categories, receipt.withheld_categories,
+            receipt.selected_media_ids, receipt.brief_version,
+            receipt.consent_text_version, receipt.retention_notice_version,
+            receipt.grant_version,
+            EXTRACT(EPOCH FROM receipt.owner_affirmed_at)::BIGINT
+                AS affirmed_at_epoch_seconds,
+            grant.status,
+            EXTRACT(EPOCH FROM grant.effective_at)::BIGINT
+                AS effective_at_epoch_seconds,
+            EXTRACT(EPOCH FROM grant.expires_at)::BIGINT AS expires_at_epoch_seconds,
+            grant.version, latest_event.event_kind AS latest_event_kind,
+            latest_event.reason_code AS latest_reason_code,
+            latest_event.created_at_epoch_seconds AS latest_event_at_epoch_seconds
+     FROM owner_provider_disclosure_receipts receipt
+     JOIN owner_provider_disclosure_grants grant ON grant.receipt_id = receipt.id
+     JOIN owner_properties property ON property.id = receipt.property_id
+     JOIN organizations organization ON organization.id = receipt.organization_id
+     JOIN LATERAL (
+         SELECT event.event_kind, event.reason_code,
+                EXTRACT(EPOCH FROM event.created_at)::BIGINT AS created_at_epoch_seconds
+         FROM owner_provider_disclosure_grant_events event
+         WHERE event.grant_id = grant.id
+         ORDER BY event.created_at DESC, event.id DESC LIMIT 1
+     ) latest_event ON TRUE";
+
+async fn disclosure_receipt_photos<'e, E>(
+    executor: E,
+    media_ids: &[String],
+) -> Result<Vec<OwnerProviderDisclosureReceiptPhoto>, sqlx::Error>
+where
+    E: sqlx::Executor<'e, Database = sqlx::Postgres>,
+{
+    if media_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let rows = sqlx::query(
+        "SELECT id, file_name, shot_type FROM owner_intake_media
+         WHERE id = ANY($1) ORDER BY id",
+    )
+    .bind(media_ids)
+    .fetch_all(executor)
+    .await?;
+    Ok(rows
+        .iter()
+        .map(|row| OwnerProviderDisclosureReceiptPhoto {
+            media_id: row.get("id"),
+            file_label: safe_media_file_name(&row.get::<String, _>("file_name")),
+            shot_type: row.get("shot_type"),
+        })
+        .collect())
+}
+
+fn disclosure_receipt_from_row(
+    row: &sqlx::postgres::PgRow,
+    selected_photos: Vec<OwnerProviderDisclosureReceiptPhoto>,
+) -> OwnerProviderDisclosureReceiptView {
+    OwnerProviderDisclosureReceiptView {
+        receipt_id: row.get("receipt_id"),
+        grant_id: row.get("grant_id"),
+        invitation_id: row.get("invitation_id"),
+        property_id: row.get("property_id"),
+        property_name: row.get("property_name"),
+        organization_id: row.get("organization_id"),
+        organization_name: row.get("organization_name"),
+        purpose: row.get("purpose"),
+        approved_categories: row.get("approved_categories"),
+        withheld_categories: row.get("withheld_categories"),
+        selected_photos,
+        brief_version: row.get("brief_version"),
+        consent_text_version: row.get("consent_text_version"),
+        retention_notice_version: row.get("retention_notice_version"),
+        grant_version: row.get("grant_version"),
+        affirmed_at_epoch_seconds: row.get("affirmed_at_epoch_seconds"),
+        status: row.get("status"),
+        effective_at_epoch_seconds: row.get("effective_at_epoch_seconds"),
+        expires_at_epoch_seconds: row.get("expires_at_epoch_seconds"),
+        version: row.get("version"),
+        latest_event_kind: row.get("latest_event_kind"),
+        latest_reason_code: row.get("latest_reason_code"),
+        latest_event_at_epoch_seconds: row.get("latest_event_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+async fn list_owner_provider_disclosure_receipts(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerProviderDisclosureReceiptView>>, sqlx::Error> {
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_properties
+             WHERE id = $1 AND owner_user_id = $2
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !property_exists {
+        return Ok(None);
+    }
+    let query = format!(
+        "{DISCLOSURE_RECEIPT_SELECT}
+         WHERE receipt.owner_user_id = $1 AND receipt.property_id = $2
+         ORDER BY receipt.created_at DESC, receipt.id DESC"
+    );
+    let rows = sqlx::query(&query)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_all(pool)
+        .await?;
+    let mut receipts = Vec::with_capacity(rows.len());
+    for row in rows {
+        let media_ids: Vec<String> = row.get("selected_media_ids");
+        let photos = disclosure_receipt_photos(pool, &media_ids).await?;
+        receipts.push(disclosure_receipt_from_row(&row, photos));
+    }
+    Ok(Some(receipts))
+}
+
+async fn owner_provider_disclosure_receipt_by_grant(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    owner_user_id: &str,
+    property_id: &str,
+    grant_id: &str,
+) -> Result<
+    Option<(
+        sqlx::postgres::PgRow,
+        Vec<OwnerProviderDisclosureReceiptPhoto>,
+    )>,
+    sqlx::Error,
+> {
+    let query = format!(
+        "{DISCLOSURE_RECEIPT_SELECT}
+         WHERE receipt.owner_user_id = $1 AND receipt.property_id = $2 AND grant.id = $3"
+    );
+    let row = sqlx::query(&query)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .bind(grant_id)
+        .fetch_optional(&mut **transaction)
+        .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let media_ids: Vec<String> = row.get("selected_media_ids");
+    let photos = disclosure_receipt_photos(&mut **transaction, &media_ids).await?;
+    Ok(Some((row, photos)))
+}
+
+async fn revoke_owner_provider_disclosure_grant(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    grant_id: &str,
+    request: RevokeOwnerProviderDisclosureGrantRequest,
+) -> Result<PersistedDisclosureRevokeOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let current = sqlx::query(
+        "SELECT grant.id, grant.receipt_id, grant.status, grant.version,
+                grant.invitation_id, grant.organization_id
+         FROM owner_provider_disclosure_grants grant
+         JOIN owner_provider_disclosure_receipts receipt ON receipt.id = grant.receipt_id
+         WHERE grant.id = $1 AND grant.owner_user_id = $2 AND grant.property_id = $3
+           AND receipt.owner_user_id = $2 AND receipt.property_id = $3
+         FOR UPDATE OF grant",
+    )
+    .bind(grant_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedDisclosureRevokeOutcome::NotFound);
+    };
+    let replay = sqlx::query(
+        "SELECT grant_id, event_kind, reason_code, grant_version
+         FROM owner_provider_disclosure_grant_events
+         WHERE actor_user_id = $1 AND idempotency_key = $2",
+    )
+    .bind(owner_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        let exact = replay.get::<String, _>("grant_id") == grant_id
+            && replay.get::<String, _>("event_kind") == "revoked"
+            && replay.get::<Option<String>, _>("reason_code").as_deref()
+                == Some(request.reason_code.as_str())
+            && replay.get::<i64, _>("grant_version") == request.expected_version + 1;
+        if !exact {
+            transaction.rollback().await?;
+            return Ok(PersistedDisclosureRevokeOutcome::Conflict);
+        }
+        let receipt = owner_provider_disclosure_receipt_by_grant(
+            &mut transaction,
+            owner_user_id,
+            property_id,
+            grant_id,
+        )
+        .await?
+        .map(|(row, photos)| disclosure_receipt_from_row(&row, photos))
+        .expect("locked owner disclosure grant should remain readable");
+        transaction.commit().await?;
+        return Ok(PersistedDisclosureRevokeOutcome::Replayed(receipt));
+    }
+    if current.get::<String, _>("status") != "active" {
+        let receipt = owner_provider_disclosure_receipt_by_grant(
+            &mut transaction,
+            owner_user_id,
+            property_id,
+            grant_id,
+        )
+        .await?
+        .map(|(row, photos)| disclosure_receipt_from_row(&row, photos))
+        .expect("locked owner disclosure grant should remain readable");
+        transaction.commit().await?;
+        return Ok(PersistedDisclosureRevokeOutcome::InvalidState(receipt));
+    }
+    if current.get::<i64, _>("version") != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedDisclosureRevokeOutcome::Conflict);
+    }
+    let next_version = request.expected_version + 1;
+    sqlx::query(
+        "UPDATE owner_provider_disclosure_grants
+         SET status = 'revoked', version = $2, updated_at = NOW()
+         WHERE id = $1",
+    )
+    .bind(grant_id)
+    .bind(next_version)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_disclosure_grant_events (
+             id, grant_id, receipt_id, actor_user_id, event_kind, reason_code,
+             grant_version, idempotency_key
+         ) VALUES ($1, $2, $3, $4, 'revoked', $5, $6, $7)",
+    )
+    .bind(format!(
+        "owner_disclosure_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(grant_id)
+    .bind(current.get::<String, _>("receipt_id"))
+    .bind(owner_user_id)
+    .bind(&request.reason_code)
+    .bind(next_version)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_disclosure_grant_revoked', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(serde_json::json!({
+        "grant_id": grant_id,
+        "receipt_id": current.get::<String, _>("receipt_id"),
+        "invitation_id": current.get::<String, _>("invitation_id"),
+        "organization_id": current.get::<String, _>("organization_id"),
+        "purpose": "yard_assessment",
+        "status": "revoked",
+        "reason_code": request.reason_code,
+        "version": next_version
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    let receipt = owner_provider_disclosure_receipt_by_grant(
+        &mut transaction,
+        owner_user_id,
+        property_id,
+        grant_id,
+    )
+    .await?
+    .map(|(row, photos)| disclosure_receipt_from_row(&row, photos))
+    .expect("revoked owner disclosure grant should remain readable");
+    transaction.commit().await?;
+    Ok(PersistedDisclosureRevokeOutcome::Revoked(receipt))
 }
 
 async fn open_owner_provider_inbox(
@@ -8857,6 +9338,27 @@ mod tests {
                 approved_categories: vec!["pricing_and_work_authority".to_string()],
                 selected_media_ids: vec![],
                 ..disclosure_grant
+            }
+        ));
+        let disclosure_revoke = RevokeOwnerProviderDisclosureGrantRequest {
+            expected_version: 1,
+            reason_code: "owner_choice".to_string(),
+            owner_confirmed: true,
+            idempotency_key: "provider-disclosure-revoke-001".to_string(),
+        };
+        assert!(validate_provider_disclosure_revoke_request(
+            &disclosure_revoke
+        ));
+        assert!(!validate_provider_disclosure_revoke_request(
+            &RevokeOwnerProviderDisclosureGrantRequest {
+                owner_confirmed: false,
+                ..disclosure_revoke.clone()
+            }
+        ));
+        assert!(!validate_provider_disclosure_revoke_request(
+            &RevokeOwnerProviderDisclosureGrantRequest {
+                reason_code: "erase_everything".to_string(),
+                ..disclosure_revoke
             }
         ));
         let abuse_report = ReportOwnerProviderInvitationAbuseRequest {

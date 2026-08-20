@@ -405,6 +405,15 @@ Active slice:
   provider access, and reconcile stale authority to status-only expired or
   suspended recovery. Phase 3D3 owner receipt history and explicit revocation is
   next.
+- Phase 3D3 is delivered. Owners can inspect property-scoped immutable receipt
+  history with named provider, approved/withheld categories, selected-photo
+  labels, policy and grant versions, current projection, and latest event. The
+  confirmed revoke action is owner-isolated, reason-controlled, optimistic-
+  versioned, exactly replayable, append-only, and minimized in general audit;
+  it ends future provider reads without rewriting consent history or claiming
+  already-viewed information was erased. Owner and provider progress now show
+  access-ended recovery separately from invitation closure. Phase 3D4
+  production interface adoption and assurance is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

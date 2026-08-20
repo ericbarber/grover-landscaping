@@ -87,7 +87,8 @@ use grover_landscaping_api::{
         validate_intake_media_request, validate_property_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
-        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
+        validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
+        validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_opportunity_response_request,
@@ -107,16 +108,17 @@ use grover_landscaping_api::{
         OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
         OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
         OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-        OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
-        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
-        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+        OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
+        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+        OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
-        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
-        VerifyOwnerProviderInvitationRecipientRequest,
+        RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
+        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -698,6 +700,14 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/provider-connection-progress",
             get(list_owner_provider_connection_progress),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-disclosure-receipts",
+            get(list_owner_provider_disclosure_receipts),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
+            post(revoke_owner_provider_disclosure_grant),
         )
         .route(
             "/owner-properties/{property_id}/provider-invitations/{invitation_id}",
@@ -1683,6 +1693,80 @@ async fn list_owner_provider_connection_progress(
         OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
             "owner_provider_connection_progress_unavailable",
             "Provider connection progress could not be loaded. Existing invitations and responses are unchanged.",
+        ),
+    }
+}
+
+async fn list_owner_provider_disclosure_receipts(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_provider_disclosure_receipts(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(receipts) => Json(receipts).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_disclosure_receipts_unavailable",
+            "Assessment access history could not be loaded. Existing access is unchanged.",
+        ),
+    }
+}
+
+async fn revoke_owner_provider_disclosure_grant(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, grant_id)): Path<(String, String)>,
+    Json(request): Json<RevokeOwnerProviderDisclosureGrantRequest>,
+) -> Response {
+    if !validate_provider_disclosure_revoke_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_revoke_invalid",
+                message: "Confirm that you want to end future assessment access and choose a supported reason.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .revoke_provider_disclosure_grant(
+            &principal.subject,
+            &property_id,
+            &grant_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderDisclosureGrantRevokeResult::Revoked(receipt)
+        | OwnerProviderDisclosureGrantRevokeResult::Replayed(receipt) => {
+            Json(receipt).into_response()
+        }
+        OwnerProviderDisclosureGrantRevokeResult::NotFound => resource_not_found_response(
+            "owner_provider_disclosure_grant_not_found",
+            "The assessment access grant was not found for this property.",
+        ),
+        OwnerProviderDisclosureGrantRevokeResult::InvalidState(receipt) => {
+            (StatusCode::CONFLICT, Json(receipt)).into_response()
+        }
+        OwnerProviderDisclosureGrantRevokeResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_revoke_conflict",
+                message: "Assessment access changed before this request was applied. Reload the access history and review its current status.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderDisclosureGrantRevokeResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_disclosure_revoke_unavailable",
+            "Future access could not be confirmed as ended. Reload the access history before retrying.",
         ),
     }
 }

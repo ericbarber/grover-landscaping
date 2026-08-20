@@ -8,18 +8,19 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerMutationResult, OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
     OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
     OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
-    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
-    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
-    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
-    OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
-    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
-    OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
+    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
+    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
-    RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+    RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
+    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
@@ -439,6 +440,28 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderDisclosureAccessResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_provider_disclosure_receipts("owner-unavailable", "property-unavailable")
+            .await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .revoke_provider_disclosure_grant(
+                "owner-unavailable",
+                "property-unavailable",
+                "grant-unavailable",
+                RevokeOwnerProviderDisclosureGrantRequest {
+                    expected_version: 1,
+                    reason_code: "owner_choice".to_string(),
+                    owner_confirmed: true,
+                    idempotency_key: "revoke-disclosure-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderDisclosureGrantRevokeResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1513,6 +1536,132 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!approved_progress.owner_action_required);
     assert_eq!(approved_progress.next_action, "wait_for_assessment");
 
+    assert!(matches!(
+        repository
+            .list_provider_disclosure_receipts(owner_b, &property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(active_receipts) = repository
+        .list_provider_disclosure_receipts(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner disclosure receipt history should load");
+    };
+    assert_eq!(active_receipts.len(), 1);
+    assert_eq!(active_receipts[0].status, "active");
+    assert_eq!(active_receipts[0].latest_event_kind, "created");
+    assert_eq!(active_receipts[0].selected_photos.len(), 1);
+    let revoke_request = RevokeOwnerProviderDisclosureGrantRequest {
+        expected_version: disclosure_grant.version,
+        reason_code: "privacy_concern".to_string(),
+        owner_confirmed: true,
+        idempotency_key: "provider-disclosure-revoke-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .revoke_provider_disclosure_grant(
+                owner_b,
+                &property.property_id,
+                &disclosure_grant.grant_id,
+                revoke_request.clone(),
+            )
+            .await,
+        OwnerProviderDisclosureGrantRevokeResult::NotFound
+    ));
+    let OwnerProviderDisclosureGrantRevokeResult::Revoked(revoked_receipt) = repository
+        .revoke_provider_disclosure_grant(
+            owner_a,
+            &property.property_id,
+            &disclosure_grant.grant_id,
+            revoke_request.clone(),
+        )
+        .await
+    else {
+        panic!("owner should revoke future provider assessment access");
+    };
+    assert_eq!(revoked_receipt.status, "revoked");
+    assert_eq!(revoked_receipt.version, disclosure_grant.version + 1);
+    assert_eq!(revoked_receipt.latest_event_kind, "revoked");
+    assert_eq!(
+        revoked_receipt.latest_reason_code.as_deref(),
+        Some("privacy_concern")
+    );
+    assert!(matches!(
+        repository
+            .revoke_provider_disclosure_grant(
+                owner_a,
+                &property.property_id,
+                &disclosure_grant.grant_id,
+                revoke_request.clone(),
+            )
+            .await,
+        OwnerProviderDisclosureGrantRevokeResult::Replayed(receipt)
+            if receipt.version == revoked_receipt.version
+    ));
+    assert!(matches!(
+        repository
+            .revoke_provider_disclosure_grant(
+                owner_a,
+                &property.property_id,
+                &disclosure_grant.grant_id,
+                RevokeOwnerProviderDisclosureGrantRequest {
+                    reason_code: "owner_choice".to_string(),
+                    ..revoke_request
+                },
+            )
+            .await,
+        OwnerProviderDisclosureGrantRevokeResult::Conflict
+    ));
+    let OwnerProviderDisclosureAccessResult::Closed(revoked_access) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("revoked disclosure should return status-only provider recovery");
+    };
+    assert_eq!(revoked_access.status, "revoked");
+    assert!(!revoked_access.can_access);
+    let revoked_access_json =
+        serde_json::to_string(&revoked_access).expect("revoked access should serialize");
+    assert!(!revoked_access_json.contains("421 Private Canyon Road"));
+    assert!(!revoked_access_json.contains("front-yard.jpg"));
+    let OwnerProviderProgressResult::Loaded(revoked_access_progress) = repository
+        .provider_invitation_progress(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("provider progress should show ended assessment access");
+    };
+    assert_eq!(
+        revoked_access_progress.progress_stage,
+        "assessment_access_closed"
+    );
+    let OwnerReadResult::Loaded(revoked_owner_progress) = repository
+        .list_provider_connection_progress(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner progress should show ended assessment access");
+    };
+    assert_eq!(
+        revoked_owner_progress
+            .iter()
+            .find(|entry| entry.invitation_id == retry.invitation.invitation_id)
+            .expect("revoked grant progress")
+            .progress_stage,
+        "assessment_access_ended"
+    );
+
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
         .create_provider_invitation(
@@ -2301,7 +2450,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     else {
         panic!("revoked invitation should close future provider disclosure reads");
     };
-    assert_eq!(closed_disclosure.status, "suspended");
+    assert_eq!(closed_disclosure.status, "revoked");
     assert!(!closed_disclosure.can_access);
     let closed_disclosure_json =
         serde_json::to_string(&closed_disclosure).expect("closed disclosure should serialize");
@@ -2316,7 +2465,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .fetch_one(&pool)
         .await
         .expect("closed disclosure grant status should load"),
-        "suspended"
+        "revoked"
     );
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
