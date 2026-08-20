@@ -236,8 +236,12 @@ Current backend endpoints include:
 | POST | `/provider-disclosures/access` | Access only the owner-granted provider disclosure capabilities |
 | POST | `/provider-assessments` | Start an authorized remote review or propose an on-site assessment window |
 | POST | `/provider-assessments/{assessment_id}/transitions` | Begin, complete, mark unable to assess, or cancel an authorized provider assessment |
+| POST | `/provider-assessments/{assessment_id}/messages` | Add a verified provider's customer-safe assessment message |
+| POST | `/provider-assessments/{assessment_id}/private-notes` | Add a verified provider-private assessment note |
 | GET | `/owner-properties/{property_id}/provider-assessments` | List an owner's property-scoped assessment history |
 | POST | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/window-decision` | Confirm a proposed on-site assessment window or request another |
+| GET | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/messages` | List only customer-safe messages for an owner's assessment |
+| POST | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/messages` | Add an owner-authored customer-safe assessment message |
 | GET | `/provider-organization-claim-reviews` | List administrative provider-claim review work |
 | POST | `/provider-organization-claim-reviews/{claim_id}/decisions` | Record a claim review or appeal decision |
 | GET | `/jobs` | List assigned jobs |

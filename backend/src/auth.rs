@@ -539,6 +539,11 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path.starts_with("/provider-assessments/") && path.ends_with("/transitions") {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
+    if path.starts_with("/provider-assessments/")
+        && (path.ends_with("/messages") || path.ends_with("/private-notes"))
+    {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
     {
         return principal.verified_email.is_some() && *method == Method::POST;
@@ -593,6 +598,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
                 && owner_property_suffix.contains("/provider-assessments/")
                 && owner_property_suffix.ends_with("/window-decision")
                 && *method == Method::POST)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/provider-assessments/")
+                && owner_property_suffix.ends_with("/messages")
+                && (*method == Method::GET || *method == Method::POST))
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1692,6 +1701,14 @@ mod tests {
                 "/owner-properties/property-1/provider-assessments/assessment-1/window-decision",
             ),
             (
+                Method::GET,
+                "/owner-properties/property-1/provider-assessments/assessment-1/messages",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-assessments/assessment-1/messages",
+            ),
+            (
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations",
             ),
@@ -1728,6 +1745,11 @@ mod tests {
             (
                 Method::POST,
                 "/provider-assessments/assessment-1/transitions",
+            ),
+            (Method::POST, "/provider-assessments/assessment-1/messages"),
+            (
+                Method::POST,
+                "/provider-assessments/assessment-1/private-notes",
             ),
             (
                 Method::POST,

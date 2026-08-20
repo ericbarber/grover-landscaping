@@ -84,8 +84,10 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     owner_acquisition::{
-        validate_intake_media_request, validate_property_request,
-        validate_provider_assessment_request, validate_provider_assessment_transition_request,
+        validate_intake_media_request, validate_owner_assessment_message_request,
+        validate_property_request, validate_provider_assessment_message_request,
+        validate_provider_assessment_private_note_request, validate_provider_assessment_request,
+        validate_provider_assessment_transition_request,
         validate_provider_assessment_window_decision_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
@@ -100,26 +102,29 @@ use grover_landscaping_api::{
         validate_provider_organization_options_request,
         validate_provider_response_capability_request, validate_workspace_request,
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
-        BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
-        CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
-        CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
-        CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
-        DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
-        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
-        OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
-        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-        OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
-        OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
-        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
-        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
-        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
+        CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+        CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
+        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
+        CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
+        CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
+        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderDisclosureRequest,
+        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderAssessmentCommunicationWriteResult, OwnerProviderAssessmentCreateResult,
+        OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
+        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+        OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
+        OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+        OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
+        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+        OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
         RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
         SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
@@ -719,6 +724,11 @@ fn app_with_runtime(
             post(decide_owner_provider_assessment_window),
         )
         .route(
+            "/owner-properties/{property_id}/provider-assessments/{assessment_id}/messages",
+            get(list_owner_provider_assessment_messages)
+                .post(create_owner_provider_assessment_message),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
             post(revoke_owner_provider_disclosure_grant),
         )
@@ -781,6 +791,14 @@ fn app_with_runtime(
         .route(
             "/provider-assessments/{assessment_id}/transitions",
             post(transition_owner_provider_assessment),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/messages",
+            post(create_provider_assessment_message),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/private-notes",
+            post(create_provider_assessment_private_note),
         )
         .route(
             "/provider-opportunity-responses",
@@ -1759,6 +1777,64 @@ async fn list_owner_provider_assessments(
             "owner_provider_assessments_unavailable",
             "Assessment progress could not be loaded. Existing assessment state is unchanged.",
         ),
+    }
+}
+
+async fn list_owner_provider_assessment_messages(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, assessment_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_owner_assessment_messages(&principal.subject, &property_id, &assessment_id)
+        .await
+    {
+        OwnerReadResult::Loaded(messages) => Json(messages).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_provider_assessment_not_found",
+            "The requested assessment was not found for this property.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_assessment_messages_unavailable",
+            "Assessment messages could not be loaded. Existing messages are unchanged.",
+        ),
+    }
+}
+
+async fn create_owner_provider_assessment_message(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, assessment_id)): Path<(String, String)>,
+    Json(request): Json<CreateOwnerAssessmentMessageRequest>,
+) -> Response {
+    if !validate_owner_assessment_message_request(&request) {
+        return assessment_communication_invalid_response();
+    }
+    match state
+        .owner_acquisition
+        .create_owner_assessment_message(&principal.subject, &property_id, &assessment_id, request)
+        .await
+    {
+        OwnerProviderAssessmentCommunicationWriteResult::Created(message) => {
+            (StatusCode::CREATED, Json(message)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Replayed(message) => {
+            Json(message).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::NotFound => resource_not_found_response(
+            "owner_provider_assessment_not_found",
+            "The requested assessment was not found for this property.",
+        ),
+        OwnerProviderAssessmentCommunicationWriteResult::InvalidState(status) => {
+            (StatusCode::CONFLICT, Json(status)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Conflict => {
+            assessment_communication_conflict_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Unavailable => {
+            assessment_communication_unavailable_response()
+        }
     }
 }
 
@@ -3017,6 +3093,136 @@ async fn transition_owner_provider_assessment(
             )
         }
     }
+}
+
+fn assessment_communication_invalid_response() -> Response {
+    (
+        StatusCode::BAD_REQUEST,
+        Json(ErrorResponse {
+            error: "provider_assessment_communication_invalid",
+            message: "Choose an allowed message or note kind, current assessment version, and valid body."
+                .to_string(),
+        }),
+    )
+        .into_response()
+}
+
+fn assessment_communication_conflict_response() -> Response {
+    (
+        StatusCode::CONFLICT,
+        Json(ErrorResponse {
+            error: "provider_assessment_communication_conflict",
+            message: "The assessment changed or this request key was used for different content. Reload before retrying."
+                .to_string(),
+        }),
+    )
+        .into_response()
+}
+
+fn assessment_communication_unavailable_response() -> Response {
+    persisted_resource_unavailable_response(
+        "provider_assessment_communication_unavailable",
+        "The assessment update could not be confirmed. Existing messages and notes are unchanged; reload before retrying.",
+    )
+}
+
+async fn create_provider_assessment_message(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<CreateProviderAssessmentMessageRequest>,
+) -> Response {
+    if !validate_provider_assessment_message_request(&request) {
+        return assessment_communication_invalid_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return verified_provider_assessment_email_required_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_assessment_message(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderAssessmentCommunicationWriteResult::Created(message) => {
+            (StatusCode::CREATED, Json(message)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Replayed(message) => {
+            Json(message).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::NotFound => resource_not_found_response(
+            "provider_assessment_not_found",
+            "Assessment access is not available to this verified account.",
+        ),
+        OwnerProviderAssessmentCommunicationWriteResult::InvalidState(status) => {
+            (StatusCode::CONFLICT, Json(status)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Conflict => {
+            assessment_communication_conflict_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Unavailable => {
+            assessment_communication_unavailable_response()
+        }
+    }
+}
+
+async fn create_provider_assessment_private_note(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<CreateProviderAssessmentPrivateNoteRequest>,
+) -> Response {
+    if !validate_provider_assessment_private_note_request(&request) {
+        return assessment_communication_invalid_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return verified_provider_assessment_email_required_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_assessment_private_note(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderAssessmentCommunicationWriteResult::Created(note) => {
+            (StatusCode::CREATED, Json(note)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Replayed(note) => {
+            Json(note).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::NotFound => resource_not_found_response(
+            "provider_assessment_not_found",
+            "Assessment access is not available to this verified account.",
+        ),
+        OwnerProviderAssessmentCommunicationWriteResult::InvalidState(status) => {
+            (StatusCode::CONFLICT, Json(status)).into_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Conflict => {
+            assessment_communication_conflict_response()
+        }
+        OwnerProviderAssessmentCommunicationWriteResult::Unavailable => {
+            assessment_communication_unavailable_response()
+        }
+    }
+}
+
+fn verified_provider_assessment_email_required_response() -> Response {
+    (
+        StatusCode::FORBIDDEN,
+        Json(ErrorResponse {
+            error: "verified_email_required",
+            message: "Verify the invited business email before updating an assessment.".to_string(),
+        }),
+    )
+        .into_response()
 }
 
 async fn list_owner_provider_organization_claim_reviews(
@@ -9124,6 +9330,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
         let response = app
+            .clone()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -9137,6 +9344,83 @@ mod tests {
                             "reason_code": null,
                             "owner_visible_summary": "The yard conditions were reviewed and documented.",
                             "idempotency_key": "assessment-transition-outage-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties/property-1/provider-assessments/assessment-1/messages")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/provider-assessments/assessment-1/messages")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"message_kind":"owner_question","customer_safe_body":"Can you check the irrigation controller?","expected_assessment_version":1,"idempotency_key":"assessment-owner-message-outage-001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let provider_communication_base = serde_json::json!({
+            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            "expected_assessment_version": 1
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/messages")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": provider_communication_base["token"],
+                            "message_kind": "provider_answer",
+                            "customer_safe_body": "Yes, the controller can be included.",
+                            "expected_assessment_version": provider_communication_base["expected_assessment_version"],
+                            "idempotency_key": "assessment-provider-message-outage-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/private-notes")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": provider_communication_base["token"],
+                            "note_kind": "scope_basis",
+                            "private_body": "Internal measurement basis.",
+                            "expected_assessment_version": provider_communication_base["expected_assessment_version"],
+                            "idempotency_key": "assessment-provider-note-outage-001"
                         })
                         .to_string(),
                     ))

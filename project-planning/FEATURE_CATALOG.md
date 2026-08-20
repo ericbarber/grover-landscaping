@@ -101,6 +101,10 @@
   repository writes with current assessment versions, exact replay, full
   provider authority rechecks, status-only terminal recovery, minimized event
   bodies, cross-actor isolation, and shared-projection-only owner reads
+- Authenticated owner assessment-message list/create and verified-provider
+  shared-message/private-note create APIs with separate privacy-shaped request
+  paths, route authorization, explicit lifecycle/error mapping, and fail-closed
+  persistence-outage behavior
 - Owner-scoped on-site assessment window confirmation/change requests with
   expected-version locking, exact replay, controlled actions, append-only
   minimized events, authoritative invalid-state recovery, route authorization,

@@ -32,6 +32,9 @@
   shared/private writes with full current-authority rechecks, exact replay,
   current-version enforcement, status-only terminal recovery, minimized events,
   and owner reads sourced only from the shared projection.
+- Phase 4A2b3 exposes owner shared-message list/create and verified-provider
+  shared-message/private-note create routes with separate validators, route
+  authorization, explicit HTTP outcomes, and fail-closed outage coverage.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -71,8 +74,8 @@ Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration
 named staffing, human usability/assistive-technology/device work,
 Privacy/Security review, and go/no-go are signed. The machine-readable assurance
 manifest must continue to list those items as external or unsigned. Provider-
-authenticated customer-safe/private assessment communication APIs are the next
-product-development slice; they do not
+production owner/provider assessment interfaces are the next product-development
+slice; they do not
 remove or bypass the Phase 3E5 pilot launch
 blockers. Keep
 [`../PLAN.md`](../PLAN.md) canonical when work resumes.

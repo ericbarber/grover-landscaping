@@ -526,7 +526,12 @@ Active slice:
   version, exactly replay actor-scoped retries, return status-only terminal
   recovery, and append events without copying either body. Owner repository
   reads use only the shared projection and have no private-note source.
-  Authenticated communication APIs are next.
+  Phase 4A2b3 is delivered. Authenticated owners can list/create only their
+  assessment's shared messages, and verified providers use separate shared-
+  message and provider-private-note routes. Separate validation and response
+  mapping preserve invalid, missing, ended-state, conflict, replay, and outage
+  distinctions; there is no owner private-note route. Production owner/provider
+  assessment interfaces are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

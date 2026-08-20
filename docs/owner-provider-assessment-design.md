@@ -151,11 +151,18 @@ Phase 4A2b2 adds authorized communication repository writes:
 - append-only events retain record IDs and controlled kinds but never copy a
   shared message or private note body.
 
+Phase 4A2b3 exposes the communication boundary through authenticated APIs:
+
+- owners list/create messages only through their property and assessment scope;
+- verified providers create customer-safe messages and private notes through
+  separate routes, request types, validators, and persistence calls;
+- private notes have no owner route or owner response shape;
+- invalid requests, missing identity, ended/terminal state, replay, conflict,
+  and persistence outage remain distinct HTTP outcomes.
+
 ## Next slices
 
-1. Expose the authorized communication repositories through authenticated,
-   fail-closed owner/provider APIs.
-2. Adopt the assessment workspace in the production owner/provider interfaces
+1. Adopt the assessment workspace in the production owner/provider interfaces
    with responsive, accessible, stale-state, and outage coverage.
-3. Begin versioned initial-service proposals only after the assessment boundary
+2. Begin versioned initial-service proposals only after the assessment boundary
    is complete.
