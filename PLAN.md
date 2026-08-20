@@ -475,6 +475,15 @@ Active slice:
   calibrated thresholds, named staffing, human usability/AT/devices,
   Privacy/Security approval, and go/no-go remain external Phase 3E5 launch
   blockers. Repository-owned Phase 3E automation is complete.
+- Phase 4A1 is delivered. PostgreSQL now records one remote review or proposed
+  on-site assessment per invitation only after rechecking the verified provider
+  actor, mailbox, explicit interest, organization relationship and membership,
+  current owner/property/brief, and active provider-specific disclosure grant.
+  Exact concurrent starts replay one authoritative assessment; changed reuse,
+  second assessments, wrong actors, stale grants, and outages fail distinctly.
+  Owner reads remain property-scoped, and general audit omits mailbox, address,
+  schedule, time zone, brief, media, and access details. Phase 4A2 assessment
+  lifecycle APIs and customer-safe/private conversation separation are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -1,23 +1,25 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
     CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-    CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
-    CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
-    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
-    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
-    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
-    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
-    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
+    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
+    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
+    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderDisclosureRequest,
+    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderAssessmentCreateResult, OwnerProviderClaimAppealResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
+    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
+    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
+    OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
@@ -30,6 +32,22 @@ use std::time::Duration;
 mod common;
 
 async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
+    sqlx::query(
+        "DELETE FROM owner_provider_assessment_events
+         WHERE assessment_id IN (
+             SELECT id FROM owner_provider_assessments
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test assessment events should reset");
+    sqlx::query("DELETE FROM owner_provider_assessments WHERE owner_user_id = ANY($1)")
+        .bind(owner_user_ids)
+        .execute(pool)
+        .await
+        .expect("test assessments should reset");
     sqlx::query(
         "DELETE FROM owner_provider_disclosure_grant_events
          WHERE receipt_id IN (
@@ -498,6 +516,30 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderDisclosureGrantRevokeResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-unavailable",
+                "provider@example.com",
+                CreateOwnerProviderAssessmentRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    disclosure_grant_id: "owner_disclosure_grant_unavailable".to_string(),
+                    assessment_method: "remote".to_string(),
+                    proposed_window_start_epoch_seconds: None,
+                    proposed_window_end_epoch_seconds: None,
+                    time_zone: None,
+                    idempotency_key: "assessment-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_owner_provider_assessments("owner-unavailable", "property-unavailable")
+            .await,
+        OwnerReadResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1620,6 +1662,154 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     );
     assert!(!approved_progress.owner_action_required);
     assert_eq!(approved_progress.next_action, "wait_for_assessment");
+
+    let assessment_request = CreateOwnerProviderAssessmentRequest {
+        token: retry.delivery_token().to_string(),
+        disclosure_grant_id: disclosure_grant.grant_id.clone(),
+        assessment_method: "on_site".to_string(),
+        proposed_window_start_epoch_seconds: Some(1_800_000_000),
+        proposed_window_end_epoch_seconds: Some(1_800_003_600),
+        time_zone: Some("America/Phoenix".to_string()),
+        idempotency_key: "provider-assessment-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "another-provider-user",
+                recipient,
+                assessment_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderAssessmentRequest {
+                    disclosure_grant_id: "owner_disclosure_grant_wrong".to_string(),
+                    idempotency_key: "provider-assessment-wrong-grant".to_string(),
+                    ..assessment_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::InvalidState
+    ));
+    let (first_assessment_result, second_assessment_result) = tokio::join!(
+        repository.create_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            assessment_request.clone(),
+        ),
+        repository.create_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            assessment_request.clone(),
+        ),
+    );
+    let assessment = match (first_assessment_result, second_assessment_result) {
+        (
+            OwnerProviderAssessmentCreateResult::Created(created),
+            OwnerProviderAssessmentCreateResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderAssessmentCreateResult::Replayed(replayed),
+            OwnerProviderAssessmentCreateResult::Created(created),
+        ) => {
+            assert_eq!(created.assessment_id, replayed.assessment_id);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact assessment starts should create once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(assessment.status, "window_proposed");
+    assert_eq!(assessment.assessment_method, "on_site");
+    assert_eq!(assessment.time_zone.as_deref(), Some("America/Phoenix"));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                assessment_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::Replayed(replayed)
+            if replayed.assessment_id == assessment.assessment_id
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderAssessmentRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    ..assessment_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderAssessmentRequest {
+                    assessment_method: "remote".to_string(),
+                    proposed_window_start_epoch_seconds: None,
+                    proposed_window_end_epoch_seconds: None,
+                    time_zone: None,
+                    ..assessment_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                CreateOwnerProviderAssessmentRequest {
+                    idempotency_key: "provider-assessment-second".to_string(),
+                    ..assessment_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCreateResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .list_owner_provider_assessments(owner_b, &property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(owner_assessments) = repository
+        .list_owner_provider_assessments(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner assessment history should load");
+    };
+    assert_eq!(
+        owner_assessments.as_slice(),
+        std::slice::from_ref(&assessment)
+    );
+    let assessment_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_assessment_started'
+           AND event_data->>'assessment_id' = $1",
+    )
+    .bind(&assessment.assessment_id)
+    .fetch_one(&pool)
+    .await
+    .expect("minimized assessment audit should load")
+    .to_string();
+    assert!(assessment_audit.contains("on_site"));
+    assert!(!assessment_audit.contains(recipient));
+    assert!(!assessment_audit.contains("421 Private Canyon Road"));
+    assert!(!assessment_audit.contains("America/Phoenix"));
 
     assert!(matches!(
         repository

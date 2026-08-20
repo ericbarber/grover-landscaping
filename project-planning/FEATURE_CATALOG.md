@@ -84,6 +84,11 @@
   labels, complete signal-family alert/runbook mappings, seven controlled
   synthetic rehearsal scenarios, explicit containment/recovery/rollback, CI
   negative tests, and external/human blockers that automation cannot pass
+- Authorized Yard Owner/provider assessment persistence with verified-recipient,
+  active-interest, organization-membership, current-brief, and disclosure-grant
+  rechecks; distinct remote review and proposed on-site windows; exact
+  concurrent replay; owner-isolated history; append-only events; and minimized
+  audit data
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

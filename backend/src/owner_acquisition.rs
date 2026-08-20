@@ -605,6 +605,33 @@ pub struct OwnerProviderDisclosureReceiptView {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerProviderAssessmentRequest {
+    pub token: String,
+    pub disclosure_grant_id: String,
+    pub assessment_method: String,
+    pub proposed_window_start_epoch_seconds: Option<i64>,
+    pub proposed_window_end_epoch_seconds: Option<i64>,
+    pub time_zone: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderAssessmentRecord {
+    pub assessment_id: String,
+    pub invitation_id: String,
+    pub property_id: String,
+    pub organization_id: String,
+    pub disclosure_grant_id: String,
+    pub assessment_method: String,
+    pub status: String,
+    pub proposed_window_start_epoch_seconds: Option<i64>,
+    pub proposed_window_end_epoch_seconds: Option<i64>,
+    pub time_zone: Option<String>,
+    pub version: i64,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -829,6 +856,16 @@ pub enum OwnerProviderDisclosureGrantRevokeResult {
     Replayed(OwnerProviderDisclosureReceiptView),
     NotFound,
     InvalidState(OwnerProviderDisclosureReceiptView),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderAssessmentCreateResult {
+    Created(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState,
     Conflict,
     Unavailable,
 }
@@ -2996,6 +3033,93 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn create_provider_assessment(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        request: CreateOwnerProviderAssessmentRequest,
+    ) -> OwnerProviderAssessmentCreateResult {
+        if !validate_provider_assessment_request(&request) {
+            return OwnerProviderAssessmentCreateResult::InvalidState;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentCreateResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        let recovery_request = request.clone();
+        match create_owner_provider_assessment(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedAssessmentCreateOutcome::Created(assessment)) => {
+                OwnerProviderAssessmentCreateResult::Created(assessment)
+            }
+            Ok(PersistedAssessmentCreateOutcome::Replayed(assessment)) => {
+                OwnerProviderAssessmentCreateResult::Replayed(assessment)
+            }
+            Ok(PersistedAssessmentCreateOutcome::NotFound) => {
+                OwnerProviderAssessmentCreateResult::NotFound
+            }
+            Ok(PersistedAssessmentCreateOutcome::InvalidState) => {
+                OwnerProviderAssessmentCreateResult::InvalidState
+            }
+            Ok(PersistedAssessmentCreateOutcome::Conflict) => {
+                OwnerProviderAssessmentCreateResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                match load_owner_provider_assessment_replay(
+                    pool,
+                    provider_actor_user_id,
+                    &normalized_email,
+                    &email_fingerprint,
+                    &token_hash,
+                    &recovery_request,
+                )
+                .await
+                {
+                    Ok(Some(PersistedAssessmentCreateOutcome::Replayed(assessment))) => {
+                        OwnerProviderAssessmentCreateResult::Replayed(assessment)
+                    }
+                    Ok(_) => OwnerProviderAssessmentCreateResult::Conflict,
+                    Err(recovery_error) => {
+                        tracing::error!(%recovery_error, provider_actor_user_id, "provider assessment replay recovery failed");
+                        OwnerProviderAssessmentCreateResult::Unavailable
+                    }
+                }
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, "provider assessment creation failed");
+                OwnerProviderAssessmentCreateResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn list_owner_provider_assessments(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderAssessmentRecord>> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match list_owner_provider_assessments(pool, owner_user_id, property_id).await {
+            Ok(Some(assessments)) => OwnerReadResult::Loaded(assessments),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "owner provider assessment list failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3428,6 +3552,50 @@ pub fn validate_provider_disclosure_revoke_request(
                 | "incorrect_details"
                 | "privacy_concern"
         )
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_assessment_request(
+    request: &CreateOwnerProviderAssessmentRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    let grant_id = request.disclosure_grant_id.trim();
+    let schedule_valid = match request.assessment_method.as_str() {
+        "remote" => {
+            request.proposed_window_start_epoch_seconds.is_none()
+                && request.proposed_window_end_epoch_seconds.is_none()
+                && request.time_zone.is_none()
+        }
+        "on_site" => match (
+            request.proposed_window_start_epoch_seconds,
+            request.proposed_window_end_epoch_seconds,
+            request.time_zone.as_deref(),
+        ) {
+            (Some(start), Some(end), Some(time_zone)) => {
+                let time_zone = time_zone.trim();
+                start > 0
+                    && end > start
+                    && end - start <= 8 * 60 * 60
+                    && (1..=80).contains(&time_zone.chars().count())
+                    && time_zone.chars().all(|character| {
+                        character.is_ascii_alphanumeric()
+                            || matches!(character, '/' | '_' | '-' | '+')
+                    })
+            }
+            _ => false,
+        },
+        _ => false,
+    };
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && (8..=180).contains(&grant_id.chars().count())
+        && grant_id
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+        && schedule_valid
         && (8..=128).contains(&idempotency_key.chars().count())
         && idempotency_key
             .chars()
@@ -7116,6 +7284,14 @@ enum PersistedDisclosureRevokeOutcome {
     Conflict,
 }
 
+enum PersistedAssessmentCreateOutcome {
+    Created(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -8306,6 +8482,326 @@ async fn revoke_owner_provider_disclosure_grant(
     .expect("revoked owner disclosure grant should remain readable");
     transaction.commit().await?;
     Ok(PersistedDisclosureRevokeOutcome::Revoked(receipt))
+}
+
+const OWNER_PROVIDER_ASSESSMENT_SELECT: &str =
+    "SELECT id AS assessment_id, invitation_id, property_id, organization_id,
+            disclosure_grant_id, assessment_method, status,
+            EXTRACT(EPOCH FROM proposed_window_start)::BIGINT
+                AS proposed_window_start_epoch_seconds,
+            EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
+                AS proposed_window_end_epoch_seconds,
+            time_zone, version
+     FROM owner_provider_assessments";
+
+fn owner_provider_assessment_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderAssessmentRecord {
+    OwnerProviderAssessmentRecord {
+        assessment_id: row.get("assessment_id"),
+        invitation_id: row.get("invitation_id"),
+        property_id: row.get("property_id"),
+        organization_id: row.get("organization_id"),
+        disclosure_grant_id: row.get("disclosure_grant_id"),
+        assessment_method: row.get("assessment_method"),
+        status: row.get("status"),
+        proposed_window_start_epoch_seconds: row.get("proposed_window_start_epoch_seconds"),
+        proposed_window_end_epoch_seconds: row.get("proposed_window_end_epoch_seconds"),
+        time_zone: row.get("time_zone"),
+        version: row.get("version"),
+        persisted: true,
+    }
+}
+
+fn owner_provider_assessment_matches_request(
+    assessment: &OwnerProviderAssessmentRecord,
+    request: &CreateOwnerProviderAssessmentRequest,
+) -> bool {
+    assessment.disclosure_grant_id == request.disclosure_grant_id.trim()
+        && assessment.assessment_method == request.assessment_method
+        && assessment.proposed_window_start_epoch_seconds
+            == request.proposed_window_start_epoch_seconds
+        && assessment.proposed_window_end_epoch_seconds == request.proposed_window_end_epoch_seconds
+        && assessment.time_zone.as_deref() == request.time_zone.as_deref().map(str::trim)
+}
+
+async fn load_owner_provider_assessment_replay(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    request: &CreateOwnerProviderAssessmentRequest,
+) -> Result<Option<PersistedAssessmentCreateOutcome>, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE provider_actor_user_id = $1 AND idempotency_key = $2
+           AND invitation_id = (
+               SELECT invitation.id
+               FROM owner_provider_invitations invitation
+               JOIN owner_provider_invitation_recipient_checks recipient_check
+                 ON recipient_check.invitation_id = invitation.id
+               WHERE invitation.token_hash = $3
+                 AND LOWER(invitation.recipient_email) = LOWER($4)
+                 AND recipient_check.recipient_user_id = $1
+                 AND recipient_check.verified_email_fingerprint = $5
+                 AND recipient_check.status = 'checked'
+               LIMIT 1
+           )"
+    );
+    let row = sqlx::query(&query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .bind(token_hash)
+        .bind(verified_email)
+        .bind(verified_email_fingerprint)
+        .fetch_optional(pool)
+        .await?;
+    Ok(row.map(|row| {
+        let assessment = owner_provider_assessment_from_row(&row);
+        if owner_provider_assessment_matches_request(&assessment, request) {
+            PersistedAssessmentCreateOutcome::Replayed(assessment)
+        } else {
+            PersistedAssessmentCreateOutcome::Conflict
+        }
+    }))
+}
+
+async fn create_owner_provider_assessment(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    request: CreateOwnerProviderAssessmentRequest,
+) -> Result<PersistedAssessmentCreateOutcome, sqlx::Error> {
+    if let Some(replay) = load_owner_provider_assessment_replay(
+        pool,
+        provider_actor_user_id,
+        verified_email,
+        verified_email_fingerprint,
+        token_hash,
+        &request,
+    )
+    .await?
+    {
+        return Ok(replay);
+    }
+    let mut transaction = pool.begin().await?;
+    let identity = sqlx::query(
+        "SELECT invitation.id AS invitation_id
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)
+           AND recipient_check.recipient_user_id = $3
+           AND recipient_check.verified_email_fingerprint = $4
+           AND recipient_check.status = 'checked'
+         LIMIT 1",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(provider_actor_user_id)
+    .bind(verified_email_fingerprint)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(identity) = identity else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCreateOutcome::NotFound);
+    };
+    let invitation_id: String = identity.get("invitation_id");
+    let eligibility = sqlx::query(
+        "SELECT invitation.owner_user_id, invitation.property_id,
+                disclosure_grant.organization_id
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_response_capabilities capability
+           ON capability.invitation_id = invitation.id
+          AND capability.actor_user_id = $2
+         JOIN owner_provider_opportunity_responses response
+           ON response.capability_id = capability.id
+          AND response.action = 'express_interest'
+          AND response.status = 'recorded'
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.id = capability.claim_id
+          AND claim.organization_id = capability.organization_id
+         JOIN organizations organization ON organization.id = capability.organization_id
+         JOIN owner_provider_disclosure_grants disclosure_grant
+           ON disclosure_grant.invitation_id = invitation.id
+          AND disclosure_grant.organization_id = capability.organization_id
+          AND disclosure_grant.recipient_actor_user_id = $2
+         JOIN owner_properties property ON property.id = invitation.property_id
+         JOIN owner_workspaces workspace
+           ON workspace.owner_user_id = invitation.owner_user_id
+         JOIN owner_yard_briefs brief ON brief.id = disclosure_grant.brief_id
+         WHERE invitation.id = $1
+           AND disclosure_grant.id = $3
+           AND invitation.status = 'opened' AND invitation.expires_at > NOW()
+           AND capability.status = 'active' AND capability.expires_at > NOW()
+           AND claim.status IN ('relationship_checked', 'claimed')
+           AND organization.status = 'active'
+           AND organization.organization_type = 'yard_care_company'
+           AND EXISTS (
+               SELECT 1 FROM organization_memberships membership
+               WHERE membership.organization_id = organization.id
+                 AND membership.user_id = $2 AND membership.status = 'active'
+           )
+           AND disclosure_grant.status = 'active'
+           AND disclosure_grant.expires_at > NOW()
+           AND disclosure_grant.owner_user_id = invitation.owner_user_id
+           AND disclosure_grant.property_id = invitation.property_id
+           AND property.owner_user_id = invitation.owner_user_id
+           AND property.status <> 'archived'
+           AND workspace.status = 'active'
+           AND brief.status = 'ready'
+           AND brief.version = disclosure_grant.brief_version
+           AND NOT EXISTS (
+               SELECT 1 FROM owner_yard_briefs newer
+               WHERE newer.property_id = property.id AND newer.version > brief.version
+           )
+           AND NOT EXISTS (
+               SELECT 1 FROM owner_provider_recipient_suppressions suppression
+               WHERE suppression.recipient_email_fingerprint = invitation.recipient_email_fingerprint
+           )
+         FOR UPDATE OF disclosure_grant",
+    )
+    .bind(&invitation_id)
+    .bind(provider_actor_user_id)
+    .bind(request.disclosure_grant_id.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(eligibility) = eligibility else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCreateOutcome::InvalidState);
+    };
+    let existing_assessment = sqlx::query_scalar::<_, String>(
+        "SELECT id FROM owner_provider_assessments WHERE invitation_id = $1",
+    )
+    .bind(&invitation_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if existing_assessment.is_some() {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCreateOutcome::Conflict);
+    }
+    let assessment_id = format!("owner_provider_assessment_{}", Uuid::new_v4().simple());
+    let status = if request.assessment_method == "remote" {
+        "remote_review"
+    } else {
+        "window_proposed"
+    };
+    let assessment_method = request.assessment_method.clone();
+    let time_zone = request.time_zone.as_deref().map(str::trim);
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_assessments (
+             id, owner_user_id, property_id, invitation_id, organization_id,
+             disclosure_grant_id, provider_actor_user_id, assessment_method,
+             status, proposed_window_start, proposed_window_end, time_zone,
+             idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9,
+             TO_TIMESTAMP($10::DOUBLE PRECISION),
+             TO_TIMESTAMP($11::DOUBLE PRECISION), $12, $13
+         )
+         RETURNING id AS assessment_id, invitation_id, property_id, organization_id,
+                   disclosure_grant_id, assessment_method, status,
+                   EXTRACT(EPOCH FROM proposed_window_start)::BIGINT
+                       AS proposed_window_start_epoch_seconds,
+                   EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
+                       AS proposed_window_end_epoch_seconds,
+                   time_zone, version",
+    )
+    .bind(&assessment_id)
+    .bind(eligibility.get::<String, _>("owner_user_id"))
+    .bind(eligibility.get::<String, _>("property_id"))
+    .bind(&invitation_id)
+    .bind(eligibility.get::<String, _>("organization_id"))
+    .bind(request.disclosure_grant_id.trim())
+    .bind(provider_actor_user_id)
+    .bind(&assessment_method)
+    .bind(status)
+    .bind(request.proposed_window_start_epoch_seconds)
+    .bind(request.proposed_window_end_epoch_seconds)
+    .bind(time_zone)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_events (
+             id, assessment_id, actor_user_id, event_kind,
+             assessment_version, idempotency_key, event_data
+         ) VALUES ($1, $2, $3, 'started', 1, $4, $5)",
+    )
+    .bind(format!(
+        "owner_assessment_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(&assessment_id)
+    .bind(provider_actor_user_id)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({
+        "assessment_method": &assessment_method,
+        "status": status,
+        "has_proposed_window": request.proposed_window_start_epoch_seconds.is_some(),
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_acquisition_events (
+             id, owner_user_id, property_id, event_kind, event_data
+         ) VALUES ($1, $2, $3, 'provider_assessment_started', $4)",
+    )
+    .bind(format!("owner_event_{}", Uuid::new_v4()))
+    .bind(eligibility.get::<String, _>("owner_user_id"))
+    .bind(eligibility.get::<String, _>("property_id"))
+    .bind(serde_json::json!({
+        "assessment_id": assessment_id,
+        "invitation_id": invitation_id,
+        "organization_id": eligibility.get::<String, _>("organization_id"),
+        "assessment_method": &assessment_method,
+        "status": status,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentCreateOutcome::Created(
+        owner_provider_assessment_from_row(&row),
+    ))
+}
+
+async fn list_owner_provider_assessments(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerProviderAssessmentRecord>>, sqlx::Error> {
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1 FROM owner_properties
+             WHERE id = $1 AND owner_user_id = $2
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !property_exists {
+        return Ok(None);
+    }
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE owner_user_id = $1 AND property_id = $2
+         ORDER BY updated_at DESC, id"
+    );
+    let rows = sqlx::query(&query)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_all(pool)
+        .await?;
+    Ok(Some(
+        rows.iter()
+            .map(owner_provider_assessment_from_row)
+            .collect(),
+    ))
 }
 
 async fn open_owner_provider_inbox(

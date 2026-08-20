@@ -8,7 +8,7 @@ The project is built as a Rust + React application with local-first and remote-f
 
 Phase 3E repository-owned pilot assurance is complete. The current build includes the Yard Owner entry experience, private property intake, known-provider invitations, provider organization claims, administrative review and appeal paths, explicit disclosure grants and revocation, provider connection progress, and automated pilot assurance validation.
 
-Production launch remains gated on external operational work: live authenticated delivery and monitoring integration, production dashboards and pager routing, calibrated alert thresholds, named pilot staffing, human usability and assistive-technology testing, physical-device verification, privacy/security review, and a signed go/no-go decision. The next product phase after those gates is Phase 4 assessment, proposal, and activation.
+Production launch remains gated on external operational work: live authenticated delivery and monitoring integration, production dashboards and pager routing, calibrated alert thresholds, named pilot staffing, human usability and assistive-technology testing, physical-device verification, privacy/security review, and a signed go/no-go decision. Product development has begun Phase 4 assessment, proposal, and activation with an authorized assessment-persistence foundation; those launch gates remain unchanged.
 
 Start with these records when reviewing or continuing development:
 

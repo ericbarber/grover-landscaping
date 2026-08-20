@@ -60,7 +60,8 @@ The approved experience is defined by:
 | 3E3 | Delivered | Production React mobile/desktop Chromium, desktop Firefox, mobile WebKit, responsive, refresh, focus, reduced-motion, forced-colors automation, and CI enforcement |
 | 3E4 | Delivered | Machine-checked minimized monitoring/alert contract, runbook validation, seven-scenario synthetic rehearsal, rollback evidence, and final evidence manifest |
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
-| 4–7 | Planned | Assessment/proposal through governed pilot convergence |
+| 4A1 | Delivered | Authorized, replay-safe remote/on-site assessment persistence with bounded windows, one assessment per invitation, owner isolation, append-only events, and minimized audit |
+| 4A2–7 | Planned | Assessment lifecycle/conversation through governed pilot convergence |
 
 ## Delivery principles
 
@@ -229,6 +230,15 @@ staffing, operational, delivery-integration, and go/no-go evidence remains
 external and unsigned until performed by the accountable reviewers.
 
 ## Phase 4 — Assessment, proposal, and activation
+
+Phase 4A1 establishes the assessment persistence and authorization boundary in
+[`owner-provider-assessment-design.md`](owner-provider-assessment-design.md).
+Only the verified provider actor with explicit interest and a current disclosure
+grant can start one remote review or proposed on-site window. Exact retries are
+idempotent, owner history is property-scoped, and the general audit excludes
+private property, recipient, and schedule data. Lifecycle transitions,
+customer-safe conversation, provider-private notes, HTTP interfaces, and
+production React adoption remain Phase 4A2 and later work.
 
 - Add assessment method/window lifecycle and customer-safe conversation.
 - Separate provider-private assessment notes from owner-visible content.

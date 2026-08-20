@@ -197,6 +197,10 @@ is complete. Live delivery/monitoring integration, dashboards, pager routing,
 calibrated thresholds, named staffing, human usability/AT/devices,
 Privacy/Security approval, and go/no-go remain external Phase 3E5 launch
 blockers; Phase 4 assessment/proposal is the next product-development phase.
+Phase 4A1 now delivers the authorized assessment persistence foundation for one
+remote review or proposed on-site window per known-provider invitation, with
+exact replay, owner isolation, and minimized audit. Assessment lifecycle APIs
+and separated customer-safe/provider-private conversation are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
