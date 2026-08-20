@@ -8,8 +8,9 @@
 - Active roadmap item: Yard Owner Phase 3E pilot hardening
 - Phase 3D is complete in `98fcfc2`, `1d234d0`, `234ac7a`, and `3afae52`.
 - Phase 3E0 hardening planning is complete in `73545a4`; Phase 3E1 retry-safe
-  disclosure decisions are delivered, and Phase 3E2 server authorization and
-  concurrency regression is next.
+  disclosure decisions and Phase 3E2 server authorization/concurrency
+  regression are delivered. Phase 3E3 browser and accessibility automation is
+  next.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -38,8 +39,9 @@ privacy behavior throughout hardening.
 
 ## Next delivery work
 
-Plan Phase 3E as reviewable pilot-hardening slices, then complete every safe
-automated slice with proportionate validation and a narrow commit. Keep
+Continue Phase 3E as reviewable pilot-hardening slices, beginning with Phase 3E3
+browser and accessibility automation, then complete every safe automated slice
+with proportionate validation and a narrow commit. Keep
 [`../PLAN.md`](../PLAN.md) canonical and update the roadmap/catalog/history only
 when their recorded status materially changes.
 

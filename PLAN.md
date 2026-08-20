@@ -444,6 +444,16 @@ Active slice:
   typecheck, all 397 unit tests, isolated production build, and the focused
   compatible-Chromium lost-response/stale-revocation journey pass. Phase 3E2
   server authorization and concurrency regression is next.
+- Phase 3E2 is delivered. Exact concurrent disclosure-grant attempts now return
+  one created result and one authoritative replay, while changed or stale reuse
+  conflicts without partial receipts. Protected grant reads and revocation use
+  valid PostgreSQL aliases; the retained-evidence lifecycle fixture is
+  repeatable; and the claim-review constraint admits the checked-recipient
+  appeal actor required by the existing contract. Rust formatting, the focused
+  PostgreSQL lifecycle, all backend tests, and a clean full migration replay
+  pass. Strict repository-wide Clippy remains pending on 19 pre-existing
+  warnings outside this slice. Phase 3E3 cross-browser, responsive, and
+  accessibility automation is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

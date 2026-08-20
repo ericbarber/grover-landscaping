@@ -172,6 +172,14 @@ reloads authoritative receipt/connection state on stale conflicts without a
 false success claim. Frontend typecheck, all 397 unit tests, isolated production
 build, and focused compatible-Chromium recovery coverage pass; Phase 3E2 server
 authorization and concurrency regression is next.
+Phase 3E2 now recovers exact concurrent disclosure decisions from the
+authoritative receipt while changed or stale reuse conflicts without partial
+writes. Protected disclosure reads use valid PostgreSQL aliases, the retained-
+evidence lifecycle fixture is repeatable, and the checked-recipient appeal actor
+survives a clean migration chain. Backend formatting, focused/full tests, and
+fresh migration replay pass; strict repository-wide Clippy remains pending on
+19 existing warnings outside the slice. Phase 3E3 cross-browser, responsive,
+and accessibility automation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

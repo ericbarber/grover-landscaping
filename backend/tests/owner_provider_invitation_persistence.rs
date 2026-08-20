@@ -24,10 +24,44 @@ use grover_landscaping_api::owner_acquisition::{
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
-use sqlx::{postgres::PgPoolOptions, Row};
+use sqlx::{postgres::PgPoolOptions, PgPool, Row};
 use std::time::Duration;
 
 mod common;
+
+async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
+    sqlx::query(
+        "DELETE FROM owner_provider_disclosure_grant_events
+         WHERE receipt_id IN (
+             SELECT id FROM owner_provider_disclosure_receipts
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test disclosure events should reset");
+    sqlx::query("DELETE FROM owner_provider_disclosure_grants WHERE owner_user_id = ANY($1)")
+        .bind(owner_user_ids)
+        .execute(pool)
+        .await
+        .expect("test disclosure grants should reset");
+    sqlx::query("DELETE FROM owner_provider_disclosure_receipts WHERE owner_user_id = ANY($1)")
+        .bind(owner_user_ids)
+        .execute(pool)
+        .await
+        .expect("test disclosure receipts should reset");
+    sqlx::query("DELETE FROM owner_provider_invitations WHERE owner_user_id = ANY($1)")
+        .bind(owner_user_ids)
+        .execute(pool)
+        .await
+        .expect("test provider invitations should reset");
+    sqlx::query("DELETE FROM owner_workspaces WHERE owner_user_id = ANY($1)")
+        .bind(owner_user_ids)
+        .execute(pool)
+        .await
+        .expect("test owners should reset");
+}
 
 fn property_request(address: &str) -> CreateOwnerPropertyRequest {
     CreateOwnerPropertyRequest {
@@ -71,15 +105,17 @@ async fn ready_checked_invitation(
     recipient_user_id: &str,
     idempotency_key: &str,
 ) -> OwnerProviderInvitationCreation {
-    let OwnerProviderInvitationCreateResult::Created(invitation) = repository
+    let invitation_result = repository
         .create_provider_invitation(
             owner_user_id,
             property_id,
             invitation_request(recipient_email, idempotency_key),
         )
-        .await
-    else {
-        panic!("provider bootstrap test invitation should be created");
+        .await;
+    let OwnerProviderInvitationCreateResult::Created(invitation) = invitation_result else {
+        panic!(
+            "provider bootstrap test invitation for {recipient_email} should be created, got {invitation_result:?}"
+        );
     };
     assert!(matches!(
         repository
@@ -528,15 +564,13 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let opt_out_recipient = "preferences@sonoranyard.example";
     let abuse_recipient = "safety@sonoranyard.example";
     let abuse_reporter = "provider_abuse_reporter";
-    sqlx::query("DELETE FROM owner_workspaces WHERE owner_user_id = ANY($1)")
-        .bind(vec![owner_a, owner_b])
-        .execute(&pool)
-        .await
-        .expect("test owners should reset");
+    reset_provider_invitation_test_owners(&pool, &[owner_a, owner_b]).await;
     sqlx::query(
         "DELETE FROM organizations
          WHERE id = ANY($1)
-            OR display_name IN ('Cactus Bloom Groundskeeping', 'Concurrent Mesa Care')",
+            OR LOWER(BTRIM(display_name)) IN (
+                'cactus bloom groundskeeping', 'concurrent mesa care'
+            )",
     )
     .bind(vec![
         "org_provider_claim_owned",
@@ -549,11 +583,14 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let opt_out_fingerprint = format!("{:x}", Sha256::digest(opt_out_recipient.as_bytes()));
     let abuse_fingerprint = format!("{:x}", Sha256::digest(abuse_recipient.as_bytes()));
     let recipient_fingerprint = format!("{:x}", Sha256::digest(recipient.as_bytes()));
-    sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
-        .bind(abuse_reporter)
-        .execute(&pool)
-        .await
-        .expect("test abuse reports should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_invitation_abuse_reports
+         WHERE reporter_user_id = ANY($1)",
+    )
+    .bind(vec![abuse_reporter, "recipient-user-1"])
+    .execute(&pool)
+    .await
+    .expect("test abuse reports should reset");
     sqlx::query(
         "DELETE FROM owner_provider_recipient_suppressions
          WHERE recipient_email_fingerprint = ANY($1)",
@@ -1360,16 +1397,63 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         owner_affirmed: true,
         idempotency_key: "provider-disclosure-grant-001".to_string(),
     };
-    let OwnerProviderDisclosureGrantCreateResult::Created(disclosure_grant) = repository
+    let stale_review_result = repository
         .create_provider_disclosure_grant(
             owner_a,
             &property.property_id,
             &retry.invitation.invitation_id,
-            grant_request.clone(),
+            CreateOwnerProviderDisclosureGrantRequest {
+                expected_review_version: format!("disclosure_review_v1_{}", "0".repeat(64)),
+                idempotency_key: "provider-disclosure-stale-review-001".to_string(),
+                ..grant_request.clone()
+            },
         )
-        .await
-    else {
-        panic!("owner-selected disclosure grant should be created atomically");
+        .await;
+    assert!(
+        matches!(
+            stale_review_result,
+            OwnerProviderDisclosureGrantCreateResult::Conflict
+        ),
+        "stale disclosure review should conflict, got {stale_review_result:?}"
+    );
+    let pre_grant_receipt_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM owner_provider_disclosure_receipts WHERE invitation_id = $1",
+    )
+    .bind(&retry.invitation.invitation_id)
+    .fetch_one(&pool)
+    .await
+    .expect("stale disclosure receipt count should load");
+    assert_eq!(pre_grant_receipt_count, 0);
+
+    let (first_grant_result, second_grant_result) = tokio::join!(
+        repository.create_provider_disclosure_grant(
+            owner_a,
+            &property.property_id,
+            &retry.invitation.invitation_id,
+            grant_request.clone(),
+        ),
+        repository.create_provider_disclosure_grant(
+            owner_a,
+            &property.property_id,
+            &retry.invitation.invitation_id,
+            grant_request.clone(),
+        ),
+    );
+    let disclosure_grant = match (first_grant_result, second_grant_result) {
+        (
+            OwnerProviderDisclosureGrantCreateResult::Created(created),
+            OwnerProviderDisclosureGrantCreateResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderDisclosureGrantCreateResult::Replayed(replayed),
+            OwnerProviderDisclosureGrantCreateResult::Created(created),
+        ) => {
+            assert_eq!(replayed.grant_id, created.grant_id);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact disclosure approvals should create once and replay once, got {first:?} and {second:?}"
+        ),
     };
     assert_eq!(disclosure_grant.status, "active");
     assert_eq!(
@@ -1404,6 +1488,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 &retry.invitation.invitation_id,
                 CreateOwnerProviderDisclosureGrantRequest {
                     approved_categories: vec!["owner_contact".to_string()],
+                    selected_media_ids: Vec::new(),
                     ..grant_request.clone()
                 },
             )
@@ -2261,7 +2346,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 OwnerProviderOrganizationBootstrapResult::Bootstrapped(_)
             ))
             .count(),
-        1
+        1,
+        "one concurrent organization bootstrap should win: {concurrent_result_a:?}, {concurrent_result_b:?}"
     );
     assert_eq!(
         concurrent_outcomes
@@ -2484,7 +2570,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .create_provider_invitation(
                 owner_a,
                 &property.property_id,
-                invitation_request(recipient, "provider-invite-after-revoke"),
+                invitation_request(
+                    "replacement@sonoranyard.example",
+                    "provider-invite-after-revoke",
+                ),
             )
             .await,
         OwnerProviderInvitationCreateResult::Created(_)
@@ -2551,7 +2640,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         "report-001",
     )
     .await;
-    let OwnerProviderOpportunityResponseResult::Recorded(report) = repository
+    let report_result = repository
         .create_provider_opportunity_response(
             "recipient-user-1",
             recipient,
@@ -2565,9 +2654,9 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 idempotency_key: "provider-opportunity-report-001".to_string(),
             },
         )
-        .await
-    else {
-        panic!("authorized safety report should be routed");
+        .await;
+    let OwnerProviderOpportunityResponseResult::Recorded(report) = report_result else {
+        panic!("authorized safety report should be routed, got {report_result:?}");
     };
     assert_eq!(report.status, "routed");
     assert_eq!(
@@ -2839,15 +2928,13 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInvitationCreateResult::Suppressed
     ));
 
-    sqlx::query("DELETE FROM owner_workspaces WHERE owner_user_id = ANY($1)")
-        .bind(vec![owner_a, owner_b])
-        .execute(&pool)
-        .await
-        .expect("test owners should clean up");
+    reset_provider_invitation_test_owners(&pool, &[owner_a, owner_b]).await;
     sqlx::query(
         "DELETE FROM organizations
          WHERE id = ANY($1)
-            OR display_name IN ('Cactus Bloom Groundskeeping', 'Concurrent Mesa Care')",
+            OR LOWER(BTRIM(display_name)) IN (
+                'cactus bloom groundskeeping', 'concurrent mesa care'
+            )",
     )
     .bind(vec![
         "org_provider_claim_owned",
@@ -2856,11 +2943,14 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .expect("test provider organizations should clean up");
-    sqlx::query("DELETE FROM owner_provider_invitation_abuse_reports WHERE reporter_user_id = $1")
-        .bind(abuse_reporter)
-        .execute(&pool)
-        .await
-        .expect("test abuse reports should clean up");
+    sqlx::query(
+        "DELETE FROM owner_provider_invitation_abuse_reports
+         WHERE reporter_user_id = ANY($1)",
+    )
+    .bind(vec![abuse_reporter, "recipient-user-1"])
+    .execute(&pool)
+    .await
+    .expect("test abuse reports should clean up");
     sqlx::query(
         "DELETE FROM owner_provider_recipient_suppressions
          WHERE recipient_email_fingerprint = ANY($1)",

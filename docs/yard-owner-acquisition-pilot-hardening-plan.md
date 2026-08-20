@@ -34,8 +34,8 @@ templates and simulations do not change external or signed evidence to passed.
 | --- | --- | --- |
 | 3E0 | Delivered | Restart index, hardening order, evidence taxonomy, launch blockers, and verification contract |
 | 3E1 | Delivered | Retry-safe owner disclosure approval/revocation keys plus explicit stale-tab and uncertain-outcome recovery |
-| 3E2 | Next | Concurrent/stale authorization, isolation, idempotency, outage, audit-minimization, and post-revocation server regression gates |
-| 3E3 | Planned | Production React cross-browser/responsive/accessibility automation with browser-specific failures recorded honestly |
+| 3E2 | Delivered | Concurrent/stale disclosure authorization, replay/isolation/outage/audit, and post-revocation PostgreSQL regression gates |
+| 3E3 | Next | Production React cross-browser/responsive/accessibility automation with browser-specific failures recorded honestly |
 | 3E4 | Planned | Minimized pilot telemetry contract, alert/runbook validation, synthetic launch rehearsal, rollback evidence, and operator-ready evidence manifests |
 | 3E5 | External | Delivery integration decision and threat review; human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go signatures |
 
@@ -59,6 +59,20 @@ revocation reconciliation without a false success claim.
   tests.
 
 ### 3E2 — server hardening gates
+
+Delivered on 2026-08-19. Disclosure grant creation now recovers an exact
+concurrent idempotent replay from the authoritative receipt, rejects changed or
+stale decisions without partial writes, and uses valid non-reserved PostgreSQL
+aliases across grant reads and revocation. The PostgreSQL lifecycle fixture is
+repeatable despite intentionally retained consent and safety records, and the
+claim-review actor constraint now admits the checked-recipient appeal actor
+defined by the appeal contract.
+
+Automated evidence includes the focused PostgreSQL owner/provider lifecycle,
+the complete backend test suite, Rust formatting, and a from-zero replay of all
+migrations. Strict repository-wide Clippy remains pending because 19 existing
+warnings outside this slice are promoted to errors; no warning points to the
+Phase 3E2 changes.
 
 - Prove concurrent grant attempts leave one active grant and one immutable
   receipt for the winning decision.

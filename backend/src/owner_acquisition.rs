@@ -2839,6 +2839,7 @@ impl OwnerAcquisitionRepository {
         let Some(pool) = &self.pool else {
             return OwnerProviderDisclosureGrantCreateResult::Unavailable;
         };
+        let replay_request = request.clone();
         match create_owner_provider_disclosure_grant(
             pool,
             owner_user_id,
@@ -2863,9 +2864,24 @@ impl OwnerAcquisitionRepository {
             Ok(PersistedDisclosureGrantOutcome::Conflict) => {
                 OwnerProviderDisclosureGrantCreateResult::Conflict
             }
-            Err(error) if is_unique_violation(&error) => {
-                OwnerProviderDisclosureGrantCreateResult::Conflict
-            }
+            Err(error) if is_unique_violation(&error) => match disclosure_grant_replay_from_pool(
+                pool,
+                owner_user_id,
+                property_id,
+                invitation_id,
+                &replay_request,
+            )
+            .await
+            {
+                Ok(Some(PersistedDisclosureGrantOutcome::Replayed(record))) => {
+                    OwnerProviderDisclosureGrantCreateResult::Replayed(record)
+                }
+                Ok(_) => OwnerProviderDisclosureGrantCreateResult::Conflict,
+                Err(replay_error) => {
+                    tracing::error!(%replay_error, owner_user_id, property_id, invitation_id, "owner provider disclosure grant replay recovery failed");
+                    OwnerProviderDisclosureGrantCreateResult::Unavailable
+                }
+            },
             Err(error) => {
                 tracing::error!(%error, owner_user_id, property_id, invitation_id, "owner provider disclosure grant creation failed");
                 OwnerProviderDisclosureGrantCreateResult::Unavailable
@@ -7336,6 +7352,79 @@ async fn get_owner_provider_disclosure_review(
     ))
 }
 
+const DISCLOSURE_GRANT_REPLAY_QUERY: &str =
+    "SELECT receipt.id AS receipt_id, disclosure_grant.id AS grant_id, receipt.invitation_id,
+            receipt.property_id, receipt.organization_id, receipt.purpose,
+            receipt.approved_categories, receipt.withheld_categories,
+            receipt.selected_media_ids, receipt.brief_id, receipt.brief_version,
+            receipt.grant_version, receipt.consent_text_version,
+            receipt.retention_notice_version, receipt.review_version,
+            disclosure_grant.status,
+            EXTRACT(EPOCH FROM disclosure_grant.effective_at)::BIGINT
+                AS effective_at_epoch_seconds,
+            EXTRACT(EPOCH FROM disclosure_grant.expires_at)::BIGINT
+                AS expires_at_epoch_seconds,
+            disclosure_grant.version
+     FROM owner_provider_disclosure_receipts receipt
+     JOIN owner_provider_disclosure_grants disclosure_grant
+       ON disclosure_grant.receipt_id = receipt.id
+     WHERE receipt.owner_user_id = $1 AND receipt.idempotency_key = $2
+       AND receipt.property_id = $3 AND receipt.invitation_id = $4";
+
+async fn disclosure_grant_replay(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    owner_user_id: &str,
+    property_id: &str,
+    invitation_id: &str,
+    request: &CreateOwnerProviderDisclosureGrantRequest,
+) -> Result<Option<PersistedDisclosureGrantOutcome>, sqlx::Error> {
+    let replay = sqlx::query(DISCLOSURE_GRANT_REPLAY_QUERY)
+        .bind(owner_user_id)
+        .bind(request.idempotency_key.trim())
+        .bind(property_id)
+        .bind(invitation_id)
+        .fetch_optional(&mut **transaction)
+        .await?;
+    let Some(row) = replay else {
+        return Ok(None);
+    };
+    let mut approved_categories = request.approved_categories.clone();
+    approved_categories.sort();
+    let mut selected_media_ids = request.selected_media_ids.clone();
+    selected_media_ids.sort();
+    let exact = row.get::<String, _>("purpose") == request.purpose
+        && row.get::<Vec<String>, _>("approved_categories") == approved_categories
+        && row.get::<Vec<String>, _>("selected_media_ids") == selected_media_ids
+        && row.get::<String, _>("consent_text_version") == request.consent_text_version
+        && row.get::<String, _>("retention_notice_version") == request.retention_notice_version
+        && row.get::<String, _>("review_version") == request.expected_review_version;
+    Ok(Some(if exact {
+        PersistedDisclosureGrantOutcome::Replayed(disclosure_grant_from_row(&row))
+    } else {
+        PersistedDisclosureGrantOutcome::Conflict
+    }))
+}
+
+async fn disclosure_grant_replay_from_pool(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    invitation_id: &str,
+    request: &CreateOwnerProviderDisclosureGrantRequest,
+) -> Result<Option<PersistedDisclosureGrantOutcome>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let replay = disclosure_grant_replay(
+        &mut transaction,
+        owner_user_id,
+        property_id,
+        invitation_id,
+        request,
+    )
+    .await?;
+    transaction.commit().await?;
+    Ok(replay)
+}
+
 async fn create_owner_provider_disclosure_grant(
     pool: &PgPool,
     owner_user_id: &str,
@@ -7346,43 +7435,17 @@ async fn create_owner_provider_disclosure_grant(
     request.approved_categories.sort();
     request.selected_media_ids.sort();
     let mut transaction = pool.begin().await?;
-    let replay = sqlx::query(
-        "SELECT receipt.id AS receipt_id, grant.id AS grant_id, receipt.invitation_id,
-                receipt.property_id, receipt.organization_id, receipt.purpose,
-                receipt.approved_categories, receipt.withheld_categories,
-                receipt.selected_media_ids, receipt.brief_id, receipt.brief_version,
-                receipt.grant_version, receipt.consent_text_version,
-                receipt.retention_notice_version, receipt.review_version,
-                grant.status, EXTRACT(EPOCH FROM grant.effective_at)::BIGINT
-                    AS effective_at_epoch_seconds,
-                EXTRACT(EPOCH FROM grant.expires_at)::BIGINT AS expires_at_epoch_seconds,
-                grant.version
-         FROM owner_provider_disclosure_receipts receipt
-         JOIN owner_provider_disclosure_grants grant ON grant.receipt_id = receipt.id
-         WHERE receipt.owner_user_id = $1 AND receipt.idempotency_key = $2
-           AND receipt.property_id = $3 AND receipt.invitation_id = $4",
+    if let Some(replay) = disclosure_grant_replay(
+        &mut transaction,
+        owner_user_id,
+        property_id,
+        invitation_id,
+        &request,
     )
-    .bind(owner_user_id)
-    .bind(request.idempotency_key.trim())
-    .bind(property_id)
-    .bind(invitation_id)
-    .fetch_optional(&mut *transaction)
-    .await?;
-    if let Some(row) = replay {
-        let exact = row.get::<String, _>("purpose") == request.purpose
-            && row.get::<Vec<String>, _>("approved_categories") == request.approved_categories
-            && row.get::<Vec<String>, _>("selected_media_ids") == request.selected_media_ids
-            && row.get::<String, _>("consent_text_version") == request.consent_text_version
-            && row.get::<String, _>("retention_notice_version") == request.retention_notice_version
-            && row.get::<String, _>("review_version") == request.expected_review_version;
-        if !exact {
-            transaction.rollback().await?;
-            return Ok(PersistedDisclosureGrantOutcome::Conflict);
-        }
+    .await?
+    {
         transaction.commit().await?;
-        return Ok(PersistedDisclosureGrantOutcome::Replayed(
-            disclosure_grant_from_row(&row),
-        ));
+        return Ok(replay);
     }
     let exists = sqlx::query_scalar::<_, bool>(
         "SELECT EXISTS(
@@ -7407,6 +7470,18 @@ async fn create_owner_provider_disclosure_grant(
         .fetch_optional(&mut *transaction)
         .await?;
     let Some(eligibility) = eligibility else {
+        if let Some(replay) = disclosure_grant_replay(
+            &mut transaction,
+            owner_user_id,
+            property_id,
+            invitation_id,
+            &request,
+        )
+        .await?
+        {
+            transaction.commit().await?;
+            return Ok(replay);
+        }
         transaction.rollback().await?;
         return Ok(PersistedDisclosureGrantOutcome::InvalidState);
     };
@@ -7678,10 +7753,13 @@ async fn open_owner_provider_disclosure(
     };
     let invitation_id: String = identity.get("invitation_id");
     let row = sqlx::query(
-        "SELECT grant.id AS grant_id, grant.receipt_id, grant.status AS grant_status,
-                grant.version AS grant_projection_version,
-                grant.approved_categories, grant.selected_media_ids,
-                EXTRACT(EPOCH FROM grant.expires_at)::BIGINT AS grant_expires_at,
+        "SELECT disclosure_grant.id AS grant_id, disclosure_grant.receipt_id,
+                disclosure_grant.status AS grant_status,
+                disclosure_grant.version AS grant_projection_version,
+                disclosure_grant.approved_categories,
+                disclosure_grant.selected_media_ids,
+                EXTRACT(EPOCH FROM disclosure_grant.expires_at)::BIGINT
+                    AS grant_expires_at,
                 receipt.withheld_categories, receipt.grant_version,
                 invitation.status AS invitation_status,
                 invitation.expires_at <= NOW() AS invitation_expired,
@@ -7715,25 +7793,29 @@ async fn open_owner_provider_disclosure(
                     SELECT 1 FROM owner_yard_briefs newer
                     WHERE newer.property_id = property.id AND newer.version > brief.version
                 ) AS newer_brief_exists
-         FROM owner_provider_disclosure_grants grant
-         JOIN owner_provider_disclosure_receipts receipt ON receipt.id = grant.receipt_id
-         JOIN owner_provider_invitations invitation ON invitation.id = grant.invitation_id
+         FROM owner_provider_disclosure_grants disclosure_grant
+         JOIN owner_provider_disclosure_receipts receipt
+           ON receipt.id = disclosure_grant.receipt_id
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = disclosure_grant.invitation_id
          JOIN owner_provider_invitation_response_capabilities capability
            ON capability.id = receipt.capability_id
          JOIN owner_provider_invitation_organization_claims claim
            ON claim.id = capability.claim_id
-         JOIN organizations organization ON organization.id = grant.organization_id
-         JOIN owner_properties property ON property.id = grant.property_id
-         JOIN owner_workspaces workspace ON workspace.owner_user_id = grant.owner_user_id
-         JOIN owner_yard_briefs brief ON brief.id = grant.brief_id
-         WHERE grant.invitation_id = $1
-           AND grant.recipient_actor_user_id = $2
+         JOIN organizations organization
+           ON organization.id = disclosure_grant.organization_id
+         JOIN owner_properties property ON property.id = disclosure_grant.property_id
+         JOIN owner_workspaces workspace
+           ON workspace.owner_user_id = disclosure_grant.owner_user_id
+         JOIN owner_yard_briefs brief ON brief.id = disclosure_grant.brief_id
+         WHERE disclosure_grant.invitation_id = $1
+           AND disclosure_grant.recipient_actor_user_id = $2
            AND receipt.recipient_actor_user_id = $2
-           AND grant.organization_id = receipt.organization_id
-           AND grant.property_id = receipt.property_id
-           AND grant.brief_version = receipt.brief_version
+           AND disclosure_grant.organization_id = receipt.organization_id
+           AND disclosure_grant.property_id = receipt.property_id
+           AND disclosure_grant.brief_version = receipt.brief_version
          ORDER BY receipt.grant_version DESC LIMIT 1
-         FOR UPDATE OF grant",
+         FOR UPDATE OF disclosure_grant",
     )
     .bind(&invitation_id)
     .bind(recipient_user_id)
@@ -7929,7 +8011,8 @@ async fn open_owner_provider_disclosure(
     Ok(PersistedDisclosureAccessOutcome::Loaded(access))
 }
 
-const DISCLOSURE_RECEIPT_SELECT: &str = "SELECT receipt.id AS receipt_id, grant.id AS grant_id,
+const DISCLOSURE_RECEIPT_SELECT: &str = "SELECT receipt.id AS receipt_id,
+            disclosure_grant.id AS grant_id,
             receipt.invitation_id, receipt.property_id,
             property.display_name AS property_name, receipt.organization_id,
             organization.display_name AS organization_name, receipt.purpose,
@@ -7939,22 +8022,24 @@ const DISCLOSURE_RECEIPT_SELECT: &str = "SELECT receipt.id AS receipt_id, grant.
             receipt.grant_version,
             EXTRACT(EPOCH FROM receipt.owner_affirmed_at)::BIGINT
                 AS affirmed_at_epoch_seconds,
-            grant.status,
-            EXTRACT(EPOCH FROM grant.effective_at)::BIGINT
+            disclosure_grant.status,
+            EXTRACT(EPOCH FROM disclosure_grant.effective_at)::BIGINT
                 AS effective_at_epoch_seconds,
-            EXTRACT(EPOCH FROM grant.expires_at)::BIGINT AS expires_at_epoch_seconds,
-            grant.version, latest_event.event_kind AS latest_event_kind,
+            EXTRACT(EPOCH FROM disclosure_grant.expires_at)::BIGINT
+                AS expires_at_epoch_seconds,
+            disclosure_grant.version, latest_event.event_kind AS latest_event_kind,
             latest_event.reason_code AS latest_reason_code,
             latest_event.created_at_epoch_seconds AS latest_event_at_epoch_seconds
      FROM owner_provider_disclosure_receipts receipt
-     JOIN owner_provider_disclosure_grants grant ON grant.receipt_id = receipt.id
+     JOIN owner_provider_disclosure_grants disclosure_grant
+       ON disclosure_grant.receipt_id = receipt.id
      JOIN owner_properties property ON property.id = receipt.property_id
      JOIN organizations organization ON organization.id = receipt.organization_id
      JOIN LATERAL (
          SELECT event.event_kind, event.reason_code,
                 EXTRACT(EPOCH FROM event.created_at)::BIGINT AS created_at_epoch_seconds
          FROM owner_provider_disclosure_grant_events event
-         WHERE event.grant_id = grant.id
+         WHERE event.grant_id = disclosure_grant.id
          ORDER BY event.created_at DESC, event.id DESC LIMIT 1
      ) latest_event ON TRUE";
 
@@ -8068,7 +8153,8 @@ async fn owner_provider_disclosure_receipt_by_grant(
 > {
     let query = format!(
         "{DISCLOSURE_RECEIPT_SELECT}
-         WHERE receipt.owner_user_id = $1 AND receipt.property_id = $2 AND grant.id = $3"
+         WHERE receipt.owner_user_id = $1 AND receipt.property_id = $2
+           AND disclosure_grant.id = $3"
     );
     let row = sqlx::query(&query)
         .bind(owner_user_id)
@@ -8093,13 +8179,16 @@ async fn revoke_owner_provider_disclosure_grant(
 ) -> Result<PersistedDisclosureRevokeOutcome, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let current = sqlx::query(
-        "SELECT grant.id, grant.receipt_id, grant.status, grant.version,
-                grant.invitation_id, grant.organization_id
-         FROM owner_provider_disclosure_grants grant
-         JOIN owner_provider_disclosure_receipts receipt ON receipt.id = grant.receipt_id
-         WHERE grant.id = $1 AND grant.owner_user_id = $2 AND grant.property_id = $3
+        "SELECT disclosure_grant.id, disclosure_grant.receipt_id,
+                disclosure_grant.status, disclosure_grant.version,
+                disclosure_grant.invitation_id, disclosure_grant.organization_id
+         FROM owner_provider_disclosure_grants disclosure_grant
+         JOIN owner_provider_disclosure_receipts receipt
+           ON receipt.id = disclosure_grant.receipt_id
+         WHERE disclosure_grant.id = $1 AND disclosure_grant.owner_user_id = $2
+           AND disclosure_grant.property_id = $3
            AND receipt.owner_user_id = $2 AND receipt.property_id = $3
-         FOR UPDATE OF grant",
+         FOR UPDATE OF disclosure_grant",
     )
     .bind(grant_id)
     .bind(owner_user_id)

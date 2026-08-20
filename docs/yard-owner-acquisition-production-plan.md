@@ -56,8 +56,9 @@ The approved experience is defined by:
 | 3D4 | Delivered | Production owner approval/history/revocation and provider selective-access interfaces with default-withheld categories, per-photo choice, separate affirmation, explicit authority boundaries, accessible recovery, and passing client/full-unit/type/build/four-journey compatible-Chromium validation |
 | 3E0 | Delivered | Pilot-hardening order, evidence taxonomy, automated verification contract, and explicit external launch blockers |
 | 3E1 | Delivered | Retry-safe disclosure approval/revocation keys, preserved uncertain decisions, authoritative conflict reload, and lost-response/stale-tab browser coverage |
-| 3E2 | Next | Concurrent/stale server authorization, isolation, idempotency, outage, audit-minimization, and post-revocation regression gates |
-| 3E3–3E4 | Planned | Broader browser automation, minimized monitoring, runbook validation, and synthetic launch rehearsal |
+| 3E2 | Delivered | Concurrent/stale disclosure authorization, exact replay, isolation, outage/audit, post-revocation, and repeatable PostgreSQL migration/lifecycle regression gates |
+| 3E3 | Next | Production React cross-browser, responsive, and accessibility automation with unavailable engines recorded honestly |
+| 3E4 | Planned | Minimized monitoring, runbook validation, synthetic launch rehearsal, rollback evidence, and final evidence manifest |
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -203,9 +204,15 @@ external launch blockers are defined in
 Phase 3E1 retry-safe owner disclosure decisions are delivered. Approval and
 revocation reuse one decision key across uncertain retries, while conflicts
 reload authoritative receipt and connection state without claiming success.
-Phase 3E2 server authorization and concurrency regression is next. Later
-automated slices advance through compatible-browser
-coverage, minimized telemetry, runbook validation, and synthetic rehearsal.
+Phase 3E2 server authorization and concurrency regression is delivered. Exact
+concurrent disclosure decisions recover the authoritative receipt, changed and
+stale reuse fails without partial writes, protected grant reads use valid
+PostgreSQL aliases, and the lifecycle fixture plus claim-appeal actor constraint
+are repeatable from a clean migration chain. Backend formatting, focused and
+complete tests, and fresh migration replay pass. Strict repository-wide Clippy
+remains pending on 19 existing warnings outside this slice. Phase 3E3
+compatible-browser, responsive, and accessibility automation is next, followed
+by minimized telemetry, runbook validation, and synthetic rehearsal.
 Human usability, real assistive-technology, physical-device, privacy/security,
 staffing, operational, delivery-integration, and go/no-go evidence remains
 external and unsigned until performed by the accountable reviewers.

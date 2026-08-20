@@ -72,6 +72,10 @@
 - Retry-safe owner provider-disclosure decisions with stable approval/revocation
   keys across uncertain responses, preserved choices, authoritative stale-state
   reload, and no false success claim
+- Concurrent disclosure-grant hardening with one authoritative receipt across
+  exact simultaneous decisions, changed/stale conflict without partial writes,
+  repeatable retained-evidence PostgreSQL fixtures, corrected protected grant
+  queries, and clean-chain claim-appeal actor support
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard
