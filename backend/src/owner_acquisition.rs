@@ -661,6 +661,57 @@ pub struct TransitionOwnerProviderAssessmentRequest {
     pub idempotency_key: String,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerAssessmentMessageRequest {
+    pub message_kind: String,
+    pub customer_safe_body: String,
+    pub expected_assessment_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateProviderAssessmentMessageRequest {
+    pub token: String,
+    pub message_kind: String,
+    pub customer_safe_body: String,
+    pub expected_assessment_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateProviderAssessmentPrivateNoteRequest {
+    pub token: String,
+    pub note_kind: String,
+    pub private_body: String,
+    pub expected_assessment_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderAssessmentMessageRecord {
+    pub message_id: String,
+    pub assessment_id: String,
+    pub author_role: String,
+    pub message_kind: String,
+    pub customer_safe_body: String,
+    pub assessment_version_snapshot: i64,
+    pub created_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderAssessmentPrivateNoteRecord {
+    pub note_id: String,
+    pub assessment_id: String,
+    pub organization_id: String,
+    pub author_user_id: String,
+    pub note_kind: String,
+    pub private_body: String,
+    pub assessment_version_snapshot: i64,
+    pub created_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -913,6 +964,16 @@ pub enum OwnerProviderAssessmentWindowDecisionResult {
 pub enum OwnerProviderAssessmentTransitionResult {
     Updated(OwnerProviderAssessmentRecord),
     Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentStatusRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderAssessmentCommunicationWriteResult<T> {
+    Created(T),
+    Replayed(T),
     NotFound,
     InvalidState(OwnerProviderAssessmentStatusRecord),
     Conflict,
@@ -3270,6 +3331,164 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn create_owner_assessment_message(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        assessment_id: &str,
+        request: CreateOwnerAssessmentMessageRequest,
+    ) -> OwnerProviderAssessmentCommunicationWriteResult<OwnerProviderAssessmentMessageRecord> {
+        if !validate_owner_assessment_message_request(&request) {
+            return OwnerProviderAssessmentCommunicationWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentCommunicationWriteResult::Unavailable;
+        };
+        match create_owner_provider_assessment_message(
+            pool,
+            owner_user_id,
+            property_id,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_assessment_communication_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderAssessmentCommunicationWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, assessment_id, "owner assessment message creation failed");
+                OwnerProviderAssessmentCommunicationWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_provider_assessment_message(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        assessment_id: &str,
+        request: CreateProviderAssessmentMessageRequest,
+    ) -> OwnerProviderAssessmentCommunicationWriteResult<OwnerProviderAssessmentMessageRecord> {
+        if !validate_provider_assessment_message_request(&request) {
+            return OwnerProviderAssessmentCommunicationWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentCommunicationWriteResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let verified_email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match create_provider_assessment_message(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &verified_email_fingerprint,
+            &token_hash,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_assessment_communication_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderAssessmentCommunicationWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, assessment_id, "provider assessment message creation failed");
+                OwnerProviderAssessmentCommunicationWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_provider_assessment_private_note(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        assessment_id: &str,
+        request: CreateProviderAssessmentPrivateNoteRequest,
+    ) -> OwnerProviderAssessmentCommunicationWriteResult<OwnerProviderAssessmentPrivateNoteRecord>
+    {
+        if !validate_provider_assessment_private_note_request(&request) {
+            return OwnerProviderAssessmentCommunicationWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentCommunicationWriteResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let verified_email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match create_provider_assessment_private_note(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &verified_email_fingerprint,
+            &token_hash,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_assessment_communication_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderAssessmentCommunicationWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, assessment_id, "provider assessment private note creation failed");
+                OwnerProviderAssessmentCommunicationWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn list_owner_assessment_messages(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        assessment_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderAssessmentMessageRecord>> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match list_owner_provider_assessment_messages(
+            pool,
+            owner_user_id,
+            property_id,
+            assessment_id,
+        )
+        .await
+        {
+            Ok(Some(messages)) => OwnerReadResult::Loaded(messages),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, assessment_id, "owner assessment messages failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+}
+
+fn public_assessment_communication_outcome<T>(
+    outcome: PersistedAssessmentCommunicationWriteOutcome<T>,
+) -> OwnerProviderAssessmentCommunicationWriteResult<T> {
+    match outcome {
+        PersistedAssessmentCommunicationWriteOutcome::Created(record) => {
+            OwnerProviderAssessmentCommunicationWriteResult::Created(record)
+        }
+        PersistedAssessmentCommunicationWriteOutcome::Replayed(record) => {
+            OwnerProviderAssessmentCommunicationWriteResult::Replayed(record)
+        }
+        PersistedAssessmentCommunicationWriteOutcome::NotFound => {
+            OwnerProviderAssessmentCommunicationWriteResult::NotFound
+        }
+        PersistedAssessmentCommunicationWriteOutcome::InvalidState(status) => {
+            OwnerProviderAssessmentCommunicationWriteResult::InvalidState(status)
+        }
+        PersistedAssessmentCommunicationWriteOutcome::Conflict => {
+            OwnerProviderAssessmentCommunicationWriteResult::Conflict
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3808,6 +4027,57 @@ pub fn validate_provider_assessment_transition_request(
         && idempotency_key
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+fn valid_assessment_communication_key(key: &str) -> bool {
+    let key = key.trim();
+    (8..=128).contains(&key.chars().count())
+        && key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_owner_assessment_message_request(
+    request: &CreateOwnerAssessmentMessageRequest,
+) -> bool {
+    matches!(
+        request.message_kind.as_str(),
+        "owner_question" | "window_change_request" | "clarification"
+    ) && (1..=2000).contains(&request.customer_safe_body.trim().chars().count())
+        && request.expected_assessment_version > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_provider_assessment_message_request(
+    request: &CreateProviderAssessmentMessageRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && matches!(
+        request.message_kind.as_str(),
+        "provider_answer" | "window_change_request" | "additional_photo_request" | "clarification"
+    ) && (1..=2000).contains(&request.customer_safe_body.trim().chars().count())
+        && request.expected_assessment_version > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_provider_assessment_private_note_request(
+    request: &CreateProviderAssessmentPrivateNoteRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && matches!(
+        request.note_kind.as_str(),
+        "scope_basis"
+            | "measurement"
+            | "access"
+            | "safety"
+            | "production_assumption"
+            | "route_fit"
+            | "other"
+    ) && (1..=4000).contains(&request.private_body.trim().chars().count())
+        && request.expected_assessment_version > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -7516,6 +7786,14 @@ enum PersistedAssessmentTransitionOutcome {
     Conflict,
 }
 
+enum PersistedAssessmentCommunicationWriteOutcome<T> {
+    Created(T),
+    Replayed(T),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentStatusRecord),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -9355,6 +9633,521 @@ async fn transition_owner_provider_assessment(
     transaction.commit().await?;
     Ok(PersistedAssessmentTransitionOutcome::Updated(
         owner_provider_assessment_from_row(&updated),
+    ))
+}
+
+const OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT: &str =
+    "SELECT id AS message_id, assessment_id, author_role, message_kind,
+            customer_safe_body, assessment_version_snapshot,
+            EXTRACT(EPOCH FROM created_at)::BIGINT AS created_at_epoch_seconds
+     FROM owner_provider_assessment_messages";
+
+fn owner_provider_assessment_message_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderAssessmentMessageRecord {
+    OwnerProviderAssessmentMessageRecord {
+        message_id: row.get("message_id"),
+        assessment_id: row.get("assessment_id"),
+        author_role: row.get("author_role"),
+        message_kind: row.get("message_kind"),
+        customer_safe_body: row.get("customer_safe_body"),
+        assessment_version_snapshot: row.get("assessment_version_snapshot"),
+        created_at_epoch_seconds: row.get("created_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+const OWNER_PROVIDER_ASSESSMENT_PRIVATE_NOTE_SELECT: &str =
+    "SELECT id AS note_id, assessment_id, organization_id, author_user_id,
+            note_kind, private_body, assessment_version_snapshot,
+            EXTRACT(EPOCH FROM created_at)::BIGINT AS created_at_epoch_seconds
+     FROM owner_provider_assessment_private_notes";
+
+fn owner_provider_assessment_private_note_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderAssessmentPrivateNoteRecord {
+    OwnerProviderAssessmentPrivateNoteRecord {
+        note_id: row.get("note_id"),
+        assessment_id: row.get("assessment_id"),
+        organization_id: row.get("organization_id"),
+        author_user_id: row.get("author_user_id"),
+        note_kind: row.get("note_kind"),
+        private_body: row.get("private_body"),
+        assessment_version_snapshot: row.get("assessment_version_snapshot"),
+        created_at_epoch_seconds: row.get("created_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+fn assessment_accepts_communication(status: &str) -> bool {
+    matches!(
+        status,
+        "remote_review"
+            | "window_proposed"
+            | "window_change_requested"
+            | "owner_confirmed"
+            | "in_progress"
+    )
+}
+
+async fn load_provider_assessment_write_authority(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+) -> Result<Option<(OwnerProviderAssessmentRecord, bool)>, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE id = $1 AND provider_actor_user_id = $2
+           AND invitation_id = (
+               SELECT invitation.id
+               FROM owner_provider_invitations invitation
+               JOIN owner_provider_invitation_recipient_checks recipient_check
+                 ON recipient_check.invitation_id = invitation.id
+               WHERE invitation.token_hash = $3
+                 AND LOWER(invitation.recipient_email) = LOWER($4)
+                 AND recipient_check.recipient_user_id = $2
+                 AND recipient_check.verified_email_fingerprint = $5
+                 AND recipient_check.status = 'checked'
+               LIMIT 1
+           )
+         FOR UPDATE"
+    );
+    let row = sqlx::query(&query)
+        .bind(assessment_id)
+        .bind(provider_actor_user_id)
+        .bind(token_hash)
+        .bind(verified_email)
+        .bind(verified_email_fingerprint)
+        .fetch_optional(&mut **transaction)
+        .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let assessment = owner_provider_assessment_from_row(&row);
+    let authority_active = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1
+             FROM owner_provider_assessments assessment
+             JOIN owner_provider_invitations invitation
+               ON invitation.id = assessment.invitation_id
+             JOIN owner_provider_invitation_response_capabilities capability
+               ON capability.invitation_id = invitation.id
+              AND capability.actor_user_id = $2
+              AND capability.organization_id = assessment.organization_id
+             JOIN owner_provider_opportunity_responses response
+               ON response.capability_id = capability.id
+              AND response.action = 'express_interest' AND response.status = 'recorded'
+             JOIN owner_provider_invitation_organization_claims claim
+               ON claim.id = capability.claim_id
+              AND claim.organization_id = capability.organization_id
+             JOIN organizations organization ON organization.id = assessment.organization_id
+             JOIN owner_provider_disclosure_grants disclosure_grant
+               ON disclosure_grant.id = assessment.disclosure_grant_id
+              AND disclosure_grant.invitation_id = invitation.id
+              AND disclosure_grant.organization_id = assessment.organization_id
+              AND disclosure_grant.recipient_actor_user_id = $2
+             JOIN owner_properties property ON property.id = assessment.property_id
+             JOIN owner_workspaces workspace
+               ON workspace.owner_user_id = assessment.owner_user_id
+             JOIN owner_yard_briefs brief ON brief.id = disclosure_grant.brief_id
+             WHERE assessment.id = $1
+               AND invitation.status = 'opened' AND invitation.expires_at > NOW()
+               AND capability.status = 'active' AND capability.expires_at > NOW()
+               AND claim.status IN ('relationship_checked', 'claimed')
+               AND organization.status = 'active'
+               AND organization.organization_type = 'yard_care_company'
+               AND EXISTS (
+                   SELECT 1 FROM organization_memberships membership
+                   WHERE membership.organization_id = organization.id
+                     AND membership.user_id = $2 AND membership.status = 'active'
+               )
+               AND disclosure_grant.status = 'active' AND disclosure_grant.expires_at > NOW()
+               AND disclosure_grant.owner_user_id = assessment.owner_user_id
+               AND disclosure_grant.property_id = assessment.property_id
+               AND property.owner_user_id = assessment.owner_user_id
+               AND property.status <> 'archived' AND workspace.status = 'active'
+               AND brief.status = 'ready' AND brief.version = disclosure_grant.brief_version
+               AND NOT EXISTS (
+                   SELECT 1 FROM owner_yard_briefs newer
+                   WHERE newer.property_id = property.id AND newer.version > brief.version
+               )
+               AND NOT EXISTS (
+                   SELECT 1 FROM owner_provider_recipient_suppressions suppression
+                   WHERE suppression.recipient_email_fingerprint = invitation.recipient_email_fingerprint
+               )
+         )",
+    )
+    .bind(assessment_id)
+    .bind(provider_actor_user_id)
+    .fetch_one(&mut **transaction)
+    .await?;
+    Ok(Some((assessment, authority_active)))
+}
+
+async fn create_owner_provider_assessment_message(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    assessment_id: &str,
+    request: CreateOwnerAssessmentMessageRequest,
+) -> Result<
+    PersistedAssessmentCommunicationWriteOutcome<OwnerProviderAssessmentMessageRecord>,
+    sqlx::Error,
+> {
+    let mut transaction = pool.begin().await?;
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3 FOR UPDATE"
+    );
+    let current = sqlx::query(&query)
+        .bind(assessment_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::NotFound);
+    };
+    let current = owner_provider_assessment_from_row(&current);
+    let replay_query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT}
+         WHERE author_user_id = $1 AND idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(owner_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_assessment_message_from_row(&replay);
+        let exact = record.assessment_id == assessment_id
+            && record.author_role == "owner"
+            && record.message_kind == request.message_kind
+            && record.customer_safe_body == request.customer_safe_body.trim()
+            && record.assessment_version_snapshot == request.expected_assessment_version;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedAssessmentCommunicationWriteOutcome::Replayed(record)
+        } else {
+            PersistedAssessmentCommunicationWriteOutcome::Conflict
+        });
+    }
+    if !assessment_accepts_communication(&current.status) {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::InvalidState(
+            owner_provider_assessment_status(&current),
+        ));
+    }
+    if current.version != request.expected_assessment_version {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::Conflict);
+    }
+    let record = insert_owner_provider_assessment_message(
+        &mut transaction,
+        AssessmentMessageInsert {
+            assessment_id,
+            author_user_id: owner_user_id,
+            author_role: "owner",
+            message_kind: &request.message_kind,
+            body: request.customer_safe_body.trim(),
+            assessment_version: current.version,
+            idempotency_key: request.idempotency_key.trim(),
+        },
+    )
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentCommunicationWriteOutcome::Created(
+        record,
+    ))
+}
+
+async fn create_provider_assessment_message(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+    request: CreateProviderAssessmentMessageRequest,
+) -> Result<
+    PersistedAssessmentCommunicationWriteOutcome<OwnerProviderAssessmentMessageRecord>,
+    sqlx::Error,
+> {
+    let mut transaction = pool.begin().await?;
+    let Some((current, authority_active)) = load_provider_assessment_write_authority(
+        &mut transaction,
+        provider_actor_user_id,
+        verified_email,
+        verified_email_fingerprint,
+        token_hash,
+        assessment_id,
+    )
+    .await?
+    else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::NotFound);
+    };
+    let replay_query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT}
+         WHERE author_user_id = $1 AND idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_assessment_message_from_row(&replay);
+        let exact = record.assessment_id == assessment_id
+            && record.author_role == "provider"
+            && record.message_kind == request.message_kind
+            && record.customer_safe_body == request.customer_safe_body.trim()
+            && record.assessment_version_snapshot == request.expected_assessment_version;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedAssessmentCommunicationWriteOutcome::Replayed(record)
+        } else {
+            PersistedAssessmentCommunicationWriteOutcome::Conflict
+        });
+    }
+    if !authority_active || !assessment_accepts_communication(&current.status) {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::InvalidState(
+            owner_provider_assessment_status(&current),
+        ));
+    }
+    if current.version != request.expected_assessment_version {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::Conflict);
+    }
+    let record = insert_owner_provider_assessment_message(
+        &mut transaction,
+        AssessmentMessageInsert {
+            assessment_id,
+            author_user_id: provider_actor_user_id,
+            author_role: "provider",
+            message_kind: &request.message_kind,
+            body: request.customer_safe_body.trim(),
+            assessment_version: current.version,
+            idempotency_key: request.idempotency_key.trim(),
+        },
+    )
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentCommunicationWriteOutcome::Created(
+        record,
+    ))
+}
+
+struct AssessmentMessageInsert<'a> {
+    assessment_id: &'a str,
+    author_user_id: &'a str,
+    author_role: &'a str,
+    message_kind: &'a str,
+    body: &'a str,
+    assessment_version: i64,
+    idempotency_key: &'a str,
+}
+
+async fn insert_owner_provider_assessment_message(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    input: AssessmentMessageInsert<'_>,
+) -> Result<OwnerProviderAssessmentMessageRecord, sqlx::Error> {
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_assessment_messages (
+             id, assessment_id, author_user_id, author_role, message_kind,
+             customer_safe_body, assessment_version_snapshot, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id AS message_id, assessment_id, author_role, message_kind,
+                   customer_safe_body, assessment_version_snapshot,
+                   EXTRACT(EPOCH FROM created_at)::BIGINT AS created_at_epoch_seconds",
+    )
+    .bind(format!(
+        "owner_assessment_message_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(input.assessment_id)
+    .bind(input.author_user_id)
+    .bind(input.author_role)
+    .bind(input.message_kind)
+    .bind(input.body)
+    .bind(input.assessment_version)
+    .bind(input.idempotency_key)
+    .fetch_one(&mut **transaction)
+    .await?;
+    let record = owner_provider_assessment_message_from_row(&row);
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_events (
+             id, assessment_id, actor_user_id, event_kind,
+             assessment_version, idempotency_key, event_data
+         ) VALUES ($1, $2, $3, 'customer_message_added', $4, $5, $6)",
+    )
+    .bind(format!(
+        "owner_assessment_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(input.assessment_id)
+    .bind(input.author_user_id)
+    .bind(input.assessment_version)
+    .bind(input.idempotency_key)
+    .bind(serde_json::json!({
+        "record_id": &record.message_id,
+        "message_kind": input.message_kind,
+        "author_role": input.author_role,
+    }))
+    .execute(&mut **transaction)
+    .await?;
+    Ok(record)
+}
+
+async fn create_provider_assessment_private_note(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+    request: CreateProviderAssessmentPrivateNoteRequest,
+) -> Result<
+    PersistedAssessmentCommunicationWriteOutcome<OwnerProviderAssessmentPrivateNoteRecord>,
+    sqlx::Error,
+> {
+    let mut transaction = pool.begin().await?;
+    let Some((current, authority_active)) = load_provider_assessment_write_authority(
+        &mut transaction,
+        provider_actor_user_id,
+        verified_email,
+        verified_email_fingerprint,
+        token_hash,
+        assessment_id,
+    )
+    .await?
+    else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::NotFound);
+    };
+    let replay_query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_PRIVATE_NOTE_SELECT}
+         WHERE author_user_id = $1 AND idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_assessment_private_note_from_row(&replay);
+        let exact = record.assessment_id == assessment_id
+            && record.organization_id == current.organization_id
+            && record.note_kind == request.note_kind
+            && record.private_body == request.private_body.trim()
+            && record.assessment_version_snapshot == request.expected_assessment_version;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedAssessmentCommunicationWriteOutcome::Replayed(record)
+        } else {
+            PersistedAssessmentCommunicationWriteOutcome::Conflict
+        });
+    }
+    if !authority_active || !assessment_accepts_communication(&current.status) {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::InvalidState(
+            owner_provider_assessment_status(&current),
+        ));
+    }
+    if current.version != request.expected_assessment_version {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentCommunicationWriteOutcome::Conflict);
+    }
+    let row = sqlx::query(
+        "INSERT INTO owner_provider_assessment_private_notes (
+             id, assessment_id, organization_id, author_user_id, note_kind,
+             private_body, assessment_version_snapshot, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id AS note_id, assessment_id, organization_id, author_user_id,
+                   note_kind, private_body, assessment_version_snapshot,
+                   EXTRACT(EPOCH FROM created_at)::BIGINT AS created_at_epoch_seconds",
+    )
+    .bind(format!(
+        "owner_assessment_private_note_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(assessment_id)
+    .bind(&current.organization_id)
+    .bind(provider_actor_user_id)
+    .bind(&request.note_kind)
+    .bind(request.private_body.trim())
+    .bind(current.version)
+    .bind(request.idempotency_key.trim())
+    .fetch_one(&mut *transaction)
+    .await?;
+    let record = owner_provider_assessment_private_note_from_row(&row);
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_events (
+             id, assessment_id, actor_user_id, event_kind,
+             assessment_version, idempotency_key, event_data
+         ) VALUES ($1, $2, $3, 'private_note_added', $4, $5, $6)",
+    )
+    .bind(format!(
+        "owner_assessment_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(assessment_id)
+    .bind(provider_actor_user_id)
+    .bind(current.version)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({
+        "record_id": &record.note_id,
+        "note_kind": &record.note_kind,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentCommunicationWriteOutcome::Created(
+        record,
+    ))
+}
+
+async fn list_owner_provider_assessment_messages(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    assessment_id: &str,
+) -> Result<Option<Vec<OwnerProviderAssessmentMessageRecord>>, sqlx::Error> {
+    let authorized = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1 FROM owner_provider_assessments
+             WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         )",
+    )
+    .bind(assessment_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_one(pool)
+    .await?;
+    if !authorized {
+        return Ok(None);
+    }
+    let rows = sqlx::query(
+        "SELECT message.id AS message_id, message.assessment_id,
+                message.author_role, message.message_kind,
+                message.customer_safe_body, message.assessment_version_snapshot,
+                EXTRACT(EPOCH FROM message.created_at)::BIGINT AS created_at_epoch_seconds
+         FROM owner_provider_assessment_owner_messages message
+         WHERE message.assessment_id = $1
+         ORDER BY message.created_at, message.id",
+    )
+    .bind(assessment_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(Some(
+        rows.iter()
+            .map(owner_provider_assessment_message_from_row)
+            .collect(),
     ))
 }
 

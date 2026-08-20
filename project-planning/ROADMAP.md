@@ -207,13 +207,16 @@ boundary and optimistic owner/provider lifecycle transitions.
 Phase 4A2b1 now separates constrained shared assessment messages from
 provider-private scope, safety, production, and route notes, and provides an
 owner projection with no private-note source. Lifecycle mutations are now
-delivered; authorized repository writes remain next.
+delivered. Phase 4A2b2 now adds authorized, version/replay-safe owner shared
+messages and provider shared/private writes, with owner reads sourced only from
+the shared projection. Authenticated communication APIs remain next.
 Phase 4A2c1 now gives owners a versioned, replay-safe choice to confirm a
 proposed on-site assessment window or request another, without activating
 service. Phase 4A2c2 now adds provider-authorized begin, completion,
 cannot-assess, and cancellation transitions with current-authority rechecks,
 controlled owner-safe outcomes, exact replay, and status-only invalid-state
-recovery. Authorized shared-message and provider-private-note writes are next.
+recovery. The communication repository writes are now delivered; authenticated
+communication APIs are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

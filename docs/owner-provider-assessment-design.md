@@ -135,10 +135,26 @@ Phase 4A2c2 adds provider execution and outcome control:
 - no transition accepts a proposal, authorizes pricing or service, creates a
   customer/work order, assigns a crew, or releases field work.
 
+Phase 4A2b2 adds authorized communication repository writes:
+
+- owners write only through an owner/property/assessment-scoped boundary and
+  only with owner-authored message kinds;
+- providers write customer-safe messages or provider-private notes only after
+  the token/mailbox identity and current invitation, capability, interest,
+  organization membership, grant, property, workspace, and brief authority are
+  rechecked;
+- every write requires the current assessment version and an actor-scoped
+  idempotency key; exact retries replay and changed reuse conflicts;
+- terminal assessments return a status-only invalid-state response;
+- owner reads select only `owner_provider_assessment_owner_messages`, while
+  private notes have no owner repository path;
+- append-only events retain record IDs and controlled kinds but never copy a
+  shared message or private note body.
+
 ## Next slices
 
-1. Add authorized, replay-safe repository writes for customer-safe messages and
-   provider-private notes, using only the owner-safe projection for owner reads.
+1. Expose the authorized communication repositories through authenticated,
+   fail-closed owner/provider APIs.
 2. Adopt the assessment workspace in the production owner/provider interfaces
    with responsive, accessible, stale-state, and outage coverage.
 3. Begin versioned initial-service proposals only after the assessment boundary

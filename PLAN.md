@@ -519,7 +519,14 @@ Active slice:
   terminal outcomes use controlled reasons and a bounded owner-visible summary,
   and minimized events do not duplicate that summary. These transitions still
   cannot accept a proposal, activate service, create work, or assign a crew.
-  Authorized shared-message and provider-private-note writes are next.
+  Phase 4A2b2 is delivered. Owners can persist only owner-authored shared
+  messages for their own property/assessment, while the verified provider actor
+  can persist controlled customer-safe messages or provider-private notes only
+  after current authority is rechecked. Writes require the current assessment
+  version, exactly replay actor-scoped retries, return status-only terminal
+  recovery, and append events without copying either body. Owner repository
+  reads use only the shared projection and have no private-note source.
+  Authenticated communication APIs are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

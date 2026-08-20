@@ -63,9 +63,10 @@ The approved experience is defined by:
 | 4A1 | Delivered | Authorized, replay-safe remote/on-site assessment persistence with bounded windows, one assessment per invitation, owner isolation, append-only events, and minimized audit |
 | 4A2a | Delivered | Authenticated verified-provider assessment start and owner/property-scoped assessment history APIs with explicit validation, replay, conflict, missing, changed-authority, and unavailable responses |
 | 4A2b1 | Delivered | Separate constrained customer-safe assessment messages and provider-private notes, owner-only shared projection, controlled authorship/kinds, minimized append-only events, and PostgreSQL non-leakage coverage |
+| 4A2b2 | Delivered | Owner-scoped shared-message and verified-provider shared/private writes with current-version/authority checks, exact replay, minimized events, owner-safe projection reads, and PostgreSQL isolation/non-leakage coverage |
 | 4A2c1 | Delivered | Owner-scoped, optimistic, replay-safe on-site assessment window confirmation/change request with controlled actions, append-only event, route policy, outage, concurrency, and cross-owner coverage |
 | 4A2c2 | Delivered | Provider-authorized begin/complete/cannot-assess/cancel transitions with full current-authority rechecks, optimistic concurrency, exact replay, controlled owner-safe outcomes, minimized events, and no service activation |
-| 4A2b2/4A2c3–7 | Planned | Authorized assessment communication writes and production workspace through governed pilot convergence |
+| 4A2b3/4A2c3–7 | Planned | Authenticated assessment communication APIs and production workspace through governed pilot convergence |
 
 ## Delivery principles
 
@@ -246,7 +247,8 @@ adoption are divided across Phase 4A2b and later work. Phase 4A2a exposes the de
 start and owner-history repository boundaries as authenticated HTTP routes.
 Phase 4A2b1 establishes physically separate shared-message and provider-private
 note stores plus an owner projection that cannot select private notes; repository
-writes and interfaces remain subsequent slices.
+writes are now delivered, while authenticated interfaces remain subsequent
+slices.
 Phase 4A2c1 adds the owner half of on-site window lifecycle through a versioned
 confirm/change-request API. It changes only assessment state and does not create
 service scheduling, customer/property projection, crew assignment, or work.

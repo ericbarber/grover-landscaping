@@ -97,6 +97,10 @@
   provider-private notes, with controlled author/kind constraints, a shared-only
   owner projection, append-only minimized events, and PostgreSQL proof that
   private production assumptions do not enter owner reads or event payloads
+- Authorized owner shared-message and verified-provider shared/private-note
+  repository writes with current assessment versions, exact replay, full
+  provider authority rechecks, status-only terminal recovery, minimized event
+  bodies, cross-actor isolation, and shared-projection-only owner reads
 - Owner-scoped on-site assessment window confirmation/change requests with
   expected-version locking, exact replay, controlled actions, append-only
   minimized events, authoritative invalid-state recovery, route authorization,

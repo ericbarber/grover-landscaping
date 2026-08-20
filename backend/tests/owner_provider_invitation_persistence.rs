@@ -1,26 +1,28 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
-    CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+    CreateOwnerAssessmentMessageRequest, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
     CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
     CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderAssessmentWindowRequest,
+    CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
+    CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
     DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
     OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderAssessmentCreateResult,
-    OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
-    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
-    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
-    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
-    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
-    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    OwnerMutationResult, OwnerProviderAssessmentCommunicationWriteResult,
+    OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
+    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
+    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
+    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
+    OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
@@ -1849,39 +1851,121 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!assessment_audit.contains("421 Private Canyon Road"));
     assert!(!assessment_audit.contains("America/Phoenix"));
 
-    let message_id = "owner_assessment_message_test_001";
-    sqlx::query(
-        "INSERT INTO owner_provider_assessment_messages (
-             id, assessment_id, author_user_id, author_role, message_kind,
-             customer_safe_body, assessment_version_snapshot, idempotency_key
-         ) VALUES ($1, $2, $3, 'owner', 'owner_question', $4, $5, $6)",
-    )
-    .bind(message_id)
-    .bind(&assessment.assessment_id)
-    .bind(owner_a)
-    .bind("Can the assessment include the irrigation controller?")
-    .bind(assessment.version)
-    .bind("assessment-message-owner-001")
-    .execute(&pool)
-    .await
-    .expect("customer-safe assessment message should save");
-    let private_note_id = "owner_assessment_private_note_test_001";
-    sqlx::query(
-        "INSERT INTO owner_provider_assessment_private_notes (
-             id, assessment_id, organization_id, author_user_id, note_kind,
-             private_body, assessment_version_snapshot, idempotency_key
-         ) VALUES ($1, $2, $3, $4, 'production_assumption', $5, $6, $7)",
-    )
-    .bind(private_note_id)
-    .bind(&assessment.assessment_id)
-    .bind(&assessment.organization_id)
-    .bind("recipient-user-1")
-    .bind("crew_hours=6; disposal_loads=2; route_margin=private")
-    .bind(assessment.version)
-    .bind("assessment-private-note-provider-001")
-    .execute(&pool)
-    .await
-    .expect("provider-private assessment note should save separately");
+    let owner_message_request = CreateOwnerAssessmentMessageRequest {
+        message_kind: "owner_question".to_string(),
+        customer_safe_body: "Can the assessment include the irrigation controller?".to_string(),
+        expected_assessment_version: assessment.version,
+        idempotency_key: "assessment-message-owner-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_owner_assessment_message(
+                owner_b,
+                &property.property_id,
+                &assessment.assessment_id,
+                owner_message_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentCommunicationWriteResult::NotFound
+    ));
+    let OwnerProviderAssessmentCommunicationWriteResult::Created(owner_message) = repository
+        .create_owner_assessment_message(
+            owner_a,
+            &property.property_id,
+            &assessment.assessment_id,
+            owner_message_request.clone(),
+        )
+        .await
+    else {
+        panic!("owner customer-safe assessment message should save");
+    };
+    assert!(matches!(
+        repository
+            .create_owner_assessment_message(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                owner_message_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentCommunicationWriteResult::Replayed(replayed)
+            if replayed == owner_message
+    ));
+    assert!(matches!(
+        repository
+            .create_owner_assessment_message(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                CreateOwnerAssessmentMessageRequest {
+                    customer_safe_body: "Changed body must conflict.".to_string(),
+                    ..owner_message_request
+                },
+            )
+            .await,
+        OwnerProviderAssessmentCommunicationWriteResult::Conflict
+    ));
+    let provider_message_request = CreateProviderAssessmentMessageRequest {
+        token: retry.delivery_token().to_string(),
+        message_kind: "provider_answer".to_string(),
+        customer_safe_body: "Yes, the irrigation controller is included in the assessment."
+            .to_string(),
+        expected_assessment_version: assessment.version,
+        idempotency_key: "assessment-message-provider-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_provider_assessment_message(
+                "another-provider-user",
+                recipient,
+                &assessment.assessment_id,
+                provider_message_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentCommunicationWriteResult::NotFound
+    ));
+    let OwnerProviderAssessmentCommunicationWriteResult::Created(provider_message) = repository
+        .create_provider_assessment_message(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            provider_message_request.clone(),
+        )
+        .await
+    else {
+        panic!("provider customer-safe assessment message should save");
+    };
+    assert_eq!(provider_message.author_role, "provider");
+    let private_note_request = CreateProviderAssessmentPrivateNoteRequest {
+        token: retry.delivery_token().to_string(),
+        note_kind: "production_assumption".to_string(),
+        private_body: "crew_hours=6; disposal_loads=2; route_margin=private".to_string(),
+        expected_assessment_version: assessment.version,
+        idempotency_key: "assessment-private-note-provider-001".to_string(),
+    };
+    let OwnerProviderAssessmentCommunicationWriteResult::Created(private_note) = repository
+        .create_provider_assessment_private_note(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            private_note_request.clone(),
+        )
+        .await
+    else {
+        panic!("provider-private assessment note should save separately");
+    };
+    assert!(matches!(
+        repository
+            .create_provider_assessment_private_note(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                private_note_request,
+            )
+            .await,
+        OwnerProviderAssessmentCommunicationWriteResult::Replayed(replayed)
+            if replayed == private_note
+    ));
     assert!(
         sqlx::query(
             "INSERT INTO owner_provider_assessment_messages (
@@ -1919,43 +2003,6 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .is_err(),
         "provider-private notes must reject owner-visible storage"
     );
-    for (event_kind, event_id, actor_user_id, idempotency_key) in [
-        (
-            "customer_message_added",
-            message_id,
-            owner_a,
-            "assessment-message-event-owner-001",
-        ),
-        (
-            "private_note_added",
-            private_note_id,
-            "recipient-user-1",
-            "assessment-private-note-event-provider-001",
-        ),
-    ] {
-        sqlx::query(
-            "INSERT INTO owner_provider_assessment_events (
-                 id, assessment_id, actor_user_id, event_kind,
-                 assessment_version, idempotency_key, event_data
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-        )
-        .bind(format!(
-            "owner_assessment_event_test_{}",
-            event_kind.replace('_', "-")
-        ))
-        .bind(&assessment.assessment_id)
-        .bind(actor_user_id)
-        .bind(event_kind)
-        .bind(assessment.version)
-        .bind(idempotency_key)
-        .bind(serde_json::json!({
-            "record_id": event_id,
-            "record_kind": event_kind,
-        }))
-        .execute(&pool)
-        .await
-        .expect("minimized assessment communication event should save");
-    }
     let owner_message_projection = sqlx::query_scalar::<_, serde_json::Value>(
         "SELECT COALESCE(JSONB_AGG(TO_JSONB(message)), '[]'::JSONB)
          FROM owner_provider_assessment_owner_messages message
@@ -1969,6 +2016,27 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(owner_message_projection.contains("irrigation controller"));
     assert!(!owner_message_projection.contains("crew_hours"));
     assert!(!owner_message_projection.contains("route_margin"));
+    assert!(matches!(
+        repository
+            .list_owner_assessment_messages(
+                owner_b,
+                &property.property_id,
+                &assessment.assessment_id,
+            )
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(owner_messages) = repository
+        .list_owner_assessment_messages(owner_a, &property.property_id, &assessment.assessment_id)
+        .await
+    else {
+        panic!("owner-safe assessment messages should load");
+    };
+    assert_eq!(owner_messages, vec![owner_message, provider_message]);
+    let owner_messages_json =
+        serde_json::to_string(&owner_messages).expect("owner messages should serialize");
+    assert!(!owner_messages_json.contains("crew_hours"));
+    assert!(!owner_messages_json.contains("route_margin"));
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM owner_provider_assessment_private_notes

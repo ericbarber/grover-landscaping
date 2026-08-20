@@ -28,6 +28,10 @@
   cannot-assess, and cancel transitions with full current-authority rechecks,
   expected-version locking, exact replay, controlled customer-safe terminal
   outcomes, minimized events, route policy, concurrency, and outage coverage.
+- Phase 4A2b2 delivers owner-scoped shared-message writes, verified-provider
+  shared/private writes with full current-authority rechecks, exact replay,
+  current-version enforcement, status-only terminal recovery, minimized events,
+  and owner reads sourced only from the shared projection.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -67,7 +71,7 @@ Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration
 named staffing, human usability/assistive-technology/device work,
 Privacy/Security review, and go/no-go are signed. The machine-readable assurance
 manifest must continue to list those items as external or unsigned. Provider-
-authorized customer-safe/private assessment communication writes are the next
+authenticated customer-safe/private assessment communication APIs are the next
 product-development slice; they do not
 remove or bypass the Phase 3E5 pilot launch
 blockers. Keep
