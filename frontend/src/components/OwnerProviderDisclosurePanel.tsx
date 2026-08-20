@@ -9,6 +9,7 @@ import {
   type OwnerProviderDisclosureReceipt,
   type OwnerProviderDisclosureReview,
 } from '../api/ownerAcquisitionClient';
+import { ApiRequestError } from '../api/apiError';
 
 const categoryCopy: Record<OwnerDisclosureCategory, { label: string; description: string }> = {
   exact_address: { label: 'Exact service address', description: 'The complete address for this yard.' },
@@ -42,6 +43,8 @@ export function OwnerProviderDisclosurePanel({
   const panelTitleRef = useRef<HTMLHeadingElement>(null);
   const reviewTitleRef = useRef<HTMLHeadingElement>(null);
   const revokeTitleRef = useRef<HTMLHeadingElement>(null);
+  const approvalKeyRef = useRef<string | null>(null);
+  const revokeKeyRef = useRef<string | null>(null);
 
   async function loadReceipts() {
     try { setReceipts(await fetchOwnerProviderDisclosureReceipts(propertyId)); }
@@ -55,6 +58,8 @@ export function OwnerProviderDisclosurePanel({
     setAffirmed(false);
     setError(null);
     setNotice(null);
+    approvalKeyRef.current = null;
+    revokeKeyRef.current = null;
     void loadReceipts();
   }, [propertyId]);
 
@@ -72,10 +77,12 @@ export function OwnerProviderDisclosurePanel({
     setNotice(null);
     try {
       setReview(await fetchOwnerProviderDisclosureReview(propertyId, invitationId));
+      approvalKeyRef.current = idempotencyKey('owner-disclosure');
       setApproved([]);
       setSelectedMedia([]);
       setAffirmed(false);
     } catch (loadError) {
+      approvalKeyRef.current = null;
       setError(loadError instanceof Error ? loadError.message : 'The current disclosure review could not be loaded. Nothing new was shared.');
     } finally { setBusy(false); }
   }
@@ -103,8 +110,9 @@ export function OwnerProviderDisclosurePanel({
         review,
         approved,
         selectedMedia,
-        idempotencyKey('owner-disclosure'),
+        approvalKeyRef.current ??= idempotencyKey('owner-disclosure'),
       );
+      approvalKeyRef.current = null;
       setReview(null);
       setApproved([]);
       setSelectedMedia([]);
@@ -112,7 +120,14 @@ export function OwnerProviderDisclosurePanel({
       setNotice('Selected assessment access was approved. This did not accept pricing or start service.');
       await Promise.all([loadReceipts(), onChanged()]);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Assessment access could not be confirmed. Nothing new was shared.');
+      if (saveError instanceof ApiRequestError && saveError.status === 409) {
+        approvalKeyRef.current = null;
+        setReview(null);
+        await Promise.all([loadReceipts(), onChanged()]);
+        setError('This assessment-access decision changed in another tab. Current access was reloaded; review it before trying again. Nothing new was shared by this attempt.');
+      } else {
+        setError(saveError instanceof Error ? saveError.message : 'Assessment access could not be confirmed. Nothing new was shared.');
+      }
     } finally { setBusy(false); }
   }
 
@@ -125,13 +140,21 @@ export function OwnerProviderDisclosurePanel({
         propertyId,
         revokeTarget,
         revokeReason,
-        idempotencyKey('owner-disclosure-revoke'),
+        revokeKeyRef.current ??= idempotencyKey('owner-disclosure-revoke'),
       );
+      revokeKeyRef.current = null;
       setRevokeTarget(null);
       setNotice('Future assessment access ended. The consent receipt remains in your history.');
       await Promise.all([loadReceipts(), onChanged()]);
     } catch (revokeError) {
-      setError(revokeError instanceof Error ? revokeError.message : 'Future access could not be confirmed as ended. Reload before retrying.');
+      if (revokeError instanceof ApiRequestError && revokeError.status === 409) {
+        revokeKeyRef.current = null;
+        setRevokeTarget(null);
+        await Promise.all([loadReceipts(), onChanged()]);
+        setError('Assessment access changed in another tab. Current access was reloaded; review its status before trying again.');
+      } else {
+        setError(revokeError instanceof Error ? revokeError.message : 'Future access could not be confirmed as ended. Reload before retrying.');
+      }
     } finally { setBusy(false); }
   }
 
@@ -157,11 +180,11 @@ export function OwnerProviderDisclosurePanel({
         {approved.includes('selected_yard_photos') ? <fieldset className="mt-5"><legend className="font-black">Choose individual photographs</legend>{review.mediaOptions.length === 0 ? <p className="mt-2 text-sm text-rose-800">No ready photographs are available. Leave photographs withheld.</p> : <div className="mt-3 grid gap-2 sm:grid-cols-2">{review.mediaOptions.map((media) => <label className="flex gap-3 rounded-xl border border-slate-200 p-3" key={media.mediaId}><input checked={selectedMedia.includes(media.mediaId)} className="mt-0.5 h-5 w-5" onChange={() => setSelectedMedia((current) => current.includes(media.mediaId) ? current.filter((id) => id !== media.mediaId) : [...current, media.mediaId])} type="checkbox" /><span className="break-all text-sm font-semibold">{media.fileLabel}</span></label>)}</div>}</fieldset> : null}
         <div className="mt-5 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm leading-6"><p><strong>Sharing:</strong> {approved.length ? approved.map((item) => categoryCopy[item].label).join(', ') : 'Nothing selected yet'}</p><p><strong>Withholding:</strong> {review.availableCategories.filter((item) => !approved.includes(item)).map((item) => categoryCopy[item].label).join(', ') || 'No categories'}</p><p>{review.retentionNotice}</p><p className="font-bold text-slate-900">{review.authorityBoundary}</p></div>
         <label className="mt-5 flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4"><input checked={affirmed} className="mt-0.5 h-5 w-5" onChange={(event) => setAffirmed(event.target.checked)} type="checkbox" /><span className="text-sm leading-6">I approve only the selected items for {review.providerOrganizationName} to assess this yard.</span></label>
-        <div className="mt-5 flex flex-wrap gap-3"><button className="min-h-12 rounded-xl bg-sky-900 px-5 font-black text-white disabled:opacity-50" disabled={busy || !affirmed || approved.length === 0} onClick={() => void approve()} type="button">{busy ? 'Approving…' : 'Approve selected assessment access'}</button><button className="min-h-12 rounded-xl px-4 font-bold" disabled={busy} onClick={() => { setReview(null); requestAnimationFrame(() => panelTitleRef.current?.focus()); }} type="button">Cancel without sharing</button></div>
+        <div className="mt-5 flex flex-wrap gap-3"><button className="min-h-12 rounded-xl bg-sky-900 px-5 font-black text-white disabled:opacity-50" disabled={busy || !affirmed || approved.length === 0} onClick={() => void approve()} type="button">{busy ? 'Approving…' : 'Approve selected assessment access'}</button><button className="min-h-12 rounded-xl px-4 font-bold" disabled={busy} onClick={() => { approvalKeyRef.current = null; setReview(null); requestAnimationFrame(() => panelTitleRef.current?.focus()); }} type="button">Cancel without sharing</button></div>
       </div> : null}
 
-        <div className="mt-6"><h5 className="font-black">Access history</h5>{receipts.length === 0 ? <p className="mt-2 text-sm text-slate-600">No assessment access has been approved for this property.</p> : <ul className="mt-3 grid gap-3">{receipts.map((receipt) => <li className="rounded-xl border border-sky-200 bg-white p-4" key={receipt.receiptId}><div className="flex flex-wrap justify-between gap-3"><div><strong>{receipt.organizationName}</strong><p className="mt-1 text-xs text-slate-600">Approved {new Date(receipt.affirmedAtEpochSeconds * 1000).toLocaleString()}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase">{receipt.status}</span></div><p className="mt-3 text-sm"><strong>Shared:</strong> {receipt.approvedCategories.map((item) => categoryCopy[item].label).join(', ')}</p><p className="mt-2 text-sm"><strong>Withheld:</strong> {receipt.withheldCategories.map((item) => categoryCopy[item].label).join(', ')}</p>{receipt.selectedPhotos.length ? <p className="mt-2 text-sm"><strong>Photos:</strong> {receipt.selectedPhotos.map((photo) => photo.fileLabel).join(', ')}</p> : null}{receipt.status === 'active' ? <button className="mt-4 min-h-11 rounded-lg border border-rose-400 px-4 text-sm font-bold text-rose-900" onClick={() => { setRevokeReason('owner_choice'); setRevokeTarget(receipt); }} type="button">End future assessment access</button> : null}</li>)}</ul>}</div>
-      {revokeTarget ? <section aria-labelledby="revoke-access-title" className="mt-5 rounded-2xl border-2 border-rose-400 bg-white p-5"><h5 className="text-lg font-black focus:outline-none" id="revoke-access-title" ref={revokeTitleRef} tabIndex={-1}>End future access for {revokeTarget.organizationName}?</h5><p className="mt-2 text-sm leading-6 text-slate-700">New access ends immediately. Information already viewed, the immutable consent receipt, and legally retained records are not erased.</p><label className="mt-4 block text-sm font-bold">Reason<select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3" onChange={(event) => setRevokeReason(event.target.value)} value={revokeReason}><option value="owner_choice">I no longer want to share</option><option value="assessment_complete">Assessment is complete</option><option value="provider_changed">I changed providers</option><option value="incorrect_details">The shared details need correction</option><option value="privacy_concern">Privacy concern</option></select></label><div className="mt-5 flex gap-3"><button className="min-h-12 rounded-xl bg-rose-800 px-5 font-black text-white disabled:opacity-60" disabled={busy} onClick={() => void revoke()} type="button">{busy ? 'Ending access…' : 'Confirm and end future access'}</button><button className="min-h-12 rounded-xl px-4 font-bold" disabled={busy} onClick={() => { setRevokeTarget(null); requestAnimationFrame(() => panelTitleRef.current?.focus()); }} type="button">Keep access active</button></div></section> : null}
+        <div className="mt-6"><h5 className="font-black">Access history</h5>{receipts.length === 0 ? <p className="mt-2 text-sm text-slate-600">No assessment access has been approved for this property.</p> : <ul className="mt-3 grid gap-3">{receipts.map((receipt) => <li className="rounded-xl border border-sky-200 bg-white p-4" key={receipt.receiptId}><div className="flex flex-wrap justify-between gap-3"><div><strong>{receipt.organizationName}</strong><p className="mt-1 text-xs text-slate-600">Approved {new Date(receipt.affirmedAtEpochSeconds * 1000).toLocaleString()}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase">{receipt.status}</span></div><p className="mt-3 text-sm"><strong>Shared:</strong> {receipt.approvedCategories.map((item) => categoryCopy[item].label).join(', ')}</p><p className="mt-2 text-sm"><strong>Withheld:</strong> {receipt.withheldCategories.map((item) => categoryCopy[item].label).join(', ')}</p>{receipt.selectedPhotos.length ? <p className="mt-2 text-sm"><strong>Photos:</strong> {receipt.selectedPhotos.map((photo) => photo.fileLabel).join(', ')}</p> : null}{receipt.status === 'active' ? <button className="mt-4 min-h-11 rounded-lg border border-rose-400 px-4 text-sm font-bold text-rose-900" onClick={() => { revokeKeyRef.current = idempotencyKey('owner-disclosure-revoke'); setRevokeReason('owner_choice'); setRevokeTarget(receipt); }} type="button">End future assessment access</button> : null}</li>)}</ul>}</div>
+      {revokeTarget ? <section aria-labelledby="revoke-access-title" className="mt-5 rounded-2xl border-2 border-rose-400 bg-white p-5"><h5 className="text-lg font-black focus:outline-none" id="revoke-access-title" ref={revokeTitleRef} tabIndex={-1}>End future access for {revokeTarget.organizationName}?</h5><p className="mt-2 text-sm leading-6 text-slate-700">New access ends immediately. Information already viewed, the immutable consent receipt, and legally retained records are not erased.</p><label className="mt-4 block text-sm font-bold">Reason<select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3" onChange={(event) => setRevokeReason(event.target.value)} value={revokeReason}><option value="owner_choice">I no longer want to share</option><option value="assessment_complete">Assessment is complete</option><option value="provider_changed">I changed providers</option><option value="incorrect_details">The shared details need correction</option><option value="privacy_concern">Privacy concern</option></select></label><div className="mt-5 flex gap-3"><button className="min-h-12 rounded-xl bg-rose-800 px-5 font-black text-white disabled:opacity-60" disabled={busy} onClick={() => void revoke()} type="button">{busy ? 'Ending access…' : 'Confirm and end future access'}</button><button className="min-h-12 rounded-xl px-4 font-bold" disabled={busy} onClick={() => { revokeKeyRef.current = null; setRevokeTarget(null); requestAnimationFrame(() => panelTitleRef.current?.focus()); }} type="button">Keep access active</button></div></section> : null}
     </section>
   );
 }

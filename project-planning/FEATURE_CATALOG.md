@@ -69,6 +69,9 @@
 - Phase 3E Yard Owner pilot-hardening contract with explicit automated,
   external-technical, and signed-human evidence classes; retry/concurrency,
   browser, monitoring, runbook, rehearsal, and launch-blocker delivery order
+- Retry-safe owner provider-disclosure decisions with stable approval/revocation
+  keys across uncertain responses, preserved choices, authoritative stale-state
+  reload, and no false success claim
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

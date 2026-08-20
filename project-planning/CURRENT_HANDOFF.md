@@ -3,10 +3,13 @@
 ## Restart point
 
 - Branch: `main`
-- Recorded tip: `3afae52` (`Deliver provider disclosure interfaces`)
+- Recorded Phase 3D tip: `3afae52` (`Deliver provider disclosure interfaces`)
 - Canonical status: [`../PLAN.md`](../PLAN.md), Yard Owner Phase 3D/3E entries only
 - Active roadmap item: Yard Owner Phase 3E pilot hardening
 - Phase 3D is complete in `98fcfc2`, `1d234d0`, `234ac7a`, and `3afae52`.
+- Phase 3E0 hardening planning is complete in `73545a4`; Phase 3E1 retry-safe
+  disclosure decisions are delivered, and Phase 3E2 server authorization and
+  concurrency regression is next.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.

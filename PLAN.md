@@ -436,6 +436,14 @@ Active slice:
   integration, human usability/AT/device, privacy/security, staffing,
   operational, and go/no-go decisions explicitly launch-blocking and unsigned.
   The Phase 3E1 retry-safe disclosure approval/revocation slice is next.
+- Phase 3E1 is delivered. Owner disclosure approval and revocation retain one
+  idempotency key across uncertain retries, preserve the reviewed decision when
+  the response is lost, and clear the key only on success, cancel, property
+  change, or authoritative conflict. Conflicts reload receipt and connection
+  projections before another decision and never claim success. Frontend
+  typecheck, all 397 unit tests, isolated production build, and the focused
+  compatible-Chromium lost-response/stale-revocation journey pass. Phase 3E2
+  server authorization and concurrency regression is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

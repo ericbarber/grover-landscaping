@@ -33,13 +33,19 @@ templates and simulations do not change external or signed evidence to passed.
 | Slice | Status | Outcome |
 | --- | --- | --- |
 | 3E0 | Delivered | Restart index, hardening order, evidence taxonomy, launch blockers, and verification contract |
-| 3E1 | Next | Retry-safe owner disclosure approval/revocation keys plus explicit stale-tab and uncertain-outcome recovery |
-| 3E2 | Planned | Concurrent/stale authorization, isolation, idempotency, outage, audit-minimization, and post-revocation server regression gates |
+| 3E1 | Delivered | Retry-safe owner disclosure approval/revocation keys plus explicit stale-tab and uncertain-outcome recovery |
+| 3E2 | Next | Concurrent/stale authorization, isolation, idempotency, outage, audit-minimization, and post-revocation server regression gates |
 | 3E3 | Planned | Production React cross-browser/responsive/accessibility automation with browser-specific failures recorded honestly |
 | 3E4 | Planned | Minimized pilot telemetry contract, alert/runbook validation, synthetic launch rehearsal, rollback evidence, and operator-ready evidence manifests |
 | 3E5 | External | Delivery integration decision and threat review; human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go signatures |
 
 ### 3E1 — retry and stale-tab recovery
+
+Delivered on 2026-08-19. Approval and revocation now retain one mutation key for
+the life of the reviewed decision, preserve the decision after an uncertain
+response, and reload current receipt/connection projections after conflict.
+Browser coverage proves successful lost-response approval replay and stale
+revocation reconciliation without a false success claim.
 
 - Reuse one idempotency key for every retry of the same reviewed disclosure
   decision or revocation decision.

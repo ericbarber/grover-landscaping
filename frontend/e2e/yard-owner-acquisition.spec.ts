@@ -260,9 +260,11 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('an owner selectively approves and later ends provider assessment access', async ({ page }) => {
+test('an owner safely retries approval and reconciles a stale revocation after lost responses', async ({ page }) => {
   let accessState: 'decision' | 'active' | 'revoked' = 'decision';
   let receipts: Array<Record<string, unknown>> = [];
+  const approvalKeys: string[] = [];
+  const revokeKeys: string[] = [];
   const property = {
     property_id: 'owner_property_2', owner_user_id: 'local-development-user', display_name: 'Home',
     address_line_1: '125 Oak Street', address_line_2: '', city: 'Phoenix', region: 'AZ',
@@ -340,19 +342,36 @@ test('an owner selectively approves and later ends provider assessment access', 
   }));
   await page.route('**/owner-properties/owner_property_2/provider-invitations/invitation_2/disclosure-grants', async (route) => {
     const request = route.request().postDataJSON();
+    approvalKeys.push(request.idempotency_key);
     expect(request.approved_categories).toEqual(['exact_address', 'selected_yard_photos']);
     expect(request.selected_media_ids).toEqual(['owner_media_ready']);
     expect(request.owner_affirmed).toBe(true);
     accessState = 'active';
     receipts = [activeReceipt()];
+    if (approvalKeys.length === 1) {
+      await route.abort('failed');
+      return;
+    }
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
   });
   await page.route('**/owner-properties/owner_property_2/provider-disclosure-grants/grant_2/revoke', async (route) => {
     const request = route.request().postDataJSON();
+    revokeKeys.push(request.idempotency_key);
     expect(request).toMatchObject({ expected_version: 1, reason_code: 'assessment_complete', owner_confirmed: true });
+    if (revokeKeys.length === 1) {
+      await route.abort('failed');
+      return;
+    }
     accessState = 'revoked';
     receipts = [activeReceipt()];
-    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: 'owner_provider_disclosure_revoke_conflict',
+        message: 'Assessment access changed before this request was applied.',
+      }),
+    });
   });
 
   await page.goto('/app/yard-owner');
@@ -367,14 +386,27 @@ test('an owner selectively approves and later ends provider assessment access', 
   await expect(page.getByText('Yard care brief, Owner contact, Access considerations')).toBeVisible();
   await page.getByLabel('I approve only the selected items for Desert Green Care to assess this yard.').check();
   await page.getByRole('button', { name: 'Approve selected assessment access' }).click();
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByLabel('Exact service address')).toBeChecked();
+  await expect(page.getByLabel('Selected yard photographs')).toBeChecked();
+  await expect(page.getByLabel('front-yard.jpg')).toBeChecked();
+  await page.getByRole('button', { name: 'Approve selected assessment access' }).click();
   await expect(page.getByText('Selected assessment access was approved. This did not accept pricing or start service.')).toBeVisible();
+  expect(approvalKeys).toHaveLength(2);
+  expect(approvalKeys[1]).toBe(approvalKeys[0]);
   await expect(page.getByText('Desert Green Care').first()).toBeVisible();
   await expect(page.getByText('active', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'End future assessment access' }).click();
   await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
   await page.getByLabel('Reason').selectOption('assessment_complete');
   await page.getByRole('button', { name: 'Confirm and end future access' }).click();
-  await expect(page.getByText('Future assessment access ended. The consent receipt remains in your history.')).toBeVisible();
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
+  expect(revokeKeys).toHaveLength(2);
+  expect(revokeKeys[1]).toBe(revokeKeys[0]);
+  await expect(page.getByText('Assessment access changed in another tab. Current access was reloaded; review its status before trying again.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).not.toBeVisible();
   await expect(page.getByText('revoked', { exact: true })).toBeVisible();
   await expect(page.getByText('Assessment access ended', { exact: true }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

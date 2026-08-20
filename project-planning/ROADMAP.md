@@ -166,6 +166,12 @@ runbook validation, and synthetic launch rehearsal. Delivery integration and
 signed human usability, assistive-technology, physical-device,
 privacy/security, staffing, operational, and go/no-go evidence remain external
 launch blockers. The Phase 3E1 retry-safe disclosure-decision slice is next.
+Phase 3E1 now retains one approval or revocation idempotency key across
+uncertain retries, preserves the reviewed decision after a lost response, and
+reloads authoritative receipt/connection state on stale conflicts without a
+false success claim. Frontend typecheck, all 397 unit tests, isolated production
+build, and focused compatible-Chromium recovery coverage pass; Phase 3E2 server
+authorization and concurrency regression is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
