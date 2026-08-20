@@ -492,6 +492,15 @@ Active slice:
   Route authorization and no-persistence behavior are covered. Phase 4A2b
   optimistic lifecycle transitions and separate customer-safe/private
   conversation stores are next.
+- Phase 4A2b1 is delivered as the assessment communication persistence boundary.
+  Customer-safe owner/provider messages and provider-private assessment notes
+  live in separate constrained tables; the owner projection selects only the
+  shared table, author roles are restricted by message kind, provider notes use
+  controlled production/scope/safety categories, and append-only events omit
+  both bodies. PostgreSQL coverage proves private crew-hour, disposal, and route
+  assumptions cannot enter the owner message projection or minimized event
+  payloads. Authorized repository writes and optimistic assessment lifecycle
+  transitions are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

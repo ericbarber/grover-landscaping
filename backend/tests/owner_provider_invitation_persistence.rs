@@ -33,6 +33,28 @@ mod common;
 
 async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
     sqlx::query(
+        "DELETE FROM owner_provider_assessment_private_notes
+         WHERE assessment_id IN (
+             SELECT id FROM owner_provider_assessments
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test assessment private notes should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_assessment_messages
+         WHERE assessment_id IN (
+             SELECT id FROM owner_provider_assessments
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test assessment messages should reset");
+    sqlx::query(
         "DELETE FROM owner_provider_assessment_events
          WHERE assessment_id IN (
              SELECT id FROM owner_provider_assessments
@@ -1810,6 +1832,151 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!assessment_audit.contains(recipient));
     assert!(!assessment_audit.contains("421 Private Canyon Road"));
     assert!(!assessment_audit.contains("America/Phoenix"));
+
+    let message_id = "owner_assessment_message_test_001";
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_messages (
+             id, assessment_id, author_user_id, author_role, message_kind,
+             customer_safe_body, assessment_version_snapshot, idempotency_key
+         ) VALUES ($1, $2, $3, 'owner', 'owner_question', $4, $5, $6)",
+    )
+    .bind(message_id)
+    .bind(&assessment.assessment_id)
+    .bind(owner_a)
+    .bind("Can the assessment include the irrigation controller?")
+    .bind(assessment.version)
+    .bind("assessment-message-owner-001")
+    .execute(&pool)
+    .await
+    .expect("customer-safe assessment message should save");
+    let private_note_id = "owner_assessment_private_note_test_001";
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_private_notes (
+             id, assessment_id, organization_id, author_user_id, note_kind,
+             private_body, assessment_version_snapshot, idempotency_key
+         ) VALUES ($1, $2, $3, $4, 'production_assumption', $5, $6, $7)",
+    )
+    .bind(private_note_id)
+    .bind(&assessment.assessment_id)
+    .bind(&assessment.organization_id)
+    .bind("recipient-user-1")
+    .bind("crew_hours=6; disposal_loads=2; route_margin=private")
+    .bind(assessment.version)
+    .bind("assessment-private-note-provider-001")
+    .execute(&pool)
+    .await
+    .expect("provider-private assessment note should save separately");
+    assert!(
+        sqlx::query(
+            "INSERT INTO owner_provider_assessment_messages (
+                 id, assessment_id, author_user_id, author_role, message_kind,
+                 customer_safe_body, assessment_version_snapshot, idempotency_key
+             ) VALUES ($1, $2, $3, 'provider', 'owner_question', $4, $5, $6)",
+        )
+        .bind("owner_assessment_message_invalid_role")
+        .bind(&assessment.assessment_id)
+        .bind("recipient-user-1")
+        .bind("This invalid authorship must be rejected.")
+        .bind(assessment.version)
+        .bind("assessment-message-invalid-role-001")
+        .execute(&pool)
+        .await
+        .is_err(),
+        "provider-authored owner questions must fail the shared-message constraint"
+    );
+    assert!(
+        sqlx::query(
+            "INSERT INTO owner_provider_assessment_private_notes (
+                 id, assessment_id, organization_id, author_user_id, note_kind,
+                 private_body, visibility, assessment_version_snapshot, idempotency_key
+             ) VALUES ($1, $2, $3, $4, 'route_fit', $5, 'owner_provider', $6, $7)",
+        )
+        .bind("owner_assessment_private_note_invalid_visibility")
+        .bind(&assessment.assessment_id)
+        .bind(&assessment.organization_id)
+        .bind("recipient-user-1")
+        .bind("This private note must not enter shared visibility.")
+        .bind(assessment.version)
+        .bind("assessment-private-note-invalid-visibility-001")
+        .execute(&pool)
+        .await
+        .is_err(),
+        "provider-private notes must reject owner-visible storage"
+    );
+    for (event_kind, event_id, actor_user_id, idempotency_key) in [
+        (
+            "customer_message_added",
+            message_id,
+            owner_a,
+            "assessment-message-event-owner-001",
+        ),
+        (
+            "private_note_added",
+            private_note_id,
+            "recipient-user-1",
+            "assessment-private-note-event-provider-001",
+        ),
+    ] {
+        sqlx::query(
+            "INSERT INTO owner_provider_assessment_events (
+                 id, assessment_id, actor_user_id, event_kind,
+                 assessment_version, idempotency_key, event_data
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        )
+        .bind(format!(
+            "owner_assessment_event_test_{}",
+            event_kind.replace('_', "-")
+        ))
+        .bind(&assessment.assessment_id)
+        .bind(actor_user_id)
+        .bind(event_kind)
+        .bind(assessment.version)
+        .bind(idempotency_key)
+        .bind(serde_json::json!({
+            "record_id": event_id,
+            "record_kind": event_kind,
+        }))
+        .execute(&pool)
+        .await
+        .expect("minimized assessment communication event should save");
+    }
+    let owner_message_projection = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT COALESCE(JSONB_AGG(TO_JSONB(message)), '[]'::JSONB)
+         FROM owner_provider_assessment_owner_messages message
+         WHERE assessment_id = $1",
+    )
+    .bind(&assessment.assessment_id)
+    .fetch_one(&pool)
+    .await
+    .expect("owner assessment message projection should load")
+    .to_string();
+    assert!(owner_message_projection.contains("irrigation controller"));
+    assert!(!owner_message_projection.contains("crew_hours"));
+    assert!(!owner_message_projection.contains("route_margin"));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_provider_assessment_private_notes
+             WHERE assessment_id = $1 AND visibility = 'provider_private'",
+        )
+        .bind(&assessment.assessment_id)
+        .fetch_one(&pool)
+        .await
+        .expect("private assessment note count should load"),
+        1
+    );
+    let communication_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT JSONB_AGG(event_data ORDER BY created_at, id)
+         FROM owner_provider_assessment_events
+         WHERE assessment_id = $1
+           AND event_kind IN ('customer_message_added', 'private_note_added')",
+    )
+    .bind(&assessment.assessment_id)
+    .fetch_one(&pool)
+    .await
+    .expect("minimized assessment communication audit should load")
+    .to_string();
+    assert!(!communication_audit.contains("irrigation controller"));
+    assert!(!communication_audit.contains("crew_hours"));
 
     assert!(matches!(
         repository

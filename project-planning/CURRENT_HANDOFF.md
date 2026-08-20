@@ -17,8 +17,10 @@
 - Phase 4A1 assessment persistence is delivered with provider authorization,
   exact replay, bounded remote/on-site states, owner isolation, and minimized
   audit. Phase 4A2a exposes verified-provider start and owner-scoped history
-  APIs with route and outage coverage. Phase 4A2b lifecycle transitions and
-  conversation/private-note separation are next.
+  APIs with route and outage coverage. Phase 4A2b1 now delivers the
+  separate constrained stores, owner-safe shared projection, minimized events,
+  and PostgreSQL non-leakage coverage; authorized writes and lifecycle mutations
+  are the next implementation boundary.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -57,9 +59,9 @@ privacy behavior throughout hardening.
 Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration,
 named staffing, human usability/assistive-technology/device work,
 Privacy/Security review, and go/no-go are signed. The machine-readable assurance
-manifest must continue to list those items as external or unsigned. Phase 4A2b
-assessment lifecycle transitions and conversation separation are the next product-
-development slice; it does not remove or bypass the Phase 3E5 pilot launch
+manifest must continue to list those items as external or unsigned. Phase 4A2b2
+authorized assessment communication writes and lifecycle transitions are the
+next product-development slice; it does not remove or bypass the Phase 3E5 pilot launch
 blockers. Keep
 [`../PLAN.md`](../PLAN.md) canonical when work resumes.
 

@@ -93,12 +93,24 @@ Phase 4A2a exposes that foundation through authenticated APIs:
 - invalid requests, missing identity, changed authority, conflicts, exact
   replay, and persistence outages retain distinct HTTP outcomes.
 
+Phase 4A2b1 establishes the communication storage boundary:
+
+- customer-safe questions, answers, window-change requests, photo requests, and
+  clarifications are stored in `owner_provider_assessment_messages` with
+  controlled author-role semantics;
+- provider scope, measurement, access, safety, production, and route assumptions
+  are stored only in `owner_provider_assessment_private_notes`;
+- `owner_provider_assessment_owner_messages` projects only explicitly shared
+  messages and has no private-note source;
+- append-only communication events retain record identifiers and kinds without
+  copying either body.
+
 ## Next slices
 
 1. Add optimistic window confirmation/change requests, provider lifecycle
    transitions, and status-only ended-authority recovery.
-2. Add customer-safe questions/answers and separately stored provider-private
-   notes with serialization isolation tests.
+2. Add authorized, replay-safe repository writes for customer-safe messages and
+   provider-private notes, using only the owner-safe projection for owner reads.
 3. Adopt the assessment workspace in the production owner/provider interfaces
    with responsive, accessible, stale-state, and outage coverage.
 4. Begin versioned initial-service proposals only after the assessment boundary

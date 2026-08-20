@@ -62,7 +62,8 @@ The approved experience is defined by:
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4A1 | Delivered | Authorized, replay-safe remote/on-site assessment persistence with bounded windows, one assessment per invitation, owner isolation, append-only events, and minimized audit |
 | 4A2a | Delivered | Authenticated verified-provider assessment start and owner/property-scoped assessment history APIs with explicit validation, replay, conflict, missing, changed-authority, and unavailable responses |
-| 4A2b–7 | Planned | Assessment lifecycle/conversation through governed pilot convergence |
+| 4A2b1 | Delivered | Separate constrained customer-safe assessment messages and provider-private notes, owner-only shared projection, controlled authorship/kinds, minimized append-only events, and PostgreSQL non-leakage coverage |
+| 4A2b2–7 | Planned | Authorized assessment communication/lifecycle through governed pilot convergence |
 
 ## Delivery principles
 
@@ -241,6 +242,9 @@ private property, recipient, and schedule data. Lifecycle transitions,
 customer-safe conversation, provider-private notes, and production React
 adoption remain Phase 4A2b and later work. Phase 4A2a exposes the delivered
 start and owner-history repository boundaries as authenticated HTTP routes.
+Phase 4A2b1 establishes physically separate shared-message and provider-private
+note stores plus an owner projection that cannot select private notes; repository
+writes, lifecycle mutations, and interfaces remain subsequent slices.
 
 - Add assessment method/window lifecycle and customer-safe conversation.
 - Separate provider-private assessment notes from owner-visible content.

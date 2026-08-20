@@ -204,6 +204,10 @@ and separated customer-safe/provider-private conversation are next.
 Phase 4A2a now exposes verified-provider assessment start and owner-scoped
 assessment history APIs. Optimistic lifecycle transitions and separately stored
 customer-safe conversation/provider-private notes are next.
+Phase 4A2b1 now separates constrained shared assessment messages from
+provider-private scope, safety, production, and route notes, and provides an
+owner projection with no private-note source. Authorized repository writes and
+optimistic lifecycle mutations are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

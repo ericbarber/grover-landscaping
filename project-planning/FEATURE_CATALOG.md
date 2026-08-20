@@ -93,6 +93,10 @@
   APIs with verified-email route policy, controlled remote/on-site validation,
   explicit replay/conflict/changed-authority/outage responses, and fail-closed
   no-persistence tests
+- Separate assessment communication persistence for customer-safe messages and
+  provider-private notes, with controlled author/kind constraints, a shared-only
+  owner projection, append-only minimized events, and PostgreSQL proof that
+  private production assumptions do not enter owner reads or event payloads
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

@@ -332,6 +332,7 @@ The project currently includes migrations for:
 - Known-provider invitations, recipient verification, suppressions, reports, and revocation history
 - Provider organizations, claims, reviews, appeals, remediation state, and invitation responses
 - Capability-scoped disclosure grants, access records, receipts, decisions, and revocations
+- Separate customer-safe assessment messages and provider-private assessment notes
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
