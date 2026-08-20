@@ -35,6 +35,13 @@ test('a checked recipient loads status without retaining the bearer fragment', a
   await expect(page.getByText('Exact service address')).toBeVisible();
   await expect(page.locator('body')).not.toContainText('owner_provider_secret');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await page.reload();
+  await expect(page.getByLabel('Invitation code')).toHaveValue('');
+  await expect(page.getByRole('heading', { name: 'Interest recorded; waiting for the owner’s next decision' })).toHaveCount(0);
+  await page.getByLabel('Invitation code').fill('owner_provider_secret');
+  await page.getByRole('button', { name: 'Check invitation progress' }).click();
+  await expect(page.getByRole('heading', { name: 'Interest recorded; waiting for the owner’s next decision' })).toBeVisible();
 });
 
 test('a provider sees only owner-approved assessment details and loses future access after revocation', async ({ page }) => {
@@ -108,7 +115,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
 
   accessActive = false;
   await page.getByRole('button', { name: 'Check invitation progress' }).click();
-  await expect(page.getByRole('heading', { name: 'Assessment access ended' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Assessment access ended', exact: true })).toBeVisible();
   await expect(page.getByText('The owner-approved details are no longer available.')).toBeVisible();
   await expect(page.getByText('Private local preview')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

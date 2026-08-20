@@ -57,8 +57,8 @@ The approved experience is defined by:
 | 3E0 | Delivered | Pilot-hardening order, evidence taxonomy, automated verification contract, and explicit external launch blockers |
 | 3E1 | Delivered | Retry-safe disclosure approval/revocation keys, preserved uncertain decisions, authoritative conflict reload, and lost-response/stale-tab browser coverage |
 | 3E2 | Delivered | Concurrent/stale disclosure authorization, exact replay, isolation, outage/audit, post-revocation, and repeatable PostgreSQL migration/lifecycle regression gates |
-| 3E3 | Next | Production React cross-browser, responsive, and accessibility automation with unavailable engines recorded honestly |
-| 3E4 | Planned | Minimized monitoring, runbook validation, synthetic launch rehearsal, rollback evidence, and final evidence manifest |
+| 3E3 | Delivered | Production React mobile/desktop Chromium, desktop Firefox, mobile WebKit, responsive, refresh, focus, reduced-motion, forced-colors automation, and CI enforcement |
+| 3E4 | Next | Minimized monitoring, runbook validation, synthetic launch rehearsal, rollback evidence, and final evidence manifest |
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -211,8 +211,12 @@ PostgreSQL aliases, and the lifecycle fixture plus claim-appeal actor constraint
 are repeatable from a clean migration chain. Backend formatting, focused and
 complete tests, and fresh migration replay pass. Strict repository-wide Clippy
 remains pending on 19 existing warnings outside this slice. Phase 3E3
-compatible-browser, responsive, and accessibility automation is next, followed
-by minimized telemetry, runbook validation, and synthetic rehearsal.
+compatible-browser, responsive, and accessibility automation is delivered with
+four Playwright projects, CI enforcement, secure refresh, focus movement,
+320/768/1366/1440 reflow, reduced-motion, and forced-colors coverage. The
+combined 24-journey matrix, 8 accessibility profiles, all 397 frontend unit
+tests, TypeScript, and isolated production build pass. Phase 3E4 minimized
+telemetry, runbook validation, and synthetic rehearsal is next.
 Human usability, real assistive-technology, physical-device, privacy/security,
 staffing, operational, delivery-integration, and go/no-go evidence remains
 external and unsigned until performed by the accountable reviewers.

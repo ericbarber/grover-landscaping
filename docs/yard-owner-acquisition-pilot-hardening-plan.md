@@ -35,8 +35,8 @@ templates and simulations do not change external or signed evidence to passed.
 | 3E0 | Delivered | Restart index, hardening order, evidence taxonomy, launch blockers, and verification contract |
 | 3E1 | Delivered | Retry-safe owner disclosure approval/revocation keys plus explicit stale-tab and uncertain-outcome recovery |
 | 3E2 | Delivered | Concurrent/stale disclosure authorization, replay/isolation/outage/audit, and post-revocation PostgreSQL regression gates |
-| 3E3 | Next | Production React cross-browser/responsive/accessibility automation with browser-specific failures recorded honestly |
-| 3E4 | Planned | Minimized pilot telemetry contract, alert/runbook validation, synthetic launch rehearsal, rollback evidence, and operator-ready evidence manifests |
+| 3E3 | Delivered | Production React Chromium/Firefox/WebKit, responsive, refresh, focus, reduced-motion, and forced-colors automation plus CI enforcement |
+| 3E4 | Next | Minimized pilot telemetry contract, alert/runbook validation, synthetic launch rehearsal, rollback evidence, and operator-ready evidence manifests |
 | 3E5 | External | Delivery integration decision and threat review; human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go signatures |
 
 ### 3E1 — retry and stale-tab recovery
@@ -87,6 +87,20 @@ Phase 3E2 changes.
   successful, and keep general audit payloads free of private content.
 
 ### 3E3 — browser and accessibility automation
+
+Delivered on 2026-08-19. Playwright now runs the production owner/provider
+journeys as mobile and desktop Chromium, desktop Firefox, and mobile WebKit
+projects, starts the application consistently, retains traces/screenshots on
+failure, and gates the production image in CI. The matrix covers secure bearer-
+fragment removal and refresh recovery, selective disclosure and post-revocation
+closure, owner review/revocation focus movement, 320/768/1366/1440 reflow,
+keyboard focus, reduced motion, and forced colors. Global production styles
+provide consistent visible focus, motion reduction, and system-color status
+borders without substituting for signed assistive-technology/device evidence.
+
+Automated evidence includes 24 passing owner/provider browser journeys and 8
+passing responsive/accessibility profile checks across all four projects, all
+397 frontend unit tests, TypeScript, and an isolated production build.
 
 - Run the production owner and provider journeys in supported Chromium, Firefox,
   and WebKit profiles where compatible infrastructure is available.

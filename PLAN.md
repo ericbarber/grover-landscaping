@@ -454,6 +454,16 @@ Active slice:
   pass. Strict repository-wide Clippy remains pending on 19 pre-existing
   warnings outside this slice. Phase 3E3 cross-browser, responsive, and
   accessibility automation is next.
+- Phase 3E3 is delivered. Playwright now runs the production Yard Owner and
+  checked-provider journeys in mobile and desktop Chromium, desktop Firefox,
+  and mobile WebKit, with CI provisioning and production-image gating. Coverage
+  includes secure fragment removal and refresh recovery, disclosure/revocation
+  focus movement, post-revocation closure, 320/768/1366/1440 reflow, visible
+  keyboard focus, reduced motion, and forced colors. The combined 24-journey
+  matrix, 8 responsive/accessibility profiles, all 397 frontend unit tests,
+  TypeScript, and the isolated production build pass. Real assistive-technology
+  and physical-device evidence remains unsigned. Phase 3E4 minimized telemetry,
+  runbook validation, and synthetic rehearsal is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

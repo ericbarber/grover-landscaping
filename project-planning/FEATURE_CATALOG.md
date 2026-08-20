@@ -76,6 +76,10 @@
   exact simultaneous decisions, changed/stale conflict without partial writes,
   repeatable retained-evidence PostgreSQL fixtures, corrected protected grant
   queries, and clean-chain claim-appeal actor support
+- CI-enforced Yard Owner acquisition browser matrix spanning mobile/desktop
+  Chromium, desktop Firefox, and mobile WebKit with secure refresh, focus
+  movement, responsive reflow, reduced-motion, forced-colors, selective-access,
+  and post-revocation assertions
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

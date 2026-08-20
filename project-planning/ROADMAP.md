@@ -180,6 +180,14 @@ survives a clean migration chain. Backend formatting, focused/full tests, and
 fresh migration replay pass; strict repository-wide Clippy remains pending on
 19 existing warnings outside the slice. Phase 3E3 cross-browser, responsive,
 and accessibility automation is next.
+Phase 3E3 now enforces the production owner/provider journeys in mobile and
+desktop Chromium, desktop Firefox, and mobile WebKit locally and in CI. Secure
+fragment refresh, review/revocation focus, post-revocation closure,
+320/768/1366/1440 reflow, visible focus, reduced motion, and forced colors are
+automated. The 24-journey matrix, 8 accessibility profiles, all 397 frontend
+unit tests, TypeScript, and isolated build pass; signed assistive-technology and
+physical-device evidence remains external. Phase 3E4 minimized monitoring,
+runbook validation, and synthetic rehearsal is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

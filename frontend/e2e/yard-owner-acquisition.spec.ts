@@ -378,6 +378,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
   await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
+  await expect(page.getByRole('heading', { name: 'Review access for Desert Green Care' })).toBeFocused();
   await expect(page.getByLabel('Exact service address')).not.toBeChecked();
   await expect(page.getByLabel('Yard care brief')).not.toBeChecked();
   await page.getByLabel('Exact service address').check();
@@ -397,7 +398,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await expect(page.getByText('Desert Green Care').first()).toBeVisible();
   await expect(page.getByText('active', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'End future assessment access' }).click();
-  await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeFocused();
   await page.getByLabel('Reason').selectOption('assessment_complete');
   await page.getByRole('button', { name: 'Confirm and end future access' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
