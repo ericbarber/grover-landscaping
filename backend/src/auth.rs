@@ -446,6 +446,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-invitations/progress"
         || path == "/provider-opportunity-responses"
         || path == "/provider-disclosures/access"
+        || path == "/provider-assessments"
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
         || path == "/provider-organization-claim-review-metrics"
@@ -530,6 +531,7 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             | "/provider-invitations/progress"
             | "/provider-opportunity-responses"
             | "/provider-disclosures/access"
+            | "/provider-assessments"
     ) {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
@@ -579,6 +581,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
                 && *method == Method::GET)
             || (segment_count == 2
                 && owner_property_suffix.ends_with("/provider-disclosure-receipts")
+                && *method == Method::GET)
+            || (segment_count == 2
+                && owner_property_suffix.ends_with("/provider-assessments")
                 && *method == Method::GET)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
@@ -1671,6 +1676,10 @@ mod tests {
                 "/owner-properties/property-1/provider-disclosure-receipts",
             ),
             (
+                Method::GET,
+                "/owner-properties/property-1/provider-assessments",
+            ),
+            (
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations",
             ),
@@ -1703,6 +1712,7 @@ mod tests {
             (Method::POST, "/provider-invitations/progress"),
             (Method::POST, "/provider-opportunity-responses"),
             (Method::POST, "/provider-disclosures/access"),
+            (Method::POST, "/provider-assessments"),
             (
                 Method::POST,
                 "/provider-invitation-organization-claims/claim-1/bootstrap",

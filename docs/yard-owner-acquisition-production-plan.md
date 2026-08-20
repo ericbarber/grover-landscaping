@@ -61,7 +61,8 @@ The approved experience is defined by:
 | 3E4 | Delivered | Machine-checked minimized monitoring/alert contract, runbook validation, seven-scenario synthetic rehearsal, rollback evidence, and final evidence manifest |
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4A1 | Delivered | Authorized, replay-safe remote/on-site assessment persistence with bounded windows, one assessment per invitation, owner isolation, append-only events, and minimized audit |
-| 4A2–7 | Planned | Assessment lifecycle/conversation through governed pilot convergence |
+| 4A2a | Delivered | Authenticated verified-provider assessment start and owner/property-scoped assessment history APIs with explicit validation, replay, conflict, missing, changed-authority, and unavailable responses |
+| 4A2b–7 | Planned | Assessment lifecycle/conversation through governed pilot convergence |
 
 ## Delivery principles
 
@@ -237,8 +238,9 @@ Only the verified provider actor with explicit interest and a current disclosure
 grant can start one remote review or proposed on-site window. Exact retries are
 idempotent, owner history is property-scoped, and the general audit excludes
 private property, recipient, and schedule data. Lifecycle transitions,
-customer-safe conversation, provider-private notes, HTTP interfaces, and
-production React adoption remain Phase 4A2 and later work.
+customer-safe conversation, provider-private notes, and production React
+adoption remain Phase 4A2b and later work. Phase 4A2a exposes the delivered
+start and owner-history repository boundaries as authenticated HTTP routes.
 
 - Add assessment method/window lifecycle and customer-safe conversation.
 - Separate provider-private assessment notes from owner-visible content.

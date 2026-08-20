@@ -484,6 +484,14 @@ Active slice:
   Owner reads remain property-scoped, and general audit omits mailbox, address,
   schedule, time zone, brief, media, and access details. Phase 4A2 assessment
   lifecycle APIs and customer-safe/private conversation separation are next.
+- Phase 4A2a is delivered. Authenticated verified providers can start a remote
+  review or proposed on-site assessment through `POST /provider-assessments`,
+  with invalid, missing, changed, conflicting, replayed, and unavailable
+  outcomes mapped explicitly. Verified owners can list only their property's
+  assessment history through `GET /owner-properties/{property_id}/provider-assessments`.
+  Route authorization and no-persistence behavior are covered. Phase 4A2b
+  optimistic lifecycle transitions and separate customer-safe/private
+  conversation stores are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

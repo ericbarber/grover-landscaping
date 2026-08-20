@@ -89,6 +89,10 @@
   rechecks; distinct remote review and proposed on-site windows; exact
   concurrent replay; owner-isolated history; append-only events; and minimized
   audit data
+- Authenticated provider assessment-start and owner property-assessment history
+  APIs with verified-email route policy, controlled remote/on-site validation,
+  explicit replay/conflict/changed-authority/outage responses, and fail-closed
+  no-persistence tests
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

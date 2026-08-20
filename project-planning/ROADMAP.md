@@ -201,6 +201,9 @@ Phase 4A1 now delivers the authorized assessment persistence foundation for one
 remote review or proposed on-site window per known-provider invitation, with
 exact replay, owner isolation, and minimized audit. Assessment lifecycle APIs
 and separated customer-safe/provider-private conversation are next.
+Phase 4A2a now exposes verified-provider assessment start and owner-scoped
+assessment history APIs. Optimistic lifecycle transitions and separately stored
+customer-safe conversation/provider-private notes are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

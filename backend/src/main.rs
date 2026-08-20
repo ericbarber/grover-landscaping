@@ -85,10 +85,10 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
-        validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
-        validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
-        validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
-        validate_provider_invitation_abuse_report_request,
+        validate_provider_assessment_request, validate_provider_claim_review_decision_request,
+        validate_provider_claim_review_filter, validate_provider_disclosure_access_request,
+        validate_provider_disclosure_grant_request, validate_provider_disclosure_revoke_request,
+        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_opportunity_response_request,
@@ -99,12 +99,13 @@ use grover_landscaping_api::{
         validate_provider_response_capability_request, validate_workspace_request,
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
-        CreateOwnerPropertyRequest, CreateOwnerProviderDisclosureGrantRequest,
-        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-        CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
+        CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
+        CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderDisclosureRequest,
+        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderAssessmentCreateResult,
         OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
         OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
         OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
@@ -706,6 +707,10 @@ fn app_with_runtime(
             get(list_owner_provider_disclosure_receipts),
         )
         .route(
+            "/owner-properties/{property_id}/provider-assessments",
+            get(list_owner_provider_assessments),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
             post(revoke_owner_provider_disclosure_grant),
         )
@@ -760,6 +765,10 @@ fn app_with_runtime(
         .route(
             "/provider-disclosures/access",
             post(open_owner_provider_disclosure),
+        )
+        .route(
+            "/provider-assessments",
+            post(create_owner_provider_assessment),
         )
         .route(
             "/provider-opportunity-responses",
@@ -1715,6 +1724,28 @@ async fn list_owner_provider_disclosure_receipts(
         OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
             "owner_provider_disclosure_receipts_unavailable",
             "Assessment access history could not be loaded. Existing access is unchanged.",
+        ),
+    }
+}
+
+async fn list_owner_provider_assessments(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_owner_provider_assessments(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(assessments) => Json(assessments).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_assessments_unavailable",
+            "Assessment progress could not be loaded. Existing assessment state is unchanged.",
         ),
     }
 }
@@ -2779,6 +2810,75 @@ async fn open_owner_provider_disclosure(
             persisted_resource_unavailable_response(
                 "provider_disclosure_unavailable",
                 "Assessment details could not be loaded. Existing access is unchanged; try again.",
+            )
+        }
+    }
+}
+
+async fn create_owner_provider_assessment(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<CreateOwnerProviderAssessmentRequest>,
+) -> Response {
+    if !validate_provider_assessment_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_assessment_invalid",
+                message: "Choose remote review or provide one valid on-site assessment window and time zone."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before starting an assessment."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_assessment(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderAssessmentCreateResult::Created(assessment) => {
+            (StatusCode::CREATED, Json(assessment)).into_response()
+        }
+        OwnerProviderAssessmentCreateResult::Replayed(assessment) => {
+            Json(assessment).into_response()
+        }
+        OwnerProviderAssessmentCreateResult::NotFound => resource_not_found_response(
+            "provider_assessment_not_found",
+            "Assessment access is not available to this verified account.",
+        ),
+        OwnerProviderAssessmentCreateResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_assessment_not_ready",
+                message: "This request is not ready for assessment or its owner-approved access ended. Reload assessment access before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderAssessmentCreateResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_assessment_conflict",
+                message: "An assessment already exists or this request key was used for different assessment details. Reload before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderAssessmentCreateResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_assessment_unavailable",
+                "The assessment could not be confirmed. Existing access is unchanged; retry before leaving this page.",
             )
         }
     }
@@ -8767,6 +8867,71 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::CONFLICT);
+    }
+
+    #[tokio::test]
+    async fn provider_assessment_endpoints_validate_and_fail_closed_without_persistence() {
+        let app = seed_app();
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties/property-1/provider-assessments")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+                            "disclosure_grant_id": "owner_disclosure_grant_0001",
+                            "assessment_method": "on_site",
+                            "proposed_window_start_epoch_seconds": null,
+                            "proposed_window_end_epoch_seconds": null,
+                            "time_zone": null,
+                            "idempotency_key": "assessment-api-invalid-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+                            "disclosure_grant_id": "owner_disclosure_grant_0001",
+                            "assessment_method": "remote",
+                            "proposed_window_start_epoch_seconds": null,
+                            "proposed_window_end_epoch_seconds": null,
+                            "time_zone": null,
+                            "idempotency_key": "assessment-api-outage-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[tokio::test]

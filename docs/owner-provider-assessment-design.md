@@ -84,10 +84,19 @@ Phase 4A1 delivers:
 - PostgreSQL coverage for wrong actor, wrong grant, concurrent replay,
   conflicting reuse, owner isolation, and minimized audit.
 
+Phase 4A2a exposes that foundation through authenticated APIs:
+
+- `POST /provider-assessments` starts a verified provider's authorized remote
+  review or proposed on-site window;
+- `GET /owner-properties/{property_id}/provider-assessments` lists the verified
+  owner's property-scoped assessment history;
+- invalid requests, missing identity, changed authority, conflicts, exact
+  replay, and persistence outages retain distinct HTTP outcomes.
+
 ## Next slices
 
-1. Add provider and owner assessment lifecycle APIs with optimistic window
-   confirmation/change requests and status-only ended-authority recovery.
+1. Add optimistic window confirmation/change requests, provider lifecycle
+   transitions, and status-only ended-authority recovery.
 2. Add customer-safe questions/answers and separately stored provider-private
    notes with serialization isolation tests.
 3. Adopt the assessment workspace in the production owner/provider interfaces
