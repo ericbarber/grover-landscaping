@@ -387,6 +387,15 @@ Active slice:
   purpose, versions, lifecycle, replay keys, and one active grant per
   invitation; and admits minimized grant create/revoke audit kinds. Phase 3D1b
   server-derived owner review and atomic creation is next.
+- Phase 3D1b is delivered. Verified owners can load a server-derived,
+  provider-specific assessment review naming the current property, provider,
+  ready brief, exact selectable categories, ready-photo options, policy
+  versions, deadline, retention notice, and non-work authority boundary. Atomic
+  approval rechecks recipient, claim, organization, membership, capability,
+  interest, brief, media, suppression, expiry, and active-grant state; records
+  the exact review version on the immutable receipt; and provides exact replay,
+  stale/conflict, isolation, minimized-audit, and outage behavior. Phase 3D2
+  category-filtered provider disclosure access is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

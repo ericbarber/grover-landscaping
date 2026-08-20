@@ -70,6 +70,25 @@ withheld categories, retention notice, and “does not authorize” boundary bef
 the final action. The button uses “Approve selected assessment access,” not
 “Connect,” “Accept,” or “Start service.”
 
+## Owner API surface
+
+`GET /owner-properties/{property_id}/provider-invitations/{invitation_id}/disclosure-review`
+returns only after the server rechecks the current invitation, checked
+recipient, provider relationship and membership, active response capability,
+expressed interest, ready brief, suppression, expiry, and absence of an active
+grant. It derives the property/provider names, exact address, brief content,
+owner contact, access considerations, ready-photo options, policy versions,
+deadline, and opaque `review_version`; clients do not construct those values.
+
+`POST /owner-properties/{property_id}/provider-invitations/{invitation_id}/disclosure-grants`
+accepts the opaque review version, purpose, approved category names, selected
+media IDs, policy versions, explicit owner affirmation, and an idempotency key.
+It reconstructs the review while locking the authoritative rows and creates the
+receipt, active grant, immutable creation event, and minimized acquisition audit
+in one transaction. An exact replay returns the existing grant. Changed
+payload, stale review/media, or another active grant returns conflict;
+ineligible state returns status without creating a partial receipt.
+
 ## Persistence model
 
 `owner_provider_disclosure_receipts` is append-only and contains:
@@ -154,7 +173,7 @@ evidence is not stored on receipt or grant rows.
 2. **3D1a — persistence foundation (delivered):** append-only receipt,
    revocable current grant, event history, category partition, selected-photo,
    lifecycle, active-invitation uniqueness, and audit-event constraints.
-3. **3D1b — owner review and creation:** server-derived review model,
+3. **3D1b — owner review and creation (delivered):** server-derived review model,
    receipt/grant/event schema, transactional creation API, replay/conflict/
    outage behavior, and owner isolation tests.
 4. **3D2 — provider access:** category-filtered read model, short-lived selected

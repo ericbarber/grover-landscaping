@@ -1,20 +1,22 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
-    CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-    CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
-    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-    OwnerProviderClaimReviewMetricsResult, OwnerProviderInboxResult,
-    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
-    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
-    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
-    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
-    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    CreateOwnerPropertyRequest, CreateOwnerProviderDisclosureGrantRequest,
+    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
+    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
+    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderInboxRequest,
+    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
+    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
+    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
+    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
+    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
+    OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
+    OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
@@ -393,6 +395,36 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderOpportunityResponseResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .get_provider_disclosure_review(
+                "owner-unavailable",
+                "property-unavailable",
+                "invitation-unavailable",
+            )
+            .await,
+        OwnerProviderDisclosureReviewResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_disclosure_grant(
+                "owner-unavailable",
+                "property-unavailable",
+                "invitation-unavailable",
+                CreateOwnerProviderDisclosureGrantRequest {
+                    expected_review_version: format!("disclosure_review_v1_{}", "0".repeat(64)),
+                    purpose: "yard_assessment".to_string(),
+                    approved_categories: vec!["yard_brief".to_string()],
+                    selected_media_ids: vec![],
+                    consent_text_version: "owner-provider-assessment-consent-v1".to_string(),
+                    retention_notice_version: "owner-provider-assessment-retention-v1".to_string(),
+                    owner_affirmed: true,
+                    idempotency_key: "disclosure-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderDisclosureGrantCreateResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1202,6 +1234,137 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!progress_json.contains("unsafe_contact"));
     assert!(!progress_json.contains("421 Private Canyon Road"));
     assert!(!progress_json.contains("0199"));
+
+    assert!(matches!(
+        repository
+            .get_provider_disclosure_review(
+                owner_b,
+                &property.property_id,
+                &retry.invitation.invitation_id,
+            )
+            .await,
+        OwnerProviderDisclosureReviewResult::NotFound
+    ));
+    let OwnerProviderDisclosureReviewResult::Loaded(disclosure_review) = repository
+        .get_provider_disclosure_review(
+            owner_a,
+            &property.property_id,
+            &retry.invitation.invitation_id,
+        )
+        .await
+    else {
+        panic!("interested provider should have an owner disclosure review");
+    };
+    assert!(disclosure_review.can_approve);
+    assert_eq!(
+        disclosure_review.provider_organization_name,
+        "Recipient Owned Yard Care"
+    );
+    assert_eq!(
+        disclosure_review.exact_address,
+        "421 Private Canyon Road, Phoenix, AZ 85004"
+    );
+    assert_eq!(
+        disclosure_review.access_considerations,
+        "Use the east gate; the code is 0199."
+    );
+    assert!(disclosure_review.media_options.is_empty());
+    assert_eq!(disclosure_review.available_categories.len(), 5);
+    assert!(disclosure_review
+        .authority_boundary
+        .contains("does not accept pricing"));
+    let grant_request = CreateOwnerProviderDisclosureGrantRequest {
+        expected_review_version: disclosure_review.review_version.clone(),
+        purpose: "yard_assessment".to_string(),
+        approved_categories: vec!["yard_brief".to_string(), "exact_address".to_string()],
+        selected_media_ids: vec![],
+        consent_text_version: disclosure_review.consent_text_version.clone(),
+        retention_notice_version: disclosure_review.retention_notice_version.clone(),
+        owner_affirmed: true,
+        idempotency_key: "provider-disclosure-grant-001".to_string(),
+    };
+    let OwnerProviderDisclosureGrantCreateResult::Created(disclosure_grant) = repository
+        .create_provider_disclosure_grant(
+            owner_a,
+            &property.property_id,
+            &retry.invitation.invitation_id,
+            grant_request.clone(),
+        )
+        .await
+    else {
+        panic!("owner-selected disclosure grant should be created atomically");
+    };
+    assert_eq!(disclosure_grant.status, "active");
+    assert_eq!(
+        disclosure_grant.approved_categories,
+        ["exact_address", "yard_brief"]
+    );
+    assert_eq!(
+        disclosure_grant.withheld_categories,
+        [
+            "selected_yard_photos",
+            "owner_contact",
+            "access_considerations"
+        ]
+    );
+    assert!(disclosure_grant.selected_media_ids.is_empty());
+    assert!(matches!(
+        repository
+            .create_provider_disclosure_grant(
+                owner_a,
+                &property.property_id,
+                &retry.invitation.invitation_id,
+                grant_request.clone(),
+            )
+            .await,
+        OwnerProviderDisclosureGrantCreateResult::Replayed(replayed)
+            if replayed.grant_id == disclosure_grant.grant_id
+    ));
+    assert!(matches!(
+        repository
+            .create_provider_disclosure_grant(
+                owner_a,
+                &property.property_id,
+                &retry.invitation.invitation_id,
+                CreateOwnerProviderDisclosureGrantRequest {
+                    approved_categories: vec!["owner_contact".to_string()],
+                    ..grant_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderDisclosureGrantCreateResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .get_provider_disclosure_review(
+                owner_a,
+                &property.property_id,
+                &retry.invitation.invitation_id,
+            )
+            .await,
+        OwnerProviderDisclosureReviewResult::InvalidState
+    ));
+    let receipt_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM owner_provider_disclosure_receipts WHERE invitation_id = $1",
+    )
+    .bind(&retry.invitation.invitation_id)
+    .fetch_one(&pool)
+    .await
+    .expect("disclosure receipt count should load");
+    assert_eq!(receipt_count, 1);
+    let disclosure_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_acquisition_events
+         WHERE event_kind = 'provider_disclosure_grant_created'
+           AND event_data->>'grant_id' = $1",
+    )
+    .bind(&disclosure_grant.grant_id)
+    .fetch_one(&pool)
+    .await
+    .expect("minimized disclosure audit should load")
+    .to_string();
+    assert!(!disclosure_audit.contains("421 Private Canyon Road"));
+    assert!(!disclosure_audit.contains("0199"));
+    assert!(!disclosure_audit.contains(recipient));
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository

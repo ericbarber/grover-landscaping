@@ -86,7 +86,8 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
-        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
+        validate_provider_disclosure_grant_request, validate_provider_inbox_request,
+        validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_opportunity_response_request,
@@ -97,20 +98,21 @@ use grover_landscaping_api::{
         validate_provider_response_capability_request, validate_workspace_request,
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerIntakeMediaRequest,
-        CreateOwnerPropertyRequest, CreateOwnerProviderInvitationRequest,
-        CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
-        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderInboxRequest,
-        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-        OwnerProviderClaimReviewMetricsResult, OwnerProviderInboxResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
-        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-        OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        CreateOwnerPropertyRequest, CreateOwnerProviderDisclosureGrantRequest,
+        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
+        CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
+        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
+        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
+        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
+        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+        OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
+        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
         SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
         VerifyOwnerProviderInvitationRecipientRequest,
@@ -699,6 +701,14 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/provider-invitations/{invitation_id}",
             get(get_owner_provider_invitation),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-invitations/{invitation_id}/disclosure-review",
+            get(get_owner_provider_disclosure_review),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-invitations/{invitation_id}/disclosure-grants",
+            post(create_owner_provider_disclosure_grant),
         )
         .route(
             "/owner-properties/{property_id}/provider-invitations/{invitation_id}/revoke",
@@ -1690,6 +1700,93 @@ async fn get_owner_provider_invitation(
         OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
             "owner_provider_invitation_unavailable",
             "The provider invitation could not be loaded.",
+        ),
+    }
+}
+
+async fn get_owner_provider_disclosure_review(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, invitation_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_provider_disclosure_review(&principal.subject, &property_id, &invitation_id)
+        .await
+    {
+        OwnerProviderDisclosureReviewResult::Loaded(review) => Json(review).into_response(),
+        OwnerProviderDisclosureReviewResult::NotFound => resource_not_found_response(
+            "owner_provider_disclosure_review_not_found",
+            "The provider disclosure review was not found for this property.",
+        ),
+        OwnerProviderDisclosureReviewResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_review_not_ready",
+                message: "This provider request is not ready for disclosure approval. Reload connection progress before continuing.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderDisclosureReviewResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_disclosure_review_unavailable",
+            "The disclosure review could not be loaded. Nothing new was shared.",
+        ),
+    }
+}
+
+async fn create_owner_provider_disclosure_grant(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, invitation_id)): Path<(String, String)>,
+    Json(request): Json<CreateOwnerProviderDisclosureGrantRequest>,
+) -> Response {
+    if !validate_provider_disclosure_grant_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_grant_invalid",
+                message: "Select at least one available category, review any selected photos, and affirm assessment-only access.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .create_provider_disclosure_grant(
+            &principal.subject,
+            &property_id,
+            &invitation_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderDisclosureGrantCreateResult::Created(grant) => {
+            (StatusCode::CREATED, Json(grant)).into_response()
+        }
+        OwnerProviderDisclosureGrantCreateResult::Replayed(grant) => Json(grant).into_response(),
+        OwnerProviderDisclosureGrantCreateResult::NotFound => resource_not_found_response(
+            "owner_provider_disclosure_grant_not_found",
+            "The provider request was not found for this property.",
+        ),
+        OwnerProviderDisclosureGrantCreateResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_grant_not_ready",
+                message: "Assessment access cannot be approved in the request's current state. Nothing new was shared.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderDisclosureGrantCreateResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_disclosure_grant_conflict",
+                message: "The disclosure review changed or this approval key was already used. Reload and review the current details; nothing new was shared.".to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderDisclosureGrantCreateResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_disclosure_grant_unavailable",
+            "Assessment access could not be confirmed. Nothing new was shared; retry before leaving this page.",
         ),
     }
 }

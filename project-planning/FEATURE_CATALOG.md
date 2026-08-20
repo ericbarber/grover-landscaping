@@ -54,7 +54,8 @@
   specific invitation entry, separate email/organization/action authority,
   preliminary provider response, complete invitation lifecycle and support,
   unselected-by-default provider disclosure, approved/withheld access receipts,
-  and reciprocal Yard Crew/gallery entry
+  server-derived assessment review, atomic owner-approved grants with exact
+  review-version receipts, and reciprocal Yard Crew/gallery entry
 - Professional Yard Owner acquisition assurance with remediated workflow and
   consent defects, browser history and session recovery, precise trust language,
   keyboard/group focus, forced-colors and reduced-motion treatment, contrast and
