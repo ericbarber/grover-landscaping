@@ -159,6 +159,13 @@ boundaries, receipt history, controlled future-access revocation, selective
 provider rendering, and status-only ended-access recovery. Automated client,
 full frontend unit, type, build, and four-journey compatible-Chromium gates
 pass; Phase 3E pilot hardening and signed human-device assurance is next.
+Phase 3E0 now defines the pilot-hardening order and evidence contract. Automated
+work proceeds through retry-safe owner disclosure decisions, stale/concurrent
+authorization regression, compatible-browser coverage, minimized monitoring,
+runbook validation, and synthetic launch rehearsal. Delivery integration and
+signed human usability, assistive-technology, physical-device,
+privacy/security, staffing, operational, and go/no-go evidence remain external
+launch blockers. The Phase 3E1 retry-safe disclosure-decision slice is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

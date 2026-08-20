@@ -54,7 +54,10 @@ The approved experience is defined by:
 | 3D2 | Delivered | Checked-recipient category-filtered access with full current-authority rechecks, omitted withheld fields, grant-bounded selected-photo URLs, progress projection, cross-provider isolation, and status-only expiry/suspension reconciliation |
 | 3D3 | Delivered | Owner-isolated immutable receipt history and confirmed versioned revocation with controlled reasons, exact replay, preserved consent evidence, immediate future-read closure, minimized audit, and access-ended progress |
 | 3D4 | Delivered | Production owner approval/history/revocation and provider selective-access interfaces with default-withheld categories, per-photo choice, separate affirmation, explicit authority boundaries, accessible recovery, and passing client/full-unit/type/build/four-journey compatible-Chromium validation |
-| 3E | Planned | Pilot hardening, privacy/security review, operations readiness, broader cross-browser coverage, and signed human assistive-technology/physical-device assurance |
+| 3E0 | Delivered | Pilot-hardening order, evidence taxonomy, automated verification contract, and explicit external launch blockers |
+| 3E1 | Next | Retry-safe disclosure approval/revocation and stale-tab or uncertain-outcome recovery |
+| 3E2–3E4 | Planned | Server authorization/concurrency regression, broader browser automation, minimized monitoring, runbook validation, and synthetic launch rehearsal |
+| 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles
@@ -190,6 +193,18 @@ recorded in
 
 Exit condition: an owner can connect a known provider for assessment without
 granting organization membership or silently creating service.
+
+### Phase 3E — pilot hardening and assurance
+
+The reviewable hardening order, evidence taxonomy, verification contract, and
+external launch blockers are defined in
+[`yard-owner-acquisition-pilot-hardening-plan.md`](yard-owner-acquisition-pilot-hardening-plan.md).
+Phase 3E1 retry-safe owner disclosure decisions are next. Automated slices may
+advance through reliability, authorization regression, compatible-browser
+coverage, minimized telemetry, runbook validation, and synthetic rehearsal.
+Human usability, real assistive-technology, physical-device, privacy/security,
+staffing, operational, delivery-integration, and go/no-go evidence remains
+external and unsigned until performed by the accountable reviewers.
 
 ## Phase 4 — Assessment, proposal, and activation
 

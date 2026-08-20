@@ -428,6 +428,14 @@ Active slice:
   revocation from both sides of the connection.
   Phase 3E pilot hardening, privacy/security review, and signed human-device
   assurance is next.
+- Phase 3E0 is delivered as the pilot-hardening contract. It separates
+  repeatable repository evidence from external technical evidence and signed
+  human assurance; orders retry/stale-tab recovery, server authorization and
+  concurrency regression, compatible-browser automation, minimized monitoring,
+  runbook validation, and synthetic launch rehearsal; and keeps delivery
+  integration, human usability/AT/device, privacy/security, staffing,
+  operational, and go/no-go decisions explicitly launch-blocking and unsigned.
+  The Phase 3E1 retry-safe disclosure approval/revocation slice is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
