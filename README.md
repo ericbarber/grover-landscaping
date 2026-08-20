@@ -1,8 +1,24 @@
 # Grover Landscaping
 
-Grover Landscaping is a mobile-first proof-of-completion application for yard care and landscaping crews. Crews can view assigned jobs, follow a daily route, track stop progress, capture service photo placeholders, complete checklists, and prepare completion reports for customer or manager review.
+Grover Landscaping is a multi-persona operations platform for landscaping businesses and their customers. It combines mobile crew execution, manager scheduling and review, customer-facing completion evidence and bids, and a privacy-first Yard Owner onboarding flow for connecting an existing provider.
 
-The project is built as a Rust + React application with local-first and remote-first development support. The frontend can run with seeded browser data when the backend is unavailable, and the backend exposes the first set of job, account, photo-ticket, stop-progress, and manager day-plan APIs.
+The project is built as a Rust + React application with local-first and remote-first development support. The frontend can run with seeded browser data when the backend is unavailable, while PostgreSQL-backed APIs provide tenant-scoped operational and acquisition workflows.
+
+## Delivery Status
+
+Phase 3E repository-owned pilot assurance is complete. The current build includes the Yard Owner entry experience, private property intake, known-provider invitations, provider organization claims, administrative review and appeal paths, explicit disclosure grants and revocation, provider connection progress, and automated pilot assurance validation.
+
+Production launch remains gated on external operational work: live authenticated delivery and monitoring integration, production dashboards and pager routing, calibrated alert thresholds, named pilot staffing, human usability and assistive-technology testing, physical-device verification, privacy/security review, and a signed go/no-go decision. The next product phase after those gates is Phase 4 assessment, proposal, and activation.
+
+Start with these records when reviewing or continuing development:
+
+- [PLAN.md](PLAN.md) — canonical delivery status and next work
+- [Current handoff](project-planning/CURRENT_HANDOFF.md) — concise implementation and validation context
+- [Roadmap](project-planning/ROADMAP.md) — ordered product phases
+- [Feature catalog](project-planning/FEATURE_CATALOG.md) — delivered and planned capability inventory
+- [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
+- [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
+- [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features
 
@@ -32,11 +48,18 @@ The project is built as a Rust + React application with local-first and remote-f
 - Customer account status display
 - Manager draft day-plan creation and publishing
 - Manager route stop assignment, removal, and ordering
+- Private Yard Owner workspace, property intake, yard brief, and intake-media workflow
+- Known-provider invitations with recipient verification, opt-out, abuse reporting, suppression, and revocation
+- Provider organization discovery, organization claims, administrative review, appeal, and remediation workflows
+- Explicit per-capability disclosure review, grant, access, receipt, and revocation controls
+- Yard Owner provider-connection progress and recovery guidance
+- Responsive and accessibility-focused owner/provider browser coverage
+- Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
-- Rust API endpoints for jobs, accounts, photo tickets, stop progress, and manager scheduling
+- Rust API endpoints for operations, customer delivery, Yard Owner acquisition, provider connection, and administration
 - PostgreSQL migrations for job, account, crew, stop, and day-plan foundations
 - Docker Compose local stack
-- GitHub Actions CI configuration
+- GitHub Actions CI with backend/frontend checks, multi-browser journeys, pilot-assurance validation, and a gated production image
 
 ## Tech Stack
 
@@ -56,10 +79,13 @@ The project is built as a Rust + React application with local-first and remote-f
 ```text
 .github/workflows/  GitHub Actions workflows
 backend/            Rust API service
-frontend/           React/Tailwind crew application
+frontend/           React/Tailwind multi-persona application
 infra/              Infrastructure notes and AWS growth plan
 docs/               Architecture, data model, and development notes
+features/           Product specifications and roadmap inputs
+project-planning/   Delivery roadmap, feature catalog, and version history
 scripts/            Local developer utility scripts
+PLAN.md             Canonical delivery-status tracker
 ```
 
 ## Remote Development
@@ -76,7 +102,7 @@ Recommended remote validation order:
 
 ```text
 1. Inspect changed files and keep changes narrowly scoped.
-2. Rely on GitHub Actions for backend format/lint/test and frontend typecheck/test/build.
+2. Rely on GitHub Actions for backend and frontend checks, browser journeys, pilot assurance, and the gated production image.
 3. Use hosted development services for API/database verification when local Docker is unavailable.
 4. Keep browser fallback behavior intact for demos and UI iteration.
 ```
@@ -169,7 +195,21 @@ npm install
 npm run typecheck
 npm test
 npm run build
+npm run test:e2e:mobile
+npm run test:e2e:chromium
+npm run test:e2e:cross-browser
 ```
+
+## Pilot Assurance Commands
+
+The machine-readable assurance contract covers 11 metrics across 10 monitoring families, 14 alerts, and seven launch scenarios. Validate both the contract and its positive/negative fixtures with:
+
+```bash
+node scripts/validate-yard-owner-pilot-assurance.mjs --rehearse
+node --test scripts/validate-yard-owner-pilot-assurance.test.mjs
+```
+
+The contract is stored in [docs/yard-owner-acquisition-pilot-assurance.json](docs/yard-owner-acquisition-pilot-assurance.json), with its operational interpretation in the [pilot monitoring contract](docs/yard-owner-acquisition-pilot-monitoring-contract.md).
 
 ## API Endpoints
 
@@ -179,6 +219,23 @@ Current backend endpoints include:
 | --- | --- | --- |
 | GET | `/health` | API health check |
 | GET | `/me/access` | Read the signed-in user's claim roles and active organization memberships |
+| GET | `/owner-workspace` | Read the signed-in Yard Owner's private workspace and onboarding state |
+| POST | `/owner-properties` | Create a private Yard Owner property intake record |
+| GET | `/owner-properties/{property_id}` | Read a private owner property and its current acquisition state |
+| PUT | `/owner-properties/{property_id}/yard-brief` | Save the owner's structured yard brief |
+| POST | `/owner-properties/{property_id}/intake-media` | Create an owner intake-media upload ticket |
+| POST | `/owner-properties/{property_id}/provider-invitations` | Invite a known provider for an owner property |
+| GET | `/owner-properties/{property_id}/provider-connection-progress` | Read owner-safe invitation, claim, disclosure, and connection progress |
+| GET | `/owner-properties/{property_id}/provider-disclosure-receipts` | List the owner's disclosure receipts and current grant state |
+| POST | `/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke` | Revoke a provider disclosure grant |
+| POST | `/provider-invitations/preview` | Preview a tokenized provider invitation without disclosing private property data |
+| POST | `/provider-invitations/verify-recipient` | Verify the intended invitation recipient |
+| POST | `/provider-invitations/organization-options` | List safe organization choices for a verified provider invitation |
+| POST | `/provider-invitations/organization-claims` | Submit a provider organization claim for review |
+| POST | `/provider-invitations/inbox` | List verified provider invitation work items |
+| POST | `/provider-disclosures/access` | Access only the owner-granted provider disclosure capabilities |
+| GET | `/provider-organization-claim-reviews` | List administrative provider-claim review work |
+| POST | `/provider-organization-claim-reviews/{claim_id}/decisions` | Record a claim review or appeal decision |
 | GET | `/jobs` | List assigned jobs |
 | GET | `/jobs/{id}` | Read job detail |
 | GET | `/jobs/{id}/account` | Read account status for a job |
@@ -269,13 +326,17 @@ The project currently includes migrations for:
 - Access audit records for login access summaries, account views, report approval and delivery, bid decisions and conversions, notification recovery, photo processing recovery, role administration, invitations, portfolio grouping, and crew assignment changes
 - Organization-scoped notification outbox records for queued project-bid and completion-report delivery
 - Organization-scoped photo-processing job records for queued thumbnail retry work
+- Private Yard Owner workspaces, properties, yard briefs, and intake-media metadata
+- Known-provider invitations, recipient verification, suppressions, reports, and revocation history
+- Provider organizations, claims, reviews, appeals, remediation state, and invitation responses
+- Capability-scoped disclosure grants, access records, receipts, decisions, and revocations
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
 
 ## Frontend Behavior
 
-The crew dashboard is designed to work on mobile devices. It currently supports:
+The application is responsive across owner, provider, crew, manager, administrator, and customer-facing workflows. It currently supports:
 
 - Viewing today’s route
 - Opening jobs from route stops
@@ -293,6 +354,11 @@ The crew dashboard is designed to work on mobile devices. It currently supports:
 - Sending tokenized bid review links and recording customer approval or rejection
 - Expiring, revoking, and securely reissuing customer review links
 - Converting approved bid line items into crew-visible scheduled add-on work
+- Creating a private Yard Owner property and yard brief before provider access exists
+- Inviting a known provider without publishing the owner's address or media
+- Verifying provider recipients and resolving provider organization claims
+- Reviewing, granting, auditing, and revoking individual disclosure capabilities
+- Tracking connection progress with explicit recovery paths for owners and providers
 
 ## Production Deployment
 
@@ -311,4 +377,6 @@ The infrastructure is declared in `render.yaml`. Provisioning, smoke testing, op
 
 ## Development Notes
 
-This repository is currently in active MVP development. Prefer small vertical slices that GitHub Actions or hosted development services can validate. The frontend should continue to degrade gracefully when the backend or database is unavailable.
+This repository is in active phased development. Treat [PLAN.md](PLAN.md) as the canonical delivery tracker and continue in reviewable vertical slices. The frontend should continue to degrade gracefully when the backend or database is unavailable.
+
+The repository-owned Phase 3E browser matrix covers 24 owner/provider journeys across mobile and desktop Chromium, desktop Firefox, and mobile WebKit, plus eight accessibility profiles spanning narrow and wide viewports, reduced motion, and forced colors. Strict `cargo clippy --all-targets --all-features -- -D warnings` currently exposes a pre-existing warning baseline; see `PLAN.md` for the current validation record rather than assuming that check is clean locally.
