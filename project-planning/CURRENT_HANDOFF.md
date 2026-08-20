@@ -9,8 +9,10 @@
 - Phase 3D is complete in `98fcfc2`, `1d234d0`, `234ac7a`, and `3afae52`.
 - Phase 3E0 hardening planning is complete in `73545a4`; Phase 3E1 retry-safe
   disclosure decisions, Phase 3E2 server authorization/concurrency regression,
-  and Phase 3E3 browser/accessibility automation are delivered. Phase 3E4
-  monitoring, runbook validation, and synthetic rehearsal is next.
+  Phase 3E3 browser/accessibility automation, and Phase 3E4 minimized monitoring,
+  runbook validation, and synthetic rehearsal are delivered. Repository-owned
+  Phase 3E automation is complete; Phase 3E5 external assurance is launch-
+  blocking.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -23,6 +25,8 @@ Preserve the unrelated existing changes in `.gitignore`,
 4. [`../design/review/yard-owner-acquisition-professional-assurance.md`](../design/review/yard-owner-acquisition-professional-assurance.md)
 5. [`../design/review/yard-owner-acquisition-human-validation-protocol.md`](../design/review/yard-owner-acquisition-human-validation-protocol.md)
 6. [`../docs/yard-owner-acquisition-pilot-operations-runbook.md`](../docs/yard-owner-acquisition-pilot-operations-runbook.md)
+7. [`../docs/yard-owner-acquisition-pilot-monitoring-contract.md`](../docs/yard-owner-acquisition-pilot-monitoring-contract.md)
+8. [`../docs/yard-owner-acquisition-pilot-assurance.json`](../docs/yard-owner-acquisition-pilot-assurance.json)
 
 ## Delivered boundary
 
@@ -30,7 +34,9 @@ Phase 3D delivers provider-specific disclosure review, immutable receipts,
 revocable current grants, category-filtered provider reads, owner history and
 revocation, production owner/provider interfaces, and passing automated client,
 frontend unit, type, production-build, and four-journey compatible-Chromium
-validation.
+validation. Phases 3E1–3E4 add retry/concurrency hardening, the four-project
+browser matrix, minimized monitoring/alert contracts, machine-checked runbook
+mappings, and synthetic rehearsal evidence.
 
 It does not authorize a proposal, pricing, service activation, scheduling, crew
 assignment, a work order, or broader provider access. Preserve the existing
@@ -39,11 +45,13 @@ privacy behavior throughout hardening.
 
 ## Next delivery work
 
-Continue Phase 3E as reviewable pilot-hardening slices, beginning with Phase 3E4
-minimized monitoring, runbook validation, and synthetic rehearsal, then complete
-every safe automated slice with proportionate validation and a narrow commit. Keep
-[`../PLAN.md`](../PLAN.md) canonical and update the roadmap/catalog/history only
-when their recorded status materially changes.
+Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration,
+named staffing, human usability/assistive-technology/device work,
+Privacy/Security review, and go/no-go are signed. The machine-readable assurance
+manifest must continue to list those items as external or unsigned. Phase 4
+assessment/proposal implementation is the next product-development phase, but it
+does not remove or bypass the Phase 3E5 pilot launch blockers. Keep
+[`../PLAN.md`](../PLAN.md) canonical when work resumes.
 
 Automated evidence may cover regression suites, conflict and outage behavior,
 cross-browser checks available in the environment, monitoring contracts,

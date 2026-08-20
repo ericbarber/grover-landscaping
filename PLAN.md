@@ -464,6 +464,17 @@ Active slice:
   TypeScript, and the isolated production build pass. Real assistive-technology
   and physical-device evidence remains unsigned. Phase 3E4 minimized telemetry,
   runbook validation, and synthetic rehearsal is next.
+- Phase 3E4 is delivered as automated repository evidence. The machine-readable
+  pilot manifest defines 11 minimized metrics across 10 required families, 14
+  alert/runbook mappings, seven synthetic launch scenarios,
+  rollback/escalation paths, passed
+  automated checks, and separate external/unsigned blockers. CI validates the
+  synthetic trigger routing and six negative cases that reject private metric
+  labels, missing alerts/scenarios, uncontrolled values, and false external
+  passes. Live delivery/monitoring integration, dashboards, pager routing,
+  calibrated thresholds, named staffing, human usability/AT/devices,
+  Privacy/Security approval, and go/no-go remain external Phase 3E5 launch
+  blockers. Repository-owned Phase 3E automation is complete.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

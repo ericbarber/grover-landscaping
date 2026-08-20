@@ -80,6 +80,10 @@
   Chromium, desktop Firefox, and mobile WebKit with secure refresh, focus
   movement, responsive reflow, reduced-motion, forced-colors, selective-access,
   and post-revocation assertions
+- Machine-checked Yard Owner pilot assurance manifest with minimized metric
+  labels, complete signal-family alert/runbook mappings, seven controlled
+  synthetic rehearsal scenarios, explicit containment/recovery/rollback, CI
+  negative tests, and external/human blockers that automation cannot pass
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

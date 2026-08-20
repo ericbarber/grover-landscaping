@@ -188,6 +188,15 @@ automated. The 24-journey matrix, 8 accessibility profiles, all 397 frontend
 unit tests, TypeScript, and isolated build pass; signed assistive-technology and
 physical-device evidence remains external. Phase 3E4 minimized monitoring,
 runbook validation, and synthetic rehearsal is next.
+Phase 3E4 now machine-checks 11 minimized metrics across 10 required families,
+14 alert/runbook mappings, seven synthetic rehearsal scenarios,
+rollback/escalation paths, and a
+final evidence manifest. CI also proves six invalid contracts fail, including
+private labels and false external passes. Repository-owned Phase 3E automation
+is complete. Live delivery/monitoring integration, dashboards, pager routing,
+calibrated thresholds, named staffing, human usability/AT/devices,
+Privacy/Security approval, and go/no-go remain external Phase 3E5 launch
+blockers; Phase 4 assessment/proposal is the next product-development phase.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

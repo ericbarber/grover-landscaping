@@ -7,8 +7,10 @@ Owner acquisition pilot can open. It is an approval contract, not evidence that
 the services, staffing, monitoring, or response targets exist today.
 
 Repository status: design complete. Verified-recipient opt-out and minimized
-block/report intake are implemented; Trust & Safety queue operations, named
-staffing, evidence controls, retention, monitoring, and approval remain pending.
+block/report intake are implemented. The minimized monitoring contract,
+machine-checked runbook mappings, and synthetic rehearsal are repository-
+validated; live Trust & Safety operations, named staffing, evidence controls,
+approved retention, monitoring integrations, and approval remain pending.
 
 Operational status: proposed and unsigned. Product Operations, Trust & Safety,
 Privacy/Security, Support, and Engineering must assign accountable people and
@@ -186,6 +188,15 @@ Minimum pilot dashboards and alerts:
 Monitoring must use minimized identifiers and approved retention. Product
 analytics cannot contain exact addresses, photographs, access notes, message
 content, or security evidence.
+
+The controlled metric names, labels, alert mappings, and synthetic scenarios are
+defined in
+[`yard-owner-acquisition-pilot-assurance.json`](yard-owner-acquisition-pilot-assurance.json)
+and explained in
+[`yard-owner-acquisition-pilot-monitoring-contract.md`](yard-owner-acquisition-pilot-monitoring-contract.md).
+Repository validation proves those mechanics only. Live dashboards, pager
+routing, traffic-calibrated thresholds, and staffed response remain external
+launch blockers.
 
 ## Pilot go/no-go checklist
 

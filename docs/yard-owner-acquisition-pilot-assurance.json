@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "evidence_class": "automated_repository",
+  "generated_for": "yard_owner_known_provider_pilot",
+  "metric_retention_days": 30,
+  "prohibited_label_terms": [
+    "address",
+    "photo",
+    "media_id",
+    "access_note",
+    "message",
+    "contact",
+    "email",
+    "token",
+    "evidence_reference",
+    "owner_user_id",
+    "recipient_user_id",
+    "property_id",
+    "invitation_id",
+    "organization_id",
+    "grant_id",
+    "receipt_id"
+  ],
+  "metrics": [
+    {
+      "name": "owner_provider_invitation_outcomes_total",
+      "family": "invitation_delivery",
+      "kind": "counter",
+      "allowed_labels": ["outcome"],
+      "allowed_label_values": {
+        "outcome": ["queued", "delivered", "failed", "expired", "opened", "declined", "opted_out", "revoked"]
+      }
+    },
+    {
+      "name": "owner_provider_suppression_enforcement_total",
+      "family": "suppression",
+      "kind": "counter",
+      "allowed_labels": ["operation", "outcome"],
+      "allowed_label_values": {
+        "operation": ["create", "retry", "response"],
+        "outcome": ["allowed", "suppressed", "unavailable"]
+      }
+    },
+    {
+      "name": "owner_provider_claim_review_queue",
+      "family": "claim_review",
+      "kind": "gauge",
+      "allowed_labels": ["state", "age_band"],
+      "allowed_label_values": {
+        "state": ["duplicate_review", "under_review", "disputed"],
+        "age_band": ["within_sla", "due", "overdue"]
+      }
+    },
+    {
+      "name": "owner_provider_authorization_decisions_total",
+      "family": "authorization",
+      "kind": "counter",
+      "allowed_labels": ["boundary", "decision", "reason_class"],
+      "allowed_label_values": {
+        "boundary": ["invitation", "claim", "response", "disclosure", "media"],
+        "decision": ["allowed", "denied", "unavailable"],
+        "reason_class": ["ordinary", "wrong_recipient", "cross_scope", "stale_authority", "system"]
+      }
+    },
+    {
+      "name": "owner_provider_disclosure_mutations_total",
+      "family": "disclosure",
+      "kind": "counter",
+      "allowed_labels": ["operation", "outcome"],
+      "allowed_label_values": {
+        "operation": ["grant", "revoke", "reconcile"],
+        "outcome": ["created", "replayed", "conflict", "denied", "unavailable"]
+      }
+    },
+    {
+      "name": "owner_provider_post_revoke_reads_total",
+      "family": "disclosure",
+      "kind": "counter",
+      "allowed_labels": ["decision"],
+      "allowed_label_values": {
+        "decision": ["denied", "allowed"]
+      }
+    },
+    {
+      "name": "owner_provider_response_writes_total",
+      "family": "response",
+      "kind": "counter",
+      "allowed_labels": ["action", "outcome"],
+      "allowed_label_values": {
+        "action": ["question", "interest", "decline", "report", "block"],
+        "outcome": ["created", "replayed", "conflict", "denied", "unavailable"]
+      }
+    },
+    {
+      "name": "owner_provider_notification_backlog",
+      "family": "notification",
+      "kind": "gauge",
+      "allowed_labels": ["channel", "state", "age_band"],
+      "allowed_label_values": {
+        "channel": ["email", "sms"],
+        "state": ["pending", "retry", "dead_letter"],
+        "age_band": ["recent", "due", "overdue"]
+      }
+    },
+    {
+      "name": "owner_provider_privacy_workflow_total",
+      "family": "privacy",
+      "kind": "counter",
+      "allowed_labels": ["workflow", "outcome"],
+      "allowed_label_values": {
+        "workflow": ["export", "deletion", "retention", "incident"],
+        "outcome": ["completed", "failed", "unavailable"]
+      }
+    },
+    {
+      "name": "owner_provider_support_cases",
+      "family": "support",
+      "kind": "gauge",
+      "allowed_labels": ["category", "severity", "state", "age_band"],
+      "allowed_label_values": {
+        "category": ["delivery", "identity", "abuse", "disclosure", "privacy", "availability"],
+        "severity": ["S0", "S1", "S2", "S3"],
+        "state": ["opened", "assigned", "resolved", "reopened"],
+        "age_band": ["within_target", "due", "overdue"]
+      }
+    },
+    {
+      "name": "owner_provider_system_availability",
+      "family": "availability",
+      "kind": "gauge",
+      "allowed_labels": ["component", "state"],
+      "allowed_label_values": {
+        "component": ["identity", "database", "delivery", "authorization", "notification"],
+        "state": ["available", "unavailable"]
+      }
+    }
+  ],
+  "alerts": [
+    {
+      "id": "invitation_delivery_failure",
+      "metric": "owner_provider_invitation_outcomes_total",
+      "condition": "failed outcome exceeds the approved pilot baseline for two checks",
+      "severity": "S2",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#bounced-or-failed-invitation",
+      "containment": "Pause automated retry when failure classification or suppression state is uncertain.",
+      "customer_safe_update": "The invitation was not delivered. No additional yard details were opened.",
+      "recovery_check": "Confirm the failed receipt remains immutable and a corrected invitation requires a new review.",
+      "rollback_or_escalation": "Disable the affected delivery adapter and escalate repeated suppression defects to Privacy/Security."
+    },
+    {
+      "id": "invitation_expiry_reconciliation",
+      "metric": "owner_provider_invitation_outcomes_total",
+      "condition": "an expired invitation remains open or actionable after one reconciliation check",
+      "severity": "S1",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#expired-invitation",
+      "containment": "Deny preview, response, and disclosure actions for the expired invitation.",
+      "customer_safe_update": "This invitation expired and cannot be reopened. A new reviewed invitation is required.",
+      "recovery_check": "Confirm status-only closure and the preserved immutable limited-data snapshot.",
+      "rollback_or_escalation": "Disable invitation actions if expiry reconciliation cannot fail closed."
+    },
+    {
+      "id": "suppression_enforcement_unavailable",
+      "metric": "owner_provider_suppression_enforcement_total",
+      "condition": "suppression state is unavailable for any create, retry, or response operation",
+      "severity": "S1",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#recipient-opt-out",
+      "containment": "Deny the scoped contact operation until suppression state is authoritative.",
+      "customer_safe_update": "The contact request was not sent because recipient preference status could not be confirmed.",
+      "recovery_check": "Confirm opted-out and blocked recipients remain suppressed across create, retry, and response paths.",
+      "rollback_or_escalation": "Disable contact creation and escalate repeated-contact risk to Privacy/Security."
+    },
+    {
+      "id": "claim_review_overdue",
+      "metric": "owner_provider_claim_review_queue",
+      "condition": "any disputed claim is unassigned or any review enters the overdue age band",
+      "severity": "S2",
+      "accountable_function": "Provider Operations",
+      "runbook_anchor": "#provider-organization-claim-and-dispute",
+      "containment": "Keep response and disclosure authority paused while the claim is unresolved.",
+      "customer_safe_update": "The provider organization check needs additional review before connection steps continue.",
+      "recovery_check": "Confirm the disposition is append-only, evidence-restricted, and does not itself grant response authority.",
+      "rollback_or_escalation": "Escalate identity or unsafe-contact facts to Trust & Safety without exposing duplicate candidates."
+    },
+    {
+      "id": "wrong_recipient_authorization",
+      "metric": "owner_provider_authorization_decisions_total",
+      "condition": "a wrong-recipient denial or report is observed",
+      "severity": "S1",
+      "accountable_function": "Trust & Safety",
+      "runbook_anchor": "#wrong-recipient",
+      "containment": "Revoke the link, deny further actions, and suppress resend when policy requires it.",
+      "customer_safe_update": "The invitation is closed and no additional owner categories are available through it.",
+      "recovery_check": "Confirm recipient mismatch remains non-disclosing and a corrected address requires a new invitation.",
+      "rollback_or_escalation": "Escalate suspicious forwarding or repeated mismatches; keep the invitation disabled."
+    },
+    {
+      "id": "impersonation_report",
+      "metric": "owner_provider_response_writes_total",
+      "condition": "a report action identifies suspected impersonation",
+      "severity": "S1",
+      "accountable_function": "Trust & Safety",
+      "runbook_anchor": "#harassment-impersonation-or-suspicious-contact",
+      "containment": "Block the scoped contact path and fail closed on pending grants.",
+      "customer_safe_update": "The contact path is paused while the identity concern is reviewed.",
+      "recovery_check": "Confirm no capability or disclosure access was reopened by case creation.",
+      "rollback_or_escalation": "Preserve restricted evidence and escalate credible ongoing harm under the incident policy."
+    },
+    {
+      "id": "unintended_disclosure_report",
+      "metric": "owner_provider_privacy_workflow_total",
+      "condition": "an incident workflow reports a category accessible without a valid grant",
+      "severity": "S0",
+      "accountable_function": "Privacy/Security",
+      "runbook_anchor": "#owner-reports-incorrect-disclosure",
+      "containment": "End future provider access and disable the affected disclosure boundary.",
+      "customer_safe_update": "Future access is contained while the disclosure record is reviewed.",
+      "recovery_check": "Reconcile receipt, policy version, actor, provider, property, purpose, categories, reads, and audit events.",
+      "rollback_or_escalation": "Invoke the approved security/privacy incident process and keep the boundary disabled until authorized."
+    },
+    {
+      "id": "failed_revocation",
+      "metric": "owner_provider_disclosure_mutations_total",
+      "condition": "a revoke or reconciliation outcome is unavailable",
+      "severity": "S1",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#revocation-job-fails",
+      "containment": "Present access as unavailable and deny provider reads while completion is uncertain.",
+      "customer_safe_update": "Future access is being contained; completion has not yet been confirmed.",
+      "recovery_check": "Reconcile grant, read model, media authorization, cache, and audit before confirming completion.",
+      "rollback_or_escalation": "Disable provider reads for the affected boundary and escalate any allowed post-revoke read as S0."
+    },
+    {
+      "id": "post_revoke_read_allowed",
+      "metric": "owner_provider_post_revoke_reads_total",
+      "condition": "any allowed post-revoke read is observed",
+      "severity": "S0",
+      "accountable_function": "Privacy/Security",
+      "runbook_anchor": "#revocation-job-fails",
+      "containment": "Disable the affected provider disclosure read boundary immediately.",
+      "customer_safe_update": "Access is contained while the authorization record is investigated.",
+      "recovery_check": "Confirm every revoked grant returns status-only recovery with no prior field or media label.",
+      "rollback_or_escalation": "Invoke the security/privacy incident process before re-enabling reads."
+    },
+    {
+      "id": "response_write_unavailable",
+      "metric": "owner_provider_response_writes_total",
+      "condition": "a question, interest, decline, report, or block write is unavailable",
+      "severity": "S2",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#opt-out-block-and-abuse",
+      "containment": "Do not report the response as recorded and preserve the prior authoritative invitation state.",
+      "customer_safe_update": "The response was not confirmed. Review the current invitation state before retrying.",
+      "recovery_check": "Replay only the same idempotent decision and verify terminal actions remain terminal.",
+      "rollback_or_escalation": "Disable the affected action if writes cannot distinguish unavailable from success."
+    },
+    {
+      "id": "notification_backlog_overdue",
+      "metric": "owner_provider_notification_backlog",
+      "condition": "any dead-letter item is overdue or retry backlog grows for three checks",
+      "severity": "S1",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#monitoring-and-alerts",
+      "containment": "Pause duplicate dispatch and preserve one authoritative delivery attempt history.",
+      "customer_safe_update": "A connection update is delayed. No duplicate decision is required.",
+      "recovery_check": "Confirm retries use attempt idempotency and dead-letter age returns within the approved threshold.",
+      "rollback_or_escalation": "Disable the affected channel adapter and use only an approved alternate route."
+    },
+    {
+      "id": "privacy_workflow_failure",
+      "metric": "owner_provider_privacy_workflow_total",
+      "condition": "an export, deletion, retention, or incident workflow is failed or unavailable",
+      "severity": "S1",
+      "accountable_function": "Privacy/Security",
+      "runbook_anchor": "#monitoring-and-alerts",
+      "containment": "Stop claiming completion and preserve the authorized request and audit state.",
+      "customer_safe_update": "The privacy request is still in progress; completion has not been confirmed.",
+      "recovery_check": "Reconcile the workflow record, retained scope, deletion jobs, and authorized customer response.",
+      "rollback_or_escalation": "Escalate under the approved privacy incident and legal-response process."
+    },
+    {
+      "id": "support_case_overdue",
+      "metric": "owner_provider_support_cases",
+      "condition": "any S0/S1 case is unassigned or any case enters the overdue age band",
+      "severity": "S1",
+      "accountable_function": "Product Operations",
+      "runbook_anchor": "#severity-and-proposed-response-objectives",
+      "containment": "Apply the scenario-specific fail-closed control and assign the accountable function.",
+      "customer_safe_update": "The issue remains open and the next update follows the approved staffed-hours policy.",
+      "recovery_check": "Confirm severity, assignment, safe update, disposition, and reopen state without case content in metric labels.",
+      "rollback_or_escalation": "Reduce or stop the pilot if staffed objectives cannot be met honestly."
+    },
+    {
+      "id": "system_outage",
+      "metric": "owner_provider_system_availability",
+      "condition": "a required component is unavailable for two consecutive checks",
+      "severity": "S1",
+      "accountable_function": "Engineering on-call",
+      "runbook_anchor": "#session-and-authorization-recovery",
+      "containment": "Return unavailable, disable protected decisions, and preserve authoritative state.",
+      "customer_safe_update": "Connection status is temporarily unavailable. No new decision was recorded.",
+      "recovery_check": "Reload authoritative identity, relationship, capability, grant, and receipt state before enabling actions.",
+      "rollback_or_escalation": "Disable the affected operation until its dependency and audit trail recover."
+    }
+  ],
+  "rehearsal_scenarios": [
+    {
+      "id": "bounce",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_invitation_outcomes_total", "labels": {"outcome": "failed"}},
+      "expected_alert": "invitation_delivery_failure"
+    },
+    {
+      "id": "expiry",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_invitation_outcomes_total", "labels": {"outcome": "expired"}},
+      "expected_alert": "invitation_expiry_reconciliation"
+    },
+    {
+      "id": "wrong_recipient",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_authorization_decisions_total", "labels": {"boundary": "invitation", "decision": "denied", "reason_class": "wrong_recipient"}},
+      "expected_alert": "wrong_recipient_authorization"
+    },
+    {
+      "id": "impersonation",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_response_writes_total", "labels": {"action": "report", "outcome": "created"}},
+      "expected_alert": "impersonation_report"
+    },
+    {
+      "id": "unintended_disclosure",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_privacy_workflow_total", "labels": {"workflow": "incident", "outcome": "failed"}},
+      "expected_alert": "unintended_disclosure_report"
+    },
+    {
+      "id": "failed_revocation",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_disclosure_mutations_total", "labels": {"operation": "revoke", "outcome": "unavailable"}},
+      "expected_alert": "failed_revocation"
+    },
+    {
+      "id": "system_outage",
+      "synthetic_only": true,
+      "trigger": {"metric": "owner_provider_system_availability", "labels": {"component": "authorization", "state": "unavailable"}},
+      "expected_alert": "system_outage"
+    }
+  ],
+  "automated_evidence": [
+    {"id": "phase_3e1_retry_recovery", "status": "passed", "commit": "a8d8e67"},
+    {"id": "phase_3e2_server_hardening", "status": "passed", "commit": "5045ba1"},
+    {"id": "phase_3e3_browser_matrix", "status": "passed", "commit": "1f8a1d7"},
+    {"id": "phase_3e4_contract_rehearsal", "status": "passed", "verification": "node scripts/validate-yard-owner-pilot-assurance.mjs --rehearse"}
+  ],
+  "external_blockers": [
+    {"id": "delivery_adapter_and_threat_review", "status": "external_pending"},
+    {"id": "live_dashboard_alert_routing", "status": "external_pending"},
+    {"id": "named_staffing_and_service_levels", "status": "unsigned"},
+    {"id": "human_usability_assistive_technology_devices", "status": "unsigned"},
+    {"id": "privacy_security_approval", "status": "unsigned"},
+    {"id": "cross_functional_go_no_go", "status": "unsigned"}
+  ]
+}

@@ -36,7 +36,7 @@ templates and simulations do not change external or signed evidence to passed.
 | 3E1 | Delivered | Retry-safe owner disclosure approval/revocation keys plus explicit stale-tab and uncertain-outcome recovery |
 | 3E2 | Delivered | Concurrent/stale disclosure authorization, replay/isolation/outage/audit, and post-revocation PostgreSQL regression gates |
 | 3E3 | Delivered | Production React Chromium/Firefox/WebKit, responsive, refresh, focus, reduced-motion, and forced-colors automation plus CI enforcement |
-| 3E4 | Next | Minimized pilot telemetry contract, alert/runbook validation, synthetic launch rehearsal, rollback evidence, and operator-ready evidence manifests |
+| 3E4 | Delivered | Minimized pilot telemetry/alert contract, machine-checked runbook mappings, seven-scenario synthetic rehearsal, rollback paths, and evidence manifest |
 | 3E5 | External | Delivery integration decision and threat review; human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go signatures |
 
 ### 3E1 — retry and stale-tab recovery
@@ -114,6 +114,22 @@ passing responsive/accessibility profile checks across all four projects, all
   in the signed human protocol.
 
 ### 3E4 — operations and rehearsal
+
+Delivered on 2026-08-19 for automated repository evidence. A machine-readable
+assurance manifest defines 11 minimized metrics across 10 required families,
+14 alert mappings, the seven required synthetic scenarios, passed automated
+evidence, and separate
+external/unsigned blockers. Validation rejects private identifier labels,
+missing metric-family alerts or rehearsal scenarios, uncontrolled trigger
+values, and any attempt by repository automation to mark an external gate
+passed. CI runs both the rehearsal and six negative validator tests and gates
+the production image on them.
+
+The rehearsal validates controlled trigger-to-alert-to-function routing plus
+linked containment, customer-safe update, recovery, and rollback/escalation
+instructions. It sends no notification or page and does not prove live signal
+export, dashboards, traffic-calibrated thresholds, pager routing, staffing, or
+signed operational readiness.
 
 - Define minimized counters and alerts for invitation delivery, suppression,
   claim review, authorization denial, disclosure grant/revoke/reconciliation,

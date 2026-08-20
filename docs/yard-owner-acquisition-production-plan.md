@@ -58,7 +58,7 @@ The approved experience is defined by:
 | 3E1 | Delivered | Retry-safe disclosure approval/revocation keys, preserved uncertain decisions, authoritative conflict reload, and lost-response/stale-tab browser coverage |
 | 3E2 | Delivered | Concurrent/stale disclosure authorization, exact replay, isolation, outage/audit, post-revocation, and repeatable PostgreSQL migration/lifecycle regression gates |
 | 3E3 | Delivered | Production React mobile/desktop Chromium, desktop Firefox, mobile WebKit, responsive, refresh, focus, reduced-motion, forced-colors automation, and CI enforcement |
-| 3E4 | Next | Minimized monitoring, runbook validation, synthetic launch rehearsal, rollback evidence, and final evidence manifest |
+| 3E4 | Delivered | Machine-checked minimized monitoring/alert contract, runbook validation, seven-scenario synthetic rehearsal, rollback evidence, and final evidence manifest |
 | 3E5 | External | Delivery integration decision plus signed human usability, assistive-technology, physical-device, privacy/security, staffing, operational, and go/no-go assurance |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
@@ -216,7 +216,14 @@ four Playwright projects, CI enforcement, secure refresh, focus movement,
 320/768/1366/1440 reflow, reduced-motion, and forced-colors coverage. The
 combined 24-journey matrix, 8 accessibility profiles, all 397 frontend unit
 tests, TypeScript, and isolated production build pass. Phase 3E4 minimized
-telemetry, runbook validation, and synthetic rehearsal is next.
+telemetry, runbook validation, and synthetic rehearsal is delivered as
+automated repository evidence. Eleven minimized metrics across 10 required
+families, 14 alert mappings, all seven required scenarios, and separate
+external/unsigned blockers
+are machine-checked in CI; six negative tests prevent private labels, incomplete
+coverage, uncontrolled triggers, or false external passes. Live signal export,
+dashboards, paging, staffing, and signed readiness remain Phase 3E5 external
+gates.
 Human usability, real assistive-technology, physical-device, privacy/security,
 staffing, operational, delivery-integration, and go/no-go evidence remains
 external and unsigned until performed by the accountable reviewers.
