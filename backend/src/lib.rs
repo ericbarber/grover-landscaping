@@ -5,6 +5,7 @@ pub mod auth;
 pub mod completion_reports;
 pub mod day_plans;
 pub mod db;
+pub mod local_review;
 pub mod marketing_events;
 pub mod marketing_leads;
 pub mod notifications;

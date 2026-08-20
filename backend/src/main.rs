@@ -589,6 +589,11 @@ async fn app_from_env() -> Result<Router, DynError> {
         .map_err(configuration_error)?;
 
     let auth = AuthService::from_env(production).await?;
+    let organizations = if auth.is_local_review() {
+        organizations.with_local_reviewers()
+    } else {
+        organizations
+    };
     let public_auth_config = auth.public_config();
     let cors = cors_layer(production)?;
     let frontend_dist = PathBuf::from(
@@ -3335,7 +3340,11 @@ fn cors_layer(production: bool) -> Result<Option<CorsLayer>, DynError> {
                 CorsLayer::new()
                     .allow_origin(origin)
                     .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-                    .allow_headers([CONTENT_TYPE, AUTHORIZATION])
+                    .allow_headers([
+                        CONTENT_TYPE,
+                        AUTHORIZATION,
+                        HeaderName::from_static("x-grover-local-reviewer"),
+                    ])
                     .allow_credentials(true),
             ))
         }

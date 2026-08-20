@@ -31,7 +31,7 @@ services:
       RUST_LOG: ${RUST_LOG:-grover_landscaping_api=debug,tower_http=debug}
       DATABASE_URL: ${COMPOSE_DATABASE_URL:-postgres://grover:grover@postgres:5432/grover_landscaping}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-}
-      AUTH_MODE: ${AUTH_MODE:-disabled}
+      AUTH_MODE: ${AUTH_MODE:-local_review}
       COGNITO_ISSUER_URL: ${COGNITO_ISSUER_URL:-}
       COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
       COGNITO_LOGIN_DOMAIN: ${COGNITO_LOGIN_DOMAIN:-}

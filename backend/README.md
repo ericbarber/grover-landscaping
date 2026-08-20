@@ -58,7 +58,13 @@ COGNITO_CLIENT_ID=<public-spa-client-id>
 COGNITO_LOGIN_DOMAIN=https://<prefix>.auth.<region>.amazoncognito.com
 ```
 
-`AUTH_MODE=disabled` is accepted outside production for seed-data development and tests. The API exposes public runtime configuration at `GET /auth/config`; all job, crew, and day-plan APIs require a valid Bearer access token in Cognito mode.
+`AUTH_MODE=local_review` exposes a fixed set of role-specific reviewer profiles
+and virtual demo-organization memberships for development without AWS. Unknown
+reviewer identifiers are rejected, and local review mode cannot start in
+production. `AUTH_MODE=disabled` remains available outside production for tests
+and legacy single-principal seed development. The API exposes public runtime
+configuration at `GET /auth/config`; all job, crew, and day-plan APIs require a
+valid Bearer access token in Cognito mode.
 
 Notification delivery is disabled by default. Webhook mode claims PostgreSQL outbox rows safely across service instances, sends bounded batches, retries failures with exponential backoff, recovers abandoned claims, and records provider receipts.
 

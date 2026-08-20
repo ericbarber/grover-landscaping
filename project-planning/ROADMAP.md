@@ -316,6 +316,10 @@ Selected properties preview the two newest reports on mobile and expand older
 completion-report history only when requested.
 The authenticated application now opens on a persona-aware Home with signed-in
 identity, work and sync summaries, and role-relevant shortcuts.
+Development review no longer requires an AWS identity deployment: a
+production-rejected local-review runtime provides seven fixed role identities,
+virtual demo-organization memberships, and per-tab account switching while
+leaving Cognito as the hosted authentication path.
 Home now provides a branded, time-aware first impression with persona messaging,
 daily progress, sync health, and a prominent recommended next action.
 Its original Southwestern landscape hero adds persona-specific product promises

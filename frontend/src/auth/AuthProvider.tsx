@@ -12,14 +12,24 @@ import { API_BASE_URL } from '../api/baseUrl';
 import { fetchPrincipalAccessSummary, type OrganizationMembership } from '../api/client';
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
-type AuthMode = 'disabled' | 'cognito';
+type AuthMode = 'disabled' | 'local_review' | 'cognito';
 export const LOCAL_DEVELOPMENT_USER_ID = 'local-development-user';
+export const LOCAL_REVIEWER_STORAGE_KEY = 'grover.local-reviewer-id';
+
+export interface LocalReviewerProfile {
+  reviewer_id: string;
+  user_id: string;
+  display_name: string;
+  verified_email: string;
+  roles: string[];
+}
 
 interface RuntimeAuthConfig {
   mode: AuthMode;
   issuer_url: string | null;
   client_id: string | null;
   login_domain: string | null;
+  local_reviewers: LocalReviewerProfile[];
 }
 
 interface AuthContextValue {
@@ -31,6 +41,9 @@ interface AuthContextValue {
   verifiedEmail: string | null;
   roles: string[];
   memberships: OrganizationMembership[];
+  localReviewers: LocalReviewerProfile[];
+  activeLocalReviewerId: string | null;
+  selectLocalReviewer: (reviewerId: string) => void;
   refreshAccess: () => Promise<void>;
   authMode: AuthMode | null;
   retryInitialization: () => void;
@@ -46,6 +59,15 @@ export function safeAuthReturnPath(state: unknown): string {
     && !returnTo.startsWith('//')
     ? returnTo
     : '/';
+}
+
+export function resolveLocalReviewer(
+  reviewers: LocalReviewerProfile[],
+  storedReviewerId: string | null,
+): LocalReviewerProfile | null {
+  return reviewers.find((reviewer) => reviewer.reviewer_id === storedReviewerId)
+    ?? reviewers[0]
+    ?? null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -136,6 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [localReviewers, setLocalReviewers] = useState<LocalReviewerProfile[]>([]);
+  const [activeLocalReviewerId, setActiveLocalReviewerId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -151,6 +175,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (runtimeConfig.mode === 'disabled') {
           configureApiAuthentication(false, async () => null);
           setUserId(LOCAL_DEVELOPMENT_USER_ID);
+          setLoading(false);
+          return;
+        }
+
+        if (runtimeConfig.mode === 'local_review') {
+          const reviewers = runtimeConfig.local_reviewers ?? [];
+          const reviewer = resolveLocalReviewer(
+            reviewers,
+            window.sessionStorage.getItem(LOCAL_REVIEWER_STORAGE_KEY),
+          );
+          if (!reviewer) {
+            throw new Error('The API returned no local reviewer profiles.');
+          }
+          window.sessionStorage.setItem(LOCAL_REVIEWER_STORAGE_KEY, reviewer.reviewer_id);
+          configureApiAuthentication(
+            false,
+            async () => null,
+            async () => ({ 'x-grover-local-reviewer': reviewer.reviewer_id }),
+          );
+          setLocalReviewers(reviewers);
+          setActiveLocalReviewerId(reviewer.reviewer_id);
+          setUserId(reviewer.user_id);
           setLoading(false);
           return;
         }
@@ -223,6 +269,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setManager(null);
     setConfig(null);
     setUser(null);
+    setLocalReviewers([]);
+    setActiveLocalReviewerId(null);
     setInitializationAttempt((current) => current + 1);
   }, []);
 
@@ -258,8 +306,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const selectLocalReviewer = useCallback((reviewerId: string) => {
+    if (!localReviewers.some((reviewer) => reviewer.reviewer_id === reviewerId)) return;
+    window.sessionStorage.setItem(LOCAL_REVIEWER_STORAGE_KEY, reviewerId);
+    window.location.reload();
+  }, [localReviewers]);
+
   useEffect(() => {
-    if (authMode === 'disabled' || (user && !user.expired)) {
+    if (authMode === 'disabled' || authMode === 'local_review' || (user && !user.expired)) {
       void refreshAccess();
     } else {
       setUserId(null);
@@ -271,27 +325,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(
     () => {
+      const localReviewer = resolveLocalReviewer(localReviewers, activeLocalReviewerId);
       const roles = Array.from(new Set([
         ...(authMode === 'disabled' ? ['OrganizationOwner'] : rolesFromUser(user)),
+        ...(authMode === 'local_review' ? (localReviewer?.roles ?? []) : []),
         ...membershipRoles,
       ]));
       return {
-      loading,
-      authenticated: authMode === 'disabled' || Boolean(user && !user.expired),
-      error,
-      displayName: authMode === 'disabled' ? 'Local development user' : displayNameFromUser(user),
-      userId,
-      verifiedEmail,
-      roles,
-      memberships,
+        loading,
+        authenticated: authMode === 'disabled'
+          || authMode === 'local_review'
+          || Boolean(user && !user.expired),
+        error,
+        displayName: authMode === 'disabled'
+          ? 'Local development user'
+          : localReviewer?.display_name ?? displayNameFromUser(user),
+        userId,
+        verifiedEmail,
+        roles,
+        memberships,
+        localReviewers,
+        activeLocalReviewerId,
+        selectLocalReviewer,
+        authMode,
+        refreshAccess,
+        retryInitialization,
+        signIn,
+        signOut,
+      };
+    },
+    [
+      activeLocalReviewerId,
       authMode,
+      error,
+      loading,
+      localReviewers,
+      membershipRoles,
+      memberships,
       refreshAccess,
       retryInitialization,
+      selectLocalReviewer,
       signIn,
       signOut,
-    };
-    },
-    [authMode, error, loading, membershipRoles, memberships, refreshAccess, retryInitialization, signIn, signOut, user, userId, verifiedEmail],
+      user,
+      userId,
+      verifiedEmail,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

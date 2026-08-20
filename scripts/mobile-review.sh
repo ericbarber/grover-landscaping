@@ -78,13 +78,13 @@ echo "Phone URL: ${frontend_url}/"
 echo "Design URL: ${frontend_url}/design/"
 echo "API URL:   ${api_url}/health"
 echo "The phone must be connected to the same Tailscale network."
-echo "Authentication is disabled for this local review environment."
+echo "Use the LOCAL REVIEW ONLY selector to switch between role-specific accounts."
 echo
 
 (
   cd "$repo_root/backend"
   APP_ENV=local \
-    AUTH_MODE=disabled \
+    AUTH_MODE=local_review \
     CORS_ALLOWED_ORIGIN="$frontend_url" \
     PUBLIC_APP_URL="$frontend_url" \
     PORT=8080 \

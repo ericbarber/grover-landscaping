@@ -141,6 +141,16 @@ Ready:    http://localhost:8080/health/ready
 Database: localhost:5432
 ```
 
+Local development starts in role-review mode. Open
+<http://localhost:5173/app> and use the `Review as` selector in the application
+header to switch among Organization Owner, Manager, Crew Lead, Crew Member,
+Property Manager, Property Owner, and Support Administrator. Each browser tab
+keeps its own selection. These fixed reviewers and their demo-organization
+memberships exist only while `AUTH_MODE=local_review`; both local review and
+disabled authentication are rejected in production. See
+[the authentication guide](docs/authentication.md) for the security boundary and
+the Cognito-backed alternative.
+
 ### Review on a phone with Tailscale
 
 Connect the workstation and phone to the same Tailscale network, then run:

@@ -178,6 +178,8 @@ here does not mean every capability has been delivered.
 ### Identity, organizations, and onboarding
 
 - Cognito authentication and role-aware access
+- Development-only local reviewer identities with fixed role assignments,
+  virtual demo-organization memberships, and per-tab switching
 - Organization memberships and invitations
 - Tenant-aware resource boundaries
 - Customer, property, crew, manager, and organization onboarding

@@ -1,4 +1,7 @@
 use crate::access_control::AccessRole;
+use crate::local_review::{
+    local_reviewer_by_user_id, local_reviewer_profiles, LOCAL_REVIEW_ORGANIZATION_ID,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::{PgPool, Row};
@@ -7,6 +10,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Default)]
 pub struct OrganizationRepository {
     pool: Option<PgPool>,
+    local_review_enabled: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -255,7 +259,15 @@ pub struct OrganizationInvitationAcceptanceResponse {
 
 impl OrganizationRepository {
     pub fn from_pool(pool: PgPool) -> Self {
-        Self { pool: Some(pool) }
+        Self {
+            pool: Some(pool),
+            local_review_enabled: false,
+        }
+    }
+
+    pub fn with_local_reviewers(mut self) -> Self {
+        self.local_review_enabled = true;
+        self
     }
 
     pub async fn principal_access_summary(
@@ -288,6 +300,13 @@ impl OrganizationRepository {
         &self,
         user_id: &str,
     ) -> OrganizationCollectionResult<OrganizationMembership> {
+        if self.local_review_enabled {
+            if let Some(profile) = local_reviewer_by_user_id(user_id) {
+                return OrganizationCollectionResult::Loaded(vec![local_review_membership(
+                    &profile,
+                )]);
+            }
+        }
         if let Some(pool) = &self.pool {
             return match list_active_memberships(pool, user_id).await {
                 Ok(memberships) => OrganizationCollectionResult::Loaded(memberships),
@@ -307,19 +326,33 @@ impl OrganizationRepository {
     ) -> OrganizationCollectionResult<OrganizationMembership> {
         if let Some(pool) = &self.pool {
             return match list_organization_memberships(pool, organization_id).await {
-                Ok(memberships) => OrganizationCollectionResult::Loaded(memberships),
+                Ok(mut memberships) => {
+                    if self.local_review_enabled && organization_id == LOCAL_REVIEW_ORGANIZATION_ID
+                    {
+                        memberships.retain(|membership| {
+                            membership.id != "membership_local_owner_demo"
+                                && local_reviewer_by_user_id(&membership.user_id).is_none()
+                        });
+                        memberships.extend(local_review_memberships());
+                    }
+                    OrganizationCollectionResult::Loaded(memberships)
+                }
                 Err(error) => {
                     tracing::error!(%error, organization_id, "persisted organization membership list failed");
                     OrganizationCollectionResult::Unavailable
                 }
             };
         }
-        OrganizationCollectionResult::Loaded(
-            seed_memberships("local-development-user")
-                .into_iter()
-                .filter(|membership| membership.organization_id == organization_id)
-                .collect(),
-        )
+        let memberships =
+            if self.local_review_enabled && organization_id == LOCAL_REVIEW_ORGANIZATION_ID {
+                local_review_memberships()
+            } else {
+                seed_memberships("local-development-user")
+                    .into_iter()
+                    .filter(|membership| membership.organization_id == organization_id)
+                    .collect()
+            };
+        OrganizationCollectionResult::Loaded(memberships)
     }
 
     pub async fn list_team_administration_activity(
@@ -2320,6 +2353,38 @@ fn seed_memberships(user_id: &str) -> Vec<OrganizationMembership> {
     }]
 }
 
+fn local_review_memberships() -> Vec<OrganizationMembership> {
+    local_reviewer_profiles()
+        .iter()
+        .map(local_review_membership)
+        .collect()
+}
+
+fn local_review_membership(
+    profile: &crate::local_review::LocalReviewerProfile,
+) -> OrganizationMembership {
+    let role = profile
+        .roles
+        .first()
+        .cloned()
+        .expect("local reviewer must have one role");
+    OrganizationMembership {
+        id: format!(
+            "membership_local_review_{}",
+            profile.reviewer_id.replace('-', "_")
+        ),
+        organization_id: LOCAL_REVIEW_ORGANIZATION_ID.to_string(),
+        organization_name: "Grover Demo Landscaping".to_string(),
+        organization_type: "yard_care_company".to_string(),
+        user_id: profile.user_id.clone(),
+        display_name: profile.display_name.clone(),
+        role,
+        status: "active".to_string(),
+        scope_type: "organization".to_string(),
+        scope_id: Some(LOCAL_REVIEW_ORGANIZATION_ID.to_string()),
+    }
+}
+
 pub fn access_role_from_storage(role: &str) -> Option<AccessRole> {
     match role {
         "organization_owner" => Some(AccessRole::OrganizationOwner),
@@ -2806,6 +2871,50 @@ mod tests {
         assert_eq!(memberships.len(), 1);
         assert_eq!(memberships[0].organization_id, "org_demo_landscaping");
         assert_eq!(memberships[0].role, AccessRole::OrganizationOwner);
+    }
+
+    #[tokio::test]
+    async fn local_review_users_receive_isolated_virtual_memberships() {
+        let repository = OrganizationRepository::default().with_local_reviewers();
+
+        let OrganizationCollectionResult::Loaded(memberships) = repository
+            .list_active_memberships("local-review-property-manager")
+            .await
+        else {
+            panic!("local reviewer memberships should load");
+        };
+
+        assert_eq!(memberships.len(), 1);
+        assert_eq!(memberships[0].role, AccessRole::PropertyManager);
+        assert_eq!(memberships[0].organization_id, "org_demo_landscaping");
+        let OrganizationCollectionResult::Loaded(legacy_memberships) = repository
+            .list_active_memberships("local-development-user")
+            .await
+        else {
+            panic!("legacy local membership should load");
+        };
+        assert_eq!(legacy_memberships.len(), 1);
+        assert_eq!(legacy_memberships[0].role, AccessRole::OrganizationOwner);
+    }
+
+    #[tokio::test]
+    async fn local_review_team_list_contains_every_fixed_profile() {
+        let repository = OrganizationRepository::default().with_local_reviewers();
+
+        let OrganizationCollectionResult::Loaded(memberships) = repository
+            .list_organization_memberships("org_demo_landscaping")
+            .await
+        else {
+            panic!("local reviewer team should load");
+        };
+
+        assert_eq!(memberships.len(), 7);
+        assert!(memberships
+            .iter()
+            .any(|membership| membership.role == AccessRole::CrewLead));
+        assert!(memberships
+            .iter()
+            .any(|membership| membership.role == AccessRole::SupportAdmin));
     }
 
     #[tokio::test]

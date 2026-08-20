@@ -111,16 +111,37 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <>
       <aside className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900 bg-slate-950 px-4 py-2 text-sm text-slate-200">
-        <div>
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-white">{auth.displayName}</span>
-          <span className="ml-2 text-xs text-slate-400">{auth.roles.join(', ') || 'No assigned role'}</span>
+          <span className="text-xs text-slate-400">{auth.roles.join(', ') || 'No assigned role'}</span>
           {auth.authMode === 'disabled' ? (
-            <span className="ml-2 rounded bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
+            <span className="rounded bg-amber-300 px-2 py-0.5 text-xs font-bold text-amber-950">
               AUTH DISABLED
             </span>
           ) : null}
+          {auth.authMode === 'local_review' ? (
+            <span className="rounded bg-sky-300 px-2 py-0.5 text-xs font-bold text-sky-950">
+              LOCAL REVIEW ONLY
+            </span>
+          ) : null}
         </div>
-        {auth.authMode === 'cognito' ? (
+        {auth.authMode === 'local_review' ? (
+          <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sky-200">
+            Review as
+            <select
+              aria-label="Local reviewer account"
+              className="min-h-9 rounded-lg border border-slate-600 bg-slate-900 px-3 text-sm font-semibold normal-case tracking-normal text-white"
+              onChange={(event) => auth.selectLocalReviewer(event.target.value)}
+              value={auth.activeLocalReviewerId ?? ''}
+            >
+              {auth.localReviewers.map((reviewer) => (
+                <option key={reviewer.reviewer_id} value={reviewer.reviewer_id}>
+                  {reviewer.display_name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : auth.authMode === 'cognito' ? (
           <button
             className="rounded-lg border border-slate-600 px-3 py-1.5 font-semibold hover:border-slate-400"
             onClick={() => void auth.signOut()}

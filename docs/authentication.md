@@ -41,6 +41,38 @@ Manager/owner/support roles can change day-plan structure. Crew roles can read a
 
 ## Local Authenticated Runtime
 
+### Local role review without AWS
+
+The default Docker Compose and mobile-review runtimes use
+`AUTH_MODE=local_review`. The API publishes a fixed allowlist of development
+reviewers, and the authenticated application displays a `Review as` selector for
+Organization Owner, Manager, Crew Lead, Crew Member, Property Manager, Property
+Owner, and Support Administrator.
+
+The selected reviewer is stored in browser session storage, so separate tabs or
+browsers can review different roles. API requests carry only the selected fixed
+reviewer identifier. The backend rejects unknown identifiers, derives the
+identity and single role from its own allowlist, and overlays an organization
+membership for the local demo organization. No reviewer rows are added to a
+production database.
+
+Start the complete local stack with:
+
+```bash
+docker compose up --build
+```
+
+Then open <http://localhost:5173/app>. The dark header identifies the active
+reviewer and always displays `LOCAL REVIEW ONLY`. Switching reviewers reloads
+the application so data from the previous identity is not retained in React
+state.
+
+`AUTH_MODE=local_review` and `AUTH_MODE=disabled` are both rejected when
+`APP_ENV=production`. The local reviewer request header is ignored by Cognito
+mode and cannot select a production principal.
+
+### Cognito development pool
+
 Read the development outputs:
 
 ```bash
@@ -60,7 +92,10 @@ cargo run --manifest-path backend/Cargo.toml
 
 Then start the frontend with `npm run dev --prefix frontend` and open <http://localhost:5173>.
 
-`AUTH_MODE=disabled` remains available outside production for automated tests and explicit seed-data development. The UI displays an `AUTH DISABLED` warning whenever that mode is active. Production startup rejects disabled authentication.
+`AUTH_MODE=disabled` remains available outside production for automated tests
+and legacy seed-data development. It provides one owner/support principal and
+cannot accurately review role boundaries. The UI displays an `AUTH DISABLED`
+warning whenever that mode is active.
 
 ## Remaining Tenant Boundary
 

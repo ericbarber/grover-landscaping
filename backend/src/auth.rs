@@ -4,6 +4,10 @@ use crate::access_control::{
     can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
     AccessRole,
 };
+use crate::local_review::{
+    default_local_reviewer, local_reviewer_by_id, local_reviewer_profiles, LocalReviewerProfile,
+    LOCAL_REVIEWER_HEADER,
+};
 use crate::organizations::{
     OrganizationCollectionResult, OrganizationMembership, OrganizationRepository,
 };
@@ -27,6 +31,7 @@ use tokio::sync::RwLock;
 #[serde(rename_all = "snake_case")]
 pub enum PublicAuthMode {
     Disabled,
+    LocalReview,
     Cognito,
 }
 
@@ -36,6 +41,7 @@ pub struct PublicAuthConfig {
     pub issuer_url: Option<String>,
     pub client_id: Option<String>,
     pub login_domain: Option<String>,
+    pub local_reviewers: Vec<LocalReviewerProfile>,
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +63,7 @@ pub struct AuthService {
 #[derive(Clone)]
 enum AuthBackend {
     Disabled,
+    LocalReview,
     Cognito(Arc<CognitoJwtVerifier>),
     #[cfg(test)]
     RejectAll,
@@ -128,14 +135,19 @@ impl From<jsonwebtoken::errors::Error> for AuthError {
 
 impl AuthService {
     pub async fn from_env(production: bool) -> Result<Self, AuthError> {
-        let mode = std::env::var("AUTH_MODE")
-            .unwrap_or_else(|_| if production { "cognito" } else { "disabled" }.to_string());
+        let mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| {
+            if production {
+                "cognito"
+            } else {
+                "local_review"
+            }
+            .to_string()
+        });
+        ensure_auth_mode_permitted(&mode, production)?;
 
         match mode.as_str() {
-            "disabled" if production => Err(AuthError::Configuration(
-                "AUTH_MODE=disabled is not permitted in production".to_string(),
-            )),
             "disabled" => Ok(Self::disabled()),
+            "local_review" => Ok(Self::local_review()),
             "cognito" => {
                 let issuer_url = required_env("COGNITO_ISSUER_URL")?;
                 let client_id = required_env("COGNITO_CLIENT_ID")?;
@@ -158,6 +170,7 @@ impl AuthService {
                         issuer_url: Some(issuer_url.trim_end_matches('/').to_string()),
                         client_id: Some(client_id),
                         login_domain: Some(login_domain.trim_end_matches('/').to_string()),
+                        local_reviewers: Vec::new(),
                     },
                     organizations: None,
                 })
@@ -176,9 +189,28 @@ impl AuthService {
                 issuer_url: None,
                 client_id: None,
                 login_domain: None,
+                local_reviewers: Vec::new(),
             },
             organizations: None,
         }
+    }
+
+    pub fn local_review() -> Self {
+        Self {
+            backend: AuthBackend::LocalReview,
+            public_config: PublicAuthConfig {
+                mode: PublicAuthMode::LocalReview,
+                issuer_url: None,
+                client_id: None,
+                login_domain: None,
+                local_reviewers: local_reviewer_profiles(),
+            },
+            organizations: None,
+        }
+    }
+
+    pub fn is_local_review(&self) -> bool {
+        matches!(self.backend, AuthBackend::LocalReview)
     }
 
     #[cfg(test)]
@@ -190,6 +222,7 @@ impl AuthService {
                 issuer_url: Some("https://issuer.example.test/pool".to_string()),
                 client_id: Some("test-client".to_string()),
                 login_domain: Some("https://login.example.test".to_string()),
+                local_reviewers: Vec::new(),
             },
             organizations: None,
         }
@@ -213,6 +246,27 @@ impl AuthService {
                 claim_roles: vec![AccessRole::OrganizationOwner, AccessRole::SupportAdmin],
                 roles: vec![AccessRole::OrganizationOwner, AccessRole::SupportAdmin],
             }),
+            AuthBackend::LocalReview => {
+                let reviewer = match headers.get(LOCAL_REVIEWER_HEADER) {
+                    Some(value) => value
+                        .to_str()
+                        .ok()
+                        .and_then(local_reviewer_by_id)
+                        .ok_or_else(|| {
+                            AuthError::InvalidToken(
+                                "the requested local reviewer is not configured".to_string(),
+                            )
+                        })?,
+                    None => default_local_reviewer(),
+                };
+                Ok(AuthPrincipal {
+                    subject: reviewer.user_id,
+                    username: reviewer.display_name,
+                    verified_email: Some(reviewer.verified_email),
+                    claim_roles: reviewer.roles.clone(),
+                    roles: reviewer.roles,
+                })
+            }
             AuthBackend::Cognito(verifier) => {
                 let token = bearer_token(headers)?;
                 verifier.verify(token).await
@@ -236,6 +290,15 @@ impl AuthService {
         }
         Ok(principal)
     }
+}
+
+fn ensure_auth_mode_permitted(mode: &str, production: bool) -> Result<(), AuthError> {
+    if production && matches!(mode, "disabled" | "local_review") {
+        return Err(AuthError::Configuration(format!(
+            "AUTH_MODE={mode} is not permitted in production"
+        )));
+    }
+    Ok(())
 }
 
 fn merge_effective_roles(
@@ -842,14 +905,15 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
 #[cfg(test)]
 mod tests {
     use super::{
-        is_authorized, is_protected_api_path, is_public_path, merge_effective_roles,
-        normalized_verified_email, require_api_auth, AuthPrincipal, AuthService,
+        ensure_auth_mode_permitted, is_authorized, is_protected_api_path, is_public_path,
+        merge_effective_roles, normalized_verified_email, require_api_auth, AuthPrincipal,
+        AuthService,
     };
     use crate::access_control::AccessRole;
     use crate::organizations::OrganizationMembership;
     use axum::{
         body::Body,
-        http::{Method, Request, StatusCode},
+        http::{HeaderMap, HeaderValue, Method, Request, StatusCode},
         middleware,
         routing::get,
         Router,
@@ -864,6 +928,51 @@ mod tests {
             claim_roles: vec![role.clone()],
             roles: vec![role],
         }
+    }
+
+    #[tokio::test]
+    async fn local_review_auth_selects_only_a_fixed_reviewer_profile() {
+        let service = AuthService::local_review();
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            "x-grover-local-reviewer",
+            HeaderValue::from_static("crew-member"),
+        );
+
+        let principal = service.authenticate(&headers).await.unwrap();
+
+        assert_eq!(principal.subject, "local-review-crew-member");
+        assert_eq!(principal.roles, vec![AccessRole::CrewMember]);
+        assert_eq!(principal.claim_roles, vec![AccessRole::CrewMember]);
+        assert_eq!(
+            principal.verified_email.as_deref(),
+            Some("crew.member.local@example.test")
+        );
+
+        headers.insert(
+            "x-grover-local-reviewer",
+            HeaderValue::from_static("unconfigured-user"),
+        );
+        assert!(service.authenticate(&headers).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn local_review_auth_defaults_to_the_organization_owner() {
+        let principal = AuthService::local_review()
+            .authenticate(&HeaderMap::new())
+            .await
+            .unwrap();
+
+        assert_eq!(principal.subject, "local-review-organization-owner");
+        assert_eq!(principal.roles, vec![AccessRole::OrganizationOwner]);
+    }
+
+    #[test]
+    fn unsafe_development_auth_modes_are_rejected_in_production() {
+        assert!(ensure_auth_mode_permitted("local_review", true).is_err());
+        assert!(ensure_auth_mode_permitted("disabled", true).is_err());
+        assert!(ensure_auth_mode_permitted("cognito", true).is_ok());
+        assert!(ensure_auth_mode_permitted("local_review", false).is_ok());
     }
 
     #[test]

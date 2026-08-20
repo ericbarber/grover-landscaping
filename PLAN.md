@@ -567,6 +567,20 @@ the outcome, and return to its recovery workflow from persisted activity history
 
 ## Delivered
 
+### Local role-review authentication
+
+- Development can run without AWS through a production-rejected
+  `AUTH_MODE=local_review` runtime.
+- Seven fixed reviewer identities cover organization owner, manager, crew lead,
+  crew member, property manager, property owner, and support administrator.
+- The backend derives each selected identity from an allowlist, rejects unknown
+  reviewers, and overlays demo-organization memberships without persisting fake
+  production accounts.
+- A persistent application banner and per-tab reviewer selector reload the
+  workspace on identity changes so prior-user React state is not retained.
+- Docker Compose and the mobile-review script use local role review by default;
+  legacy disabled authentication remains available for automated tests.
+
 ### Design review foundation
 
 - Source-controlled design workspace mirrors the eventual application areas
