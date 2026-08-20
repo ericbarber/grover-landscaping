@@ -501,6 +501,16 @@ Active slice:
   assumptions cannot enter the owner message projection or minimized event
   payloads. Authorized repository writes and optimistic assessment lifecycle
   transitions are next.
+- Phase 4A2c1 is delivered. A verified owner can confirm a proposed on-site
+  assessment window or request a different one through a property/assessment-
+  scoped API. The mutation locks current state, requires the expected version,
+  accepts only the two controlled actions, records one append-only minimized
+  event, exactly replays uncertain retries, and returns authoritative current
+  state for invalid lifecycle attempts. Cross-owner, concurrent, changed-key,
+  stale-state, invalid-request, route-authorization, outage, and PostgreSQL
+  behavior are covered. Confirmation remains an assessment appointment only; it
+  does not accept service, create a customer, assign a crew, or release work.
+  Provider assessment execution/completion transitions are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

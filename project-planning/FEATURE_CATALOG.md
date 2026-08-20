@@ -97,6 +97,10 @@
   provider-private notes, with controlled author/kind constraints, a shared-only
   owner projection, append-only minimized events, and PostgreSQL proof that
   private production assumptions do not enter owner reads or event payloads
+- Owner-scoped on-site assessment window confirmation/change requests with
+  expected-version locking, exact replay, controlled actions, append-only
+  minimized events, authoritative invalid-state recovery, route authorization,
+  and cross-owner/concurrency/outage coverage without service activation
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

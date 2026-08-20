@@ -632,6 +632,13 @@ pub struct OwnerProviderAssessmentRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct DecideOwnerProviderAssessmentWindowRequest {
+    pub action: String,
+    pub expected_version: i64,
+    pub idempotency_key: String,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -866,6 +873,16 @@ pub enum OwnerProviderAssessmentCreateResult {
     Replayed(OwnerProviderAssessmentRecord),
     NotFound,
     InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderAssessmentWindowDecisionResult {
+    Updated(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentRecord),
     Conflict,
     Unavailable,
 }
@@ -3120,6 +3137,53 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn decide_provider_assessment_window(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        assessment_id: &str,
+        request: DecideOwnerProviderAssessmentWindowRequest,
+    ) -> OwnerProviderAssessmentWindowDecisionResult {
+        if !validate_provider_assessment_window_decision_request(&request) {
+            return OwnerProviderAssessmentWindowDecisionResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentWindowDecisionResult::Unavailable;
+        };
+        match decide_owner_provider_assessment_window(
+            pool,
+            owner_user_id,
+            property_id,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedAssessmentWindowDecisionOutcome::Updated(assessment)) => {
+                OwnerProviderAssessmentWindowDecisionResult::Updated(assessment)
+            }
+            Ok(PersistedAssessmentWindowDecisionOutcome::Replayed(assessment)) => {
+                OwnerProviderAssessmentWindowDecisionResult::Replayed(assessment)
+            }
+            Ok(PersistedAssessmentWindowDecisionOutcome::NotFound) => {
+                OwnerProviderAssessmentWindowDecisionResult::NotFound
+            }
+            Ok(PersistedAssessmentWindowDecisionOutcome::InvalidState(assessment)) => {
+                OwnerProviderAssessmentWindowDecisionResult::InvalidState(assessment)
+            }
+            Ok(PersistedAssessmentWindowDecisionOutcome::Conflict) => {
+                OwnerProviderAssessmentWindowDecisionResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderAssessmentWindowDecisionResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, assessment_id, "owner provider assessment window decision failed");
+                OwnerProviderAssessmentWindowDecisionResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3596,6 +3660,18 @@ pub fn validate_provider_assessment_request(
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
         && schedule_valid
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_assessment_window_decision_request(
+    request: &DecideOwnerProviderAssessmentWindowRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    matches!(request.action.as_str(), "confirm" | "request_change")
+        && request.expected_version > 0
         && (8..=128).contains(&idempotency_key.chars().count())
         && idempotency_key
             .chars()
@@ -7292,6 +7368,14 @@ enum PersistedAssessmentCreateOutcome {
     Conflict,
 }
 
+enum PersistedAssessmentWindowDecisionOutcome {
+    Updated(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentRecord),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -8801,6 +8885,115 @@ async fn list_owner_provider_assessments(
         rows.iter()
             .map(owner_provider_assessment_from_row)
             .collect(),
+    ))
+}
+
+async fn decide_owner_provider_assessment_window(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    assessment_id: &str,
+    request: DecideOwnerProviderAssessmentWindowRequest,
+) -> Result<PersistedAssessmentWindowDecisionOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+         FOR UPDATE"
+    );
+    let current = sqlx::query(&query)
+        .bind(assessment_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentWindowDecisionOutcome::NotFound);
+    };
+    let current = owner_provider_assessment_from_row(&current);
+    let event_kind = if request.action == "confirm" {
+        "window_confirmed"
+    } else {
+        "window_change_requested"
+    };
+    let next_status = if request.action == "confirm" {
+        "owner_confirmed"
+    } else {
+        "window_change_requested"
+    };
+    let replay = sqlx::query(
+        "SELECT event_kind, assessment_version
+         FROM owner_provider_assessment_events
+         WHERE actor_user_id = $1 AND idempotency_key = $2",
+    )
+    .bind(owner_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        let exact = replay.get::<String, _>("event_kind") == event_kind
+            && replay.get::<i64, _>("assessment_version") == request.expected_version + 1
+            && current.version == request.expected_version + 1
+            && current.status == next_status;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedAssessmentWindowDecisionOutcome::Replayed(current)
+        } else {
+            PersistedAssessmentWindowDecisionOutcome::Conflict
+        });
+    }
+    if current.status != "window_proposed" || current.assessment_method != "on_site" {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentWindowDecisionOutcome::InvalidState(
+            current,
+        ));
+    }
+    if current.version != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentWindowDecisionOutcome::Conflict);
+    }
+    let next_version = current.version + 1;
+    let updated = sqlx::query(
+        "UPDATE owner_provider_assessments
+         SET status = $2, version = $3, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id AS assessment_id, invitation_id, property_id, organization_id,
+                   disclosure_grant_id, assessment_method, status,
+                   EXTRACT(EPOCH FROM proposed_window_start)::BIGINT
+                       AS proposed_window_start_epoch_seconds,
+                   EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
+                       AS proposed_window_end_epoch_seconds,
+                   time_zone, version",
+    )
+    .bind(assessment_id)
+    .bind(next_status)
+    .bind(next_version)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_events (
+             id, assessment_id, actor_user_id, event_kind,
+             assessment_version, idempotency_key, event_data
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    )
+    .bind(format!(
+        "owner_assessment_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(assessment_id)
+    .bind(owner_user_id)
+    .bind(event_kind)
+    .bind(next_version)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({
+        "status": next_status,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentWindowDecisionOutcome::Updated(
+        owner_provider_assessment_from_row(&updated),
     ))
 }
 

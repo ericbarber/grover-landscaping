@@ -21,6 +21,10 @@
   separate constrained stores, owner-safe shared projection, minimized events,
   and PostgreSQL non-leakage coverage; authorized writes and lifecycle mutations
   are the next implementation boundary.
+- Phase 4A2c1 delivers optimistic, replay-safe owner confirmation or change
+  request for a proposed on-site window with owner/property isolation, controlled
+  actions, minimized event history, route policy, concurrency, and outage
+  coverage. Provider execution/completion transitions are next.
 
 Preserve the unrelated existing changes in `.gitignore`,
 `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -59,9 +63,10 @@ privacy behavior throughout hardening.
 Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration,
 named staffing, human usability/assistive-technology/device work,
 Privacy/Security review, and go/no-go are signed. The machine-readable assurance
-manifest must continue to list those items as external or unsigned. Phase 4A2b2
-authorized assessment communication writes and lifecycle transitions are the
-next product-development slice; it does not remove or bypass the Phase 3E5 pilot launch
+manifest must continue to list those items as external or unsigned. Provider-
+authorized assessment execution/completion transitions and authorized
+communication writes are the next product-development slices; they do not
+remove or bypass the Phase 3E5 pilot launch
 blockers. Keep
 [`../PLAN.md`](../PLAN.md) canonical when work resumes.
 

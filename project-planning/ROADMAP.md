@@ -208,6 +208,9 @@ Phase 4A2b1 now separates constrained shared assessment messages from
 provider-private scope, safety, production, and route notes, and provides an
 owner projection with no private-note source. Authorized repository writes and
 optimistic lifecycle mutations are next.
+Phase 4A2c1 now gives owners a versioned, replay-safe choice to confirm a
+proposed on-site assessment window or request another, without activating
+service. Provider execution/completion transitions are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

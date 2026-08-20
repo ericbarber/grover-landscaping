@@ -105,10 +105,22 @@ Phase 4A2b1 establishes the communication storage boundary:
 - append-only communication events retain record identifiers and kinds without
   copying either body.
 
+Phase 4A2c1 adds owner control of proposed on-site windows:
+
+- `POST /owner-properties/{property_id}/provider-assessments/{assessment_id}/window-decision`
+  accepts only `confirm` or `request_change`;
+- owner, property, assessment, current `window_proposed` status, method, and
+  expected version are checked under a row lock;
+- exact concurrent or uncertain retry returns the authoritative first result;
+- changed key reuse, stale versions, cross-owner access, invalid lifecycle, and
+  persistence outage remain distinct;
+- the decision records no service acceptance, customer projection, crew
+  assignment, work order, or visit release.
+
 ## Next slices
 
-1. Add optimistic window confirmation/change requests, provider lifecycle
-   transitions, and status-only ended-authority recovery.
+1. Add provider-authorized assessment begin, completion, cannot-assess, and
+   cancellation transitions plus status-only ended-authority recovery.
 2. Add authorized, replay-safe repository writes for customer-safe messages and
    provider-private notes, using only the owner-safe projection for owner reads.
 3. Adopt the assessment workspace in the production owner/provider interfaces

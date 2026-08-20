@@ -85,10 +85,11 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
-        validate_provider_assessment_request, validate_provider_claim_review_decision_request,
-        validate_provider_claim_review_filter, validate_provider_disclosure_access_request,
-        validate_provider_disclosure_grant_request, validate_provider_disclosure_revoke_request,
-        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
+        validate_provider_assessment_request, validate_provider_assessment_window_decision_request,
+        validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
+        validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
+        validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
+        validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_opportunity_response_request,
@@ -102,10 +103,11 @@ use grover_landscaping_api::{
         CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
         CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
         CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
-        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderDisclosureRequest,
-        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderAssessmentCreateResult,
+        DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
+        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
+        OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentWindowDecisionResult,
         OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
         OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
         OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
@@ -709,6 +711,10 @@ fn app_with_runtime(
         .route(
             "/owner-properties/{property_id}/provider-assessments",
             get(list_owner_provider_assessments),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-assessments/{assessment_id}/window-decision",
+            post(decide_owner_provider_assessment_window),
         )
         .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
@@ -1747,6 +1753,62 @@ async fn list_owner_provider_assessments(
             "owner_provider_assessments_unavailable",
             "Assessment progress could not be loaded. Existing assessment state is unchanged.",
         ),
+    }
+}
+
+async fn decide_owner_provider_assessment_window(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, assessment_id)): Path<(String, String)>,
+    Json(request): Json<DecideOwnerProviderAssessmentWindowRequest>,
+) -> Response {
+    if !validate_provider_assessment_window_decision_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_provider_assessment_window_decision_invalid",
+                message: "Choose to confirm this assessment window or request a different one."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .decide_provider_assessment_window(
+            &principal.subject,
+            &property_id,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderAssessmentWindowDecisionResult::Updated(assessment)
+        | OwnerProviderAssessmentWindowDecisionResult::Replayed(assessment) => {
+            Json(assessment).into_response()
+        }
+        OwnerProviderAssessmentWindowDecisionResult::NotFound => resource_not_found_response(
+            "owner_provider_assessment_not_found",
+            "The proposed assessment window was not found for this property.",
+        ),
+        OwnerProviderAssessmentWindowDecisionResult::InvalidState(assessment) => {
+            (StatusCode::CONFLICT, Json(assessment)).into_response()
+        }
+        OwnerProviderAssessmentWindowDecisionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_assessment_window_decision_conflict",
+                message: "The proposed assessment window changed before this decision was applied. Reload and review its current status."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderAssessmentWindowDecisionResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_assessment_window_decision_unavailable",
+                "The window decision could not be confirmed. Existing assessment state is unchanged; reload before retrying.",
+            )
+        }
     }
 }
 
@@ -8878,6 +8940,38 @@ mod tests {
                 Request::builder()
                     .uri("/owner-properties/property-1/provider-assessments")
                     .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/provider-assessments/assessment-1/window-decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"accept_service","expected_version":1,"idempotency_key":"assessment-window-invalid-001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/provider-assessments/assessment-1/window-decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"confirm","expected_version":1,"idempotency_key":"assessment-window-outage-001"}"#,
+                    ))
                     .unwrap(),
             )
             .await

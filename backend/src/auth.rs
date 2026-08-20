@@ -585,6 +585,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             || (segment_count == 2
                 && owner_property_suffix.ends_with("/provider-assessments")
                 && *method == Method::GET)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/provider-assessments/")
+                && owner_property_suffix.ends_with("/window-decision")
+                && *method == Method::POST)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1678,6 +1682,10 @@ mod tests {
             (
                 Method::GET,
                 "/owner-properties/property-1/provider-assessments",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-assessments/assessment-1/window-decision",
             ),
             (
                 Method::POST,

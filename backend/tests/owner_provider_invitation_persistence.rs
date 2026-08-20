@@ -3,10 +3,11 @@ use grover_landscaping_api::owner_acquisition::{
     CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
     CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
     CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderDisclosureRequest,
-    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-    OwnerProviderAssessmentCreateResult, OwnerProviderClaimAppealResult,
+    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderAssessmentWindowRequest,
+    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
+    OwnerMutationResult, OwnerProviderAssessmentCreateResult,
+    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
     OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
     OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
     OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
@@ -562,6 +563,21 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             .list_owner_provider_assessments("owner-unavailable", "property-unavailable")
             .await,
         OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .decide_provider_assessment_window(
+                "owner-unavailable",
+                "property-unavailable",
+                "assessment-unavailable",
+                DecideOwnerProviderAssessmentWindowRequest {
+                    action: "confirm".to_string(),
+                    expected_version: 1,
+                    idempotency_key: "assessment-window-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderAssessmentWindowDecisionResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -1977,6 +1993,96 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .to_string();
     assert!(!communication_audit.contains("irrigation controller"));
     assert!(!communication_audit.contains("crew_hours"));
+
+    let window_decision = DecideOwnerProviderAssessmentWindowRequest {
+        action: "confirm".to_string(),
+        expected_version: assessment.version,
+        idempotency_key: "assessment-window-confirm-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .decide_provider_assessment_window(
+                owner_b,
+                &property.property_id,
+                &assessment.assessment_id,
+                window_decision.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentWindowDecisionResult::NotFound
+    ));
+    let (first_window_result, second_window_result) = tokio::join!(
+        repository.decide_provider_assessment_window(
+            owner_a,
+            &property.property_id,
+            &assessment.assessment_id,
+            window_decision.clone(),
+        ),
+        repository.decide_provider_assessment_window(
+            owner_a,
+            &property.property_id,
+            &assessment.assessment_id,
+            window_decision.clone(),
+        ),
+    );
+    let confirmed_assessment = match (first_window_result, second_window_result) {
+        (
+            OwnerProviderAssessmentWindowDecisionResult::Updated(updated),
+            OwnerProviderAssessmentWindowDecisionResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderAssessmentWindowDecisionResult::Replayed(replayed),
+            OwnerProviderAssessmentWindowDecisionResult::Updated(updated),
+        ) => {
+            assert_eq!(updated, replayed);
+            updated
+        }
+        (first, second) => panic!(
+            "concurrent exact owner window decisions should update once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(confirmed_assessment.status, "owner_confirmed");
+    assert_eq!(confirmed_assessment.version, assessment.version + 1);
+    assert!(matches!(
+        repository
+            .decide_provider_assessment_window(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                window_decision.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentWindowDecisionResult::Replayed(replayed)
+            if replayed == confirmed_assessment
+    ));
+    assert!(matches!(
+        repository
+            .decide_provider_assessment_window(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                DecideOwnerProviderAssessmentWindowRequest {
+                    action: "request_change".to_string(),
+                    ..window_decision.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentWindowDecisionResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .decide_provider_assessment_window(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                DecideOwnerProviderAssessmentWindowRequest {
+                    idempotency_key: "assessment-window-stale-001".to_string(),
+                    ..window_decision
+                },
+            )
+            .await,
+        OwnerProviderAssessmentWindowDecisionResult::InvalidState(current)
+            if current == confirmed_assessment
+    ));
 
     assert!(matches!(
         repository
