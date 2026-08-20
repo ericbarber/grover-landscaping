@@ -82,6 +82,53 @@ interface ApiOwnerProviderConnectionProgress {
   persisted: boolean;
 }
 
+interface ApiOwnerProviderDisclosureReview {
+  review_version: string;
+  invitation_id: string;
+  property_name: string;
+  provider_organization_name: string;
+  purpose: string;
+  brief_version: number;
+  exact_address: string;
+  yard_areas: string[];
+  care_goals: string[];
+  cadence_preference: string;
+  access_considerations: string;
+  owner_contact: string;
+  available_categories: OwnerDisclosureCategory[];
+  media_options: Array<{
+    media_id: string;
+    shot_type: string;
+    file_label: string;
+    thumbnail_url?: string | null;
+  }>;
+  consent_text_version: string;
+  retention_notice_version: string;
+  retention_notice: string;
+  authority_boundary: string;
+  expires_at_epoch_seconds: number;
+}
+
+interface ApiOwnerProviderDisclosureReceipt {
+  receipt_id: string;
+  grant_id: string;
+  invitation_id: string;
+  property_name: string;
+  organization_name: string;
+  purpose: string;
+  approved_categories: OwnerDisclosureCategory[];
+  withheld_categories: OwnerDisclosureCategory[];
+  selected_photos: Array<{ media_id: string; file_label: string; shot_type: string }>;
+  brief_version: number;
+  grant_version: number;
+  affirmed_at_epoch_seconds: number;
+  status: OwnerProviderDisclosureReceipt['status'];
+  expires_at_epoch_seconds: number;
+  version: number;
+  latest_event_kind: string;
+  latest_reason_code?: string | null;
+}
+
 export interface OwnerWorkspace {
   ownerUserId: string;
   verifiedEmail: string;
@@ -182,7 +229,7 @@ export interface OwnerProviderConnectionProgress {
   deliveryStatus: string;
   progressStage: 'sending' | 'delivery_failed' | 'awaiting_open' | 'provider_reviewing'
     | 'question_received' | 'disclosure_decision' | 'declined' | 'contact_closed'
-    | 'withdrawn' | 'expired';
+    | 'withdrawn' | 'expired' | 'assessment_access_approved' | 'assessment_access_ended';
   statusLabel: string;
   ownerActionRequired: boolean;
   nextAction: string;
@@ -191,6 +238,51 @@ export interface OwnerProviderConnectionProgress {
   expiresAtEpochSeconds: number;
   respondedAtEpochSeconds?: number;
   persisted: boolean;
+}
+
+export type OwnerDisclosureCategory = 'exact_address' | 'yard_brief' | 'selected_yard_photos'
+  | 'owner_contact' | 'access_considerations';
+
+export interface OwnerProviderDisclosureReview {
+  reviewVersion: string;
+  invitationId: string;
+  propertyName: string;
+  providerOrganizationName: string;
+  purpose: string;
+  briefVersion: number;
+  exactAddress: string;
+  yardAreas: string[];
+  careGoals: string[];
+  cadencePreference: string;
+  accessConsiderations: string;
+  ownerContact: string;
+  availableCategories: OwnerDisclosureCategory[];
+  mediaOptions: Array<{ mediaId: string; shotType: string; fileLabel: string; thumbnailUrl?: string }>;
+  consentTextVersion: string;
+  retentionNoticeVersion: string;
+  retentionNotice: string;
+  authorityBoundary: string;
+  expiresAtEpochSeconds: number;
+}
+
+export interface OwnerProviderDisclosureReceipt {
+  receiptId: string;
+  grantId: string;
+  invitationId: string;
+  propertyName: string;
+  organizationName: string;
+  purpose: string;
+  approvedCategories: OwnerDisclosureCategory[];
+  withheldCategories: OwnerDisclosureCategory[];
+  selectedPhotos: Array<{ mediaId: string; fileLabel: string; shotType: string }>;
+  briefVersion: number;
+  grantVersion: number;
+  affirmedAtEpochSeconds: number;
+  status: 'active' | 'revoked' | 'expired' | 'suspended';
+  expiresAtEpochSeconds: number;
+  version: number;
+  latestEventKind: string;
+  latestReasonCode?: string;
 }
 
 function mapWorkspace(workspace: ApiOwnerWorkspace): OwnerWorkspace {
@@ -373,6 +465,126 @@ export async function fetchOwnerProviderConnectionProgress(
   );
   return ((await response.json()) as ApiOwnerProviderConnectionProgress[])
     .map(mapProviderConnectionProgress);
+}
+
+export async function fetchOwnerProviderDisclosureReview(
+  propertyId: string,
+  invitationId: string,
+): Promise<OwnerProviderDisclosureReview> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-invitations/${encodeURIComponent(invitationId)}/disclosure-review`,
+  );
+  const value = await response.json() as ApiOwnerProviderDisclosureReview;
+  return {
+    reviewVersion: value.review_version,
+    invitationId: value.invitation_id,
+    propertyName: value.property_name,
+    providerOrganizationName: value.provider_organization_name,
+    purpose: value.purpose,
+    briefVersion: value.brief_version,
+    exactAddress: value.exact_address,
+    yardAreas: value.yard_areas,
+    careGoals: value.care_goals,
+    cadencePreference: value.cadence_preference,
+    accessConsiderations: value.access_considerations,
+    ownerContact: value.owner_contact,
+    availableCategories: value.available_categories,
+    mediaOptions: value.media_options.map((media) => ({
+      mediaId: media.media_id,
+      shotType: media.shot_type,
+      fileLabel: media.file_label,
+      thumbnailUrl: media.thumbnail_url ?? undefined,
+    })),
+    consentTextVersion: value.consent_text_version,
+    retentionNoticeVersion: value.retention_notice_version,
+    retentionNotice: value.retention_notice,
+    authorityBoundary: value.authority_boundary,
+    expiresAtEpochSeconds: value.expires_at_epoch_seconds,
+  };
+}
+
+export async function approveOwnerProviderDisclosure(
+  propertyId: string,
+  invitationId: string,
+  review: OwnerProviderDisclosureReview,
+  approvedCategories: OwnerDisclosureCategory[],
+  selectedMediaIds: string[],
+  idempotencyKey: string,
+): Promise<void> {
+  await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-invitations/${encodeURIComponent(invitationId)}/disclosure-grants`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        expected_review_version: review.reviewVersion,
+        purpose: review.purpose,
+        approved_categories: approvedCategories,
+        selected_media_ids: selectedMediaIds,
+        consent_text_version: review.consentTextVersion,
+        retention_notice_version: review.retentionNoticeVersion,
+        owner_affirmed: true,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+}
+
+function mapDisclosureReceipt(value: ApiOwnerProviderDisclosureReceipt): OwnerProviderDisclosureReceipt {
+  return {
+    receiptId: value.receipt_id,
+    grantId: value.grant_id,
+    invitationId: value.invitation_id,
+    propertyName: value.property_name,
+    organizationName: value.organization_name,
+    purpose: value.purpose,
+    approvedCategories: value.approved_categories,
+    withheldCategories: value.withheld_categories,
+    selectedPhotos: value.selected_photos.map((photo) => ({
+      mediaId: photo.media_id,
+      fileLabel: photo.file_label,
+      shotType: photo.shot_type,
+    })),
+    briefVersion: value.brief_version,
+    grantVersion: value.grant_version,
+    affirmedAtEpochSeconds: value.affirmed_at_epoch_seconds,
+    status: value.status,
+    expiresAtEpochSeconds: value.expires_at_epoch_seconds,
+    version: value.version,
+    latestEventKind: value.latest_event_kind,
+    latestReasonCode: value.latest_reason_code ?? undefined,
+  };
+}
+
+export async function fetchOwnerProviderDisclosureReceipts(
+  propertyId: string,
+): Promise<OwnerProviderDisclosureReceipt[]> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-disclosure-receipts`,
+  );
+  return ((await response.json()) as ApiOwnerProviderDisclosureReceipt[]).map(mapDisclosureReceipt);
+}
+
+export async function revokeOwnerProviderDisclosure(
+  propertyId: string,
+  receipt: OwnerProviderDisclosureReceipt,
+  reasonCode: string,
+  idempotencyKey: string,
+): Promise<OwnerProviderDisclosureReceipt> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-disclosure-grants/${encodeURIComponent(receipt.grantId)}/revoke`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        expected_version: receipt.version,
+        reason_code: reasonCode,
+        owner_confirmed: true,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  return mapDisclosureReceipt(await response.json() as ApiOwnerProviderDisclosureReceipt);
 }
 
 export async function createOwnerIntakeMediaUpload(

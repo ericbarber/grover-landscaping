@@ -53,7 +53,8 @@ The approved experience is defined by:
 | 3D1b | Delivered | Owner-isolated server-derived review and atomic grant creation with exact category/photo selection, current-authority rechecks, immutable review-version receipt, replay/conflict/outage behavior, and minimized audit |
 | 3D2 | Delivered | Checked-recipient category-filtered access with full current-authority rechecks, omitted withheld fields, grant-bounded selected-photo URLs, progress projection, cross-provider isolation, and status-only expiry/suspension reconciliation |
 | 3D3 | Delivered | Owner-isolated immutable receipt history and confirmed versioned revocation with controlled reasons, exact replay, preserved consent evidence, immediate future-read closure, minimized audit, and access-ended progress |
-| 3D4–3E | Planned | Interface adoption and pilot hardening |
+| 3D4 | Delivered | Production owner approval/history/revocation and provider selective-access interfaces with default-withheld categories, per-photo choice, separate affirmation, explicit authority boundaries, accessible recovery, and passing client/full-unit/type/build/four-journey compatible-Chromium validation |
+| 3E | Planned | Pilot hardening, privacy/security review, operations readiness, broader cross-browser coverage, and signed human assistive-technology/physical-device assurance |
 | 4–7 | Planned | Assessment/proposal through governed pilot convergence |
 
 ## Delivery principles

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
-import { fetchProviderInvitationProgress } from './providerInvitationClient';
+import { fetchProviderDisclosureAccess, fetchProviderInvitationProgress } from './providerInvitationClient';
 
 afterEach(() => {
   configureApiAuthentication(false, async () => null);
@@ -28,6 +28,25 @@ describe('provider invitation progress client', () => {
       }),
     );
     expect(fetchMock.mock.calls[0][0]).toContain('/provider-invitations/progress');
+    expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+      token: 'owner_provider_secret',
+    });
+  });
+
+  it('maps only present owner-approved disclosure categories', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      invitation_id: 'invitation_1', status: 'active', can_access: true,
+      organization_name: 'Desert Bloom', property_name: 'Home', purpose: 'yard_assessment',
+      approved_categories: ['exact_address'], withheld_categories: ['owner_contact'],
+      brief_version: 2, expires_at_epoch_seconds: 1_800_000_000,
+      exact_address: '123 Oak Street, Phoenix, AZ 85004',
+      authority_boundary: 'Assessment access only.', persisted: true,
+    }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const access = await fetchProviderDisclosureAccess('owner_provider_secret');
+    expect(access.exactAddress).toContain('123 Oak Street');
+    expect(access.ownerContact).toBeUndefined();
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       token: 'owner_provider_secret',

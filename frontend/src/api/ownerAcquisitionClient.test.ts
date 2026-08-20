@@ -4,14 +4,18 @@ import {
   completeOwnerIntakeMediaUpload,
   createOwnerProperty,
   createOwnerIntakeMediaUpload,
+  approveOwnerProviderDisclosure,
   deleteOwnerIntakeMedia,
   fetchOwnerIntakeMedia,
   fetchOwnerProviderConnectionProgress,
+  fetchOwnerProviderDisclosureReceipts,
+  fetchOwnerProviderDisclosureReview,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
   uploadOwnerIntakeMediaFile,
   saveOwnerWorkspace,
+  revokeOwnerProviderDisclosure,
 } from './ownerAcquisitionClient';
 
 afterEach(() => {
@@ -131,6 +135,51 @@ describe('Yard Owner acquisition API client', () => {
     expect(fetchMock.mock.calls[0][0]).toContain(
       '/owner-properties/owner_property_1/provider-connection-progress',
     );
+  });
+
+  it('keeps disclosure snapshots server-derived and sends only affirmative owner choices', async () => {
+    const reviewApi = {
+      review_version: `disclosure_review_v1_${'0'.repeat(64)}`,
+      invitation_id: 'invitation_1', property_name: 'Home',
+      provider_organization_name: 'Desert Bloom', purpose: 'yard_assessment',
+      brief_version: 2, exact_address: '123 Oak Street, Phoenix, AZ 85004',
+      yard_areas: ['Front yard'], care_goals: ['Routine upkeep'],
+      cadence_preference: 'every_two_weeks', access_considerations: 'Use side gate',
+      owner_contact: 'Morgan — owner@example.com',
+      available_categories: ['exact_address', 'yard_brief', 'selected_yard_photos', 'owner_contact', 'access_considerations'],
+      media_options: [{ media_id: 'media_1', shot_type: 'front_yard', file_label: 'front.jpg' }],
+      consent_text_version: 'owner-provider-assessment-consent-v1',
+      retention_notice_version: 'owner-provider-assessment-retention-v1',
+      retention_notice: 'Future access can be ended.', authority_boundary: 'Assessment only.',
+      expires_at_epoch_seconds: 1_800_000_000,
+    };
+    const receiptApi = {
+      receipt_id: 'receipt_1', grant_id: 'grant_1', invitation_id: 'invitation_1',
+      property_name: 'Home', organization_name: 'Desert Bloom', purpose: 'yard_assessment',
+      approved_categories: ['exact_address'], withheld_categories: ['yard_brief'],
+      selected_photos: [], brief_version: 2, grant_version: 1,
+      affirmed_at_epoch_seconds: 1_700_000_000, status: 'active',
+      expires_at_epoch_seconds: 1_800_000_000, version: 1,
+      latest_event_kind: 'created', latest_reason_code: null,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(reviewApi), { status: 200 }))
+      .mockResolvedValueOnce(new Response('{}', { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([receiptApi]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...receiptApi, status: 'revoked', version: 2 }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const review = await fetchOwnerProviderDisclosureReview('property_1', 'invitation_1');
+    await approveOwnerProviderDisclosure('property_1', 'invitation_1', review, ['exact_address'], [], 'approval-key-1');
+    const approvalBody = JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string);
+    expect(approvalBody.approved_categories).toEqual(['exact_address']);
+    expect(approvalBody).not.toHaveProperty('exact_address');
+    const [receipt] = await fetchOwnerProviderDisclosureReceipts('property_1');
+    expect(receipt).toEqual(expect.objectContaining({ grantId: 'grant_1', status: 'active' }));
+    await revokeOwnerProviderDisclosure('property_1', receipt, 'owner_choice', 'revoke-key-1');
+    expect(JSON.parse((fetchMock.mock.calls[3][1] as RequestInit).body as string)).toEqual({
+      expected_version: 1, reason_code: 'owner_choice', owner_confirmed: true,
+      idempotency_key: 'revoke-key-1',
+    });
   });
 
   it('creates an independently scoped guided-media upload without provider identifiers', async () => {

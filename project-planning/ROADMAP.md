@@ -152,8 +152,13 @@ provider access with omitted withheld fields, grant-bounded selected-media
 authorization, current-authority reconciliation, safe progress, cross-provider
 isolation, and status-only closure. Phase 3D3 now delivers owner-isolated
 immutable receipt history and confirmed, controlled, versioned, replay-safe
-revocation with preserved consent evidence and access-ended progress. Production
-interface adoption and assurance is next.
+revocation with preserved consent evidence and access-ended progress. Phase 3D4
+now adopts that contract in the production owner and provider interfaces with
+unselected categories, per-photo choice, explicit shared/withheld and authority
+boundaries, receipt history, controlled future-access revocation, selective
+provider rendering, and status-only ended-access recovery. Automated client,
+full frontend unit, type, build, and four-journey compatible-Chromium gates
+pass; Phase 3E pilot hardening and signed human-device assurance is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

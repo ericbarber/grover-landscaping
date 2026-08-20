@@ -210,9 +210,14 @@ evidence is not stored on receipt or grant rows.
    media authorization, status-only closure, and cross-provider tests.
 5. **3D3 — revocation (delivered):** versioned owner revoke API, access/cache
    reconciliation, immutable history, support visibility, and recovery tests.
-6. **3D4 — interface adoption:** unselected owner approval, receipt views,
-   provider access, revoke confirmation, responsive/accessibility/browser
-   evidence, and content review.
+6. **3D4 — interface adoption (delivered):** unselected owner approval,
+   per-photo choice, explicit shared/withheld summary, named-provider
+   affirmation, receipt history, controlled revoke confirmation, provider-only
+   approved detail rendering, status-only ended access, responsive browser
+   scenarios, accessibility semantics, and content review. Automated client,
+   full frontend unit, type, production-build, and four-journey compatible-
+   Chromium gates pass; signed human and physical-device assurance remains in
+   Phase 3E.
 
 ## Acceptance criteria
 

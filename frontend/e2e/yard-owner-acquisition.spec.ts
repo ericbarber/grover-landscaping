@@ -141,6 +141,10 @@ test('a verified owner creates a private profile and reconfirms a changed addres
     contentType: 'application/json',
     body: '[]',
   }));
+  await page.route('**/owner-properties/owner_property_1/provider-disclosure-receipts', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
   await page.route('**/owner-properties/owner_property_1/intake-media/*/complete', async (route) => {
     const mediaId = route.request().url().split('/').at(-2);
     const replacement = mediaRecords.find((record) => record.media_id === mediaId);
@@ -253,5 +257,125 @@ test('a verified owner creates a private profile and reconfirms a changed addres
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.getByRole('heading', { name: 'You control each connection.' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('an owner selectively approves and later ends provider assessment access', async ({ page }) => {
+  let accessState: 'decision' | 'active' | 'revoked' = 'decision';
+  let receipts: Array<Record<string, unknown>> = [];
+  const property = {
+    property_id: 'owner_property_2', owner_user_id: 'local-development-user', display_name: 'Home',
+    address_line_1: '125 Oak Street', address_line_2: '', city: 'Phoenix', region: 'AZ',
+    postal_code: '85004', country_code: 'US', coarse_area: 'Central Phoenix',
+    address_status: 'owner_confirmed', authority_attested: true, status: 'draft', version: 1, persisted: true,
+  };
+  const brief = {
+    brief_id: 'owner_brief_ready', owner_user_id: 'local-development-user', property_id: 'owner_property_2',
+    version: 4, status: 'ready', yard_areas: ['Front yard', 'Back yard'], care_goals: ['Routine upkeep'],
+    cadence_preference: 'every_two_weeks', considerations: 'Keep the side gate closed for the dog.',
+    author_source: 'yard_owner', persisted: true,
+  };
+  const photo = {
+    media_id: 'owner_media_ready', owner_user_id: 'local-development-user', property_id: 'owner_property_2',
+    brief_id: 'owner_brief_ready', shot_type: 'front_yard', file_name: 'front-yard.jpg', content_type: 'image/jpeg',
+    upload_mode: 'object_storage', object_key: 'owner-intake/private/front-yard.jpg', thumbnail_object_key: null,
+    status: 'ready', file_size_bytes: 64, image_width_px: 1200, image_height_px: 800,
+    metadata_source: 'client_reported', rejection_reason: null, replaces_media_id: null, replaced_by_media_id: null,
+    display_url: 'local://owner-media/owner_media_ready', thumbnail_url: null, persisted: true,
+  };
+  const progress = () => [{
+    invitation_id: 'invitation_2', provider_name: 'Desert Green Care', invitation_status: 'responded',
+    delivery_status: 'delivered',
+    progress_stage: accessState === 'decision' ? 'disclosure_decision' : accessState === 'active' ? 'assessment_access_approved' : 'assessment_access_ended',
+    status_label: accessState === 'decision' ? 'Provider interest is ready for your review' : accessState === 'active' ? 'Assessment access is active' : 'Assessment access ended',
+    owner_action_required: accessState === 'decision',
+    next_action: accessState === 'decision' ? 'review_disclosure' : accessState === 'active' ? 'wait_for_assessment' : 'review_connection',
+    latest_response_action: 'express_interest', response_label: 'Interested in assessing this yard',
+    expires_at_epoch_seconds: 1_799_000_000, responded_at_epoch_seconds: 1_798_000_000, persisted: true,
+  }];
+  const activeReceipt = () => ({
+    receipt_id: 'receipt_2', grant_id: 'grant_2', invitation_id: 'invitation_2', property_name: 'Home',
+    organization_name: 'Desert Green Care', purpose: 'yard_assessment',
+    approved_categories: ['exact_address', 'selected_yard_photos'],
+    withheld_categories: ['yard_brief', 'owner_contact', 'access_considerations'],
+    selected_photos: [{ media_id: 'owner_media_ready', file_label: 'front-yard.jpg', shot_type: 'front_yard' }],
+    brief_version: 4, grant_version: 1, affirmed_at_epoch_seconds: 1_798_100_000,
+    status: accessState === 'revoked' ? 'revoked' : 'active', expires_at_epoch_seconds: 1_799_000_000,
+    version: accessState === 'revoked' ? 2 : 1,
+    latest_event_kind: accessState === 'revoked' ? 'revoked' : 'granted',
+    latest_reason_code: accessState === 'revoked' ? 'assessment_complete' : null,
+  });
+
+  await page.route('**/auth/config', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
+  }));
+  await page.route('**/me/access', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({
+      user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [],
+    }),
+  }));
+  await page.route('**/owner-workspace', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({
+      owner_user_id: 'local-development-user', verified_email: 'owner@example.com', display_name: 'Morgan Reyes', status: 'active', persisted: true,
+    }),
+  }));
+  await page.route('**/owner-properties', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([property]) }));
+  await page.route('**/owner-properties/owner_property_2/yard-brief', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(brief) }));
+  await page.route('**/owner-properties/owner_property_2/intake-media', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([photo]) }));
+  await page.route('**/owner-properties/owner_property_2/provider-connection-progress', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(progress()) }));
+  await page.route('**/owner-properties/owner_property_2/provider-disclosure-receipts', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(receipts) }));
+  await page.route('**/owner-properties/owner_property_2/provider-invitations/invitation_2/disclosure-review', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({
+      review_version: 'review-v1', invitation_id: 'invitation_2', property_name: 'Home', provider_organization_name: 'Desert Green Care',
+      purpose: 'yard_assessment', brief_version: 4, exact_address: '125 Oak Street, Phoenix, AZ 85004',
+      yard_areas: ['Front yard', 'Back yard'], care_goals: ['Routine upkeep'], cadence_preference: 'every_two_weeks',
+      access_considerations: 'Keep the side gate closed for the dog.', owner_contact: 'Morgan Reyes · owner@example.com',
+      available_categories: ['exact_address', 'yard_brief', 'selected_yard_photos', 'owner_contact', 'access_considerations'],
+      media_options: [{ media_id: 'owner_media_ready', shot_type: 'front_yard', file_label: 'front-yard.jpg', thumbnail_url: null }],
+      consent_text_version: 'owner-disclosure-v1', retention_notice_version: 'retention-v1',
+      retention_notice: 'The provider may retain assessment records required for business or legal purposes.',
+      authority_boundary: 'Assessment access does not approve pricing, schedule service, assign a crew, or authorize work.',
+      expires_at_epoch_seconds: 1_799_000_000,
+    }),
+  }));
+  await page.route('**/owner-properties/owner_property_2/provider-invitations/invitation_2/disclosure-grants', async (route) => {
+    const request = route.request().postDataJSON();
+    expect(request.approved_categories).toEqual(['exact_address', 'selected_yard_photos']);
+    expect(request.selected_media_ids).toEqual(['owner_media_ready']);
+    expect(request.owner_affirmed).toBe(true);
+    accessState = 'active';
+    receipts = [activeReceipt()];
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
+  });
+  await page.route('**/owner-properties/owner_property_2/provider-disclosure-grants/grant_2/revoke', async (route) => {
+    const request = route.request().postDataJSON();
+    expect(request).toMatchObject({ expected_version: 1, reason_code: 'assessment_complete', owner_confirmed: true });
+    accessState = 'revoked';
+    receipts = [activeReceipt()];
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(activeReceipt()) });
+  });
+
+  await page.goto('/app/yard-owner');
+  await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
+  await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
+  await expect(page.getByLabel('Exact service address')).not.toBeChecked();
+  await expect(page.getByLabel('Yard care brief')).not.toBeChecked();
+  await page.getByLabel('Exact service address').check();
+  await page.getByLabel('Selected yard photographs').check();
+  await page.getByLabel('front-yard.jpg').check();
+  await expect(page.getByText('Yard care brief, Owner contact, Access considerations')).toBeVisible();
+  await page.getByLabel('I approve only the selected items for Desert Green Care to assess this yard.').check();
+  await page.getByRole('button', { name: 'Approve selected assessment access' }).click();
+  await expect(page.getByText('Selected assessment access was approved. This did not accept pricing or start service.')).toBeVisible();
+  await expect(page.getByText('Desert Green Care').first()).toBeVisible();
+  await expect(page.getByText('active', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'End future assessment access' }).click();
+  await expect(page.getByRole('heading', { name: 'End future access for Desert Green Care?' })).toBeVisible();
+  await page.getByLabel('Reason').selectOption('assessment_complete');
+  await page.getByRole('button', { name: 'Confirm and end future access' }).click();
+  await expect(page.getByText('Future assessment access ended. The consent receipt remains in your history.')).toBeVisible();
+  await expect(page.getByText('revoked', { exact: true })).toBeVisible();
+  await expect(page.getByText('Assessment access ended', { exact: true }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

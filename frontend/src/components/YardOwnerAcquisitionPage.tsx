@@ -22,6 +22,7 @@ import {
   type SaveOwnerYardBriefInput,
 } from '../api/ownerAcquisitionClient';
 import { useAuth } from '../auth/AuthProvider';
+import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -138,6 +139,8 @@ function connectionNextActionLabel(nextAction: string): string {
     wait_or_withdraw: 'Wait or withdraw this invitation',
     review_question: 'Review the provider’s question',
     review_disclosure: 'Review what you want to share next',
+    wait_for_assessment: 'Wait for the provider’s assessment',
+    review_connection: 'Review this provider connection',
     choose_another_provider: 'Choose another provider',
     start_new_invitation: 'Review and create a new invitation',
   }[nextAction] ?? 'Review connection details';
@@ -194,7 +197,7 @@ function ConnectionProgress({
               {entry.responseLabel ? <p className="mt-3 text-sm leading-6 text-slate-700">{entry.responseLabel}</p> : null}
               <dl className="mt-4 grid gap-2 border-t border-slate-200 pt-3 text-xs sm:grid-cols-2">
                 <div><dt className="font-bold uppercase tracking-wide text-slate-500">Safe next step</dt><dd className="mt-1 font-semibold text-slate-800">{connectionNextActionLabel(entry.nextAction)}</dd></div>
-                <div><dt className="font-bold uppercase tracking-wide text-slate-500">Invitation access</dt><dd className="mt-1 font-semibold text-slate-800">{entry.progressStage === 'contact_closed' || entry.progressStage === 'withdrawn' || entry.progressStage === 'expired' || entry.progressStage === 'declined' ? 'Closed' : 'Limited details only'}</dd></div>
+                <div><dt className="font-bold uppercase tracking-wide text-slate-500">Invitation access</dt><dd className="mt-1 font-semibold text-slate-800">{entry.progressStage === 'assessment_access_approved' ? 'Owner-approved assessment details' : entry.progressStage === 'assessment_access_ended' ? 'Assessment access ended' : entry.progressStage === 'contact_closed' || entry.progressStage === 'withdrawn' || entry.progressStage === 'expired' || entry.progressStage === 'declined' ? 'Closed' : 'Limited details only'}</dd></div>
               </dl>
               {entry.progressStage === 'disclosure_decision' ? <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-950"><strong>Nothing new is shared yet.</strong> Provider interest is not a proposal, selection, crew assignment, or permission to start work.</p> : null}
             </li>
@@ -857,6 +860,7 @@ export function YardOwnerAcquisitionPage() {
                         </section>
                       ) : null}
                       <ConnectionProgress entries={connectionProgress} error={connectionError} loading={connectionLoading} onRefresh={() => void refreshConnectionProgress()} />
+                      {selectedPropertyId ? <OwnerProviderDisclosurePanel connections={connectionProgress} onChanged={refreshConnectionProgress} propertyId={selectedPropertyId} /> : null}
                     </>
                   )}
                 </section>

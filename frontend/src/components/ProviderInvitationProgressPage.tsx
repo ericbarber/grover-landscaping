@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { ApiRequestError } from '../api/apiError';
 import {
+  fetchProviderDisclosureAccess,
   fetchProviderInvitationProgress,
+  type ProviderDisclosureAccess,
   type ProviderInvitationProgress,
 } from '../api/providerInvitationClient';
 import { useAuth } from '../auth/AuthProvider';
@@ -18,15 +20,29 @@ function actionLabel(action: string): string {
     acknowledge_withheld_data: 'Review the limited-response boundary',
     respond_to_limited_request: 'Review the limited request',
     wait_for_owner: 'Wait for the owner’s next decision',
+    review_owner_approved_details: 'Review the owner-approved assessment details',
+    contact_owner: 'Contact the owner about renewed access',
     request_new_invitation: 'Ask the owner for a new invitation',
     none: 'No further action on this invitation',
   }[action] ?? 'Review invitation status';
+}
+
+function disclosureCategoryLabel(category: string): string {
+  return {
+    exact_address: 'Exact service address',
+    yard_brief: 'Yard care brief',
+    selected_yard_photos: 'Selected yard photographs',
+    owner_contact: 'Owner contact',
+    access_considerations: 'Access considerations',
+  }[category] ?? category.split('_').join(' ');
 }
 
 export function ProviderInvitationProgressPage() {
   const auth = useAuth();
   const [token, setToken] = useState('');
   const [progress, setProgress] = useState<ProviderInvitationProgress | null>(null);
+  const [disclosure, setDisclosure] = useState<ProviderDisclosureAccess | null>(null);
+  const [disclosureError, setDisclosureError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +50,23 @@ export function ProviderInvitationProgressPage() {
     setLoading(true);
     setError(null);
     try {
-      setProgress(await fetchProviderInvitationProgress(value));
+      const loadedProgress = await fetchProviderInvitationProgress(value);
+      setProgress(loadedProgress);
+      if (['assessment_access_ready', 'assessment_access_closed'].includes(loadedProgress.progressStage)) {
+        try {
+          setDisclosure(await fetchProviderDisclosureAccess(value));
+          setDisclosureError(null);
+        } catch (accessError) {
+          setDisclosure(null);
+          setDisclosureError(message(accessError));
+        }
+      } else {
+        setDisclosure(null);
+        setDisclosureError(null);
+      }
     } catch (loadError) {
       setProgress(null);
+      setDisclosure(null);
       setError(message(loadError));
     } finally {
       setLoading(false);
@@ -93,11 +123,29 @@ export function ProviderInvitationProgressPage() {
               {!progress.closed ? <ul className="mt-4 grid gap-2 text-xs text-slate-700 sm:grid-cols-3"><li>Email checked: <strong>{progress.recipientEmailChecked ? 'Yes' : 'No'}</strong></li><li>Organization checked: <strong>{progress.organizationRelationshipChecked ? 'Yes' : 'Not yet'}</strong></li><li>Limited response: <strong>{progress.opportunityResponseCapability ? 'Available' : 'Not available'}</strong></li></ul> : null}
             </article>
           ) : null}
+          {disclosureError ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Assessment details were not loaded.</strong><p className="mt-1 text-sm leading-6">{disclosureError} Your recorded invitation response is unchanged.</p></div> : null}
+          {disclosure ? (
+            <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5" aria-labelledby="provider-assessment-title">
+              <p className="text-xs font-black uppercase tracking-wide text-sky-800">Owner-approved assessment access</p>
+              <h3 className="mt-2 text-xl font-black" id="provider-assessment-title">{disclosure.canAccess ? disclosure.propertyName : 'Assessment access ended'}</h3>
+              {!disclosure.canAccess ? <p className="mt-3 text-sm leading-6 text-slate-700">The owner-approved details are no longer available. Contact the owner if a new assessment review is needed.</p> : <>
+                <p className="mt-2 text-sm text-slate-600">For {disclosure.organizationName} · Brief version {disclosure.briefVersion} · Ends {disclosure.expiresAtEpochSeconds ? new Date(disclosure.expiresAtEpochSeconds * 1000).toLocaleString() : 'at the owner-approved deadline'}</p>
+                <div className="mt-5 grid gap-4">
+                  {disclosure.exactAddress ? <div className="rounded-xl bg-white p-4"><strong>Service address</strong><p className="mt-1 text-sm">{disclosure.exactAddress}</p></div> : null}
+                  {disclosure.yardBrief ? <div className="rounded-xl bg-white p-4"><strong>Yard brief</strong><p className="mt-2 text-sm">Areas: {disclosure.yardBrief.yardAreas.join(', ')}</p><p className="mt-1 text-sm">Goals: {disclosure.yardBrief.careGoals.join(', ')}</p><p className="mt-1 text-sm">Cadence: {disclosure.yardBrief.cadencePreference.split('_').join(' ')}</p></div> : null}
+                  {disclosure.selectedYardPhotos ? <div className="rounded-xl bg-white p-4"><strong>Selected photographs</strong><ul className="mt-3 grid gap-3 sm:grid-cols-2">{disclosure.selectedYardPhotos.map((photo) => <li key={photo.mediaId}>{(photo.thumbnailUrl ?? photo.displayUrl).startsWith('local://') ? <div aria-label={`${photo.fileLabel} — owner-selected yard view`} className="grid aspect-video w-full place-items-center rounded-lg bg-slate-100 text-sm font-bold text-slate-500">Private local preview</div> : <img alt={`${photo.fileLabel} — owner-selected yard view`} className="aspect-video w-full rounded-lg bg-slate-100 object-cover" src={photo.thumbnailUrl ?? photo.displayUrl} />}<span className="mt-1 block break-all text-xs font-semibold">{photo.fileLabel}</span></li>)}</ul></div> : null}
+                  {disclosure.ownerContact ? <div className="rounded-xl bg-white p-4"><strong>Owner contact</strong><p className="mt-1 text-sm">{disclosure.ownerContact}</p></div> : null}
+                  {disclosure.accessConsiderations ? <div className="rounded-xl bg-white p-4"><strong>Access considerations</strong><p className="mt-1 whitespace-pre-wrap text-sm">{disclosure.accessConsiderations}</p></div> : null}
+                </div>
+                <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold leading-6">{disclosure.authorityBoundary}</p>
+              </>}
+            </section>
+          ) : null}
         </section>
         <aside className="rounded-3xl bg-emerald-950 p-6 text-white lg:self-start" aria-label="Provider data boundary">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Still withheld</p>
-          <h2 className="mt-3 text-xl font-black">No owner approval yet</h2>
-          <ul className="mt-5 space-y-3 text-sm leading-6 text-emerald-100"><li>Exact address</li><li>Yard photographs</li><li>Owner contact</li><li>Access considerations</li><li>Pricing and work authority</li></ul>
+          <h2 className="mt-3 text-xl font-black">{disclosure?.canAccess ? 'Outside this approval' : 'No active owner approval'}</h2>
+          <ul className="mt-5 space-y-3 text-sm leading-6 text-emerald-100">{(disclosure?.withheldCategories ?? ['exact_address', 'yard_brief', 'selected_yard_photos', 'owner_contact', 'access_considerations']).map((category) => <li key={category}>{disclosureCategoryLabel(category)}</li>)}<li>Pricing and work authority</li></ul>
         </aside>
       </div>
     </main>

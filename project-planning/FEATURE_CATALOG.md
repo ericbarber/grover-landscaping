@@ -57,7 +57,10 @@
   server-derived assessment review, atomic owner-approved grants with exact
   review-version receipts, category-filtered provider reads with grant-bounded
   selected-photo access and status-only closure, immutable owner receipt history
-  and versioned future-access revocation, and reciprocal Yard Crew/gallery entry
+  and versioned future-access revocation, production default-withheld approval
+  and access-history controls, provider-only approved detail rendering with an
+  explicit withholding/authority boundary and ended-access recovery, and
+  reciprocal Yard Crew/gallery entry
 - Professional Yard Owner acquisition assurance with remediated workflow and
   consent defects, browser history and session recovery, precise trust language,
   keyboard/group focus, forced-colors and reduced-motion treatment, contrast and

@@ -414,6 +414,20 @@ Active slice:
   already-viewed information was erased. Owner and provider progress now show
   access-ended recovery separately from invitation closure. Phase 3D4
   production interface adoption and assurance is next.
+- Phase 3D4 is delivered. The production Yard Owner flow now presents every
+  disclosure category unselected, supports individual ready-photo choice,
+  distinguishes shared from withheld information, requires a separate named-
+  provider affirmation, and preserves assessment-only, retention, pricing,
+  scheduling, crew-assignment, and work-authority boundaries. Owners can review
+  immutable access history and explicitly end future access with a controlled
+  reason; providers see only present approved fields and photos, an honest
+  withheld summary, grant deadline, and status-only ended-access recovery.
+  Client tests, the complete frontend unit suite, TypeScript, and the production
+  build pass. All four responsive owner/provider browser journeys pass in a
+  compatible Chromium runtime, including selective approval and future-access
+  revocation from both sides of the connection.
+  Phase 3E pilot hardening, privacy/security review, and signed human-device
+  assurance is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
