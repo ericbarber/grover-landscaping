@@ -147,7 +147,10 @@ partitioning, selected-photo consistency, lifecycle/version/replay constraints,
 and one active grant per invitation. Phase 3D1b now delivers server-derived
 owner review and atomic creation with exact review-version receipts, current
 authority and media rechecks, owner isolation, replay/conflict handling, and
-minimized audit. Category-filtered provider access is next.
+minimized audit. Phase 3D2 now delivers checked-recipient, category-filtered
+provider access with omitted withheld fields, grant-bounded selected-media
+authorization, current-authority reconciliation, safe progress, cross-provider
+isolation, and status-only closure. Owner receipt history and revocation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

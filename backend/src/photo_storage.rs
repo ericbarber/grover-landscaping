@@ -187,9 +187,32 @@ impl PhotoStorageConfig {
     }
 
     pub fn display_url(&self, upload_mode: &str, object_key: &str) -> String {
+        self.display_url_for_seconds(upload_mode, object_key, u32::MAX)
+    }
+
+    pub fn display_authorization_seconds(&self, maximum_expires_seconds: u32) -> u32 {
+        let configured = match self {
+            Self::Local => 900,
+            Self::S3(config) => config.display_expires_seconds,
+        };
+        configured.min(maximum_expires_seconds.max(1))
+    }
+
+    pub fn display_url_for_seconds(
+        &self,
+        upload_mode: &str,
+        object_key: &str,
+        maximum_expires_seconds: u32,
+    ) -> String {
         if upload_mode == "s3-presigned" {
             if let Self::S3(config) = self {
-                return config.presigned_url("GET", object_key, config.display_expires_seconds);
+                return config.presigned_url(
+                    "GET",
+                    object_key,
+                    config
+                        .display_expires_seconds
+                        .min(maximum_expires_seconds.max(1)),
+                );
             }
         }
 
@@ -201,14 +224,27 @@ impl PhotoStorageConfig {
         upload_mode: &str,
         thumbnail_object_key: Option<&str>,
     ) -> Option<String> {
+        self.thumbnail_url_for_seconds(upload_mode, thumbnail_object_key, u32::MAX)
+    }
+
+    pub fn thumbnail_url_for_seconds(
+        &self,
+        upload_mode: &str,
+        thumbnail_object_key: Option<&str>,
+        maximum_expires_seconds: u32,
+    ) -> Option<String> {
         let thumbnail_object_key = thumbnail_object_key?;
         if upload_mode == "s3-presigned" {
             if let Self::S3(config) = self {
-                return Some(config.presigned_url(
-                    "GET",
-                    thumbnail_object_key,
-                    config.display_expires_seconds,
-                ));
+                return Some(
+                    config.presigned_url(
+                        "GET",
+                        thumbnail_object_key,
+                        config
+                            .display_expires_seconds
+                            .min(maximum_expires_seconds.max(1)),
+                    ),
+                );
             }
         }
 

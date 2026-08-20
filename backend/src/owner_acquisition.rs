@@ -499,6 +499,69 @@ pub struct OwnerProviderDisclosureGrantRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OpenOwnerProviderDisclosureRequest {
+    pub token: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderDisclosureYardBrief {
+    pub yard_areas: Vec<String>,
+    pub care_goals: Vec<String>,
+    pub cadence_preference: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderDisclosurePhoto {
+    pub media_id: String,
+    pub shot_type: String,
+    pub file_label: String,
+    pub display_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thumbnail_url: Option<String>,
+    pub authorization_expires_at_epoch_seconds: i64,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderDisclosureAccess {
+    pub invitation_id: String,
+    pub status: String,
+    pub can_access: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recovery_action: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grant_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receipt_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub organization_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub property_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub purpose: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub approved_categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub withheld_categories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brief_version: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exact_address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub yard_brief: Option<OwnerProviderDisclosureYardBrief>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selected_yard_photos: Option<Vec<OwnerProviderDisclosurePhoto>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_contact: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub access_considerations: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authority_boundary: Option<String>,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -705,6 +768,15 @@ pub enum OwnerProviderDisclosureGrantCreateResult {
     NotFound,
     InvalidState,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderDisclosureAccessResult {
+    Loaded(OwnerProviderDisclosureAccess),
+    Closed(OwnerProviderDisclosureAccess),
+    NotFound,
+    InvalidState,
     Unavailable,
 }
 
@@ -1371,6 +1443,7 @@ impl OwnerAcquisitionRepository {
                         None,
                         None,
                         None,
+                        false,
                         false,
                     )
                 })
@@ -2746,6 +2819,49 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn open_provider_disclosure(
+        &self,
+        recipient_user_id: &str,
+        verified_email: &str,
+        request: OpenOwnerProviderDisclosureRequest,
+    ) -> OwnerProviderDisclosureAccessResult {
+        if !validate_provider_disclosure_access_request(&request) {
+            return OwnerProviderDisclosureAccessResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderDisclosureAccessResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match open_owner_provider_disclosure(
+            pool,
+            recipient_user_id,
+            &normalized_email,
+            &email_fingerprint,
+            &token_hash,
+        )
+        .await
+        {
+            Ok(PersistedDisclosureAccessOutcome::Loaded(access)) => {
+                OwnerProviderDisclosureAccessResult::Loaded(access)
+            }
+            Ok(PersistedDisclosureAccessOutcome::Closed(access)) => {
+                OwnerProviderDisclosureAccessResult::Closed(access)
+            }
+            Ok(PersistedDisclosureAccessOutcome::NotFound) => {
+                OwnerProviderDisclosureAccessResult::NotFound
+            }
+            Ok(PersistedDisclosureAccessOutcome::InvalidState) => {
+                OwnerProviderDisclosureAccessResult::InvalidState
+            }
+            Err(error) => {
+                tracing::error!(%error, recipient_user_id, "provider disclosure access failed");
+                OwnerProviderDisclosureAccessResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3154,6 +3270,14 @@ pub fn validate_provider_disclosure_grant_request(
                     character.is_ascii_alphanumeric() || matches!(character, '-' | '_')
                 })
         })
+}
+
+pub fn validate_provider_disclosure_access_request(
+    request: &OpenOwnerProviderDisclosureRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    })
 }
 
 fn abuse_report_severity(category: &str) -> &'static str {
@@ -3988,7 +4112,13 @@ async fn list_owner_provider_connection_progress(
                 EXTRACT(EPOCH FROM invitation.expires_at)::BIGINT AS expires_at_epoch_seconds,
                 response.action AS response_action,
                 response.response_code,
-                response.responded_at_epoch_seconds
+                response.responded_at_epoch_seconds,
+                EXISTS (
+                    SELECT 1 FROM owner_provider_disclosure_grants disclosure_grant
+                    WHERE disclosure_grant.invitation_id = invitation.id
+                      AND disclosure_grant.status = 'active'
+                      AND disclosure_grant.expires_at > NOW()
+                ) AS disclosure_active
          FROM owner_provider_invitations invitation
          LEFT JOIN LATERAL (
              SELECT attempt.status
@@ -4031,6 +4161,7 @@ async fn list_owner_provider_connection_progress(
                     row.get("response_action"),
                     row.get("response_code"),
                     row.get("responded_at_epoch_seconds"),
+                    row.get("disclosure_active"),
                     true,
                 )
             })
@@ -4048,6 +4179,7 @@ fn owner_provider_connection_progress_entry(
     response_action: Option<String>,
     response_code: Option<String>,
     responded_at_epoch_seconds: Option<i64>,
+    disclosure_active: bool,
     persisted: bool,
 ) -> OwnerProviderConnectionProgressEntry {
     let (progress_stage, status_label, owner_action_required, next_action) = match invitation_status
@@ -4082,6 +4214,14 @@ fn owner_provider_connection_progress_entry(
             true,
             "review_recipient",
         ),
+        "opened" if response_action.as_deref() == Some("express_interest") && disclosure_active => {
+            (
+                "assessment_access_approved",
+                "Assessment access approved for this provider",
+                false,
+                "wait_for_assessment",
+            )
+        }
         "opened" if response_action.as_deref() == Some("express_interest") => (
             "disclosure_decision",
             "Provider is interested in the next owner-approved review",
@@ -4183,6 +4323,13 @@ async fn get_owner_provider_progress(
                 response.response_code,
                 response.responded_at_epoch_seconds,
                 EXISTS (
+                    SELECT 1 FROM owner_provider_disclosure_grants disclosure_grant
+                    WHERE disclosure_grant.invitation_id = invitation.id
+                      AND disclosure_grant.recipient_actor_user_id = $3
+                      AND disclosure_grant.status = 'active'
+                      AND disclosure_grant.expires_at > NOW()
+                ) AS disclosure_active,
+                EXISTS (
                     SELECT 1 FROM organization_memberships membership
                     WHERE membership.organization_id = claim.organization_id
                       AND membership.user_id = $3 AND membership.status = 'active'
@@ -4261,6 +4408,7 @@ async fn get_owner_provider_progress(
     let response_action: Option<String> = row.get("response_action");
     let response_code: Option<String> = row.get("response_code");
     let responded_at: Option<i64> = row.get("responded_at_epoch_seconds");
+    let disclosure_active: bool = row.get("disclosure_active");
     let terminal_status = if invitation_expired
         && matches!(
             invitation_status.as_str(),
@@ -4348,6 +4496,22 @@ async fn get_owner_provider_progress(
             response_action: None,
             response_label: None,
             responded_at_epoch_seconds: None,
+            closed: false,
+        }
+    } else if disclosure_active && response_action.as_deref() == Some("express_interest") {
+        OwnerProviderProgressEntry {
+            invitation_id,
+            progress_stage: "assessment_access_ready".to_string(),
+            status_label: "Owner-approved assessment details are ready".to_string(),
+            next_action: "review_owner_approved_details".to_string(),
+            recipient_email_checked: true,
+            organization_relationship_checked: true,
+            opportunity_response_capability: true,
+            response_action: Some("express_interest".to_string()),
+            response_label: Some(
+                "Interest recorded; the owner approved selected assessment details".to_string(),
+            ),
+            responded_at_epoch_seconds: responded_at,
             closed: false,
         }
     } else if matches!(
@@ -6738,6 +6902,13 @@ enum PersistedDisclosureGrantOutcome {
     Conflict,
 }
 
+enum PersistedDisclosureAccessOutcome {
+    Loaded(OwnerProviderDisclosureAccess),
+    Closed(OwnerProviderDisclosureAccess),
+    NotFound,
+    InvalidState,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -7209,6 +7380,362 @@ fn disclosure_grant_from_row(row: &sqlx::postgres::PgRow) -> OwnerProviderDisclo
         version: row.get("version"),
         persisted: true,
     }
+}
+
+fn closed_provider_disclosure(
+    invitation_id: String,
+    status: &str,
+    recovery_action: &str,
+) -> OwnerProviderDisclosureAccess {
+    OwnerProviderDisclosureAccess {
+        invitation_id,
+        status: status.to_string(),
+        can_access: false,
+        recovery_action: Some(recovery_action.to_string()),
+        grant_id: None,
+        receipt_id: None,
+        organization_name: None,
+        property_name: None,
+        purpose: None,
+        approved_categories: None,
+        withheld_categories: None,
+        brief_version: None,
+        expires_at_epoch_seconds: None,
+        exact_address: None,
+        yard_brief: None,
+        selected_yard_photos: None,
+        owner_contact: None,
+        access_considerations: None,
+        authority_boundary: None,
+        persisted: true,
+    }
+}
+
+async fn reconcile_provider_disclosure_grant(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    grant_id: &str,
+    receipt_id: &str,
+    actor_user_id: &str,
+    current_version: i64,
+    next_status: &str,
+    reason_code: &str,
+) -> Result<(), sqlx::Error> {
+    let next_version = current_version + 1;
+    sqlx::query(
+        "UPDATE owner_provider_disclosure_grants
+         SET status = $2, version = $3, updated_at = NOW()
+         WHERE id = $1 AND status = 'active' AND version = $4",
+    )
+    .bind(grant_id)
+    .bind(next_status)
+    .bind(next_version)
+    .bind(current_version)
+    .execute(&mut **transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_disclosure_grant_events (
+             id, grant_id, receipt_id, actor_user_id, event_kind, reason_code,
+             grant_version, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (actor_user_id, idempotency_key) DO NOTHING",
+    )
+    .bind(format!(
+        "owner_disclosure_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(grant_id)
+    .bind(receipt_id)
+    .bind(actor_user_id)
+    .bind(next_status)
+    .bind(reason_code)
+    .bind(next_version)
+    .bind(format!("access-reconcile-{grant_id}-{current_version}"))
+    .execute(&mut **transaction)
+    .await?;
+    Ok(())
+}
+
+async fn open_owner_provider_disclosure(
+    pool: &PgPool,
+    recipient_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+) -> Result<PersistedDisclosureAccessOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let identity = sqlx::query(
+        "SELECT invitation.id AS invitation_id
+         FROM owner_provider_invitations invitation
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         WHERE invitation.token_hash = $1
+           AND LOWER(invitation.recipient_email) = LOWER($2)
+           AND recipient_check.recipient_user_id = $3
+           AND recipient_check.verified_email_fingerprint = $4
+           AND recipient_check.status = 'checked'
+         LIMIT 1",
+    )
+    .bind(token_hash)
+    .bind(verified_email)
+    .bind(recipient_user_id)
+    .bind(verified_email_fingerprint)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(identity) = identity else {
+        transaction.rollback().await?;
+        return Ok(PersistedDisclosureAccessOutcome::NotFound);
+    };
+    let invitation_id: String = identity.get("invitation_id");
+    let row = sqlx::query(
+        "SELECT grant.id AS grant_id, grant.receipt_id, grant.status AS grant_status,
+                grant.version AS grant_projection_version,
+                grant.approved_categories, grant.selected_media_ids,
+                EXTRACT(EPOCH FROM grant.expires_at)::BIGINT AS grant_expires_at,
+                receipt.withheld_categories, receipt.grant_version,
+                invitation.status AS invitation_status,
+                invitation.expires_at <= NOW() AS invitation_expired,
+                EXISTS (
+                    SELECT 1 FROM owner_provider_recipient_suppressions suppression
+                    WHERE suppression.recipient_email_fingerprint = invitation.recipient_email_fingerprint
+                ) AS recipient_suppressed,
+                claim.status AS claim_status,
+                organization.id AS organization_id,
+                organization.display_name AS organization_name,
+                organization.status AS organization_status,
+                organization.organization_type,
+                capability.status AS capability_status,
+                capability.expires_at <= NOW() AS capability_expired,
+                EXISTS (
+                    SELECT 1 FROM organization_memberships membership
+                    WHERE membership.organization_id = organization.id
+                      AND membership.user_id = $2 AND membership.status = 'active'
+                ) AS active_membership,
+                property.id AS property_id, property.owner_user_id,
+                property.display_name AS property_name, property.address_line_1,
+                property.address_line_2, property.city, property.region,
+                property.postal_code, property.status AS property_status,
+                workspace.display_name AS owner_display_name,
+                workspace.verified_email AS owner_verified_email,
+                workspace.status AS workspace_status,
+                brief.id AS brief_id, brief.version AS brief_version,
+                brief.status AS brief_status, brief.yard_areas, brief.care_goals,
+                brief.cadence_preference, brief.considerations,
+                EXISTS (
+                    SELECT 1 FROM owner_yard_briefs newer
+                    WHERE newer.property_id = property.id AND newer.version > brief.version
+                ) AS newer_brief_exists
+         FROM owner_provider_disclosure_grants grant
+         JOIN owner_provider_disclosure_receipts receipt ON receipt.id = grant.receipt_id
+         JOIN owner_provider_invitations invitation ON invitation.id = grant.invitation_id
+         JOIN owner_provider_invitation_response_capabilities capability
+           ON capability.id = receipt.capability_id
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.id = capability.claim_id
+         JOIN organizations organization ON organization.id = grant.organization_id
+         JOIN owner_properties property ON property.id = grant.property_id
+         JOIN owner_workspaces workspace ON workspace.owner_user_id = grant.owner_user_id
+         JOIN owner_yard_briefs brief ON brief.id = grant.brief_id
+         WHERE grant.invitation_id = $1
+           AND grant.recipient_actor_user_id = $2
+           AND receipt.recipient_actor_user_id = $2
+           AND grant.organization_id = receipt.organization_id
+           AND grant.property_id = receipt.property_id
+           AND grant.brief_version = receipt.brief_version
+         ORDER BY receipt.grant_version DESC LIMIT 1
+         FOR UPDATE OF grant",
+    )
+    .bind(&invitation_id)
+    .bind(recipient_user_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(PersistedDisclosureAccessOutcome::InvalidState);
+    };
+    let grant_status: String = row.get("grant_status");
+    if grant_status != "active" {
+        transaction.commit().await?;
+        let recovery = if grant_status == "expired" {
+            "request_new_owner_approval"
+        } else {
+            "contact_owner"
+        };
+        return Ok(PersistedDisclosureAccessOutcome::Closed(
+            closed_provider_disclosure(invitation_id, &grant_status, recovery),
+        ));
+    }
+    let now_epoch = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
+    let grant_expires_at: i64 = row.get("grant_expires_at");
+    let expired = grant_expires_at <= now_epoch
+        || row.get::<bool, _>("invitation_expired")
+        || row.get::<bool, _>("capability_expired");
+    let effective = !expired
+        && row.get::<String, _>("invitation_status") == "opened"
+        && !row.get::<bool, _>("recipient_suppressed")
+        && matches!(
+            row.get::<String, _>("claim_status").as_str(),
+            "relationship_checked" | "claimed"
+        )
+        && row.get::<String, _>("organization_status") == "active"
+        && row.get::<String, _>("organization_type") == "yard_care_company"
+        && row.get::<bool, _>("active_membership")
+        && row.get::<String, _>("capability_status") == "active"
+        && row.get::<String, _>("property_status") != "archived"
+        && row.get::<String, _>("workspace_status") == "active"
+        && row.get::<String, _>("brief_status") == "ready"
+        && !row.get::<bool, _>("newer_brief_exists");
+    if !effective {
+        let next_status = if expired { "expired" } else { "suspended" };
+        let reason = if expired {
+            "access_expired"
+        } else {
+            "access_authority_inactive"
+        };
+        reconcile_provider_disclosure_grant(
+            &mut transaction,
+            &row.get::<String, _>("grant_id"),
+            &row.get::<String, _>("receipt_id"),
+            recipient_user_id,
+            row.get("grant_projection_version"),
+            next_status,
+            reason,
+        )
+        .await?;
+        transaction.commit().await?;
+        return Ok(PersistedDisclosureAccessOutcome::Closed(
+            closed_provider_disclosure(
+                invitation_id,
+                next_status,
+                if expired {
+                    "request_new_owner_approval"
+                } else {
+                    "contact_owner"
+                },
+            ),
+        ));
+    }
+    let approved: Vec<String> = row.get("approved_categories");
+    let selected_media_ids: Vec<String> = row.get("selected_media_ids");
+    let media_rows = if approved
+        .iter()
+        .any(|category| category == "selected_yard_photos")
+    {
+        sqlx::query(
+            "SELECT id, shot_type, file_name, upload_mode, object_key,
+                    thumbnail_object_key
+             FROM owner_intake_media
+             WHERE id = ANY($1) AND property_id = $2 AND brief_id = $3
+               AND owner_user_id = $4 AND status = 'ready'
+             ORDER BY id",
+        )
+        .bind(&selected_media_ids)
+        .bind(row.get::<String, _>("property_id"))
+        .bind(row.get::<String, _>("brief_id"))
+        .bind(row.get::<String, _>("owner_user_id"))
+        .fetch_all(&mut *transaction)
+        .await?
+    } else {
+        Vec::new()
+    };
+    if media_rows.len() != selected_media_ids.len() {
+        reconcile_provider_disclosure_grant(
+            &mut transaction,
+            &row.get::<String, _>("grant_id"),
+            &row.get::<String, _>("receipt_id"),
+            recipient_user_id,
+            row.get("grant_projection_version"),
+            "suspended",
+            "selected_media_unavailable",
+        )
+        .await?;
+        transaction.commit().await?;
+        return Ok(PersistedDisclosureAccessOutcome::Closed(
+            closed_provider_disclosure(invitation_id, "suspended", "contact_owner"),
+        ));
+    }
+    let storage = PhotoStorageConfig::from_env();
+    let maximum_seconds = (grant_expires_at - now_epoch).clamp(1, u32::MAX as i64) as u32;
+    let authorization_seconds = storage.display_authorization_seconds(maximum_seconds);
+    let authorization_expires_at = now_epoch + i64::from(authorization_seconds);
+    let selected_yard_photos = approved
+        .iter()
+        .any(|category| category == "selected_yard_photos")
+        .then(|| {
+            media_rows
+                .iter()
+                .map(|media| OwnerProviderDisclosurePhoto {
+                    media_id: media.get("id"),
+                    shot_type: media.get("shot_type"),
+                    file_label: safe_media_file_name(&media.get::<String, _>("file_name")),
+                    display_url: storage.display_url_for_seconds(
+                        &media.get::<String, _>("upload_mode"),
+                        &media.get::<String, _>("object_key"),
+                        maximum_seconds,
+                    ),
+                    thumbnail_url: storage.thumbnail_url_for_seconds(
+                        &media.get::<String, _>("upload_mode"),
+                        media
+                            .get::<Option<String>, _>("thumbnail_object_key")
+                            .as_deref(),
+                        maximum_seconds,
+                    ),
+                    authorization_expires_at_epoch_seconds: authorization_expires_at,
+                })
+                .collect()
+        });
+    let exact_address = approved
+        .iter()
+        .any(|category| category == "exact_address")
+        .then(|| formatted_property_address(&row));
+    let yard_brief = approved
+        .iter()
+        .any(|category| category == "yard_brief")
+        .then(|| OwnerProviderDisclosureYardBrief {
+            yard_areas: row.get("yard_areas"),
+            care_goals: row.get("care_goals"),
+            cadence_preference: row.get("cadence_preference"),
+        });
+    let owner_contact = approved
+        .iter()
+        .any(|category| category == "owner_contact")
+        .then(|| {
+            format!(
+                "{} — {}",
+                row.get::<String, _>("owner_display_name"),
+                row.get::<String, _>("owner_verified_email")
+            )
+        });
+    let access_considerations = approved
+        .iter()
+        .any(|category| category == "access_considerations")
+        .then(|| row.get("considerations"));
+    let access = OwnerProviderDisclosureAccess {
+        invitation_id,
+        status: "active".to_string(),
+        can_access: true,
+        recovery_action: None,
+        grant_id: Some(row.get("grant_id")),
+        receipt_id: Some(row.get("receipt_id")),
+        organization_name: Some(row.get("organization_name")),
+        property_name: Some(row.get("property_name")),
+        purpose: Some("yard_assessment".to_string()),
+        approved_categories: Some(approved),
+        withheld_categories: Some(row.get("withheld_categories")),
+        brief_version: Some(row.get("brief_version")),
+        expires_at_epoch_seconds: Some(grant_expires_at),
+        exact_address,
+        yard_brief,
+        selected_yard_photos,
+        owner_contact,
+        access_considerations,
+        authority_boundary: Some("Assessment access does not accept pricing, start service, schedule work, or assign a crew.".to_string()),
+        persisted: true,
+    };
+    transaction.commit().await?;
+    Ok(PersistedDisclosureAccessOutcome::Loaded(access))
 }
 
 async fn open_owner_provider_inbox(

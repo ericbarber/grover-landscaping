@@ -396,6 +396,15 @@ Active slice:
   the exact review version on the immutable receipt; and provides exact replay,
   stale/conflict, isolation, minimized-audit, and outage behavior. Phase 3D2
   category-filtered provider disclosure access is next.
+- Phase 3D2 is delivered. The checked provider can open its own active grant
+  through a protected body-token request; every read rechecks mailbox, actor,
+  organization, membership, relationship, capability, invitation, suppression,
+  property, workspace, brief, media, and expiry state. Responses omit every
+  withheld category, issue only selected ready-photo URLs bounded by grant
+  expiry, expose safe owner/provider progress after approval, reject cross-
+  provider access, and reconcile stale authority to status-only expired or
+  suspended recovery. Phase 3D3 owner receipt history and explicit revocation is
+  next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

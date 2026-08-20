@@ -1,12 +1,13 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
-    CreateOwnerPropertyRequest, CreateOwnerProviderDisclosureGrantRequest,
-    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-    CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
-    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderInboxRequest,
-    OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+    CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
+    CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
+    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
+    OwnerMutationResult, OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
     OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
     OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
@@ -20,6 +21,7 @@ use grover_landscaping_api::owner_acquisition::{
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
 };
+use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, Row};
 use std::time::Duration;
@@ -428,6 +430,18 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .open_provider_disclosure(
+                "recipient-unavailable",
+                "provider@example.com",
+                OpenOwnerProviderDisclosureRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderDisclosureAccessResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .retry_provider_invitation(
                 "owner-unavailable",
                 "property-unavailable",
@@ -560,6 +574,38 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .save_yard_brief(owner_a, &property.property_id, ready_brief_request())
             .await,
         OwnerMutationResult::Saved(_)
+    ));
+    let OwnerMutationResult::Saved(disclosure_photo_upload) = repository
+        .create_intake_media_upload(
+            owner_a,
+            &property.property_id,
+            CreateOwnerIntakeMediaRequest {
+                file_name: "front-yard.jpg".to_string(),
+                content_type: "image/jpeg".to_string(),
+                shot_type: "front_yard".to_string(),
+                replaces_media_id: None,
+            },
+        )
+        .await
+    else {
+        panic!("disclosure test photo upload should be created");
+    };
+    let disclosure_media_id = disclosure_photo_upload.media.media_id.clone();
+    assert!(matches!(
+        repository
+            .complete_intake_media_upload(
+                owner_a,
+                &property.property_id,
+                &disclosure_media_id,
+                PhotoUploadMetadata {
+                    file_size_bytes: Some(2048),
+                    image_width_px: Some(1200),
+                    image_height_px: Some(800),
+                    metadata_source: Some("client_reported".to_string()),
+                },
+            )
+            .await,
+        OwnerMutationResult::Saved(media) if media.status == "ready"
     ));
 
     let OwnerProviderInvitationCreateResult::Created(created) = repository
@@ -1268,7 +1314,11 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         disclosure_review.access_considerations,
         "Use the east gate; the code is 0199."
     );
-    assert!(disclosure_review.media_options.is_empty());
+    assert_eq!(disclosure_review.media_options.len(), 1);
+    assert_eq!(
+        disclosure_review.media_options[0].media_id,
+        disclosure_media_id
+    );
     assert_eq!(disclosure_review.available_categories.len(), 5);
     assert!(disclosure_review
         .authority_boundary
@@ -1276,8 +1326,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     let grant_request = CreateOwnerProviderDisclosureGrantRequest {
         expected_review_version: disclosure_review.review_version.clone(),
         purpose: "yard_assessment".to_string(),
-        approved_categories: vec!["yard_brief".to_string(), "exact_address".to_string()],
-        selected_media_ids: vec![],
+        approved_categories: vec![
+            "yard_brief".to_string(),
+            "selected_yard_photos".to_string(),
+            "exact_address".to_string(),
+        ],
+        selected_media_ids: vec![disclosure_media_id.clone()],
         consent_text_version: disclosure_review.consent_text_version.clone(),
         retention_notice_version: disclosure_review.retention_notice_version.clone(),
         owner_affirmed: true,
@@ -1297,17 +1351,16 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(disclosure_grant.status, "active");
     assert_eq!(
         disclosure_grant.approved_categories,
-        ["exact_address", "yard_brief"]
+        ["exact_address", "selected_yard_photos", "yard_brief"]
     );
     assert_eq!(
         disclosure_grant.withheld_categories,
-        [
-            "selected_yard_photos",
-            "owner_contact",
-            "access_considerations"
-        ]
+        ["owner_contact", "access_considerations"]
     );
-    assert!(disclosure_grant.selected_media_ids.is_empty());
+    assert_eq!(
+        disclosure_grant.selected_media_ids,
+        [disclosure_media_id.clone()]
+    );
     assert!(matches!(
         repository
             .create_provider_disclosure_grant(
@@ -1365,6 +1418,100 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!disclosure_audit.contains("421 Private Canyon Road"));
     assert!(!disclosure_audit.contains("0199"));
     assert!(!disclosure_audit.contains(recipient));
+    assert!(matches!(
+        repository
+            .open_provider_disclosure(
+                "another-provider-user",
+                recipient,
+                OpenOwnerProviderDisclosureRequest {
+                    token: retry.delivery_token().to_string(),
+                },
+            )
+            .await,
+        OwnerProviderDisclosureAccessResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .open_provider_disclosure(
+                "recipient-user-1",
+                "another@sonoranyard.example",
+                OpenOwnerProviderDisclosureRequest {
+                    token: retry.delivery_token().to_string(),
+                },
+            )
+            .await,
+        OwnerProviderDisclosureAccessResult::NotFound
+    ));
+    let OwnerProviderDisclosureAccessResult::Loaded(provider_disclosure) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("authorized provider should load only owner-approved assessment details");
+    };
+    assert!(provider_disclosure.can_access);
+    assert_eq!(provider_disclosure.status, "active");
+    assert_eq!(
+        provider_disclosure.exact_address.as_deref(),
+        Some("421 Private Canyon Road, Phoenix, AZ 85004")
+    );
+    assert!(provider_disclosure.yard_brief.is_some());
+    assert!(provider_disclosure.owner_contact.is_none());
+    assert!(provider_disclosure.access_considerations.is_none());
+    let provider_photos = provider_disclosure
+        .selected_yard_photos
+        .as_ref()
+        .expect("selected photos should be included");
+    assert_eq!(provider_photos.len(), 1);
+    assert_eq!(provider_photos[0].media_id, disclosure_media_id);
+    assert_eq!(provider_photos[0].file_label, "front-yard.jpg");
+    assert!(
+        provider_photos[0].authorization_expires_at_epoch_seconds
+            <= provider_disclosure
+                .expires_at_epoch_seconds
+                .expect("grant expiry")
+    );
+    let provider_disclosure_json =
+        serde_json::to_string(&provider_disclosure).expect("provider disclosure should serialize");
+    assert!(!provider_disclosure_json.contains("owner-a@example.com"));
+    assert!(!provider_disclosure_json.contains("0199"));
+    assert!(!provider_disclosure_json.contains("selected_yard_photos\":null"));
+    assert!(!provider_disclosure_json.contains("owner_contact\":null"));
+    let OwnerProviderProgressResult::Loaded(access_progress) = repository
+        .provider_invitation_progress(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderInboxRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("provider progress should expose owner-approved access readiness");
+    };
+    assert_eq!(access_progress.progress_stage, "assessment_access_ready");
+    assert_eq!(access_progress.next_action, "review_owner_approved_details");
+    let OwnerReadResult::Loaded(owner_access_progress) = repository
+        .list_provider_connection_progress(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner progress should show approved assessment access");
+    };
+    let approved_progress = owner_access_progress
+        .iter()
+        .find(|entry| entry.invitation_id == retry.invitation.invitation_id)
+        .expect("approved invitation should remain in owner progress");
+    assert_eq!(
+        approved_progress.progress_stage,
+        "assessment_access_approved"
+    );
+    assert!(!approved_progress.owner_action_required);
+    assert_eq!(approved_progress.next_action, "wait_for_assessment");
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
     let OwnerProviderInvitationCreateResult::Created(duplicate_invitation) = repository
@@ -2142,6 +2289,35 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(closed_provider_progress.response_label.is_none());
     assert!(!closed_provider_progress.organization_relationship_checked);
     assert!(!closed_provider_progress.opportunity_response_capability);
+    let OwnerProviderDisclosureAccessResult::Closed(closed_disclosure) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("revoked invitation should close future provider disclosure reads");
+    };
+    assert_eq!(closed_disclosure.status, "suspended");
+    assert!(!closed_disclosure.can_access);
+    let closed_disclosure_json =
+        serde_json::to_string(&closed_disclosure).expect("closed disclosure should serialize");
+    assert!(!closed_disclosure_json.contains("421 Private Canyon Road"));
+    assert!(!closed_disclosure_json.contains("front-yard.jpg"));
+    assert!(!closed_disclosure_json.contains("approved_categories"));
+    assert_eq!(
+        sqlx::query_scalar::<_, String>(
+            "SELECT status FROM owner_provider_disclosure_grants WHERE id = $1",
+        )
+        .bind(&disclosure_grant.grant_id)
+        .fetch_one(&pool)
+        .await
+        .expect("closed disclosure grant status should load"),
+        "suspended"
+    );
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM owner_acquisition_events

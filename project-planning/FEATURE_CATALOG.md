@@ -55,7 +55,9 @@
   preliminary provider response, complete invitation lifecycle and support,
   unselected-by-default provider disclosure, approved/withheld access receipts,
   server-derived assessment review, atomic owner-approved grants with exact
-  review-version receipts, and reciprocal Yard Crew/gallery entry
+  review-version receipts, category-filtered provider reads with grant-bounded
+  selected-photo access and status-only closure, and reciprocal Yard
+  Crew/gallery entry
 - Professional Yard Owner acquisition assurance with remediated workflow and
   consent defects, browser history and session recovery, precise trust language,
   keyboard/group focus, forced-colors and reduced-motion treatment, contrast and

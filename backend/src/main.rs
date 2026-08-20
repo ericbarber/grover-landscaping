@@ -86,8 +86,8 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
-        validate_provider_disclosure_grant_request, validate_provider_inbox_request,
-        validate_provider_invitation_abuse_report_request,
+        validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
+        validate_provider_inbox_request, validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
         validate_provider_opportunity_response_request,
@@ -102,10 +102,11 @@ use grover_landscaping_api::{
         CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
         CreateOwnerProviderOrganizationClaimRequest, DecideOwnerProviderClaimReviewRequest,
         IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
-        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult, OwnerProviderClaimAppealResult,
-        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+        OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+        OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
         OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureReviewResult,
         OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
@@ -745,6 +746,10 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/progress",
             post(get_owner_provider_progress),
+        )
+        .route(
+            "/provider-disclosures/access",
+            post(open_owner_provider_disclosure),
         )
         .route(
             "/provider-opportunity-responses",
@@ -2637,6 +2642,59 @@ async fn create_owner_provider_opportunity_response(
             persisted_resource_unavailable_response(
                 "provider_opportunity_response_unavailable",
                 "The response could not be confirmed. Please retry before leaving this page.",
+            )
+        }
+    }
+}
+
+async fn open_owner_provider_disclosure(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Json(request): Json<OpenOwnerProviderDisclosureRequest>,
+) -> Response {
+    if !validate_provider_disclosure_access_request(&request) {
+        return resource_not_found_response(
+            "provider_disclosure_not_found",
+            "Assessment access is not available to this verified account.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before opening assessment details."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .open_provider_disclosure(&principal.subject, verified_email, request)
+        .await
+    {
+        OwnerProviderDisclosureAccessResult::Loaded(access) => Json(access).into_response(),
+        OwnerProviderDisclosureAccessResult::Closed(access) => {
+            (StatusCode::GONE, Json(access)).into_response()
+        }
+        OwnerProviderDisclosureAccessResult::NotFound => resource_not_found_response(
+            "provider_disclosure_not_found",
+            "Assessment access is not available to this verified account.",
+        ),
+        OwnerProviderDisclosureAccessResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_disclosure_not_ready",
+                message: "The owner has not approved assessment details for this provider request."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderDisclosureAccessResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_disclosure_unavailable",
+                "Assessment details could not be loaded. Existing access is unchanged; try again.",
             )
         }
     }

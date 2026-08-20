@@ -131,6 +131,22 @@ suppressed relationships fail closed and return status-only recovery. Caches and
 download authorization may not outlive the grant expiry and must be invalidated
 on revocation.
 
+`POST /provider-disclosures/access` accepts the checked invitation token only
+in the protected request body. The server binds it to the authenticated actor
+and verified mailbox, finds that invitation's latest provider-specific grant,
+and rechecks the grant, receipt, recipient, relationship, organization,
+membership, response capability, invitation, suppression, property, workspace,
+brief, selected media, and expiry on every read. Approved categories are
+serialized independently; withheld properties are omitted rather than returned
+as empty or null placeholders. Selected ready media receive short-lived URLs
+whose authorization cannot outlive the grant.
+
+Missing owner approval returns a not-ready state without private data. A
+revoked, expired, suspended, or newly ineffective grant returns only invitation
+status and a controlled recovery action. A formerly active grant is reconciled
+to `expired` or `suspended` with an immutable grant event before that closed
+response is returned.
+
 ## Receipt views
 
 The owner receipt may show the named provider, property nickname, purpose,
@@ -176,7 +192,7 @@ evidence is not stored on receipt or grant rows.
 3. **3D1b — owner review and creation (delivered):** server-derived review model,
    receipt/grant/event schema, transactional creation API, replay/conflict/
    outage behavior, and owner isolation tests.
-4. **3D2 — provider access:** category-filtered read model, short-lived selected
+4. **3D2 — provider access (delivered):** category-filtered read model, short-lived selected
    media authorization, status-only closure, and cross-provider tests.
 5. **3D3 — revocation:** versioned owner revoke API, access/cache
    reconciliation, immutable history, support visibility, and recovery tests.
