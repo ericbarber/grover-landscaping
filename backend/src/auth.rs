@@ -447,6 +447,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-opportunity-responses"
         || path == "/provider-disclosures/access"
         || path == "/provider-assessments"
+        || path.starts_with("/provider-assessments/")
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
         || path == "/provider-organization-claim-review-metrics"
@@ -533,6 +534,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
             | "/provider-disclosures/access"
             | "/provider-assessments"
     ) {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    if path.starts_with("/provider-assessments/") && path.ends_with("/transitions") {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
@@ -1721,6 +1725,10 @@ mod tests {
             (Method::POST, "/provider-opportunity-responses"),
             (Method::POST, "/provider-disclosures/access"),
             (Method::POST, "/provider-assessments"),
+            (
+                Method::POST,
+                "/provider-assessments/assessment-1/transitions",
+            ),
             (
                 Method::POST,
                 "/provider-invitation-organization-claims/claim-1/bootstrap",

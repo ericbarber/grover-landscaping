@@ -199,18 +199,21 @@ Privacy/Security approval, and go/no-go remain external Phase 3E5 launch
 blockers; Phase 4 assessment/proposal is the next product-development phase.
 Phase 4A1 now delivers the authorized assessment persistence foundation for one
 remote review or proposed on-site window per known-provider invitation, with
-exact replay, owner isolation, and minimized audit. Assessment lifecycle APIs
-and separated customer-safe/provider-private conversation are next.
+exact replay, owner isolation, and minimized audit. Later Phase 4A2 slices now
+deliver the assessment lifecycle APIs and separated communication stores.
 Phase 4A2a now exposes verified-provider assessment start and owner-scoped
-assessment history APIs. Optimistic lifecycle transitions and separately stored
-customer-safe conversation/provider-private notes are next.
+assessment history APIs. Later slices now deliver the communication storage
+boundary and optimistic owner/provider lifecycle transitions.
 Phase 4A2b1 now separates constrained shared assessment messages from
 provider-private scope, safety, production, and route notes, and provides an
-owner projection with no private-note source. Authorized repository writes and
-optimistic lifecycle mutations are next.
+owner projection with no private-note source. Lifecycle mutations are now
+delivered; authorized repository writes remain next.
 Phase 4A2c1 now gives owners a versioned, replay-safe choice to confirm a
 proposed on-site assessment window or request another, without activating
-service. Provider execution/completion transitions are next.
+service. Phase 4A2c2 now adds provider-authorized begin, completion,
+cannot-assess, and cancellation transitions with current-authority rechecks,
+controlled owner-safe outcomes, exact replay, and status-only invalid-state
+recovery. Authorized shared-message and provider-private-note writes are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

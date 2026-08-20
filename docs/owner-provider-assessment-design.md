@@ -117,13 +117,29 @@ Phase 4A2c1 adds owner control of proposed on-site windows:
 - the decision records no service acceptance, customer projection, crew
   assignment, work order, or visit release.
 
+Phase 4A2c2 adds provider execution and outcome control:
+
+- `POST /provider-assessments/{assessment_id}/transitions` accepts `begin`,
+  `complete`, `cannot_assess`, or `cancel` from the same verified provider actor;
+- every non-replay mutation rechecks the token/mailbox binding, invitation,
+  capability, interest, claim, organization membership, disclosure grant,
+  property, workspace, and yard-brief authority in the mutation transaction;
+- begin requires remote review or an owner-confirmed on-site window, while
+  completion requires an in-progress assessment;
+- terminal inability and cancellation use controlled customer-safe reasons, and
+  every terminal outcome requires a bounded owner-visible summary;
+- row locking, expected versions, actor-scoped keys, and exact replay prevent
+  uncertain or concurrent retries from applying twice;
+- ended authority and invalid lifecycle return status-only authoritative state,
+  while append-only event data omits the owner-visible summary body;
+- no transition accepts a proposal, authorizes pricing or service, creates a
+  customer/work order, assigns a crew, or releases field work.
+
 ## Next slices
 
-1. Add provider-authorized assessment begin, completion, cannot-assess, and
-   cancellation transitions plus status-only ended-authority recovery.
-2. Add authorized, replay-safe repository writes for customer-safe messages and
+1. Add authorized, replay-safe repository writes for customer-safe messages and
    provider-private notes, using only the owner-safe projection for owner reads.
-3. Adopt the assessment workspace in the production owner/provider interfaces
+2. Adopt the assessment workspace in the production owner/provider interfaces
    with responsive, accessible, stale-state, and outage coverage.
-4. Begin versioned initial-service proposals only after the assessment boundary
+3. Begin versioned initial-service proposals only after the assessment boundary
    is complete.

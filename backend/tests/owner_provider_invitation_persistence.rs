@@ -7,23 +7,23 @@ use grover_landscaping_api::owner_acquisition::{
     DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
     OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
     OwnerMutationResult, OwnerProviderAssessmentCreateResult,
-    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
-    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
-    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
-    OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
-    OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
-    OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-    OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
-    OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
-    OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
-    OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
+    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
+    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+    OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
+    OwnerProviderInvitationCreation, OwnerProviderInvitationDeliveryResult,
+    OwnerProviderInvitationExpiryResult, OwnerProviderInvitationMutationResult,
+    OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+    OwnerProviderInvitationRetryResult, OwnerProviderOpportunityResponseResult,
+    OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
+    OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
+    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
-    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
@@ -2083,6 +2083,172 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderAssessmentWindowDecisionResult::InvalidState(current)
             if current == confirmed_assessment
     ));
+
+    let begin_request = TransitionOwnerProviderAssessmentRequest {
+        token: retry.delivery_token().to_string(),
+        action: "begin".to_string(),
+        expected_version: confirmed_assessment.version,
+        reason_code: None,
+        owner_visible_summary: None,
+        idempotency_key: "assessment-begin-provider-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .transition_provider_assessment(
+                "another-provider-user",
+                recipient,
+                &assessment.assessment_id,
+                begin_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentTransitionResult::NotFound
+    ));
+    let (first_begin_result, second_begin_result) = tokio::join!(
+        repository.transition_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            begin_request.clone(),
+        ),
+        repository.transition_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            begin_request.clone(),
+        ),
+    );
+    let in_progress_assessment = match (first_begin_result, second_begin_result) {
+        (
+            OwnerProviderAssessmentTransitionResult::Updated(updated),
+            OwnerProviderAssessmentTransitionResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderAssessmentTransitionResult::Replayed(replayed),
+            OwnerProviderAssessmentTransitionResult::Updated(updated),
+        ) => {
+            assert_eq!(updated, replayed);
+            updated
+        }
+        (first, second) => panic!(
+            "concurrent exact provider assessment begins should update once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(in_progress_assessment.status, "in_progress");
+    assert_eq!(
+        in_progress_assessment.version,
+        confirmed_assessment.version + 1
+    );
+    assert!(matches!(
+        repository
+            .transition_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                TransitionOwnerProviderAssessmentRequest {
+                    action: "cancel".to_string(),
+                    reason_code: Some("provider_unavailable".to_string()),
+                    owner_visible_summary: Some(
+                        "The provider is no longer available for this assessment.".to_string(),
+                    ),
+                    ..begin_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderAssessmentTransitionResult::Conflict
+    ));
+    let completion_request = TransitionOwnerProviderAssessmentRequest {
+        token: retry.delivery_token().to_string(),
+        action: "complete".to_string(),
+        expected_version: in_progress_assessment.version,
+        reason_code: None,
+        owner_visible_summary: Some(
+            "The on-site yard assessment is complete and ready for proposal review.".to_string(),
+        ),
+        idempotency_key: "assessment-complete-provider-001".to_string(),
+    };
+    let OwnerProviderAssessmentTransitionResult::Updated(completed_assessment) = repository
+        .transition_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            completion_request.clone(),
+        )
+        .await
+    else {
+        panic!("provider should complete an in-progress assessment");
+    };
+    assert_eq!(completed_assessment.status, "completed");
+    assert_eq!(
+        completed_assessment.owner_visible_summary,
+        completion_request.owner_visible_summary
+    );
+    assert!(completed_assessment.outcome_reason_code.is_none());
+    assert!(matches!(
+        repository
+            .transition_provider_assessment(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                completion_request.clone(),
+            )
+            .await,
+        OwnerProviderAssessmentTransitionResult::Replayed(replayed)
+            if replayed == completed_assessment
+    ));
+    let OwnerProviderAssessmentTransitionResult::InvalidState(ended_status) = repository
+        .transition_provider_assessment(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            TransitionOwnerProviderAssessmentRequest {
+                action: "cancel".to_string(),
+                expected_version: completed_assessment.version,
+                reason_code: Some("assessment_no_longer_needed".to_string()),
+                owner_visible_summary: Some(
+                    "This completed assessment cannot be cancelled.".to_string(),
+                ),
+                idempotency_key: "assessment-cancel-after-complete-001".to_string(),
+                ..completion_request
+            },
+        )
+        .await
+    else {
+        panic!("a terminal assessment should return status-only recovery");
+    };
+    assert_eq!(
+        ended_status.assessment_id,
+        completed_assessment.assessment_id
+    );
+    assert_eq!(ended_status.status, completed_assessment.status);
+    assert_eq!(ended_status.version, completed_assessment.version);
+    let ended_status_json =
+        serde_json::to_value(ended_status).expect("ended assessment status should serialize");
+    assert_eq!(
+        ended_status_json.as_object().map(|value| value.len()),
+        Some(4)
+    );
+    assert!(ended_status_json.get("organization_id").is_none());
+    assert!(ended_status_json
+        .get("proposed_window_start_epoch_seconds")
+        .is_none());
+    let completed_event_audit = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT event_data FROM owner_provider_assessment_events
+         WHERE assessment_id = $1 AND event_kind = 'completed'",
+    )
+    .bind(&assessment.assessment_id)
+    .fetch_one(&pool)
+    .await
+    .expect("completed assessment audit should load")
+    .to_string();
+    assert!(completed_event_audit.contains("has_owner_visible_summary"));
+    assert!(!completed_event_audit.contains("ready for proposal review"));
+    let OwnerReadResult::Loaded(owner_completed_assessments) = repository
+        .list_owner_provider_assessments(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner should load the provider's customer-safe assessment outcome");
+    };
+    assert_eq!(owner_completed_assessments, vec![completed_assessment]);
 
     assert!(matches!(
         repository

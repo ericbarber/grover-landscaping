@@ -85,7 +85,8 @@ use grover_landscaping_api::{
     },
     owner_acquisition::{
         validate_intake_media_request, validate_property_request,
-        validate_provider_assessment_request, validate_provider_assessment_window_decision_request,
+        validate_provider_assessment_request, validate_provider_assessment_transition_request,
+        validate_provider_assessment_window_decision_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
         validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
@@ -107,21 +108,22 @@ use grover_landscaping_api::{
         IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
         OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
         OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-        OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentWindowDecisionResult,
-        OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-        OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-        OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-        OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
-        OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
-        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-        OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
+        OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
+        OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+        OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+        OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
+        OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
+        OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
         RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
-        SaveOwnerYardBriefRequest, VerifyOwnerProviderInvitationRecipientRequest,
+        SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
+        VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -775,6 +777,10 @@ fn app_with_runtime(
         .route(
             "/provider-assessments",
             post(create_owner_provider_assessment),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/transitions",
+            post(transition_owner_provider_assessment),
         )
         .route(
             "/provider-opportunity-responses",
@@ -2941,6 +2947,73 @@ async fn create_owner_provider_assessment(
             persisted_resource_unavailable_response(
                 "provider_assessment_unavailable",
                 "The assessment could not be confirmed. Existing access is unchanged; retry before leaving this page.",
+            )
+        }
+    }
+}
+
+async fn transition_owner_provider_assessment(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<TransitionOwnerProviderAssessmentRequest>,
+) -> Response {
+    if !validate_provider_assessment_transition_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_assessment_transition_invalid",
+                message: "Choose a valid assessment action, current version, and customer-safe outcome when required."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before updating an assessment."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .transition_provider_assessment(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderAssessmentTransitionResult::Updated(assessment)
+        | OwnerProviderAssessmentTransitionResult::Replayed(assessment) => {
+            Json(assessment).into_response()
+        }
+        OwnerProviderAssessmentTransitionResult::NotFound => resource_not_found_response(
+            "provider_assessment_not_found",
+            "Assessment access is not available to this verified account.",
+        ),
+        OwnerProviderAssessmentTransitionResult::InvalidState(assessment) => {
+            (StatusCode::CONFLICT, Json(assessment)).into_response()
+        }
+        OwnerProviderAssessmentTransitionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_assessment_transition_conflict",
+                message: "The assessment changed before this update was applied. Reload its current status before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderAssessmentTransitionResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_assessment_transition_unavailable",
+                "The assessment update could not be confirmed. Existing assessment state is unchanged; reload before retrying.",
             )
         }
     }
@@ -9004,6 +9077,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
         let response = app
+            .clone()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -9018,6 +9092,51 @@ mod tests {
                             "proposed_window_end_epoch_seconds": null,
                             "time_zone": null,
                             "idempotency_key": "assessment-api-outage-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let transition_payload = serde_json::json!({
+            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            "action": "complete",
+            "expected_version": 2,
+            "reason_code": null,
+            "owner_visible_summary": null,
+            "idempotency_key": "assessment-transition-invalid-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/transitions")
+                    .header("content-type", "application/json")
+                    .body(Body::from(transition_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/transitions")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+                            "action": "complete",
+                            "expected_version": 2,
+                            "reason_code": null,
+                            "owner_visible_summary": "The yard conditions were reviewed and documented.",
+                            "idempotency_key": "assessment-transition-outage-001"
                         })
                         .to_string(),
                     ))

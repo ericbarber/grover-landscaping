@@ -482,16 +482,16 @@ Active slice:
   Exact concurrent starts replay one authoritative assessment; changed reuse,
   second assessments, wrong actors, stale grants, and outages fail distinctly.
   Owner reads remain property-scoped, and general audit omits mailbox, address,
-  schedule, time zone, brief, media, and access details. Phase 4A2 assessment
-  lifecycle APIs and customer-safe/private conversation separation are next.
+  schedule, time zone, brief, media, and access details. The following Phase 4A2
+  slices deliver lifecycle APIs and customer-safe/private storage separation.
 - Phase 4A2a is delivered. Authenticated verified providers can start a remote
   review or proposed on-site assessment through `POST /provider-assessments`,
   with invalid, missing, changed, conflicting, replayed, and unavailable
   outcomes mapped explicitly. Verified owners can list only their property's
   assessment history through `GET /owner-properties/{property_id}/provider-assessments`.
-  Route authorization and no-persistence behavior are covered. Phase 4A2b
-  optimistic lifecycle transitions and separate customer-safe/private
-  conversation stores are next.
+  Route authorization and no-persistence behavior are covered. Following
+  Phase 4A2b/c slices deliver separate customer-safe/private stores and the
+  optimistic lifecycle transitions.
 - Phase 4A2b1 is delivered as the assessment communication persistence boundary.
   Customer-safe owner/provider messages and provider-private assessment notes
   live in separate constrained tables; the owner projection selects only the
@@ -499,8 +499,8 @@ Active slice:
   controlled production/scope/safety categories, and append-only events omit
   both bodies. PostgreSQL coverage proves private crew-hour, disposal, and route
   assumptions cannot enter the owner message projection or minimized event
-  payloads. Authorized repository writes and optimistic assessment lifecycle
-  transitions are next.
+  payloads. Optimistic lifecycle transitions are now delivered; authorized
+  repository writes remain next.
 - Phase 4A2c1 is delivered. A verified owner can confirm a proposed on-site
   assessment window or request a different one through a property/assessment-
   scoped API. The mutation locks current state, requires the expected version,
@@ -510,7 +510,16 @@ Active slice:
   stale-state, invalid-request, route-authorization, outage, and PostgreSQL
   behavior are covered. Confirmation remains an assessment appointment only; it
   does not accept service, create a customer, assign a crew, or release work.
-  Provider assessment execution/completion transitions are next.
+  Phase 4A2c2 is also delivered. The same verified provider actor can begin an
+  authorized remote review or owner-confirmed visit, then complete, mark unable
+  to assess, or cancel it through a versioned transition API. Every mutation
+  rechecks current invitation, capability, interest, provider organization and
+  membership, disclosure grant, property, workspace, and brief authority;
+  exact retries replay, stale or ended authority returns authoritative state,
+  terminal outcomes use controlled reasons and a bounded owner-visible summary,
+  and minimized events do not duplicate that summary. These transitions still
+  cannot accept a proposal, activate service, create work, or assign a crew.
+  Authorized shared-message and provider-private-note writes are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -101,6 +101,10 @@
   expected-version locking, exact replay, controlled actions, append-only
   minimized events, authoritative invalid-state recovery, route authorization,
   and cross-owner/concurrency/outage coverage without service activation
+- Provider-authorized assessment begin, completion, inability, and cancellation
+  transitions with verified token/mailbox identity, full current-authority
+  rechecks, row-locked expected versions, exact replay, controlled owner-safe
+  reason/summary outcomes, minimized events, and no service activation
 - Validated Yard Crew acquisition working design with provider organization
   setup, service territory and readiness, owner-approved opportunity search,
   privacy-preserving previews, provider-specific disclosure, remote/on-site yard

@@ -235,6 +235,7 @@ Current backend endpoints include:
 | POST | `/provider-invitations/inbox` | List verified provider invitation work items |
 | POST | `/provider-disclosures/access` | Access only the owner-granted provider disclosure capabilities |
 | POST | `/provider-assessments` | Start an authorized remote review or propose an on-site assessment window |
+| POST | `/provider-assessments/{assessment_id}/transitions` | Begin, complete, mark unable to assess, or cancel an authorized provider assessment |
 | GET | `/owner-properties/{property_id}/provider-assessments` | List an owner's property-scoped assessment history |
 | POST | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/window-decision` | Confirm a proposed on-site assessment window or request another |
 | GET | `/provider-organization-claim-reviews` | List administrative provider-claim review work |

@@ -628,6 +628,18 @@ pub struct OwnerProviderAssessmentRecord {
     pub proposed_window_start_epoch_seconds: Option<i64>,
     pub proposed_window_end_epoch_seconds: Option<i64>,
     pub time_zone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outcome_reason_code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_visible_summary: Option<String>,
+    pub version: i64,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderAssessmentStatusRecord {
+    pub assessment_id: String,
+    pub status: String,
     pub version: i64,
     pub persisted: bool,
 }
@@ -636,6 +648,16 @@ pub struct OwnerProviderAssessmentRecord {
 pub struct DecideOwnerProviderAssessmentWindowRequest {
     pub action: String,
     pub expected_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct TransitionOwnerProviderAssessmentRequest {
+    pub token: String,
+    pub action: String,
+    pub expected_version: i64,
+    pub reason_code: Option<String>,
+    pub owner_visible_summary: Option<String>,
     pub idempotency_key: String,
 }
 
@@ -883,6 +905,16 @@ pub enum OwnerProviderAssessmentWindowDecisionResult {
     Replayed(OwnerProviderAssessmentRecord),
     NotFound,
     InvalidState(OwnerProviderAssessmentRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderAssessmentTransitionResult {
+    Updated(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentStatusRecord),
     Conflict,
     Unavailable,
 }
@@ -3184,6 +3216,60 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn transition_provider_assessment(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        assessment_id: &str,
+        request: TransitionOwnerProviderAssessmentRequest,
+    ) -> OwnerProviderAssessmentTransitionResult {
+        if !validate_provider_assessment_transition_request(&request) {
+            return OwnerProviderAssessmentTransitionResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderAssessmentTransitionResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let verified_email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match transition_owner_provider_assessment(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &verified_email_fingerprint,
+            &token_hash,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedAssessmentTransitionOutcome::Updated(assessment)) => {
+                OwnerProviderAssessmentTransitionResult::Updated(assessment)
+            }
+            Ok(PersistedAssessmentTransitionOutcome::Replayed(assessment)) => {
+                OwnerProviderAssessmentTransitionResult::Replayed(assessment)
+            }
+            Ok(PersistedAssessmentTransitionOutcome::NotFound) => {
+                OwnerProviderAssessmentTransitionResult::NotFound
+            }
+            Ok(PersistedAssessmentTransitionOutcome::InvalidState(assessment)) => {
+                OwnerProviderAssessmentTransitionResult::InvalidState(
+                    owner_provider_assessment_status(&assessment),
+                )
+            }
+            Ok(PersistedAssessmentTransitionOutcome::Conflict) => {
+                OwnerProviderAssessmentTransitionResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderAssessmentTransitionResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, assessment_id, "provider assessment transition failed");
+                OwnerProviderAssessmentTransitionResult::Unavailable
+            }
+        }
+    }
 }
 
 pub fn validate_workspace_request(request: &SaveOwnerWorkspaceRequest) -> bool {
@@ -3672,6 +3758,52 @@ pub fn validate_provider_assessment_window_decision_request(
     let idempotency_key = request.idempotency_key.trim();
     matches!(request.action.as_str(), "confirm" | "request_change")
         && request.expected_version > 0
+        && (8..=128).contains(&idempotency_key.chars().count())
+        && idempotency_key
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '-' | '_'))
+}
+
+pub fn validate_provider_assessment_transition_request(
+    request: &TransitionOwnerProviderAssessmentRequest,
+) -> bool {
+    let idempotency_key = request.idempotency_key.trim();
+    let summary_valid = request
+        .owner_visible_summary
+        .as_deref()
+        .is_some_and(|summary| (1..=2000).contains(&summary.trim().chars().count()));
+    let action_valid = match request.action.as_str() {
+        "begin" => request.reason_code.is_none() && request.owner_visible_summary.is_none(),
+        "complete" => request.reason_code.is_none() && summary_valid,
+        "cannot_assess" => {
+            request.reason_code.as_deref().is_some_and(|reason| {
+                matches!(
+                    reason,
+                    "insufficient_information"
+                        | "on_site_required"
+                        | "safety_concern"
+                        | "outside_service_scope"
+                        | "qualified_specialist_required"
+                )
+            }) && summary_valid
+        }
+        "cancel" => {
+            request.reason_code.as_deref().is_some_and(|reason| {
+                matches!(
+                    reason,
+                    "provider_unavailable"
+                        | "safety_concern"
+                        | "access_unavailable"
+                        | "assessment_no_longer_needed"
+                )
+            }) && summary_valid
+        }
+        _ => false,
+    };
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.expected_version > 0
+        && action_valid
         && (8..=128).contains(&idempotency_key.chars().count())
         && idempotency_key
             .chars()
@@ -7376,6 +7508,14 @@ enum PersistedAssessmentWindowDecisionOutcome {
     Conflict,
 }
 
+enum PersistedAssessmentTransitionOutcome {
+    Updated(OwnerProviderAssessmentRecord),
+    Replayed(OwnerProviderAssessmentRecord),
+    NotFound,
+    InvalidState(OwnerProviderAssessmentRecord),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -8575,7 +8715,7 @@ const OWNER_PROVIDER_ASSESSMENT_SELECT: &str =
                 AS proposed_window_start_epoch_seconds,
             EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
                 AS proposed_window_end_epoch_seconds,
-            time_zone, version
+            time_zone, outcome_reason_code, owner_visible_summary, version
      FROM owner_provider_assessments";
 
 fn owner_provider_assessment_from_row(
@@ -8592,8 +8732,21 @@ fn owner_provider_assessment_from_row(
         proposed_window_start_epoch_seconds: row.get("proposed_window_start_epoch_seconds"),
         proposed_window_end_epoch_seconds: row.get("proposed_window_end_epoch_seconds"),
         time_zone: row.get("time_zone"),
+        outcome_reason_code: row.get("outcome_reason_code"),
+        owner_visible_summary: row.get("owner_visible_summary"),
         version: row.get("version"),
         persisted: true,
+    }
+}
+
+fn owner_provider_assessment_status(
+    assessment: &OwnerProviderAssessmentRecord,
+) -> OwnerProviderAssessmentStatusRecord {
+    OwnerProviderAssessmentStatusRecord {
+        assessment_id: assessment.assessment_id.clone(),
+        status: assessment.status.clone(),
+        version: assessment.version,
+        persisted: assessment.persisted,
     }
 }
 
@@ -8793,7 +8946,7 @@ async fn create_owner_provider_assessment(
                        AS proposed_window_start_epoch_seconds,
                    EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
                        AS proposed_window_end_epoch_seconds,
-                   time_zone, version",
+                   time_zone, outcome_reason_code, owner_visible_summary, version",
     )
     .bind(&assessment_id)
     .bind(eligibility.get::<String, _>("owner_user_id"))
@@ -8964,7 +9117,7 @@ async fn decide_owner_provider_assessment_window(
                        AS proposed_window_start_epoch_seconds,
                    EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
                        AS proposed_window_end_epoch_seconds,
-                   time_zone, version",
+                   time_zone, outcome_reason_code, owner_visible_summary, version",
     )
     .bind(assessment_id)
     .bind(next_status)
@@ -8993,6 +9146,214 @@ async fn decide_owner_provider_assessment_window(
     .await?;
     transaction.commit().await?;
     Ok(PersistedAssessmentWindowDecisionOutcome::Updated(
+        owner_provider_assessment_from_row(&updated),
+    ))
+}
+
+async fn transition_owner_provider_assessment(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+    request: TransitionOwnerProviderAssessmentRequest,
+) -> Result<PersistedAssessmentTransitionOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE id = $1 AND provider_actor_user_id = $2
+           AND invitation_id = (
+               SELECT invitation.id
+               FROM owner_provider_invitations invitation
+               JOIN owner_provider_invitation_recipient_checks recipient_check
+                 ON recipient_check.invitation_id = invitation.id
+               WHERE invitation.token_hash = $3
+                 AND LOWER(invitation.recipient_email) = LOWER($4)
+                 AND recipient_check.recipient_user_id = $2
+                 AND recipient_check.verified_email_fingerprint = $5
+                 AND recipient_check.status = 'checked'
+               LIMIT 1
+           )
+         FOR UPDATE"
+    );
+    let current = sqlx::query(&query)
+        .bind(assessment_id)
+        .bind(provider_actor_user_id)
+        .bind(token_hash)
+        .bind(verified_email)
+        .bind(verified_email_fingerprint)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentTransitionOutcome::NotFound);
+    };
+    let current = owner_provider_assessment_from_row(&current);
+    let (event_kind, next_status) = match request.action.as_str() {
+        "begin" => ("began", "in_progress"),
+        "complete" => ("completed", "completed"),
+        "cannot_assess" => ("cannot_assess", "cannot_assess"),
+        "cancel" => ("cancelled", "cancelled"),
+        _ => return Ok(PersistedAssessmentTransitionOutcome::Conflict),
+    };
+    let normalized_reason = request.reason_code.as_deref().map(str::trim);
+    let normalized_summary = request.owner_visible_summary.as_deref().map(str::trim);
+    let replay = sqlx::query(
+        "SELECT assessment_id, event_kind, assessment_version
+         FROM owner_provider_assessment_events
+         WHERE actor_user_id = $1 AND idempotency_key = $2",
+    )
+    .bind(provider_actor_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        let exact = replay.get::<String, _>("assessment_id") == assessment_id
+            && replay.get::<String, _>("event_kind") == event_kind
+            && replay.get::<i64, _>("assessment_version") == request.expected_version + 1
+            && current.version == request.expected_version + 1
+            && current.status == next_status
+            && current.outcome_reason_code.as_deref() == normalized_reason
+            && current.owner_visible_summary.as_deref() == normalized_summary;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedAssessmentTransitionOutcome::Replayed(current)
+        } else {
+            PersistedAssessmentTransitionOutcome::Conflict
+        });
+    }
+    let state_valid = match request.action.as_str() {
+        "begin" => matches!(current.status.as_str(), "remote_review" | "owner_confirmed"),
+        "complete" => current.status == "in_progress",
+        "cannot_assess" | "cancel" => matches!(
+            current.status.as_str(),
+            "remote_review"
+                | "window_proposed"
+                | "window_change_requested"
+                | "owner_confirmed"
+                | "in_progress"
+        ),
+        _ => false,
+    };
+    if !state_valid {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentTransitionOutcome::InvalidState(current));
+    }
+    if current.version != request.expected_version {
+        transaction.rollback().await?;
+        return Ok(PersistedAssessmentTransitionOutcome::Conflict);
+    }
+    let authority_active = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1
+             FROM owner_provider_assessments assessment
+             JOIN owner_provider_invitations invitation
+               ON invitation.id = assessment.invitation_id
+             JOIN owner_provider_invitation_response_capabilities capability
+               ON capability.invitation_id = invitation.id
+              AND capability.actor_user_id = $2
+              AND capability.organization_id = assessment.organization_id
+             JOIN owner_provider_opportunity_responses response
+               ON response.capability_id = capability.id
+              AND response.action = 'express_interest'
+              AND response.status = 'recorded'
+             JOIN owner_provider_invitation_organization_claims claim
+               ON claim.id = capability.claim_id
+              AND claim.organization_id = capability.organization_id
+             JOIN organizations organization ON organization.id = assessment.organization_id
+             JOIN owner_provider_disclosure_grants disclosure_grant
+               ON disclosure_grant.id = assessment.disclosure_grant_id
+              AND disclosure_grant.invitation_id = invitation.id
+              AND disclosure_grant.organization_id = assessment.organization_id
+              AND disclosure_grant.recipient_actor_user_id = $2
+             JOIN owner_properties property ON property.id = assessment.property_id
+             JOIN owner_workspaces workspace
+               ON workspace.owner_user_id = assessment.owner_user_id
+             JOIN owner_yard_briefs brief ON brief.id = disclosure_grant.brief_id
+             WHERE assessment.id = $1
+               AND invitation.status = 'opened' AND invitation.expires_at > NOW()
+               AND capability.status = 'active' AND capability.expires_at > NOW()
+               AND claim.status IN ('relationship_checked', 'claimed')
+               AND organization.status = 'active'
+               AND organization.organization_type = 'yard_care_company'
+               AND EXISTS (
+                   SELECT 1 FROM organization_memberships membership
+                   WHERE membership.organization_id = organization.id
+                     AND membership.user_id = $2 AND membership.status = 'active'
+               )
+               AND disclosure_grant.status = 'active'
+               AND disclosure_grant.expires_at > NOW()
+               AND disclosure_grant.owner_user_id = assessment.owner_user_id
+               AND disclosure_grant.property_id = assessment.property_id
+               AND property.owner_user_id = assessment.owner_user_id
+               AND property.status <> 'archived'
+               AND workspace.status = 'active'
+               AND brief.status = 'ready'
+               AND brief.version = disclosure_grant.brief_version
+               AND NOT EXISTS (
+                   SELECT 1 FROM owner_yard_briefs newer
+                   WHERE newer.property_id = property.id AND newer.version > brief.version
+               )
+               AND NOT EXISTS (
+                   SELECT 1 FROM owner_provider_recipient_suppressions suppression
+                   WHERE suppression.recipient_email_fingerprint = invitation.recipient_email_fingerprint
+               )
+         )",
+    )
+    .bind(assessment_id)
+    .bind(provider_actor_user_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if !authority_active {
+        transaction.commit().await?;
+        return Ok(PersistedAssessmentTransitionOutcome::InvalidState(current));
+    }
+    let next_version = current.version + 1;
+    let updated = sqlx::query(
+        "UPDATE owner_provider_assessments
+         SET status = $2, outcome_reason_code = $3, owner_visible_summary = $4,
+             version = $5, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id AS assessment_id, invitation_id, property_id, organization_id,
+                   disclosure_grant_id, assessment_method, status,
+                   EXTRACT(EPOCH FROM proposed_window_start)::BIGINT
+                       AS proposed_window_start_epoch_seconds,
+                   EXTRACT(EPOCH FROM proposed_window_end)::BIGINT
+                       AS proposed_window_end_epoch_seconds,
+                   time_zone, outcome_reason_code, owner_visible_summary, version",
+    )
+    .bind(assessment_id)
+    .bind(next_status)
+    .bind(normalized_reason)
+    .bind(normalized_summary)
+    .bind(next_version)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_assessment_events (
+             id, assessment_id, actor_user_id, event_kind,
+             assessment_version, idempotency_key, event_data
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    )
+    .bind(format!(
+        "owner_assessment_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(assessment_id)
+    .bind(provider_actor_user_id)
+    .bind(event_kind)
+    .bind(next_version)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({
+        "status": next_status,
+        "reason_code": normalized_reason,
+        "has_owner_visible_summary": normalized_summary.is_some(),
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedAssessmentTransitionOutcome::Updated(
         owner_provider_assessment_from_row(&updated),
     ))
 }
