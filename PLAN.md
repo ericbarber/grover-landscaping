@@ -549,6 +549,13 @@ Active slice:
   current version; exact retries replay, changed/stale writes conflict, ended
   authority fails closed, and the assessment returns to owner confirmation
   without scheduling service. Versioned initial-service proposals are next.
+- Phase 4B proposal design is complete in
+  [`docs/owner-provider-initial-service-proposal-design.md`](docs/owner-provider-initial-service-proposal-design.md).
+  Acquisition proposals remain separate from project bids because they precede
+  customer accounts and jobs. The contract defines immutable proposal versions,
+  exact-version owner decisions, accepted-but-unactivated snapshots, separate
+  question/change requests, minimized audit, and a Phase 4B1 persistence-first
+  implementation sequence.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -230,6 +230,10 @@ browser coverage, and no service-activation action. A versioned replacement
 window after an owner change request is now delivered with current-authority
 rechecks, exact replay, minimized audit, and fresh owner confirmation. Versioned
 initial-service proposals are next.
+The Phase 4B proposal contract is now defined: acquisition proposals do not
+reuse customer/day-plan-bound project bids, published revisions are immutable,
+owner decisions target one exact version, and acceptance remains an
+accepted-but-unactivated snapshot. Phase 4B1 proposal persistence is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
