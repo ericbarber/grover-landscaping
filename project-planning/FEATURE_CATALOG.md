@@ -36,6 +36,8 @@
 ## Persona Workspaces
 
 - Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
+- Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
+- Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
 - Validated Yard Owner V2 working design with service-day confidence, contextual
   questions, delivered proof comparison and feedback, concern recovery,

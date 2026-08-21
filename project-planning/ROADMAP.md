@@ -320,6 +320,12 @@ Development review no longer requires an AWS identity deployment: a
 production-rejected local-review runtime provides seven fixed role identities,
 virtual demo-organization memberships, and per-tab account switching while
 leaving Cognito as the hosted authentication path.
+Desktop review now honors the selected persona across the full workspace:
+customer roles receive property and portfolio content, crews receive route and
+job execution, company operators receive field and office operations, and
+support receives role-filtered access, reporting, and recovery tools. Manager
+categories and tools are filtered per persona and only one selected tool renders
+at a time on either desktop or mobile.
 Home now provides a branded, time-aware first impression with persona messaging,
 daily progress, sync health, and a prominent recommended next action.
 Its original Southwestern landscape hero adds persona-specific product promises

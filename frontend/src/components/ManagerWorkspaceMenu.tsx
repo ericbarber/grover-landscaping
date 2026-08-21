@@ -1,3 +1,5 @@
+import type { WorkspacePersonaId } from '../domain/workspacePersona';
+
 export type ManagerWorkspaceSection =
   | 'overview'
   | 'schedule'
@@ -87,23 +89,75 @@ export const managerWorkspaceTools: Record<
   ],
 };
 
+const sectionAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceSection[]>> = {
+  'company-owner': ['overview', 'schedule', 'customers', 'team', 'reports', 'recovery'],
+  'company-manager': ['overview', 'schedule', 'customers', 'team', 'reports', 'recovery'],
+  'property-manager': ['customers'],
+  dispatcher: ['schedule'],
+  'billing-admin': ['customers', 'reports'],
+  support: ['team', 'reports', 'recovery'],
+};
+
+const toolAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceTool[]>> = {
+  'company-owner': [
+    'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
+    'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
+    'customer-portal', 'customer-portfolios', 'team-members', 'team-invitations',
+    'team-activity', 'operations-activity', 'notifications', 'completion-reports',
+    'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
+  ],
+  'company-manager': [
+    'company-readiness', 'day-plan', 'dispatch-workload', 'property-profile',
+    'property-service', 'customer-accounts', 'customer-portal', 'customer-portfolios',
+    'team-members', 'team-activity', 'operations-activity', 'notifications',
+    'completion-reports', 'photo-processing', 'operational-exceptions',
+  ],
+  'property-manager': ['customer-portal', 'customer-portfolios'],
+  dispatcher: ['day-plan', 'dispatch-workload'],
+  'billing-admin': ['customer-accounts', 'customer-portal', 'completion-reports'],
+  support: [
+    'team-members', 'team-invitations', 'team-activity', 'operations-activity',
+    'notifications', 'completion-reports', 'marketing-leads', 'conversion-dashboard',
+    'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
+  ],
+};
+
+export function managerWorkspaceSectionsForPersona(
+  personaId: WorkspacePersonaId,
+): typeof managerWorkspaceSections {
+  const allowed = new Set(sectionAccess[personaId] ?? []);
+  return managerWorkspaceSections.filter((section) => allowed.has(section.id));
+}
+
+export function managerWorkspaceToolsForPersona(
+  personaId: WorkspacePersonaId,
+  section: ManagerWorkspaceSection,
+): Array<{ id: ManagerWorkspaceTool; label: string; description: string }> {
+  const allowed = new Set(toolAccess[personaId] ?? []);
+  return managerWorkspaceTools[section].filter((tool) => allowed.has(tool.id));
+}
+
 export function ManagerWorkspaceMenu({
   activeSection,
   onChange,
+  personaId,
 }: {
   activeSection: ManagerWorkspaceSection | null;
   onChange: (section: ManagerWorkspaceSection) => void;
+  personaId: WorkspacePersonaId;
 }) {
+  const sections = managerWorkspaceSectionsForPersona(personaId);
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         Manager home
       </p>
       <h2 className="mt-1 text-xl font-black text-slate-950">
         Choose what you need to do
       </h2>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        {managerWorkspaceSections.map((section) => (
+      <div className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-3">
+        {sections.map((section) => (
           <button
             aria-pressed={activeSection === section.id}
             className={`min-h-20 rounded-xl border p-3 text-left ${
@@ -134,20 +188,23 @@ export function ManagerWorkspaceToolMenu({
   onBack,
   onClear,
   onChange,
+  personaId,
 }: {
   section: ManagerWorkspaceSection;
   activeTool: ManagerWorkspaceTool | null;
   onBack: () => void;
   onClear: () => void;
   onChange: (tool: ManagerWorkspaceTool) => void;
+  personaId: WorkspacePersonaId;
 }) {
-  const selectedTool = managerWorkspaceTools[section].find(
+  const tools = managerWorkspaceToolsForPersona(personaId, section);
+  const selectedTool = tools.find(
     (tool) => tool.id === activeTool,
   );
 
   if (selectedTool) {
     return (
-      <section className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:hidden">
+      <section className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         <button
           className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
           onClick={onClear}
@@ -166,7 +223,7 @@ export function ManagerWorkspaceToolMenu({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:hidden">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <button
         className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
         onClick={onBack}
@@ -179,7 +236,7 @@ export function ManagerWorkspaceToolMenu({
       </p>
       <h2 className="mt-1 text-xl font-black text-slate-950">Choose a tool</h2>
       <div className="mt-4 space-y-2">
-        {managerWorkspaceTools[section].map((tool) => (
+        {tools.map((tool) => (
           <button
             aria-pressed={activeTool === tool.id}
             className={`flex min-h-16 w-full items-center justify-between gap-3 rounded-xl border p-3 text-left ${

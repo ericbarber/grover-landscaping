@@ -20,6 +20,12 @@ export interface WorkspacePersona {
   navigation: Array<{ view: MobileWorkspaceView; label: string; symbol: string }>;
 }
 
+export interface WorkspaceSurfaces {
+  fieldOperations: boolean;
+  customerCare: boolean;
+  management: boolean;
+}
+
 const fieldNavigation: WorkspacePersona['navigation'] = [
   { view: 'home', label: 'Home', symbol: '⌂' },
   { view: 'route', label: 'Route', symbol: '↗' },
@@ -152,4 +158,22 @@ export function workspacePersonasForRoles(roles: string[]): WorkspacePersona[] {
   );
   const personas = priority.filter((id) => ids.has(id)).map((id) => personaDefinitions[id]);
   return personas.length > 0 ? personas : [personaDefinitions.general];
+}
+
+export function workspaceSurfacesForPersona(
+  personaId: WorkspacePersonaId,
+): WorkspaceSurfaces {
+  if (personaId === 'yard-owner') {
+    return { fieldOperations: false, customerCare: true, management: false };
+  }
+  if (personaId === 'property-manager' || personaId === 'billing-admin') {
+    return { fieldOperations: false, customerCare: true, management: true };
+  }
+  if (personaId === 'crew-lead' || personaId === 'crew-member' || personaId === 'general') {
+    return { fieldOperations: true, customerCare: false, management: false };
+  }
+  if (personaId === 'support') {
+    return { fieldOperations: false, customerCare: false, management: true };
+  }
+  return { fieldOperations: true, customerCare: false, management: true };
 }

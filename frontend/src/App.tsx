@@ -80,6 +80,7 @@ import {
 import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
 import {
   workspacePersonasForRoles,
+  workspaceSurfacesForPersona,
   type WorkspacePersonaId,
 } from './domain/workspacePersona';
 import {
@@ -91,6 +92,8 @@ import {
 import {
   ManagerWorkspaceMenu,
   ManagerWorkspaceToolMenu,
+  managerWorkspaceSectionsForPersona,
+  managerWorkspaceToolsForPersona,
   type ManagerWorkspaceSection,
   type ManagerWorkspaceTool,
 } from './components/ManagerWorkspaceMenu';
@@ -1034,7 +1037,6 @@ export function App() {
     [auth.roles],
   );
   const initialPersona = availablePersonas[0];
-  const canUseManagerTools = workspaceGuidance.managerTools;
   const canManageDispatchHierarchy = auth.roles.includes('OrganizationOwner')
     || auth.roles.includes('SupportAdmin');
   const canReviewMarketingLeads = auth.roles.includes('SupportAdmin');
@@ -1151,12 +1153,44 @@ export function App() {
   const activePersona = availablePersonas.find(
     (persona) => persona.id === activePersonaId,
   ) ?? initialPersona;
+  const workspaceSurfaces = workspaceSurfacesForPersona(activePersona.id);
+  const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
+  const managerWorkspaceHeading = activePersona.id === 'support'
+    ? 'Support and recovery tools'
+    : activePersona.id === 'property-manager'
+      ? 'Portfolio management tools'
+      : 'Manager and office tools';
+  const managerWorkspaceDescription = activePersona.id === 'support'
+    ? 'Access, diagnostics, reporting, and recovery'
+    : activePersona.id === 'property-manager'
+      ? 'Customer properties, reports, and portfolios'
+      : 'Scheduling, customers, and recovery';
 
   useEffect(() => {
     if (availablePersonas.some((persona) => persona.id === activePersonaId)) return;
     setActivePersonaId(initialPersona.id);
     setMobileView(initialPersona.defaultView);
   }, [activePersonaId, availablePersonas, initialPersona]);
+
+  useEffect(() => {
+    const sections = managerWorkspaceSectionsForPersona(activePersona.id);
+    if (
+      managerWorkspaceSection
+      && !sections.some((section) => section.id === managerWorkspaceSection)
+    ) {
+      setManagerWorkspaceSection(null);
+      setManagerWorkspaceTool(null);
+      return;
+    }
+    if (
+      managerWorkspaceSection
+      && managerWorkspaceTool
+      && !managerWorkspaceToolsForPersona(activePersona.id, managerWorkspaceSection)
+        .some((tool) => tool.id === managerWorkspaceTool)
+    ) {
+      setManagerWorkspaceTool(null);
+    }
+  }, [activePersona.id, managerWorkspaceSection, managerWorkspaceTool]);
 
   function changeMobileView(
     destination: MobileWorkspaceView,
@@ -2700,7 +2734,11 @@ export function App() {
         view={mobileView}
       />
 
-      <section className="mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <section className={`mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 ${
+        workspaceSurfaces.fieldOperations
+          ? 'lg:grid-cols-[minmax(0,1fr)_420px]'
+          : 'lg:grid-cols-1'
+      }`}>
         <div className="min-w-0">
           <div className={mobileView === 'home' ? 'block' : 'hidden'}>
             <WorkspaceHomePanel
@@ -2723,14 +2761,14 @@ export function App() {
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>
-          <div className={`${mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16 lg:block`} id="today-route">
+          <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16 ${workspaceSurfaces.fieldOperations ? 'lg:block' : ''}`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
             />
           </div>
-          <section className={`${mobileView === 'jobs' ? 'block' : 'hidden'} lg:block`}>
+          <section className={`${workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'} ${workspaceSurfaces.fieldOperations ? 'lg:block' : ''}`}>
           <div className="mb-4 mt-0 scroll-mt-16 lg:mt-6" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
@@ -3004,7 +3042,7 @@ export function App() {
           </div>
           </section>
 
-          <div className={`${mobileView === 'customer' ? 'space-y-6' : 'hidden'} lg:hidden`}>
+          <div className={`${workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} ${workspaceSurfaces.customerCare ? 'lg:block lg:space-y-6' : ''}`} id="customer-workspace">
             <CustomerPortalPreviewPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
@@ -3027,8 +3065,8 @@ export function App() {
           {canUseManagerTools ? (
           <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:mt-6 lg:block lg:open:bg-transparent`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
             <summary className="cursor-pointer list-none rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
-              Manager and office tools
-              <span className="ml-2 text-xs font-normal text-slate-300">Scheduling, customers, and recovery</span>
+              {managerWorkspaceHeading}
+              <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>
             </summary>
             <div className="mt-5 space-y-6">
           {managerWorkspaceSection === null ? (
@@ -3039,6 +3077,7 @@ export function App() {
                 setManagerWorkspaceTool(null);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              personaId={activePersona.id}
             />
           ) : null}
           {managerWorkspaceSection ? (
@@ -3053,10 +3092,11 @@ export function App() {
                 setManagerWorkspaceTool(tool);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              personaId={activePersona.id}
               section={managerWorkspaceSection}
             />
           ) : null}
-          <div className={`${managerWorkspaceTool === 'owner-setup' ? 'block' : 'hidden'} lg:block`}>
+          <div className={managerWorkspaceTool === 'owner-setup' ? 'block' : 'hidden'}>
           <FirstOwnerOnboardingPanel
             crewBranchRequest={crewAdministrationBranch}
             crewSelectionRequest={crewAdministrationSelection}
@@ -3143,7 +3183,7 @@ export function App() {
             }}
           />
           </div>
-          <div className={`${managerWorkspaceTool === 'day-plan' ? 'block' : 'hidden'} scroll-mt-20 lg:block`} id="first-owner-day-plan">
+          <div className={`${managerWorkspaceTool === 'day-plan' ? 'block' : 'hidden'} scroll-mt-20`} id="first-owner-day-plan">
             <ManagerDayPlanPanel
               crewRefreshSignal={crewRefreshSignal}
               jobs={jobs}
@@ -3159,13 +3199,13 @@ export function App() {
               }}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'company-readiness' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'company-readiness' ? 'block' : 'hidden'} mt-6`}>
             <ManagementCompanyPreviewPanel
               company={managementCompanyPreview}
               crews={managementCompanyPreviewCrews}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'property-profile' ? 'block' : 'hidden'} mt-6 scroll-mt-20 lg:block`} id="property-operational-profile">
+          <div className={`${managerWorkspaceTool === 'property-profile' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="property-operational-profile">
             <ManagerPropertyOnboardingPanel
               properties={managerPropertyOnboardingOptions}
               requestedPropertyId={requestedOperationalProfilePropertyId}
@@ -3182,7 +3222,7 @@ export function App() {
               }}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'property-service' ? 'block' : 'hidden'} mt-6 scroll-mt-20 lg:block`} id="property-service-setup">
+          <div className={`${managerWorkspaceTool === 'property-service' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="property-service-setup">
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
               onboardingRefreshSignal={propertyOnboardingRefreshSignal}
@@ -3191,7 +3231,7 @@ export function App() {
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'customer-accounts' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'customer-accounts' ? 'block' : 'hidden'} mt-6`}>
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
               onOpenPropertyWorkspace={openPropertyWorkspace}
@@ -3203,7 +3243,7 @@ export function App() {
               }}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'team-members' ? 'block' : 'hidden'} mt-6 scroll-mt-20 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'team-members' ? 'block' : 'hidden'} mt-6 scroll-mt-20`}>
             <ManagerTeamMembershipsPanel
               onTeamChanged={() => {
                 setTeamActivityRefreshSignal((current) => current + 1);
@@ -3212,7 +3252,7 @@ export function App() {
               organizationId={activeManagerOrganizationId}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'team-invitations' ? 'block' : 'hidden'} mt-6 scroll-mt-20 lg:block`} id="first-owner-team-invitations">
+          <div className={`${managerWorkspaceTool === 'team-invitations' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="first-owner-team-invitations">
             <ManagerTeamInvitationsPanel
               onTeamChanged={() => {
                 setTeamActivityRefreshSignal((current) => current + 1);
@@ -3221,7 +3261,7 @@ export function App() {
               organizationId={activeManagerOrganizationId}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'team-activity' ? 'block' : 'hidden'} mt-6 scroll-mt-20 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'team-activity' ? 'block' : 'hidden'} mt-6 scroll-mt-20`}>
             <ManagerTeamActivityPanel
               onOpenCrew={(activity) => {
                 setManagerWorkspaceSection('overview');
@@ -3268,7 +3308,7 @@ export function App() {
               refreshSignal={teamActivityRefreshSignal}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'customer-portal' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'customer-portal' ? 'block' : 'hidden'} mt-6`}>
             <CustomerPortalPreviewPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
@@ -3281,7 +3321,7 @@ export function App() {
               hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'customer-portfolios' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'customer-portfolios' ? 'block' : 'hidden'} mt-6`}>
             <CustomerPortfolioSummaryPanel
               customer={customerPortalPreviewCustomer}
               portfolios={customerPortalPreviewPortfolios}
@@ -3289,7 +3329,7 @@ export function App() {
               links={customerPortalPreviewPortfolioLinks}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'operations-activity' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'operations-activity' ? 'block' : 'hidden'} mt-6`}>
             <ManagerActivityHistoryPanel
               items={visibleManagerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
@@ -3302,16 +3342,16 @@ export function App() {
             />
           </div>
           {canReviewMarketingLeads ? (
-            <div className={`${managerWorkspaceTool === 'conversion-dashboard' ? 'block' : 'hidden'} mt-6 lg:block`}>
+            <div className={`${managerWorkspaceTool === 'conversion-dashboard' ? 'block' : 'hidden'} mt-6`}>
               <ManagerMarketingConversionDashboard />
             </div>
           ) : null}
           {canReviewMarketingLeads ? (
-            <div className={`${managerWorkspaceTool === 'marketing-leads' ? 'block' : 'hidden'} mt-6 lg:block`}>
+            <div className={`${managerWorkspaceTool === 'marketing-leads' ? 'block' : 'hidden'} mt-6`}>
               <ManagerMarketingLeadInboxPanel />
             </div>
           ) : null}
-          <div className={`${managerWorkspaceTool === 'notifications' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'notifications' ? 'block' : 'hidden'} mt-6`}>
             <ManagerNotificationHistoryPanel
               notifications={notificationHistory}
               isLoading={isLoadingNotificationHistory}
@@ -3320,7 +3360,7 @@ export function App() {
               onResolve={(notificationId, filters) => void handleResolveNotificationDelivery(notificationId, filters)}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'photo-processing' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'photo-processing' ? 'block' : 'hidden'} mt-6`}>
             <ManagerPhotoProcessingRecoveryPanel
               items={photoProcessingHistory}
               isLoading={isLoadingPhotoProcessingHistory}
@@ -3329,10 +3369,10 @@ export function App() {
               onResolve={(processingJobId, filters) => void handleResolvePhotoProcessing(processingJobId, filters)}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6`}>
             <ManagerOperationalExceptionsPanel organizationId={activeManagerOrganizationId} />
           </div>
-          <div className={`${managerWorkspaceTool === 'customer-privacy' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'customer-privacy' ? 'block' : 'hidden'} mt-6`}>
             <ManagerCustomerPrivacyPanel
               accountIds={privacyAccountIds}
               exportResult={customerPrivacyExport}
@@ -3342,7 +3382,7 @@ export function App() {
               onErasePhotos={(accountId, reason) => void handleCustomerPhotoErasure(accountId, reason)}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'photo-erasure' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'photo-erasure' ? 'block' : 'hidden'} mt-6`}>
             <ManagerPhotoErasureRecoveryPanel
               items={photoErasureDeletionHistory}
               isLoading={isLoadingPhotoErasureDeletionHistory}
@@ -3351,7 +3391,7 @@ export function App() {
               onResolve={(id) => void handleResolvePhotoErasureDeletion(id)}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'dispatch-hierarchy' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'dispatch-hierarchy' ? 'block' : 'hidden'} mt-6`}>
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
@@ -3380,7 +3420,7 @@ export function App() {
               />
             ) : null}
           </div>
-          <div className={`${managerWorkspaceTool === 'dispatch-workload' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'dispatch-workload' ? 'block' : 'hidden'} mt-6`}>
             <ManagerDispatchWorkloadPanel
               hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
               jobs={jobs}
@@ -3388,7 +3428,7 @@ export function App() {
               onSelectJob={selectJobForReview}
             />
           </div>
-          <div className={`${managerWorkspaceTool === 'completion-reports' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div className={`${managerWorkspaceTool === 'completion-reports' ? 'block' : 'hidden'} mt-6`}>
             <ManagerCompletionReportQueuePanel
               reports={managerReportQueueReports}
               isLoading={isLoadingReportQueue}
@@ -3401,7 +3441,7 @@ export function App() {
           ) : null}
         </div>
 
-        <div className={`${mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 lg:sticky lg:top-4 lg:block lg:self-start`} id="job-detail" ref={jobDetailRef}>
+        <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 ${workspaceSurfaces.fieldOperations ? 'lg:sticky lg:top-4 lg:block lg:self-start' : ''}`} id="job-detail" ref={jobDetailRef}>
           {jobDetailUnavailable ? (
             <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
               Persisted job access could not be verified. Job details remain hidden until API readiness recovers.

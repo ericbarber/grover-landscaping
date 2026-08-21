@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { workspacePersonasForRoles } from './workspacePersona';
+import {
+  workspacePersonasForRoles,
+  workspaceSurfacesForPersona,
+} from './workspacePersona';
 
 describe('persona workspaces', () => {
   it('maps current product roles to distinct workspaces', () => {
@@ -30,5 +33,28 @@ describe('persona workspaces', () => {
       .toEqual(['home', 'customer']);
     expect(workspacePersonasForRoles(['CrewMember'])[0].navigation.map(({ view }) => view))
       .toEqual(['home', 'route', 'jobs', 'job']);
+  });
+
+  it('keeps desktop surfaces aligned with the selected persona', () => {
+    expect(workspaceSurfacesForPersona('yard-owner')).toEqual({
+      fieldOperations: false,
+      customerCare: true,
+      management: false,
+    });
+    expect(workspaceSurfacesForPersona('crew-lead')).toEqual({
+      fieldOperations: true,
+      customerCare: false,
+      management: false,
+    });
+    expect(workspaceSurfacesForPersona('company-owner')).toEqual({
+      fieldOperations: true,
+      customerCare: false,
+      management: true,
+    });
+    expect(workspaceSurfacesForPersona('support')).toEqual({
+      fieldOperations: false,
+      customerCare: false,
+      management: true,
+    });
   });
 });

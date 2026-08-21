@@ -654,13 +654,14 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Signed-in roles map to yard owner, property manager, crew lead/member, yard-care company owner/manager, dispatcher, billing, and support personas
 - Persona-specific navigation hides irrelevant workspaces, and multi-role users can switch their active view without signing out
 - Yard owners receive a customer property workspace while property managers receive portfolio and management navigation
+- Desktop applies the same persona boundaries: customer roles see property and portfolio care, crews see field execution, company roles see operations, and support sees diagnostics and recovery
 - Install and application-update notifications stack above the mobile navbar and iPhone safe area instead of covering navigation
 - Install guidance uses device-neutral language across phones, tablets, and desktop computers
 - Failed route recovery clears stale Grover Field shell caches before reloading, and online application assets use network-first delivery with offline cache fallback
 - Manager activity renders photo-erasure recovery audits and safely falls back for newer server event kinds instead of crashing application startup
-- Mobile managers land on a compact six-category home instead of every office tool in one continuous page
-- Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render one task group at a time on mobile
-- Each manager category has a compact task picker and renders only one selected tool on mobile
+- Managers land on a compact role-filtered category home instead of every office tool in one continuous page
+- Manager Overview, Schedule, Customers, Team, Reports, and Recovery categories render only when relevant to the active persona
+- Each manager category has a compact task picker and renders only one selected tool on mobile and desktop
 - Customer, team, report, schedule, and recovery panels no longer stack together inside their category views
 - Active manager tools collapse the picker into a compact context bar with a clear return to the category tools
 - Crew routes default to the current and next stop instead of rendering the full day down the mobile page

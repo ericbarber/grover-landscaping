@@ -5,7 +5,14 @@ export type WorkspaceGuidance = {
 };
 
 export function workspaceGuidanceForRoles(roles: string[]): WorkspaceGuidance {
-  if (roles.some((role) => role === 'OrganizationOwner' || role === 'SupportAdmin')) {
+  if (roles.includes('SupportAdmin')) {
+    return {
+      label: 'Platform support',
+      description: 'Review tenant access, recovery queues, diagnostics, and marketing requests.',
+      managerTools: true,
+    };
+  }
+  if (roles.includes('OrganizationOwner')) {
     return {
       label: 'Organization administration',
       description: 'Manage routes, customers, properties, and team access.',

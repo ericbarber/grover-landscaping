@@ -13,6 +13,7 @@ describe('role-aware workspace guidance', () => {
   it('guides accepted crew and customer roles to distinct workspaces', () => {
     expect(workspaceGuidanceForRoles(['CrewLead']).label).toBe('Crew workspace');
     expect(workspaceGuidanceForRoles(['PropertyOwner']).label).toBe('Customer access');
+    expect(workspaceGuidanceForRoles(['SupportAdmin']).label).toBe('Platform support');
     expect(workspaceGuidanceForRoles([]).label).toBe('Access refreshing');
   });
 });
