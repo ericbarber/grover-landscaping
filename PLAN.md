@@ -556,6 +556,12 @@ Active slice:
   exact-version owner decisions, accepted-but-unactivated snapshots, separate
   question/change requests, minimized audit, and a Phase 4B1 persistence-first
   implementation sequence.
+- Phase 4B1a is delivered. A clean migration replay now creates acquisition-
+  specific proposal versions, owner decisions, accepted snapshots, and
+  minimized events with bounded content, currency/price/cadence controls, one
+  open or accepted proposal per assessment, actor-scoped replay uniqueness, and
+  database-enforced published-content immutability. Repository writes and
+  isolation/replay tests are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

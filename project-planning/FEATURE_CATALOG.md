@@ -220,6 +220,7 @@ here does not mean every capability has been delivered.
 - Production verified-provider assessment workspace with disclosure-scoped reload, lifecycle controls, customer-safe conversation, organization-private notes, and no-service boundaries
 - Replay-safe provider replacement windows after owner change requests, returning to explicit owner confirmation without service scheduling
 - Designed initial-service proposal contract with immutable versions, neutral owner decisions, accepted-but-unactivated snapshots, and strict separation from existing-customer project bids
+- Acquisition proposal schema with immutable published content, constrained scope/terms/price, one open/accepted version per assessment, owner decisions, accepted snapshots, and minimized events
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

@@ -71,7 +71,8 @@ The approved experience is defined by:
 | 4A2c4 | Delivered | Production verified-provider assessment start, lifecycle, shared conversation, private-note workspace, and authoritative disclosure-scoped reload |
 | 4A2c5 | Delivered | Provider-authored replacement window after an owner change request, with optimistic concurrency, exact replay, and fresh owner confirmation |
 | 4B0 | Delivered | Acquisition-specific immutable proposal/version/decision/accepted-snapshot contract and project-bid separation |
-| 4B1–3 | Planned | Proposal persistence, authenticated APIs, and production provider/owner interfaces |
+| 4B1a | Delivered | Constrained immutable proposal-version, owner-decision, accepted-snapshot, and minimized-event schema |
+| 4B1b–3 | Planned | Proposal repositories, authenticated APIs, and production provider/owner interfaces |
 | 4C–D | Planned | Activation and governed pilot convergence |
 
 ## Delivery principles

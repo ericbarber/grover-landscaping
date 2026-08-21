@@ -98,14 +98,18 @@ scope/exclusion text.
 
 ## Delivery slices
 
-1. **4B1 — Persistence foundation:** immutable proposal versions, constrained
+1. **4B1a — Schema foundation (delivered):** separate proposal, decision,
+   accepted-snapshot, and minimized-event tables; constrained customer-safe
+   content; one open/accepted version per assessment; actor replay uniqueness;
+   and a database trigger that prevents published-content mutation.
+2. **4B1b — Repository foundation:** immutable proposal versions, constrained
    scope/terms, current-series uniqueness, expiration, accepted snapshot,
    minimized events, and PostgreSQL isolation/replay coverage.
-2. **4B2 — Authenticated APIs:** verified-provider create/revise, owner-scoped
+3. **4B2 — Authenticated APIs:** verified-provider create/revise, owner-scoped
    list/detail, question/change requests, and versioned accept/decline.
-3. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard
+4. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard
    Owner comparison/decision experiences with responsive recovery coverage.
-4. **4C — Activation:** separately project an accepted snapshot into provider
+5. **4C — Activation:** separately project an accepted snapshot into provider
    customer/property setup, then confirm the first visit without coupling crew
    assignment to acceptance.
 
