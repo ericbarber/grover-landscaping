@@ -67,7 +67,9 @@ The approved experience is defined by:
 | 4A2b3 | Delivered | Authenticated owner shared-message list/create and verified-provider shared/private create APIs with separate validators, route policy, explicit failure mapping, and fail-closed outage coverage |
 | 4A2c1 | Delivered | Owner-scoped, optimistic, replay-safe on-site assessment window confirmation/change request with controlled actions, append-only event, route policy, outage, concurrency, and cross-owner coverage |
 | 4A2c2 | Delivered | Provider-authorized begin/complete/cannot-assess/cancel transitions with full current-authority rechecks, optimistic concurrency, exact replay, controlled owner-safe outcomes, minimized events, and no service activation |
-| 4A2c3–7 | Planned | Production assessment workspace through governed pilot convergence |
+| 4A2c3 | Delivered | Production Yard Owner assessment history, proposed-window decision, customer-safe conversation, and explicit no-service boundary |
+| 4A2c4 | Planned | Production verified-provider assessment start, lifecycle, shared conversation, and private-note workspace |
+| 4A2c5–7 | Planned | Versioned proposal, activation, and governed pilot convergence |
 
 ## Delivery principles
 
@@ -256,6 +258,10 @@ service scheduling, customer/property projection, crew assignment, or work.
 Phase 4A2c2 adds the provider half through authorized begin and terminal outcome
 transitions with exact replay, customer-safe outcome data, and no proposal or
 service-activation authority.
+Phase 4A2c3 adopts the owner half in production React with assessment history,
+proposed-window confirmation or change requests, customer-safe messages,
+terminal outcome summaries, responsive recovery, and repeated no-service
+boundaries. Provider-private notes have no owner read path or interface.
 
 - Add assessment method/window lifecycle and customer-safe conversation.
 - Separate provider-private assessment notes from owner-visible content.

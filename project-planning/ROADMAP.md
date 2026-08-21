@@ -219,7 +219,10 @@ service. Phase 4A2c2 now adds provider-authorized begin, completion,
 cannot-assess, and cancellation transitions with current-authority rechecks,
 controlled owner-safe outcomes, exact replay, and status-only invalid-state
 recovery. The communication repositories and authenticated APIs are now
-delivered; production assessment interfaces are next.
+delivered. Phase 4A2c3 now adopts the production Yard Owner assessment
+workspace with status history, explicit proposed-window decisions,
+customer-safe conversation, responsive recovery, and no provider-private note
+path. The verified-provider assessment workspace is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

@@ -532,6 +532,14 @@ Active slice:
   mapping preserve invalid, missing, ended-state, conflict, replay, and outage
   distinctions; there is no owner private-note route. Production owner/provider
   assessment interfaces are next.
+- Phase 4A2c3 is delivered. The production Yard Owner property journey now
+  lists assessment history, distinguishes proposed, confirmed, active, and
+  terminal states, lets the owner confirm or request another on-site window,
+  and supports only customer-safe owner/provider conversation. Retry keys are
+  preserved across uncertain decisions, stale conflicts reload authoritative
+  state, provider-private notes remain absent, and the interface never presents
+  assessment as pricing, service acceptance, crew assignment, or scheduling.
+  The verified-provider assessment workspace is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

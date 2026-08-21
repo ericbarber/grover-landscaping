@@ -22,6 +22,7 @@ import {
   type SaveOwnerYardBriefInput,
 } from '../api/ownerAcquisitionClient';
 import { useAuth } from '../auth/AuthProvider';
+import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
@@ -861,6 +862,7 @@ export function YardOwnerAcquisitionPage() {
                       ) : null}
                       <ConnectionProgress entries={connectionProgress} error={connectionError} loading={connectionLoading} onRefresh={() => void refreshConnectionProgress()} />
                       {selectedPropertyId ? <OwnerProviderDisclosurePanel connections={connectionProgress} onChanged={refreshConnectionProgress} propertyId={selectedPropertyId} /> : null}
+                      {selectedPropertyId ? <OwnerProviderAssessmentPanel connections={connectionProgress} propertyId={selectedPropertyId} /> : null}
                     </>
                   )}
                 </section>

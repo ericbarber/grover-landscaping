@@ -216,6 +216,7 @@ here does not mean every capability has been delivered.
 - Validated working design for guided yard intake, optional photographs, and shareable care brief
 - Validated working design for existing-provider invitations and curated provider discovery
 - Validated working design for assessment, initial proposal, consented activation, and relationship controls
+- Production Yard Owner assessment workspace with proposed-window decisions, customer-safe conversation, terminal outcomes, and explicit no-service boundaries
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

@@ -160,9 +160,19 @@ Phase 4A2b3 exposes the communication boundary through authenticated APIs:
 - invalid requests, missing identity, ended/terminal state, replay, conflict,
   and persistence outage remain distinct HTTP outcomes.
 
+Phase 4A2c3 adopts the owner assessment workspace in production React:
+
+- property-scoped history preserves loading, empty, unavailable, active, and
+  terminal outcomes;
+- proposed on-site windows require explicit confirmation or a change request;
+- owner/provider customer-safe messages render together while provider-private
+  notes remain structurally absent;
+- retries reuse decision keys, conflicts reload authoritative state, and every
+  decision repeats that assessment is not service acceptance or scheduling.
+
 ## Next slices
 
-1. Adopt the assessment workspace in the production owner/provider interfaces
-   with responsive, accessible, stale-state, and outage coverage.
-2. Begin versioned initial-service proposals only after the assessment boundary
-   is complete.
+1. Adopt provider assessment start, lifecycle, customer-safe conversation, and
+   private-note interfaces with responsive, stale-state, and outage coverage.
+2. Begin versioned initial-service proposals only after both assessment
+   interfaces are complete.

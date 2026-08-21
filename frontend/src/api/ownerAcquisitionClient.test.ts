@@ -6,7 +6,11 @@ import {
   createOwnerIntakeMediaUpload,
   approveOwnerProviderDisclosure,
   deleteOwnerIntakeMedia,
+  decideOwnerProviderAssessmentWindow,
+  createOwnerProviderAssessmentMessage,
   fetchOwnerIntakeMedia,
+  fetchOwnerProviderAssessmentMessages,
+  fetchOwnerProviderAssessments,
   fetchOwnerProviderConnectionProgress,
   fetchOwnerProviderDisclosureReceipts,
   fetchOwnerProviderDisclosureReview,
@@ -179,6 +183,54 @@ describe('Yard Owner acquisition API client', () => {
     expect(JSON.parse((fetchMock.mock.calls[3][1] as RequestInit).body as string)).toEqual({
       expected_version: 1, reason_code: 'owner_choice', owner_confirmed: true,
       idempotency_key: 'revoke-key-1',
+    });
+  });
+
+  it('maps owner assessment progress and sends versioned owner decisions and messages', async () => {
+    const assessmentApi = {
+      assessment_id: 'assessment_1', invitation_id: 'invitation_1',
+      property_id: 'property_1', organization_id: 'organization_1',
+      disclosure_grant_id: 'grant_1', assessment_method: 'on_site',
+      status: 'window_proposed', proposed_window_start_epoch_seconds: 1_800_000_000,
+      proposed_window_end_epoch_seconds: 1_800_001_800, time_zone: 'America/Phoenix',
+      outcome_reason_code: null, owner_visible_summary: null, version: 2, persisted: true,
+    };
+    const messageApi = {
+      message_id: 'message_1', assessment_id: 'assessment_1', author_role: 'owner',
+      message_kind: 'owner_question', customer_safe_body: 'Should I unlock the side gate?',
+      assessment_version_snapshot: 3, created_at_epoch_seconds: 1_799_000_000,
+      persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([assessmentApi]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        ...assessmentApi, status: 'owner_confirmed', version: 3,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(messageApi), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const [assessment] = await fetchOwnerProviderAssessments('property_1');
+    await expect(fetchOwnerProviderAssessmentMessages('property_1', assessment.assessmentId))
+      .resolves.toEqual([]);
+    const confirmed = await decideOwnerProviderAssessmentWindow(
+      'property_1', assessment, 'confirm', 'owner-window-1',
+    );
+    expect(confirmed.status).toBe('owner_confirmed');
+    expect(JSON.parse((fetchMock.mock.calls[2][1] as RequestInit).body as string)).toEqual({
+      action: 'confirm', expected_version: 2, idempotency_key: 'owner-window-1',
+    });
+    await expect(createOwnerProviderAssessmentMessage(
+      'property_1', confirmed, 'owner_question', 'Should I unlock the side gate?',
+      'owner-message-1',
+    )).resolves.toEqual(expect.objectContaining({
+      messageId: 'message_1', authorRole: 'owner', assessmentVersionSnapshot: 3,
+    }));
+    expect(JSON.parse((fetchMock.mock.calls[3][1] as RequestInit).body as string)).toEqual({
+      message_kind: 'owner_question',
+      customer_safe_body: 'Should I unlock the side gate?',
+      expected_assessment_version: 3,
+      idempotency_key: 'owner-message-1',
     });
   });
 
