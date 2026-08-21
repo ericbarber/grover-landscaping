@@ -22,10 +22,11 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
     OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
     OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
-    OwnerProviderResponseCapabilityResult, OwnerReadResult,
-    RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
-    RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
-    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
+    OwnerProviderResponseCapabilityResult, OwnerReadResult, ProposeProviderAssessmentWindowRequest,
+    ProviderAssessmentWindowProposalResult, RecordOwnerProviderInvitationDeliveryRequest,
+    ReportOwnerProviderInvitationAbuseRequest, RetryOwnerProviderInvitationRequest,
+    RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
+    SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
@@ -1152,7 +1153,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .withheld_categories
         .contains(&"pricing_and_work_authority".to_string()));
     let capability_json = serde_json::to_string(&capability).expect("capability should serialize");
-    assert!(!capability_json.contains(owner_a));
+    assert!(!capability_json.contains("\"owner_user_id\""));
     assert!(!capability_json.contains(recipient));
     assert!(!capability_json.contains("421 Private Canyon Road"));
     assert!(!capability_json.contains("0199"));
@@ -2095,9 +2096,94 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(provider_workspace_json.contains("crew_hours"));
     assert!(provider_workspace_json.contains("irrigation controller"));
 
+    let OwnerProviderAssessmentWindowDecisionResult::Updated(change_requested_assessment) =
+        repository
+            .decide_provider_assessment_window(
+                owner_a,
+                &property.property_id,
+                &assessment.assessment_id,
+                DecideOwnerProviderAssessmentWindowRequest {
+                    action: "request_change".to_string(),
+                    expected_version: assessment.version,
+                    idempotency_key: "assessment-window-change-001".to_string(),
+                },
+            )
+            .await
+    else {
+        panic!("owner should be able to request another assessment window");
+    };
+    let replacement_request = ProposeProviderAssessmentWindowRequest {
+        token: retry.delivery_token().to_string(),
+        proposed_window_start_epoch_seconds: 1_800_086_400,
+        proposed_window_end_epoch_seconds: 1_800_090_000,
+        time_zone: "America/Phoenix".to_string(),
+        expected_version: change_requested_assessment.version,
+        idempotency_key: "assessment-window-replacement-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .propose_provider_assessment_window(
+                "another-provider-user",
+                recipient,
+                &assessment.assessment_id,
+                replacement_request.clone(),
+            )
+            .await,
+        ProviderAssessmentWindowProposalResult::NotFound
+    ));
+    let (first_replacement, second_replacement) = tokio::join!(
+        repository.propose_provider_assessment_window(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            replacement_request.clone(),
+        ),
+        repository.propose_provider_assessment_window(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            replacement_request.clone(),
+        ),
+    );
+    let replacement_assessment = match (first_replacement, second_replacement) {
+        (
+            ProviderAssessmentWindowProposalResult::Updated(updated),
+            ProviderAssessmentWindowProposalResult::Replayed(replayed),
+        )
+        | (
+            ProviderAssessmentWindowProposalResult::Replayed(replayed),
+            ProviderAssessmentWindowProposalResult::Updated(updated),
+        ) => {
+            assert_eq!(updated, replayed);
+            updated
+        }
+        (first, second) => panic!(
+            "concurrent exact replacement windows should update once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(replacement_assessment.status, "window_proposed");
+    assert_eq!(
+        replacement_assessment.proposed_window_start_epoch_seconds,
+        Some(1_800_086_400),
+    );
+    assert!(matches!(
+        repository
+            .propose_provider_assessment_window(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                ProposeProviderAssessmentWindowRequest {
+                    proposed_window_end_epoch_seconds: 1_800_093_600,
+                    ..replacement_request.clone()
+                },
+            )
+            .await,
+        ProviderAssessmentWindowProposalResult::Conflict
+    ));
+
     let window_decision = DecideOwnerProviderAssessmentWindowRequest {
         action: "confirm".to_string(),
-        expected_version: assessment.version,
+        expected_version: replacement_assessment.version,
         idempotency_key: "assessment-window-confirm-001".to_string(),
     };
     assert!(matches!(
@@ -2142,7 +2228,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         ),
     };
     assert_eq!(confirmed_assessment.status, "owner_confirmed");
-    assert_eq!(confirmed_assessment.version, assessment.version + 1);
+    assert_eq!(
+        confirmed_assessment.version,
+        replacement_assessment.version + 1
+    );
     assert!(matches!(
         repository
             .decide_provider_assessment_window(

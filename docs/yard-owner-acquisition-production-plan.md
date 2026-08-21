@@ -69,7 +69,8 @@ The approved experience is defined by:
 | 4A2c2 | Delivered | Provider-authorized begin/complete/cannot-assess/cancel transitions with full current-authority rechecks, optimistic concurrency, exact replay, controlled owner-safe outcomes, minimized events, and no service activation |
 | 4A2c3 | Delivered | Production Yard Owner assessment history, proposed-window decision, customer-safe conversation, and explicit no-service boundary |
 | 4A2c4 | Delivered | Production verified-provider assessment start, lifecycle, shared conversation, private-note workspace, and authoritative disclosure-scoped reload |
-| 4A2c5–7 | Planned | Versioned proposal, activation, and governed pilot convergence |
+| 4A2c5 | Delivered | Provider-authored replacement window after an owner change request, with optimistic concurrency, exact replay, and fresh owner confirmation |
+| 4A2c6–8 | Planned | Versioned proposal, activation, and governed pilot convergence |
 
 ## Delivery principles
 
@@ -266,9 +267,10 @@ Phase 4A2c4 adopts the provider half with disclosure-scoped authoritative
 reload, remote/on-site start, owner-confirmation gating, lifecycle outcomes,
 customer-safe conversation, a separately rendered private-note workspace, and
 responsive revocation coverage.
+Phase 4A2c5 closes the on-site recovery loop: only the same verified provider
+with current authority can replace a requested-change window, and the new
+version returns to owner confirmation without scheduling service.
 
-- Add a versioned replacement-window action after an owner requests a
-  different on-site assessment time.
 - Add versioned initial-service proposals with scope, exclusions, cadence,
   arrival/weather/cancellation policy, proof expectation, price, expiration,
   revision, and immutable accepted snapshot.

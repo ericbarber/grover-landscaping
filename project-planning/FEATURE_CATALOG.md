@@ -218,6 +218,7 @@ here does not mean every capability has been delivered.
 - Validated working design for assessment, initial proposal, consented activation, and relationship controls
 - Production Yard Owner assessment workspace with proposed-window decisions, customer-safe conversation, terminal outcomes, and explicit no-service boundaries
 - Production verified-provider assessment workspace with disclosure-scoped reload, lifecycle controls, customer-safe conversation, organization-private notes, and no-service boundaries
+- Replay-safe provider replacement windows after owner change requests, returning to explicit owner confirmation without service scheduling
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

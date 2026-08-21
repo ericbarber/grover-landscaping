@@ -334,6 +334,25 @@ export function transitionProviderAssessment(
   }).then((response) => assessmentResponse(response, `Provider assessment update failed with status ${response.status}.`));
 }
 
+export function proposeProviderAssessmentWindow(
+  token: string,
+  assessment: ProviderAssessment,
+  window: { startEpochSeconds: number; endEpochSeconds: number; timeZone: string },
+  idempotencyKey: string,
+): Promise<ProviderAssessment> {
+  return authenticatedFetch(`${API_BASE_URL}/provider-assessments/${encodeURIComponent(assessment.assessmentId)}/window-proposal`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      token,
+      proposed_window_start_epoch_seconds: window.startEpochSeconds,
+      proposed_window_end_epoch_seconds: window.endEpochSeconds,
+      time_zone: window.timeZone,
+      expected_version: assessment.version,
+      idempotency_key: idempotencyKey,
+    }),
+  }).then((response) => assessmentResponse(response, `Provider assessment window proposal failed with status ${response.status}.`));
+}
+
 export async function createProviderAssessmentMessage(
   token: string,
   assessment: ProviderAssessment,

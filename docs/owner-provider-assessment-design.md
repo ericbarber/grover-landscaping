@@ -179,9 +179,20 @@ private notes, stable retry keys, and the explicit no-service boundary. Exact
 concurrent assessment starts also recover as replay after the invitation-level
 uniqueness check observes another committed request.
 
+Phase 4A2c5 closes replacement-window recovery:
+
+- `POST /provider-assessments/{assessment_id}/window-proposal` is limited to
+  the same verified provider and a current `window_change_requested` on-site
+  assessment;
+- the new bounded window and time zone replace the prior proposal, advance the
+  version, and return the assessment to `window_proposed` for fresh owner
+  confirmation;
+- exact concurrent retries replay, stale or changed reuse conflicts, ended
+  authority fails closed, and the append-only event omits schedule values;
+- the provider interface retains the draft after uncertainty and repeats that
+  proposing an assessment window does not schedule service.
+
 ## Next slices
 
-1. Add a versioned provider action to replace an on-site window after the owner
-   requests a different time.
-2. Begin versioned initial-service proposals after that scheduling recovery is
-   complete.
+1. Begin versioned initial-service proposals now that both assessment
+   interfaces and scheduling recovery are complete.

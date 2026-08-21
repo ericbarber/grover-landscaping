@@ -5,6 +5,7 @@ import {
   createProviderAssessmentPrivateNote,
   fetchProviderDisclosureAccess,
   fetchProviderInvitationProgress,
+  proposeProviderAssessmentWindow,
   startProviderAssessment,
   transitionProviderAssessment,
 } from './providerInvitationClient';
@@ -104,5 +105,25 @@ describe('provider invitation progress client', () => {
     expect(bodies[2]).not.toHaveProperty('private_body');
     expect(bodies[3]).toMatchObject({ private_body: 'Private note.', expected_assessment_version: 2 });
     expect(bodies[3]).not.toHaveProperty('customer_safe_body');
+  });
+
+  it('proposes a replacement window against the current assessment version', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      assessment_id: 'assessment_1', invitation_id: 'invitation_1', property_id: 'property_1',
+      organization_id: 'organization_1', disclosure_grant_id: 'grant_1', assessment_method: 'on_site',
+      status: 'window_proposed', proposed_window_start_epoch_seconds: 1_800_010_000,
+      proposed_window_end_epoch_seconds: 1_800_013_600, time_zone: 'America/Phoenix', version: 3,
+    }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await proposeProviderAssessmentWindow('secret', {
+      assessmentId: 'assessment_1', invitationId: 'invitation_1', propertyId: 'property_1',
+      organizationId: 'organization_1', disclosureGrantId: 'grant_1', assessmentMethod: 'on_site',
+      status: 'window_change_requested', version: 2,
+    }, { startEpochSeconds: 1_800_010_000, endEpochSeconds: 1_800_013_600, timeZone: 'America/Phoenix' }, 'window-key');
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+      token: 'secret', proposed_window_start_epoch_seconds: 1_800_010_000,
+      proposed_window_end_epoch_seconds: 1_800_013_600, time_zone: 'America/Phoenix',
+      expected_version: 2, idempotency_key: 'window-key',
+    });
   });
 });

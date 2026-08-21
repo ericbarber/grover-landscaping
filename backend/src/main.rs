@@ -89,6 +89,7 @@ use grover_landscaping_api::{
         validate_provider_assessment_private_note_request, validate_provider_assessment_request,
         validate_provider_assessment_transition_request,
         validate_provider_assessment_window_decision_request,
+        validate_provider_assessment_window_proposal_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
         validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
@@ -125,7 +126,8 @@ use grover_landscaping_api::{
         OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
         OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
         OwnerProviderResponseCapabilityResult, OwnerReadResult,
-        PreviewOwnerProviderInvitationRequest, ReportOwnerProviderInvitationAbuseRequest,
+        PreviewOwnerProviderInvitationRequest, ProposeProviderAssessmentWindowRequest,
+        ProviderAssessmentWindowProposalResult, ReportOwnerProviderInvitationAbuseRequest,
         RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
         SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
         VerifyOwnerProviderInvitationRecipientRequest,
@@ -796,6 +798,10 @@ fn app_with_runtime(
         .route(
             "/provider-assessments/{assessment_id}/transitions",
             post(transition_owner_provider_assessment),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/window-proposal",
+            post(propose_provider_assessment_window),
         )
         .route(
             "/provider-assessments/{assessment_id}/messages",
@@ -3095,6 +3101,63 @@ async fn transition_owner_provider_assessment(
             persisted_resource_unavailable_response(
                 "provider_assessment_transition_unavailable",
                 "The assessment update could not be confirmed. Existing assessment state is unchanged; reload before retrying.",
+            )
+        }
+    }
+}
+
+async fn propose_provider_assessment_window(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<ProposeProviderAssessmentWindowRequest>,
+) -> Response {
+    if !validate_provider_assessment_window_proposal_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_assessment_window_proposal_invalid",
+                message: "Provide one valid replacement assessment window, time zone, current version, and request key.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return verified_provider_assessment_email_required_response();
+    };
+    match state
+        .owner_acquisition
+        .propose_provider_assessment_window(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        ProviderAssessmentWindowProposalResult::Updated(assessment)
+        | ProviderAssessmentWindowProposalResult::Replayed(assessment) => {
+            Json(assessment).into_response()
+        }
+        ProviderAssessmentWindowProposalResult::NotFound => resource_not_found_response(
+            "provider_assessment_not_found",
+            "The assessment is not available to this verified provider.",
+        ),
+        ProviderAssessmentWindowProposalResult::InvalidState(status) => {
+            (StatusCode::CONFLICT, Json(status)).into_response()
+        }
+        ProviderAssessmentWindowProposalResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_assessment_window_proposal_conflict",
+                message: "The assessment or replacement window changed. Reload its current state before retrying.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProviderAssessmentWindowProposalResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_assessment_window_proposal_unavailable",
+                "The replacement window could not be confirmed. Existing assessment state is unchanged; reload before retrying.",
             )
         }
     }
@@ -9315,6 +9378,52 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let replacement_payload = serde_json::json!({
+            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            "proposed_window_start_epoch_seconds": 1_800_086_400_i64,
+            "proposed_window_end_epoch_seconds": 1_800_090_000_i64,
+            "time_zone": "America/Phoenix",
+            "expected_version": 2,
+            "idempotency_key": "assessment-window-replacement-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/window-proposal")
+                    .header("content-type", "application/json")
+                    .body(Body::from(replacement_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/window-proposal")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+                            "proposed_window_start_epoch_seconds": 1_800_086_400_i64,
+                            "proposed_window_end_epoch_seconds": 1_800_080_000_i64,
+                            "time_zone": "America/Phoenix",
+                            "expected_version": 2,
+                            "idempotency_key": "assessment-window-replacement-invalid-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
         let transition_payload = serde_json::json!({
             "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",

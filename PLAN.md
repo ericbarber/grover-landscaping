@@ -544,7 +544,11 @@ Active slice:
   separately projected private-note workspace. Active disclosure reloads now
   recover the current assessment and both visibility-specific threads, while
   retry keys and concurrent start recovery preserve one authoritative result.
-  A provider replacement-window action after an owner change request is next.
+  Phase 4A2c5 is delivered. After an owner requests a different on-site time,
+  the same verified provider can submit one bounded replacement against the
+  current version; exact retries replay, changed/stale writes conflict, ended
+  authority fails closed, and the assessment returns to owner confirmation
+  without scheduling service. Versioned initial-service proposals are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

@@ -174,3 +174,30 @@ test('a provider sees only owner-approved assessment details and loses future ac
   await expect(page.getByText('Private local preview')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('a provider proposes a replacement after the owner requests another on-site time', async ({ page }) => {
+  await page.route('**/auth/config', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }) }));
+  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'recipient-user-1', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [] }) }));
+  await page.route('**/provider-invitations/progress', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+    invitation_id: 'invitation_3', progress_stage: 'assessment_access_ready', status_label: 'Owner-approved assessment access is ready', next_action: 'review_owner_approved_details', recipient_email_checked: true, organization_relationship_checked: true, opportunity_response_capability: true, response_action: 'express_interest', closed: false,
+  }) }));
+  await page.route('**/provider-disclosures/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+    invitation_id: 'invitation_3', status: 'active', can_access: true, grant_id: 'owner_disclosure_grant_3', organization_name: 'Desert Green Care', property_name: 'Home', purpose: 'yard_assessment', approved_categories: ['yard_brief'], withheld_categories: ['exact_address'], brief_version: 4, expires_at_epoch_seconds: 1_900_000_000, yard_brief: { yard_areas: ['front_yard'], care_goals: ['routine_maintenance'], cadence_preference: 'every_two_weeks' }, authority_boundary: 'Assessment access only.', assessment: { assessment_id: 'assessment_3', invitation_id: 'invitation_3', property_id: 'property_3', organization_id: 'organization_3', disclosure_grant_id: 'owner_disclosure_grant_3', assessment_method: 'on_site', status: 'window_change_requested', proposed_window_start_epoch_seconds: 1_800_000_000, proposed_window_end_epoch_seconds: 1_800_003_600, time_zone: 'America/Phoenix', version: 2 }, customer_safe_messages: [], private_notes: [],
+  }) }));
+  await page.route('**/provider-assessments/assessment_3/window-proposal', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({ token: 'replacement_secret', expected_version: 2 });
+    expect(body.time_zone).toEqual(expect.any(String));
+    expect(body.proposed_window_end_epoch_seconds).toBeGreaterThan(body.proposed_window_start_epoch_seconds);
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ assessment_id: 'assessment_3', invitation_id: 'invitation_3', property_id: 'property_3', organization_id: 'organization_3', disclosure_grant_id: 'owner_disclosure_grant_3', assessment_method: 'on_site', status: 'window_proposed', proposed_window_start_epoch_seconds: body.proposed_window_start_epoch_seconds, proposed_window_end_epoch_seconds: body.proposed_window_end_epoch_seconds, time_zone: body.time_zone, version: 3 }) });
+  });
+
+  await page.goto('/app/provider-invitation#invitation=replacement_secret');
+  await expect(page.getByText('The owner requested another time.')).toBeVisible();
+  await page.getByLabel('Replacement starts').fill('2027-01-15T10:00');
+  await page.getByLabel('Replacement ends').fill('2027-01-15T11:00');
+  await page.getByRole('button', { name: 'Send replacement window' }).click();
+  await expect(page.getByText('Replacement assessment window sent for owner confirmation.')).toBeVisible();
+  await expect(page.getByText('window proposed', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
