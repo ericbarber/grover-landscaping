@@ -530,8 +530,7 @@ Active slice:
   assessment's shared messages, and verified providers use separate shared-
   message and provider-private-note routes. Separate validation and response
   mapping preserve invalid, missing, ended-state, conflict, replay, and outage
-  distinctions; there is no owner private-note route. Production owner/provider
-  assessment interfaces are next.
+  distinctions; there is no owner private-note route.
 - Phase 4A2c3 is delivered. The production Yard Owner property journey now
   lists assessment history, distinguishes proposed, confirmed, active, and
   terminal states, lets the owner confirm or request another on-site window,
@@ -539,7 +538,13 @@ Active slice:
   preserved across uncertain decisions, stale conflicts reload authoritative
   state, provider-private notes remain absent, and the interface never presents
   assessment as pricing, service acceptance, crew assignment, or scheduling.
-  The verified-provider assessment workspace is next.
+  Phase 4A2c4 is delivered. Verified providers can start a remote review or
+  propose an on-site window, obey owner confirmation before beginning a visit,
+  record controlled outcomes, exchange customer-safe messages, and maintain a
+  separately projected private-note workspace. Active disclosure reloads now
+  recover the current assessment and both visibility-specific threads, while
+  retry keys and concurrent start recovery preserve one authoritative result.
+  A provider replacement-window action after an owner change request is next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

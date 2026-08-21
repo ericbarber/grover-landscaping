@@ -222,7 +222,12 @@ recovery. The communication repositories and authenticated APIs are now
 delivered. Phase 4A2c3 now adopts the production Yard Owner assessment
 workspace with status history, explicit proposed-window decisions,
 customer-safe conversation, responsive recovery, and no provider-private note
-path. The verified-provider assessment workspace is next.
+path.
+Phase 4A2c4 now adds that provider workspace with remote/on-site start,
+owner-confirmation gating, lifecycle outcomes, separately shaped shared and
+private communication, disclosure-scoped authoritative reload, responsive
+browser coverage, and no service-activation action. A versioned replacement
+window after an owner change request is the remaining assessment recovery slice.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

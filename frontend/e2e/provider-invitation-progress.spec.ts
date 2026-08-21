@@ -46,6 +46,9 @@ test('a checked recipient loads status without retaining the bearer fragment', a
 
 test('a provider sees only owner-approved assessment details and loses future access after revocation', async ({ page }) => {
   let accessActive = true;
+  let assessment: Record<string, unknown> | null = null;
+  const messages: Record<string, unknown>[] = [];
+  const privateNotes: Record<string, unknown>[] = [];
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -85,6 +88,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
       contentType: 'application/json',
       body: JSON.stringify({
         invitation_id: 'invitation_2', status: 'active', can_access: true,
+        grant_id: 'owner_disclosure_grant_2', receipt_id: 'receipt_2',
         organization_name: 'Desert Green Care', property_name: 'Home', purpose: 'yard_assessment',
         approved_categories: ['selected_yard_photos', 'access_considerations'],
         withheld_categories: ['exact_address', 'yard_brief', 'owner_contact'], brief_version: 4,
@@ -96,8 +100,45 @@ test('a provider sees only owner-approved assessment details and loses future ac
         }],
         access_considerations: 'Keep the side gate closed for the dog.',
         authority_boundary: 'Assessment access does not approve pricing, schedule service, assign a crew, or authorize work.',
+        assessment, customer_safe_messages: messages, private_notes: privateNotes,
       }),
     });
+  });
+  await page.route('**/provider-assessments', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({ token: 'selective_access_secret', disclosure_grant_id: 'owner_disclosure_grant_2', assessment_method: 'remote' });
+    assessment = {
+      assessment_id: 'assessment_2', invitation_id: 'invitation_2', property_id: 'property_2',
+      organization_id: 'organization_2', disclosure_grant_id: 'owner_disclosure_grant_2',
+      assessment_method: 'remote', status: 'remote_review', version: 1,
+    };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(assessment) });
+  });
+  await page.route('**/provider-assessments/assessment_2/transitions', async (route) => {
+    const body = route.request().postDataJSON();
+    const currentVersion = Number(assessment?.version);
+    expect(body.expected_version).toBe(currentVersion);
+    assessment = {
+      ...assessment,
+      status: body.action === 'begin' ? 'in_progress' : 'completed',
+      owner_visible_summary: body.owner_visible_summary,
+      version: currentVersion + 1,
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(assessment) });
+  });
+  await page.route('**/provider-assessments/assessment_2/messages', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.private_body).toBeUndefined();
+    const created = { message_id: 'message_2', assessment_id: 'assessment_2', author_role: 'provider', message_kind: body.message_kind, customer_safe_body: body.customer_safe_body, assessment_version_snapshot: body.expected_assessment_version, created_at_epoch_seconds: 1_800_000_001 };
+    messages.push(created);
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) });
+  });
+  await page.route('**/provider-assessments/assessment_2/private-notes', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.customer_safe_body).toBeUndefined();
+    const created = { note_id: 'note_2', assessment_id: 'assessment_2', organization_id: 'organization_2', author_user_id: 'recipient-user-1', note_kind: body.note_kind, private_body: body.private_body, assessment_version_snapshot: body.expected_assessment_version, created_at_epoch_seconds: 1_800_000_002 };
+    privateNotes.push(created);
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) });
   });
 
   await page.goto('/app/provider-invitation#invitation=selective_access_secret');
@@ -112,6 +153,19 @@ test('a provider sees only owner-approved assessment details and loses future ac
   await expect(page.getByText('Service address', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Yard brief', { exact: true })).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('selective_access_secret');
+
+  await page.getByRole('button', { name: 'Start remote review' }).click();
+  await expect(page.getByText('remote review', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Begin assessment' }).click();
+  await page.getByLabel('Customer-safe message').fill('The visible irrigation check is included in this review.');
+  await page.getByRole('button', { name: 'Share with owner' }).click();
+  await expect(page.getByText('The visible irrigation check is included in this review.')).toBeVisible();
+  await page.getByLabel('Provider-private note').fill('Route fit remains internal.');
+  await page.getByRole('button', { name: 'Save private note' }).click();
+  await expect(page.getByText('Route fit remains internal.')).toBeVisible();
+  await page.getByLabel('Customer-safe outcome').fill('Remote assessment complete; proposal preparation may begin separately.');
+  await page.getByRole('button', { name: 'Complete assessment' }).click();
+  await expect(page.getByText('Remote assessment complete; proposal preparation may begin separately.')).toBeVisible();
 
   accessActive = false;
   await page.getByRole('button', { name: 'Check invitation progress' }).click();

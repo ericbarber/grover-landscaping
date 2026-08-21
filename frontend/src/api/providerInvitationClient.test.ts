@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
-import { fetchProviderDisclosureAccess, fetchProviderInvitationProgress } from './providerInvitationClient';
+import {
+  createProviderAssessmentMessage,
+  createProviderAssessmentPrivateNote,
+  fetchProviderDisclosureAccess,
+  fetchProviderInvitationProgress,
+  startProviderAssessment,
+  transitionProviderAssessment,
+} from './providerInvitationClient';
 
 afterEach(() => {
   configureApiAuthentication(false, async () => null);
@@ -37,19 +44,65 @@ describe('provider invitation progress client', () => {
   it('maps only present owner-approved disclosure categories', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       invitation_id: 'invitation_1', status: 'active', can_access: true,
+      grant_id: 'owner_disclosure_grant_1', receipt_id: 'receipt_1',
       organization_name: 'Desert Bloom', property_name: 'Home', purpose: 'yard_assessment',
       approved_categories: ['exact_address'], withheld_categories: ['owner_contact'],
       brief_version: 2, expires_at_epoch_seconds: 1_800_000_000,
       exact_address: '123 Oak Street, Phoenix, AZ 85004',
+      assessment: {
+        assessment_id: 'assessment_1', invitation_id: 'invitation_1', property_id: 'property_1',
+        organization_id: 'organization_1', disclosure_grant_id: 'owner_disclosure_grant_1',
+        assessment_method: 'remote', status: 'remote_review', version: 1,
+      },
+      customer_safe_messages: [{
+        message_id: 'message_1', assessment_id: 'assessment_1', author_role: 'owner',
+        message_kind: 'owner_question', customer_safe_body: 'Is the controller included?',
+        assessment_version_snapshot: 1, created_at_epoch_seconds: 1_800_000_001,
+      }],
+      private_notes: [{
+        note_id: 'note_1', assessment_id: 'assessment_1', organization_id: 'organization_1',
+        author_user_id: 'provider_1', note_kind: 'route_fit', private_body: 'Private route note.',
+        assessment_version_snapshot: 1, created_at_epoch_seconds: 1_800_000_002,
+      }],
       authority_boundary: 'Assessment access only.', persisted: true,
     }), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     const access = await fetchProviderDisclosureAccess('owner_provider_secret');
     expect(access.exactAddress).toContain('123 Oak Street');
     expect(access.ownerContact).toBeUndefined();
+    expect(access.grantId).toBe('owner_disclosure_grant_1');
+    expect(access.assessment?.status).toBe('remote_review');
+    expect(access.customerSafeMessages?.[0].authorRole).toBe('owner');
+    expect(access.privateNotes?.[0].privateBody).toBe('Private route note.');
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       token: 'owner_provider_secret',
     });
+  });
+
+  it('sends provider assessment mutations with token, current version, and separate visibility bodies', async () => {
+    const responses = [
+      { assessment_id: 'assessment_1', invitation_id: 'invitation_1', property_id: 'property_1', organization_id: 'organization_1', disclosure_grant_id: 'grant_1', assessment_method: 'remote', status: 'remote_review', version: 1 },
+      { assessment_id: 'assessment_1', invitation_id: 'invitation_1', property_id: 'property_1', organization_id: 'organization_1', disclosure_grant_id: 'grant_1', assessment_method: 'remote', status: 'in_progress', version: 2 },
+      { message_id: 'message_1', assessment_id: 'assessment_1', author_role: 'provider', message_kind: 'provider_answer', customer_safe_body: 'Shared answer.', assessment_version_snapshot: 2, created_at_epoch_seconds: 1 },
+      { note_id: 'note_1', assessment_id: 'assessment_1', organization_id: 'organization_1', author_user_id: 'provider_1', note_kind: 'route_fit', private_body: 'Private note.', assessment_version_snapshot: 2, created_at_epoch_seconds: 2 },
+    ];
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(
+      JSON.stringify(responses.shift()), { status: 200 },
+    )));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const started = await startProviderAssessment('secret', 'grant_1', 'remote', {}, 'start-key');
+    const active = await transitionProviderAssessment('secret', started, 'begin', {}, 'begin-key');
+    await createProviderAssessmentMessage('secret', active, 'provider_answer', 'Shared answer.', 'message-key');
+    await createProviderAssessmentPrivateNote('secret', active, 'route_fit', 'Private note.', 'note-key');
+
+    const bodies = fetchMock.mock.calls.map((call) => JSON.parse((call[1] as RequestInit).body as string));
+    expect(bodies[0]).toMatchObject({ token: 'secret', disclosure_grant_id: 'grant_1', idempotency_key: 'start-key' });
+    expect(bodies[1]).toMatchObject({ action: 'begin', expected_version: 1, idempotency_key: 'begin-key' });
+    expect(bodies[2]).toMatchObject({ customer_safe_body: 'Shared answer.', expected_assessment_version: 2 });
+    expect(bodies[2]).not.toHaveProperty('private_body');
+    expect(bodies[3]).toMatchObject({ private_body: 'Private note.', expected_assessment_version: 2 });
+    expect(bodies[3]).not.toHaveProperty('customer_safe_body');
   });
 });

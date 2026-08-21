@@ -170,9 +170,18 @@ Phase 4A2c3 adopts the owner assessment workspace in production React:
 - retries reuse decision keys, conflicts reload authoritative state, and every
   decision repeats that assessment is not service acceptance or scheduling.
 
+Phase 4A2c4 adopts the verified-provider assessment workspace in production
+React. Active disclosure reads now reload the provider's assessment, shared
+conversation, and organization-private notes without exposing them through an
+owner route. The interface supports remote or proposed on-site starts, the
+owner-confirmation gate, begin and terminal outcomes, customer-safe messages,
+private notes, stable retry keys, and the explicit no-service boundary. Exact
+concurrent assessment starts also recover as replay after the invitation-level
+uniqueness check observes another committed request.
+
 ## Next slices
 
-1. Adopt provider assessment start, lifecycle, customer-safe conversation, and
-   private-note interfaces with responsive, stale-state, and outage coverage.
-2. Begin versioned initial-service proposals only after both assessment
-   interfaces are complete.
+1. Add a versioned provider action to replace an on-site window after the owner
+   requests a different time.
+2. Begin versioned initial-service proposals after that scheduling recovery is
+   complete.

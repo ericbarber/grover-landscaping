@@ -68,7 +68,7 @@ The approved experience is defined by:
 | 4A2c1 | Delivered | Owner-scoped, optimistic, replay-safe on-site assessment window confirmation/change request with controlled actions, append-only event, route policy, outage, concurrency, and cross-owner coverage |
 | 4A2c2 | Delivered | Provider-authorized begin/complete/cannot-assess/cancel transitions with full current-authority rechecks, optimistic concurrency, exact replay, controlled owner-safe outcomes, minimized events, and no service activation |
 | 4A2c3 | Delivered | Production Yard Owner assessment history, proposed-window decision, customer-safe conversation, and explicit no-service boundary |
-| 4A2c4 | Planned | Production verified-provider assessment start, lifecycle, shared conversation, and private-note workspace |
+| 4A2c4 | Delivered | Production verified-provider assessment start, lifecycle, shared conversation, private-note workspace, and authoritative disclosure-scoped reload |
 | 4A2c5–7 | Planned | Versioned proposal, activation, and governed pilot convergence |
 
 ## Delivery principles
@@ -262,9 +262,13 @@ Phase 4A2c3 adopts the owner half in production React with assessment history,
 proposed-window confirmation or change requests, customer-safe messages,
 terminal outcome summaries, responsive recovery, and repeated no-service
 boundaries. Provider-private notes have no owner read path or interface.
+Phase 4A2c4 adopts the provider half with disclosure-scoped authoritative
+reload, remote/on-site start, owner-confirmation gating, lifecycle outcomes,
+customer-safe conversation, a separately rendered private-note workspace, and
+responsive revocation coverage.
 
-- Add assessment method/window lifecycle and customer-safe conversation.
-- Separate provider-private assessment notes from owner-visible content.
+- Add a versioned replacement-window action after an owner requests a
+  different on-site assessment time.
 - Add versioned initial-service proposals with scope, exclusions, cadence,
   arrival/weather/cancellation policy, proof expectation, price, expiration,
   revision, and immutable accepted snapshot.

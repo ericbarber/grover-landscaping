@@ -559,6 +559,12 @@ pub struct OwnerProviderDisclosureAccess {
     pub access_considerations: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authority_boundary: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assessment: Option<OwnerProviderAssessmentRecord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_safe_messages: Option<Vec<OwnerProviderAssessmentMessageRecord>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub private_notes: Option<Vec<OwnerProviderAssessmentPrivateNoteRecord>>,
     pub persisted: bool,
 }
 
@@ -8351,6 +8357,9 @@ fn closed_provider_disclosure(
         owner_contact: None,
         access_considerations: None,
         authority_boundary: None,
+        assessment: None,
+        customer_safe_messages: None,
+        private_notes: None,
         persisted: true,
     }
 }
@@ -8663,6 +8672,55 @@ async fn open_owner_provider_disclosure(
         .iter()
         .any(|category| category == "access_considerations")
         .then(|| row.get("considerations"));
+    let assessment_query = format!(
+        "{OWNER_PROVIDER_ASSESSMENT_SELECT}
+         WHERE invitation_id = $1 AND provider_actor_user_id = $2
+           AND disclosure_grant_id = $3
+         LIMIT 1"
+    );
+    let assessment_row = sqlx::query(&assessment_query)
+        .bind(&invitation_id)
+        .bind(recipient_user_id)
+        .bind(row.get::<String, _>("grant_id"))
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let assessment = assessment_row
+        .as_ref()
+        .map(owner_provider_assessment_from_row);
+    let (customer_safe_messages, private_notes) = if let Some(assessment) = &assessment {
+        let message_rows = sqlx::query(&format!(
+            "{OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT}
+             WHERE assessment_id = $1 ORDER BY created_at, id"
+        ))
+        .bind(&assessment.assessment_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        let note_rows = sqlx::query(&format!(
+            "{OWNER_PROVIDER_ASSESSMENT_PRIVATE_NOTE_SELECT}
+             WHERE assessment_id = $1 AND organization_id = $2
+             ORDER BY created_at, id"
+        ))
+        .bind(&assessment.assessment_id)
+        .bind(&assessment.organization_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        (
+            Some(
+                message_rows
+                    .iter()
+                    .map(owner_provider_assessment_message_from_row)
+                    .collect(),
+            ),
+            Some(
+                note_rows
+                    .iter()
+                    .map(owner_provider_assessment_private_note_from_row)
+                    .collect(),
+            ),
+        )
+    } else {
+        (None, None)
+    };
     let access = OwnerProviderDisclosureAccess {
         invitation_id,
         status: "active".to_string(),
@@ -8683,6 +8741,9 @@ async fn open_owner_provider_disclosure(
         owner_contact,
         access_considerations,
         authority_boundary: Some("Assessment access does not accept pricing, start service, schedule work, or assign a crew.".to_string()),
+        assessment,
+        customer_safe_messages,
+        private_notes,
         persisted: true,
     };
     transaction.commit().await?;
@@ -9197,7 +9258,16 @@ async fn create_owner_provider_assessment(
     .await?;
     if existing_assessment.is_some() {
         transaction.rollback().await?;
-        return Ok(PersistedAssessmentCreateOutcome::Conflict);
+        return Ok(load_owner_provider_assessment_replay(
+            pool,
+            provider_actor_user_id,
+            verified_email,
+            verified_email_fingerprint,
+            token_hash,
+            &request,
+        )
+        .await?
+        .unwrap_or(PersistedAssessmentCreateOutcome::Conflict));
     }
     let assessment_id = format!("owner_provider_assessment_{}", Uuid::new_v4().simple());
     let status = if request.assessment_method == "remote" {

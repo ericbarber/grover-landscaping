@@ -8,6 +8,7 @@ import {
 } from '../api/providerInvitationClient';
 import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
+import { ProviderAssessmentWorkspace } from './ProviderAssessmentWorkspace';
 
 function message(error: unknown): string {
   if (error instanceof ApiRequestError || error instanceof Error) return error.message;
@@ -138,6 +139,12 @@ export function ProviderInvitationProgressPage() {
                   {disclosure.accessConsiderations ? <div className="rounded-xl bg-white p-4"><strong>Access considerations</strong><p className="mt-1 whitespace-pre-wrap text-sm">{disclosure.accessConsiderations}</p></div> : null}
                 </div>
                 <p className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-bold leading-6">{disclosure.authorityBoundary}</p>
+                <ProviderAssessmentWorkspace
+                  access={disclosure}
+                  onChange={setDisclosure}
+                  onReload={() => loadProgress(token)}
+                  token={token}
+                />
               </>}
             </section>
           ) : null}

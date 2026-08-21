@@ -2032,7 +2032,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     else {
         panic!("owner-safe assessment messages should load");
     };
-    assert_eq!(owner_messages, vec![owner_message, provider_message]);
+    assert_eq!(
+        owner_messages,
+        vec![owner_message.clone(), provider_message.clone()],
+    );
     let owner_messages_json =
         serde_json::to_string(&owner_messages).expect("owner messages should serialize");
     assert!(!owner_messages_json.contains("crew_hours"));
@@ -2061,6 +2064,36 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .to_string();
     assert!(!communication_audit.contains("irrigation controller"));
     assert!(!communication_audit.contains("crew_hours"));
+
+    let OwnerProviderDisclosureAccessResult::Loaded(provider_workspace) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("active provider disclosure should reload the assessment workspace");
+    };
+    assert_eq!(
+        provider_workspace.grant_id.as_deref(),
+        Some(disclosure_grant.grant_id.as_str()),
+    );
+    assert_eq!(provider_workspace.assessment.as_ref(), Some(&assessment));
+    assert_eq!(
+        provider_workspace.customer_safe_messages.as_deref(),
+        Some([owner_message.clone(), provider_message.clone()].as_slice()),
+    );
+    assert_eq!(
+        provider_workspace.private_notes.as_deref(),
+        Some([private_note.clone()].as_slice()),
+    );
+    let provider_workspace_json = serde_json::to_string(&provider_workspace)
+        .expect("provider assessment workspace should serialize");
+    assert!(provider_workspace_json.contains("crew_hours"));
+    assert!(provider_workspace_json.contains("irrigation controller"));
 
     let window_decision = DecideOwnerProviderAssessmentWindowRequest {
         action: "confirm".to_string(),
