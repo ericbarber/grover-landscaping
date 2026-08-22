@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
+import type { InitialServiceProposal } from '../domain/initialServiceProposals';
 import {
   createProviderAssessmentMessage,
   createProviderAssessmentPrivateNote,
+  createProviderInitialServiceProposalResponse,
   fetchProviderDisclosureAccess,
   fetchProviderInvitationProgress,
   proposeProviderAssessmentWindow,
@@ -80,6 +82,14 @@ describe('provider invitation progress client', () => {
         issued_at_epoch_seconds: 1_799_000_000, expires_at_epoch_seconds: 1_800_000_000,
         persisted: true,
       },
+      initial_service_proposal_messages: [{
+        message_id: 'proposal_message_1', proposal_id: 'proposal_1',
+        assessment_id: 'assessment_1', author_role: 'owner',
+        message_kind: 'owner_question', customer_safe_body: 'Does this include edging?',
+        proposal_version_snapshot: 2, series_version_snapshot: 2,
+        in_reply_to_message_id: null, related_proposal_id: null,
+        created_at_epoch_seconds: 1_799_500_000, persisted: true,
+      }],
       authority_boundary: 'Assessment access only.', persisted: true,
     }), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -92,6 +102,10 @@ describe('provider invitation progress client', () => {
     expect(access.privateNotes?.[0].privateBody).toBe('Private route note.');
     expect(access.currentInitialServiceProposal).toEqual(expect.objectContaining({
       proposalId: 'proposal_1', proposalVersion: 2, priceAmountMinor: 12000,
+    }));
+    expect(access.initialServiceProposalMessages?.[0]).toEqual(expect.objectContaining({
+      messageId: 'proposal_message_1', messageKind: 'owner_question',
+      proposalVersionSnapshot: 2,
     }));
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
@@ -130,6 +144,46 @@ describe('provider invitation progress client', () => {
     });
     expect(body).not.toHaveProperty('route_fit');
     expect(body).not.toHaveProperty('margin');
+  });
+
+  it('responds to an exact owner proposal message and links the current revision', async () => {
+    const responseApi = {
+      message_id: 'proposal_message_2', proposal_id: 'proposal_1',
+      assessment_id: 'assessment_1', author_role: 'provider',
+      message_kind: 'provider_response', customer_safe_body: 'Version 2 includes edging.',
+      proposal_version_snapshot: 1, series_version_snapshot: 2,
+      in_reply_to_message_id: 'proposal_message_1', related_proposal_id: 'proposal_2',
+      created_at_epoch_seconds: 1_799_600_000, persisted: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(
+      JSON.stringify(responseApi), { status: 201 },
+    ));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(createProviderInitialServiceProposalResponse(
+      'secret',
+      'assessment_1',
+      { proposalId: 'proposal_2', proposalVersion: 2, status: 'sent' } as InitialServiceProposal,
+      {
+        messageId: 'proposal_message_1', proposalId: 'proposal_1',
+        assessmentId: 'assessment_1', authorRole: 'owner', messageKind: 'owner_question',
+        customerSafeBody: 'Does this include edging?', proposalVersionSnapshot: 1,
+        seriesVersionSnapshot: 1, createdAtEpochSeconds: 1, persisted: true,
+      },
+      'Version 2 includes edging.',
+      'response-key',
+    )).resolves.toEqual(expect.objectContaining({
+      messageId: 'proposal_message_2', relatedProposalId: 'proposal_2',
+      seriesVersionSnapshot: 2,
+    }));
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
+      token: 'secret',
+      in_reply_to_message_id: 'proposal_message_1',
+      customer_safe_body: 'Version 2 includes edging.',
+      expected_proposal_version: 2,
+      related_proposal_id: 'proposal_2',
+      idempotency_key: 'response-key',
+    });
   });
 
   it('sends provider assessment mutations with token, current version, and separate visibility bodies', async () => {

@@ -74,7 +74,7 @@ The approved experience is defined by:
 | 4B1a | Delivered | Constrained immutable proposal-version, owner-decision, accepted-snapshot, and minimized-event schema |
 | 4B1b | Delivered | Immutable proposal repository versions, expiration, exact replay/conflict, owner isolation, accepted-but-unactivated snapshots, minimized events, and PostgreSQL coverage |
 | 4B2a | Delivered | Authenticated provider publish/revise and owner list/detail/exact-version decision APIs with explicit lifecycle and outage mapping |
-| 4B2b | In progress | Append-only owner questions/change requests and provider replies now persist with exact proposal-version context, revised-version linkage, replay safety, isolation, and no lifecycle/activation side effects; authenticated owner/provider routes and reload are delivered, while both workspaces remain |
+| 4B2b | Delivered | Append-only owner questions/change requests and provider replies persist with exact proposal-version context, revised-version linkage, replay safety, isolation, authenticated routes/reload, responsive owner/provider interfaces, and no decision/lifecycle/activation side effects |
 | 4B3 | Delivered | Responsive provider authoring/revision with latest-version reload and neutral Yard Owner immutable-history comparison/exact-version decisions against the delivered APIs |
 | 4C–D | Planned | Activation and governed pilot convergence |
 
@@ -281,9 +281,10 @@ Phase 4B1 and 4B2a deliver immutable proposal persistence plus authenticated
 provider publication/revision and owner list/detail/exact-version decisions.
 Acceptance creates an accepted-but-unactivated snapshot only. Phase 4B3
 production interfaces are delivered with provider reload/revision, neutral owner
-history and decision confirmation, and explicit no-scheduling boundaries. Phase 4B2b proposal
-questions/change requests remain a separate contract and must not be represented
-as decisions or assessment messages.
+history and decision confirmation, and explicit no-scheduling boundaries. Phase
+4B2b separately persists and exposes proposal questions/change requests and
+provider replies with exact-version context; they are not decisions or
+assessment messages.
 
 - Add versioned initial-service proposals with scope, exclusions, cadence,
   arrival/weather/cancellation policy, proof expectation, price, expiration,

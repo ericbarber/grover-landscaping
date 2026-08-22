@@ -8,6 +8,9 @@ export type InitialServicePriceBasis = 'per_visit' | 'monthly' | 'fixed';
 
 export type InitialServiceProposalDecisionAction = 'accept' | 'decline';
 
+export type InitialServiceProposalMessageKind = 'owner_question'
+  | 'owner_change_request' | 'provider_response';
+
 export interface InitialServiceProposal {
   proposalId: string;
   assessmentId: string;
@@ -48,6 +51,21 @@ export interface InitialServiceProposalDecision {
   decidedAtEpochSeconds: number;
   acceptanceSnapshotId?: string;
   acceptanceSnapshotSha256?: string;
+  persisted: boolean;
+}
+
+export interface InitialServiceProposalMessage {
+  messageId: string;
+  proposalId: string;
+  assessmentId: string;
+  authorRole: 'owner' | 'provider';
+  messageKind: InitialServiceProposalMessageKind;
+  customerSafeBody: string;
+  proposalVersionSnapshot: number;
+  seriesVersionSnapshot: number;
+  inReplyToMessageId?: string;
+  relatedProposalId?: string;
+  createdAtEpochSeconds: number;
   persisted: boolean;
 }
 

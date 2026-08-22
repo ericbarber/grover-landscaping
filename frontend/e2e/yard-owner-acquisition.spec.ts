@@ -588,6 +588,29 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await page.route('**/owner-properties/owner_property_4/provider-assessments', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([assessment]) }));
   await page.route('**/owner-properties/owner_property_4/provider-assessments/assessment_4/messages', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
   await page.route('**/owner-properties/owner_property_4/initial-service-proposals', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([proposal]) }));
+  let proposalMessages: Record<string, unknown>[] = [];
+  await page.route('**/owner-properties/owner_property_4/initial-service-proposals/proposal_4/messages', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(proposalMessages) });
+      return;
+    }
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      message_kind: 'owner_change_request', expected_proposal_version: 2,
+      customer_safe_body: 'Please include the irrigation controller check.',
+    });
+    const created = {
+      message_id: 'proposal_message_4', proposal_id: 'proposal_4',
+      assessment_id: 'assessment_4', author_role: 'owner',
+      message_kind: body.message_kind, customer_safe_body: body.customer_safe_body,
+      proposal_version_snapshot: body.expected_proposal_version,
+      series_version_snapshot: body.expected_proposal_version,
+      in_reply_to_message_id: null, related_proposal_id: null,
+      created_at_epoch_seconds: Math.floor(Date.now() / 1000), persisted: true,
+    };
+    proposalMessages = [...proposalMessages, created];
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) });
+  });
   await page.route('**/owner-properties/owner_property_4/initial-service-proposals/proposal_4/decision', async (route) => {
     const body = route.request().postDataJSON();
     expect(body).toMatchObject({
@@ -606,6 +629,11 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText('$120.00 per visit')).toBeVisible();
   await expect(page.getByText('Tree work above eight feet')).toBeVisible();
   await expect(page.getByText('Updated after confirming the turf area.')).toBeVisible();
+  await page.getByRole('button', { name: 'Request a change' }).click();
+  await page.getByLabel('Proposal message').fill('Please include the irrigation controller check.');
+  await page.getByRole('button', { name: 'Send change request' }).click();
+  await expect(page.getByText(/Change requested for proposal version 2. This did not decline or accept it/)).toBeVisible();
+  await expect(page.getByText('Please include the irrigation controller check.')).toBeVisible();
   await page.getByRole('button', { name: 'Review and accept' }).click();
   const affirmation = page.getByLabel(/I accept this exact proposal for provider setup/);
   await expect(page.getByRole('button', { name: 'Accept this exact version' })).toBeDisabled();

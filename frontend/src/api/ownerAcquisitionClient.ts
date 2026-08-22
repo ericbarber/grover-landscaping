@@ -5,6 +5,7 @@ import type {
   InitialServiceProposal,
   InitialServiceProposalDecision,
   InitialServiceProposalDecisionAction,
+  InitialServiceProposalMessage,
   InitialServiceProposalStatus,
 } from '../domain/initialServiceProposals';
 
@@ -203,6 +204,21 @@ interface ApiInitialServiceProposalDecision {
   decided_at_epoch_seconds: number;
   acceptance_snapshot_id?: string | null;
   acceptance_snapshot_sha256?: string | null;
+  persisted: boolean;
+}
+
+interface ApiInitialServiceProposalMessage {
+  message_id: string;
+  proposal_id: string;
+  assessment_id: string;
+  author_role: InitialServiceProposalMessage['authorRole'];
+  message_kind: InitialServiceProposalMessage['messageKind'];
+  customer_safe_body: string;
+  proposal_version_snapshot: number;
+  series_version_snapshot: number;
+  in_reply_to_message_id?: string | null;
+  related_proposal_id?: string | null;
+  created_at_epoch_seconds: number;
   persisted: boolean;
 }
 
@@ -568,6 +584,25 @@ function mapInitialServiceProposalDecision(
   };
 }
 
+function mapInitialServiceProposalMessage(
+  value: ApiInitialServiceProposalMessage,
+): InitialServiceProposalMessage {
+  return {
+    messageId: value.message_id,
+    proposalId: value.proposal_id,
+    assessmentId: value.assessment_id,
+    authorRole: value.author_role,
+    messageKind: value.message_kind,
+    customerSafeBody: value.customer_safe_body,
+    proposalVersionSnapshot: value.proposal_version_snapshot,
+    seriesVersionSnapshot: value.series_version_snapshot,
+    inReplyToMessageId: value.in_reply_to_message_id ?? undefined,
+    relatedProposalId: value.related_proposal_id ?? undefined,
+    createdAtEpochSeconds: value.created_at_epoch_seconds,
+    persisted: value.persisted,
+  };
+}
+
 async function ownerRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await authenticatedFetch(`${API_BASE_URL}${path}`, init);
   if (!response.ok) {
@@ -761,6 +796,42 @@ export async function decideOwnerInitialServiceProposal(
   );
   return mapInitialServiceProposalDecision(
     await response.json() as ApiInitialServiceProposalDecision,
+  );
+}
+
+export async function fetchOwnerInitialServiceProposalMessages(
+  propertyId: string,
+  proposalId: string,
+): Promise<InitialServiceProposalMessage[]> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals/${encodeURIComponent(proposalId)}/messages`,
+  );
+  return ((await response.json()) as ApiInitialServiceProposalMessage[])
+    .map(mapInitialServiceProposalMessage);
+}
+
+export async function createOwnerInitialServiceProposalMessage(
+  propertyId: string,
+  proposal: InitialServiceProposal,
+  messageKind: 'owner_question' | 'owner_change_request',
+  customerSafeBody: string,
+  idempotencyKey: string,
+): Promise<InitialServiceProposalMessage> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals/${encodeURIComponent(proposal.proposalId)}/messages`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        message_kind: messageKind,
+        customer_safe_body: customerSafeBody,
+        expected_proposal_version: proposal.proposalVersion,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  return mapInitialServiceProposalMessage(
+    await response.json() as ApiInitialServiceProposalMessage,
   );
 }
 

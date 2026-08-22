@@ -25,7 +25,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Crew field route and execution | [Crew route V1](../design/high-fidelity/field/crew-route-mobile-v1.png) and [field wireframes](../design/wireframes/field/01-home.svg) | Partial | Adopt the field hierarchy across Home → Route → Jobs → Job; keep offline queue, photo, checklist, amendment, and completion recovery behavior intact. |
 | Manager daily operations | [Schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png) and [manager wireframes](../design/wireframes/manager/00-manager-hub.svg) | Partial | Converge the production hub, schedule, dispatch, inspector, publish, capacity-risk, and Recovery compositions across desktop, tablet, and mobile. |
 | Completion proof and communication | [Reports wireframe](../design/wireframes/manager/04-reports.svg) and [shared proof wireframe](../design/wireframes/public/04-shared-customer-proof.svg) | Partial | Link crew completion, manager evidence review, customer-safe delivery, recommendation/bid decision, and recovery as one responsive journey. |
-| Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, provider/owner proposal interfaces, and proposal-conversation persistence/APIs are delivered. Next: conversation interfaces, explicit activation, relationship continuity, and only afterward any curated discovery. |
+| Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, provider/owner proposals, and version-aware proposal collaboration are delivered. Next: explicit activation, relationship continuity, and only afterward any curated discovery. |
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Design ready / partial foundations | Adopt the customer next-visit read model, service-day states, delivered proof, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md) and [handoff](../design/review/yard-crew-acquisition-handoff.md) | Design ready / reciprocal entry partial | Adopt provider public routing and identity/readiness first, then connect known-owner invitation, assessment, proposal, and first-service preparation. Curated opportunities and alerts remain gated on marketplace operations. |
 | Property-manager portfolios | [Portfolio wireframe](../design/wireframes/customer/02-property-manager-portfolio.svg) | Partial foundations | Produce and validate the connected working design, then adopt portfolio readiness, exceptions, property proof, and vendor accountability without exposing provider-private data. |
@@ -39,8 +39,8 @@ remains the canonical delivery-status record for all product and platform work.
 The next repository-owned phases are ordered by an existing approved contract,
 user value, and dependency safety:
 
-1. Define and deliver proposal questions/change requests, then the explicit
-   activation boundary. Curated discovery stays deferred.
+1. Deliver the explicit accepted-proposal activation boundary. Curated discovery
+   stays deferred.
 2. Finish shared authenticated-shell adoption: outlined icons, desktop density,
    status primitives, and tablet navigation behavior.
 3. Converge field execution from Home through completion without weakening

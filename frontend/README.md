@@ -34,9 +34,12 @@ not currently depend on React Router.
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting
 - Yard Owner private property and brief intake, guided media, provider connection
-  progress, disclosure consent/history/revocation, and assessment collaboration
+  progress, disclosure consent/history/revocation, assessment collaboration,
+  immutable proposal review/decisions, and version-specific questions/change
+  requests
 - Provider recipient progress, disclosure-limited assessment workspace, and
-  separate customer-safe versus provider-private notes
+  separate customer-safe versus provider-private notes, proposal
+  authoring/revision, and exact-message proposal responses
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records
@@ -71,7 +74,8 @@ After a completed assessment, the provider workspace can publish or revise a
 customer-safe initial-service proposal and reload its latest immutable version.
 The Yard Owner workspace presents neutral proposal history and requires an
 exact-version confirmation to accept or decline; acceptance does not schedule a
-visit, collect payment, or assign a crew.
+visit, collect payment, or assign a crew. Both workspaces expose a separate,
+version-aware proposal conversation whose messages never imply a decision.
 
 ## Validation
 

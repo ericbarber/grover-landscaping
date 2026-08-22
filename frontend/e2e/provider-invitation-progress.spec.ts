@@ -72,6 +72,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
   let proposal: Record<string, unknown> | null = null;
   const messages: Record<string, unknown>[] = [];
   const privateNotes: Record<string, unknown>[] = [];
+  const proposalMessages: Record<string, unknown>[] = [];
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -125,6 +126,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
         authority_boundary: 'Assessment access does not approve pricing, schedule service, assign a crew, or authorize work.',
         assessment, customer_safe_messages: messages, private_notes: privateNotes,
         initial_service_proposal: proposal,
+        initial_service_proposal_messages: proposalMessages,
       }),
     });
   });
@@ -186,7 +188,35 @@ test('a provider sees only owner-approved assessment details and loses future ac
       revision_note: null, issued_at_epoch_seconds: 1_800_000_000,
       expires_at_epoch_seconds: body.expires_at_epoch_seconds, persisted: true,
     };
+    proposalMessages.push({
+      message_id: 'proposal_message_owner_2', proposal_id: 'proposal_2',
+      assessment_id: 'assessment_2', author_role: 'owner',
+      message_kind: 'owner_question', customer_safe_body: 'Does this include edging near the irrigation boxes?',
+      proposal_version_snapshot: 1, series_version_snapshot: 1,
+      in_reply_to_message_id: null, related_proposal_id: null,
+      created_at_epoch_seconds: 1_800_000_010, persisted: true,
+    });
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(proposal) });
+  });
+  await page.route('**/provider-assessments/assessment_2/initial-service-proposal-responses', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      token: 'selective_access_secret',
+      in_reply_to_message_id: 'proposal_message_owner_2',
+      customer_safe_body: 'Yes. Version 1 includes edging around the visible irrigation boxes.',
+      expected_proposal_version: 1,
+    });
+    expect(body.related_proposal_id).toBeUndefined();
+    const created = {
+      message_id: 'proposal_message_provider_2', proposal_id: 'proposal_2',
+      assessment_id: 'assessment_2', author_role: 'provider',
+      message_kind: 'provider_response', customer_safe_body: body.customer_safe_body,
+      proposal_version_snapshot: 1, series_version_snapshot: 1,
+      in_reply_to_message_id: body.in_reply_to_message_id, related_proposal_id: null,
+      created_at_epoch_seconds: 1_800_000_020, persisted: true,
+    };
+    proposalMessages.push(created);
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) });
   });
 
   await page.goto('/app/provider-invitation#invitation=selective_access_secret');
@@ -223,6 +253,12 @@ test('a provider sees only owner-approved assessment details and loses future ac
   await page.getByRole('button', { name: 'Send proposal to owner' }).click();
   await expect(page.getByText('Proposal version 1 was sent to the owner. Nothing was scheduled or activated.')).toBeVisible();
   await expect(page.getByText('$120.00 per visit')).toBeVisible();
+  await page.getByRole('button', { name: 'Reload workspace' }).click();
+  await expect(page.getByText('Does this include edging near the irrigation boxes?', { exact: true })).toBeVisible();
+  await page.getByLabel('Proposal response').fill('Yes. Version 1 includes edging around the visible irrigation boxes.');
+  await page.getByRole('button', { name: 'Send response' }).click();
+  await expect(page.getByText(/Response shared about proposal version 1. Nothing was activated/)).toBeVisible();
+  await expect(page.getByText('Yes. Version 1 includes edging around the visible irrigation boxes.')).toBeVisible();
 
   accessActive = false;
   await page.getByRole('button', { name: 'Check invitation progress' }).click();

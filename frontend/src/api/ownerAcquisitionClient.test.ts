@@ -4,6 +4,7 @@ import {
   completeOwnerIntakeMediaUpload,
   createOwnerProperty,
   createOwnerIntakeMediaUpload,
+  createOwnerInitialServiceProposalMessage,
   approveOwnerProviderDisclosure,
   deleteOwnerIntakeMedia,
   decideOwnerProviderAssessmentWindow,
@@ -16,6 +17,7 @@ import {
   fetchOwnerProviderDisclosureReceipts,
   fetchOwnerProviderDisclosureReview,
   fetchOwnerInitialServiceProposals,
+  fetchOwnerInitialServiceProposalMessages,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
@@ -271,6 +273,48 @@ describe('Yard Owner acquisition API client', () => {
     expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
       action: 'accept', expected_proposal_version: 2, customer_safe_note: 'Please contact me first.',
       affirmation_text_version: 'initial_service_proposal_acceptance_v1', idempotency_key: 'decision-key',
+    });
+  });
+
+  it('maps and creates proposal-version messages separately from decisions', async () => {
+    const proposal = {
+      proposalId: 'proposal_2', assessmentId: 'assessment_1', invitationId: 'invitation_1',
+      propertyId: 'property_1', organizationId: 'organization_1', disclosureGrantId: 'grant_1',
+      proposalVersion: 2, status: 'sent' as const, title: 'Routine yard care',
+      customerSummary: 'Visible summary.', includedScope: ['Mow'], exclusions: ['Trees'],
+      cadenceCode: 'every_two_weeks' as const, cadenceDetail: 'Every other Tuesday',
+      arrivalPolicy: 'Confirm first.', weatherPolicy: 'Weather notice.',
+      cancellationPolicy: '24 hours.', proofExpectation: 'Completion note.',
+      priceAmountMinor: 12000, priceBasis: 'per_visit' as const, currencyCode: 'USD',
+      issuedAtEpochSeconds: 1_799_000_000, expiresAtEpochSeconds: 1_800_000_000,
+      persisted: true,
+    };
+    const messageApi = {
+      message_id: 'proposal_message_1', proposal_id: 'proposal_2',
+      assessment_id: 'assessment_1', author_role: 'owner',
+      message_kind: 'owner_change_request', customer_safe_body: 'Please adjust the cadence.',
+      proposal_version_snapshot: 2, series_version_snapshot: 2,
+      in_reply_to_message_id: null, related_proposal_id: null,
+      created_at_epoch_seconds: 1_799_500_000, persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([messageApi]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(messageApi), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchOwnerInitialServiceProposalMessages('property_1', 'proposal_2'))
+      .resolves.toEqual([expect.objectContaining({
+        messageId: 'proposal_message_1', messageKind: 'owner_change_request',
+        proposalVersionSnapshot: 2,
+      })]);
+    await createOwnerInitialServiceProposalMessage(
+      'property_1', proposal, 'owner_change_request', 'Please adjust the cadence.', 'message-key',
+    );
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
+      message_kind: 'owner_change_request',
+      customer_safe_body: 'Please adjust the cadence.',
+      expected_proposal_version: 2,
+      idempotency_key: 'message-key',
     });
   });
 

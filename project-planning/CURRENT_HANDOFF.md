@@ -52,18 +52,21 @@
 
 ## Next implementable slice
 
-Phase 4B3 owner/provider initial-service proposal interfaces are delivered
-against the Phase 4B2a APIs. Phase 4B2b1 now provides the proposal-collaboration
-schema, repositories, and PostgreSQL coverage. Phase 4B2b2 adds authenticated
-owner list/create and verified-provider response routes plus provider disclosure
-reload. The active remainder is:
+Phase 4B3 owner/provider initial-service proposal interfaces and all Phase 4B2b
+proposal-collaboration slices are delivered. Persistence, authenticated routes,
+provider reload, client mapping, and both responsive workspaces preserve exact
+version context and no-decision/no-activation meaning. The next slice is Phase
+4C explicit activation:
 
-1. Expose the contract through both acquisition workspaces with conflict,
-   expiry, revocation, unavailable, and retry recovery.
-2. Preserve the delivered exact subject/current-version display and explicit
-   revised-proposal linkage in both interfaces.
-3. Validate client mapping, responsive browser behavior,
-   and non-activation side effects before beginning Phase 4C.
+1. Define an idempotent transaction that projects one accepted immutable
+   proposal snapshot into the selected provider’s customer/property records
+   with provenance and without creating a job, route, payment, or crew
+   assignment.
+2. Keep provider setup separate from owner confirmation of the first visit and
+   close competing acquisition requests only as an explicit activation effect.
+3. Prove owner/provider isolation, replay/concurrency, rollback, conflict,
+   unavailable recovery, and safe progress projections before interface
+   adoption.
 
 ## Read first
 

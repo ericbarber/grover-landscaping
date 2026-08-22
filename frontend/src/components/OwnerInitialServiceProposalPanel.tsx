@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiRequestError } from '../api/apiError';
 import {
+  createOwnerInitialServiceProposalMessage,
   decideOwnerInitialServiceProposal,
+  fetchOwnerInitialServiceProposalMessages,
   fetchOwnerInitialServiceProposals,
   type OwnerProviderAssessment,
   type OwnerProviderConnectionProgress,
@@ -15,6 +17,7 @@ import {
   proposalPriceLabel,
   type InitialServiceProposal,
   type InitialServiceProposalDecisionAction,
+  type InitialServiceProposalMessage,
 } from '../domain/initialServiceProposals';
 
 const statusCopy: Record<InitialServiceProposal['status'], string> = {
@@ -43,6 +46,7 @@ export function OwnerInitialServiceProposalPanel({
   connections: OwnerProviderConnectionProgress[];
 }) {
   const [proposals, setProposals] = useState<InitialServiceProposal[]>([]);
+  const [messages, setMessages] = useState<Record<string, InitialServiceProposalMessage[]>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,13 +56,30 @@ export function OwnerInitialServiceProposalPanel({
   const [declineReason, setDeclineReason] = useState('price');
   const [decisionNote, setDecisionNote] = useState('');
   const [affirmed, setAffirmed] = useState(false);
+  const [messageTarget, setMessageTarget] = useState<string | null>(null);
+  const [messageKind, setMessageKind] = useState<'owner_question' | 'owner_change_request'>('owner_question');
+  const [messageBody, setMessageBody] = useState('');
   const keys = useRef(new Map<string, string>());
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setProposals(await fetchOwnerInitialServiceProposals(propertyId));
+      const loadedProposals = await fetchOwnerInitialServiceProposals(propertyId);
+      setProposals(loadedProposals);
+      const representativeByAssessment = new Map<string, InitialServiceProposal>();
+      for (const proposal of loadedProposals) {
+        if (!representativeByAssessment.has(proposal.assessmentId)) {
+          representativeByAssessment.set(proposal.assessmentId, proposal);
+        }
+      }
+      const conversations = await Promise.all([...representativeByAssessment.values()].map(
+        async (proposal) => [
+          proposal.assessmentId,
+          await fetchOwnerInitialServiceProposalMessages(propertyId, proposal.proposalId),
+        ] as const,
+      ));
+      setMessages(Object.fromEntries(conversations));
     } catch (loadError) {
       setError(proposalError(loadError));
     } finally {
@@ -70,6 +91,8 @@ export function OwnerInitialServiceProposalPanel({
     setProposals([]);
     setNotice(null);
     setDecisionTarget(null);
+    setMessageTarget(null);
+    setMessages({});
     keys.current.clear();
     void load();
   }, [load]);
@@ -117,6 +140,56 @@ export function OwnerInitialServiceProposalPanel({
     }
   }
 
+  function openMessage(
+    proposal: InitialServiceProposal,
+    kind: 'owner_question' | 'owner_change_request',
+  ) {
+    setMessageTarget(proposal.proposalId);
+    setMessageKind(kind);
+    setMessageBody('');
+    setDecisionTarget(null);
+    setError(null);
+    setNotice(null);
+  }
+
+  async function sendMessage(proposal: InitialServiceProposal) {
+    if (!messageBody.trim()) {
+      setError('Enter a customer-safe question or requested change first.');
+      return;
+    }
+    const keyId = `${proposal.proposalId}:${proposal.proposalVersion}:${messageKind}`;
+    const idempotencyKey = keys.current.get(keyId)
+      ?? `owner-proposal-message-${crypto.randomUUID()}`;
+    keys.current.set(keyId, idempotencyKey);
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const created = await createOwnerInitialServiceProposalMessage(
+        propertyId,
+        proposal,
+        messageKind,
+        messageBody.trim(),
+        idempotencyKey,
+      );
+      keys.current.delete(keyId);
+      setMessages((current) => ({
+        ...current,
+        [proposal.assessmentId]: [...(current[proposal.assessmentId] ?? []), created],
+      }));
+      setMessageTarget(null);
+      setMessageBody('');
+      setNotice(messageKind === 'owner_change_request'
+        ? `Change requested for proposal version ${proposal.proposalVersion}. This did not decline or accept it.`
+        : `Question sent about proposal version ${proposal.proposalVersion}. This did not make a decision.`);
+    } catch (messageError) {
+      await load();
+      setError(`${proposalError(messageError)} Reloaded proposal status and messages are shown when available.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const providerFor = (proposal: InitialServiceProposal) => {
     const invitationId = assessments.find((assessment) => (
       assessment.assessmentId === proposal.assessmentId
@@ -144,6 +217,12 @@ export function OwnerInitialServiceProposalPanel({
           {proposals.map((proposal) => {
             const decisionOpen = decisionTarget === proposal.proposalId;
             const canDecide = canDecideInitialServiceProposal(proposal);
+            const messageOpen = messageTarget === proposal.proposalId;
+            const latestVersion = Math.max(...proposals
+              .filter((entry) => entry.assessmentId === proposal.assessmentId)
+              .map((entry) => entry.proposalVersion));
+            const isLatestVersion = proposal.proposalVersion === latestVersion;
+            const conversation = messages[proposal.assessmentId] ?? [];
             return (
               <li className={`rounded-2xl border bg-white p-5 ${proposal.status === 'sent' ? 'border-emerald-300 shadow-sm' : 'border-slate-200'}`} key={proposal.proposalId}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -166,8 +245,9 @@ export function OwnerInitialServiceProposalPanel({
                 </dl>
                 {proposal.revisionNote ? <p className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950"><strong>Provider’s revision note:</strong> {proposal.revisionNote}</p> : null}
                 {proposal.status === 'accepted' ? <p className="mt-5 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-950">Accepted for provider setup only. The next phase must separately confirm the customer record and first service; nothing is scheduled here.</p> : null}
+                {isLatestVersion ? <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-4"><div className="flex flex-wrap items-start justify-between gap-2"><div><h6 className="font-black text-sky-950">Questions and requested changes</h6><p className="mt-1 text-xs leading-5 text-sky-900">Messages preserve the proposal version they discuss. Sending one does not accept, decline, or activate service.</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-black text-sky-900">{conversation.length} messages</span></div>{conversation.length > 0 ? <ol className="mt-4 grid gap-3">{conversation.map((message) => { const related = proposals.find((entry) => entry.proposalId === message.relatedProposalId); return <li className="rounded-xl bg-white p-4 text-sm" key={message.messageId}><div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-slate-950">{message.authorRole === 'owner' ? 'You' : providerFor(proposal)}</strong><span className="text-xs font-bold text-slate-500">About version {message.proposalVersionSnapshot}</span></div><p className="mt-2 whitespace-pre-wrap leading-6 text-slate-700">{message.customerSafeBody}</p>{related ? <p className="mt-2 text-xs font-bold text-emerald-800">Provider linked proposal version {related.proposalVersion}: {related.title}</p> : null}</li>; })}</ol> : <p className="mt-4 rounded-xl bg-white p-3 text-sm text-slate-600">No proposal-specific messages yet.</p>}{canDecide && !messageOpen ? <div className="mt-4 flex flex-wrap gap-2"><button className="min-h-11 rounded-lg bg-sky-800 px-4 font-black text-white" onClick={() => openMessage(proposal, 'owner_question')} type="button">Ask a question</button><button className="min-h-11 rounded-lg border border-sky-700 bg-white px-4 font-bold text-sky-950" onClick={() => openMessage(proposal, 'owner_change_request')} type="button">Request a change</button></div> : null}{messageOpen ? <div className="mt-4 rounded-xl border border-sky-300 bg-white p-4"><h6 className="font-black text-slate-950">{messageKind === 'owner_question' ? 'Ask about' : 'Request a change to'} version {proposal.proposalVersion}</h6><textarea aria-label="Proposal message" className="mt-3 min-h-28 w-full rounded-xl border border-slate-300 p-3 text-sm" maxLength={2000} onChange={(event) => setMessageBody(event.target.value)} placeholder={messageKind === 'owner_question' ? 'What would you like the provider to clarify?' : 'Describe the exact scope, timing, or price change you want considered.'} value={messageBody} /><div className="mt-3 flex flex-wrap gap-2"><button className="min-h-11 rounded-lg bg-sky-800 px-4 font-black text-white disabled:opacity-60" disabled={busy} onClick={() => void sendMessage(proposal)} type="button">{busy ? 'Sending…' : messageKind === 'owner_question' ? 'Send question' : 'Send change request'}</button><button className="min-h-11 rounded-lg border border-slate-300 px-4 font-bold" disabled={busy} onClick={() => setMessageTarget(null)} type="button">Cancel</button></div></div> : null}</div> : null}
                 {canDecide && !decisionOpen ? <div className="mt-5 flex flex-wrap gap-3"><button className="min-h-12 rounded-xl bg-emerald-800 px-5 font-black text-white" onClick={() => openDecision(proposal, 'accept')} type="button">Review and accept</button><button className="min-h-12 rounded-xl border border-slate-400 px-5 font-bold text-slate-900" onClick={() => openDecision(proposal, 'decline')} type="button">Decline proposal</button></div> : null}
-                {decisionOpen ? <div className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 p-5"><h6 className="font-black text-amber-950">Confirm {decisionAction === 'accept' ? 'acceptance' : 'decline'}</h6>{decisionAction === 'accept' ? <label className="mt-4 flex items-start gap-3 rounded-xl bg-white p-4 text-sm font-semibold leading-6 text-slate-800"><input checked={affirmed} className="mt-1 size-5 shrink-0" onChange={(event) => setAffirmed(event.target.checked)} type="checkbox" /><span>{INITIAL_SERVICE_PROPOSAL_ACCEPTANCE_TEXT}</span></label> : <label className="mt-4 block text-sm font-bold text-slate-800">Primary reason<select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 font-normal" onChange={(event) => setDeclineReason(event.target.value)} value={declineReason}><option value="price">Price</option><option value="scope">Scope</option><option value="timing">Timing</option><option value="provider_fit">Provider fit</option><option value="no_longer_needed">No longer needed</option><option value="other">Other</option></select></label>}<label className="mt-4 block text-sm font-bold text-slate-800">Optional decision note<textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" maxLength={1000} onChange={(event) => setDecisionNote(event.target.value)} placeholder="This note belongs to your decision. Use the assessment conversation for questions; a separate proposal-change workflow is not active yet." value={decisionNote} /></label><div className="mt-4 flex flex-wrap gap-3"><button className={`min-h-12 rounded-xl px-5 font-black text-white disabled:opacity-60 ${decisionAction === 'accept' ? 'bg-emerald-800' : 'bg-slate-900'}`} disabled={busy || (decisionAction === 'accept' && !affirmed)} onClick={() => void decide(proposal)} type="button">{busy ? 'Confirming…' : decisionAction === 'accept' ? 'Accept this exact version' : 'Confirm decline'}</button><button className="min-h-12 rounded-xl border border-slate-400 bg-white px-5 font-bold" disabled={busy} onClick={() => setDecisionTarget(null)} type="button">Cancel</button></div></div> : null}
+                {decisionOpen ? <div className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 p-5"><h6 className="font-black text-amber-950">Confirm {decisionAction === 'accept' ? 'acceptance' : 'decline'}</h6>{decisionAction === 'accept' ? <label className="mt-4 flex items-start gap-3 rounded-xl bg-white p-4 text-sm font-semibold leading-6 text-slate-800"><input checked={affirmed} className="mt-1 size-5 shrink-0" onChange={(event) => setAffirmed(event.target.checked)} type="checkbox" /><span>{INITIAL_SERVICE_PROPOSAL_ACCEPTANCE_TEXT}</span></label> : <label className="mt-4 block text-sm font-bold text-slate-800">Primary reason<select className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 font-normal" onChange={(event) => setDeclineReason(event.target.value)} value={declineReason}><option value="price">Price</option><option value="scope">Scope</option><option value="timing">Timing</option><option value="provider_fit">Provider fit</option><option value="no_longer_needed">No longer needed</option><option value="other">Other</option></select></label>}<label className="mt-4 block text-sm font-bold text-slate-800">Optional decision note<textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" maxLength={1000} onChange={(event) => setDecisionNote(event.target.value)} placeholder="This note belongs to your decision. Use the proposal conversation above for questions or requested changes." value={decisionNote} /></label><div className="mt-4 flex flex-wrap gap-3"><button className={`min-h-12 rounded-xl px-5 font-black text-white disabled:opacity-60 ${decisionAction === 'accept' ? 'bg-emerald-800' : 'bg-slate-900'}`} disabled={busy || (decisionAction === 'accept' && !affirmed)} onClick={() => void decide(proposal)} type="button">{busy ? 'Confirming…' : decisionAction === 'accept' ? 'Accept this exact version' : 'Confirm decline'}</button><button className="min-h-12 rounded-xl border border-slate-400 bg-white px-5 font-bold" disabled={busy} onClick={() => setDecisionTarget(null)} type="button">Cancel</button></div></div> : null}
               </li>
             );
           })}

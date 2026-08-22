@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { ApiRequestError } from '../api/apiError';
-import { publishProviderInitialServiceProposal } from '../api/providerInvitationClient';
+import {
+  createProviderInitialServiceProposalResponse,
+  publishProviderInitialServiceProposal,
+} from '../api/providerInvitationClient';
 import {
   proposalCadenceLabel,
   proposalLines,
@@ -8,6 +11,7 @@ import {
   type InitialServiceCadence,
   type InitialServicePriceBasis,
   type InitialServiceProposal,
+  type InitialServiceProposalMessage,
 } from '../domain/initialServiceProposals';
 
 const defaultExpiration = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
@@ -26,12 +30,16 @@ export function ProviderInitialServiceProposalPanel({
   token,
   assessmentId,
   proposal,
+  messages,
   onPublished,
+  onMessagesChange,
 }: {
   token: string;
   assessmentId: string;
   proposal?: InitialServiceProposal;
+  messages: InitialServiceProposalMessage[];
   onPublished: (proposal: InitialServiceProposal) => void;
+  onMessagesChange: (messages: InitialServiceProposalMessage[]) => void;
 }) {
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
@@ -50,7 +58,10 @@ export function ProviderInitialServiceProposalPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [replyTarget, setReplyTarget] = useState('');
+  const [replyBody, setReplyBody] = useState('');
   const idempotencyKey = useRef<string | null>(null);
+  const responseKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!proposal) return;
@@ -128,7 +139,43 @@ export function ProviderInitialServiceProposalPanel({
     }
   }
 
+  async function respond() {
+    const target = messages.find((message) => message.messageId === replyTarget)
+      ?? [...messages].reverse().find((message) => message.authorRole === 'owner');
+    if (!proposal || proposal.status !== 'sent' || !target || !replyBody.trim()) {
+      setError('Choose an owner question or change request and enter a customer-safe response.');
+      return;
+    }
+    responseKey.current ??= `provider-proposal-response-${crypto.randomUUID()}`;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const created = await createProviderInitialServiceProposalResponse(
+        token,
+        assessmentId,
+        proposal,
+        target,
+        replyBody.trim(),
+        responseKey.current,
+      );
+      responseKey.current = null;
+      onMessagesChange([...messages, created]);
+      setReplyTarget('');
+      setReplyBody('');
+      setNotice(created.relatedProposalId
+        ? `Response shared and linked to current proposal version ${proposal.proposalVersion}. Nothing was activated.`
+        : `Response shared about proposal version ${created.proposalVersionSnapshot}. Nothing was activated.`);
+    } catch (responseError) {
+      setError(proposalError(responseError));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const editable = canReviseProviderProposal(proposal);
+  const ownerMessages = messages.filter((message) => message.authorRole === 'owner');
+  const defaultReplyTarget = ownerMessages[ownerMessages.length - 1]?.messageId ?? '';
   return (
     <section aria-labelledby="provider-proposal-title" className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
       <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-800">Initial service proposal</p>
@@ -151,6 +198,8 @@ export function ProviderInitialServiceProposalPanel({
       ) : null}
       {notice ? <p className="mt-4 rounded-xl border border-emerald-300 bg-white p-4 text-sm font-semibold text-emerald-950" role="status">{notice}</p> : null}
       {error ? <p className="mt-4 rounded-xl border border-rose-300 bg-white p-4 text-sm font-semibold text-rose-950" role="alert">{error} Your entries remain available to retry.</p> : null}
+
+      {proposal ? <div className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-5"><div className="flex flex-wrap items-start justify-between gap-2"><div><h4 className="font-black text-sky-950">Proposal conversation</h4><p className="mt-1 text-xs leading-5 text-sky-900">Each message retains the exact proposal version it discusses. Responding does not accept, decline, schedule, or activate service.</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-black text-sky-900">{messages.length} messages</span></div>{messages.length > 0 ? <ol className="mt-4 grid gap-3">{messages.map((message) => <li className="rounded-xl bg-white p-4 text-sm" key={message.messageId}><div className="flex flex-wrap items-center justify-between gap-2"><strong>{message.authorRole === 'owner' ? 'Owner' : 'Your team'}</strong><span className="text-xs font-bold text-slate-500">About version {message.proposalVersionSnapshot}</span></div><p className="mt-2 whitespace-pre-wrap leading-6 text-slate-700">{message.customerSafeBody}</p>{message.relatedProposalId ? <p className="mt-2 text-xs font-bold text-emerald-800">Linked to current proposal version {message.seriesVersionSnapshot}</p> : null}</li>)}</ol> : <p className="mt-4 rounded-xl bg-white p-3 text-sm text-slate-600">No proposal-specific questions or change requests yet.</p>}{ownerMessages.length > 0 && proposal.status === 'sent' ? <div className="mt-4 rounded-xl border border-sky-300 bg-white p-4"><label className="text-sm font-bold text-slate-800">Reply to<select className="mt-2 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 font-normal" onChange={(event) => setReplyTarget(event.target.value)} value={replyTarget || defaultReplyTarget}><option value="">Choose an owner message</option>{ownerMessages.map((message) => <option key={message.messageId} value={message.messageId}>Version {message.proposalVersionSnapshot} · {message.messageKind === 'owner_change_request' ? 'Change request' : 'Question'} · {message.customerSafeBody.slice(0, 70)}</option>)}</select></label><textarea aria-label="Proposal response" className="mt-3 min-h-28 w-full rounded-xl border border-slate-300 p-3 text-sm" maxLength={2000} onChange={(event) => setReplyBody(event.target.value)} placeholder="Answer with customer-safe details. Publish a revision first if the requested terms changed." value={replyBody} /><button className="mt-3 min-h-11 rounded-lg bg-sky-800 px-4 font-black text-white disabled:opacity-60" disabled={busy} onClick={() => void respond()} type="button">{busy ? 'Sending…' : 'Send response'}</button></div> : null}</div> : null}
 
       {editable ? (
         <div className="mt-5 grid gap-4 rounded-2xl bg-white p-5">

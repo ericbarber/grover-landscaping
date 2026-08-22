@@ -277,14 +277,16 @@ owner immutable-version review/decision into the authenticated acquisition
 workspaces. The provider reload projection includes its latest version, private
 production assumptions remain separate, owner acceptance requires the exact
 affirmation, and accepted state creates no schedule, payment, or crew
-assignment. Phase 4B2b proposal questions and change requests are next and remain separate
+assignment. Phase 4B2b proposal questions and change requests remain separate
 from lifecycle decisions and minimized audit events. Its persistence foundation
 is now delivered with immutable customer-safe messages, exact subject/current
 version snapshots, provider reply and revised-proposal linkage, actor-scoped
 replay, owner isolation, and PostgreSQL non-activation coverage. Authenticated
 owner/provider routes and provider reload are now delivered with explicit
-authorization and fail-closed outcomes. Both workspace interfaces are the
-active remainder.
+authorization and fail-closed outcomes. Both responsive workspace interfaces
+are now delivered with exact-version labels, retry-safe controls, explicit
+newer-revision linkage, and no-decision/no-activation guidance. Phase 4B2b is
+complete; Phase 4C explicit activation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
@@ -416,15 +418,18 @@ schedule, remaining work, or a completed day.
    - Preserve immutable versions, owner-visible scope/exclusions/cadence/terms,
      provider-private production assumptions, expiration, exact-version
      decisions, conflict recovery, and accepted-but-unactivated meaning.
-   - Keep proposal questions and change requests out of decisions, assessment
-     messages, and audit notes until their separate contract is delivered.
+   - Keep the delivered proposal questions/change requests out of decisions,
+     assessment messages, and audit notes.
 
-**Current — Proposal collaboration and activation**
+**Delivered — Proposal collaboration**
 
-   - Define and deliver proposal questions and change requests as their own
-     persistence, authorization, audit, and interface boundary.
-   - Then project an explicitly accepted immutable snapshot into provider setup
-     and first-visit confirmation without silently scheduling or assigning work.
+   - Proposal questions and change requests now have their own persistence,
+     authorization, reload, version-link, and responsive interface boundary.
+
+**Current — Explicit activation**
+
+   - Project an explicitly accepted immutable snapshot into provider setup and
+     first-visit confirmation without silently scheduling or assigning work.
 
 **Next — Shared application and workflow convergence**
 

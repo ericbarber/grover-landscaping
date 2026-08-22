@@ -268,8 +268,10 @@ here does not mean every capability has been delivered.
 - Authenticated owner proposal-message list/create and verified-provider
   response APIs with authoritative disclosure reload, explicit route policy,
   and fail-closed error mapping
-- Planned proposal-conversation workspace interfaces and explicit accepted-
-  proposal activation
+- Responsive owner proposal question/change-request and provider exact-message
+  response interfaces with version labels, current-revision linkage, retry
+  recovery, and explicit no-decision/no-activation meaning
+- Planned explicit accepted-proposal activation
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

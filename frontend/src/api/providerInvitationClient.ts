@@ -3,6 +3,7 @@ import { authenticatedFetch } from './authenticatedFetch';
 import { API_BASE_URL } from './baseUrl';
 import type {
   InitialServiceProposal,
+  InitialServiceProposalMessage,
   InitialServiceProposalStatus,
   PublishInitialServiceProposalInput,
 } from '../domain/initialServiceProposals';
@@ -52,6 +53,7 @@ interface ApiProviderDisclosureAccess {
   customer_safe_messages?: ApiProviderAssessmentMessage[];
   private_notes?: ApiProviderAssessmentPrivateNote[];
   initial_service_proposal?: ApiInitialServiceProposal;
+  initial_service_proposal_messages?: ApiInitialServiceProposalMessage[];
 }
 
 interface ApiInitialServiceProposal {
@@ -80,6 +82,21 @@ interface ApiInitialServiceProposal {
   revision_note?: string | null;
   issued_at_epoch_seconds: number;
   expires_at_epoch_seconds: number;
+  persisted: boolean;
+}
+
+interface ApiInitialServiceProposalMessage {
+  message_id: string;
+  proposal_id: string;
+  assessment_id: string;
+  author_role: InitialServiceProposalMessage['authorRole'];
+  message_kind: InitialServiceProposalMessage['messageKind'];
+  customer_safe_body: string;
+  proposal_version_snapshot: number;
+  series_version_snapshot: number;
+  in_reply_to_message_id?: string | null;
+  related_proposal_id?: string | null;
+  created_at_epoch_seconds: number;
   persisted: boolean;
 }
 
@@ -161,6 +178,7 @@ export interface ProviderDisclosureAccess {
   customerSafeMessages?: ProviderAssessmentMessage[];
   privateNotes?: ProviderAssessmentPrivateNote[];
   currentInitialServiceProposal?: InitialServiceProposal;
+  initialServiceProposalMessages?: InitialServiceProposalMessage[];
 }
 
 export type ProviderAssessmentStatus = 'remote_review' | 'window_proposed'
@@ -284,6 +302,25 @@ function mapInitialServiceProposal(value: ApiInitialServiceProposal): InitialSer
   };
 }
 
+function mapInitialServiceProposalMessage(
+  value: ApiInitialServiceProposalMessage,
+): InitialServiceProposalMessage {
+  return {
+    messageId: value.message_id,
+    proposalId: value.proposal_id,
+    assessmentId: value.assessment_id,
+    authorRole: value.author_role,
+    messageKind: value.message_kind,
+    customerSafeBody: value.customer_safe_body,
+    proposalVersionSnapshot: value.proposal_version_snapshot,
+    seriesVersionSnapshot: value.series_version_snapshot,
+    inReplyToMessageId: value.in_reply_to_message_id ?? undefined,
+    relatedProposalId: value.related_proposal_id ?? undefined,
+    createdAtEpochSeconds: value.created_at_epoch_seconds,
+    persisted: value.persisted,
+  };
+}
+
 export async function fetchProviderInvitationProgress(
   token: string,
 ): Promise<ProviderInvitationProgress> {
@@ -360,6 +397,8 @@ export async function fetchProviderDisclosureAccess(token: string): Promise<Prov
     privateNotes: value.private_notes?.map(mapPrivateNote),
     currentInitialServiceProposal: value.initial_service_proposal
       ? mapInitialServiceProposal(value.initial_service_proposal) : undefined,
+    initialServiceProposalMessages: value.initial_service_proposal_messages
+      ?.map(mapInitialServiceProposalMessage),
   };
 }
 
@@ -498,4 +537,40 @@ export async function publishProviderInitialServiceProposal(
     );
   }
   return mapInitialServiceProposal(await response.json() as ApiInitialServiceProposal);
+}
+
+export async function createProviderInitialServiceProposalResponse(
+  token: string,
+  assessmentId: string,
+  currentProposal: InitialServiceProposal,
+  inReplyTo: InitialServiceProposalMessage,
+  customerSafeBody: string,
+  idempotencyKey: string,
+): Promise<InitialServiceProposalMessage> {
+  const relatedProposalId = inReplyTo.proposalId === currentProposal.proposalId
+    ? undefined : currentProposal.proposalId;
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-assessments/${encodeURIComponent(assessmentId)}/initial-service-proposal-responses`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        in_reply_to_message_id: inReplyTo.messageId,
+        customer_safe_body: customerSafeBody,
+        expected_proposal_version: currentProposal.proposalVersion,
+        related_proposal_id: relatedProposalId,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(
+      response,
+      `Initial service proposal response failed with status ${response.status}.`,
+    );
+  }
+  return mapInitialServiceProposalMessage(
+    await response.json() as ApiInitialServiceProposalMessage,
+  );
 }
