@@ -35,6 +35,21 @@ test('a checked recipient loads status without retaining the bearer fragment', a
   await expect(page.getByText('Exact service address')).toBeVisible();
   await expect(page.locator('body')).not.toContainText('owner_provider_secret');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const heading = document.querySelector('h1');
+    const brandMark = document.querySelector('.grover-brand-mark');
+    if (!main || !heading || !brandMark) throw new Error('Provider shell theme was not rendered.');
+    return {
+      canvas: getComputedStyle(main).backgroundColor,
+      displayFamily: getComputedStyle(heading).fontFamily,
+      brandMark: getComputedStyle(brandMark).stroke,
+    };
+  })).toEqual({
+    canvas: 'rgb(246, 242, 232)',
+    displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
+    brandMark: 'rgb(222, 199, 157)',
+  });
 
   await page.reload();
   await expect(page.getByLabel('Invitation code')).toHaveValue('');

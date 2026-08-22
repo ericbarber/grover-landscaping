@@ -33,6 +33,10 @@ adds the shared wordmark and editorial greeting, paper cards, warm canvas,
 forest manager navigation, and canonical mobile header/bottom-navigation
 materials without changing role-aware access. Desktop rail, operational density,
 status, and icon convergence remain the next application-shell work.
+The reciprocal provider-invitation entry now also consumes the acquisition
+family's shared brand lockup, editorial title, bone/paper/forest composition,
+control geometry, and exact browser style contract while preserving its
+privacy-limited progress and assessment behavior.
 The [application working-design delivery plan](../design/review/application-working-design-delivery-plan.md)
 now sequences the remaining current product through shared application
 foundations, access and Home, field execution, manager daily operations,

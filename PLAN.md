@@ -57,6 +57,12 @@ Current state:
   shadows, forest manager navigation, and canonical mobile header/bottom-nav
   materials. Exact browser assertions cover the canvas, display stack, sand
   wordmark, and deep-navigation surface without changing role or tool access.
+- Production visual convergence phase 3 aligns the reciprocal provider
+  invitation entry with the acquisition family: canonical brand lockup,
+  editorial page title, bone/paper/forest composition, shared action and card
+  geometry, and matching data-boundary emphasis. The bearer-fragment removal,
+  verified-mailbox checks, disclosure limits, and assessment workflow remain
+  unchanged and the provider browser journey now asserts its shared theme.
 - Original Southwestern hero photography is stored with its generation brief and
   project-local usage guidance.
 - Professional V2 review retains the split hero and Plan–Care–Proof narrative,

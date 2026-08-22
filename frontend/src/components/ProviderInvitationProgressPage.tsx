@@ -8,6 +8,7 @@ import {
 } from '../api/providerInvitationClient';
 import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
+import { GroverBrand } from './GroverBrand';
 import { ProviderAssessmentWorkspace } from './ProviderAssessmentWorkspace';
 
 function message(error: unknown): string {
@@ -93,17 +94,17 @@ export function ProviderInvitationProgressPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f1e9] text-slate-950">
+    <main className="min-h-screen bg-bone text-slate-950">
       <header className="bg-emerald-950 text-white">
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-          <a className="inline-flex min-h-11 items-center rounded-lg font-black focus:outline-none focus:ring-2 focus:ring-amber-300" href="/">Grover</a>
-          <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-amber-300">Provider invitation</p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">Review your connection progress</h1>
+          <a aria-label="Grover home" className="inline-flex rounded-lg text-sand focus:outline-none focus:ring-2 focus:ring-sky" href="/"><GroverBrand /></a>
+          <p className="mt-8 text-xs font-black uppercase tracking-[0.2em] text-sand">Provider invitation</p>
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-5xl">Review your connection progress</h1>
           <p className="mt-4 max-w-2xl leading-7 text-emerald-100">This page confirms your own invitation steps. It does not grant yard details, pricing, proposal, crew assignment, or permission to begin work.</p>
         </div>
       </header>
       <div className="mx-auto grid max-w-4xl gap-5 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/5 sm:p-8" aria-labelledby="provider-progress-title">
+        <section className="grover-card p-5 sm:p-8" aria-labelledby="provider-progress-title">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Verified business email</p>
           <h2 className="mt-2 text-2xl font-black" id="provider-progress-title">Invitation status</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Signed in as <strong>{auth.verifiedEmail ?? 'an unverified account'}</strong>. The invited mailbox must match before any progress is returned.</p>
@@ -113,7 +114,7 @@ export function ProviderInvitationProgressPage() {
               <span className="mt-1 block text-xs leading-5 text-slate-500">A link may fill this once. It is removed from the browser address immediately and is never stored by this page.</span>
               <input autoComplete="off" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-3.5 font-mono text-sm focus:border-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-100" id="provider-invitation-token" onChange={(event) => setToken(event.target.value)} spellCheck={false} type="password" value={token} />
             </label>
-            <button className="mt-4 min-h-12 rounded-xl bg-emerald-800 px-5 font-black text-white disabled:opacity-60" disabled={loading || !auth.verifiedEmail} type="submit">{loading ? 'Checking progress…' : 'Check invitation progress'}</button>
+            <button className="grover-button-primary mt-4 disabled:opacity-60" disabled={loading || !auth.verifiedEmail} type="submit">{loading ? 'Checking progress…' : 'Check invitation progress'}</button>
           </form>
           {error ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Progress was not loaded.</strong><p className="mt-1 text-sm leading-6">{error}</p></div> : null}
           {progress ? (
@@ -149,8 +150,8 @@ export function ProviderInvitationProgressPage() {
             </section>
           ) : null}
         </section>
-        <aside className="rounded-3xl bg-emerald-950 p-6 text-white lg:self-start" aria-label="Provider data boundary">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Still withheld</p>
+        <aside className="rounded-2xl bg-emerald-950 p-6 text-white shadow-grover-md lg:self-start" aria-label="Provider data boundary">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">Still withheld</p>
           <h2 className="mt-3 text-xl font-black">{disclosure?.canAccess ? 'Outside this approval' : 'No active owner approval'}</h2>
           <ul className="mt-5 space-y-3 text-sm leading-6 text-emerald-100">{(disclosure?.withheldCategories ?? ['exact_address', 'yard_brief', 'selected_yard_photos', 'owner_contact', 'access_considerations']).map((category) => <li key={category}>{disclosureCategoryLabel(category)}</li>)}<li>Pricing and work authority</li></ul>
         </aside>

@@ -47,6 +47,9 @@
   wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
   navigation, mobile header and bottom-navigation surfaces, and exact style
   regression coverage
+- Prototype-aligned provider invitation and assessment entry shell with shared
+  wordmark, type roles, acquisition materials, action/card geometry, and guarded
+  privacy-boundary emphasis
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
