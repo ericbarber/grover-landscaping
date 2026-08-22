@@ -1,4 +1,5 @@
 import type { MobileWorkspaceView } from '../components/MobileWorkspaceShell';
+import type { WorkspaceIconName } from '../components/WorkspaceIcon';
 
 export type WorkspacePersonaId =
   | 'yard-owner'
@@ -17,7 +18,7 @@ export interface WorkspacePersona {
   label: string;
   description: string;
   defaultView: MobileWorkspaceView;
-  navigation: Array<{ view: MobileWorkspaceView; label: string; symbol: string }>;
+  navigation: Array<{ view: MobileWorkspaceView; label: string; icon: WorkspaceIconName }>;
 }
 
 export interface WorkspaceSurfaces {
@@ -27,15 +28,15 @@ export interface WorkspaceSurfaces {
 }
 
 const fieldNavigation: WorkspacePersona['navigation'] = [
-  { view: 'home', label: 'Home', symbol: '⌂' },
-  { view: 'route', label: 'Route', symbol: '↗' },
-  { view: 'jobs', label: 'Jobs', symbol: '☷' },
-  { view: 'job', label: 'Job', symbol: '✓' },
+  { view: 'home', label: 'Home', icon: 'home' },
+  { view: 'route', label: 'Route', icon: 'route' },
+  { view: 'jobs', label: 'Jobs', icon: 'jobs' },
+  { view: 'job', label: 'Job', icon: 'job' },
 ];
 
 const managerNavigation: WorkspacePersona['navigation'] = [
-  { view: 'home', label: 'Home', symbol: '⌂' },
-  { view: 'manager', label: 'Manage', symbol: '▦' },
+  { view: 'home', label: 'Home', icon: 'home' },
+  { view: 'manager', label: 'Manage', icon: 'manage' },
   ...fieldNavigation.slice(1),
 ];
 
@@ -46,8 +47,8 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     description: 'Properties, upcoming service, reports, photos, and bids',
     defaultView: 'home',
     navigation: [
-      { view: 'home', label: 'Home', symbol: '⌂' },
-      { view: 'customer', label: 'My yard', symbol: '◇' },
+      { view: 'home', label: 'Home', icon: 'home' },
+      { view: 'customer', label: 'My yard', icon: 'customer' },
     ],
   },
   'property-manager': {
@@ -56,9 +57,9 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     description: 'Portfolio service, vendor work, reports, and approvals',
     defaultView: 'home',
     navigation: [
-      { view: 'home', label: 'Home', symbol: '⌂' },
-      { view: 'customer', label: 'Portfolio', symbol: '◇' },
-      { view: 'manager', label: 'Manage', symbol: '▦' },
+      { view: 'home', label: 'Home', icon: 'home' },
+      { view: 'customer', label: 'Portfolio', icon: 'customer' },
+      { view: 'manager', label: 'Manage', icon: 'manage' },
     ],
   },
   'crew-lead': {
@@ -102,9 +103,9 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     description: 'Customer accounts, bids, approvals, and billing readiness',
     defaultView: 'home',
     navigation: [
-      { view: 'home', label: 'Home', symbol: '⌂' },
-      { view: 'manager', label: 'Billing', symbol: '▦' },
-      { view: 'customer', label: 'Accounts', symbol: '◇' },
+      { view: 'home', label: 'Home', icon: 'home' },
+      { view: 'manager', label: 'Billing', icon: 'manage' },
+      { view: 'customer', label: 'Accounts', icon: 'customer' },
     ],
   },
   support: {
@@ -113,8 +114,8 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
     description: 'Tenant support, access review, recovery, and diagnostics',
     defaultView: 'home',
     navigation: [
-      { view: 'home', label: 'Home', symbol: '⌂' },
-      { view: 'manager', label: 'Support', symbol: '▦' },
+      { view: 'home', label: 'Home', icon: 'home' },
+      { view: 'manager', label: 'Support', icon: 'manage' },
     ],
   },
   general: {

@@ -35,6 +35,34 @@ describe('persona workspaces', () => {
       .toEqual(['home', 'route', 'jobs', 'job']);
   });
 
+  it('uses the shared outlined icon family for every navigation item', () => {
+    const allowedIcons = new Set([
+      'home',
+      'route',
+      'jobs',
+      'job',
+      'manage',
+      'customer',
+    ]);
+
+    for (const persona of workspacePersonasForRoles([
+      'PropertyOwner',
+      'PropertyManager',
+      'CrewLead',
+      'CrewMember',
+      'OrganizationOwner',
+      'Manager',
+      'Dispatcher',
+      'BillingAdmin',
+      'SupportAdmin',
+    ])) {
+      for (const item of persona.navigation) {
+        expect(allowedIcons.has(item.icon)).toBe(true);
+        expect(item).not.toHaveProperty('symbol');
+      }
+    }
+  });
+
   it('keeps desktop surfaces aligned with the selected persona', () => {
     expect(workspaceSurfacesForPersona('yard-owner')).toEqual({
       fieldOperations: false,

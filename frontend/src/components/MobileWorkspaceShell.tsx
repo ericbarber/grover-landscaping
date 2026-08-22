@@ -1,4 +1,5 @@
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
+import { WorkspaceIcon } from './WorkspaceIcon';
 
 export type MobileWorkspaceView = 'home' | 'route' | 'jobs' | 'job' | 'manager' | 'customer';
 
@@ -101,7 +102,7 @@ export function MobileWorkspaceHeader({
             onClick={onBackToJobs}
             type="button"
           >
-            ←
+            <WorkspaceIcon className="size-5" name="back" />
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
@@ -154,10 +155,10 @@ export function MobileWorkspaceNavigation({
   return (
     <nav
       aria-label="Mobile workspace"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:w-24 md:border-r md:border-t-0 md:px-2 md:py-24 md:shadow-grover-md lg:hidden"
     >
       <div
-        className="mx-auto grid max-w-lg gap-1"
+        className="mx-auto grid max-w-lg gap-1 md:flex md:h-full md:flex-col md:justify-center"
         style={{ gridTemplateColumns: `repeat(${navigationItems.length}, minmax(0, 1fr))` }}
       >
         {navigationItems.map((item) => {
@@ -167,7 +168,7 @@ export function MobileWorkspaceNavigation({
           return (
             <button
               aria-current={active ? 'page' : undefined}
-              className={`flex min-h-12 flex-col items-center justify-center rounded-xl px-1 text-[0.68rem] font-bold ${
+              className={`flex min-h-12 flex-col items-center justify-center rounded-xl px-1 text-[0.68rem] font-bold md:min-h-16 md:w-full ${
                 active
                   ? 'bg-emerald-800 text-white'
                   : 'text-slate-600 hover:bg-slate-100 disabled:text-slate-300'
@@ -177,7 +178,7 @@ export function MobileWorkspaceNavigation({
               onClick={() => onChange(item.view)}
               type="button"
             >
-              <span aria-hidden="true" className="text-base leading-none">{item.symbol}</span>
+              <WorkspaceIcon className="size-5" name={item.icon} />
               <span className="mt-1">{item.label}</span>
             </button>
           );

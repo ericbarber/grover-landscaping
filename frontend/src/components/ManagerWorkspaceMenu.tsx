@@ -1,4 +1,6 @@
 import type { WorkspacePersonaId } from '../domain/workspacePersona';
+import { WorkspaceIcon } from './WorkspaceIcon';
+import type { WorkspaceIconName } from './WorkspaceIcon';
 
 export type ManagerWorkspaceSection =
   | 'overview'
@@ -44,6 +46,15 @@ export const managerWorkspaceSections: Array<{
   { id: 'reports', label: 'Reports', description: 'Quality, activity, and communication' },
   { id: 'recovery', label: 'Recovery', description: 'Photos, privacy, and failed work' },
 ];
+
+const managerSectionIcons: Record<ManagerWorkspaceSection, WorkspaceIconName> = {
+  overview: 'home',
+  schedule: 'route',
+  customers: 'customer',
+  team: 'jobs',
+  reports: 'job',
+  recovery: 'attention',
+};
 
 export function managerWorkspaceSectionLabel(section: ManagerWorkspaceSection): string {
   return managerWorkspaceSections.find((item) => item.id === section)?.label ?? 'Manager';
@@ -169,6 +180,7 @@ export function ManagerWorkspaceMenu({
             onClick={() => onChange(section.id)}
             type="button"
           >
+            <WorkspaceIcon className="mb-2 size-5" name={managerSectionIcons[section.id]} />
             <span className="block text-sm font-black">{section.label}</span>
             <span className={`mt-1 block text-xs ${
               activeSection === section.id ? 'text-emerald-100' : 'text-slate-500'
@@ -210,7 +222,7 @@ export function ManagerWorkspaceToolMenu({
           onClick={onClear}
           type="button"
         >
-          ← Tools
+          <span className="inline-flex items-center gap-2"><WorkspaceIcon className="size-4" name="back" />Tools</span>
         </button>
         <div className="min-w-0">
           <p className="truncate text-xs font-bold uppercase tracking-wide text-emerald-700">
@@ -229,7 +241,7 @@ export function ManagerWorkspaceToolMenu({
         onClick={onBack}
         type="button"
       >
-        ← Manager home
+        <span className="inline-flex items-center gap-2"><WorkspaceIcon className="size-4" name="back" />Manager home</span>
       </button>
       <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         {managerWorkspaceSectionLabel(section)}
@@ -256,7 +268,7 @@ export function ManagerWorkspaceToolMenu({
                 {tool.description}
               </span>
             </span>
-            <span aria-hidden="true" className="text-lg">›</span>
+            <WorkspaceIcon className="size-5" name="forward" />
           </button>
         ))}
       </div>

@@ -2643,7 +2643,7 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink lg:pb-0">
+    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink md:pb-0 md:pl-24 lg:pl-0">
       <section className="relative hidden min-h-[25rem] overflow-hidden bg-emerald-950 px-6 py-10 text-white lg:block">
         <img
           alt=""

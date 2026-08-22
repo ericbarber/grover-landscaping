@@ -1,6 +1,7 @@
 import type { WorkspacePersona } from '../domain/workspacePersona';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
 import { GroverBrand } from './GroverBrand';
+import { WorkspaceIcon } from './WorkspaceIcon';
 
 const viewDescriptions: Record<MobileWorkspaceView, string> = {
   home: 'Your signed-in workspace summary',
@@ -242,7 +243,10 @@ export function WorkspaceHomePanel({
                   : 'bg-sky-200 text-sky-950'
             }`}
           >
-            {priorityStatus.tone === 'attention' ? '!' : '✓'}
+            <WorkspaceIcon
+              className="size-5"
+              name={priorityStatus.tone === 'attention' ? 'attention' : 'check'}
+            />
           </span>
           <div>
             <p className="text-sm font-black text-slate-950">{priorityStatus.title}</p>
@@ -270,7 +274,7 @@ export function WorkspaceHomePanel({
             aria-hidden="true"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/15 text-2xl transition-transform group-hover:translate-x-1"
           >
-            →
+            <WorkspaceIcon className="size-6" name="forward" />
           </span>
         </button>
       ) : null}
@@ -288,7 +292,7 @@ export function WorkspaceHomePanel({
                 onClick={() => onOpen(action.view)}
                 type="button"
               >
-                <span aria-hidden="true" className="text-lg text-emerald-800">{action.symbol}</span>
+                <WorkspaceIcon className="size-5 text-emerald-800" name={action.icon} />
                 <span className="mt-2 block text-sm font-black text-slate-900">{action.label}</span>
                 <span className="mt-1 line-clamp-2 block text-xs leading-4 text-slate-500">
                   {action.description}

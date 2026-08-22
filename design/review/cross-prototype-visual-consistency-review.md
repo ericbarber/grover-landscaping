@@ -82,8 +82,10 @@ same brand, palette, active treatment, geometry, and responsive standards.
 
 ## Next design-system work
 
-- Replace remaining Unicode and emoji-like symbols with the approved outlined
-  icon set as production components become available.
+- Extend the delivered production outlined SVG icon family only when new
+  authenticated workflows require additional approved meanings.
+- Finish shared operational status primitives and desktop density rules without
+  collapsing the distinct phone, tablet, and desktop compositions.
 - Extract shared HTML/React shell components during production adoption; the
   current static prototype foundation intentionally shares CSS without coupling
   prototype JavaScript.

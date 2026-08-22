@@ -92,11 +92,16 @@ Current state:
   request; owners can confirm the exact version or request another window. A
   confirmed appointment links into the Yard Owner portal while keeping crew,
   route, work-order, recurring-schedule, and payment work separate.
+- The first shared authenticated-shell convergence slice now replaces
+  Unicode/emoji-like workspace navigation and status symbols with a reusable
+  outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
+  at tablet widths, retains the role-filtered navigation model, and yields to
+  the existing desktop shell at the large breakpoint.
 
 Next slice:
 
-- Begin the next approved adoption item: shared authenticated-shell icon,
-  density, status-primitive, and tablet-navigation convergence.
+- Finish shared authenticated-shell operational density and reusable status
+  primitives, then begin the approved field-execution hierarchy convergence.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

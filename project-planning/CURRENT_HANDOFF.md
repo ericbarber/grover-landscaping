@@ -7,7 +7,7 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: Yard Owner acquisition Phase 4C activation
+- Active product boundary: shared authenticated-shell convergence
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -21,6 +21,9 @@
   interactive “Today’s operation” schedule concept.
 - The canonical palette, typography roles, wordmark, controls, focus treatment,
   public/acquisition materials, and authenticated Home shell are in production.
+- Authenticated navigation now uses one reusable outlined SVG icon family,
+  retains phone bottom navigation, becomes a fixed left rail at tablet widths,
+  and yields to the existing desktop shell at the large breakpoint.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -73,13 +76,14 @@ requests in the responsive workspaces. Mobile and desktop browser journeys
 preserve the no-operational-work boundary and the confirmed owner view links to
 the existing portal.
 
-The next repository-owned slice is shared authenticated-shell convergence:
+The outlined-icon and tablet-navigation portion of shared authenticated-shell
+convergence is delivered. The next repository-owned slice is:
 
-1. Reconcile outlined icon treatment and status primitives with the approved
-   shared-shell working design.
-2. Tighten desktop information density without weakening role-based composition.
-3. Validate tablet navigation behavior before beginning field-workflow
-   convergence.
+1. Extract reusable status primitives for operational feedback and synchronize
+   their tone and semantics across the authenticated Home and work areas.
+2. Tighten desktop information density without weakening role-based composition
+   or the phone/tablet navigation behavior.
+3. Validate the remaining Phase 0 gates, then begin field-workflow convergence.
 
 ## Read first
 
@@ -90,13 +94,14 @@ The next repository-owned slice is shared authenticated-shell convergence:
 5. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
 6. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
 7. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-6. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
+8. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
 
 ## Validation baseline
 
-The latest public-product slice passes all 408 frontend unit tests, TypeScript,
-the production build, and 16 Chromium mobile/desktop landing checks. Re-run the
-checks appropriate to each subsequent phase; do not infer that unrelated backend,
+The latest authenticated-shell slice passes all 419 frontend unit tests across
+103 files, TypeScript, the production build, and its phone/tablet/desktop
+responsive journey in both compatible Chromium profiles. Re-run the checks
+appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
 baseline.
 

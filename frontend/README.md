@@ -28,6 +28,8 @@ not currently depend on React Router.
   first-party lead flow, and interactive “Today’s operation” product tour
 - Cognito, disabled, and production-rejected local-review authentication modes
 - Role-filtered Home, field, customer, manager, and support destinations
+- Shared outlined SVG workspace icons with phone bottom navigation, a fixed
+  tablet rail, and handoff to the desktop shell at the large breakpoint
 - Mobile route, jobs, checklist, photos, completion, offline queue, replay, and
   diagnostics behavior
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
@@ -105,7 +107,8 @@ baseline when those executables are unavailable.
   not an authorization control.
 - Keep customer-safe projections separate from provider-private operational data.
 - Reuse the canonical theme, wordmark, focus, controls, and shell materials in
-  `src/index.css` and shared components.
+  `src/index.css` and shared components, including `WorkspaceIcon` for
+  authenticated navigation and status symbols.
 - Treat `design/prototypes/` as review code, not a second production component
   library; adopt approved behavior deliberately in React.
 - Add responsive browser coverage for workflow/navigation changes and focused

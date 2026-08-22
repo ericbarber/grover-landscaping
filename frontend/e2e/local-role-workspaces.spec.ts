@@ -155,3 +155,51 @@ test('authenticated home retains the shared shell materials and type roles', asy
     managerNavigation: 'rgb(15, 47, 40)',
   });
 });
+
+test('authenticated navigation moves from a phone bar to a tablet rail', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app');
+
+  const navigation = page.getByRole('navigation', { name: 'Mobile workspace' });
+  await expect(navigation).toBeVisible();
+  await expect(navigation.locator('svg')).toHaveCount(5);
+
+  const phone = await navigation.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return {
+      bottom: Math.round(window.innerHeight - box.bottom),
+      height: Math.round(box.height),
+      left: Math.round(box.left),
+      width: Math.round(box.width),
+    };
+  });
+  expect(phone.left).toBe(0);
+  expect(phone.width).toBe(390);
+  expect(phone.bottom).toBe(0);
+  expect(phone.height).toBeLessThan(120);
+
+  await page.setViewportSize({ width: 820, height: 1180 });
+  const tablet = await navigation.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const main = document.querySelector('main');
+    return {
+      height: Math.round(box.height),
+      left: Math.round(box.left),
+      mainPaddingLeft: main ? Math.round(Number.parseFloat(getComputedStyle(main).paddingLeft)) : 0,
+      overflow: document.documentElement.scrollWidth > window.innerWidth,
+      top: Math.round(box.top),
+      width: Math.round(box.width),
+    };
+  });
+  expect(tablet).toEqual({
+    height: 1180,
+    left: 0,
+    mainPaddingLeft: 96,
+    overflow: false,
+    top: 0,
+    width: 96,
+  });
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(navigation).toBeHidden();
+});

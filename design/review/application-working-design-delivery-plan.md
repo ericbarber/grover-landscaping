@@ -104,7 +104,7 @@ identity, density, forms, status, and recovery.
 
 - Responsive authenticated shell:
   - desktop application rail;
-  - mobile bottom navigation;
+  - phone bottom navigation and a fixed tablet rail;
   - manager category and tool context;
   - organization, persona, and signed-in identity context;
   - breadcrumb or context-return behavior;
@@ -119,11 +119,15 @@ identity, density, forms, status, and recovery.
   views.
 - Shared browser validation helpers and reference viewport matrix.
 
-### Key decisions
+### Delivered shell decisions
 
-- Whether desktop Home returns to the last tool or always opens the persona Home.
-- Exact manager rail/category relationship at tablet widths.
-- One outlined SVG icon family for production handoff.
+- Desktop Home opens the persona Home rather than retaining implicit tool state.
+- Role-filtered workspace navigation uses one outlined SVG icon family.
+- The compact shell uses bottom navigation on phones, a left rail on tablets,
+  and the existing desktop rail/category composition at the large breakpoint.
+
+### Remaining key decision
+
 - Placement and priority of simultaneous offline, sync, update, and API states.
 
 ### Exit condition
@@ -360,7 +364,7 @@ different product decision, missing authority, or unavailable required contract.
 
 | Phase | Status | Next action |
 | --- | --- | --- |
-| 0. Foundation and shell | Partial production adoption | Finish outlined icons, operational density/status primitives, and tablet rail behavior |
+| 0. Foundation and shell | Partial production adoption | Outlined icons and tablet rail delivered; finish operational density and shared status primitives |
 | 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
 | 2. Field execution | Partial production adoption | Adopt Crew Route V1 hierarchy across the connected Home → Route → Jobs → Job workflow |
 | 3. Manager daily operations | Partial production adoption | Converge authenticated Schedule, inspector, publish/capacity risk, and Recovery composition |
