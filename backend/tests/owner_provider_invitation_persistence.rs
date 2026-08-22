@@ -8,16 +8,18 @@ use grover_landscaping_api::owner_acquisition::{
     CreateProviderAssessmentMessageRequest, CreateProviderAssessmentPrivateNoteRequest,
     CreateProviderInitialServiceProposalResponseRequest,
     DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
-    DecideOwnerProviderInitialServiceProposalRequest, IssueOwnerProviderResponseCapabilityRequest,
-    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderAssessmentCommunicationWriteResult,
-    OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
-    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
-    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
-    OwnerProviderInboxResult, OwnerProviderInitialServiceProposalDecisionResult,
+    DecideOwnerProviderFirstVisitRequest, DecideOwnerProviderInitialServiceProposalRequest,
+    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderDisclosureRequest,
+    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderAssessmentCommunicationWriteResult, OwnerProviderAssessmentCreateResult,
+    OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
+    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
+    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+    OwnerProviderDisclosureReviewResult, OwnerProviderFirstVisitReadResult,
+    OwnerProviderFirstVisitWriteResult, OwnerProviderInboxResult,
+    OwnerProviderInitialServiceProposalDecisionResult,
     OwnerProviderInitialServiceProposalMessageWriteResult,
     OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
@@ -28,8 +30,8 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
     OwnerProviderProgressResult, OwnerProviderRelationshipActivationResult,
     OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
-    ProposeProviderAssessmentWindowRequest, ProviderAssessmentWindowProposalResult,
-    PublishOwnerProviderInitialServiceProposalRequest,
+    ProposeProviderAssessmentWindowRequest, ProposeProviderFirstVisitRequest,
+    ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
@@ -51,6 +53,50 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .fetch_all(pool)
     .await
     .expect("test activation projection identifiers should load");
+    sqlx::query(
+        "DELETE FROM owner_provider_first_visit_events
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test first-visit events should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_first_visit_decisions
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test first-visit decisions should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_first_visit_proposals
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test first-visit proposals should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_first_visit_series
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test first-visit series should reset");
     sqlx::query(
         "DELETE FROM owner_provider_relationship_activation_events
          WHERE activation_id IN (
@@ -790,6 +836,54 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .get_owner_provider_first_visit(
+                "owner-unavailable",
+                "property-unavailable",
+                "activation-unavailable",
+            )
+            .await,
+        OwnerProviderFirstVisitReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .propose_provider_first_visit(
+                "provider-unavailable",
+                "provider@example.com",
+                "activation-unavailable",
+                ProposeProviderFirstVisitRequest {
+                    token: "owner_provider_0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                    expected_series_version: 0,
+                    window_start_epoch_seconds: 1_800_000_000,
+                    window_end_epoch_seconds: 1_800_007_200,
+                    time_zone: "America/Phoenix".to_string(),
+                    customer_safe_arrival_note: None,
+                    idempotency_key: "first-visit-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .decide_owner_provider_first_visit(
+                "owner-unavailable",
+                "property-unavailable",
+                "activation-unavailable",
+                DecideOwnerProviderFirstVisitRequest {
+                    expected_window_version: 1,
+                    action: "confirm".to_string(),
+                    customer_safe_note: None,
+                    confirmation_affirmation_text_version: Some(
+                        "owner_provider_first_visit_confirmation_v1".to_string(),
+                    ),
+                    idempotency_key: "first-visit-decision-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -3313,6 +3407,219 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         projection.get::<String, _>("competing_invitation_status"),
         "revoked"
     );
+    let OwnerProviderFirstVisitReadResult::Loaded(awaiting_first_visit) = repository
+        .get_owner_provider_first_visit(owner_a, &property.property_id, &activation.activation_id)
+        .await
+    else {
+        panic!("the activated owner relationship should expose first-visit setup");
+    };
+    assert_eq!(awaiting_first_visit.status, "awaiting_provider");
+    assert_eq!(awaiting_first_visit.current_version, 0);
+    assert!(matches!(
+        repository
+            .get_owner_provider_first_visit(
+                owner_b,
+                &property.property_id,
+                &activation.activation_id,
+            )
+            .await,
+        OwnerProviderFirstVisitReadResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .get_provider_first_visit(
+                "recipient-user-1",
+                "wrong@sonoranyard.example",
+                &activation.activation_id,
+                retry.delivery_token(),
+            )
+            .await,
+        OwnerProviderFirstVisitReadResult::NotFound
+    ));
+    let first_visit_start = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time should follow the epoch")
+        .as_secs() as i64
+        + 86_400;
+    let first_window_request = ProposeProviderFirstVisitRequest {
+        token: retry.delivery_token().to_string(),
+        expected_series_version: 0,
+        window_start_epoch_seconds: first_visit_start,
+        window_end_epoch_seconds: first_visit_start + 7_200,
+        time_zone: "America/Phoenix".to_string(),
+        customer_safe_arrival_note: Some(
+            "Please unlock the side gate and keep pets inside.".to_string(),
+        ),
+        idempotency_key: "provider-first-visit-window-001".to_string(),
+    };
+    let OwnerProviderFirstVisitWriteResult::Saved(first_window) = repository
+        .propose_provider_first_visit(
+            "recipient-user-1",
+            recipient,
+            &activation.activation_id,
+            first_window_request.clone(),
+        )
+        .await
+    else {
+        panic!("the activated provider should propose the first window");
+    };
+    assert_eq!(first_window.status, "proposed");
+    assert_eq!(first_window.current_version, 1);
+    assert!(matches!(
+        repository
+            .propose_provider_first_visit(
+                "recipient-user-1",
+                recipient,
+                &activation.activation_id,
+                first_window_request.clone(),
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::Replayed(record) if record == first_window
+    ));
+    assert!(matches!(
+        repository
+            .propose_provider_first_visit(
+                "recipient-user-1",
+                recipient,
+                &activation.activation_id,
+                ProposeProviderFirstVisitRequest {
+                    window_end_epoch_seconds: first_visit_start + 10_800,
+                    ..first_window_request
+                },
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::Conflict
+    ));
+    let change_request = DecideOwnerProviderFirstVisitRequest {
+        expected_window_version: 1,
+        action: "request_change".to_string(),
+        customer_safe_note: Some("Could we use the Friday afternoon window instead?".to_string()),
+        confirmation_affirmation_text_version: None,
+        idempotency_key: "owner-first-visit-change-001".to_string(),
+    };
+    let OwnerProviderFirstVisitWriteResult::Saved(change_requested) = repository
+        .decide_owner_provider_first_visit(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            change_request.clone(),
+        )
+        .await
+    else {
+        panic!("the owner should request a first-window change");
+    };
+    assert_eq!(change_requested.status, "change_requested");
+    assert!(matches!(
+        repository
+            .decide_owner_provider_first_visit(
+                owner_a,
+                &property.property_id,
+                &activation.activation_id,
+                change_request,
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::Replayed(record) if record == change_requested
+    ));
+    let second_window_request = ProposeProviderFirstVisitRequest {
+        token: retry.delivery_token().to_string(),
+        expected_series_version: 1,
+        window_start_epoch_seconds: first_visit_start + 86_400,
+        window_end_epoch_seconds: first_visit_start + 86_400 + 7_200,
+        time_zone: "America/Phoenix".to_string(),
+        customer_safe_arrival_note: Some("Friday afternoon arrival window.".to_string()),
+        idempotency_key: "provider-first-visit-window-002".to_string(),
+    };
+    let OwnerProviderFirstVisitWriteResult::Saved(second_window) = repository
+        .propose_provider_first_visit(
+            "recipient-user-1",
+            recipient,
+            &activation.activation_id,
+            second_window_request,
+        )
+        .await
+    else {
+        panic!("the provider should respond with a new immutable window");
+    };
+    assert_eq!(second_window.current_version, 2);
+    let confirmation = DecideOwnerProviderFirstVisitRequest {
+        expected_window_version: 2,
+        action: "confirm".to_string(),
+        customer_safe_note: None,
+        confirmation_affirmation_text_version: Some(
+            "owner_provider_first_visit_confirmation_v1".to_string(),
+        ),
+        idempotency_key: "owner-first-visit-confirm-001".to_string(),
+    };
+    let (first_confirmation, second_confirmation) = tokio::join!(
+        repository.decide_owner_provider_first_visit(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            confirmation.clone(),
+        ),
+        repository.decide_owner_provider_first_visit(
+            owner_a,
+            &property.property_id,
+            &activation.activation_id,
+            confirmation.clone(),
+        ),
+    );
+    let confirmed = match (first_confirmation, second_confirmation) {
+        (
+            OwnerProviderFirstVisitWriteResult::Saved(saved),
+            OwnerProviderFirstVisitWriteResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderFirstVisitWriteResult::Replayed(replayed),
+            OwnerProviderFirstVisitWriteResult::Saved(saved),
+        ) => {
+            assert_eq!(saved, replayed);
+            saved
+        }
+        (first, second) => panic!(
+            "concurrent exact first-visit confirmation should save once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(confirmed.status, "confirmed");
+    assert_eq!(confirmed.owner_decision.as_deref(), Some("confirm"));
+    assert!(matches!(
+        repository
+            .decide_owner_provider_first_visit(
+                owner_b,
+                &property.property_id,
+                &activation.activation_id,
+                DecideOwnerProviderFirstVisitRequest {
+                    idempotency_key: "wrong-owner-first-visit-001".to_string(),
+                    ..confirmation
+                },
+            )
+            .await,
+        OwnerProviderFirstVisitWriteResult::NotFound
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_provider_first_visit_proposals
+             WHERE activation_id = $1",
+        )
+        .bind(&activation.activation_id)
+        .fetch_one(&pool)
+        .await
+        .expect("first-visit proposal count should load"),
+        2
+    );
+    assert!(sqlx::query(
+        "UPDATE owner_provider_first_visit_proposals
+         SET time_zone = 'UTC' WHERE id = $1",
+    )
+    .bind(
+        second_window
+            .proposal_id
+            .as_deref()
+            .expect("proposal id should exist")
+    )
+    .execute(&pool)
+    .await
+    .is_err());
     let operational_side_effects_after = sqlx::query(
         "SELECT
              (SELECT COUNT(*) FROM service_jobs) AS service_jobs,
@@ -3327,7 +3634,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         assert_eq!(
             operational_side_effects_after.get::<i64, _>(column),
             operational_side_effects_before.get::<i64, _>(column),
-            "activation must not create {column}"
+            "activation and first-visit confirmation must not create {column}"
         );
     }
     assert!(sqlx::query(

@@ -876,6 +876,58 @@ pub struct OwnerProviderRelationshipActivationRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ProposeProviderFirstVisitRequest {
+    pub token: String,
+    pub expected_series_version: i64,
+    pub window_start_epoch_seconds: i64,
+    pub window_end_epoch_seconds: i64,
+    pub time_zone: String,
+    pub customer_safe_arrival_note: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct DecideOwnerProviderFirstVisitRequest {
+    pub expected_window_version: i64,
+    pub action: String,
+    pub customer_safe_note: Option<String>,
+    pub confirmation_affirmation_text_version: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderFirstVisitRecord {
+    pub activation_id: String,
+    pub owner_property_id: String,
+    pub invitation_id: String,
+    pub organization_id: String,
+    pub organization_name: String,
+    pub customer_account_id: String,
+    pub customer_property_id: String,
+    pub status: String,
+    pub current_version: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proposal_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_start_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub window_end_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time_zone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_safe_arrival_note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_decision: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_customer_safe_note: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proposed_at_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decided_at_epoch_seconds: Option<i64>,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -1191,6 +1243,24 @@ pub enum OwnerProviderRelationshipActivationResult {
     NotFound,
     InvalidState,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderFirstVisitWriteResult {
+    Saved(OwnerProviderFirstVisitRecord),
+    Replayed(OwnerProviderFirstVisitRecord),
+    NotFound,
+    InvalidState(OwnerProviderFirstVisitRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderFirstVisitReadResult {
+    Loaded(OwnerProviderFirstVisitRecord),
+    NotFound,
+    InvalidState,
     Unavailable,
 }
 
@@ -4056,6 +4126,147 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn get_owner_provider_first_visit(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        activation_id: &str,
+    ) -> OwnerProviderFirstVisitReadResult {
+        let Some(pool) = &self.pool else {
+            return OwnerProviderFirstVisitReadResult::Unavailable;
+        };
+        match get_owner_provider_first_visit(pool, owner_user_id, property_id, activation_id).await
+        {
+            Ok(Some(record)) => OwnerProviderFirstVisitReadResult::Loaded(record),
+            Ok(None) => OwnerProviderFirstVisitReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, activation_id, "owner first-visit read failed");
+                OwnerProviderFirstVisitReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn get_provider_first_visit(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        activation_id: &str,
+        token: &str,
+    ) -> OwnerProviderFirstVisitReadResult {
+        if !validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+            token: token.to_string(),
+        }) {
+            return OwnerProviderFirstVisitReadResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderFirstVisitReadResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        match get_provider_first_visit(
+            pool,
+            provider_actor_user_id,
+            &email_fingerprint(&normalized_email),
+            &invitation_token_hash(token.trim()),
+            activation_id,
+        )
+        .await
+        {
+            Ok(Some(record)) => OwnerProviderFirstVisitReadResult::Loaded(record),
+            Ok(None) => OwnerProviderFirstVisitReadResult::NotFound,
+            Err(sqlx::Error::RowNotFound) => OwnerProviderFirstVisitReadResult::InvalidState,
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, activation_id, "provider first-visit read failed");
+                OwnerProviderFirstVisitReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn propose_provider_first_visit(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        activation_id: &str,
+        request: ProposeProviderFirstVisitRequest,
+    ) -> OwnerProviderFirstVisitWriteResult {
+        if !validate_provider_first_visit_request(&request) {
+            return OwnerProviderFirstVisitWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderFirstVisitWriteResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        match propose_provider_first_visit(
+            pool,
+            provider_actor_user_id,
+            &email_fingerprint(&normalized_email),
+            &invitation_token_hash(request.token.trim()),
+            activation_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_first_visit_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderFirstVisitWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, activation_id, "provider first-visit proposal failed");
+                OwnerProviderFirstVisitWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn decide_owner_provider_first_visit(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        activation_id: &str,
+        request: DecideOwnerProviderFirstVisitRequest,
+    ) -> OwnerProviderFirstVisitWriteResult {
+        if !validate_owner_first_visit_decision_request(&request) {
+            return OwnerProviderFirstVisitWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderFirstVisitWriteResult::Unavailable;
+        };
+        match decide_owner_provider_first_visit(
+            pool,
+            owner_user_id,
+            property_id,
+            activation_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_first_visit_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderFirstVisitWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, activation_id, "owner first-visit decision failed");
+                OwnerProviderFirstVisitWriteResult::Unavailable
+            }
+        }
+    }
+}
+
+fn public_first_visit_outcome(
+    outcome: PersistedFirstVisitOutcome,
+) -> OwnerProviderFirstVisitWriteResult {
+    match outcome {
+        PersistedFirstVisitOutcome::Saved(record) => {
+            OwnerProviderFirstVisitWriteResult::Saved(record)
+        }
+        PersistedFirstVisitOutcome::Replayed(record) => {
+            OwnerProviderFirstVisitWriteResult::Replayed(record)
+        }
+        PersistedFirstVisitOutcome::NotFound => OwnerProviderFirstVisitWriteResult::NotFound,
+        PersistedFirstVisitOutcome::InvalidState(record) => {
+            OwnerProviderFirstVisitWriteResult::InvalidState(record)
+        }
+        PersistedFirstVisitOutcome::Conflict => OwnerProviderFirstVisitWriteResult::Conflict,
+    }
 }
 
 fn public_initial_service_proposal_message_outcome(
@@ -4719,6 +4930,8 @@ const OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT: &str =
     "I accept this exact proposal for provider setup. I understand that acceptance does not schedule service, collect payment, or assign a crew.";
 pub const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT_VERSION: &str =
     "owner_provider_relationship_activation_v1";
+pub const OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_TEXT_VERSION: &str =
+    "owner_provider_first_visit_confirmation_v1";
 
 fn valid_proposal_text_items(items: &[String]) -> bool {
     (1..=40).contains(&items.len())
@@ -4815,6 +5028,53 @@ pub fn validate_owner_provider_relationship_activation_request(
         && request.owner_confirmed
         && request.activation_affirmation_text_version.trim()
             == OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT_VERSION
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_provider_first_visit_request(request: &ProposeProviderFirstVisitRequest) -> bool {
+    let time_zone = request.time_zone.trim();
+    let note_valid = request
+        .customer_safe_arrival_note
+        .as_deref()
+        .is_none_or(|note| (1..=1000).contains(&note.trim().chars().count()));
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.expected_series_version >= 0
+        && request.window_start_epoch_seconds > 0
+        && request.window_end_epoch_seconds > request.window_start_epoch_seconds
+        && request.window_end_epoch_seconds - request.window_start_epoch_seconds <= 4 * 60 * 60
+        && (1..=80).contains(&time_zone.chars().count())
+        && time_zone.chars().all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '/' | '_' | '-' | '+')
+        })
+        && note_valid
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_owner_first_visit_decision_request(
+    request: &DecideOwnerProviderFirstVisitRequest,
+) -> bool {
+    let note_valid = request
+        .customer_safe_note
+        .as_deref()
+        .is_none_or(|note| (1..=1000).contains(&note.trim().chars().count()));
+    let action_valid = match request.action.as_str() {
+        "confirm" => {
+            note_valid
+                && request.confirmation_affirmation_text_version.as_deref()
+                    == Some(OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_TEXT_VERSION)
+        }
+        "request_change" => {
+            request.confirmation_affirmation_text_version.is_none()
+                && request
+                    .customer_safe_note
+                    .as_deref()
+                    .is_some_and(|note| !note.trim().is_empty())
+        }
+        _ => false,
+    };
+    request.expected_window_version > 0
+        && action_valid
         && valid_assessment_communication_key(&request.idempotency_key)
 }
 
@@ -8606,6 +8866,14 @@ enum PersistedRelationshipActivationOutcome {
     Replayed(OwnerProviderRelationshipActivationRecord),
     NotFound,
     InvalidState,
+    Conflict,
+}
+
+enum PersistedFirstVisitOutcome {
+    Saved(OwnerProviderFirstVisitRecord),
+    Replayed(OwnerProviderFirstVisitRecord),
+    NotFound,
+    InvalidState(OwnerProviderFirstVisitRecord),
     Conflict,
 }
 
@@ -12638,6 +12906,458 @@ async fn activate_owner_provider_relationship(
     ))
 }
 
+const OWNER_PROVIDER_FIRST_VISIT_SELECT: &str = "SELECT activation.id AS activation_id,
+            activation.owner_property_id, activation.invitation_id,
+            activation.organization_id, organization.display_name AS organization_name,
+            activation.customer_account_id, activation.customer_property_id,
+            COALESCE(series.status, 'awaiting_provider') AS first_visit_status,
+            COALESCE(series.current_version, 0) AS current_version,
+            proposal.id AS first_visit_proposal_id,
+            EXTRACT(EPOCH FROM proposal.window_start)::BIGINT AS window_start_epoch_seconds,
+            EXTRACT(EPOCH FROM proposal.window_end)::BIGINT AS window_end_epoch_seconds,
+            proposal.time_zone, proposal.customer_safe_arrival_note,
+            proposal.provider_actor_user_id, proposal.verified_email_fingerprint,
+            proposal.idempotency_key AS proposal_idempotency_key,
+            EXTRACT(EPOCH FROM proposal.created_at)::BIGINT AS proposed_at_epoch_seconds,
+            decision.action AS owner_decision,
+            decision.customer_safe_note AS owner_customer_safe_note,
+            decision.confirmation_affirmation_text_version,
+            decision.idempotency_key AS decision_idempotency_key,
+            EXTRACT(EPOCH FROM decision.decided_at)::BIGINT AS decided_at_epoch_seconds
+     FROM owner_provider_relationship_activations activation
+     JOIN organizations organization ON organization.id = activation.organization_id
+     JOIN owner_provider_active_relationships relationship
+       ON relationship.activation_id = activation.id
+     LEFT JOIN owner_provider_first_visit_series series
+       ON series.activation_id = activation.id
+     LEFT JOIN owner_provider_first_visit_proposals proposal
+       ON proposal.activation_id = activation.id
+      AND proposal.proposal_version = series.current_version
+     LEFT JOIN owner_provider_first_visit_decisions decision
+       ON decision.proposal_id = proposal.id";
+
+fn owner_provider_first_visit_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderFirstVisitRecord {
+    OwnerProviderFirstVisitRecord {
+        activation_id: row.get("activation_id"),
+        owner_property_id: row.get("owner_property_id"),
+        invitation_id: row.get("invitation_id"),
+        organization_id: row.get("organization_id"),
+        organization_name: row.get("organization_name"),
+        customer_account_id: row.get("customer_account_id"),
+        customer_property_id: row.get("customer_property_id"),
+        status: row.get("first_visit_status"),
+        current_version: row.get("current_version"),
+        proposal_id: row.get("first_visit_proposal_id"),
+        window_start_epoch_seconds: row.get("window_start_epoch_seconds"),
+        window_end_epoch_seconds: row.get("window_end_epoch_seconds"),
+        time_zone: row.get("time_zone"),
+        customer_safe_arrival_note: row.get("customer_safe_arrival_note"),
+        owner_decision: row.get("owner_decision"),
+        owner_customer_safe_note: row.get("owner_customer_safe_note"),
+        proposed_at_epoch_seconds: row.get("proposed_at_epoch_seconds"),
+        decided_at_epoch_seconds: row.get("decided_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+async fn get_owner_provider_first_visit(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    activation_id: &str,
+) -> Result<Option<OwnerProviderFirstVisitRecord>, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_FIRST_VISIT_SELECT}
+         WHERE activation.id = $1 AND activation.owner_user_id = $2
+           AND activation.owner_property_id = $3 AND relationship.status = 'active'"
+    );
+    Ok(sqlx::query(&query)
+        .bind(activation_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(pool)
+        .await?
+        .map(|row| owner_provider_first_visit_from_row(&row)))
+}
+
+async fn get_provider_first_visit(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    activation_id: &str,
+) -> Result<Option<OwnerProviderFirstVisitRecord>, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_FIRST_VISIT_SELECT}
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = activation.invitation_id
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.invitation_id = invitation.id
+          AND claim.organization_id = activation.organization_id
+         WHERE activation.id = $1 AND relationship.status = 'active'
+           AND invitation.token_hash = $2 AND invitation.status = 'activated'
+           AND recipient_check.recipient_user_id = $3
+           AND recipient_check.verified_email_fingerprint = $4
+           AND recipient_check.status = 'checked'
+           AND claim.actor_user_id = $3
+           AND claim.status IN ('relationship_checked', 'claimed')
+           AND organization.status = 'active'
+           AND EXISTS (
+               SELECT 1 FROM organization_memberships membership
+               WHERE membership.organization_id = activation.organization_id
+                 AND membership.user_id = $3 AND membership.status = 'active'
+           )"
+    );
+    Ok(sqlx::query(&query)
+        .bind(activation_id)
+        .bind(token_hash)
+        .bind(provider_actor_user_id)
+        .bind(verified_email_fingerprint)
+        .fetch_optional(pool)
+        .await?
+        .map(|row| owner_provider_first_visit_from_row(&row)))
+}
+
+async fn load_first_visit_in_transaction(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    activation_id: &str,
+) -> Result<OwnerProviderFirstVisitRecord, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_FIRST_VISIT_SELECT}
+         WHERE activation.id = $1 AND relationship.status = 'active'"
+    );
+    let row = sqlx::query(&query)
+        .bind(activation_id)
+        .fetch_one(&mut **transaction)
+        .await?;
+    Ok(owner_provider_first_visit_from_row(&row))
+}
+
+fn trimmed_optional(value: Option<&str>) -> Option<&str> {
+    value.map(str::trim)
+}
+
+async fn propose_provider_first_visit(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    activation_id: &str,
+    request: ProposeProviderFirstVisitRequest,
+) -> Result<PersistedFirstVisitOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtext($1))")
+        .bind(format!("owner-provider-first-visit:{activation_id}"))
+        .execute(&mut *transaction)
+        .await?;
+
+    let replay_query = format!(
+        "{OWNER_PROVIDER_FIRST_VISIT_SELECT}
+         WHERE proposal.provider_actor_user_id = $1
+           AND proposal.idempotency_key = $2"
+    );
+    if let Some(replay) = sqlx::query(&replay_query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?
+    {
+        let record = owner_provider_first_visit_from_row(&replay);
+        let exact = record.activation_id == activation_id
+            && record.current_version == request.expected_series_version + 1
+            && record.window_start_epoch_seconds == Some(request.window_start_epoch_seconds)
+            && record.window_end_epoch_seconds == Some(request.window_end_epoch_seconds)
+            && record.time_zone.as_deref() == Some(request.time_zone.trim())
+            && record.customer_safe_arrival_note.as_deref()
+                == trimmed_optional(request.customer_safe_arrival_note.as_deref());
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedFirstVisitOutcome::Replayed(record)
+        } else {
+            PersistedFirstVisitOutcome::Conflict
+        });
+    }
+
+    let authority = sqlx::query(
+        "SELECT activation.id, COALESCE(series.current_version, 0) AS current_version,
+                COALESCE(series.status, 'awaiting_provider') AS first_visit_status,
+                activation.invitation_id, activation.organization_id,
+                activation.owner_property_id, activation.customer_account_id,
+                activation.customer_property_id
+         FROM owner_provider_relationship_activations activation
+         JOIN owner_provider_active_relationships relationship
+           ON relationship.activation_id = activation.id AND relationship.status = 'active'
+         JOIN organizations organization
+           ON organization.id = activation.organization_id AND organization.status = 'active'
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = activation.invitation_id
+          AND invitation.status = 'activated' AND invitation.token_hash = $2
+         JOIN owner_provider_invitation_recipient_checks recipient_check
+           ON recipient_check.invitation_id = invitation.id
+          AND recipient_check.recipient_user_id = $3
+          AND recipient_check.verified_email_fingerprint = $4
+          AND recipient_check.status = 'checked'
+         JOIN owner_provider_invitation_organization_claims claim
+           ON claim.invitation_id = invitation.id
+          AND claim.organization_id = activation.organization_id
+          AND claim.actor_user_id = $3
+          AND claim.status IN ('relationship_checked', 'claimed')
+         LEFT JOIN owner_provider_first_visit_series series
+           ON series.activation_id = activation.id
+         WHERE activation.id = $1
+           AND EXISTS (
+               SELECT 1 FROM organization_memberships membership
+               WHERE membership.organization_id = activation.organization_id
+                 AND membership.user_id = $3 AND membership.status = 'active'
+           )
+         FOR UPDATE OF activation",
+    )
+    .bind(activation_id)
+    .bind(token_hash)
+    .bind(provider_actor_user_id)
+    .bind(verified_email_fingerprint)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(authority) = authority else {
+        transaction.rollback().await?;
+        return Ok(PersistedFirstVisitOutcome::NotFound);
+    };
+
+    sqlx::query(
+        "INSERT INTO owner_provider_first_visit_series (activation_id)
+         VALUES ($1) ON CONFLICT (activation_id) DO NOTHING",
+    )
+    .bind(activation_id)
+    .execute(&mut *transaction)
+    .await?;
+    let current_version: i64 = authority.get("current_version");
+    let current_status: String = authority.get("first_visit_status");
+    if current_version != request.expected_series_version
+        || !matches!(
+            current_status.as_str(),
+            "awaiting_provider" | "change_requested"
+        )
+        || request.window_start_epoch_seconds <= current_epoch_seconds()
+    {
+        let record = load_first_visit_in_transaction(&mut transaction, activation_id).await?;
+        transaction.commit().await?;
+        return Ok(PersistedFirstVisitOutcome::InvalidState(record));
+    }
+
+    let next_version = current_version + 1;
+    let proposal_id = format!("owner_provider_first_visit_{}", Uuid::new_v4().simple());
+    sqlx::query(
+        "INSERT INTO owner_provider_first_visit_proposals (
+             id, activation_id, proposal_version, provider_actor_user_id,
+             verified_email_fingerprint, invitation_id, organization_id,
+             owner_property_id, customer_account_id, customer_property_id,
+             window_start, window_end, time_zone, customer_safe_arrival_note,
+             idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                   TO_TIMESTAMP($11), TO_TIMESTAMP($12), $13, $14, $15)",
+    )
+    .bind(&proposal_id)
+    .bind(activation_id)
+    .bind(next_version)
+    .bind(provider_actor_user_id)
+    .bind(verified_email_fingerprint)
+    .bind(authority.get::<String, _>("invitation_id"))
+    .bind(authority.get::<String, _>("organization_id"))
+    .bind(authority.get::<String, _>("owner_property_id"))
+    .bind(authority.get::<String, _>("customer_account_id"))
+    .bind(authority.get::<String, _>("customer_property_id"))
+    .bind(request.window_start_epoch_seconds)
+    .bind(request.window_end_epoch_seconds)
+    .bind(request.time_zone.trim())
+    .bind(trimmed_optional(
+        request.customer_safe_arrival_note.as_deref(),
+    ))
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "UPDATE owner_provider_first_visit_series
+         SET current_version = $2, status = 'proposed', updated_at = NOW()
+         WHERE activation_id = $1 AND current_version = $3",
+    )
+    .bind(activation_id)
+    .bind(next_version)
+    .bind(current_version)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_first_visit_events (
+             id, activation_id, proposal_id, actor_user_id, event_kind,
+             proposal_version, event_data
+         ) VALUES ($1, $2, $3, $4, 'window_proposed', $5,
+                   '{\"status\":\"proposed\"}'::JSONB)",
+    )
+    .bind(format!(
+        "owner_provider_first_visit_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(activation_id)
+    .bind(&proposal_id)
+    .bind(provider_actor_user_id)
+    .bind(next_version)
+    .execute(&mut *transaction)
+    .await?;
+    let record = load_first_visit_in_transaction(&mut transaction, activation_id).await?;
+    transaction.commit().await?;
+    Ok(PersistedFirstVisitOutcome::Saved(record))
+}
+
+async fn decide_owner_provider_first_visit(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    activation_id: &str,
+    request: DecideOwnerProviderFirstVisitRequest,
+) -> Result<PersistedFirstVisitOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtext($1))")
+        .bind(format!("owner-provider-first-visit:{activation_id}"))
+        .execute(&mut *transaction)
+        .await?;
+
+    let replay = sqlx::query(
+        "SELECT decision.activation_id, decision.proposal_version,
+                decision.action, decision.customer_safe_note,
+                decision.confirmation_affirmation_text_version
+         FROM owner_provider_first_visit_decisions decision
+         WHERE decision.owner_user_id = $1 AND decision.idempotency_key = $2",
+    )
+    .bind(owner_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        let exact = replay.get::<String, _>("activation_id") == activation_id
+            && replay.get::<i64, _>("proposal_version") == request.expected_window_version
+            && replay.get::<String, _>("action") == request.action
+            && replay
+                .get::<Option<String>, _>("customer_safe_note")
+                .as_deref()
+                == trimmed_optional(request.customer_safe_note.as_deref())
+            && replay
+                .get::<Option<String>, _>("confirmation_affirmation_text_version")
+                .as_deref()
+                == trimmed_optional(request.confirmation_affirmation_text_version.as_deref());
+        let record = load_first_visit_in_transaction(&mut transaction, activation_id).await?;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedFirstVisitOutcome::Replayed(record)
+        } else {
+            PersistedFirstVisitOutcome::Conflict
+        });
+    }
+
+    let current = get_owner_provider_first_visit_in_transaction(
+        &mut transaction,
+        owner_user_id,
+        property_id,
+        activation_id,
+    )
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedFirstVisitOutcome::NotFound);
+    };
+    if current.status != "proposed" || current.current_version != request.expected_window_version {
+        transaction.commit().await?;
+        return Ok(PersistedFirstVisitOutcome::InvalidState(current));
+    }
+    let proposal_id = current
+        .proposal_id
+        .as_deref()
+        .expect("a proposed first-visit state must identify its proposal");
+    let decision_id = format!(
+        "owner_provider_first_visit_decision_{}",
+        Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        "INSERT INTO owner_provider_first_visit_decisions (
+             id, activation_id, proposal_id, owner_user_id, action,
+             proposal_version, customer_safe_note,
+             confirmation_affirmation_text_version, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    )
+    .bind(&decision_id)
+    .bind(activation_id)
+    .bind(proposal_id)
+    .bind(owner_user_id)
+    .bind(&request.action)
+    .bind(request.expected_window_version)
+    .bind(trimmed_optional(request.customer_safe_note.as_deref()))
+    .bind(trimmed_optional(
+        request.confirmation_affirmation_text_version.as_deref(),
+    ))
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    let (next_status, event_kind) = if request.action == "confirm" {
+        ("confirmed", "window_confirmed")
+    } else {
+        ("change_requested", "window_change_requested")
+    };
+    sqlx::query(
+        "UPDATE owner_provider_first_visit_series
+         SET status = $2, updated_at = NOW(),
+             confirmed_at = CASE WHEN $2 = 'confirmed' THEN NOW() ELSE NULL END
+         WHERE activation_id = $1 AND current_version = $3 AND status = 'proposed'",
+    )
+    .bind(activation_id)
+    .bind(next_status)
+    .bind(request.expected_window_version)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_first_visit_events (
+             id, activation_id, proposal_id, actor_user_id, event_kind,
+             proposal_version, event_data
+         ) VALUES ($1, $2, $3, $4, $5, $6, JSONB_BUILD_OBJECT('status', $7::TEXT))",
+    )
+    .bind(format!(
+        "owner_provider_first_visit_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(activation_id)
+    .bind(proposal_id)
+    .bind(owner_user_id)
+    .bind(event_kind)
+    .bind(request.expected_window_version)
+    .bind(next_status)
+    .execute(&mut *transaction)
+    .await?;
+    let record = load_first_visit_in_transaction(&mut transaction, activation_id).await?;
+    transaction.commit().await?;
+    Ok(PersistedFirstVisitOutcome::Saved(record))
+}
+
+async fn get_owner_provider_first_visit_in_transaction(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    owner_user_id: &str,
+    property_id: &str,
+    activation_id: &str,
+) -> Result<Option<OwnerProviderFirstVisitRecord>, sqlx::Error> {
+    let query = format!(
+        "{OWNER_PROVIDER_FIRST_VISIT_SELECT}
+         WHERE activation.id = $1 AND activation.owner_user_id = $2
+           AND activation.owner_property_id = $3 AND relationship.status = 'active'"
+    );
+    Ok(sqlx::query(&query)
+        .bind(activation_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut **transaction)
+        .await?
+        .map(|row| owner_provider_first_visit_from_row(&row)))
+}
+
 async fn open_owner_provider_inbox(
     pool: &PgPool,
     recipient_user_id: &str,
@@ -13585,6 +14305,51 @@ mod tests {
             &ActivateOwnerProviderRelationshipRequest {
                 activation_affirmation_text_version: "unknown-text".to_string(),
                 ..activation
+            }
+        ));
+
+        let first_visit = ProposeProviderFirstVisitRequest {
+            token:
+                "owner_provider_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    .to_string(),
+            expected_series_version: 0,
+            window_start_epoch_seconds: 1_800_000_000,
+            window_end_epoch_seconds: 1_800_007_200,
+            time_zone: "America/Phoenix".to_string(),
+            customer_safe_arrival_note: Some("Please unlock the side gate.".to_string()),
+            idempotency_key: "provider-first-visit-001".to_string(),
+        };
+        assert!(validate_provider_first_visit_request(&first_visit));
+        assert!(!validate_provider_first_visit_request(
+            &ProposeProviderFirstVisitRequest {
+                window_end_epoch_seconds: first_visit.window_start_epoch_seconds + 14_401,
+                ..first_visit.clone()
+            }
+        ));
+        let first_visit_confirmation = DecideOwnerProviderFirstVisitRequest {
+            expected_window_version: 1,
+            action: "confirm".to_string(),
+            customer_safe_note: None,
+            confirmation_affirmation_text_version: Some(
+                OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_TEXT_VERSION.to_string(),
+            ),
+            idempotency_key: "owner-first-visit-confirm-001".to_string(),
+        };
+        assert!(validate_owner_first_visit_decision_request(
+            &first_visit_confirmation
+        ));
+        assert!(!validate_owner_first_visit_decision_request(
+            &DecideOwnerProviderFirstVisitRequest {
+                confirmation_affirmation_text_version: Some("unknown-text".to_string()),
+                ..first_visit_confirmation.clone()
+            }
+        ));
+        assert!(validate_owner_first_visit_decision_request(
+            &DecideOwnerProviderFirstVisitRequest {
+                action: "request_change".to_string(),
+                customer_safe_note: Some("Please offer an afternoon window.".to_string()),
+                confirmation_affirmation_text_version: None,
+                ..first_visit_confirmation
             }
         ));
     }

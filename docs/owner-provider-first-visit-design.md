@@ -121,8 +121,9 @@ operational workflows create and execute authorized work.
 
 1. **4C4a — Contract:** authority, versioning, decisions, replay, privacy, and
    operational side-effect boundaries.
-2. **4C4b — Persistence:** constrained immutable versions, decisions, minimized
-   events, repository transitions, isolation, concurrency, and outage proof.
+2. **4C4b — Persistence (delivered):** constrained immutable versions,
+   decisions, minimized events, repository transitions, isolation, concurrency,
+   outage distinction, and no-operational-side-effect proof.
 3. **4C4c — Authenticated API:** provider propose/status and owner
    status/decision routes with explicit invalid, missing, stale, conflict, and
    unavailable recovery.

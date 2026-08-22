@@ -46,7 +46,8 @@ persistent model. Focused API contracts and runbooks live in [`../docs/`](../doc
   service proposals, including the provider’s authoritative latest-version
   reload projection, owner exact-version decisions, and append-only version-
   aware proposal questions/change requests/provider responses with authenticated
-  owner/provider APIs and authoritative reload
+  owner/provider APIs and authoritative reload, explicit relationship
+  activation, and the separate versioned first-visit persistence lifecycle
 - Marketing leads, first-party conversion events, and support-admin review
 
 The definitive route registration is in [`src/main.rs`](src/main.rs). The root

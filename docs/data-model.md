@@ -428,3 +428,27 @@ same-property competing-invitation closure events. These records do not contain
 addresses, proposal scope, price, photos, access considerations, contact values,
 or schedule details. Activation creates no job, route, work order, invoice,
 payment, recurring schedule, crew assignment, or first visit.
+
+## owner_provider_first_visit_series
+
+This small mutable projection records the current customer-facing first-visit
+state and version for one active relationship. It begins at
+`awaiting_provider`, moves to `proposed`, and then to `change_requested` or
+`confirmed`. It contains no crew, route, work-order, billing, or private
+provider-planning data.
+
+`owner_provider_first_visit_proposals` stores immutable provider-authored
+arrival-window versions with actor, verified-recipient, invitation,
+organization, owner-property, provider account/property, time-zone, and
+idempotency provenance. A window is future-bounded and cannot exceed four
+hours. A replacement version is allowed only after the owner requests a change.
+
+`owner_provider_first_visit_decisions` stores one immutable owner decision per
+window version. Confirmation binds the displayed affirmation version; a change
+request requires a customer-safe note. Actor-scoped keys make exact retries
+replay-safe and changed reuse conflicting.
+
+`owner_provider_first_visit_events` contains minimized proposed, confirmed, or
+change-requested lifecycle facts. First-visit confirmation creates no service
+job, day plan, route stop, work order, recurring schedule, payment, crew, or
+assignment and does not activate the provider's operational property.
