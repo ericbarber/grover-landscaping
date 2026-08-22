@@ -728,6 +728,85 @@ pub struct OwnerProviderAssessmentPrivateNoteRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct PublishOwnerProviderInitialServiceProposalRequest {
+    pub token: String,
+    pub expected_proposal_version: i64,
+    pub title: String,
+    pub customer_summary: String,
+    pub included_scope: Vec<String>,
+    pub exclusions: Vec<String>,
+    pub cadence_code: String,
+    pub cadence_detail: String,
+    pub arrival_policy: String,
+    pub weather_policy: String,
+    pub cancellation_policy: String,
+    pub proof_expectation: String,
+    pub price_amount_minor: i64,
+    pub price_basis: String,
+    pub currency_code: String,
+    pub revision_note: Option<String>,
+    pub expires_at_epoch_seconds: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInitialServiceProposalRecord {
+    pub proposal_id: String,
+    pub assessment_id: String,
+    pub invitation_id: String,
+    pub property_id: String,
+    pub organization_id: String,
+    pub disclosure_grant_id: String,
+    pub proposal_version: i64,
+    pub status: String,
+    pub title: String,
+    pub customer_summary: String,
+    pub included_scope: Vec<String>,
+    pub exclusions: Vec<String>,
+    pub cadence_code: String,
+    pub cadence_detail: String,
+    pub arrival_policy: String,
+    pub weather_policy: String,
+    pub cancellation_policy: String,
+    pub proof_expectation: String,
+    pub price_amount_minor: i64,
+    pub price_basis: String,
+    pub currency_code: String,
+    pub annualized_monthly_minor: Option<i64>,
+    pub revision_note: Option<String>,
+    pub issued_at_epoch_seconds: i64,
+    pub expires_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct DecideOwnerProviderInitialServiceProposalRequest {
+    pub action: String,
+    pub expected_proposal_version: i64,
+    pub reason_code: Option<String>,
+    pub customer_safe_note: Option<String>,
+    pub affirmation_text_version: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInitialServiceProposalDecisionRecord {
+    pub decision_id: String,
+    pub proposal_id: String,
+    pub action: String,
+    pub reason_code: Option<String>,
+    pub customer_safe_note: Option<String>,
+    pub proposal_version: i64,
+    pub affirmation_text_version: Option<String>,
+    pub decided_at_epoch_seconds: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acceptance_snapshot_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acceptance_snapshot_sha256: Option<String>,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -1002,6 +1081,26 @@ pub enum OwnerProviderAssessmentCommunicationWriteResult<T> {
     Replayed(T),
     NotFound,
     InvalidState(OwnerProviderAssessmentStatusRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInitialServiceProposalWriteResult {
+    Published(OwnerProviderInitialServiceProposalRecord),
+    Replayed(OwnerProviderInitialServiceProposalRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInitialServiceProposalDecisionResult {
+    Decided(OwnerProviderInitialServiceProposalDecisionRecord),
+    Replayed(OwnerProviderInitialServiceProposalDecisionRecord),
+    NotFound,
+    InvalidState(OwnerProviderInitialServiceProposalRecord),
     Conflict,
     Unavailable,
 }
@@ -3547,6 +3646,124 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn publish_initial_service_proposal(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        assessment_id: &str,
+        request: PublishOwnerProviderInitialServiceProposalRequest,
+    ) -> OwnerProviderInitialServiceProposalWriteResult {
+        if !validate_initial_service_proposal_request(&request) {
+            return OwnerProviderInitialServiceProposalWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderInitialServiceProposalWriteResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let verified_email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match publish_owner_provider_initial_service_proposal(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &verified_email_fingerprint,
+            &token_hash,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedInitialServiceProposalWriteOutcome::Published(proposal)) => {
+                OwnerProviderInitialServiceProposalWriteResult::Published(proposal)
+            }
+            Ok(PersistedInitialServiceProposalWriteOutcome::Replayed(proposal)) => {
+                OwnerProviderInitialServiceProposalWriteResult::Replayed(proposal)
+            }
+            Ok(PersistedInitialServiceProposalWriteOutcome::NotFound) => {
+                OwnerProviderInitialServiceProposalWriteResult::NotFound
+            }
+            Ok(PersistedInitialServiceProposalWriteOutcome::InvalidState) => {
+                OwnerProviderInitialServiceProposalWriteResult::InvalidState
+            }
+            Ok(PersistedInitialServiceProposalWriteOutcome::Conflict) => {
+                OwnerProviderInitialServiceProposalWriteResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInitialServiceProposalWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, assessment_id, "initial service proposal publish failed");
+                OwnerProviderInitialServiceProposalWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn list_owner_initial_service_proposals(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderInitialServiceProposalRecord>> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match list_owner_provider_initial_service_proposals(pool, owner_user_id, property_id).await
+        {
+            Ok(Some(proposals)) => OwnerReadResult::Loaded(proposals),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, "initial service proposal list failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn decide_initial_service_proposal(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+        request: DecideOwnerProviderInitialServiceProposalRequest,
+    ) -> OwnerProviderInitialServiceProposalDecisionResult {
+        if !validate_initial_service_proposal_decision_request(&request) {
+            return OwnerProviderInitialServiceProposalDecisionResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderInitialServiceProposalDecisionResult::Unavailable;
+        };
+        match decide_owner_provider_initial_service_proposal(
+            pool,
+            owner_user_id,
+            property_id,
+            proposal_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedInitialServiceProposalDecisionOutcome::Decided(decision)) => {
+                OwnerProviderInitialServiceProposalDecisionResult::Decided(decision)
+            }
+            Ok(PersistedInitialServiceProposalDecisionOutcome::Replayed(decision)) => {
+                OwnerProviderInitialServiceProposalDecisionResult::Replayed(decision)
+            }
+            Ok(PersistedInitialServiceProposalDecisionOutcome::NotFound) => {
+                OwnerProviderInitialServiceProposalDecisionResult::NotFound
+            }
+            Ok(PersistedInitialServiceProposalDecisionOutcome::InvalidState(proposal)) => {
+                OwnerProviderInitialServiceProposalDecisionResult::InvalidState(proposal)
+            }
+            Ok(PersistedInitialServiceProposalDecisionOutcome::Conflict) => {
+                OwnerProviderInitialServiceProposalDecisionResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInitialServiceProposalDecisionResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "initial service proposal decision failed");
+                OwnerProviderInitialServiceProposalDecisionResult::Unavailable
+            }
+        }
+    }
 }
 
 fn public_assessment_communication_outcome<T>(
@@ -4179,6 +4396,99 @@ pub fn validate_provider_assessment_private_note_request(
             | "other"
     ) && (1..=4000).contains(&request.private_body.trim().chars().count())
         && request.expected_assessment_version > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+const OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT_VERSION: &str =
+    "initial_service_proposal_acceptance_v1";
+const OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT: &str =
+    "I accept this exact proposal for provider setup. I understand that acceptance does not schedule service, collect payment, or assign a crew.";
+
+fn valid_proposal_text_items(items: &[String]) -> bool {
+    (1..=40).contains(&items.len())
+        && items
+            .iter()
+            .all(|item| (1..=500).contains(&item.trim().chars().count()))
+}
+
+pub fn validate_initial_service_proposal_request(
+    request: &PublishOwnerProviderInitialServiceProposalRequest,
+) -> bool {
+    let revision_note_valid = if request.expected_proposal_version == 0 {
+        request.revision_note.is_none()
+    } else {
+        request
+            .revision_note
+            .as_deref()
+            .is_some_and(|note| (1..=1000).contains(&note.trim().chars().count()))
+    };
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && request.expected_proposal_version >= 0
+        && (1..=160).contains(&request.title.trim().chars().count())
+        && (1..=2000).contains(&request.customer_summary.trim().chars().count())
+        && valid_proposal_text_items(&request.included_scope)
+        && valid_proposal_text_items(&request.exclusions)
+        && matches!(
+            request.cadence_code.as_str(),
+            "weekly" | "every_two_weeks" | "monthly" | "one_time" | "custom"
+        )
+        && (1..=500).contains(&request.cadence_detail.trim().chars().count())
+        && [
+            &request.arrival_policy,
+            &request.weather_policy,
+            &request.cancellation_policy,
+            &request.proof_expectation,
+        ]
+        .iter()
+        .all(|value| (1..=1000).contains(&value.trim().chars().count()))
+        && (0..=100_000_000_000).contains(&request.price_amount_minor)
+        && matches!(
+            request.price_basis.as_str(),
+            "per_visit" | "monthly" | "fixed"
+        )
+        && request.currency_code.len() == 3
+        && request
+            .currency_code
+            .chars()
+            .all(|character| character.is_ascii_uppercase())
+        && revision_note_valid
+        && request.expires_at_epoch_seconds > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_initial_service_proposal_decision_request(
+    request: &DecideOwnerProviderInitialServiceProposalRequest,
+) -> bool {
+    let note_valid = request
+        .customer_safe_note
+        .as_deref()
+        .is_none_or(|note| (1..=2000).contains(&note.trim().chars().count()));
+    let action_valid = match request.action.as_str() {
+        "accept" => {
+            request.reason_code.is_none()
+                && request.affirmation_text_version.as_deref()
+                    == Some(OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT_VERSION)
+        }
+        "decline" => {
+            request.affirmation_text_version.is_none()
+                && request.reason_code.as_deref().is_some_and(|reason| {
+                    matches!(
+                        reason,
+                        "price"
+                            | "scope"
+                            | "timing"
+                            | "provider_fit"
+                            | "no_longer_needed"
+                            | "other"
+                    )
+                })
+        }
+        _ => false,
+    };
+    request.expected_proposal_version > 0
+        && action_valid
+        && note_valid
         && valid_assessment_communication_key(&request.idempotency_key)
 }
 
@@ -7904,6 +8214,22 @@ enum PersistedAssessmentCommunicationWriteOutcome<T> {
     Conflict,
 }
 
+enum PersistedInitialServiceProposalWriteOutcome {
+    Published(OwnerProviderInitialServiceProposalRecord),
+    Replayed(OwnerProviderInitialServiceProposalRecord),
+    NotFound,
+    InvalidState,
+    Conflict,
+}
+
+enum PersistedInitialServiceProposalDecisionOutcome {
+    Decided(OwnerProviderInitialServiceProposalDecisionRecord),
+    Replayed(OwnerProviderInitialServiceProposalDecisionRecord),
+    NotFound,
+    InvalidState(OwnerProviderInitialServiceProposalRecord),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -10436,6 +10762,627 @@ async fn list_owner_provider_assessment_messages(
     ))
 }
 
+const OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT: &str =
+    "SELECT id AS proposal_id, assessment_id, invitation_id, property_id,
+            organization_id, disclosure_grant_id, proposal_version, status,
+            title, customer_summary, included_scope, exclusions, cadence_code,
+            cadence_detail, arrival_policy, weather_policy, cancellation_policy,
+            proof_expectation, price_amount_minor, price_basis, currency_code,
+            annualized_monthly_minor, revision_note,
+            EXTRACT(EPOCH FROM issued_at)::BIGINT AS issued_at_epoch_seconds,
+            EXTRACT(EPOCH FROM expires_at)::BIGINT AS expires_at_epoch_seconds
+     FROM owner_provider_initial_service_proposals";
+
+fn owner_provider_initial_service_proposal_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderInitialServiceProposalRecord {
+    OwnerProviderInitialServiceProposalRecord {
+        proposal_id: row.get("proposal_id"),
+        assessment_id: row.get("assessment_id"),
+        invitation_id: row.get("invitation_id"),
+        property_id: row.get("property_id"),
+        organization_id: row.get("organization_id"),
+        disclosure_grant_id: row.get("disclosure_grant_id"),
+        proposal_version: row.get("proposal_version"),
+        status: row.get("status"),
+        title: row.get("title"),
+        customer_summary: row.get("customer_summary"),
+        included_scope: row.get("included_scope"),
+        exclusions: row.get("exclusions"),
+        cadence_code: row.get("cadence_code"),
+        cadence_detail: row.get("cadence_detail"),
+        arrival_policy: row.get("arrival_policy"),
+        weather_policy: row.get("weather_policy"),
+        cancellation_policy: row.get("cancellation_policy"),
+        proof_expectation: row.get("proof_expectation"),
+        price_amount_minor: row.get("price_amount_minor"),
+        price_basis: row.get("price_basis"),
+        currency_code: row.get("currency_code"),
+        annualized_monthly_minor: row.get("annualized_monthly_minor"),
+        revision_note: row.get("revision_note"),
+        issued_at_epoch_seconds: row.get("issued_at_epoch_seconds"),
+        expires_at_epoch_seconds: row.get("expires_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+fn normalized_proposal_items(items: &[String]) -> Vec<String> {
+    items.iter().map(|item| item.trim().to_string()).collect()
+}
+
+fn annualized_monthly_minor(
+    amount_minor: i64,
+    price_basis: &str,
+    cadence_code: &str,
+) -> Option<i64> {
+    match price_basis {
+        "monthly" => Some(amount_minor),
+        "per_visit" => match cadence_code {
+            "weekly" => amount_minor.checked_mul(52).map(|annual| annual / 12),
+            "every_two_weeks" => amount_minor.checked_mul(26).map(|annual| annual / 12),
+            "monthly" => Some(amount_minor),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn initial_service_proposal_matches_request(
+    proposal: &OwnerProviderInitialServiceProposalRecord,
+    assessment_id: &str,
+    request: &PublishOwnerProviderInitialServiceProposalRequest,
+) -> bool {
+    proposal.assessment_id == assessment_id
+        && proposal.proposal_version == request.expected_proposal_version + 1
+        && proposal.title == request.title.trim()
+        && proposal.customer_summary == request.customer_summary.trim()
+        && proposal.included_scope == normalized_proposal_items(&request.included_scope)
+        && proposal.exclusions == normalized_proposal_items(&request.exclusions)
+        && proposal.cadence_code == request.cadence_code
+        && proposal.cadence_detail == request.cadence_detail.trim()
+        && proposal.arrival_policy == request.arrival_policy.trim()
+        && proposal.weather_policy == request.weather_policy.trim()
+        && proposal.cancellation_policy == request.cancellation_policy.trim()
+        && proposal.proof_expectation == request.proof_expectation.trim()
+        && proposal.price_amount_minor == request.price_amount_minor
+        && proposal.price_basis == request.price_basis
+        && proposal.currency_code == request.currency_code
+        && proposal.annualized_monthly_minor
+            == annualized_monthly_minor(
+                request.price_amount_minor,
+                &request.price_basis,
+                &request.cadence_code,
+            )
+        && proposal.revision_note.as_deref() == request.revision_note.as_deref().map(str::trim)
+        && proposal.expires_at_epoch_seconds == request.expires_at_epoch_seconds
+}
+
+async fn expire_owner_provider_initial_service_proposals(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    assessment_id: &str,
+) -> Result<(), sqlx::Error> {
+    let expired = sqlx::query(
+        "UPDATE owner_provider_initial_service_proposals
+         SET status = 'expired', updated_at = NOW()
+         WHERE assessment_id = $1 AND status = 'sent' AND expires_at <= NOW()
+         RETURNING id AS proposal_id, proposal_version",
+    )
+    .bind(assessment_id)
+    .fetch_all(&mut **transaction)
+    .await?;
+    for row in expired {
+        let proposal_id: String = row.get("proposal_id");
+        let proposal_version: i64 = row.get("proposal_version");
+        sqlx::query(
+            "INSERT INTO owner_provider_initial_service_proposal_events (
+                 id, proposal_id, actor_user_id, event_kind, proposal_version,
+                 idempotency_key, event_data
+             ) VALUES ($1, $2, 'system', 'expired', $3, $4, $5)
+             ON CONFLICT (actor_user_id, idempotency_key) DO NOTHING",
+        )
+        .bind(format!(
+            "owner_provider_proposal_event_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(&proposal_id)
+        .bind(proposal_version)
+        .bind(format!("proposal-expired-{proposal_id}"))
+        .bind(serde_json::json!({ "status": "expired" }))
+        .execute(&mut **transaction)
+        .await?;
+    }
+    Ok(())
+}
+
+async fn publish_owner_provider_initial_service_proposal(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+    request: PublishOwnerProviderInitialServiceProposalRequest,
+) -> Result<PersistedInitialServiceProposalWriteOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let Some((assessment, authority_active)) = load_provider_assessment_write_authority(
+        &mut transaction,
+        provider_actor_user_id,
+        verified_email,
+        verified_email_fingerprint,
+        token_hash,
+        assessment_id,
+    )
+    .await?
+    else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalWriteOutcome::NotFound);
+    };
+
+    let replay_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE provider_actor_user_id = $1 AND idempotency_key = $2"
+    );
+    if let Some(row) = sqlx::query(&replay_query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?
+    {
+        let proposal = owner_provider_initial_service_proposal_from_row(&row);
+        let exact = initial_service_proposal_matches_request(&proposal, assessment_id, &request);
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedInitialServiceProposalWriteOutcome::Replayed(proposal)
+        } else {
+            PersistedInitialServiceProposalWriteOutcome::Conflict
+        });
+    }
+
+    if !authority_active || assessment.status != "completed" {
+        transaction.commit().await?;
+        return Ok(PersistedInitialServiceProposalWriteOutcome::InvalidState);
+    }
+    let now = sqlx::query_scalar::<_, i64>("SELECT EXTRACT(EPOCH FROM NOW())::BIGINT")
+        .fetch_one(&mut *transaction)
+        .await?;
+    if request.expires_at_epoch_seconds < now + 60 * 60
+        || request.expires_at_epoch_seconds > now + 30 * 24 * 60 * 60
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalWriteOutcome::Conflict);
+    }
+    expire_owner_provider_initial_service_proposals(&mut transaction, assessment_id).await?;
+    let accepted_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1 FROM owner_provider_initial_service_proposals
+             WHERE assessment_id = $1 AND status = 'accepted'
+         )",
+    )
+    .bind(assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if accepted_exists {
+        transaction.commit().await?;
+        return Ok(PersistedInitialServiceProposalWriteOutcome::InvalidState);
+    }
+    let latest_version = sqlx::query_scalar::<_, Option<i64>>(
+        "SELECT MAX(proposal_version)
+         FROM owner_provider_initial_service_proposals WHERE assessment_id = $1",
+    )
+    .bind(assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?
+    .unwrap_or(0);
+    if latest_version != request.expected_proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalWriteOutcome::Conflict);
+    }
+    if latest_version > 0 {
+        let superseded = sqlx::query(
+            "UPDATE owner_provider_initial_service_proposals
+             SET status = 'superseded', updated_at = NOW()
+             WHERE assessment_id = $1 AND status = 'sent'
+             RETURNING id, proposal_version",
+        )
+        .bind(assessment_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+        if let Some(superseded) = superseded {
+            sqlx::query(
+                "INSERT INTO owner_provider_initial_service_proposal_events (
+                     id, proposal_id, actor_user_id, event_kind, proposal_version,
+                     idempotency_key, event_data
+                 ) VALUES ($1, $2, $3, 'superseded', $4, $5, $6)",
+            )
+            .bind(format!(
+                "owner_provider_proposal_event_{}",
+                Uuid::new_v4().simple()
+            ))
+            .bind(superseded.get::<String, _>("id"))
+            .bind(provider_actor_user_id)
+            .bind(superseded.get::<i64, _>("proposal_version"))
+            .bind(format!("{}-superseded", request.idempotency_key.trim()))
+            .bind(serde_json::json!({ "status": "superseded" }))
+            .execute(&mut *transaction)
+            .await?;
+        }
+    }
+
+    let proposal_id = format!("owner_provider_proposal_{}", Uuid::new_v4().simple());
+    let proposal_version = latest_version + 1;
+    let owner_user_id = sqlx::query_scalar::<_, String>(
+        "SELECT owner_user_id FROM owner_provider_assessments WHERE id = $1",
+    )
+    .bind(assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    let included_scope = normalized_proposal_items(&request.included_scope);
+    let exclusions = normalized_proposal_items(&request.exclusions);
+    let annualized = annualized_monthly_minor(
+        request.price_amount_minor,
+        &request.price_basis,
+        &request.cadence_code,
+    );
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposals (
+             id, owner_user_id, property_id, invitation_id, organization_id,
+             disclosure_grant_id, assessment_id, provider_actor_user_id,
+             proposal_version, status, title, customer_summary, included_scope,
+             exclusions, cadence_code, cadence_detail, arrival_policy,
+             weather_policy, cancellation_policy, proof_expectation,
+             price_amount_minor, price_basis, currency_code,
+             annualized_monthly_minor, revision_note, expires_at, idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9, 'sent', $10, $11, $12,
+             $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
+             TO_TIMESTAMP($25::DOUBLE PRECISION), $26
+         )",
+    )
+    .bind(&proposal_id)
+    .bind(&owner_user_id)
+    .bind(&assessment.property_id)
+    .bind(&assessment.invitation_id)
+    .bind(&assessment.organization_id)
+    .bind(&assessment.disclosure_grant_id)
+    .bind(assessment_id)
+    .bind(provider_actor_user_id)
+    .bind(proposal_version)
+    .bind(request.title.trim())
+    .bind(request.customer_summary.trim())
+    .bind(&included_scope)
+    .bind(&exclusions)
+    .bind(&request.cadence_code)
+    .bind(request.cadence_detail.trim())
+    .bind(request.arrival_policy.trim())
+    .bind(request.weather_policy.trim())
+    .bind(request.cancellation_policy.trim())
+    .bind(request.proof_expectation.trim())
+    .bind(request.price_amount_minor)
+    .bind(&request.price_basis)
+    .bind(&request.currency_code)
+    .bind(annualized)
+    .bind(request.revision_note.as_deref().map(str::trim))
+    .bind(request.expires_at_epoch_seconds)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposal_events (
+             id, proposal_id, actor_user_id, event_kind, proposal_version,
+             idempotency_key, event_data
+         ) VALUES ($1, $2, $3, 'sent', $4, $5, $6)",
+    )
+    .bind(format!(
+        "owner_provider_proposal_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(&proposal_id)
+    .bind(provider_actor_user_id)
+    .bind(proposal_version)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({
+        "status": "sent",
+        "price_basis": request.price_basis,
+        "currency_code": request.currency_code,
+    }))
+    .execute(&mut *transaction)
+    .await?;
+    let proposal_query = format!("{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT} WHERE id = $1");
+    let row = sqlx::query(&proposal_query)
+        .bind(&proposal_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(PersistedInitialServiceProposalWriteOutcome::Published(
+        owner_provider_initial_service_proposal_from_row(&row),
+    ))
+}
+
+async fn list_owner_provider_initial_service_proposals(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+) -> Result<Option<Vec<OwnerProviderInitialServiceProposalRecord>>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let property_exists = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1 FROM owner_properties WHERE id = $1 AND owner_user_id = $2
+         )",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if !property_exists {
+        transaction.rollback().await?;
+        return Ok(None);
+    }
+    let assessment_ids = sqlx::query_scalar::<_, String>(
+        "SELECT DISTINCT assessment_id
+         FROM owner_provider_initial_service_proposals
+         WHERE owner_user_id = $1 AND property_id = $2",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_all(&mut *transaction)
+    .await?;
+    for assessment_id in assessment_ids {
+        expire_owner_provider_initial_service_proposals(&mut transaction, &assessment_id).await?;
+    }
+    let query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE owner_user_id = $1 AND property_id = $2
+         ORDER BY assessment_id, proposal_version DESC"
+    );
+    let rows = sqlx::query(&query)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(Some(
+        rows.iter()
+            .map(owner_provider_initial_service_proposal_from_row)
+            .collect(),
+    ))
+}
+
+fn owner_provider_initial_service_proposal_decision_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderInitialServiceProposalDecisionRecord {
+    OwnerProviderInitialServiceProposalDecisionRecord {
+        decision_id: row.get("decision_id"),
+        proposal_id: row.get("proposal_id"),
+        action: row.get("action"),
+        reason_code: row.get("reason_code"),
+        customer_safe_note: row.get("customer_safe_note"),
+        proposal_version: row.get("proposal_version"),
+        affirmation_text_version: row.get("affirmation_text_version"),
+        decided_at_epoch_seconds: row.get("decided_at_epoch_seconds"),
+        acceptance_snapshot_id: row.get("acceptance_snapshot_id"),
+        acceptance_snapshot_sha256: row.get("acceptance_snapshot_sha256"),
+        persisted: true,
+    }
+}
+
+async fn decide_owner_provider_initial_service_proposal(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    proposal_id: &str,
+    request: DecideOwnerProviderInitialServiceProposalRequest,
+) -> Result<PersistedInitialServiceProposalDecisionOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3 FOR UPDATE"
+    );
+    let row = sqlx::query(&query)
+        .bind(proposal_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(row) = row else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalDecisionOutcome::NotFound);
+    };
+    let mut proposal = owner_provider_initial_service_proposal_from_row(&row);
+    expire_owner_provider_initial_service_proposals(&mut transaction, &proposal.assessment_id)
+        .await?;
+    let refreshed_query = format!("{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT} WHERE id = $1");
+    proposal = owner_provider_initial_service_proposal_from_row(
+        &sqlx::query(&refreshed_query)
+            .bind(proposal_id)
+            .fetch_one(&mut *transaction)
+            .await?,
+    );
+
+    let replay = sqlx::query(
+        "SELECT decision.id AS decision_id, decision.proposal_id, decision.action,
+                decision.reason_code, decision.customer_safe_note,
+                decision.proposal_version, decision.affirmation_text_version,
+                EXTRACT(EPOCH FROM decision.decided_at)::BIGINT AS decided_at_epoch_seconds,
+                snapshot.id AS acceptance_snapshot_id,
+                snapshot.snapshot_sha256 AS acceptance_snapshot_sha256
+         FROM owner_provider_initial_service_proposal_decisions decision
+         LEFT JOIN owner_provider_initial_service_proposal_acceptance_snapshots snapshot
+           ON snapshot.decision_id = decision.id
+         WHERE decision.owner_user_id = $1 AND decision.idempotency_key = $2",
+    )
+    .bind(owner_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(replay) = replay {
+        let decision = owner_provider_initial_service_proposal_decision_from_row(&replay);
+        let exact = decision.proposal_id == proposal_id
+            && decision.action == request.action
+            && decision.reason_code.as_deref() == request.reason_code.as_deref()
+            && decision.customer_safe_note.as_deref()
+                == request.customer_safe_note.as_deref().map(str::trim)
+            && decision.proposal_version == request.expected_proposal_version
+            && decision.affirmation_text_version.as_deref()
+                == request.affirmation_text_version.as_deref();
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedInitialServiceProposalDecisionOutcome::Replayed(decision)
+        } else {
+            PersistedInitialServiceProposalDecisionOutcome::Conflict
+        });
+    }
+    if proposal.status == "expired" {
+        transaction.commit().await?;
+        return Ok(PersistedInitialServiceProposalDecisionOutcome::InvalidState(proposal));
+    }
+    if proposal.status != "sent" {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalDecisionOutcome::Conflict);
+    }
+    if proposal.proposal_version != request.expected_proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalDecisionOutcome::Conflict);
+    }
+    let latest_version = sqlx::query_scalar::<_, Option<i64>>(
+        "SELECT MAX(proposal_version)
+         FROM owner_provider_initial_service_proposals WHERE assessment_id = $1",
+    )
+    .bind(&proposal.assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?
+    .unwrap_or(0);
+    if latest_version != proposal.proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalDecisionOutcome::Conflict);
+    }
+
+    let decision_id = format!(
+        "owner_provider_proposal_decision_{}",
+        Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposal_decisions (
+             id, proposal_id, owner_user_id, action, reason_code,
+             customer_safe_note, proposal_version, affirmation_text_version,
+             idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    )
+    .bind(&decision_id)
+    .bind(proposal_id)
+    .bind(owner_user_id)
+    .bind(&request.action)
+    .bind(request.reason_code.as_deref())
+    .bind(request.customer_safe_note.as_deref().map(str::trim))
+    .bind(request.expected_proposal_version)
+    .bind(request.affirmation_text_version.as_deref())
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+
+    let next_status = if request.action == "accept" {
+        "accepted"
+    } else {
+        "declined"
+    };
+    sqlx::query(
+        "UPDATE owner_provider_initial_service_proposals
+         SET status = $2, updated_at = NOW() WHERE id = $1",
+    )
+    .bind(proposal_id)
+    .bind(next_status)
+    .execute(&mut *transaction)
+    .await?;
+
+    if request.action == "accept" {
+        let snapshot = serde_json::json!({
+            "proposal_id": proposal.proposal_id,
+            "proposal_version": proposal.proposal_version,
+            "assessment_id": proposal.assessment_id,
+            "property_id": proposal.property_id,
+            "organization_id": proposal.organization_id,
+            "title": proposal.title,
+            "customer_summary": proposal.customer_summary,
+            "included_scope": proposal.included_scope,
+            "exclusions": proposal.exclusions,
+            "cadence_code": proposal.cadence_code,
+            "cadence_detail": proposal.cadence_detail,
+            "arrival_policy": proposal.arrival_policy,
+            "weather_policy": proposal.weather_policy,
+            "cancellation_policy": proposal.cancellation_policy,
+            "proof_expectation": proposal.proof_expectation,
+            "price_amount_minor": proposal.price_amount_minor,
+            "price_basis": proposal.price_basis,
+            "currency_code": proposal.currency_code,
+            "annualized_monthly_minor": proposal.annualized_monthly_minor,
+            "issued_at_epoch_seconds": proposal.issued_at_epoch_seconds,
+            "expires_at_epoch_seconds": proposal.expires_at_epoch_seconds,
+            "affirmation_text": OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT,
+            "affirmation_text_version": OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT_VERSION,
+        });
+        let snapshot_sha256 = format!("{:x}", Sha256::digest(snapshot.to_string().as_bytes()));
+        sqlx::query(
+            "INSERT INTO owner_provider_initial_service_proposal_acceptance_snapshots (
+                 id, proposal_id, decision_id, owner_user_id, property_id,
+                 organization_id, assessment_id, proposal_version, snapshot,
+                 snapshot_sha256
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+        )
+        .bind(format!(
+            "owner_provider_proposal_snapshot_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(proposal_id)
+        .bind(&decision_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .bind(&proposal.organization_id)
+        .bind(&proposal.assessment_id)
+        .bind(proposal.proposal_version)
+        .bind(snapshot)
+        .bind(snapshot_sha256)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposal_events (
+             id, proposal_id, actor_user_id, event_kind, proposal_version,
+             idempotency_key, event_data
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+    )
+    .bind(format!(
+        "owner_provider_proposal_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(proposal_id)
+    .bind(owner_user_id)
+    .bind(next_status)
+    .bind(proposal.proposal_version)
+    .bind(request.idempotency_key.trim())
+    .bind(serde_json::json!({ "status": next_status }))
+    .execute(&mut *transaction)
+    .await?;
+
+    let decision = sqlx::query(
+        "SELECT decision.id AS decision_id, decision.proposal_id, decision.action,
+                decision.reason_code, decision.customer_safe_note,
+                decision.proposal_version, decision.affirmation_text_version,
+                EXTRACT(EPOCH FROM decision.decided_at)::BIGINT AS decided_at_epoch_seconds,
+                snapshot.id AS acceptance_snapshot_id,
+                snapshot.snapshot_sha256 AS acceptance_snapshot_sha256
+         FROM owner_provider_initial_service_proposal_decisions decision
+         LEFT JOIN owner_provider_initial_service_proposal_acceptance_snapshots snapshot
+           ON snapshot.decision_id = decision.id
+         WHERE decision.id = $1",
+    )
+    .bind(&decision_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(PersistedInitialServiceProposalDecisionOutcome::Decided(
+        owner_provider_initial_service_proposal_decision_from_row(&decision),
+    ))
+}
+
 async fn open_owner_provider_inbox(
     pool: &PgPool,
     recipient_user_id: &str,
@@ -11288,6 +12235,80 @@ mod tests {
             shot_type: shot_type.to_string(),
             replaces_media_id,
         }
+    }
+
+    fn initial_service_proposal_request() -> PublishOwnerProviderInitialServiceProposalRequest {
+        PublishOwnerProviderInitialServiceProposalRequest {
+            token: new_owner_provider_invitation_token(),
+            expected_proposal_version: 0,
+            title: "Every-two-week yard care".to_string(),
+            customer_summary: "Routine care based on the completed assessment.".to_string(),
+            included_scope: vec!["Mow and edge turf".to_string()],
+            exclusions: vec!["Tree work above eight feet".to_string()],
+            cadence_code: "every_two_weeks".to_string(),
+            cadence_detail: "One visit every two weeks".to_string(),
+            arrival_policy: "Confirm the first service day with the owner.".to_string(),
+            weather_policy: "Unsafe weather may move the visit.".to_string(),
+            cancellation_policy: "Cancel at least 24 hours before service.".to_string(),
+            proof_expectation: "Send a completion note after each visit.".to_string(),
+            price_amount_minor: 12_000,
+            price_basis: "per_visit".to_string(),
+            currency_code: "USD".to_string(),
+            revision_note: None,
+            expires_at_epoch_seconds: current_epoch_seconds() + 7 * 24 * 60 * 60,
+            idempotency_key: "proposal-publish-001".to_string(),
+        }
+    }
+
+    #[test]
+    fn validates_initial_service_proposal_and_decision_boundaries() {
+        let proposal = initial_service_proposal_request();
+        assert!(validate_initial_service_proposal_request(&proposal));
+        assert_eq!(
+            annualized_monthly_minor(12_000, "per_visit", "every_two_weeks"),
+            Some(26_000)
+        );
+        assert_eq!(annualized_monthly_minor(12_000, "fixed", "one_time"), None);
+
+        let mut invalid_revision = proposal.clone();
+        invalid_revision.expected_proposal_version = 1;
+        assert!(!validate_initial_service_proposal_request(
+            &invalid_revision
+        ));
+        invalid_revision.revision_note = Some("Adjusted after assessment review.".to_string());
+        assert!(validate_initial_service_proposal_request(&invalid_revision));
+        invalid_revision.currency_code = "usd".to_string();
+        assert!(!validate_initial_service_proposal_request(
+            &invalid_revision
+        ));
+
+        let acceptance = DecideOwnerProviderInitialServiceProposalRequest {
+            action: "accept".to_string(),
+            expected_proposal_version: 1,
+            reason_code: None,
+            customer_safe_note: None,
+            affirmation_text_version: Some(
+                OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT_VERSION.to_string(),
+            ),
+            idempotency_key: "proposal-accept-001".to_string(),
+        };
+        assert!(validate_initial_service_proposal_decision_request(
+            &acceptance
+        ));
+        assert!(!validate_initial_service_proposal_decision_request(
+            &DecideOwnerProviderInitialServiceProposalRequest {
+                affirmation_text_version: Some("unknown-text".to_string()),
+                ..acceptance.clone()
+            }
+        ));
+        assert!(validate_initial_service_proposal_decision_request(
+            &DecideOwnerProviderInitialServiceProposalRequest {
+                action: "decline".to_string(),
+                reason_code: Some("scope".to_string()),
+                affirmation_text_version: None,
+                ..acceptance
+            }
+        ));
     }
 
     #[test]

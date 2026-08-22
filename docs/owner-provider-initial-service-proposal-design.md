@@ -102,9 +102,9 @@ scope/exclusion text.
    accepted-snapshot, and minimized-event tables; constrained customer-safe
    content; one open/accepted version per assessment; actor replay uniqueness;
    and a database trigger that prevents published-content mutation.
-2. **4B1b — Repository foundation:** immutable proposal versions, constrained
-   scope/terms, current-series uniqueness, expiration, accepted snapshot,
-   minimized events, and PostgreSQL isolation/replay coverage.
+2. **4B1b — Repository foundation (delivered):** immutable proposal versions,
+   constrained scope/terms, current-series uniqueness, expiration, accepted
+   snapshot, minimized events, and PostgreSQL isolation/replay coverage.
 3. **4B2 — Authenticated APIs:** verified-provider create/revise, owner-scoped
    list/detail, question/change requests, and versioned accept/decline.
 4. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard

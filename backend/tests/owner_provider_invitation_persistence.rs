@@ -5,16 +5,18 @@ use grover_landscaping_api::owner_acquisition::{
     CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
     CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
     CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
-    DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
-    OwnerMutationResult, OwnerProviderAssessmentCommunicationWriteResult,
-    OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
-    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
-    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
-    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
-    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
-    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
-    OwnerProviderInboxResult, OwnerProviderInvitationAbuseReportResult,
+    DecideOwnerProviderClaimReviewRequest, DecideOwnerProviderInitialServiceProposalRequest,
+    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderDisclosureRequest,
+    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
+    OwnerProviderAssessmentCommunicationWriteResult, OwnerProviderAssessmentCreateResult,
+    OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
+    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
+    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
+    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
+    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
+    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+    OwnerProviderInitialServiceProposalDecisionResult,
+    OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
     OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
     OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
@@ -23,19 +25,54 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
     OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
     OwnerProviderResponseCapabilityResult, OwnerReadResult, ProposeProviderAssessmentWindowRequest,
-    ProviderAssessmentWindowProposalResult, RecordOwnerProviderInvitationDeliveryRequest,
-    ReportOwnerProviderInvitationAbuseRequest, RetryOwnerProviderInvitationRequest,
-    RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
-    SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
+    ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
+    RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
+    RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
+    SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 mod common;
 
 async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
+    sqlx::query(
+        "DELETE FROM owner_provider_initial_service_proposal_events
+         WHERE proposal_id IN (
+             SELECT id FROM owner_provider_initial_service_proposals
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test proposal events should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_initial_service_proposal_acceptance_snapshots
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test proposal snapshots should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_initial_service_proposal_decisions
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test proposal decisions should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_initial_service_proposals
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test proposals should reset");
     sqlx::query(
         "DELETE FROM owner_provider_assessment_private_notes
          WHERE assessment_id IN (
@@ -614,6 +651,32 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
         repository.expire_provider_invitations(25).await,
         OwnerProviderInvitationExpiryResult::Unavailable
     );
+    assert!(matches!(
+        repository
+            .list_owner_initial_service_proposals("owner-unavailable", "property-unavailable")
+            .await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .decide_initial_service_proposal(
+                "owner-unavailable",
+                "property-unavailable",
+                "proposal-unavailable",
+                DecideOwnerProviderInitialServiceProposalRequest {
+                    action: "accept".to_string(),
+                    expected_proposal_version: 1,
+                    reason_code: None,
+                    customer_safe_note: None,
+                    affirmation_text_version: Some(
+                        "initial_service_proposal_acceptance_v1".to_string(),
+                    ),
+                    idempotency_key: "proposal-outage-decision-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalDecisionResult::Unavailable
+    ));
     assert!(matches!(
         repository
             .opt_out_provider_invitation(
@@ -2439,6 +2502,363 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         panic!("owner should load the provider's customer-safe assessment outcome");
     };
     assert_eq!(owner_completed_assessments, vec![completed_assessment]);
+
+    let expires_at_epoch_seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("proposal expiration clock should be available")
+        .as_secs() as i64
+        + 7 * 24 * 60 * 60;
+    let proposal_request = PublishOwnerProviderInitialServiceProposalRequest {
+        token: retry.delivery_token().to_string(),
+        expected_proposal_version: 0,
+        title: "Every-two-week yard care".to_string(),
+        customer_summary: "Routine front and back yard care based on the completed assessment."
+            .to_string(),
+        included_scope: vec![
+            "Mow and edge turf areas".to_string(),
+            "Blow hardscape clean".to_string(),
+        ],
+        exclusions: vec!["Tree work above eight feet".to_string()],
+        cadence_code: "every_two_weeks".to_string(),
+        cadence_detail: "One visit every two weeks".to_string(),
+        arrival_policy: "The company will confirm the service day before the first visit."
+            .to_string(),
+        weather_policy: "Unsafe weather may move the visit after owner notice.".to_string(),
+        cancellation_policy: "Cancel at least 24 hours before a confirmed visit.".to_string(),
+        proof_expectation: "A completion note and customer-safe photos follow each visit."
+            .to_string(),
+        price_amount_minor: 12_000,
+        price_basis: "per_visit".to_string(),
+        currency_code: "USD".to_string(),
+        revision_note: None,
+        expires_at_epoch_seconds,
+        idempotency_key: "proposal-publish-provider-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .publish_initial_service_proposal(
+                "different-provider-user",
+                recipient,
+                &assessment.assessment_id,
+                proposal_request.clone(),
+            )
+            .await,
+        OwnerProviderInitialServiceProposalWriteResult::NotFound
+    ));
+    let (first_proposal, second_proposal) = tokio::join!(
+        repository.publish_initial_service_proposal(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            proposal_request.clone(),
+        ),
+        repository.publish_initial_service_proposal(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            proposal_request.clone(),
+        ),
+    );
+    let proposal_v1 = match (first_proposal, second_proposal) {
+        (
+            OwnerProviderInitialServiceProposalWriteResult::Published(published),
+            OwnerProviderInitialServiceProposalWriteResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderInitialServiceProposalWriteResult::Replayed(replayed),
+            OwnerProviderInitialServiceProposalWriteResult::Published(published),
+        ) => {
+            assert_eq!(published, replayed);
+            published
+        }
+        (first, second) => panic!(
+            "concurrent exact proposal publication should publish once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(proposal_v1.proposal_version, 1);
+    assert_eq!(proposal_v1.status, "sent");
+    assert_eq!(proposal_v1.annualized_monthly_minor, Some(26_000));
+    assert!(matches!(
+        repository
+            .publish_initial_service_proposal(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                PublishOwnerProviderInitialServiceProposalRequest {
+                    title: "Changed content under a reused key".to_string(),
+                    ..proposal_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalWriteResult::Conflict
+    ));
+
+    let revised_request = PublishOwnerProviderInitialServiceProposalRequest {
+        expected_proposal_version: proposal_v1.proposal_version,
+        price_amount_minor: 11_000,
+        revision_note: Some("Updated the visit price after confirming the turf area.".to_string()),
+        idempotency_key: "proposal-revise-provider-001".to_string(),
+        ..proposal_request.clone()
+    };
+    let OwnerProviderInitialServiceProposalWriteResult::Published(proposal_v2) = repository
+        .publish_initial_service_proposal(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            revised_request.clone(),
+        )
+        .await
+    else {
+        panic!("the current proposal should be revised into a new immutable version");
+    };
+    assert_eq!(proposal_v2.proposal_version, 2);
+    assert_eq!(proposal_v2.status, "sent");
+    assert_eq!(proposal_v2.annualized_monthly_minor, Some(23_833));
+    assert!(matches!(
+        repository
+            .publish_initial_service_proposal(
+                "recipient-user-1",
+                recipient,
+                &assessment.assessment_id,
+                PublishOwnerProviderInitialServiceProposalRequest {
+                    idempotency_key: "proposal-revise-stale-001".to_string(),
+                    ..revised_request
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalWriteResult::Conflict
+    ));
+    assert!(matches!(
+        repository
+            .list_owner_initial_service_proposals(owner_b, &property.property_id)
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(owner_proposals) = repository
+        .list_owner_initial_service_proposals(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("the owner should load the immutable proposal history");
+    };
+    assert_eq!(owner_proposals.len(), 2);
+    assert_eq!(owner_proposals[0], proposal_v2);
+    assert_eq!(owner_proposals[1].proposal_id, proposal_v1.proposal_id);
+    assert_eq!(owner_proposals[1].status, "superseded");
+    assert!(sqlx::query(
+        "UPDATE owner_provider_initial_service_proposals
+         SET title = 'Mutated published title' WHERE id = $1",
+    )
+    .bind(&proposal_v2.proposal_id)
+    .execute(&pool)
+    .await
+    .is_err());
+
+    let acquisition_side_effects_before = sqlx::query(
+        "SELECT
+             (SELECT COUNT(*) FROM customer_accounts) AS customer_accounts,
+             (SELECT COUNT(*) FROM customer_properties) AS customer_properties,
+             (SELECT COUNT(*) FROM service_jobs) AS service_jobs,
+             (SELECT COUNT(*) FROM day_plans) AS day_plans,
+             (SELECT COUNT(*) FROM crews) AS crews",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("pre-acceptance side-effect counts should load");
+    let acceptance_request = DecideOwnerProviderInitialServiceProposalRequest {
+        action: "accept".to_string(),
+        expected_proposal_version: proposal_v2.proposal_version,
+        reason_code: None,
+        customer_safe_note: Some("Please contact me before proposing the first visit.".to_string()),
+        affirmation_text_version: Some("initial_service_proposal_acceptance_v1".to_string()),
+        idempotency_key: "proposal-accept-owner-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .decide_initial_service_proposal(
+                owner_b,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+                acceptance_request.clone(),
+            )
+            .await,
+        OwnerProviderInitialServiceProposalDecisionResult::NotFound
+    ));
+    let (first_acceptance, second_acceptance) = tokio::join!(
+        repository.decide_initial_service_proposal(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+            acceptance_request.clone(),
+        ),
+        repository.decide_initial_service_proposal(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+            acceptance_request.clone(),
+        ),
+    );
+    let acceptance = match (first_acceptance, second_acceptance) {
+        (
+            OwnerProviderInitialServiceProposalDecisionResult::Decided(decided),
+            OwnerProviderInitialServiceProposalDecisionResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderInitialServiceProposalDecisionResult::Replayed(replayed),
+            OwnerProviderInitialServiceProposalDecisionResult::Decided(decided),
+        ) => {
+            assert_eq!(decided, replayed);
+            decided
+        }
+        (first, second) => panic!(
+            "concurrent exact proposal acceptance should decide once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert!(acceptance.acceptance_snapshot_id.is_some());
+    assert_eq!(
+        acceptance
+            .acceptance_snapshot_sha256
+            .as_deref()
+            .map(str::len),
+        Some(64)
+    );
+    assert!(matches!(
+        repository
+            .decide_initial_service_proposal(
+                owner_a,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+                DecideOwnerProviderInitialServiceProposalRequest {
+                    action: "decline".to_string(),
+                    reason_code: Some("price".to_string()),
+                    customer_safe_note: None,
+                    affirmation_text_version: None,
+                    idempotency_key: "proposal-decline-after-accept-001".to_string(),
+                    ..acceptance_request
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalDecisionResult::Conflict
+    ));
+    let acquisition_side_effects_after = sqlx::query(
+        "SELECT
+             (SELECT COUNT(*) FROM customer_accounts) AS customer_accounts,
+             (SELECT COUNT(*) FROM customer_properties) AS customer_properties,
+             (SELECT COUNT(*) FROM service_jobs) AS service_jobs,
+             (SELECT COUNT(*) FROM day_plans) AS day_plans,
+             (SELECT COUNT(*) FROM crews) AS crews",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("post-acceptance side-effect counts should load");
+    for column in [
+        "customer_accounts",
+        "customer_properties",
+        "service_jobs",
+        "day_plans",
+        "crews",
+    ] {
+        assert_eq!(
+            acquisition_side_effects_after.get::<i64, _>(column),
+            acquisition_side_effects_before.get::<i64, _>(column),
+            "proposal acceptance must not create {column}"
+        );
+    }
+    let accepted_snapshot = sqlx::query_scalar::<_, serde_json::Value>(
+        "SELECT snapshot
+         FROM owner_provider_initial_service_proposal_acceptance_snapshots
+         WHERE proposal_id = $1",
+    )
+    .bind(&proposal_v2.proposal_id)
+    .fetch_one(&pool)
+    .await
+    .expect("accepted immutable proposal snapshot should load");
+    assert_eq!(
+        accepted_snapshot
+            .get("affirmation_text_version")
+            .and_then(serde_json::Value::as_str),
+        Some("initial_service_proposal_acceptance_v1")
+    );
+    let proposal_audit = sqlx::query_scalar::<_, String>(
+        "SELECT STRING_AGG(event_data::TEXT, ' ') FROM owner_provider_initial_service_proposal_events
+         WHERE proposal_id IN ($1, $2)",
+    )
+    .bind(&proposal_v1.proposal_id)
+    .bind(&proposal_v2.proposal_id)
+    .fetch_one(&pool)
+    .await
+    .expect("minimized proposal audit should load");
+    assert!(!proposal_audit.contains("Mow and edge"));
+    assert!(!proposal_audit.contains("421 Private Canyon Road"));
+    let expired_proposal_id = "owner_provider_proposal_expiration_fixture";
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposals (
+             id, owner_user_id, property_id, invitation_id, organization_id,
+             disclosure_grant_id, assessment_id, provider_actor_user_id,
+             proposal_version, status, title, customer_summary, included_scope,
+             exclusions, cadence_code, cadence_detail, arrival_policy,
+             weather_policy, cancellation_policy, proof_expectation,
+             price_amount_minor, price_basis, currency_code,
+             annualized_monthly_minor, revision_note, issued_at, expires_at,
+             idempotency_key
+         )
+         SELECT $1, owner_user_id, property_id, invitation_id, organization_id,
+                disclosure_grant_id, assessment_id, provider_actor_user_id,
+                proposal_version + 1, 'sent', title, customer_summary,
+                included_scope, exclusions, cadence_code, cadence_detail,
+                arrival_policy, weather_policy, cancellation_policy,
+                proof_expectation, price_amount_minor, price_basis, currency_code,
+                annualized_monthly_minor, 'Expiration reconciliation fixture',
+                NOW() - INTERVAL '2 days', NOW() - INTERVAL '1 day',
+                'proposal-expiration-fixture-001'
+         FROM owner_provider_initial_service_proposals WHERE id = $2",
+    )
+    .bind(expired_proposal_id)
+    .bind(&proposal_v2.proposal_id)
+    .execute(&pool)
+    .await
+    .expect("an already-expired immutable proposal fixture should insert");
+    let OwnerReadResult::Loaded(proposals_after_expiration) = repository
+        .list_owner_initial_service_proposals(owner_a, &property.property_id)
+        .await
+    else {
+        panic!("owner proposal reads should reconcile server-derived expiration");
+    };
+    assert!(proposals_after_expiration.iter().any(|proposal| {
+        proposal.proposal_id == expired_proposal_id && proposal.status == "expired"
+    }));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM owner_provider_initial_service_proposal_events
+             WHERE proposal_id = $1 AND actor_user_id = 'system'
+               AND event_kind = 'expired'",
+        )
+        .bind(expired_proposal_id)
+        .fetch_one(&pool)
+        .await
+        .expect("proposal expiration event should load"),
+        1
+    );
+    assert!(matches!(
+        repository
+            .decide_initial_service_proposal(
+                owner_a,
+                &property.property_id,
+                expired_proposal_id,
+                DecideOwnerProviderInitialServiceProposalRequest {
+                    action: "accept".to_string(),
+                    expected_proposal_version: proposal_v2.proposal_version + 1,
+                    reason_code: None,
+                    customer_safe_note: None,
+                    affirmation_text_version: Some(
+                        "initial_service_proposal_acceptance_v1".to_string(),
+                    ),
+                    idempotency_key: "proposal-expired-decision-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalDecisionResult::InvalidState(proposal)
+            if proposal.status == "expired"
+    ));
 
     assert!(matches!(
         repository

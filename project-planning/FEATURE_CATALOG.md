@@ -223,6 +223,10 @@ here does not mean every capability has been delivered.
 - Replay-safe provider replacement windows after owner change requests, returning to explicit owner confirmation without service scheduling
 - Designed initial-service proposal contract with immutable versions, neutral owner decisions, accepted-but-unactivated snapshots, and strict separation from existing-customer project bids
 - Acquisition proposal schema with immutable published content, constrained scope/terms/price, one open/accepted version per assessment, owner decisions, accepted snapshots, and minimized events
+- Acquisition proposal repositories with completed-assessment provider
+  authorization, immutable revisions, server-derived expiration, owner-scoped
+  history and exact-version decisions, hashed unactivated acceptance snapshots,
+  replay/concurrency/isolation coverage, and no operational side effects
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

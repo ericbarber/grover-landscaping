@@ -560,8 +560,16 @@ Active slice:
   specific proposal versions, owner decisions, accepted snapshots, and
   minimized events with bounded content, currency/price/cadence controls, one
   open or accepted proposal per assessment, actor-scoped replay uniqueness, and
-  database-enforced published-content immutability. Repository writes and
-  isolation/replay tests are next.
+  database-enforced published-content immutability.
+- Phase 4B1b is delivered. Verified providers can persist an initial proposal
+  or immutable revision only against a completed, currently authorized
+  assessment; actor-scoped exact retries replay and stale or changed writes
+  conflict. Owner/property-scoped history reconciles server-derived expiration,
+  exact-version accept/decline writes create one immutable decision, and
+  acceptance creates a hashed accepted-but-unactivated snapshot. PostgreSQL
+  coverage verifies concurrency, isolation, immutability, minimized audit, and
+  the absence of customer, service-property, job, plan, or crew side effects.
+  Authenticated proposal APIs are next.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

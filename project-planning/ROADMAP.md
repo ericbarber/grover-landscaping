@@ -233,10 +233,14 @@ initial-service proposals are next.
 The Phase 4B proposal contract is now defined: acquisition proposals do not
 reuse customer/day-plan-bound project bids, published revisions are immutable,
 owner decisions target one exact version, and acceptance remains an
-accepted-but-unactivated snapshot. Phase 4B1 proposal persistence is next.
+accepted-but-unactivated snapshot. Phase 4B1 proposal persistence is complete.
 Phase 4B1a now delivers the proposal schema boundary and clean full-migration
 replay. Phase 4B1b repository authorization, versioning, expiration, decisions,
-accepted snapshots, and PostgreSQL concurrency/isolation coverage is next.
+accepted snapshots, and PostgreSQL concurrency/isolation coverage is now
+delivered. Provider publication reuses the completed-assessment authority
+boundary, revisions insert immutable versions, owner reads reconcile expiration,
+and exact-version acceptance creates only a hashed unactivated snapshot. Phase
+4B2 authenticated provider and owner APIs are next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
