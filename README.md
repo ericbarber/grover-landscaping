@@ -39,6 +39,7 @@ Start with these records when reviewing or continuing development:
 - [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
 - [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
 - [Owner–provider activation contract](docs/owner-provider-activation-design.md) — accepted-proposal projection, portal access, and first-visit boundaries
+- [First-visit contract](docs/owner-provider-first-visit-design.md) and [API](docs/owner-provider-first-visit-api.md) — post-activation provider windows, owner decisions, recovery, and operational separation
 - [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
@@ -417,9 +418,9 @@ The application is responsive across owner, provider, crew, manager, administrat
   exact current version, then separately activating provider customer/property
   setup without creating a first visit, payment, schedule, route, or crew assignment
 
-The next acquisition slice is separate first-visit confirmation after explicit
-activation. The delivered proposal conversation remains separate from
-assessment messages and decision notes. See the
+The next acquisition slice adopts the delivered first-visit API into the
+responsive owner/provider workspaces. The delivered proposal conversation
+remains separate from assessment messages and decision notes. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment

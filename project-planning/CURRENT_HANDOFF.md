@@ -65,21 +65,27 @@ confirmation/change requests, privacy, replay, concurrency, recovery, and the
 no-operational-side-effect boundary. Phase 4C4b now delivers the constrained
 schema, repository transitions, exact replay, concurrent confirmation,
 owner/provider isolation, immutable history, and PostgreSQL side-effect proof.
-The next slice is Phase 4C4c authenticated APIs:
+Phase 4C4c now exposes authenticated provider status/propose and property-owner
+status/decision routes with explicit validation, missing/not-ready/conflict,
+replay, and unavailable mappings. The next slice is Phase 4C4d interface
+adoption:
 
-1. Expose provider-authorized status/propose routes and property-owner-scoped
-   status/decision routes.
-2. Preserve explicit invalid, missing, stale, conflict, replay, and unavailable
-   response mappings in route and no-persistence tests.
-3. Adopt responsive owner/provider controls after the HTTP contract is stable.
+1. Add provider window authoring after activated progress, including stable
+   retry keys and authoritative reload.
+2. Add owner window review, exact-version confirmation, and customer-safe change
+   requests after activation.
+3. Prove responsive owner/provider journeys and preserve the no-operational-work
+   boundary in both interfaces.
 
 ## Read first
 
 1. [`../docs/owner-provider-initial-service-proposal-design.md`](../docs/owner-provider-initial-service-proposal-design.md)
 2. [`../docs/owner-provider-activation-design.md`](../docs/owner-provider-activation-design.md)
-3. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
-4. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
-5. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
+3. [`../docs/owner-provider-first-visit-design.md`](../docs/owner-provider-first-visit-design.md)
+4. [`../docs/owner-provider-first-visit-api.md`](../docs/owner-provider-first-visit-api.md)
+5. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
+6. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
+7. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 6. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
 
 ## Validation baseline

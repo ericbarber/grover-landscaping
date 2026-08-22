@@ -78,7 +78,8 @@ The approved experience is defined by:
 | 4B3 | Delivered | Responsive provider authoring/revision with latest-version reload and neutral Yard Owner immutable-history comparison/exact-version decisions against the delivered APIs |
 | 4C0–3 | Delivered | Separate owner-confirmed accepted-proposal activation contract, persistence, atomic customer/property/portal projection, authenticated API, safe activated progress, and responsive owner/provider interfaces with no first-visit or operational work side effects |
 | 4C4a–b | Delivered | Separate first-visit contract and persistence with immutable windows, exact-version owner decisions, replay/concurrency/isolation proof, and no operational work side effects |
-| 4C4c–D | Planned | Authenticated first-visit interfaces and governed pilot convergence |
+| 4C4c | Delivered | Authenticated verified-provider status/propose and property-owner status/decision routes with explicit recovery mappings |
+| 4C4d–D | Planned | Responsive first-visit interfaces and governed pilot convergence |
 
 ## Delivery principles
 

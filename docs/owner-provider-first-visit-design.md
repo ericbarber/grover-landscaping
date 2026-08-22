@@ -124,9 +124,10 @@ operational workflows create and execute authorized work.
 2. **4C4b — Persistence (delivered):** constrained immutable versions,
    decisions, minimized events, repository transitions, isolation, concurrency,
    outage distinction, and no-operational-side-effect proof.
-3. **4C4c — Authenticated API:** provider propose/status and owner
+3. **4C4c — Authenticated API (delivered):** provider propose/status and owner
    status/decision routes with explicit invalid, missing, stale, conflict, and
-   unavailable recovery.
+   unavailable recovery. See the
+   [API contract](owner-provider-first-visit-api.md).
 4. **4C4d — Production interfaces:** responsive provider proposal and owner
    confirmation/change-request controls, authoritative reload, and the connected
    transition toward the Yard Owner portal.

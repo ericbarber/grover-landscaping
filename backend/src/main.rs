@@ -86,7 +86,7 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_initial_service_proposal_decision_request,
         validate_initial_service_proposal_request, validate_intake_media_request,
-        validate_owner_assessment_message_request,
+        validate_owner_assessment_message_request, validate_owner_first_visit_decision_request,
         validate_owner_initial_service_proposal_message_request,
         validate_owner_provider_relationship_activation_request, validate_property_request,
         validate_provider_assessment_message_request,
@@ -96,7 +96,8 @@ use grover_landscaping_api::{
         validate_provider_assessment_window_proposal_request,
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
-        validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
+        validate_provider_disclosure_revoke_request, validate_provider_first_visit_request,
+        validate_provider_inbox_request,
         validate_provider_initial_service_proposal_response_request,
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
@@ -117,7 +118,7 @@ use grover_landscaping_api::{
         CreateProviderAssessmentMessageRequest, CreateProviderAssessmentPrivateNoteRequest,
         CreateProviderInitialServiceProposalResponseRequest,
         DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
-        DecideOwnerProviderInitialServiceProposalRequest,
+        DecideOwnerProviderFirstVisitRequest, DecideOwnerProviderInitialServiceProposalRequest,
         IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
         OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
         OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
@@ -127,7 +128,8 @@ use grover_landscaping_api::{
         OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
         OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
         OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
-        OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
+        OwnerProviderDisclosureReviewResult, OwnerProviderFirstVisitReadResult,
+        OwnerProviderFirstVisitWriteResult, OwnerProviderInboxResult,
         OwnerProviderInitialServiceProposalDecisionResult,
         OwnerProviderInitialServiceProposalMessageWriteResult,
         OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
@@ -138,7 +140,8 @@ use grover_landscaping_api::{
         OwnerProviderProgressResult, OwnerProviderRelationshipActivationResult,
         OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ProposeProviderAssessmentWindowRequest,
-        ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
+        ProposeProviderFirstVisitRequest, ProviderAssessmentWindowProposalResult,
+        PublishOwnerProviderInitialServiceProposalRequest,
         ReportOwnerProviderInvitationAbuseRequest, RevokeOwnerProviderDisclosureGrantRequest,
         SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
         TransitionOwnerProviderAssessmentRequest, VerifyOwnerProviderInvitationRecipientRequest,
@@ -769,6 +772,14 @@ fn app_with_runtime(
                 .post(activate_owner_provider_relationship),
         )
         .route(
+            "/owner-properties/{property_id}/provider-relationships/{activation_id}/first-visit",
+            get(get_owner_provider_first_visit),
+        )
+        .route(
+            "/owner-properties/{property_id}/provider-relationships/{activation_id}/first-visit/decision",
+            post(decide_owner_provider_first_visit),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
             post(revoke_owner_provider_disclosure_grant),
         )
@@ -819,6 +830,14 @@ fn app_with_runtime(
         .route(
             "/provider-invitations/progress",
             post(get_owner_provider_progress),
+        )
+        .route(
+            "/provider-relationships/{activation_id}/first-visit/status",
+            post(get_provider_first_visit),
+        )
+        .route(
+            "/provider-relationships/{activation_id}/first-visit/proposal",
+            post(propose_provider_first_visit),
         )
         .route(
             "/provider-disclosures/access",
@@ -2015,6 +2034,208 @@ async fn activate_owner_provider_relationship(
             persisted_resource_unavailable_response(
                 "owner_provider_relationship_activation_unavailable",
                 "Provider setup could not be confirmed. No partial setup is reported; reload activation status before retrying.",
+            )
+        }
+    }
+}
+
+async fn get_owner_provider_first_visit(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, activation_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_owner_provider_first_visit(&principal.subject, &property_id, &activation_id)
+        .await
+    {
+        OwnerProviderFirstVisitReadResult::Loaded(first_visit) => {
+            Json(first_visit).into_response()
+        }
+        OwnerProviderFirstVisitReadResult::NotFound => resource_not_found_response(
+            "owner_provider_first_visit_not_found",
+            "The first-visit lifecycle was not found for this property relationship.",
+        ),
+        OwnerProviderFirstVisitReadResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_first_visit_not_ready",
+                message: "This relationship is not ready for first-visit planning. Reload provider setup before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderFirstVisitReadResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_first_visit_unavailable",
+                "First-visit status could not be loaded. Existing provider setup and appointment state are unchanged.",
+            )
+        }
+    }
+}
+
+async fn decide_owner_provider_first_visit(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, activation_id)): Path<(String, String)>,
+    Json(request): Json<DecideOwnerProviderFirstVisitRequest>,
+) -> Response {
+    if !validate_owner_first_visit_decision_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_provider_first_visit_decision_invalid",
+                message: "Confirm the exact proposed window using the current statement, or include a customer-safe change request."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    first_visit_write_response(
+        state
+            .owner_acquisition
+            .decide_owner_provider_first_visit(
+                &principal.subject,
+                &property_id,
+                &activation_id,
+                request,
+            )
+            .await,
+        "owner_provider_first_visit_not_found",
+    )
+}
+
+async fn get_provider_first_visit(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(activation_id): Path<String>,
+    Json(request): Json<OpenOwnerProviderInboxRequest>,
+) -> Response {
+    if !validate_provider_inbox_request(&request) {
+        return resource_not_found_response(
+            "provider_first_visit_not_found",
+            "The provider relationship is not available to this verified account.",
+        );
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before planning a first visit."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .get_provider_first_visit(
+            &principal.subject,
+            verified_email,
+            &activation_id,
+            &request.token,
+        )
+        .await
+    {
+        OwnerProviderFirstVisitReadResult::Loaded(first_visit) => {
+            Json(first_visit).into_response()
+        }
+        OwnerProviderFirstVisitReadResult::NotFound => resource_not_found_response(
+            "provider_first_visit_not_found",
+            "The provider relationship is not available to this verified account.",
+        ),
+        OwnerProviderFirstVisitReadResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_first_visit_not_ready",
+                message: "The relationship is no longer ready for first-visit planning. Reload provider progress."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderFirstVisitReadResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_first_visit_unavailable",
+                "First-visit status could not be loaded. Existing relationship and appointment state are unchanged.",
+            )
+        }
+    }
+}
+
+async fn propose_provider_first_visit(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(activation_id): Path<String>,
+    Json(request): Json<ProposeProviderFirstVisitRequest>,
+) -> Response {
+    if !validate_provider_first_visit_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_first_visit_proposal_invalid",
+                message: "Provide the current series version, a future arrival window of four hours or less, its time zone, and a valid retry key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before proposing a first visit."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    first_visit_write_response(
+        state
+            .owner_acquisition
+            .propose_provider_first_visit(
+                &principal.subject,
+                verified_email,
+                &activation_id,
+                request,
+            )
+            .await,
+        "provider_first_visit_not_found",
+    )
+}
+
+fn first_visit_write_response(
+    result: OwnerProviderFirstVisitWriteResult,
+    not_found_code: &'static str,
+) -> Response {
+    match result {
+        OwnerProviderFirstVisitWriteResult::Saved(first_visit) => {
+            (StatusCode::CREATED, Json(first_visit)).into_response()
+        }
+        OwnerProviderFirstVisitWriteResult::Replayed(first_visit) => {
+            Json(first_visit).into_response()
+        }
+        OwnerProviderFirstVisitWriteResult::NotFound => resource_not_found_response(
+            not_found_code,
+            "The active provider relationship was not found in this authenticated scope.",
+        ),
+        OwnerProviderFirstVisitWriteResult::InvalidState(first_visit) => {
+            (StatusCode::CONFLICT, Json(first_visit)).into_response()
+        }
+        OwnerProviderFirstVisitWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_first_visit_conflict",
+                message: "The first-visit version changed, was already decided, or this retry key identifies different content. Reload status before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderFirstVisitWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_first_visit_unavailable",
+                "The first-visit write could not be confirmed. Retain the retry key and reload status before retrying.",
             )
         }
     }
@@ -10211,6 +10432,120 @@ mod tests {
                     .body(Body::from(
                         r#"{"action":"accept","expected_proposal_version":1,"reason_code":null,"customer_safe_note":null,"affirmation_text_version":null,"idempotency_key":"proposal-decision-invalid-001"}"#,
                     ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties/property-1/provider-relationships/activation-1/first-visit")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let first_visit_decision_payload = serde_json::json!({
+            "expected_window_version": 1,
+            "action": "confirm",
+            "customer_safe_note": null,
+            "confirmation_affirmation_text_version": "owner_provider_first_visit_confirmation_v1",
+            "idempotency_key": "first-visit-decision-api-outage-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/provider-relationships/activation-1/first-visit/decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(first_visit_decision_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/provider-relationships/activation-1/first-visit/decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "expected_window_version": 1,
+                            "action": "request_change",
+                            "customer_safe_note": null,
+                            "confirmation_affirmation_text_version": null,
+                            "idempotency_key": "first-visit-decision-api-invalid-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let provider_first_visit_token =
+            "owner_provider_0000000000000000000000000000000000000000000000000000000000000000";
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-relationships/activation-1/first-visit/status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({ "token": provider_first_visit_token }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let provider_first_visit_payload = serde_json::json!({
+            "token": provider_first_visit_token,
+            "expected_series_version": 0,
+            "window_start_epoch_seconds": 1_800_000_000_i64,
+            "window_end_epoch_seconds": 1_800_007_200_i64,
+            "time_zone": "America/Phoenix",
+            "customer_safe_arrival_note": "Please unlock the side gate.",
+            "idempotency_key": "first-visit-proposal-api-outage-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-relationships/activation-1/first-visit/proposal")
+                    .header("content-type", "application/json")
+                    .body(Body::from(provider_first_visit_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let mut invalid_provider_first_visit_payload = provider_first_visit_payload;
+        invalid_provider_first_visit_payload["window_end_epoch_seconds"] =
+            serde_json::json!(1_800_020_000_i64);
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-relationships/activation-1/first-visit/proposal")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_provider_first_visit_payload.to_string()))
                     .unwrap(),
             )
             .await

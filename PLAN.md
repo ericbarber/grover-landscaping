@@ -73,20 +73,25 @@ Current state:
   payment, schedule, route, or crew assignment exists.
 
 - Phase 4C4a now defines the first-visit contract: an authorized provider actor
-proposes an immutable, bounded arrival window only after activation; the owner
-confirms that exact version or requests a change. The customer-facing lifecycle
-does not create a job, day plan, route stop, work order, payment, recurring
-schedule, or crew assignment and excludes provider-private operational data.
+  proposes an immutable, bounded arrival window only after activation; the
+  owner confirms that exact version or requests a change. The customer-facing
+  lifecycle does not create a job, day plan, route stop, work order, payment,
+  recurring schedule, or crew assignment and excludes provider-private
+  operational data.
 - Phase 4C4b now delivers immutable provider window versions, exact-version
   owner decisions, minimized lifecycle events, an authoritative current-state
   projection, post-activation provider and property-owner isolation, exact
   replay and concurrency handling, and PostgreSQL proof that confirmation does
   not create operational work.
+- Phase 4C4c now exposes verified-provider status/propose and property-owner
+  status/decision routes. The API distinguishes invalid, missing, stale,
+  conflict, exact replay, and unavailable results while keeping invitation
+  tokens out of URLs and operational side effects out of the lifecycle.
 
 Next slice:
 
-- Deliver Phase 4C4c authenticated first-visit APIs, followed by responsive
-  owner/provider adoption.
+- Deliver Phase 4C4d responsive provider window and owner
+  confirmation/change-request controls with authoritative reload.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

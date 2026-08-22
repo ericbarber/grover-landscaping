@@ -511,6 +511,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-disclosures/access"
         || path == "/provider-assessments"
         || path.starts_with("/provider-assessments/")
+        || path.starts_with("/provider-relationships/")
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
         || path == "/provider-organization-claim-review-metrics"
@@ -610,6 +611,11 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
+    if path.starts_with("/provider-relationships/")
+        && (path.ends_with("/first-visit/status") || path.ends_with("/first-visit/proposal"))
+    {
+        return principal.verified_email.is_some() && *method == Method::POST;
+    }
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
     {
         return principal.verified_email.is_some() && *method == Method::POST;
@@ -686,6 +692,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
                 && owner_property_suffix.contains("/initial-service-proposals/")
                 && owner_property_suffix.ends_with("/activation")
                 && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 4
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.ends_with("/first-visit")
+                && *method == Method::GET)
+            || (segment_count == 5
+                && owner_property_suffix.contains("/provider-relationships/")
+                && owner_property_suffix.ends_with("/first-visit/decision")
+                && *method == Method::POST)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1867,6 +1881,14 @@ mod tests {
                 "/owner-properties/property-1/initial-service-proposals/proposal-1/activation",
             ),
             (
+                Method::GET,
+                "/owner-properties/property-1/provider-relationships/activation-1/first-visit",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/provider-relationships/activation-1/first-visit/decision",
+            ),
+            (
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations",
             ),
@@ -1905,6 +1927,14 @@ mod tests {
                 "/provider-assessments/assessment-1/transitions",
             ),
             (Method::POST, "/provider-assessments/assessment-1/messages"),
+            (
+                Method::POST,
+                "/provider-relationships/activation-1/first-visit/status",
+            ),
+            (
+                Method::POST,
+                "/provider-relationships/activation-1/first-visit/proposal",
+            ),
             (
                 Method::POST,
                 "/provider-assessments/assessment-1/private-notes",
