@@ -51,12 +51,17 @@ Current state:
   access, immutable provenance, and same-property competing-request closure.
   It creates no job, route, work order, payment, recurring schedule, crew
   assignment, or first visit.
+- Phase 4C1a now delivers the constrained persistence foundation: immutable
+  accepted-snapshot activation provenance, an explicit current-relationship
+  projection, account/property-scoped portal grants, minimized activation
+  events, and an `activated` invitation terminal state. The atomic repository
+  transaction remains the next slice.
 
 Next slice:
 
-- Deliver Phase 4C1 activation persistence and its atomic repository transaction,
-  then expose and adopt the owner-confirmed interface before the separate
-  first-visit lifecycle.
+- Deliver the Phase 4C1b atomic activation repository transaction, then expose
+  and adopt the owner-confirmed interface before the separate first-visit
+  lifecycle.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

@@ -55,8 +55,9 @@
 Phase 4B3 owner/provider initial-service proposal interfaces and all Phase 4B2b
 proposal-collaboration slices are delivered. Phase 4C0 now defines activation
 authority, atomic projection, property-scoped portal access, immutable
-provenance, competing-request closure, and the first-visit boundary. The next
-slice is Phase 4C1 activation persistence:
+provenance, competing-request closure, and the first-visit boundary. Phase 4C1a
+adds its constrained schema. The next slice is Phase 4C1b activation
+transaction behavior:
 
 1. Implement an idempotent transaction that projects one accepted immutable
    proposal snapshot into the selected provider’s customer/property records

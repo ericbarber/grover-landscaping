@@ -403,3 +403,28 @@ acceptance/revocation, role-change, suspension, and reactivation events inside
 the requested active organization membership. The July 18 team-admin audit
 migration expands the database event-kind constraint for these lifecycle events
 on fresh deployments.
+
+## owner_provider_relationship_activations
+
+An activation is the immutable provenance bridge between one accepted
+acquisition proposal snapshot and the provider's operational customer/property
+records. It records the owner, private owner property, provider organization,
+invitation, assessment, exact proposal and decision, accepted-snapshot digest,
+new customer account and onboarding property, property-owner membership,
+affirmation version, and idempotency key. One accepted snapshot and one owner
+property can activate only once in the current phase.
+
+`owner_provider_active_relationships` is the separately mutable current-
+relationship projection used by later relationship governance. The activation
+history itself cannot be updated or deleted.
+
+`customer_portal_access_grants` binds an owner or property manager to an exact
+provider organization, customer account, and property. Customer-facing reads
+must use this allow-list rather than treating organization membership as access
+to every customer record in the provider tenant.
+
+`owner_provider_relationship_activation_events` stores minimized activation and
+same-property competing-invitation closure events. These records do not contain
+addresses, proposal scope, price, photos, access considerations, contact values,
+or schedule details. Activation creates no job, route, work order, invoice,
+payment, recurring schedule, crew assignment, or first visit.
