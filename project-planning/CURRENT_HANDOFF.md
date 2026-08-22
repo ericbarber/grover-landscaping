@@ -59,14 +59,16 @@ provenance, competing-request closure, and the first-visit boundary. Phase 4C1
 now delivers the constrained schema, atomic repository transaction, safe
 activated progress, PostgreSQL concurrency/side-effect proof, and authenticated
 owner activation/status routes and responsive owner/provider setup interfaces.
-The next slice is Phase 4C4 first-visit confirmation:
+Phase 4C4a now defines the separate first-visit contract, including
+post-activation provider authority, immutable windows, exact-version owner
+confirmation/change requests, privacy, replay, concurrency, recovery, and the
+no-operational-side-effect boundary. The next slice is Phase 4C4b persistence:
 
-1. Define provider-proposed first-visit windows and owner confirm/change-request
-   transitions against an active relationship.
-2. Keep visit confirmation independent of customer/property activation and do
-   not assign a crew, route, or work order in the confirmation transaction.
-3. Prove owner/provider isolation, version/replay/conflict/outage recovery, then
-   adopt the responsive owner/provider controls.
+1. Add immutable proposal versions, owner decisions, minimized events, and a
+   current-state read model against an active relationship.
+2. Prove owner/provider isolation, version/replay/conflict/concurrency/outage
+   behavior and that no crew, route, work order, job, or payment is created.
+3. Expose authenticated APIs, then adopt responsive owner/provider controls.
 
 ## Read first
 

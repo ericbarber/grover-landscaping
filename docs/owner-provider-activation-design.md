@@ -130,8 +130,12 @@ the relationship was activated.
    activation review, stable retry recovery, authoritative status reload, and
    responsive owner/provider setup states that repeat the no-first-visit,
    payment, schedule, route, and crew boundary.
-5. **4C4 — First visit:** separate provider proposal and owner confirmation or
-   change-request lifecycle, without implicit crew assignment.
+5. **4C4a — First-visit contract (delivered):** separate provider proposal and
+   owner confirmation/change-request authority, version, privacy, recovery, and
+   no-operational-side-effect boundaries. See the
+   [first-visit contract](owner-provider-first-visit-design.md).
+6. **4C4b–d — First-visit delivery:** persistence, authenticated APIs, and
+   responsive owner/provider adoption without implicit crew assignment.
 
 ## Acceptance criteria
 

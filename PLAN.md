@@ -72,10 +72,16 @@ Current state:
   provider see an activated setup state that repeats that no first visit,
   payment, schedule, route, or crew assignment exists.
 
+Phase 4C4a now defines the first-visit contract: an authorized provider actor
+proposes an immutable, bounded arrival window only after activation; the owner
+confirms that exact version or requests a change. The customer-facing lifecycle
+does not create a job, day plan, route stop, work order, payment, recurring
+schedule, or crew assignment and excludes provider-private operational data.
+
 Next slice:
 
-- Deliver the Phase 4C4 separate first-visit proposal/owner-confirmation
-  lifecycle without coupling it to crew assignment or route work.
+- Deliver Phase 4C4b first-visit persistence and lifecycle proof, followed by
+  authenticated APIs and responsive owner/provider adoption.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 
