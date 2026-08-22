@@ -42,6 +42,15 @@ Current state:
 - Computed-style validation now prevents token, wordmark, banner, navigation
   material, and focus-ring drift in addition to each journey's existing
   responsive, interaction, accessibility, and recovery checks.
+- Production visual convergence phase 1 is delivered. The React runtime now
+  owns the validated evergreen, bone, paper, ink, sand, state, and focus tokens;
+  the editorial and interface font roles; shared leaf wordmark and control
+  primitives; and matching browser/PWA chrome. The public homepage adopts the
+  split editorial hero, responsive persona control, role-specific illustrative
+  preview, trust strip, and prototype-aligned section typography without losing
+  its metadata, analytics, lead, or direct Yard Owner/company entry contracts.
+  Access and Yard Owner acquisition surfaces consume the same foundation, and a
+  computed-style browser check guards the production token contract.
 - Original Southwestern hero photography is stored with its generation brief and
   project-local usage guidance.
 - Professional V2 review retains the split hero and Plan–Care–Proof narrative,
@@ -182,8 +191,10 @@ Current state:
 
 Next design work:
 
-- Review the V2 working homepage for production React adoption while retaining
-  the existing campaign, metadata, analytics, and persisted-lead contracts.
+- Continue production visual convergence through the authenticated application
+  shell: adopt the validated desktop rail, mobile navigation materials,
+  operational density, status components, and outlined icon family while
+  retaining role-aware destinations and local-review behavior.
 - Review the Yard Owner working design for phased production React adoption,
   including a customer-specific next-visit read model and removal of raw billing
   notes from customer completion reports.

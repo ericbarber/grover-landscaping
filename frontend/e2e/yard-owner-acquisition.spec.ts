@@ -185,8 +185,8 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   });
 
   await page.goto('/for-yard-owners');
-  await expect(page.getByRole('link', { name: 'Set up my yard' })).toBeVisible();
-  await page.getByRole('link', { name: 'Set up my yard' }).click();
+  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
+  await page.getByRole('link', { name: 'Sign up your yard' }).click();
   await expect(page).toHaveURL(/\/app\/yard-owner$/);
   await expect(page.getByRole('heading', { name: 'Tell us about the yard. You choose who sees it.' })).toBeVisible();
   await page.getByLabel('Your name').fill('Morgan Reyes');

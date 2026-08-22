@@ -24,6 +24,7 @@ import {
 import { useAuth } from '../auth/AuthProvider';
 import { OwnerProviderAssessmentPanel } from './OwnerProviderAssessmentPanel';
 import { OwnerProviderDisclosurePanel } from './OwnerProviderDisclosurePanel';
+import { GroverBrand } from './GroverBrand';
 
 type PropertyDraft = Omit<CreateOwnerPropertyInput, 'addressConfirmed' | 'authorityAttested'>;
 type YardBriefDraft = Omit<SaveOwnerYardBriefInput, 'status'>;
@@ -488,13 +489,12 @@ export function YardOwnerAcquisitionPage() {
   const inputId = (name: string) => `${prefix}-${name}`;
 
   return (
-    <main className="min-h-[calc(100vh-2.6rem)] bg-[#f4f1e9] text-slate-950">
+    <main className="min-h-[calc(100vh-2.6rem)] bg-bone text-slate-950">
       <header className="relative overflow-hidden bg-emerald-950 text-white">
         <div className="absolute inset-0 opacity-20 [background:radial-gradient(circle_at_80%_10%,#fbbf24,transparent_35%)]" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <a className="flex min-h-11 items-center gap-3 rounded-lg font-black tracking-tight focus:outline-none focus:ring-2 focus:ring-amber-300" href="/">
-            <span aria-hidden="true" className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500 text-emerald-950">G</span>
-            <span className="text-lg">Grover</span>
+          <a aria-label="Grover home" className="rounded-lg text-sand focus:outline-none focus:ring-2 focus:ring-sky" href="/">
+            <GroverBrand />
           </a>
           <a className="rounded-lg px-3 py-2 text-sm font-bold text-emerald-100 hover:bg-white/10 hover:text-white" href="/app">
             My workspace
@@ -502,7 +502,7 @@ export function YardOwnerAcquisitionPage() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-4 sm:px-6 lg:px-8">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-300">Private yard setup</p>
-          <h1 className="mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">
+          <h1 className="mt-3 max-w-3xl font-display text-3xl font-bold tracking-tight sm:text-5xl">
             Tell us about the yard. You choose who sees it.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-emerald-100 sm:text-lg">
@@ -512,7 +512,7 @@ export function YardOwnerAcquisitionPage() {
       </header>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
-        <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/5 sm:p-8" aria-labelledby="yard-setup-title">
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-paper p-5 shadow-grover-md sm:p-8" aria-labelledby="yard-setup-title">
           <Progress workspace={Boolean(workspace)} propertyCount={properties.length} briefReady={yardBrief?.status === 'ready'} />
           <div aria-live="polite" className="mt-6">
             {notice ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-950">{notice}</p> : null}

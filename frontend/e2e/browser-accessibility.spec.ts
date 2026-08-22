@@ -45,3 +45,40 @@ test('the hero offers direct yard and company signup paths', async ({ page }) =>
   await expect(companySignup).toBeVisible();
   await expect(companySignup).toHaveAttribute('href', '/app');
 });
+
+test('the production homepage retains the validated prototype foundation', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+  const theme = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const heading = document.querySelector('h1');
+    const primaryAction = Array.from(document.querySelectorAll('a'))
+      .find((element) => element.textContent?.includes('Sign up your company'));
+    const brandMark = document.querySelector('.grover-brand-mark');
+
+    if (!main || !heading || !primaryAction || !brandMark) {
+      throw new Error('The shared Grover theme targets were not rendered.');
+    }
+
+    return {
+      canvas: getComputedStyle(main).backgroundColor,
+      ink: getComputedStyle(heading).color,
+      displayFamily: getComputedStyle(heading).fontFamily,
+      primaryAction: getComputedStyle(primaryAction).backgroundColor,
+      brandMark: getComputedStyle(brandMark).stroke,
+      focusToken: getComputedStyle(document.documentElement)
+        .getPropertyValue('--grover-focus')
+        .trim(),
+    };
+  });
+
+  expect(theme).toEqual({
+    canvas: 'rgb(246, 242, 232)',
+    ink: 'rgb(23, 52, 45)',
+    displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
+    primaryAction: 'rgb(23, 63, 53)',
+    brandMark: 'rgb(23, 63, 53)',
+    focusToken: '#1685a4',
+  });
+});

@@ -29,7 +29,12 @@
 - Overdue lead counts, priority sorting, and visual attention states
 - Validated working homepage design with responsive audience continuity,
   interactive workflow proof, accessible request states, and implementation
-  handoff; production adoption remains a separate delivery slice
+  handoff
+- Production prototype-convergence foundation with canonical theme tokens,
+  editorial/interface font roles, reusable leaf wordmark and controls,
+  prototype-aligned responsive public hero and persona preview, matching access
+  and Yard Owner acquisition surfaces, PWA chrome, and computed-style regression
+  coverage
 - Validated Yard Crew acquisition marketing with distinct solo provider,
   provider-company, and invited-worker paths, evidence-based capability claims,
   lifecycle explanation, opportunity preview, and contextual support entry

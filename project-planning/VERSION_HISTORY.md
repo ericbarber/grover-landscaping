@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Began production visual convergence by centralizing the validated prototype palette, editorial/interface font roles, focus and control primitives, leaf wordmark, and PWA chrome; rebuilt the responsive public hero around its split prototype composition and persona-specific product preview; aligned access and Yard Owner acquisition surfaces; and added exact computed-style regression coverage.
 - 2026-08-22: Added authenticated acquisition-proposal lifecycle APIs for verified-provider publication/revision and owner-scoped history, detail, and exact-version decisions, with explicit route authorization and invalid/not-found/conflict/replay/outage mapping.
 - 2026-08-22: Added acquisition-proposal repositories with completed-assessment provider authorization, immutable version publication, server-derived expiration, owner-scoped reads and exact-version decisions, replay-safe concurrency, hashed accepted-but-unactivated snapshots, minimized audit, and verified absence of customer/job/plan/crew side effects.
 - 2026-08-22: Added persistent public-hero invitations for private Yard Owner signup and authenticated landscaping-company onboarding, with persona-aware visual emphasis and direct route coverage.

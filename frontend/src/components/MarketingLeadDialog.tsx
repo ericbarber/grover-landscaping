@@ -102,7 +102,7 @@ export function MarketingLeadDialog({
       role="dialog"
     >
       <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center">
-        <section className="relative grid w-full overflow-hidden rounded-[2rem] bg-white shadow-2xl lg:grid-cols-[0.75fr_1.25fr]">
+        <section className="relative grid w-full overflow-hidden rounded-2xl bg-paper shadow-grover-lg lg:grid-cols-[0.75fr_1.25fr]">
           <aside className="bg-emerald-950 p-7 text-white sm:p-9">
             <button
               aria-label="Close request form"
@@ -113,7 +113,7 @@ export function MarketingLeadDialog({
               ×
             </button>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Start a conversation</p>
-            <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight" id="marketing-lead-title">
+            <h2 className="mt-5 font-display text-3xl font-bold leading-tight tracking-tight" id="marketing-lead-title">
               {callToAction.title}
             </h2>
             <p className="mt-4 text-sm leading-6 text-emerald-50/75">
@@ -135,7 +135,7 @@ export function MarketingLeadDialog({
               <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-emerald-700">
                 {status === 'success' ? 'Request received' : 'Local preview complete'}
               </p>
-              <h3 className="mt-3 text-3xl font-black tracking-tight text-slate-950">
+              <h3 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-950">
                 {status === 'success' ? `Thank you, ${fullName.split(' ')[0]}.` : 'The form is working as designed.'}
               </h3>
               <p className="mt-4 max-w-lg leading-7 text-slate-600">

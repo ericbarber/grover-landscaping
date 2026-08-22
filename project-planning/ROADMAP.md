@@ -23,8 +23,14 @@ documented shell contract. A validated V2 working homepage
 now applies that direction to the complete public journey with responsive
 composition, persona continuity, interactive Plan-Care-Proof inspection,
 capability-backed credibility, conversion recovery, and success states. The
-prototype remains separate from the production React page; its handoff preserves
-the existing campaign, metadata, analytics, and persisted-lead contracts.
+first production convergence slice now carries its exact palette, typography
+roles, leaf wordmark, split hero composition, persona-specific product preview,
+trust strip, controls, focus treatment, and PWA chrome into React while
+preserving the existing campaign, metadata, analytics, persisted-lead, and
+direct Yard Owner/company entry contracts. The shared theme also reaches access,
+acquisition, and authenticated utility classes; desktop rail, mobile navigation,
+operational density, and icon convergence remain the next application-shell
+slice.
 The [application working-design delivery plan](../design/review/application-working-design-delivery-plan.md)
 now sequences the remaining current product through shared application
 foundations, access and Home, field execution, manager daily operations,

@@ -4,8 +4,34 @@
 
 :root {
   color-scheme: light;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --grover-forest: #0f2f28;
+  --grover-evergreen: #173f35;
+  --grover-evergreen-hover: #24594a;
+  --grover-bone: #f6f2e8;
+  --grover-paper: #fffdf8;
+  --grover-ink: #17342d;
+  --grover-slate: #5d6e67;
+  --grover-line: #d8ddd7;
+  --grover-sage: #8ea795;
+  --grover-sage-soft: #dce6de;
+  --grover-sand: #dec79d;
+  --grover-gold: #c99f55;
+  --grover-clay: #bd6848;
+  --grover-sky: #dce8eb;
+  --grover-focus: #1685a4;
+  --grover-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --grover-sans: Inter, 'Segoe UI', Arial, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  font-family: var(--grover-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  background: var(--grover-bone);
 }
 
 body {
@@ -13,7 +39,8 @@ body {
   min-width: 320px;
   min-height: 100dvh;
   overflow-x: hidden;
-  background: #f1f5f9;
+  background: var(--grover-bone);
+  color: var(--grover-ink);
   padding-right: env(safe-area-inset-right);
   padding-left: env(safe-area-inset-left);
 }
@@ -22,7 +49,7 @@ button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: var(--grover-sans);
 }
 
 button {
@@ -38,8 +65,47 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid #b45309;
+  outline: 3px solid var(--grover-focus);
   outline-offset: 3px;
+}
+
+::selection {
+  background: var(--grover-sand);
+  color: var(--grover-forest);
+}
+
+@layer components {
+  .grover-brand {
+    @apply inline-flex min-h-11 items-center gap-3 font-sans text-sm font-black uppercase tracking-[0.18em] no-underline;
+  }
+
+  .grover-brand-mark {
+    @apply h-8 w-8 shrink-0 fill-none stroke-current;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.6;
+  }
+
+  .grover-eyebrow {
+    @apply text-[0.7rem] font-black uppercase tracking-[0.18em] text-emerald-700;
+  }
+
+  .grover-display {
+    @apply font-display font-bold text-ink;
+    letter-spacing: -0.035em;
+  }
+
+  .grover-card {
+    @apply rounded-2xl border border-slate-200 bg-paper shadow-grover-sm;
+  }
+
+  .grover-button-primary {
+    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-800 bg-emerald-800 px-5 py-3 text-sm font-extrabold text-white shadow-grover-sm transition hover:border-emerald-700 hover:bg-emerald-700;
+  }
+
+  .grover-button-secondary {
+    @apply inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-paper px-5 py-3 text-sm font-extrabold text-emerald-800 transition hover:border-emerald-700 hover:bg-emerald-50;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
