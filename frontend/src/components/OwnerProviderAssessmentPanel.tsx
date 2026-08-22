@@ -9,6 +9,7 @@ import {
   type OwnerProviderAssessmentMessage,
   type OwnerProviderConnectionProgress,
 } from '../api/ownerAcquisitionClient';
+import { OwnerInitialServiceProposalPanel } from './OwnerInitialServiceProposalPanel';
 
 type AssessmentTone = 'attention' | 'active' | 'complete' | 'closed';
 
@@ -351,6 +352,7 @@ export function OwnerProviderAssessmentPanel({
           })}
         </ul>
       )}
+      <OwnerInitialServiceProposalPanel assessments={assessments} connections={connections} propertyId={propertyId} />
     </section>
   );
 }

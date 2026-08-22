@@ -1,6 +1,11 @@
 import { apiRequestError } from './apiError';
 import { authenticatedFetch } from './authenticatedFetch';
 import { API_BASE_URL } from './baseUrl';
+import type {
+  InitialServiceProposal,
+  InitialServiceProposalStatus,
+  PublishInitialServiceProposalInput,
+} from '../domain/initialServiceProposals';
 
 interface ApiProviderInvitationProgress {
   invitation_id: string;
@@ -46,6 +51,36 @@ interface ApiProviderDisclosureAccess {
   assessment?: ApiProviderAssessment;
   customer_safe_messages?: ApiProviderAssessmentMessage[];
   private_notes?: ApiProviderAssessmentPrivateNote[];
+  initial_service_proposal?: ApiInitialServiceProposal;
+}
+
+interface ApiInitialServiceProposal {
+  proposal_id: string;
+  assessment_id: string;
+  invitation_id: string;
+  property_id: string;
+  organization_id: string;
+  disclosure_grant_id: string;
+  proposal_version: number;
+  status: InitialServiceProposalStatus;
+  title: string;
+  customer_summary: string;
+  included_scope: string[];
+  exclusions: string[];
+  cadence_code: InitialServiceProposal['cadenceCode'];
+  cadence_detail: string;
+  arrival_policy: string;
+  weather_policy: string;
+  cancellation_policy: string;
+  proof_expectation: string;
+  price_amount_minor: number;
+  price_basis: InitialServiceProposal['priceBasis'];
+  currency_code: string;
+  annualized_monthly_minor?: number | null;
+  revision_note?: string | null;
+  issued_at_epoch_seconds: number;
+  expires_at_epoch_seconds: number;
+  persisted: boolean;
 }
 
 interface ApiProviderAssessment {
@@ -125,6 +160,7 @@ export interface ProviderDisclosureAccess {
   assessment?: ProviderAssessment;
   customerSafeMessages?: ProviderAssessmentMessage[];
   privateNotes?: ProviderAssessmentPrivateNote[];
+  currentInitialServiceProposal?: InitialServiceProposal;
 }
 
 export type ProviderAssessmentStatus = 'remote_review' | 'window_proposed'
@@ -217,6 +253,37 @@ function mapPrivateNote(value: ApiProviderAssessmentPrivateNote): ProviderAssess
   };
 }
 
+function mapInitialServiceProposal(value: ApiInitialServiceProposal): InitialServiceProposal {
+  return {
+    proposalId: value.proposal_id,
+    assessmentId: value.assessment_id,
+    invitationId: value.invitation_id,
+    propertyId: value.property_id,
+    organizationId: value.organization_id,
+    disclosureGrantId: value.disclosure_grant_id,
+    proposalVersion: value.proposal_version,
+    status: value.status,
+    title: value.title,
+    customerSummary: value.customer_summary,
+    includedScope: value.included_scope,
+    exclusions: value.exclusions,
+    cadenceCode: value.cadence_code,
+    cadenceDetail: value.cadence_detail,
+    arrivalPolicy: value.arrival_policy,
+    weatherPolicy: value.weather_policy,
+    cancellationPolicy: value.cancellation_policy,
+    proofExpectation: value.proof_expectation,
+    priceAmountMinor: value.price_amount_minor,
+    priceBasis: value.price_basis,
+    currencyCode: value.currency_code,
+    annualizedMonthlyMinor: value.annualized_monthly_minor ?? undefined,
+    revisionNote: value.revision_note ?? undefined,
+    issuedAtEpochSeconds: value.issued_at_epoch_seconds,
+    expiresAtEpochSeconds: value.expires_at_epoch_seconds,
+    persisted: value.persisted,
+  };
+}
+
 export async function fetchProviderInvitationProgress(
   token: string,
 ): Promise<ProviderInvitationProgress> {
@@ -291,6 +358,8 @@ export async function fetchProviderDisclosureAccess(token: string): Promise<Prov
     assessment: value.assessment ? mapAssessment(value.assessment) : undefined,
     customerSafeMessages: value.customer_safe_messages?.map(mapMessage),
     privateNotes: value.private_notes?.map(mapPrivateNote),
+    currentInitialServiceProposal: value.initial_service_proposal
+      ? mapInitialServiceProposal(value.initial_service_proposal) : undefined,
   };
 }
 
@@ -387,4 +456,46 @@ export async function createProviderAssessmentPrivateNote(
   });
   if (!response.ok) throw await apiRequestError(response, `Provider private note failed with status ${response.status}.`);
   return mapPrivateNote(await response.json() as ApiProviderAssessmentPrivateNote);
+}
+
+export async function publishProviderInitialServiceProposal(
+  token: string,
+  assessmentId: string,
+  input: PublishInitialServiceProposalInput,
+  idempotencyKey: string,
+): Promise<InitialServiceProposal> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-assessments/${encodeURIComponent(assessmentId)}/initial-service-proposals`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        expected_proposal_version: input.expectedProposalVersion,
+        title: input.title,
+        customer_summary: input.customerSummary,
+        included_scope: input.includedScope,
+        exclusions: input.exclusions,
+        cadence_code: input.cadenceCode,
+        cadence_detail: input.cadenceDetail,
+        arrival_policy: input.arrivalPolicy,
+        weather_policy: input.weatherPolicy,
+        cancellation_policy: input.cancellationPolicy,
+        proof_expectation: input.proofExpectation,
+        price_amount_minor: input.priceAmountMinor,
+        price_basis: input.priceBasis,
+        currency_code: input.currencyCode,
+        revision_note: input.revisionNote,
+        expires_at_epoch_seconds: input.expiresAtEpochSeconds,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(
+      response,
+      `Initial service proposal publication failed with status ${response.status}.`,
+    );
+  }
+  return mapInitialServiceProposal(await response.json() as ApiInitialServiceProposal);
 }

@@ -28,15 +28,20 @@ Current state:
 - The current handoff, design index, high-fidelity index, prototype READMEs,
   application design delivery tracker, roadmap, feature catalog, and version
   history use the same adoption boundary.
+- Phase 4B3 now adopts the immutable initial-service proposal lifecycle into
+  both production acquisition workspaces. A provider can publish or revise a
+  customer-safe offer after a completed assessment and recover the latest
+  version on reload; an owner can review immutable history and make a deliberate
+  exact-version accept/decline decision. Acceptance remains unactivated.
 
 Next slice:
 
-- Adopt the delivered Phase 4B initial-service proposal APIs into the owner and
-  provider acquisition interfaces. Preserve immutable versions, exact-version
-  decisions, expiry/conflict recovery, provider-private production assumptions,
-  and the accepted-but-unactivated boundary.
-- Define proposal questions/change requests separately before implementing them;
-  do not repurpose assessment messages, owner decisions, or audit notes.
+- Define and deliver Phase 4B2b proposal questions/change requests as a separate
+  persistence and interface contract; do not repurpose assessment messages,
+  owner decisions, or audit notes.
+- Then deliver the Phase 4C explicit activation boundary from an accepted
+  snapshot into provider setup and first-visit confirmation without coupling
+  acceptance to payment, scheduling, or crew assignment.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 
@@ -632,7 +637,7 @@ Active slice:
   the same verified provider can submit one bounded replacement against the
   current version; exact retries replay, changed/stale writes conflict, ended
   authority fails closed, and the assessment returns to owner confirmation
-  without scheduling service. Versioned initial-service proposals are next.
+  without scheduling service. Versioned initial-service proposals follow.
 - Phase 4B proposal design is complete in
   [`docs/owner-provider-initial-service-proposal-design.md`](docs/owner-provider-initial-service-proposal-design.md).
   Acquisition proposals remain separate from project bids because they precede
@@ -658,9 +663,18 @@ Active slice:
   routes now preserve invalid, missing, expired/current-state, conflict, replay,
   and persistence-outage distinctions. The authorization policy explicitly
   permits only these methods and paths, and route tests fail closed without
-  storage. Phase 4B2b owner/provider interface adoption is next. Proposal
-  questions and change requests still need their separate persistence contract;
-  they are not stored as decisions, assessment messages, or audit events.
+  storage.
+- Phase 4B3 is delivered. The verified-provider assessment workspace now
+  authors initial and revised customer-safe proposals, preserves idempotency
+  keys across uncertain writes, keeps production assumptions in private notes,
+  and reloads the latest immutable version from the disclosure projection. The
+  Yard Owner workspace neutrally presents all versions, scope, exclusions,
+  cadence, policies, price, monthly comparison, revision notes, and expiration;
+  only a current sent version exposes explicit acceptance or controlled decline.
+  Acceptance requires the versioned affirmation and states that no visit,
+  payment, or crew assignment was created. Proposal questions and change
+  requests still need their separate Phase 4B2b persistence contract and are not
+  stored as decisions, assessment messages, or audit events.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

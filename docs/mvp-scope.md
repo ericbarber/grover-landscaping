@@ -26,15 +26,16 @@ source.
 - Manager route planning, dispatch, report review/delivery, recovery operations,
   customer onboarding, portfolio, team, and support views
 - Customer-safe report and project-bid review links
-- Private Yard Owner intake and known-provider connection through disclosure and
-  assessment, plus versioned initial-service proposal APIs
+- Private Yard Owner intake and known-provider connection through disclosure,
+  assessment, and provider/owner versioned initial-service proposal interfaces
 - Persona-specific public landing journeys, direct signup, lead capture, and
   first-party conversion measurement
 
 ## Active completion boundary
 
-The next MVP adoption slice is the Yard Owner/provider proposal interface. An
-accepted acquisition proposal remains unactivated: it does not create a provider
+The next MVP adoption slice is the separate Yard Owner/provider proposal
+question and change-request contract. An accepted acquisition proposal remains
+unactivated: it does not create a provider
 customer, service property, contract, job, route, schedule, payment, or crew
 assignment. Explicit activation and relationship continuity follow as separate
 phases.

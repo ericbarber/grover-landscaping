@@ -5,8 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the Yard Owner/provider initial-
-service proposal interface against the delivered Phase 4B APIs. The immediately
+The current production-adoption priority is the separate Yard Owner/provider
+proposal question and change-request contract, followed by explicit activation.
+The initial-service proposal interface against the delivered Phase 4B APIs is
+now adopted. The immediately
 preceding UX priority—a complete persona-specific public landing experience—is
 delivered. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
@@ -270,7 +272,12 @@ boundary, revisions insert immutable versions, owner reads reconcile expiration,
 and exact-version acceptance creates only a hashed unactivated snapshot. Phase
 4B2a now exposes verified-provider publication/revision and owner-scoped list,
 detail, and decision APIs behind explicit fail-closed route authorization.
-Phase 4B2b proposal questions and change requests are next and remain separate
+Phase 4B3 now adopts responsive provider proposal authoring/revision and neutral
+owner immutable-version review/decision into the authenticated acquisition
+workspaces. The provider reload projection includes its latest version, private
+production assumptions remain separate, owner acceptance requires the exact
+affirmation, and accepted state creates no schedule, payment, or crew
+assignment. Phase 4B2b proposal questions and change requests are next and remain separate
 from lifecycle decisions and minimized audit events.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
@@ -396,15 +403,22 @@ schedule, remaining work, or a completed day.
 
 ## Immediate Continuation Work
 
-**Current — Yard Owner acquisition proposal interfaces**
+**Delivered — Yard Owner acquisition proposal interfaces**
 
-   - Adopt the delivered versioned initial-service proposal APIs into the owner
-     and provider acquisition interfaces.
+   - The delivered versioned initial-service proposal APIs are adopted into the
+     owner and provider acquisition interfaces.
    - Preserve immutable versions, owner-visible scope/exclusions/cadence/terms,
      provider-private production assumptions, expiration, exact-version
      decisions, conflict recovery, and accepted-but-unactivated meaning.
    - Keep proposal questions and change requests out of decisions, assessment
      messages, and audit notes until their separate contract is delivered.
+
+**Current — Proposal collaboration and activation**
+
+   - Define and deliver proposal questions and change requests as their own
+     persistence, authorization, audit, and interface boundary.
+   - Then project an explicitly accepted immutable snapshot into provider setup
+     and first-visit confirmation without silently scheduling or assigning work.
 
 **Next — Shared application and workflow convergence**
 

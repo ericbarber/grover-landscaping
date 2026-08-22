@@ -109,8 +109,9 @@ scope/exclusion text.
    create/revise plus owner-scoped list/detail and versioned accept/decline.
 4. **4B2b — Proposal conversation:** persist and expose owner questions and
    change requests separately from decisions and minimized lifecycle events.
-5. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard
-   Owner comparison/decision experiences with responsive recovery coverage.
+5. **4B3 — Production interfaces (delivered):** provider authoring/revision,
+   latest-version reload, and neutral Yard Owner immutable-history
+   comparison/exact-version decision experiences with responsive recovery.
 6. **4C — Activation:** separately project an accepted snapshot into provider
    customer/property setup, then confirm the first visit without coupling crew
    assignment to acceptance.

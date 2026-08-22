@@ -2614,6 +2614,22 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(proposal_v2.proposal_version, 2);
     assert_eq!(proposal_v2.status, "sent");
     assert_eq!(proposal_v2.annualized_monthly_minor, Some(23_833));
+    let OwnerProviderDisclosureAccessResult::Loaded(provider_proposal_workspace) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("the provider should reload the latest proposal with the assessment workspace");
+    };
+    assert_eq!(
+        provider_proposal_workspace.initial_service_proposal,
+        Some(proposal_v2.clone()),
+    );
     assert!(matches!(
         repository
             .publish_initial_service_proposal(

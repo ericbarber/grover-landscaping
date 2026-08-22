@@ -6,6 +6,7 @@ import {
   fetchProviderDisclosureAccess,
   fetchProviderInvitationProgress,
   proposeProviderAssessmentWindow,
+  publishProviderInitialServiceProposal,
   startProviderAssessment,
   transitionProviderAssessment,
 } from './providerInvitationClient';
@@ -65,6 +66,20 @@ describe('provider invitation progress client', () => {
         author_user_id: 'provider_1', note_kind: 'route_fit', private_body: 'Private route note.',
         assessment_version_snapshot: 1, created_at_epoch_seconds: 1_800_000_002,
       }],
+      initial_service_proposal: {
+        proposal_id: 'proposal_1', assessment_id: 'assessment_1', invitation_id: 'invitation_1',
+        property_id: 'property_1', organization_id: 'organization_1',
+        disclosure_grant_id: 'owner_disclosure_grant_1', proposal_version: 2,
+        status: 'sent', title: 'Routine yard care', customer_summary: 'Customer-safe terms.',
+        included_scope: ['Mow and edge'], exclusions: ['Tree work'],
+        cadence_code: 'every_two_weeks', cadence_detail: 'Every other Tuesday',
+        arrival_policy: 'Day confirmed first.', weather_policy: 'Unsafe weather moves the visit.',
+        cancellation_policy: '24 hours notice.', proof_expectation: 'Completion photos.',
+        price_amount_minor: 12000, price_basis: 'per_visit', currency_code: 'USD',
+        annualized_monthly_minor: 26000, revision_note: 'Price clarified.',
+        issued_at_epoch_seconds: 1_799_000_000, expires_at_epoch_seconds: 1_800_000_000,
+        persisted: true,
+      },
       authority_boundary: 'Assessment access only.', persisted: true,
     }), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -75,10 +90,46 @@ describe('provider invitation progress client', () => {
     expect(access.assessment?.status).toBe('remote_review');
     expect(access.customerSafeMessages?.[0].authorRole).toBe('owner');
     expect(access.privateNotes?.[0].privateBody).toBe('Private route note.');
+    expect(access.currentInitialServiceProposal).toEqual(expect.objectContaining({
+      proposalId: 'proposal_1', proposalVersion: 2, priceAmountMinor: 12000,
+    }));
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       token: 'owner_provider_secret',
     });
+  });
+
+  it('publishes a versioned customer-safe proposal without private operating fields', async () => {
+    const apiProposal = {
+      proposal_id: 'proposal_1', assessment_id: 'assessment_1', invitation_id: 'invitation_1',
+      property_id: 'property_1', organization_id: 'organization_1', disclosure_grant_id: 'grant_1',
+      proposal_version: 1, status: 'sent', title: 'Routine yard care',
+      customer_summary: 'Visible summary.', included_scope: ['Mow'], exclusions: ['Trees'],
+      cadence_code: 'weekly', cadence_detail: 'Every Tuesday', arrival_policy: 'Confirm first.',
+      weather_policy: 'Weather notice.', cancellation_policy: '24 hours.',
+      proof_expectation: 'Completion note.', price_amount_minor: 9000, price_basis: 'per_visit',
+      currency_code: 'USD', annualized_monthly_minor: 39000,
+      issued_at_epoch_seconds: 1_799_000_000, expires_at_epoch_seconds: 1_800_000_000,
+      persisted: true,
+    };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(apiProposal), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await publishProviderInitialServiceProposal('secret', 'assessment_1', {
+      expectedProposalVersion: 0, title: 'Routine yard care', customerSummary: 'Visible summary.',
+      includedScope: ['Mow'], exclusions: ['Trees'], cadenceCode: 'weekly',
+      cadenceDetail: 'Every Tuesday', arrivalPolicy: 'Confirm first.',
+      weatherPolicy: 'Weather notice.', cancellationPolicy: '24 hours.',
+      proofExpectation: 'Completion note.', priceAmountMinor: 9000, priceBasis: 'per_visit',
+      currencyCode: 'USD', expiresAtEpochSeconds: 1_800_000_000,
+    }, 'proposal-key');
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body).toMatchObject({
+      token: 'secret', expected_proposal_version: 0, included_scope: ['Mow'],
+      price_amount_minor: 9000, idempotency_key: 'proposal-key',
+    });
+    expect(body).not.toHaveProperty('route_fit');
+    expect(body).not.toHaveProperty('margin');
   });
 
   it('sends provider assessment mutations with token, current version, and separate visibility bodies', async () => {

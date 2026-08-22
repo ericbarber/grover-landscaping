@@ -150,6 +150,9 @@ test('a verified owner creates a private profile and reconfirms a changed addres
     contentType: 'application/json',
     body: '[]',
   }));
+  await page.route('**/owner-properties/owner_property_1/initial-service-proposals', (route) => route.fulfill({
+    contentType: 'application/json', body: '[]',
+  }));
   await page.route('**/owner-properties/owner_property_1/intake-media/*/complete', async (route) => {
     const mediaId = route.request().url().split('/').at(-2);
     const replacement = mediaRecords.find((record) => record.media_id === mediaId);
@@ -350,6 +353,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
   await page.route('**/owner-properties/owner_property_2/provider-connection-progress', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(progress()) }));
   await page.route('**/owner-properties/owner_property_2/provider-disclosure-receipts', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(receipts) }));
   await page.route('**/owner-properties/owner_property_2/provider-assessments', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
+  await page.route('**/owner-properties/owner_property_2/initial-service-proposals', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
   await page.route('**/owner-properties/owner_property_2/provider-invitations/invitation_2/disclosure-review', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify({
       review_version: 'review-v1', invitation_id: 'invitation_2', property_name: 'Home', provider_organization_name: 'Desert Green Care',
@@ -494,6 +498,9 @@ test('an owner confirms an assessment window and uses only the shared conversati
   await page.route('**/owner-properties/owner_property_3/provider-assessments', (route) => route.fulfill({
     contentType: 'application/json', body: JSON.stringify([assessment]),
   }));
+  await page.route('**/owner-properties/owner_property_3/initial-service-proposals', (route) => route.fulfill({
+    contentType: 'application/json', body: '[]',
+  }));
   await page.route('**/owner-properties/owner_property_3/provider-assessments/assessment_3/messages', async (route) => {
     if (route.request().method() === 'GET') {
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify(messages) });
@@ -536,5 +543,75 @@ test('an owner confirms an assessment window and uses only the shared conversati
   await page.getByRole('button', { name: 'Send assessment message' }).click();
   await expect(page.getByText('Your assessment message was saved for this provider. It did not make a service decision.')).toBeVisible();
   await expect(page.getByText('Should I leave the side gate unlocked?')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('an owner reviews and explicitly accepts an exact initial-service proposal version', async ({ page }) => {
+  const property = {
+    property_id: 'owner_property_4', owner_user_id: 'local-development-user', display_name: 'Home',
+    address_line_1: '125 Oak Street', address_line_2: '', city: 'Phoenix', region: 'AZ',
+    postal_code: '85004', country_code: 'US', coarse_area: 'Central Phoenix',
+    address_status: 'owner_confirmed', authority_attested: true, status: 'draft', version: 1, persisted: true,
+  };
+  const assessment = {
+    assessment_id: 'assessment_4', invitation_id: 'invitation_4', property_id: 'owner_property_4',
+    organization_id: 'organization_4', disclosure_grant_id: 'grant_4', assessment_method: 'remote',
+    status: 'completed', outcome_reason_code: null,
+    owner_visible_summary: 'Routine service scope is ready for proposal review.', version: 3, persisted: true,
+  };
+  let proposal = {
+    proposal_id: 'proposal_4', assessment_id: 'assessment_4', invitation_id: 'invitation_4',
+    property_id: 'owner_property_4', organization_id: 'organization_4', disclosure_grant_id: 'grant_4',
+    proposal_version: 2, status: 'sent', title: 'Every-two-week yard care',
+    customer_summary: 'Routine front and back yard care based on the completed assessment.',
+    included_scope: ['Mow and edge turf', 'Blow hardscape clean'],
+    exclusions: ['Tree work above eight feet'], cadence_code: 'every_two_weeks',
+    cadence_detail: 'One visit every two weeks', arrival_policy: 'Service day confirmed first.',
+    weather_policy: 'Unsafe weather may move the visit after notice.',
+    cancellation_policy: 'Cancel at least 24 hours before a confirmed visit.',
+    proof_expectation: 'A completion note and customer-safe photos follow each visit.',
+    price_amount_minor: 12000, price_basis: 'per_visit', currency_code: 'USD',
+    annualized_monthly_minor: 26000, revision_note: 'Updated after confirming the turf area.',
+    issued_at_epoch_seconds: Math.floor(Date.now() / 1000),
+    expires_at_epoch_seconds: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    persisted: true,
+  };
+
+  await page.route('**/auth/config', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }) }));
+  await page.route('**/me/access', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ user_id: 'local-development-user', username: 'Morgan Reyes', verified_email: 'owner@example.com', claim_roles: [], memberships: [] }) }));
+  await page.route('**/owner-workspace', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ owner_user_id: 'local-development-user', verified_email: 'owner@example.com', display_name: 'Morgan Reyes', status: 'active', persisted: true }) }));
+  await page.route('**/owner-properties', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([property]) }));
+  await page.route('**/owner-properties/owner_property_4/yard-brief', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ brief_id: 'brief_4', owner_user_id: 'local-development-user', property_id: 'owner_property_4', version: 2, status: 'ready', yard_areas: ['Front yard', 'Back yard'], care_goals: ['Routine upkeep'], cadence_preference: 'every_two_weeks', considerations: '', author_source: 'yard_owner', persisted: true }) }));
+  await page.route('**/owner-properties/owner_property_4/intake-media', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
+  await page.route('**/owner-properties/owner_property_4/provider-connection-progress', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([{ invitation_id: 'invitation_4', provider_name: 'Desert Bloom Landscaping', invitation_status: 'responded', delivery_status: 'delivered', progress_stage: 'assessment_access_approved', status_label: 'Assessment complete', owner_action_required: true, next_action: 'review_proposal', latest_response_action: 'express_interest', response_label: 'Proposal sent', expires_at_epoch_seconds: proposal.expires_at_epoch_seconds, responded_at_epoch_seconds: proposal.issued_at_epoch_seconds, persisted: true }]) }));
+  await page.route('**/owner-properties/owner_property_4/provider-disclosure-receipts', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
+  await page.route('**/owner-properties/owner_property_4/provider-assessments', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([assessment]) }));
+  await page.route('**/owner-properties/owner_property_4/provider-assessments/assessment_4/messages', (route) => route.fulfill({ contentType: 'application/json', body: '[]' }));
+  await page.route('**/owner-properties/owner_property_4/initial-service-proposals', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify([proposal]) }));
+  await page.route('**/owner-properties/owner_property_4/initial-service-proposals/proposal_4/decision', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      action: 'accept', expected_proposal_version: 2,
+      affirmation_text_version: 'initial_service_proposal_acceptance_v1',
+    });
+    expect(body.reason_code).toBeUndefined();
+    proposal = { ...proposal, status: 'accepted' };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ decision_id: 'decision_4', proposal_id: 'proposal_4', action: 'accept', reason_code: null, customer_safe_note: null, proposal_version: 2, affirmation_text_version: 'initial_service_proposal_acceptance_v1', decided_at_epoch_seconds: Math.floor(Date.now() / 1000), acceptance_snapshot_id: 'snapshot_4', acceptance_snapshot_sha256: 'a'.repeat(64), persisted: true }) });
+  });
+
+  await page.goto('/app/yard-owner');
+  await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Compare the exact offer before deciding' })).toBeVisible();
+  await expect(page.getByText('$120.00 per visit')).toBeVisible();
+  await expect(page.getByText('Tree work above eight feet')).toBeVisible();
+  await expect(page.getByText('Updated after confirming the turf area.')).toBeVisible();
+  await page.getByRole('button', { name: 'Review and accept' }).click();
+  const affirmation = page.getByLabel(/I accept this exact proposal for provider setup/);
+  await expect(page.getByRole('button', { name: 'Accept this exact version' })).toBeDisabled();
+  await affirmation.check();
+  await page.getByRole('button', { name: 'Accept this exact version' }).click();
+  await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
+  await expect(page.getByText(/Accepted for provider setup only/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

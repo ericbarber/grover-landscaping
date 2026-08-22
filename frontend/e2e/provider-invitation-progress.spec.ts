@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/health/ready', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ status: 'ready', service: 'grover-landscaping-api' }),
+  }));
+});
+
 test('a checked recipient loads status without retaining the bearer fragment', async ({ page }) => {
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
@@ -62,6 +69,7 @@ test('a checked recipient loads status without retaining the bearer fragment', a
 test('a provider sees only owner-approved assessment details and loses future access after revocation', async ({ page }) => {
   let accessActive = true;
   let assessment: Record<string, unknown> | null = null;
+  let proposal: Record<string, unknown> | null = null;
   const messages: Record<string, unknown>[] = [];
   const privateNotes: Record<string, unknown>[] = [];
   await page.route('**/auth/config', (route) => route.fulfill({
@@ -116,6 +124,7 @@ test('a provider sees only owner-approved assessment details and loses future ac
         access_considerations: 'Keep the side gate closed for the dog.',
         authority_boundary: 'Assessment access does not approve pricing, schedule service, assign a crew, or authorize work.',
         assessment, customer_safe_messages: messages, private_notes: privateNotes,
+        initial_service_proposal: proposal,
       }),
     });
   });
@@ -155,6 +164,30 @@ test('a provider sees only owner-approved assessment details and loses future ac
     privateNotes.push(created);
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(created) });
   });
+  await page.route('**/provider-assessments/assessment_2/initial-service-proposals', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      token: 'selective_access_secret', expected_proposal_version: 0,
+      included_scope: ['Mow and edge turf'], exclusions: ['Tree work above eight feet'],
+      price_amount_minor: 12000, price_basis: 'per_visit', currency_code: 'USD',
+    });
+    expect(body).not.toHaveProperty('route_fit');
+    proposal = {
+      proposal_id: 'proposal_2', assessment_id: 'assessment_2', invitation_id: 'invitation_2',
+      property_id: 'property_2', organization_id: 'organization_2',
+      disclosure_grant_id: 'owner_disclosure_grant_2', proposal_version: 1,
+      status: 'sent', title: body.title, customer_summary: body.customer_summary,
+      included_scope: body.included_scope, exclusions: body.exclusions,
+      cadence_code: body.cadence_code, cadence_detail: body.cadence_detail,
+      arrival_policy: body.arrival_policy, weather_policy: body.weather_policy,
+      cancellation_policy: body.cancellation_policy, proof_expectation: body.proof_expectation,
+      price_amount_minor: body.price_amount_minor, price_basis: body.price_basis,
+      currency_code: body.currency_code, annualized_monthly_minor: 26000,
+      revision_note: null, issued_at_epoch_seconds: 1_800_000_000,
+      expires_at_epoch_seconds: body.expires_at_epoch_seconds, persisted: true,
+    };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(proposal) });
+  });
 
   await page.goto('/app/provider-invitation#invitation=selective_access_secret');
   await expect(page).toHaveURL(/\/app\/provider-invitation$/);
@@ -181,6 +214,15 @@ test('a provider sees only owner-approved assessment details and loses future ac
   await page.getByLabel('Customer-safe outcome').fill('Remote assessment complete; proposal preparation may begin separately.');
   await page.getByRole('button', { name: 'Complete assessment' }).click();
   await expect(page.getByText('Remote assessment complete; proposal preparation may begin separately.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Turn the completed assessment into a customer-safe offer' })).toBeVisible();
+  await page.getByLabel('Proposal title').fill('Every-two-week yard care');
+  await page.getByLabel('Price (USD)').fill('120.00');
+  await page.getByLabel('Customer summary').fill('Routine front and back yard care based on the completed assessment.');
+  await page.getByLabel(/Included scope/).fill('Mow and edge turf');
+  await page.getByLabel(/Exclusions/).fill('Tree work above eight feet');
+  await page.getByRole('button', { name: 'Send proposal to owner' }).click();
+  await expect(page.getByText('Proposal version 1 was sent to the owner. Nothing was scheduled or activated.')).toBeVisible();
+  await expect(page.getByText('$120.00 per visit')).toBeVisible();
 
   accessActive = false;
   await page.getByRole('button', { name: 'Check invitation progress' }).click();

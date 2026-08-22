@@ -8,12 +8,14 @@ import {
   deleteOwnerIntakeMedia,
   decideOwnerProviderAssessmentWindow,
   createOwnerProviderAssessmentMessage,
+  decideOwnerInitialServiceProposal,
   fetchOwnerIntakeMedia,
   fetchOwnerProviderAssessmentMessages,
   fetchOwnerProviderAssessments,
   fetchOwnerProviderConnectionProgress,
   fetchOwnerProviderDisclosureReceipts,
   fetchOwnerProviderDisclosureReview,
+  fetchOwnerInitialServiceProposals,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
@@ -231,6 +233,44 @@ describe('Yard Owner acquisition API client', () => {
       customer_safe_body: 'Should I unlock the side gate?',
       expected_assessment_version: 3,
       idempotency_key: 'owner-message-1',
+    });
+  });
+
+  it('maps immutable proposals and sends an exact versioned acceptance', async () => {
+    const proposalApi = {
+      proposal_id: 'proposal_1', assessment_id: 'assessment_1', invitation_id: 'invitation_1',
+      property_id: 'property_1', organization_id: 'organization_1', disclosure_grant_id: 'grant_1',
+      proposal_version: 2, status: 'sent', title: 'Routine yard care',
+      customer_summary: 'Visible summary.', included_scope: ['Mow'], exclusions: ['Trees'],
+      cadence_code: 'every_two_weeks', cadence_detail: 'Every other Tuesday',
+      arrival_policy: 'Confirm first.', weather_policy: 'Weather notice.',
+      cancellation_policy: '24 hours.', proof_expectation: 'Completion note.',
+      price_amount_minor: 12000, price_basis: 'per_visit', currency_code: 'USD',
+      annualized_monthly_minor: 26000, revision_note: 'Updated price.',
+      issued_at_epoch_seconds: 1_799_000_000, expires_at_epoch_seconds: 1_800_000_000,
+      persisted: true,
+    };
+    const decisionApi = {
+      decision_id: 'decision_1', proposal_id: 'proposal_1', action: 'accept',
+      proposal_version: 2, affirmation_text_version: 'initial_service_proposal_acceptance_v1',
+      decided_at_epoch_seconds: 1_799_500_000, acceptance_snapshot_id: 'snapshot_1',
+      acceptance_snapshot_sha256: 'a'.repeat(64), persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([proposalApi]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(decisionApi), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const [proposal] = await fetchOwnerInitialServiceProposals('property_1');
+    expect(proposal).toEqual(expect.objectContaining({
+      proposalVersion: 2, revisionNote: 'Updated price.', annualizedMonthlyMinor: 26000,
+    }));
+    await decideOwnerInitialServiceProposal('property_1', proposal, 'accept', {
+      customerSafeNote: 'Please contact me first.',
+      affirmationTextVersion: 'initial_service_proposal_acceptance_v1',
+    }, 'decision-key');
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
+      action: 'accept', expected_proposal_version: 2, customer_safe_note: 'Please contact me first.',
+      affirmation_text_version: 'initial_service_proposal_acceptance_v1', idempotency_key: 'decision-key',
     });
   });
 

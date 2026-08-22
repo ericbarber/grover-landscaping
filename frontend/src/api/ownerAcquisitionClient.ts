@@ -1,6 +1,12 @@
 import { apiRequestError } from './apiError';
 import { authenticatedFetch } from './authenticatedFetch';
 import { API_BASE_URL } from './baseUrl';
+import type {
+  InitialServiceProposal,
+  InitialServiceProposalDecision,
+  InitialServiceProposalDecisionAction,
+  InitialServiceProposalStatus,
+} from '../domain/initialServiceProposals';
 
 interface ApiOwnerWorkspace {
   owner_user_id: string;
@@ -154,6 +160,49 @@ interface ApiOwnerProviderAssessmentMessage {
   customer_safe_body: string;
   assessment_version_snapshot: number;
   created_at_epoch_seconds: number;
+  persisted: boolean;
+}
+
+interface ApiInitialServiceProposal {
+  proposal_id: string;
+  assessment_id: string;
+  invitation_id: string;
+  property_id: string;
+  organization_id: string;
+  disclosure_grant_id: string;
+  proposal_version: number;
+  status: InitialServiceProposalStatus;
+  title: string;
+  customer_summary: string;
+  included_scope: string[];
+  exclusions: string[];
+  cadence_code: InitialServiceProposal['cadenceCode'];
+  cadence_detail: string;
+  arrival_policy: string;
+  weather_policy: string;
+  cancellation_policy: string;
+  proof_expectation: string;
+  price_amount_minor: number;
+  price_basis: InitialServiceProposal['priceBasis'];
+  currency_code: string;
+  annualized_monthly_minor?: number | null;
+  revision_note?: string | null;
+  issued_at_epoch_seconds: number;
+  expires_at_epoch_seconds: number;
+  persisted: boolean;
+}
+
+interface ApiInitialServiceProposalDecision {
+  decision_id: string;
+  proposal_id: string;
+  action: InitialServiceProposalDecisionAction;
+  reason_code?: string | null;
+  customer_safe_note?: string | null;
+  proposal_version: number;
+  affirmation_text_version?: string | null;
+  decided_at_epoch_seconds: number;
+  acceptance_snapshot_id?: string | null;
+  acceptance_snapshot_sha256?: string | null;
   persisted: boolean;
 }
 
@@ -470,6 +519,55 @@ function mapProviderAssessmentMessage(
   };
 }
 
+function mapInitialServiceProposal(value: ApiInitialServiceProposal): InitialServiceProposal {
+  return {
+    proposalId: value.proposal_id,
+    assessmentId: value.assessment_id,
+    invitationId: value.invitation_id,
+    propertyId: value.property_id,
+    organizationId: value.organization_id,
+    disclosureGrantId: value.disclosure_grant_id,
+    proposalVersion: value.proposal_version,
+    status: value.status,
+    title: value.title,
+    customerSummary: value.customer_summary,
+    includedScope: value.included_scope,
+    exclusions: value.exclusions,
+    cadenceCode: value.cadence_code,
+    cadenceDetail: value.cadence_detail,
+    arrivalPolicy: value.arrival_policy,
+    weatherPolicy: value.weather_policy,
+    cancellationPolicy: value.cancellation_policy,
+    proofExpectation: value.proof_expectation,
+    priceAmountMinor: value.price_amount_minor,
+    priceBasis: value.price_basis,
+    currencyCode: value.currency_code,
+    annualizedMonthlyMinor: value.annualized_monthly_minor ?? undefined,
+    revisionNote: value.revision_note ?? undefined,
+    issuedAtEpochSeconds: value.issued_at_epoch_seconds,
+    expiresAtEpochSeconds: value.expires_at_epoch_seconds,
+    persisted: value.persisted,
+  };
+}
+
+function mapInitialServiceProposalDecision(
+  value: ApiInitialServiceProposalDecision,
+): InitialServiceProposalDecision {
+  return {
+    decisionId: value.decision_id,
+    proposalId: value.proposal_id,
+    action: value.action,
+    reasonCode: value.reason_code ?? undefined,
+    customerSafeNote: value.customer_safe_note ?? undefined,
+    proposalVersion: value.proposal_version,
+    affirmationTextVersion: value.affirmation_text_version ?? undefined,
+    decidedAtEpochSeconds: value.decided_at_epoch_seconds,
+    acceptanceSnapshotId: value.acceptance_snapshot_id ?? undefined,
+    acceptanceSnapshotSha256: value.acceptance_snapshot_sha256 ?? undefined,
+    persisted: value.persisted,
+  };
+}
+
 async function ownerRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await authenticatedFetch(`${API_BASE_URL}${path}`, init);
   if (!response.ok) {
@@ -623,6 +721,46 @@ export async function createOwnerProviderAssessmentMessage(
   );
   return mapProviderAssessmentMessage(
     await response.json() as ApiOwnerProviderAssessmentMessage,
+  );
+}
+
+export async function fetchOwnerInitialServiceProposals(
+  propertyId: string,
+): Promise<InitialServiceProposal[]> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals`,
+  );
+  return ((await response.json()) as ApiInitialServiceProposal[]).map(mapInitialServiceProposal);
+}
+
+export async function decideOwnerInitialServiceProposal(
+  propertyId: string,
+  proposal: InitialServiceProposal,
+  action: InitialServiceProposalDecisionAction,
+  options: {
+    reasonCode?: string;
+    customerSafeNote?: string;
+    affirmationTextVersion?: string;
+  },
+  idempotencyKey: string,
+): Promise<InitialServiceProposalDecision> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals/${encodeURIComponent(proposal.proposalId)}/decision`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        expected_proposal_version: proposal.proposalVersion,
+        reason_code: options.reasonCode,
+        customer_safe_note: options.customerSafeNote,
+        affirmation_text_version: options.affirmationTextVersion,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  return mapInitialServiceProposalDecision(
+    await response.json() as ApiInitialServiceProposalDecision,
   );
 }
 

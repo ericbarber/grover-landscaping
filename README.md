@@ -7,17 +7,19 @@ The project is built as a Rust + React application with local-first and remote-f
 ## Delivery Status
 
 Repository-owned Yard Owner pilot assurance is complete through Phase 3E, and
-production adoption has advanced through assessment interfaces and versioned
-initial-service proposal APIs. The current build includes private property
+production adoption has advanced through assessment and versioned initial-
+service proposal interfaces. The current build includes private property
 intake, known-provider invitations, provider organization claims, administrative
 review and appeals, explicit disclosure grants and revocation, owner/provider
 connection progress, remote/on-site assessments with separated communication,
-and immutable proposal publication and owner-decision persistence.
+and immutable proposal publication, revision, reload, neutral owner history, and
+exact-version owner decisions.
 
 The public site now carries four complete persona journeys and reuses the
 prototype-aligned “Today’s operation” dashboard in the landscaping-company hero
-and product tour. The next implementable product slice is the owner/provider
-proposal interface; explicit activation and relationship continuity follow.
+and product tour. The next implementable product slice is separate proposal
+questions and change requests; explicit activation and relationship continuity
+follow.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -402,10 +404,14 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Reviewing, granting, auditing, and revoking individual disclosure capabilities
 - Tracking connection progress with explicit recovery paths for owners and providers
 - Reviewing and coordinating owner/provider assessments without leaking provider-private notes
+- Authoring, revising, and reloading customer-safe initial-service proposals
+  after a completed assessment
+- Reviewing immutable proposal history and explicitly accepting or declining one
+  exact current version without activating service
 
-The next frontend acquisition slice adopts the delivered initial-service proposal
-APIs. Until that interface ships, the API foundation must not be described as a
-complete owner proposal experience. See the
+The next acquisition slice defines proposal questions and change requests as a
+separate persisted conversation; assessment messages and decision notes are not
+substitutes for that contract. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment

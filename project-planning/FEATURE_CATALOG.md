@@ -257,9 +257,13 @@ here does not mean every capability has been delivered.
 - Authenticated acquisition-proposal lifecycle APIs for verified-provider
   publication/revision and owner-scoped list, detail, and exact-version
   decisions with explicit route authorization and fail-closed error mapping
-- Planned production proposal interfaces for provider authoring/revision and
-  neutral owner comparison/decision, followed by separately persisted questions,
-  change requests, and explicit accepted-proposal activation
+- Production provider proposal authoring/revision with authoritative latest-
+  version reload, customer-safe/private-data separation, and immutable history
+- Production neutral owner proposal comparison and exact-version accept/decline
+  with explicit affirmation, expiration handling, and accepted-but-unactivated
+  guidance
+- Planned separately persisted proposal questions, change requests, and explicit
+  accepted-proposal activation
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

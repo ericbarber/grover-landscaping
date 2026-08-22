@@ -52,25 +52,19 @@
 
 ## Next implementable slice
 
-Build the owner and provider initial-service proposal interfaces against the
-delivered Phase 4B2a APIs and the validated acquisition prototype:
+Phase 4B3 owner/provider initial-service proposal interfaces are delivered
+against the Phase 4B2a APIs. The next slice is Phase 4B2b proposal collaboration:
 
-1. Add typed client mapping for provider publication/revision and owner
-   list/detail/exact-version decisions.
-2. Let a provider publish only after an authorized completed assessment and keep
-   provider-private production basis separate from owner-visible scope.
-3. Let an owner compare immutable versions, inspect scope, exclusions, cadence,
-   price, terms, expiry, and decide with explicit confirmation.
-4. Preserve loading, empty, unavailable, expired, stale/conflict, retry, replay,
-   and accepted-but-not-activated states.
-5. Integrate the owner view into `/app/yard-owner` and the provider view into the
-   recipient assessment workspace without implying scheduling, payment, service
-   activation, or crew assignment.
-6. Add unit, TypeScript, production-build, and responsive owner/provider browser
-   coverage, then update `PLAN.md` and this handoff.
-
-Proposal questions and change requests remain a separate persistence contract;
-do not store them as decisions, assessment messages, or generic audit notes.
+1. Define owner question and change-request records separately from decisions,
+   assessment conversation, and minimized lifecycle audit.
+2. Preserve proposal-version context, author identity, customer-safe content,
+   idempotency, tenant/owner isolation, and explicit no-decision meaning.
+3. Add provider response and revised-version linkage without allowing a question
+   or change request to accept, decline, activate, schedule, or assign work.
+4. Expose the contract through authenticated routes and both acquisition
+   workspaces with conflict, expiry, revocation, unavailable, and retry recovery.
+5. Validate persistence, API policy, client mapping, responsive browser behavior,
+   and non-activation side effects before beginning Phase 4C.
 
 ## Read first
 

@@ -75,7 +75,7 @@ The approved experience is defined by:
 | 4B1b | Delivered | Immutable proposal repository versions, expiration, exact replay/conflict, owner isolation, accepted-but-unactivated snapshots, minimized events, and PostgreSQL coverage |
 | 4B2a | Delivered | Authenticated provider publish/revise and owner list/detail/exact-version decision APIs with explicit lifecycle and outage mapping |
 | 4B2b | Planned | Proposal questions and change requests stored separately from decisions, assessment messages, and minimized lifecycle events |
-| 4B3 | Next | Responsive provider authoring/revision and neutral Yard Owner comparison/decision interfaces against the delivered APIs |
+| 4B3 | Delivered | Responsive provider authoring/revision with latest-version reload and neutral Yard Owner immutable-history comparison/exact-version decisions against the delivered APIs |
 | 4C–D | Planned | Activation and governed pilot convergence |
 
 ## Delivery principles
@@ -280,7 +280,8 @@ version returns to owner confirmation without scheduling service.
 Phase 4B1 and 4B2a deliver immutable proposal persistence plus authenticated
 provider publication/revision and owner list/detail/exact-version decisions.
 Acceptance creates an accepted-but-unactivated snapshot only. Phase 4B3
-production interfaces are the current implementation slice. Phase 4B2b proposal
+production interfaces are delivered with provider reload/revision, neutral owner
+history and decision confirmation, and explicit no-scheduling boundaries. Phase 4B2b proposal
 questions/change requests remain a separate contract and must not be represented
 as decisions or assessment messages.
 
@@ -340,11 +341,10 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 4B3 — provider and owner proposal interfaces against the delivered APIs.
-2. Phase 4B2b — separately contracted proposal questions/change requests.
-3. Phase 4C — explicit accepted-proposal activation and first-visit confirmation.
-4. Phase 4D/6 — relationship continuity and governed known-provider convergence.
-5. Phase 5 curated discovery only after eligibility, density, abuse, support, and
+1. Phase 4B2b — separately contracted proposal questions/change requests.
+2. Phase 4C — explicit accepted-proposal activation and first-visit confirmation.
+3. Phase 4D/6 — relationship continuity and governed known-provider convergence.
+4. Phase 5 curated discovery only after eligibility, density, abuse, support, and
    marketplace-governance gates have accountable owners.
 
 Phase 3 repository behavior is complete except for the 3A5 live authenticated

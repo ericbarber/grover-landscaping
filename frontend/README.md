@@ -66,6 +66,13 @@ When the API is unavailable, supported surfaces use explicit seeded or browser-
 local fallbacks. A fallback is never meant to imply that a production write was
 persisted.
 
+The Yard Owner and recipient-provider acquisition routes are persistence-backed.
+After a completed assessment, the provider workspace can publish or revise a
+customer-safe initial-service proposal and reload its latest immutable version.
+The Yard Owner workspace presents neutral proposal history and requires an
+exact-version confirmation to accept or decline; acceptance does not schedule a
+visit, collect payment, or assign a crew.
+
 ## Validation
 
 ```bash
