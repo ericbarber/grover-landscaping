@@ -1,7 +1,7 @@
 import type { ReactNode, SVGProps } from 'react';
 
 export type WorkspaceIconName = 'home' | 'route' | 'jobs' | 'job' | 'manage'
-  | 'customer' | 'back' | 'forward' | 'check' | 'attention';
+  | 'customer' | 'back' | 'forward' | 'check' | 'attention' | 'info';
 
 export function WorkspaceIcon({
   name,
@@ -25,6 +25,7 @@ export function WorkspaceIcon({
     forward: <><path d="m9.5 5 7 7-7 7" /><path d="M16 12H5" /></>,
     check: <path d="m5 12 4.5 4.5L19 7" />,
     attention: <><path d="M12 4 3.5 20h17L12 4Z" /><path d="M12 9v5M12 17.5h.01" /></>,
+    info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5h.01" /></>,
   };
 
   return (

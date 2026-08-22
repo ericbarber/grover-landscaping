@@ -113,6 +113,7 @@ import {
   WorkspaceHomePanel,
 } from './components/WorkspaceHomePanel';
 import { GroverBrand } from './components/GroverBrand';
+import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -319,11 +320,16 @@ function managerActivityTimestamp() {
 
 function StatusBadge({ status }: { status: YardCareJob['status'] }) {
   const label = status.replace('_', ' ');
+  const tone = status === 'completed'
+    ? 'success'
+    : status === 'in_progress'
+      ? 'warning'
+      : 'info';
 
   return (
-    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+    <WorkspaceStatusBadge className="uppercase tracking-wide" tone={tone}>
       {label}
-    </span>
+    </WorkspaceStatusBadge>
   );
 }
 
@@ -2771,9 +2777,13 @@ export function App() {
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
             {jobsUnavailable ? (
-              <p className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
-                Persisted field work could not be loaded. Assigned jobs remain hidden until API readiness recovers.
-              </p>
+              <WorkspaceStatusNotice
+                className="mt-2"
+                compact
+                detail="Assigned jobs remain hidden until API readiness recovers."
+                title="Persisted field work could not be loaded."
+                tone="danger"
+              />
             ) : null}
             {offlineJobMutations.length > 0 && (
               <div className="mt-2 rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900" role="status">

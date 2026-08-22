@@ -30,6 +30,8 @@ not currently depend on React Router.
 - Role-filtered Home, field, customer, manager, and support destinations
 - Shared outlined SVG workspace icons with phone bottom navigation, a fixed
   tablet rail, and handoff to the desktop shell at the large breakpoint
+- Shared semantic notice and status-pill primitives for neutral, information,
+  success, warning, and dangerous authenticated workflow feedback
 - Mobile route, jobs, checklist, photos, completion, offline queue, replay, and
   diagnostics behavior
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
@@ -108,7 +110,7 @@ baseline when those executables are unavailable.
 - Keep customer-safe projections separate from provider-private operational data.
 - Reuse the canonical theme, wordmark, focus, controls, and shell materials in
   `src/index.css` and shared components, including `WorkspaceIcon` for
-  authenticated navigation and status symbols.
+  authenticated navigation and `WorkspaceStatus` for operational feedback.
 - Treat `design/prototypes/` as review code, not a second production component
   library; adopt approved behavior deliberately in React.
 - Add responsive browser coverage for workflow/navigation changes and focused

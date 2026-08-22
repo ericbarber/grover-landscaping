@@ -2,6 +2,7 @@ import type { WorkspacePersona } from '../domain/workspacePersona';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
 import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
+import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 const viewDescriptions: Record<MobileWorkspaceView, string> = {
   home: 'Your signed-in workspace summary',
@@ -215,45 +216,21 @@ export function WorkspaceHomePanel({
           <span className="font-semibold text-slate-600">
             {assignedJobCount} {progressLanguage.total}
           </span>
-          <span className={`rounded-full px-2 py-1 font-bold ${
-            pendingChangeCount > 0
-              ? 'bg-amber-100 text-amber-900'
-              : 'bg-emerald-100 text-emerald-800'
-          }`}>
+          <WorkspaceStatusBadge tone={pendingChangeCount > 0 ? 'warning' : 'success'}>
             {pendingChangeCount > 0 ? `${pendingChangeCount} waiting to sync` : 'Everything synced'}
-          </span>
+          </WorkspaceStatusBadge>
         </div>
       </article>
 
-      <aside className={`rounded-2xl border p-4 ${
-        priorityStatus.tone === 'attention'
-          ? 'border-amber-300 bg-amber-50'
+      <WorkspaceStatusNotice
+        detail={priorityStatus.detail}
+        title={priorityStatus.title}
+        tone={priorityStatus.tone === 'attention'
+          ? 'warning'
           : priorityStatus.tone === 'complete'
-            ? 'border-emerald-300 bg-emerald-50'
-            : 'border-sky-200 bg-sky-50'
-      }`} role="status">
-        <div className="flex items-start gap-3">
-          <span
-            aria-hidden="true"
-            className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black ${
-              priorityStatus.tone === 'attention'
-                ? 'bg-amber-200 text-amber-950'
-                : priorityStatus.tone === 'complete'
-                  ? 'bg-emerald-200 text-emerald-950'
-                  : 'bg-sky-200 text-sky-950'
-            }`}
-          >
-            <WorkspaceIcon
-              className="size-5"
-              name={priorityStatus.tone === 'attention' ? 'attention' : 'check'}
-            />
-          </span>
-          <div>
-            <p className="text-sm font-black text-slate-950">{priorityStatus.title}</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">{priorityStatus.detail}</p>
-          </div>
-        </div>
-      </aside>
+            ? 'success'
+            : 'info'}
+      />
 
       {primaryAction ? (
         <button

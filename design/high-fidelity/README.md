@@ -49,8 +49,8 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Finish the shared authenticated shell’s outlined icons, operational density,
-   status primitives, and tablet rail behavior.
+1. Finish shared authenticated-shell operational density; outlined icons,
+   tablet rail behavior, and the reusable status contract are adopted.
 2. Adopt the crew-route hierarchy across the connected field journey.
 3. Converge the authenticated manager schedule, inspector, and Recovery workflow.
 4. Link each implementation slice back to the adoption matrix and validated

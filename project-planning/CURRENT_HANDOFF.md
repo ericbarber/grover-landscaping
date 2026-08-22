@@ -24,6 +24,10 @@
 - Authenticated navigation now uses one reusable outlined SVG icon family,
   retains phone bottom navigation, becomes a fixed left rail at tablet widths,
   and yields to the existing desktop shell at the large breakpoint.
+- Shared semantic notice and status-pill primitives now align Home priority and
+  sync feedback, job lifecycle badges, persisted-job failures, and route
+  storage/availability recovery across neutral, info, success, warning, and
+  danger tones.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -76,13 +80,14 @@ requests in the responsive workspaces. Mobile and desktop browser journeys
 preserve the no-operational-work boundary and the confirmed owner view links to
 the existing portal.
 
-The outlined-icon and tablet-navigation portion of shared authenticated-shell
-convergence is delivered. The next repository-owned slice is:
+The outlined-icon, tablet-navigation, and first shared-status portions of
+authenticated-shell convergence are delivered. The next repository-owned slice
+is:
 
-1. Extract reusable status primitives for operational feedback and synchronize
-   their tone and semantics across the authenticated Home and work areas.
-2. Tighten desktop information density without weakening role-based composition
+1. Tighten desktop information density without weakening role-based composition
    or the phone/tablet navigation behavior.
+2. Continue migrating workflow-local feedback to the shared status contract
+   inside each affected adoption slice.
 3. Validate the remaining Phase 0 gates, then begin field-workflow convergence.
 
 ## Read first
@@ -98,8 +103,8 @@ convergence is delivered. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest authenticated-shell slice passes all 419 frontend unit tests across
-103 files, TypeScript, the production build, and its phone/tablet/desktop
+The latest authenticated-shell slice passes all 421 frontend unit tests across
+104 files, TypeScript, the production build, and its phone/tablet/desktop
 responsive journey in both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

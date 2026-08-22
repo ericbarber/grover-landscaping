@@ -97,11 +97,17 @@ Current state:
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
   at tablet widths, retains the role-filtered navigation model, and yields to
   the existing desktop shell at the large breakpoint.
+- Shared operational status primitives now provide semantic neutral,
+  information, success, warning, and danger notices plus bounded status pills.
+  Authenticated Home sync/priority feedback, field job states, persisted-work
+  failures, and crew-route storage/availability recovery use the same icon,
+  color, spacing, and live-region contract.
 
 Next slice:
 
-- Finish shared authenticated-shell operational density and reusable status
-  primitives, then begin the approved field-execution hierarchy convergence.
+- Finish authenticated desktop operational density and migrate remaining
+  workflow-local feedback onto the shared status contract as each phase is
+  adopted, then begin the approved field-execution hierarchy convergence.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

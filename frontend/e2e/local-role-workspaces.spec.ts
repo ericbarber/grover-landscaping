@@ -163,6 +163,9 @@ test('authenticated navigation moves from a phone bar to a tablet rail', async (
   const navigation = page.getByRole('navigation', { name: 'Mobile workspace' });
   await expect(navigation).toBeVisible();
   await expect(navigation.locator('svg')).toHaveCount(5);
+  const homeStatus = page.getByRole('status').filter({ hasText: 'You’re clear for now' });
+  await expect(homeStatus).toBeVisible();
+  await expect(homeStatus.locator('svg')).toHaveCount(1);
 
   const phone = await navigation.evaluate((element) => {
     const box = element.getBoundingClientRect();
