@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Added a responsive interactive operations-planning demo to the landscaping-company hero, letting visitors assign an unplanned stop, expose an over-capacity crew, apply the suggested balance, and review updated stop/minute totals inside an explicit non-persistent preview boundary.
 - 2026-08-22: Made persona-specific public landing experiences the active UX priority and extended Yard Owner, property-manager, landscaping-company, and crew-lead views beyond the hero with tailored primary actions, previews, trust signals, outcome proof, capability sets, and final invitations while preserving both direct signup paths and adding route/switching/reflow coverage.
 - 2026-08-22: Separated the production Yard Owner acquisition journey into four independently rendered screens, made its progress header navigate available steps for review and editing, added explicit back/continue controls, and covered step isolation plus backward navigation in the browser suite.
 - 2026-08-22: Aligned the reciprocal provider-invitation entry with the production acquisition theme through the shared leaf lockup, editorial title, bone/paper/forest materials, controls, cards, data-boundary emphasis, and exact browser style checks without changing token removal, mailbox verification, disclosure, or assessment behavior.

@@ -10,6 +10,7 @@ import {
   MarketingLeadDialog,
 } from './MarketingLeadDialog';
 import { MarketingProductTour } from './MarketingProductTour';
+import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 import { GroverBrand } from './GroverBrand';
 
@@ -411,10 +412,10 @@ export function PublicLandingPage({
             </div>
           </div>
         </div>
-        <div className="relative min-h-[31rem] overflow-hidden bg-forest lg:min-h-[42rem] lg:rounded-bl-[5rem]">
+        <div className={`relative overflow-hidden bg-forest lg:min-h-[42rem] lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[47rem]' : 'min-h-[31rem]'}`}>
           <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" src="/brand/grover-landscape-home-hero.webp" />
           <span className="absolute inset-0 bg-gradient-to-t from-forest/35 via-transparent to-transparent" />
-          <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
+          {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[0.62rem] font-black uppercase tracking-[0.14em] text-slate-600">Illustrative product preview</p>
               <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-wide text-emerald-800">{activePersona.preview.status}</span>
@@ -429,7 +430,7 @@ export function PublicLandingPage({
               <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-emerald-700">{activePersona.preview.metaOne}</span>
               <span className="flex items-center gap-2 before:h-2 before:w-2 before:rounded-full before:bg-[#c99f55]">{activePersona.preview.metaTwo}</span>
             </div>
-          </article>
+          </article>}
         </div>
       </section>
 

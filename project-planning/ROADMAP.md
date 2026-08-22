@@ -9,7 +9,10 @@ The current UX priority is a complete persona-specific public landing
 experience. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
 signals, outcome stories, proof, capabilities, and final invitations instead of
-changing only first-screen copy. The source-controlled [`../design/`](../design/)
+changing only first-screen copy. The landscaping-company route now makes its
+operations promise tangible with an interactive, explicitly non-persistent hero
+planner that demonstrates stop assignment, workload risk, and suggested crew
+balancing. The source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,
 a browsable gallery, information architecture, state checklist, and decision log.

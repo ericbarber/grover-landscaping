@@ -15,6 +15,9 @@
 - Complete persona-specific landing narratives for yard owners, property
   managers, landscaping companies, and crew leads, spanning hero actions,
   previews, trust signals, outcomes, proof, capabilities, and final invitations
+- Interactive landscaping-company hero planner demonstrating stop assignment,
+  crew workload/capacity risk, suggested balancing, and an explicit
+  non-persistent preview boundary
 - Plan-Care-Proof product narrative and representative workspace preview
 - Responsive product capability and trust sections
 - Persona-specific demo, portfolio-discussion, and early-access conversion paths
