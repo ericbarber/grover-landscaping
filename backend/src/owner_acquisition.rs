@@ -848,6 +848,34 @@ pub struct OwnerProviderInitialServiceProposalMessageRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ActivateOwnerProviderRelationshipRequest {
+    pub expected_proposal_version: i64,
+    pub activation_affirmation_text_version: String,
+    pub owner_confirmed: bool,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderRelationshipActivationRecord {
+    pub activation_id: String,
+    pub owner_property_id: String,
+    pub invitation_id: String,
+    pub organization_id: String,
+    pub proposal_id: String,
+    pub proposal_version: i64,
+    pub acceptance_snapshot_id: String,
+    pub acceptance_snapshot_sha256: String,
+    pub customer_account_id: String,
+    pub customer_property_id: String,
+    pub owner_membership_id: String,
+    pub portal_access_id: String,
+    pub status: String,
+    pub closed_competing_invitation_count: i64,
+    pub activated_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -1152,6 +1180,16 @@ pub enum OwnerProviderInitialServiceProposalMessageWriteResult {
     Replayed(OwnerProviderInitialServiceProposalMessageRecord),
     NotFound,
     InvalidState(OwnerProviderInitialServiceProposalRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderRelationshipActivationResult {
+    Activated(OwnerProviderRelationshipActivationRecord),
+    Replayed(OwnerProviderRelationshipActivationRecord),
+    NotFound,
+    InvalidState,
     Conflict,
     Unavailable,
 }
@@ -3938,6 +3976,53 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn activate_owner_provider_relationship(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+        request: ActivateOwnerProviderRelationshipRequest,
+    ) -> OwnerProviderRelationshipActivationResult {
+        if !validate_owner_provider_relationship_activation_request(&request) {
+            return OwnerProviderRelationshipActivationResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderRelationshipActivationResult::Unavailable;
+        };
+        match activate_owner_provider_relationship(
+            pool,
+            owner_user_id,
+            property_id,
+            proposal_id,
+            request,
+        )
+        .await
+        {
+            Ok(PersistedRelationshipActivationOutcome::Activated(activation)) => {
+                OwnerProviderRelationshipActivationResult::Activated(activation)
+            }
+            Ok(PersistedRelationshipActivationOutcome::Replayed(activation)) => {
+                OwnerProviderRelationshipActivationResult::Replayed(activation)
+            }
+            Ok(PersistedRelationshipActivationOutcome::NotFound) => {
+                OwnerProviderRelationshipActivationResult::NotFound
+            }
+            Ok(PersistedRelationshipActivationOutcome::InvalidState) => {
+                OwnerProviderRelationshipActivationResult::InvalidState
+            }
+            Ok(PersistedRelationshipActivationOutcome::Conflict) => {
+                OwnerProviderRelationshipActivationResult::Conflict
+            }
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderRelationshipActivationResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "owner-provider relationship activation failed");
+                OwnerProviderRelationshipActivationResult::Unavailable
+            }
+        }
+    }
 }
 
 fn public_initial_service_proposal_message_outcome(
@@ -4599,6 +4684,8 @@ const OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT_VERSION: &str =
     "initial_service_proposal_acceptance_v1";
 const OWNER_PROVIDER_PROPOSAL_ACCEPTANCE_TEXT: &str =
     "I accept this exact proposal for provider setup. I understand that acceptance does not schedule service, collect payment, or assign a crew.";
+pub const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT_VERSION: &str =
+    "owner_provider_relationship_activation_v1";
 
 fn valid_proposal_text_items(items: &[String]) -> bool {
     (1..=40).contains(&items.len())
@@ -4685,6 +4772,16 @@ pub fn validate_initial_service_proposal_decision_request(
     request.expected_proposal_version > 0
         && action_valid
         && note_valid
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_owner_provider_relationship_activation_request(
+    request: &ActivateOwnerProviderRelationshipRequest,
+) -> bool {
+    request.expected_proposal_version > 0
+        && request.owner_confirmed
+        && request.activation_affirmation_text_version.trim()
+            == OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT_VERSION
         && valid_assessment_communication_key(&request.idempotency_key)
 }
 
@@ -5624,6 +5721,12 @@ fn owner_provider_connection_progress_entry(
 ) -> OwnerProviderConnectionProgressEntry {
     let (progress_stage, status_label, owner_action_required, next_action) = match invitation_status
     {
+        "activated" => (
+            "relationship_activated",
+            "Provider relationship activated",
+            false,
+            "complete_provider_setup",
+        ),
         "revoked" => (
             "withdrawn",
             "Invitation withdrawn",
@@ -5904,10 +6007,15 @@ async fn get_owner_provider_progress(
     let own_report = response_action.as_deref() == Some("report");
     let terminal = matches!(
         terminal_status,
-        "failed" | "expired" | "declined" | "opted_out" | "revoked"
+        "failed" | "expired" | "declined" | "opted_out" | "revoked" | "activated"
     );
     let progress = if terminal {
         let (stage, label, next_action) = match terminal_status {
+            "activated" => (
+                "relationship_activated",
+                "Provider relationship activated",
+                "complete_provider_setup",
+            ),
             "declined" => ("closed", "Response recorded and invitation closed", "none"),
             "opted_out" if own_report => {
                 ("closed", "Safety item routed and contact blocked", "none")
@@ -8457,6 +8565,14 @@ enum PersistedInitialServiceProposalMessageWriteOutcome {
     Replayed(OwnerProviderInitialServiceProposalMessageRecord),
     NotFound,
     InvalidState(OwnerProviderInitialServiceProposalRecord),
+    Conflict,
+}
+
+enum PersistedRelationshipActivationOutcome {
+    Activated(OwnerProviderRelationshipActivationRecord),
+    Replayed(OwnerProviderRelationshipActivationRecord),
+    NotFound,
+    InvalidState,
     Conflict,
 }
 
@@ -12030,6 +12146,465 @@ async fn decide_owner_provider_initial_service_proposal(
     ))
 }
 
+fn owner_provider_relationship_activation_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderRelationshipActivationRecord {
+    OwnerProviderRelationshipActivationRecord {
+        activation_id: row.get("activation_id"),
+        owner_property_id: row.get("owner_property_id"),
+        invitation_id: row.get("invitation_id"),
+        organization_id: row.get("organization_id"),
+        proposal_id: row.get("proposal_id"),
+        proposal_version: row.get("proposal_version"),
+        acceptance_snapshot_id: row.get("acceptance_snapshot_id"),
+        acceptance_snapshot_sha256: row.get("acceptance_snapshot_sha256"),
+        customer_account_id: row.get("customer_account_id"),
+        customer_property_id: row.get("customer_property_id"),
+        owner_membership_id: row.get("owner_membership_id"),
+        portal_access_id: row.get("portal_access_id"),
+        status: "provider_setup".to_string(),
+        closed_competing_invitation_count: row.get("closed_competing_invitation_count"),
+        activated_at_epoch_seconds: row.get("activated_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
+const OWNER_PROVIDER_RELATIONSHIP_ACTIVATION_SELECT: &str =
+    "SELECT activation.id AS activation_id, activation.owner_property_id,
+            activation.invitation_id, activation.organization_id,
+            activation.proposal_id, activation.proposal_version,
+            activation.acceptance_snapshot_id,
+            activation.acceptance_snapshot_sha256,
+            activation.customer_account_id, activation.customer_property_id,
+            activation.owner_membership_id, portal_access.id AS portal_access_id,
+            EXTRACT(EPOCH FROM activation.activated_at)::BIGINT AS activated_at_epoch_seconds,
+            (SELECT COUNT(*) FROM owner_provider_relationship_activation_events event
+             WHERE event.activation_id = activation.id
+               AND event.event_kind = 'competing_invitation_closed')::BIGINT
+                AS closed_competing_invitation_count,
+            activation.activation_affirmation_text_version,
+            activation.owner_confirmed, activation.idempotency_key
+     FROM owner_provider_relationship_activations activation
+     JOIN customer_portal_access_grants portal_access
+       ON portal_access.activation_id = activation.id";
+
+fn formatted_owner_service_address(row: &sqlx::postgres::PgRow) -> String {
+    let mut lines = vec![row.get::<String, _>("address_line_1")];
+    let address_line_2: String = row.get("address_line_2");
+    if !address_line_2.trim().is_empty() {
+        lines.push(address_line_2);
+    }
+    lines.push(format!(
+        "{}, {} {}",
+        row.get::<String, _>("city"),
+        row.get::<String, _>("region"),
+        row.get::<String, _>("postal_code")
+    ));
+    let country_code: String = row.get("country_code");
+    if country_code != "US" {
+        lines.push(country_code);
+    }
+    lines.join(", ")
+}
+
+async fn activate_owner_provider_relationship(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    proposal_id: &str,
+    request: ActivateOwnerProviderRelationshipRequest,
+) -> Result<PersistedRelationshipActivationOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtext($1))")
+        .bind(format!("owner-provider-activation:{property_id}"))
+        .execute(&mut *transaction)
+        .await?;
+
+    let replay_query = format!(
+        "{OWNER_PROVIDER_RELATIONSHIP_ACTIVATION_SELECT}
+         WHERE activation.owner_user_id = $1 AND activation.idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(owner_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_relationship_activation_from_row(&replay);
+        let exact = record.owner_property_id == property_id
+            && record.proposal_id == proposal_id
+            && record.proposal_version == request.expected_proposal_version
+            && replay.get::<String, _>("activation_affirmation_text_version")
+                == request.activation_affirmation_text_version.trim()
+            && replay.get::<bool, _>("owner_confirmed") == request.owner_confirmed;
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedRelationshipActivationOutcome::Replayed(record)
+        } else {
+            PersistedRelationshipActivationOutcome::Conflict
+        });
+    }
+
+    let eligibility = sqlx::query(
+        "SELECT proposal.id AS proposal_id, proposal.proposal_version,
+                proposal.status AS proposal_status, proposal.invitation_id,
+                proposal.assessment_id, proposal.organization_id,
+                decision.id AS decision_id, decision.action AS decision_action,
+                decision.owner_user_id AS decision_owner_user_id,
+                decision.proposal_version AS decision_proposal_version,
+                accepted.id AS acceptance_snapshot_id,
+                accepted.owner_user_id AS snapshot_owner_user_id,
+                accepted.property_id AS snapshot_property_id,
+                accepted.organization_id AS snapshot_organization_id,
+                accepted.assessment_id AS snapshot_assessment_id,
+                accepted.proposal_version AS snapshot_proposal_version,
+                accepted.snapshot AS accepted_snapshot_json,
+                accepted.snapshot_sha256 AS acceptance_snapshot_sha256,
+                property.display_name AS property_display_name,
+                property.address_line_1, property.address_line_2, property.city,
+                property.region, property.postal_code, property.country_code,
+                property.address_status, property.status AS property_status,
+                workspace.display_name AS owner_display_name,
+                workspace.verified_email AS owner_verified_email,
+                workspace.status AS workspace_status,
+                organization.status AS organization_status,
+                organization.organization_type,
+                invitation.owner_user_id AS invitation_owner_user_id,
+                invitation.property_id AS invitation_property_id,
+                invitation.status AS invitation_status
+         FROM owner_provider_initial_service_proposals proposal
+         JOIN owner_provider_initial_service_proposal_decisions decision
+           ON decision.proposal_id = proposal.id
+         JOIN owner_provider_initial_service_proposal_acceptance_snapshots accepted
+           ON accepted.proposal_id = proposal.id AND accepted.decision_id = decision.id
+         JOIN owner_properties property
+           ON property.id = proposal.property_id
+          AND property.owner_user_id = proposal.owner_user_id
+         JOIN owner_workspaces workspace
+           ON workspace.owner_user_id = proposal.owner_user_id
+         JOIN organizations organization ON organization.id = proposal.organization_id
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = proposal.invitation_id
+         WHERE proposal.id = $1 AND proposal.owner_user_id = $2
+           AND proposal.property_id = $3
+         FOR UPDATE OF proposal, decision, accepted, property, workspace, organization, invitation",
+    )
+    .bind(proposal_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(eligibility) = eligibility else {
+        transaction.rollback().await?;
+        return Ok(PersistedRelationshipActivationOutcome::NotFound);
+    };
+
+    let accepted_snapshot: serde_json::Value = eligibility.get("accepted_snapshot_json");
+    let stored_snapshot_sha256: String = eligibility.get("acceptance_snapshot_sha256");
+    let expected_organization_id: String = eligibility.get("organization_id");
+    let calculated_snapshot_sha256 = format!(
+        "{:x}",
+        Sha256::digest(accepted_snapshot.to_string().as_bytes())
+    );
+    let snapshot_matches = calculated_snapshot_sha256 == stored_snapshot_sha256
+        && accepted_snapshot
+            .get("proposal_id")
+            .and_then(|value| value.as_str())
+            == Some(proposal_id)
+        && accepted_snapshot
+            .get("property_id")
+            .and_then(|value| value.as_str())
+            == Some(property_id)
+        && accepted_snapshot
+            .get("organization_id")
+            .and_then(|value| value.as_str())
+            == Some(expected_organization_id.as_str())
+        && accepted_snapshot
+            .get("proposal_version")
+            .and_then(|value| value.as_i64())
+            == Some(request.expected_proposal_version);
+    let eligible = eligibility.get::<String, _>("proposal_status") == "accepted"
+        && eligibility.get::<String, _>("decision_action") == "accept"
+        && eligibility.get::<String, _>("decision_owner_user_id") == owner_user_id
+        && eligibility.get::<i64, _>("proposal_version") == request.expected_proposal_version
+        && eligibility.get::<i64, _>("decision_proposal_version")
+            == request.expected_proposal_version
+        && eligibility.get::<i64, _>("snapshot_proposal_version")
+            == request.expected_proposal_version
+        && eligibility.get::<String, _>("snapshot_owner_user_id") == owner_user_id
+        && eligibility.get::<String, _>("snapshot_property_id") == property_id
+        && eligibility.get::<String, _>("snapshot_organization_id") == expected_organization_id
+        && eligibility.get::<String, _>("snapshot_assessment_id")
+            == eligibility.get::<String, _>("assessment_id")
+        && eligibility.get::<String, _>("workspace_status") == "active"
+        && eligibility.get::<String, _>("property_status") != "archived"
+        && eligibility.get::<String, _>("address_status") == "owner_confirmed"
+        && eligibility.get::<String, _>("organization_status") == "active"
+        && eligibility.get::<String, _>("organization_type") == "yard_care_company"
+        && eligibility.get::<String, _>("invitation_owner_user_id") == owner_user_id
+        && eligibility.get::<String, _>("invitation_property_id") == property_id
+        && eligibility.get::<String, _>("invitation_status") == "opened"
+        && snapshot_matches;
+    if !eligible {
+        transaction.rollback().await?;
+        return Ok(PersistedRelationshipActivationOutcome::InvalidState);
+    }
+
+    let already_active = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(
+             SELECT 1 FROM owner_provider_active_relationships
+             WHERE owner_property_id = $1 AND status = 'active'
+         )",
+    )
+    .bind(property_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    if already_active {
+        transaction.rollback().await?;
+        return Ok(PersistedRelationshipActivationOutcome::Conflict);
+    }
+
+    let activation_id = format!("owner_provider_activation_{}", Uuid::new_v4().simple());
+    let customer_account_id = format!("acct_{}", Uuid::new_v4().simple());
+    let customer_property_id = format!("property_{}", Uuid::new_v4().simple());
+    let owner_membership_id = format!("membership_{}", Uuid::new_v4().simple());
+    let portal_access_id = format!("portal_access_{}", Uuid::new_v4().simple());
+    let organization_id = expected_organization_id;
+    let invitation_id: String = eligibility.get("invitation_id");
+    let owner_display_name: String = eligibility.get("owner_display_name");
+    let owner_verified_email: String = eligibility.get("owner_verified_email");
+    let property_display_name: String = eligibility.get("property_display_name");
+    let service_address = formatted_owner_service_address(&eligibility);
+
+    sqlx::query(
+        "INSERT INTO customer_accounts (
+             id, customer_name, billing_model, payment_status,
+             service_approval_status, contracted_services_per_period,
+             completed_services_this_period, billing_notes,
+             primary_contact_name, contact_email, contact_phone,
+             email_notifications_enabled, sms_notifications_enabled
+         ) VALUES ($1, $2, 'manual_account', 'not_required', 'manager_review',
+                   0, 0, NULL, $2, $3, NULL, TRUE, FALSE)",
+    )
+    .bind(&customer_account_id)
+    .bind(&owner_display_name)
+    .bind(&owner_verified_email)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO organization_customer_accounts (
+             organization_id, account_id, relationship_type, status
+         ) VALUES ($1, $2, 'owner', 'active')",
+    )
+    .bind(&organization_id)
+    .bind(&customer_account_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO customer_properties (
+             id, organization_id, account_id, display_name, service_address, status
+         ) VALUES ($1, $2, $3, $4, $5, 'onboarding')",
+    )
+    .bind(&customer_property_id)
+    .bind(&organization_id)
+    .bind(&customer_account_id)
+    .bind(&property_display_name)
+    .bind(&service_address)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO organization_memberships (
+             id, organization_id, user_id, display_name, role, status,
+             scope_type, scope_id
+         ) VALUES ($1, $2, $3, $4, 'property_owner', 'active', 'property', $5)",
+    )
+    .bind(&owner_membership_id)
+    .bind(&organization_id)
+    .bind(owner_user_id)
+    .bind(&owner_display_name)
+    .bind(&customer_property_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_relationship_activations (
+             id, owner_user_id, owner_property_id, invitation_id,
+             organization_id, assessment_id, proposal_id, proposal_decision_id,
+             acceptance_snapshot_id, acceptance_snapshot_sha256,
+             proposal_version, customer_account_id, customer_property_id,
+             owner_membership_id, activation_affirmation_text_version,
+             owner_confirmed, idempotency_key
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+                   $13, $14, $15, TRUE, $16)",
+    )
+    .bind(&activation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(&invitation_id)
+    .bind(&organization_id)
+    .bind(eligibility.get::<String, _>("assessment_id"))
+    .bind(proposal_id)
+    .bind(eligibility.get::<String, _>("decision_id"))
+    .bind(eligibility.get::<String, _>("acceptance_snapshot_id"))
+    .bind(&stored_snapshot_sha256)
+    .bind(request.expected_proposal_version)
+    .bind(&customer_account_id)
+    .bind(&customer_property_id)
+    .bind(&owner_membership_id)
+    .bind(request.activation_affirmation_text_version.trim())
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO customer_portal_access_grants (
+             id, activation_id, organization_id, account_id, property_id,
+             user_id, access_role, status
+         ) VALUES ($1, $2, $3, $4, $5, $6, 'property_owner', 'active')",
+    )
+    .bind(&portal_access_id)
+    .bind(&activation_id)
+    .bind(&organization_id)
+    .bind(&customer_account_id)
+    .bind(&customer_property_id)
+    .bind(owner_user_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_active_relationships (
+             owner_property_id, activation_id, organization_id,
+             customer_account_id, customer_property_id, status, activated_at
+         ) VALUES ($1, $2, $3, $4, $5, 'active', NOW())",
+    )
+    .bind(property_id)
+    .bind(&activation_id)
+    .bind(&organization_id)
+    .bind(&customer_account_id)
+    .bind(&customer_property_id)
+    .execute(&mut *transaction)
+    .await?;
+
+    let selected = sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET status = 'activated', terminal_at = NOW(), updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3
+           AND status = 'opened'",
+    )
+    .bind(&invitation_id)
+    .bind(owner_user_id)
+    .bind(property_id)
+    .execute(&mut *transaction)
+    .await?;
+    if selected.rows_affected() != 1 {
+        transaction.rollback().await?;
+        return Ok(PersistedRelationshipActivationOutcome::InvalidState);
+    }
+    sqlx::query(
+        "UPDATE owner_properties
+         SET status = 'provider_setup', version = version + 1, updated_at = NOW()
+         WHERE id = $1 AND owner_user_id = $2 AND status <> 'archived'",
+    )
+    .bind(property_id)
+    .bind(owner_user_id)
+    .execute(&mut *transaction)
+    .await?;
+
+    let competing_rows = sqlx::query(
+        "UPDATE owner_provider_invitations
+         SET status = 'revoked', terminal_at = NOW(), updated_at = NOW()
+         WHERE owner_user_id = $1 AND property_id = $2 AND id <> $3
+           AND status IN ('pending_delivery', 'delivered', 'opened')
+         RETURNING id",
+    )
+    .bind(owner_user_id)
+    .bind(property_id)
+    .bind(&invitation_id)
+    .fetch_all(&mut *transaction)
+    .await?;
+    for competing in &competing_rows {
+        let competing_invitation_id: String = competing.get("id");
+        sqlx::query(
+            "UPDATE owner_provider_invitation_response_capabilities
+             SET status = 'revoked', version = version + 1, updated_at = NOW()
+             WHERE invitation_id = $1 AND status = 'active'",
+        )
+        .bind(&competing_invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+        let grants = sqlx::query(
+            "UPDATE owner_provider_disclosure_grants
+             SET status = 'revoked', version = version + 1, updated_at = NOW()
+             WHERE invitation_id = $1 AND status = 'active'
+             RETURNING id, receipt_id, version",
+        )
+        .bind(&competing_invitation_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        for grant in grants {
+            let grant_id: String = grant.get("id");
+            sqlx::query(
+                "INSERT INTO owner_provider_disclosure_grant_events (
+                     id, grant_id, receipt_id, actor_user_id, event_kind,
+                     reason_code, grant_version, idempotency_key
+                 ) VALUES ($1, $2, $3, $4, 'revoked',
+                           'competing_relationship_activated', $5, $6)",
+            )
+            .bind(format!(
+                "owner_provider_grant_event_{}",
+                Uuid::new_v4().simple()
+            ))
+            .bind(&grant_id)
+            .bind(grant.get::<String, _>("receipt_id"))
+            .bind(owner_user_id)
+            .bind(grant.get::<i64, _>("version"))
+            .bind(format!("activation:{activation_id}:grant:{grant_id}"))
+            .execute(&mut *transaction)
+            .await?;
+        }
+        sqlx::query(
+            "INSERT INTO owner_provider_relationship_activation_events (
+                 id, activation_id, actor_user_id, event_kind, target_id, event_data
+             ) VALUES ($1, $2, $3, 'competing_invitation_closed', $4,
+                       '{\"reason_code\":\"another_provider_activated\"}'::JSONB)",
+        )
+        .bind(format!(
+            "owner_provider_activation_event_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(&activation_id)
+        .bind(owner_user_id)
+        .bind(&competing_invitation_id)
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "INSERT INTO owner_provider_relationship_activation_events (
+             id, activation_id, actor_user_id, event_kind, target_id, event_data
+         ) VALUES ($1, $2, $3, 'activated', $2,
+                   '{\"status\":\"provider_setup\"}'::JSONB)",
+    )
+    .bind(format!(
+        "owner_provider_activation_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(&activation_id)
+    .bind(owner_user_id)
+    .execute(&mut *transaction)
+    .await?;
+
+    let activation_query = format!(
+        "{OWNER_PROVIDER_RELATIONSHIP_ACTIVATION_SELECT}
+         WHERE activation.id = $1"
+    );
+    let activation = sqlx::query(&activation_query)
+        .bind(&activation_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(PersistedRelationshipActivationOutcome::Activated(
+        owner_provider_relationship_activation_from_row(&activation),
+    ))
+}
+
 async fn open_owner_provider_inbox(
     pool: &PgPool,
     recipient_user_id: &str,
@@ -12954,6 +13529,29 @@ mod tests {
                 reason_code: Some("scope".to_string()),
                 affirmation_text_version: None,
                 ..acceptance
+            }
+        ));
+
+        let activation = ActivateOwnerProviderRelationshipRequest {
+            expected_proposal_version: 1,
+            activation_affirmation_text_version: OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT_VERSION
+                .to_string(),
+            owner_confirmed: true,
+            idempotency_key: "owner-provider-activation-001".to_string(),
+        };
+        assert!(validate_owner_provider_relationship_activation_request(
+            &activation
+        ));
+        assert!(!validate_owner_provider_relationship_activation_request(
+            &ActivateOwnerProviderRelationshipRequest {
+                owner_confirmed: false,
+                ..activation.clone()
+            }
+        ));
+        assert!(!validate_owner_provider_relationship_activation_request(
+            &ActivateOwnerProviderRelationshipRequest {
+                activation_affirmation_text_version: "unknown-text".to_string(),
+                ..activation
             }
         ));
     }

@@ -55,19 +55,19 @@
 Phase 4B3 owner/provider initial-service proposal interfaces and all Phase 4B2b
 proposal-collaboration slices are delivered. Phase 4C0 now defines activation
 authority, atomic projection, property-scoped portal access, immutable
-provenance, competing-request closure, and the first-visit boundary. Phase 4C1a
-adds its constrained schema. The next slice is Phase 4C1b activation
-transaction behavior:
+provenance, competing-request closure, and the first-visit boundary. Phase 4C1
+now delivers the constrained schema, atomic repository transaction, safe
+activated progress, and PostgreSQL concurrency/side-effect proof. The next
+slice is Phase 4C2 authenticated API delivery:
 
-1. Implement an idempotent transaction that projects one accepted immutable
-   proposal snapshot into the selected provider’s customer/property records
-   with provenance and without creating a job, route, payment, or crew
-   assignment.
-2. Keep provider setup separate from owner confirmation of the first visit and
-   close competing acquisition requests only as an explicit activation effect.
-3. Prove owner/provider isolation, replay/concurrency, rollback, conflict,
-   unavailable recovery, and safe progress projections before interface
-   adoption.
+1. Expose owner-only exact-version activation and property-scoped activation
+   status without accepting provider or operational identifiers from the
+   browser.
+2. Map invalid, missing, stale, changed-replay, conflict, and unavailable
+   outcomes explicitly and keep provider setup separate from first-visit
+   confirmation.
+3. Prove route authorization and persistence-outage behavior before production
+   interface adoption.
 
 ## Read first
 

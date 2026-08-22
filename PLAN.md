@@ -54,14 +54,18 @@ Current state:
 - Phase 4C1a now delivers the constrained persistence foundation: immutable
   accepted-snapshot activation provenance, an explicit current-relationship
   projection, account/property-scoped portal grants, minimized activation
-  events, and an `activated` invitation terminal state. The atomic repository
-  transaction remains the next slice.
+  events, and an `activated` invitation terminal state.
+- Phase 4C1b now delivers the owner-confirmed atomic repository transaction. It
+  verifies the accepted snapshot digest and exact version, projects the
+  provider customer/account relationship and onboarding property, creates a
+  property-scoped owner membership and portal grant, closes only same-property
+  competitors, reports activated progress safely, and proves concurrent exact
+  replay without jobs, plans, routes, crews, or assignments.
 
 Next slice:
 
-- Deliver the Phase 4C1b atomic activation repository transaction, then expose
-  and adopt the owner-confirmed interface before the separate first-visit
-  lifecycle.
+- Deliver the Phase 4C2 authenticated owner activation/status API, then adopt
+  the owner-confirmed interface before the separate first-visit lifecycle.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

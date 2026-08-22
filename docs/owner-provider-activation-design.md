@@ -118,9 +118,10 @@ the relationship was activated.
 1. **4C0 — Contract (delivered):** authority, atomic projection, portal allow-
    list, provenance, replay, competing closure, and no-operational-side-effect
    boundaries.
-2. **4C1 — Persistence:** constrained activation/provenance and portal-access
-   schema plus the atomic repository transaction and PostgreSQL isolation,
-   replay, concurrency, rollback, and side-effect coverage.
+2. **4C1 — Persistence (delivered):** constrained activation/provenance and
+   portal-access schema plus the atomic repository transaction, activated
+   progress projection, and PostgreSQL isolation, replay, concurrency,
+   competing-closure, and no-operational-side-effect coverage.
 3. **4C2 — Authenticated API:** owner-only activation and activation-status
    reads with invalid, missing, stale, conflict, replay, and unavailable
    recovery mappings.

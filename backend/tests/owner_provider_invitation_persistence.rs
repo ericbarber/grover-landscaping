@@ -1,11 +1,11 @@
 use grover_landscaping_api::owner_acquisition::{
-    AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
-    CreateOwnerAssessmentMessageRequest, CreateOwnerInitialServiceProposalMessageRequest,
-    CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-    CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
-    CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-    CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
-    CreateProviderAssessmentPrivateNoteRequest,
+    ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
+    BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
+    CreateOwnerInitialServiceProposalMessageRequest, CreateOwnerIntakeMediaRequest,
+    CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
+    CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
+    CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+    CreateProviderAssessmentMessageRequest, CreateProviderAssessmentPrivateNoteRequest,
     CreateProviderInitialServiceProposalResponseRequest,
     DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
     DecideOwnerProviderInitialServiceProposalRequest, IssueOwnerProviderResponseCapabilityRequest,
@@ -26,9 +26,10 @@ use grover_landscaping_api::owner_acquisition::{
     OwnerProviderInvitationRecipientCheckResult, OwnerProviderInvitationRetryResult,
     OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
     OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-    OwnerProviderProgressResult, OwnerProviderResponseCapabilityRecord,
-    OwnerProviderResponseCapabilityResult, OwnerReadResult, ProposeProviderAssessmentWindowRequest,
-    ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
+    OwnerProviderProgressResult, OwnerProviderRelationshipActivationResult,
+    OwnerProviderResponseCapabilityRecord, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+    ProposeProviderAssessmentWindowRequest, ProviderAssessmentWindowProposalResult,
+    PublishOwnerProviderInitialServiceProposalRequest,
     RecordOwnerProviderInvitationDeliveryRequest, ReportOwnerProviderInvitationAbuseRequest,
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
@@ -41,6 +42,81 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 mod common;
 
 async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
+    let activation_rows = sqlx::query(
+        "SELECT customer_account_id, customer_property_id, owner_membership_id
+         FROM owner_provider_relationship_activations
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .fetch_all(pool)
+    .await
+    .expect("test activation projection identifiers should load");
+    sqlx::query(
+        "DELETE FROM owner_provider_relationship_activation_events
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test activation events should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_active_relationships
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test active relationships should reset");
+    sqlx::query(
+        "DELETE FROM customer_portal_access_grants
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test portal access should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_relationship_activations
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test activations should reset");
+    for row in activation_rows {
+        let customer_property_id: String = row.get("customer_property_id");
+        let customer_account_id: String = row.get("customer_account_id");
+        let owner_membership_id: String = row.get("owner_membership_id");
+        sqlx::query("DELETE FROM organization_memberships WHERE id = $1")
+            .bind(owner_membership_id)
+            .execute(pool)
+            .await
+            .expect("test activation membership should reset");
+        sqlx::query("DELETE FROM customer_properties WHERE id = $1")
+            .bind(customer_property_id)
+            .execute(pool)
+            .await
+            .expect("test activation property should reset");
+        sqlx::query("DELETE FROM organization_customer_accounts WHERE account_id = $1")
+            .bind(&customer_account_id)
+            .execute(pool)
+            .await
+            .expect("test activation account relation should reset");
+        sqlx::query("DELETE FROM customer_accounts WHERE id = $1")
+            .bind(customer_account_id)
+            .execute(pool)
+            .await
+            .expect("test activation account should reset");
+    }
     sqlx::query(
         "DELETE FROM owner_provider_initial_service_proposal_messages
          WHERE owner_user_id = ANY($1)",
@@ -687,6 +763,23 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
             )
             .await,
         OwnerProviderInitialServiceProposalDecisionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .activate_owner_provider_relationship(
+                "owner-unavailable",
+                "property-unavailable",
+                "proposal-unavailable",
+                ActivateOwnerProviderRelationshipRequest {
+                    expected_proposal_version: 1,
+                    activation_affirmation_text_version:
+                        "owner_provider_relationship_activation_v1".to_string(),
+                    owner_confirmed: true,
+                    idempotency_key: "activation-outage-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderRelationshipActivationResult::Unavailable
     ));
     assert!(matches!(
         repository
@@ -3045,6 +3138,197 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(!proposal_audit.contains("421 Private Canyon Road"));
     assert!(!proposal_audit.contains("revise the visit price"));
     assert!(!proposal_audit.contains("lower visit price"));
+
+    let OwnerProviderInvitationCreateResult::Created(competing_invitation) = repository
+        .create_provider_invitation(
+            owner_a,
+            &property.property_id,
+            invitation_request(
+                "competing@desertcare.example",
+                "provider-invite-competing-activation-001",
+            ),
+        )
+        .await
+    else {
+        panic!("a competing same-property invitation should be created before activation");
+    };
+    let activation_request = ActivateOwnerProviderRelationshipRequest {
+        expected_proposal_version: proposal_v2.proposal_version,
+        activation_affirmation_text_version: "owner_provider_relationship_activation_v1"
+            .to_string(),
+        owner_confirmed: true,
+        idempotency_key: "owner-provider-activation-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .activate_owner_provider_relationship(
+                owner_b,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+                activation_request.clone(),
+            )
+            .await,
+        OwnerProviderRelationshipActivationResult::NotFound
+    ));
+    let operational_side_effects_before = sqlx::query(
+        "SELECT
+             (SELECT COUNT(*) FROM service_jobs) AS service_jobs,
+             (SELECT COUNT(*) FROM day_plans) AS day_plans,
+             (SELECT COUNT(*) FROM crews) AS crews,
+             (SELECT COUNT(*) FROM property_crew_assignments) AS crew_assignments",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("pre-activation operational counts should load");
+    let (first_activation, second_activation) = tokio::join!(
+        repository.activate_owner_provider_relationship(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+            activation_request.clone(),
+        ),
+        repository.activate_owner_provider_relationship(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+            activation_request.clone(),
+        ),
+    );
+    let activation = match (first_activation, second_activation) {
+        (
+            OwnerProviderRelationshipActivationResult::Activated(activated),
+            OwnerProviderRelationshipActivationResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderRelationshipActivationResult::Replayed(replayed),
+            OwnerProviderRelationshipActivationResult::Activated(activated),
+        ) => {
+            assert_eq!(activated, replayed);
+            activated
+        }
+        (first, second) => panic!(
+            "concurrent exact activation should activate once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(activation.status, "provider_setup");
+    assert_eq!(activation.proposal_version, proposal_v2.proposal_version);
+    assert_eq!(activation.closed_competing_invitation_count, 1);
+    assert!(activation.persisted);
+    assert!(matches!(
+        repository
+            .activate_owner_provider_relationship(
+                owner_a,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+                ActivateOwnerProviderRelationshipRequest {
+                    expected_proposal_version: proposal_v2.proposal_version + 1,
+                    ..activation_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderRelationshipActivationResult::Conflict
+    ));
+    let projection = sqlx::query(
+        "SELECT account.customer_name, account.billing_model,
+                account.payment_status, account.service_approval_status,
+                relation.relationship_type,
+                customer_property.display_name, customer_property.service_address,
+                customer_property.status AS customer_property_status,
+                membership.user_id, membership.role, membership.scope_type,
+                membership.scope_id, portal.user_id AS portal_user_id,
+                portal.status AS portal_status, owner_property.status AS owner_property_status,
+                invitation.status AS selected_invitation_status,
+                competing.status AS competing_invitation_status
+         FROM owner_provider_relationship_activations activation
+         JOIN customer_accounts account ON account.id = activation.customer_account_id
+         JOIN organization_customer_accounts relation
+           ON relation.organization_id = activation.organization_id
+          AND relation.account_id = activation.customer_account_id
+         JOIN customer_properties customer_property
+           ON customer_property.id = activation.customer_property_id
+         JOIN organization_memberships membership
+           ON membership.id = activation.owner_membership_id
+         JOIN customer_portal_access_grants portal
+           ON portal.activation_id = activation.id
+         JOIN owner_properties owner_property
+           ON owner_property.id = activation.owner_property_id
+         JOIN owner_provider_invitations invitation
+           ON invitation.id = activation.invitation_id
+         JOIN owner_provider_invitations competing ON competing.id = $2
+         WHERE activation.id = $1",
+    )
+    .bind(&activation.activation_id)
+    .bind(&competing_invitation.invitation.invitation_id)
+    .fetch_one(&pool)
+    .await
+    .expect("activation projection should load");
+    assert_eq!(
+        projection.get::<String, _>("billing_model"),
+        "manual_account"
+    );
+    assert_eq!(
+        projection.get::<String, _>("payment_status"),
+        "not_required"
+    );
+    assert_eq!(
+        projection.get::<String, _>("service_approval_status"),
+        "manager_review"
+    );
+    assert_eq!(projection.get::<String, _>("relationship_type"), "owner");
+    assert_eq!(
+        projection.get::<String, _>("customer_property_status"),
+        "onboarding"
+    );
+    assert!(projection
+        .get::<String, _>("service_address")
+        .contains("421 Private Canyon Road"));
+    assert_eq!(projection.get::<String, _>("user_id"), owner_a);
+    assert_eq!(projection.get::<String, _>("role"), "property_owner");
+    assert_eq!(projection.get::<String, _>("scope_type"), "property");
+    assert_eq!(
+        projection.get::<String, _>("scope_id"),
+        activation.customer_property_id
+    );
+    assert_eq!(projection.get::<String, _>("portal_user_id"), owner_a);
+    assert_eq!(projection.get::<String, _>("portal_status"), "active");
+    assert_eq!(
+        projection.get::<String, _>("owner_property_status"),
+        "provider_setup"
+    );
+    assert_eq!(
+        projection.get::<String, _>("selected_invitation_status"),
+        "activated"
+    );
+    assert_eq!(
+        projection.get::<String, _>("competing_invitation_status"),
+        "revoked"
+    );
+    let operational_side_effects_after = sqlx::query(
+        "SELECT
+             (SELECT COUNT(*) FROM service_jobs) AS service_jobs,
+             (SELECT COUNT(*) FROM day_plans) AS day_plans,
+             (SELECT COUNT(*) FROM crews) AS crews,
+             (SELECT COUNT(*) FROM property_crew_assignments) AS crew_assignments",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("post-activation operational counts should load");
+    for column in ["service_jobs", "day_plans", "crews", "crew_assignments"] {
+        assert_eq!(
+            operational_side_effects_after.get::<i64, _>(column),
+            operational_side_effects_before.get::<i64, _>(column),
+            "activation must not create {column}"
+        );
+    }
+    assert!(sqlx::query(
+        "UPDATE owner_provider_relationship_activations
+         SET proposal_version = proposal_version + 1 WHERE id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .is_err());
+
     let expired_proposal_id = "owner_provider_proposal_expiration_fixture";
     sqlx::query(
         "INSERT INTO owner_provider_initial_service_proposals (
@@ -3242,7 +3526,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     };
     assert_eq!(
         revoked_access_progress.progress_stage,
-        "assessment_access_closed"
+        "relationship_activated"
     );
     let OwnerReadResult::Loaded(revoked_owner_progress) = repository
         .list_provider_connection_progress(owner_a, &property.property_id)
@@ -3256,7 +3540,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .find(|entry| entry.invitation_id == retry.invitation.invitation_id)
             .expect("revoked grant progress")
             .progress_stage,
-        "assessment_access_ended"
+        "relationship_activated"
     );
 
     let duplicate_recipient = "duplicate@sonoranyard.example";
@@ -3946,8 +4230,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 &created.invitation.invitation_id,
             )
             .await,
-        OwnerProviderInvitationMutationResult::Saved(invitation)
-            if invitation.status == "revoked" && invitation.delivery_status == "delivered"
+        OwnerProviderInvitationMutationResult::InvalidState(invitation)
+            if invitation.status == "activated" && invitation.delivery_status == "delivered"
     ));
     assert!(matches!(
         repository
@@ -3957,15 +4241,15 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 &created.invitation.invitation_id,
             )
             .await,
-        OwnerProviderInvitationMutationResult::Saved(invitation)
-            if invitation.status == "revoked"
+        OwnerProviderInvitationMutationResult::InvalidState(invitation)
+            if invitation.status == "activated"
     ));
     assert!(matches!(
         repository
             .preview_provider_invitation(retry.delivery_token())
             .await,
         OwnerProviderInvitationPreviewResult::Closed(invitation)
-            if invitation.status == "revoked"
+            if invitation.status == "activated"
                 && !invitation.can_review_limited_request
                 && invitation.owner_name.is_none()
                 && invitation.coarse_area.is_none()
@@ -3980,7 +4264,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .fetch_one(&pool)
         .await
         .expect("revoke event count should load"),
-        1
+        0
     );
     assert_eq!(
         sqlx::query_scalar::<_, String>(
@@ -4027,10 +4311,13 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         panic!("revoked provider progress should return status-only closure");
     };
     assert!(closed_provider_progress.closed);
-    assert_eq!(closed_provider_progress.progress_stage, "closed");
+    assert_eq!(
+        closed_provider_progress.progress_stage,
+        "relationship_activated"
+    );
     assert_eq!(
         closed_provider_progress.status_label,
-        "Owner withdrew this invitation"
+        "Provider relationship activated"
     );
     assert!(closed_provider_progress.response_action.is_none());
     assert!(closed_provider_progress.response_label.is_none());
