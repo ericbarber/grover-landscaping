@@ -1,21 +1,24 @@
 use grover_landscaping_api::owner_acquisition::{
     AppealOwnerProviderOrganizationClaimRequest, BootstrapOwnerProviderOrganizationClaimRequest,
-    CreateOwnerAssessmentMessageRequest, CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
+    CreateOwnerAssessmentMessageRequest, CreateOwnerInitialServiceProposalMessageRequest,
+    CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
     CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
     CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
     CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
-    CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
-    DecideOwnerProviderClaimReviewRequest, DecideOwnerProviderInitialServiceProposalRequest,
-    IssueOwnerProviderResponseCapabilityRequest, OpenOwnerProviderDisclosureRequest,
-    OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository, OwnerMutationResult,
-    OwnerProviderAssessmentCommunicationWriteResult, OwnerProviderAssessmentCreateResult,
-    OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
-    OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
-    OwnerProviderClaimReviewFilter, OwnerProviderClaimReviewListResult,
-    OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
-    OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
-    OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
-    OwnerProviderInitialServiceProposalDecisionResult,
+    CreateProviderAssessmentPrivateNoteRequest,
+    CreateProviderInitialServiceProposalResponseRequest,
+    DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
+    DecideOwnerProviderInitialServiceProposalRequest, IssueOwnerProviderResponseCapabilityRequest,
+    OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest, OwnerAcquisitionRepository,
+    OwnerMutationResult, OwnerProviderAssessmentCommunicationWriteResult,
+    OwnerProviderAssessmentCreateResult, OwnerProviderAssessmentTransitionResult,
+    OwnerProviderAssessmentWindowDecisionResult, OwnerProviderClaimAppealResult,
+    OwnerProviderClaimReviewDecisionResult, OwnerProviderClaimReviewFilter,
+    OwnerProviderClaimReviewListResult, OwnerProviderClaimReviewMetricsResult,
+    OwnerProviderDisclosureAccessResult, OwnerProviderDisclosureGrantCreateResult,
+    OwnerProviderDisclosureGrantRevokeResult, OwnerProviderDisclosureReviewResult,
+    OwnerProviderInboxResult, OwnerProviderInitialServiceProposalDecisionResult,
+    OwnerProviderInitialServiceProposalMessageWriteResult,
     OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
     OwnerProviderInvitationCreateResult, OwnerProviderInvitationCreation,
     OwnerProviderInvitationDeliveryResult, OwnerProviderInvitationExpiryResult,
@@ -38,6 +41,14 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 mod common;
 
 async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[&str]) {
+    sqlx::query(
+        "DELETE FROM owner_provider_initial_service_proposal_messages
+         WHERE owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test proposal messages should reset");
     sqlx::query(
         "DELETE FROM owner_provider_initial_service_proposal_events
          WHERE proposal_id IN (
@@ -2593,6 +2604,72 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         OwnerProviderInitialServiceProposalWriteResult::Conflict
     ));
 
+    let owner_change_request = CreateOwnerInitialServiceProposalMessageRequest {
+        message_kind: "owner_change_request".to_string(),
+        customer_safe_body: "Please revise the visit price after confirming the turf area."
+            .to_string(),
+        expected_proposal_version: proposal_v1.proposal_version,
+        idempotency_key: "proposal-owner-change-request-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_owner_initial_service_proposal_message(
+                owner_b,
+                &property.property_id,
+                &proposal_v1.proposal_id,
+                owner_change_request.clone(),
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::NotFound
+    ));
+    let (first_owner_message, second_owner_message) = tokio::join!(
+        repository.create_owner_initial_service_proposal_message(
+            owner_a,
+            &property.property_id,
+            &proposal_v1.proposal_id,
+            owner_change_request.clone(),
+        ),
+        repository.create_owner_initial_service_proposal_message(
+            owner_a,
+            &property.property_id,
+            &proposal_v1.proposal_id,
+            owner_change_request.clone(),
+        ),
+    );
+    let owner_change_message = match (first_owner_message, second_owner_message) {
+        (
+            OwnerProviderInitialServiceProposalMessageWriteResult::Created(created),
+            OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(replayed),
+            OwnerProviderInitialServiceProposalMessageWriteResult::Created(created),
+        ) => {
+            assert_eq!(created, replayed);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact owner proposal messages should create once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(owner_change_message.proposal_id, proposal_v1.proposal_id);
+    assert_eq!(owner_change_message.proposal_version_snapshot, 1);
+    assert_eq!(owner_change_message.series_version_snapshot, 1);
+    assert!(matches!(
+        repository
+            .create_owner_initial_service_proposal_message(
+                owner_a,
+                &property.property_id,
+                &proposal_v1.proposal_id,
+                CreateOwnerInitialServiceProposalMessageRequest {
+                    customer_safe_body: "Changed content under a reused key".to_string(),
+                    ..owner_change_request.clone()
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::Conflict
+    ));
+
     let revised_request = PublishOwnerProviderInitialServiceProposalRequest {
         expected_proposal_version: proposal_v1.proposal_version,
         price_amount_minor: 11_000,
@@ -2630,6 +2707,96 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         provider_proposal_workspace.initial_service_proposal,
         Some(proposal_v2.clone()),
     );
+    let provider_response_request = CreateProviderInitialServiceProposalResponseRequest {
+        token: retry.delivery_token().to_string(),
+        in_reply_to_message_id: owner_change_message.message_id.clone(),
+        customer_safe_body:
+            "The revised proposal reflects the confirmed turf area and lower visit price."
+                .to_string(),
+        expected_proposal_version: proposal_v2.proposal_version,
+        related_proposal_id: Some(proposal_v2.proposal_id.clone()),
+        idempotency_key: "proposal-provider-response-001".to_string(),
+    };
+    assert!(matches!(
+        repository
+            .create_provider_initial_service_proposal_response(
+                "different-provider-user",
+                recipient,
+                &assessment.assessment_id,
+                provider_response_request.clone(),
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::NotFound
+    ));
+    let (first_provider_response, second_provider_response) = tokio::join!(
+        repository.create_provider_initial_service_proposal_response(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            provider_response_request.clone(),
+        ),
+        repository.create_provider_initial_service_proposal_response(
+            "recipient-user-1",
+            recipient,
+            &assessment.assessment_id,
+            provider_response_request.clone(),
+        ),
+    );
+    let provider_response = match (first_provider_response, second_provider_response) {
+        (
+            OwnerProviderInitialServiceProposalMessageWriteResult::Created(created),
+            OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(replayed),
+        )
+        | (
+            OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(replayed),
+            OwnerProviderInitialServiceProposalMessageWriteResult::Created(created),
+        ) => {
+            assert_eq!(created, replayed);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact provider proposal responses should create once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(provider_response.proposal_id, proposal_v1.proposal_id);
+    assert_eq!(provider_response.proposal_version_snapshot, 1);
+    assert_eq!(provider_response.series_version_snapshot, 2);
+    assert_eq!(
+        provider_response.related_proposal_id.as_deref(),
+        Some(proposal_v2.proposal_id.as_str())
+    );
+    assert!(matches!(
+        repository
+            .list_owner_initial_service_proposal_messages(
+                owner_b,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+            )
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    let OwnerReadResult::Loaded(proposal_messages) = repository
+        .list_owner_initial_service_proposal_messages(
+            owner_a,
+            &property.property_id,
+            &proposal_v2.proposal_id,
+        )
+        .await
+    else {
+        panic!("the owner should load the proposal-version conversation");
+    };
+    assert_eq!(
+        proposal_messages,
+        vec![owner_change_message.clone(), provider_response.clone()]
+    );
+    assert!(sqlx::query(
+        "UPDATE owner_provider_initial_service_proposal_messages
+         SET customer_safe_body = 'Mutated conversation' WHERE id = $1",
+    )
+    .bind(&owner_change_message.message_id)
+    .execute(&pool)
+    .await
+    .is_err());
     assert!(matches!(
         repository
             .publish_initial_service_proposal(
@@ -2759,6 +2926,34 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     );
     assert!(matches!(
         repository
+            .create_owner_initial_service_proposal_message(
+                owner_a,
+                &property.property_id,
+                &proposal_v1.proposal_id,
+                owner_change_request.clone(),
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(message)
+            if message == owner_change_message
+    ));
+    assert!(matches!(
+        repository
+            .create_owner_initial_service_proposal_message(
+                owner_a,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+                CreateOwnerInitialServiceProposalMessageRequest {
+                    message_kind: "owner_question".to_string(),
+                    customer_safe_body: "Can service begin next week?".to_string(),
+                    expected_proposal_version: proposal_v2.proposal_version,
+                    idempotency_key: "proposal-question-after-accept-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::Conflict
+    ));
+    assert!(matches!(
+        repository
             .decide_initial_service_proposal(
                 owner_a,
                 &property.property_id,
@@ -2825,6 +3020,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .expect("minimized proposal audit should load");
     assert!(!proposal_audit.contains("Mow and edge"));
     assert!(!proposal_audit.contains("421 Private Canyon Road"));
+    assert!(!proposal_audit.contains("revise the visit price"));
+    assert!(!proposal_audit.contains("lower visit price"));
     let expired_proposal_id = "owner_provider_proposal_expiration_fixture";
     sqlx::query(
         "INSERT INTO owner_provider_initial_service_proposals (
@@ -2893,6 +3090,23 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             )
             .await,
         OwnerProviderInitialServiceProposalDecisionResult::InvalidState(proposal)
+            if proposal.status == "expired"
+    ));
+    assert!(matches!(
+        repository
+            .create_owner_initial_service_proposal_message(
+                owner_a,
+                &property.property_id,
+                expired_proposal_id,
+                CreateOwnerInitialServiceProposalMessageRequest {
+                    message_kind: "owner_question".to_string(),
+                    customer_safe_body: "Is this expired proposal still available?".to_string(),
+                    expected_proposal_version: proposal_v2.proposal_version + 1,
+                    idempotency_key: "proposal-expired-question-001".to_string(),
+                },
+            )
+            .await,
+        OwnerProviderInitialServiceProposalMessageWriteResult::InvalidState(proposal)
             if proposal.status == "expired"
     ));
 

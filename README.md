@@ -13,13 +13,15 @@ intake, known-provider invitations, provider organization claims, administrative
 review and appeals, explicit disclosure grants and revocation, owner/provider
 connection progress, remote/on-site assessments with separated communication,
 and immutable proposal publication, revision, reload, neutral owner history, and
-exact-version owner decisions.
+exact-version owner decisions. Owner proposal questions/change requests and
+provider replies are also persisted as an append-only, version-aware
+conversation separate from decisions and lifecycle audit.
 
 The public site now carries four complete persona journeys and reuses the
 prototype-aligned “Today’s operation” dashboard in the landscaping-company hero
-and product tour. The next implementable product slice is separate proposal
-questions and change requests; explicit activation and relationship continuity
-follow.
+and product tour. The active product slice exposes the persisted proposal
+conversation through authenticated APIs and both acquisition workspaces;
+explicit activation and relationship continuity follow.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -409,9 +411,10 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Reviewing immutable proposal history and explicitly accepting or declining one
   exact current version without activating service
 
-The next acquisition slice defines proposal questions and change requests as a
-separate persisted conversation; assessment messages and decision notes are not
-substitutes for that contract. See the
+The next acquisition slice exposes the separately persisted proposal questions,
+change requests, and provider replies through authenticated APIs and both
+workspaces; assessment messages and decision notes are not substitutes for that
+contract. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment

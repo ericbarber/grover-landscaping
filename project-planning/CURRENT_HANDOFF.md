@@ -53,17 +53,14 @@
 ## Next implementable slice
 
 Phase 4B3 owner/provider initial-service proposal interfaces are delivered
-against the Phase 4B2a APIs. The next slice is Phase 4B2b proposal collaboration:
+against the Phase 4B2a APIs. Phase 4B2b1 now provides the proposal-collaboration
+schema, repositories, and PostgreSQL coverage. The active remainder is:
 
-1. Define owner question and change-request records separately from decisions,
-   assessment conversation, and minimized lifecycle audit.
-2. Preserve proposal-version context, author identity, customer-safe content,
-   idempotency, tenant/owner isolation, and explicit no-decision meaning.
-3. Add provider response and revised-version linkage without allowing a question
-   or change request to accept, decline, activate, schedule, or assign work.
-4. Expose the contract through authenticated routes and both acquisition
+1. Expose the contract through authenticated routes and both acquisition
    workspaces with conflict, expiry, revocation, unavailable, and retry recovery.
-5. Validate persistence, API policy, client mapping, responsive browser behavior,
+2. Preserve the delivered exact subject/current-version display and explicit
+   revised-proposal linkage in both interfaces.
+3. Validate API policy, client mapping, responsive browser behavior,
    and non-activation side effects before beginning Phase 4C.
 
 ## Read first

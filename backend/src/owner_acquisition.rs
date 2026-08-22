@@ -809,6 +809,42 @@ pub struct OwnerProviderInitialServiceProposalDecisionRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateOwnerInitialServiceProposalMessageRequest {
+    pub message_kind: String,
+    pub customer_safe_body: String,
+    pub expected_proposal_version: i64,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct CreateProviderInitialServiceProposalResponseRequest {
+    pub token: String,
+    pub in_reply_to_message_id: String,
+    pub customer_safe_body: String,
+    pub expected_proposal_version: i64,
+    pub related_proposal_id: Option<String>,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct OwnerProviderInitialServiceProposalMessageRecord {
+    pub message_id: String,
+    pub proposal_id: String,
+    pub assessment_id: String,
+    pub author_role: String,
+    pub message_kind: String,
+    pub customer_safe_body: String,
+    pub proposal_version_snapshot: i64,
+    pub series_version_snapshot: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub in_reply_to_message_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub related_proposal_id: Option<String>,
+    pub created_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
 pub struct OwnerProviderInvitationCreation {
     pub invitation: OwnerProviderInvitationRecord,
     delivery_token: String,
@@ -1101,6 +1137,16 @@ pub enum OwnerProviderInitialServiceProposalWriteResult {
 pub enum OwnerProviderInitialServiceProposalDecisionResult {
     Decided(OwnerProviderInitialServiceProposalDecisionRecord),
     Replayed(OwnerProviderInitialServiceProposalDecisionRecord),
+    NotFound,
+    InvalidState(OwnerProviderInitialServiceProposalRecord),
+    Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OwnerProviderInitialServiceProposalMessageWriteResult {
+    Created(OwnerProviderInitialServiceProposalMessageRecord),
+    Replayed(OwnerProviderInitialServiceProposalMessageRecord),
     NotFound,
     InvalidState(OwnerProviderInitialServiceProposalRecord),
     Conflict,
@@ -3792,6 +3838,125 @@ impl OwnerAcquisitionRepository {
             }
         }
     }
+
+    pub async fn list_owner_initial_service_proposal_messages(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+    ) -> OwnerReadResult<Vec<OwnerProviderInitialServiceProposalMessageRecord>> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match list_owner_provider_initial_service_proposal_messages(
+            pool,
+            owner_user_id,
+            property_id,
+            proposal_id,
+        )
+        .await
+        {
+            Ok(Some(messages)) => OwnerReadResult::Loaded(messages),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "initial service proposal messages failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_owner_initial_service_proposal_message(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+        request: CreateOwnerInitialServiceProposalMessageRequest,
+    ) -> OwnerProviderInitialServiceProposalMessageWriteResult {
+        if !validate_owner_initial_service_proposal_message_request(&request) {
+            return OwnerProviderInitialServiceProposalMessageWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable;
+        };
+        match create_owner_initial_service_proposal_message(
+            pool,
+            owner_user_id,
+            property_id,
+            proposal_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_initial_service_proposal_message_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInitialServiceProposalMessageWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "owner initial service proposal message failed");
+                OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn create_provider_initial_service_proposal_response(
+        &self,
+        provider_actor_user_id: &str,
+        verified_email: &str,
+        assessment_id: &str,
+        request: CreateProviderInitialServiceProposalResponseRequest,
+    ) -> OwnerProviderInitialServiceProposalMessageWriteResult {
+        if !validate_provider_initial_service_proposal_response_request(&request) {
+            return OwnerProviderInitialServiceProposalMessageWriteResult::Conflict;
+        }
+        let Some(pool) = &self.pool else {
+            return OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable;
+        };
+        let normalized_email = normalize_email(verified_email);
+        let verified_email_fingerprint = email_fingerprint(&normalized_email);
+        let token_hash = invitation_token_hash(request.token.trim());
+        match create_provider_initial_service_proposal_response(
+            pool,
+            provider_actor_user_id,
+            &normalized_email,
+            &verified_email_fingerprint,
+            &token_hash,
+            assessment_id,
+            request,
+        )
+        .await
+        {
+            Ok(outcome) => public_initial_service_proposal_message_outcome(outcome),
+            Err(error) if is_unique_violation(&error) => {
+                OwnerProviderInitialServiceProposalMessageWriteResult::Conflict
+            }
+            Err(error) => {
+                tracing::error!(%error, provider_actor_user_id, assessment_id, "provider initial service proposal response failed");
+                OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable
+            }
+        }
+    }
+}
+
+fn public_initial_service_proposal_message_outcome(
+    outcome: PersistedInitialServiceProposalMessageWriteOutcome,
+) -> OwnerProviderInitialServiceProposalMessageWriteResult {
+    match outcome {
+        PersistedInitialServiceProposalMessageWriteOutcome::Created(record) => {
+            OwnerProviderInitialServiceProposalMessageWriteResult::Created(record)
+        }
+        PersistedInitialServiceProposalMessageWriteOutcome::Replayed(record) => {
+            OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(record)
+        }
+        PersistedInitialServiceProposalMessageWriteOutcome::NotFound => {
+            OwnerProviderInitialServiceProposalMessageWriteResult::NotFound
+        }
+        PersistedInitialServiceProposalMessageWriteOutcome::InvalidState(proposal) => {
+            OwnerProviderInitialServiceProposalMessageWriteResult::InvalidState(proposal)
+        }
+        PersistedInitialServiceProposalMessageWriteOutcome::Conflict => {
+            OwnerProviderInitialServiceProposalMessageWriteResult::Conflict
+        }
+    }
 }
 
 fn public_assessment_communication_outcome<T>(
@@ -4517,6 +4682,32 @@ pub fn validate_initial_service_proposal_decision_request(
     request.expected_proposal_version > 0
         && action_valid
         && note_valid
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_owner_initial_service_proposal_message_request(
+    request: &CreateOwnerInitialServiceProposalMessageRequest,
+) -> bool {
+    matches!(
+        request.message_kind.as_str(),
+        "owner_question" | "owner_change_request"
+    ) && (1..=2000).contains(&request.customer_safe_body.trim().chars().count())
+        && request.expected_proposal_version > 0
+        && valid_assessment_communication_key(&request.idempotency_key)
+}
+
+pub fn validate_provider_initial_service_proposal_response_request(
+    request: &CreateProviderInitialServiceProposalResponseRequest,
+) -> bool {
+    validate_provider_invitation_preview_request(&PreviewOwnerProviderInvitationRequest {
+        token: request.token.clone(),
+    }) && (8..=160).contains(&request.in_reply_to_message_id.trim().chars().count())
+        && (1..=2000).contains(&request.customer_safe_body.trim().chars().count())
+        && request.expected_proposal_version > 0
+        && request
+            .related_proposal_id
+            .as_deref()
+            .is_none_or(|proposal_id| (8..=160).contains(&proposal_id.trim().chars().count()))
         && valid_assessment_communication_key(&request.idempotency_key)
 }
 
@@ -8258,6 +8449,14 @@ enum PersistedInitialServiceProposalDecisionOutcome {
     Conflict,
 }
 
+enum PersistedInitialServiceProposalMessageWriteOutcome {
+    Created(OwnerProviderInitialServiceProposalMessageRecord),
+    Replayed(OwnerProviderInitialServiceProposalMessageRecord),
+    NotFound,
+    InvalidState(OwnerProviderInitialServiceProposalRecord),
+    Conflict,
+}
+
 fn disclosure_review_version(
     invitation_id: &str,
     capability_id: &str,
@@ -10855,6 +11054,33 @@ fn owner_provider_initial_service_proposal_from_row(
     }
 }
 
+const OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT: &str =
+    "SELECT id AS message_id, proposal_id, assessment_id, author_role,
+            message_kind, customer_safe_body, proposal_version_snapshot,
+            series_version_snapshot, in_reply_to_message_id,
+            related_proposal_id,
+            EXTRACT(EPOCH FROM created_at)::BIGINT AS created_at_epoch_seconds
+     FROM owner_provider_initial_service_proposal_messages";
+
+fn owner_provider_initial_service_proposal_message_from_row(
+    row: &sqlx::postgres::PgRow,
+) -> OwnerProviderInitialServiceProposalMessageRecord {
+    OwnerProviderInitialServiceProposalMessageRecord {
+        message_id: row.get("message_id"),
+        proposal_id: row.get("proposal_id"),
+        assessment_id: row.get("assessment_id"),
+        author_role: row.get("author_role"),
+        message_kind: row.get("message_kind"),
+        customer_safe_body: row.get("customer_safe_body"),
+        proposal_version_snapshot: row.get("proposal_version_snapshot"),
+        series_version_snapshot: row.get("series_version_snapshot"),
+        in_reply_to_message_id: row.get("in_reply_to_message_id"),
+        related_proposal_id: row.get("related_proposal_id"),
+        created_at_epoch_seconds: row.get("created_at_epoch_seconds"),
+        persisted: true,
+    }
+}
+
 fn normalized_proposal_items(items: &[String]) -> Vec<String> {
     items.iter().map(|item| item.trim().to_string()).collect()
 }
@@ -11229,6 +11455,318 @@ async fn get_owner_provider_initial_service_proposal(
     Ok(Some(owner_provider_initial_service_proposal_from_row(
         &proposal,
     )))
+}
+
+async fn list_owner_provider_initial_service_proposal_messages(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    proposal_id: &str,
+) -> Result<Option<Vec<OwnerProviderInitialServiceProposalMessageRecord>>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let proposal_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3"
+    );
+    let proposal = sqlx::query(&proposal_query)
+        .bind(proposal_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(proposal) = proposal else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let assessment_id: String = proposal.get("assessment_id");
+    expire_owner_provider_initial_service_proposals(&mut transaction, &assessment_id).await?;
+    let messages_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT}
+         WHERE assessment_id = $1 ORDER BY created_at, id"
+    );
+    let rows = sqlx::query(&messages_query)
+        .bind(&assessment_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(Some(
+        rows.iter()
+            .map(owner_provider_initial_service_proposal_message_from_row)
+            .collect(),
+    ))
+}
+
+async fn create_owner_initial_service_proposal_message(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    proposal_id: &str,
+    request: CreateOwnerInitialServiceProposalMessageRequest,
+) -> Result<PersistedInitialServiceProposalMessageWriteOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let proposal_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3 FOR UPDATE"
+    );
+    let proposal = sqlx::query(&proposal_query)
+        .bind(proposal_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(proposal) = proposal else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::NotFound);
+    };
+    let assessment_id: String = proposal.get("assessment_id");
+    expire_owner_provider_initial_service_proposals(&mut transaction, &assessment_id).await?;
+    let refreshed_query = format!("{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT} WHERE id = $1");
+    let proposal = owner_provider_initial_service_proposal_from_row(
+        &sqlx::query(&refreshed_query)
+            .bind(proposal_id)
+            .fetch_one(&mut *transaction)
+            .await?,
+    );
+
+    let replay_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT}
+         WHERE author_user_id = $1 AND idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(owner_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_initial_service_proposal_message_from_row(&replay);
+        let exact = record.proposal_id == proposal_id
+            && record.assessment_id == proposal.assessment_id
+            && record.author_role == "owner"
+            && record.message_kind == request.message_kind
+            && record.customer_safe_body == request.customer_safe_body.trim()
+            && record.proposal_version_snapshot == request.expected_proposal_version
+            && record.series_version_snapshot == request.expected_proposal_version
+            && record.in_reply_to_message_id.is_none()
+            && record.related_proposal_id.is_none();
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedInitialServiceProposalMessageWriteOutcome::Replayed(record)
+        } else {
+            PersistedInitialServiceProposalMessageWriteOutcome::Conflict
+        });
+    }
+    if proposal.status == "expired" {
+        transaction.commit().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::InvalidState(proposal));
+    }
+    if proposal.status != "sent" || proposal.proposal_version != request.expected_proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    }
+    let latest_version = sqlx::query_scalar::<_, Option<i64>>(
+        "SELECT MAX(proposal_version)
+         FROM owner_provider_initial_service_proposals WHERE assessment_id = $1",
+    )
+    .bind(&proposal.assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?
+    .unwrap_or(0);
+    if latest_version != proposal.proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    }
+
+    let message_id = format!(
+        "owner_provider_proposal_message_{}",
+        Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposal_messages (
+             id, proposal_id, assessment_id, owner_user_id, property_id,
+             invitation_id, organization_id, author_user_id, author_role,
+             message_kind, customer_safe_body, proposal_version_snapshot,
+             series_version_snapshot, idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $4, 'owner', $8, $9, $10, $10, $11
+         )",
+    )
+    .bind(&message_id)
+    .bind(&proposal.proposal_id)
+    .bind(&proposal.assessment_id)
+    .bind(owner_user_id)
+    .bind(&proposal.property_id)
+    .bind(&proposal.invitation_id)
+    .bind(&proposal.organization_id)
+    .bind(&request.message_kind)
+    .bind(request.customer_safe_body.trim())
+    .bind(proposal.proposal_version)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    let message_query =
+        format!("{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT} WHERE id = $1");
+    let message = sqlx::query(&message_query)
+        .bind(&message_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(PersistedInitialServiceProposalMessageWriteOutcome::Created(
+        owner_provider_initial_service_proposal_message_from_row(&message),
+    ))
+}
+
+async fn create_provider_initial_service_proposal_response(
+    pool: &PgPool,
+    provider_actor_user_id: &str,
+    verified_email: &str,
+    verified_email_fingerprint: &str,
+    token_hash: &str,
+    assessment_id: &str,
+    request: CreateProviderInitialServiceProposalResponseRequest,
+) -> Result<PersistedInitialServiceProposalMessageWriteOutcome, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let Some((assessment, authority_active)) = load_provider_assessment_write_authority(
+        &mut transaction,
+        provider_actor_user_id,
+        verified_email,
+        verified_email_fingerprint,
+        token_hash,
+        assessment_id,
+    )
+    .await?
+    else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::NotFound);
+    };
+    expire_owner_provider_initial_service_proposals(&mut transaction, assessment_id).await?;
+    let current_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE assessment_id = $1 ORDER BY proposal_version DESC LIMIT 1 FOR UPDATE"
+    );
+    let current = sqlx::query(&current_query)
+        .bind(assessment_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::NotFound);
+    };
+    let current = owner_provider_initial_service_proposal_from_row(&current);
+
+    let replay_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT}
+         WHERE author_user_id = $1 AND idempotency_key = $2"
+    );
+    let replay = sqlx::query(&replay_query)
+        .bind(provider_actor_user_id)
+        .bind(request.idempotency_key.trim())
+        .fetch_optional(&mut *transaction)
+        .await?;
+    if let Some(replay) = replay {
+        let record = owner_provider_initial_service_proposal_message_from_row(&replay);
+        let exact = record.assessment_id == assessment_id
+            && record.author_role == "provider"
+            && record.message_kind == "provider_response"
+            && record.customer_safe_body == request.customer_safe_body.trim()
+            && record.series_version_snapshot == request.expected_proposal_version
+            && record.in_reply_to_message_id.as_deref()
+                == Some(request.in_reply_to_message_id.trim())
+            && record.related_proposal_id.as_deref()
+                == request.related_proposal_id.as_deref().map(str::trim);
+        transaction.commit().await?;
+        return Ok(if exact {
+            PersistedInitialServiceProposalMessageWriteOutcome::Replayed(record)
+        } else {
+            PersistedInitialServiceProposalMessageWriteOutcome::Conflict
+        });
+    }
+    if !authority_active || assessment.status != "completed" || current.status != "sent" {
+        transaction.commit().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::InvalidState(current));
+    }
+    if current.proposal_version != request.expected_proposal_version {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    }
+
+    let reply_query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT}
+         WHERE id = $1 AND assessment_id = $2"
+    );
+    let reply = sqlx::query(&reply_query)
+        .bind(request.in_reply_to_message_id.trim())
+        .bind(assessment_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(reply) = reply else {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    };
+    let reply = owner_provider_initial_service_proposal_message_from_row(&reply);
+    if reply.author_role != "owner"
+        || !matches!(
+            reply.message_kind.as_str(),
+            "owner_question" | "owner_change_request"
+        )
+    {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    }
+    let expected_related_proposal_id =
+        (reply.proposal_id != current.proposal_id).then_some(current.proposal_id.as_str());
+    if request.related_proposal_id.as_deref().map(str::trim) != expected_related_proposal_id {
+        transaction.rollback().await?;
+        return Ok(PersistedInitialServiceProposalMessageWriteOutcome::Conflict);
+    }
+
+    let message_id = format!(
+        "owner_provider_proposal_message_{}",
+        Uuid::new_v4().simple()
+    );
+    let owner_user_id = sqlx::query_scalar::<_, String>(
+        "SELECT owner_user_id FROM owner_provider_assessments WHERE id = $1",
+    )
+    .bind(assessment_id)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query(
+        "INSERT INTO owner_provider_initial_service_proposal_messages (
+             id, proposal_id, assessment_id, owner_user_id, property_id,
+             invitation_id, organization_id, author_user_id, author_role,
+             message_kind, customer_safe_body, proposal_version_snapshot,
+             series_version_snapshot, in_reply_to_message_id,
+             related_proposal_id, idempotency_key
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, 'provider',
+             'provider_response', $9, $10, $11, $12, $13, $14
+         )",
+    )
+    .bind(&message_id)
+    .bind(&reply.proposal_id)
+    .bind(&current.assessment_id)
+    .bind(&owner_user_id)
+    .bind(&current.property_id)
+    .bind(&current.invitation_id)
+    .bind(&current.organization_id)
+    .bind(provider_actor_user_id)
+    .bind(request.customer_safe_body.trim())
+    .bind(reply.proposal_version_snapshot)
+    .bind(current.proposal_version)
+    .bind(&reply.message_id)
+    .bind(request.related_proposal_id.as_deref().map(str::trim))
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    let message_query =
+        format!("{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT} WHERE id = $1");
+    let message = sqlx::query(&message_query)
+        .bind(&message_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(PersistedInitialServiceProposalMessageWriteOutcome::Created(
+        owner_provider_initial_service_proposal_message_from_row(&message),
+    ))
 }
 
 fn owner_provider_initial_service_proposal_decision_from_row(

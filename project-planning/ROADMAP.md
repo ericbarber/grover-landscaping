@@ -278,7 +278,11 @@ workspaces. The provider reload projection includes its latest version, private
 production assumptions remain separate, owner acceptance requires the exact
 affirmation, and accepted state creates no schedule, payment, or crew
 assignment. Phase 4B2b proposal questions and change requests are next and remain separate
-from lifecycle decisions and minimized audit events.
+from lifecycle decisions and minimized audit events. Its persistence foundation
+is now delivered with immutable customer-safe messages, exact subject/current
+version snapshots, provider reply and revised-proposal linkage, actor-scoped
+replay, owner isolation, and PostgreSQL non-activation coverage. Authenticated
+routes and both workspace interfaces are the active remainder.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

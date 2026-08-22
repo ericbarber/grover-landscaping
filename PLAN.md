@@ -33,12 +33,17 @@ Current state:
   customer-safe offer after a completed assessment and recover the latest
   version on reload; an owner can review immutable history and make a deliberate
   exact-version accept/decline decision. Acceptance remains unactivated.
+- Phase 4B2b1 now delivers the proposal-conversation persistence boundary:
+  append-only owner questions/change requests and provider responses retain the
+  exact subject and current-series proposal versions, preserve actor-scoped
+  replay, link revised proposals explicitly, and stay outside decisions and
+  minimized lifecycle events.
 
 Next slice:
 
-- Define and deliver Phase 4B2b proposal questions/change requests as a separate
-  persistence and interface contract; do not repurpose assessment messages,
-  owner decisions, or audit notes.
+- Complete Phase 4B2b by exposing the separate proposal conversation through
+  authenticated APIs and both acquisition workspaces; do not repurpose
+  assessment messages, owner decisions, or audit notes.
 - Then deliver the Phase 4C explicit activation boundary from an accepted
   snapshot into provider setup and first-visit confirmation without coupling
   acceptance to payment, scheduling, or crew assignment.
@@ -672,9 +677,10 @@ Active slice:
   cadence, policies, price, monthly comparison, revision notes, and expiration;
   only a current sent version exposes explicit acceptance or controlled decline.
   Acceptance requires the versioned affirmation and states that no visit,
-  payment, or crew assignment was created. Proposal questions and change
-  requests still need their separate Phase 4B2b persistence contract and are not
-  stored as decisions, assessment messages, or audit events.
+  payment, or crew assignment was created. Phase 4B2b1 now persists owner
+  questions/change requests and provider responses separately, with exact
+  proposal-version context and no decision, audit-event, or operational side
+  effect; authenticated routes and workspace interfaces remain in progress.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

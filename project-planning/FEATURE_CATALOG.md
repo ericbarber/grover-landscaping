@@ -262,8 +262,11 @@ here does not mean every capability has been delivered.
 - Production neutral owner proposal comparison and exact-version accept/decline
   with explicit affirmation, expiration handling, and accepted-but-unactivated
   guidance
-- Planned separately persisted proposal questions, change requests, and explicit
-  accepted-proposal activation
+- Append-only proposal questions/change requests and provider responses with
+  exact proposal-version context, revised-version linkage, owner isolation,
+  replay safety, and separation from decisions and lifecycle audit
+- Planned authenticated proposal-conversation interfaces and explicit accepted-
+  proposal activation
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

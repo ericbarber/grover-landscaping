@@ -107,8 +107,11 @@ scope/exclusion text.
    snapshot, minimized events, and PostgreSQL isolation/replay coverage.
 3. **4B2a — Authenticated lifecycle APIs (delivered):** verified-provider
    create/revise plus owner-scoped list/detail and versioned accept/decline.
-4. **4B2b — Proposal conversation:** persist and expose owner questions and
-   change requests separately from decisions and minimized lifecycle events.
+4. **4B2b — Proposal conversation (in progress):** persistence now keeps owner
+   questions/change requests and provider responses append-only and separate
+   from decisions and minimized lifecycle events, snapshots both the subject
+   and current series version, and explicitly links a newer revision when a
+   provider replies. Authenticated APIs and both production interfaces remain.
 5. **4B3 — Production interfaces (delivered):** provider authoring/revision,
    latest-version reload, and neutral Yard Owner immutable-history
    comparison/exact-version decision experiences with responsive recovery.
