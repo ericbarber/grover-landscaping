@@ -57,17 +57,17 @@ proposal-collaboration slices are delivered. Phase 4C0 now defines activation
 authority, atomic projection, property-scoped portal access, immutable
 provenance, competing-request closure, and the first-visit boundary. Phase 4C1
 now delivers the constrained schema, atomic repository transaction, safe
-activated progress, and PostgreSQL concurrency/side-effect proof. The next
-slice is Phase 4C2 authenticated API delivery:
+activated progress, PostgreSQL concurrency/side-effect proof, and authenticated
+owner activation/status routes. The next slice is Phase 4C3 interface adoption:
 
-1. Expose owner-only exact-version activation and property-scoped activation
-   status without accepting provider or operational identifiers from the
-   browser.
-2. Map invalid, missing, stale, changed-replay, conflict, and unavailable
-   outcomes explicitly and keep provider setup separate from first-visit
-   confirmation.
-3. Prove route authorization and persistence-outage behavior before production
-   interface adoption.
+1. Add a distinct post-acceptance activation review to the Yard Owner proposal
+   workspace with the current activation affirmation and stable retry key.
+2. Reload activation status authoritatively after unknown responses and show the
+   projected provider-setup state without implying a first visit, payment,
+   schedule, or crew assignment.
+3. Show the provider an activated/setup status through an authorized existing
+   projection, with responsive browser coverage for success, replay, conflict,
+   and unavailable recovery.
 
 ## Read first
 

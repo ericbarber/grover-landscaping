@@ -61,11 +61,16 @@ Current state:
   property-scoped owner membership and portal grant, closes only same-property
   competitors, reports activated progress safely, and proves concurrent exact
   replay without jobs, plans, routes, crews, or assignments.
+- Phase 4C2 now exposes verified-owner activation and activation-status routes
+  in the exact property/proposal scope. Validation, route authorization,
+  created-versus-replayed responses, missing/not-ready/conflict distinctions,
+  and persistence-outage recovery are explicit; the browser supplies no
+  provider or operational record identifier.
 
 Next slice:
 
-- Deliver the Phase 4C2 authenticated owner activation/status API, then adopt
-  the owner-confirmed interface before the separate first-visit lifecycle.
+- Deliver the Phase 4C3 owner-confirmed activation interface and provider setup
+  status, then proceed to the separate first-visit lifecycle.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

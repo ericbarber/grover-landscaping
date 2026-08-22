@@ -3880,6 +3880,39 @@ impl OwnerAcquisitionRepository {
         }
     }
 
+    pub async fn get_owner_provider_relationship_activation(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+    ) -> OwnerReadResult<OwnerProviderRelationshipActivationRecord> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        let query = format!(
+            "{OWNER_PROVIDER_RELATIONSHIP_ACTIVATION_SELECT}
+             WHERE activation.owner_user_id = $1
+               AND activation.owner_property_id = $2
+               AND activation.proposal_id = $3"
+        );
+        match sqlx::query(&query)
+            .bind(owner_user_id)
+            .bind(property_id)
+            .bind(proposal_id)
+            .fetch_optional(pool)
+            .await
+        {
+            Ok(Some(row)) => {
+                OwnerReadResult::Loaded(owner_provider_relationship_activation_from_row(&row))
+            }
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "owner-provider relationship activation read failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
     pub async fn list_owner_initial_service_proposal_messages(
         &self,
         owner_user_id: &str,

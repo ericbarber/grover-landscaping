@@ -87,7 +87,8 @@ use grover_landscaping_api::{
         validate_initial_service_proposal_decision_request,
         validate_initial_service_proposal_request, validate_intake_media_request,
         validate_owner_assessment_message_request,
-        validate_owner_initial_service_proposal_message_request, validate_property_request,
+        validate_owner_initial_service_proposal_message_request,
+        validate_owner_provider_relationship_activation_request, validate_property_request,
         validate_provider_assessment_message_request,
         validate_provider_assessment_private_note_request, validate_provider_assessment_request,
         validate_provider_assessment_transition_request,
@@ -106,7 +107,8 @@ use grover_landscaping_api::{
         validate_provider_organization_claim_request,
         validate_provider_organization_options_request,
         validate_provider_response_capability_request, validate_workspace_request,
-        validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
+        validate_yard_brief_request, ActivateOwnerProviderRelationshipRequest,
+        AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
         CreateOwnerInitialServiceProposalMessageRequest, CreateOwnerIntakeMediaRequest,
         CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
@@ -133,7 +135,8 @@ use grover_landscaping_api::{
         OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
         OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
         OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
-        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        OwnerProviderProgressResult, OwnerProviderRelationshipActivationResult,
+        OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ProposeProviderAssessmentWindowRequest,
         ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
         ReportOwnerProviderInvitationAbuseRequest, RevokeOwnerProviderDisclosureGrantRequest,
@@ -759,6 +762,11 @@ fn app_with_runtime(
             "/owner-properties/{property_id}/initial-service-proposals/{proposal_id}/messages",
             get(list_owner_initial_service_proposal_messages)
                 .post(create_owner_initial_service_proposal_message),
+        )
+        .route(
+            "/owner-properties/{property_id}/initial-service-proposals/{proposal_id}/activation",
+            get(get_owner_provider_relationship_activation)
+                .post(activate_owner_provider_relationship),
         )
         .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
@@ -1921,6 +1929,92 @@ async fn decide_owner_initial_service_proposal(
             persisted_resource_unavailable_response(
                 "owner_initial_service_proposal_decision_unavailable",
                 "The proposal decision could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
+            )
+        }
+    }
+}
+
+async fn get_owner_provider_relationship_activation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_owner_provider_relationship_activation(&principal.subject, &property_id, &proposal_id)
+        .await
+    {
+        OwnerReadResult::Loaded(activation) => Json(activation).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_provider_relationship_activation_not_found",
+            "No activation was found for this proposal and property.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_provider_relationship_activation_unavailable",
+            "Activation status could not be loaded. Existing provider setup is unchanged.",
+        ),
+    }
+}
+
+async fn activate_owner_provider_relationship(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+    Json(request): Json<ActivateOwnerProviderRelationshipRequest>,
+) -> Response {
+    if !validate_owner_provider_relationship_activation_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_provider_relationship_activation_invalid",
+                message: "Confirm provider setup using the current activation statement and exact accepted proposal version."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .activate_owner_provider_relationship(
+            &principal.subject,
+            &property_id,
+            &proposal_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderRelationshipActivationResult::Activated(activation) => {
+            (StatusCode::CREATED, Json(activation)).into_response()
+        }
+        OwnerProviderRelationshipActivationResult::Replayed(activation) => {
+            Json(activation).into_response()
+        }
+        OwnerProviderRelationshipActivationResult::NotFound => resource_not_found_response(
+            "owner_initial_service_proposal_not_found",
+            "The accepted proposal was not found for this property.",
+        ),
+        OwnerProviderRelationshipActivationResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_relationship_activation_not_ready",
+                message: "This proposal or property is no longer ready for activation. Reload the accepted proposal and current property status."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderRelationshipActivationResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_provider_relationship_activation_conflict",
+                message: "Provider setup was already completed, changed, or is being completed. Reload activation status before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderRelationshipActivationResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_provider_relationship_activation_unavailable",
+                "Provider setup could not be confirmed. No partial setup is reported; reload activation status before retrying.",
             )
         }
     }
@@ -9971,6 +10065,7 @@ mod tests {
         for uri in [
             "/owner-properties/property-1/initial-service-proposals",
             "/owner-properties/property-1/initial-service-proposals/proposal-1",
+            "/owner-properties/property-1/initial-service-proposals/proposal-1/activation",
         ] {
             let response = app
                 .clone()
@@ -10064,6 +10159,42 @@ mod tests {
                         })
                         .to_string(),
                     ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let activation_payload = serde_json::json!({
+            "expected_proposal_version": 1,
+            "activation_affirmation_text_version": "owner_provider_relationship_activation_v1",
+            "owner_confirmed": true,
+            "idempotency_key": "relationship-activation-outage-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/activation")
+                    .header("content-type", "application/json")
+                    .body(Body::from(activation_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let mut invalid_activation_payload = activation_payload;
+        invalid_activation_payload["owner_confirmed"] = serde_json::json!(false);
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/activation")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_activation_payload.to_string()))
                     .unwrap(),
             )
             .await

@@ -122,9 +122,10 @@ the relationship was activated.
    portal-access schema plus the atomic repository transaction, activated
    progress projection, and PostgreSQL isolation, replay, concurrency,
    competing-closure, and no-operational-side-effect coverage.
-3. **4C2 — Authenticated API:** owner-only activation and activation-status
-   reads with invalid, missing, stale, conflict, replay, and unavailable
-   recovery mappings.
+3. **4C2 — Authenticated API (delivered):** owner-only activation and
+   activation-status reads with invalid, missing, stale, conflict, replay, and
+   unavailable recovery mappings. See the
+   [API contract](owner-provider-activation-api.md).
 4. **4C3 — Production interfaces:** an explicit post-acceptance activation
    review and provider setup status in the owner/provider workspaces.
 5. **4C4 — First visit:** separate provider proposal and owner confirmation or

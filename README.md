@@ -37,6 +37,7 @@ Start with these records when reviewing or continuing development:
 - [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
 - [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
 - [Owner–provider activation contract](docs/owner-provider-activation-design.md) — accepted-proposal projection, portal access, and first-visit boundaries
+- [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features

@@ -783,6 +783,16 @@ async fn repository_distinguishes_unavailable_invitation_storage() {
     ));
     assert!(matches!(
         repository
+            .get_owner_provider_relationship_activation(
+                "owner-unavailable",
+                "property-unavailable",
+                "proposal-unavailable",
+            )
+            .await,
+        OwnerReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .opt_out_provider_invitation(
                 "provider@example.com",
                 "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
