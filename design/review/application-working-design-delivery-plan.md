@@ -360,12 +360,15 @@ different product decision, missing authority, or unavailable required contract.
 
 | Phase | Status | Next action |
 | --- | --- | --- |
-| 0. Foundation and shell | Next | Audit production shell and define shared state/component inventory |
-| 1. Access, setup, and Home | Planned | Begin after shell composition is validated |
-| 2. Field execution | Planned | Reuse crew Route V1 direction in connected prototype |
-| 3. Manager daily operations | Planned | Reuse schedule V1 and Recovery wireframe |
-| 4. Completion proof | Planned | Map current report, evidence, delivery, and bid contracts |
-| 5. Customers and portfolios | In progress · Yard Owner portal and acquisition complete | Return to property-manager portfolios; review acquisition production adoption separately and keep billing product-gated |
-| 6. Team and organization | Planned | Map invitation, membership, crew, and hierarchy decisions |
+| 0. Foundation and shell | Partial production adoption | Finish outlined icons, operational density/status primitives, and tablet rail behavior |
+| 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
+| 2. Field execution | Partial production adoption | Adopt Crew Route V1 hierarchy across the connected Home → Route → Jobs → Job workflow |
+| 3. Manager daily operations | Partial production adoption | Converge authenticated Schedule, inspector, publish/capacity risk, and Recovery composition |
+| 4. Completion proof | Partial production adoption | Connect existing report, evidence, delivery, and bid contracts as one responsive handoff |
+| 5. Customers and portfolios | In progress · Yard Owner designs complete, production partial | Finish acquisition proposal/activation; adopt Yard Owner portal; then produce property-manager working design; keep billing gated |
+| 6. Team and organization | Partial production adoption | Converge delivered invitation, membership, crew, hierarchy, and audit controls in the shared shell |
 | 7. Revenue operations | Product-gated | Confirm planned product contracts before high fidelity |
-| 8. Convergence | Planned | Begin after phases 0–7 reach their applicable gates |
+| 8. Convergence | Partial foundation | Continue shared visual/browser regression now; complete linked critical journeys after phases 0–7 meet applicable gates |
+
+The production-facing detail and exact ordered queue are maintained in the
+[`prototype adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).

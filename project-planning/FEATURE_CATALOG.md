@@ -1,5 +1,10 @@
 # Feature Catalog
 
+This catalog includes delivered foundations, design-ready targets, and planned
+capability areas. Use [`../PLAN.md`](../PLAN.md) for delivery status and
+[`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md) for the exact design-to-React
+boundary; inclusion here alone does not mean a feature shipped.
+
 ## Public Product Experience
 
 - Shared working-design foundation across the public homepage, Yard Crew
@@ -252,6 +257,9 @@ here does not mean every capability has been delivered.
 - Authenticated acquisition-proposal lifecycle APIs for verified-provider
   publication/revision and owner-scoped list, detail, and exact-version
   decisions with explicit route authorization and fail-closed error mapping
+- Planned production proposal interfaces for provider authoring/revision and
+  neutral owner comparison/decision, followed by separately persisted questions,
+  change requests, and explicit accepted-proposal activation
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

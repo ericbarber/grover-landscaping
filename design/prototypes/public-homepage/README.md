@@ -21,6 +21,16 @@ http://127.0.0.1:4179/design/prototypes/public-homepage/
 Opening `index.html` directly also works. The Sign in destination represents the
 production handoff and is not part of the design prototype.
 
+## Production adoption status
+
+The production React landing page has adopted the shared visual foundation,
+split editorial hero, full persona continuity, direct Yard Owner/company signup,
+Plan–Care–Proof interaction, backend-aware lead states, metadata, attribution,
+and accessibility coverage. The Plan step now embeds the prototype-aligned
+“Today’s operation” dashboard. Remaining public work is intentionally gated on
+approved production captures, verified customer proof, and measured conversion
+evidence. See the [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Intended journey
 
 1. The split hero explains the product promise and shows an explicitly
@@ -65,7 +75,9 @@ production handoff and is not part of the design prototype.
 - No leads, analytics, authentication, or application mutations are sent.
 - All operating counts are fictional preview data and are labeled as illustrative.
 - The existing image is a project-local design asset, not customer evidence.
-- Production React adoption belongs to a separate implementation slice.
+- The static prototype remains the design reference; production behavior lives
+  in React and must preserve real analytics, lead persistence, and local-preview
+  boundaries.
 
 ## Validation
 

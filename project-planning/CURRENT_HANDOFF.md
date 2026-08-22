@@ -3,89 +3,94 @@
 ## Restart point
 
 - Branch: `main`
-- Current branch tip: use `git log -1`; this handoff tracks delivery state rather
-  than pinning a pre-Phase-4 commit.
-- Canonical status: [`../PLAN.md`](../PLAN.md), Yard Owner Phase 3E/4 entries only
-- Active roadmap item: Yard Owner Phase 4 assessment lifecycle
-- Phase 3D is complete in `98fcfc2`, `1d234d0`, `234ac7a`, and `3afae52`.
-- Phase 3E0 hardening planning is complete in `73545a4`; Phase 3E1 retry-safe
-  disclosure decisions, Phase 3E2 server authorization/concurrency regression,
-  Phase 3E3 browser/accessibility automation, and Phase 3E4 minimized monitoring,
-  runbook validation, and synthetic rehearsal are delivered. Repository-owned
-  Phase 3E automation is complete; Phase 3E5 external assurance is launch-
-  blocking.
-- Phase 4A1 assessment persistence is delivered with provider authorization,
-  exact replay, bounded remote/on-site states, owner isolation, and minimized
-  audit. Phase 4A2a exposes verified-provider start and owner-scoped history
-  APIs with route and outage coverage. Phase 4A2b1 now delivers the
-  separate constrained stores, owner-safe shared projection, minimized events,
-  and PostgreSQL non-leakage coverage; authorized communication writes are the
-  next implementation boundary after the delivered lifecycle mutations.
-- Phase 4A2c1 delivers optimistic, replay-safe owner confirmation or change
-  request for a proposed on-site window with owner/property isolation, controlled
-  actions, minimized event history, route policy, concurrency, and outage
-  coverage. Phase 4A2c2 delivers verified-provider begin, complete,
-  cannot-assess, and cancel transitions with full current-authority rechecks,
-  expected-version locking, exact replay, controlled customer-safe terminal
-  outcomes, minimized events, route policy, concurrency, and outage coverage.
-- Phase 4A2b2 delivers owner-scoped shared-message writes, verified-provider
-  shared/private writes with full current-authority rechecks, exact replay,
-  current-version enforcement, status-only terminal recovery, minimized events,
-  and owner reads sourced only from the shared projection.
-- Phase 4A2b3 exposes owner shared-message list/create and verified-provider
-  shared-message/private-note create routes with separate validators, route
-  authorization, explicit HTTP outcomes, and fail-closed outage coverage.
+- Resolve the current tip with `git log -1`; this handoff intentionally does not
+  pin a commit that will become stale.
+- Canonical delivery status: [`../PLAN.md`](../PLAN.md)
+- Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
+- Active product boundary: Yard Owner acquisition Phase 4B proposal adoption
+- Preserve unrelated local changes in `.gitignore`,
+  `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
-Preserve the unrelated existing changes in `.gitignore`,
-`frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
+## What is currently delivered
+
+### Public and shared visual experience
+
+- All four public personas carry a tailored story from hero through invitation.
+- Yard and company signup remain directly available.
+- The landscaping-company hero and the Plan product-tour step use the approved
+  interactive “Today’s operation” schedule concept.
+- The canonical palette, typography roles, wordmark, controls, focus treatment,
+  public/acquisition materials, and authenticated Home shell are in production.
+- Local role review exposes seven fixed personas without AWS and the `/app`
+  composition follows the selected persona rather than changing only its title.
+
+### Yard Owner production adoption
+
+- Private owner workspace, property, versioned brief, and optional guided media
+  are owner-scoped and independent of provider tenants.
+- Known-provider invitation, delivery-state, recipient verification, organization
+  claim/review/appeal, bounded response, owner/provider progress, and abuse/opt-
+  out/revocation contracts are implemented.
+- Provider-specific disclosure review, immutable receipts, category-filtered
+  access, owner history, and future-access revocation are implemented in the API
+  and responsive owner/provider interfaces.
+- Assessment persistence, remote/on-site lifecycle, replacement windows,
+  customer-safe conversation, provider-private notes, owner interface, and
+  provider interface are implemented.
+- Versioned initial-service proposal persistence and authenticated provider
+  publish/revise plus owner list/detail/decision APIs are implemented. Acceptance
+  creates an immutable accepted-but-unactivated snapshot and does not create a
+  customer, job, route, schedule, or crew assignment.
+
+### Repository assurance
+
+- The pilot assurance manifest, alerts/runbook mapping, synthetic scenarios, and
+  browser/accessibility matrix provide repository-owned evidence.
+- Live provider delivery, monitoring, staffing, human usability/assistive-
+  technology/device sessions, Privacy/Security approval, and go/no-go remain
+  explicitly unsigned external gates.
+
+## Next implementable slice
+
+Build the owner and provider initial-service proposal interfaces against the
+delivered Phase 4B2a APIs and the validated acquisition prototype:
+
+1. Add typed client mapping for provider publication/revision and owner
+   list/detail/exact-version decisions.
+2. Let a provider publish only after an authorized completed assessment and keep
+   provider-private production basis separate from owner-visible scope.
+3. Let an owner compare immutable versions, inspect scope, exclusions, cadence,
+   price, terms, expiry, and decide with explicit confirmation.
+4. Preserve loading, empty, unavailable, expired, stale/conflict, retry, replay,
+   and accepted-but-not-activated states.
+5. Integrate the owner view into `/app/yard-owner` and the provider view into the
+   recipient assessment workspace without implying scheduling, payment, service
+   activation, or crew assignment.
+6. Add unit, TypeScript, production-build, and responsive owner/provider browser
+   coverage, then update `PLAN.md` and this handoff.
+
+Proposal questions and change requests remain a separate persistence contract;
+do not store them as decisions, assessment messages, or generic audit notes.
 
 ## Read first
 
-1. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
-2. [`../docs/owner-provider-disclosure-grant-design.md`](../docs/owner-provider-disclosure-grant-design.md)
-3. [`ROADMAP.md`](ROADMAP.md), only where it describes Yard Owner Phase 3E/4
-4. [`../design/review/yard-owner-acquisition-professional-assurance.md`](../design/review/yard-owner-acquisition-professional-assurance.md)
-5. [`../design/review/yard-owner-acquisition-human-validation-protocol.md`](../design/review/yard-owner-acquisition-human-validation-protocol.md)
-6. [`../docs/yard-owner-acquisition-pilot-operations-runbook.md`](../docs/yard-owner-acquisition-pilot-operations-runbook.md)
-7. [`../docs/yard-owner-acquisition-pilot-monitoring-contract.md`](../docs/yard-owner-acquisition-pilot-monitoring-contract.md)
-8. [`../docs/yard-owner-acquisition-pilot-assurance.json`](../docs/yard-owner-acquisition-pilot-assurance.json)
-9. [`../docs/owner-provider-assessment-design.md`](../docs/owner-provider-assessment-design.md)
+1. [`../docs/owner-provider-initial-service-proposal-design.md`](../docs/owner-provider-initial-service-proposal-design.md)
+2. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
+3. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
+4. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
+5. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
 
-## Delivered boundary
+## Validation baseline
 
-Phase 3D delivers provider-specific disclosure review, immutable receipts,
-revocable current grants, category-filtered provider reads, owner history and
-revocation, production owner/provider interfaces, and passing automated client,
-frontend unit, type, production-build, and four-journey compatible-Chromium
-validation. Phases 3E1–3E4 add retry/concurrency hardening, the four-project
-browser matrix, minimized monitoring/alert contracts, machine-checked runbook
-mappings, and synthetic rehearsal evidence.
+The latest public-product slice passes all 408 frontend unit tests, TypeScript,
+the production build, and 16 Chromium mobile/desktop landing checks. Re-run the
+checks appropriate to each subsequent phase; do not infer that unrelated backend,
+PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
+baseline.
 
-Phase 4A1 authorizes only creation of a remote review or proposed on-site
-assessment window after the current disclosure boundary is rechecked. It does
-not authorize a proposal, pricing, service activation, scheduling, crew
-assignment, a work order, or broader provider access. Preserve the existing
-owner/property/provider/actor/mailbox/capability checks and default-withheld
-privacy behavior throughout hardening.
+## Stop conditions
 
-## Next delivery work
-
-Do not mark the pilot ready until Phase 3E5 live delivery/monitoring integration,
-named staffing, human usability/assistive-technology/device work,
-Privacy/Security review, and go/no-go are signed. The machine-readable assurance
-manifest must continue to list those items as external or unsigned. Provider-
-production owner/provider assessment interfaces are the next product-development
-slice; they do not
-remove or bypass the Phase 3E5 pilot launch
-blockers. Keep
-[`../PLAN.md`](../PLAN.md) canonical when work resumes.
-
-Automated evidence may cover regression suites, conflict and outage behavior,
-cross-browser checks available in the environment, monitoring contracts,
-runbook validation, and launch-rehearsal tooling. Do not label automated or
-simulated results as signed human evidence.
-
-Stop only where completion genuinely requires a person or unavailable external
-infrastructure: real assistive-technology use, physical-device checks, privacy
-and security approval, operational ownership/signature, vendor selection, or a
-live pilot decision.
+Continue automatically through safe repository-owned slices. Pause only for a
+material product choice, new authority, unavailable required infrastructure, or
+evidence that must come from a real person or live service. Never represent a
+simulation, fallback, or local reviewer as production or signed evidence.

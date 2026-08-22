@@ -4,6 +4,22 @@ The first protected production pilot is defined by the repository-root `render.y
 
 AWS remains the target for a later stage that needs managed user identity, private S3 photo storage, asynchronous workflows, or tighter network isolation.
 
+Local development does not require AWS, Render, Cognito, or S3. The default
+Compose stack uses PostgreSQL, `AUTH_MODE=local_review`, local photo placeholders,
+and disabled notification delivery. See
+[`../docs/local-development-without-cloud.md`](../docs/local-development-without-cloud.md).
+
+## Current infrastructure status
+
+| Area | Repository state | External work still required |
+| --- | --- | --- |
+| Local stack | Delivered through Docker Compose and watchdog scripts | None for normal local review |
+| Protected pilot image | Delivered Dockerfile, health/readiness, migrations, non-root runtime, and `render.yaml` | Provisioned service, secrets, domain, smoke/rollback evidence |
+| Cognito | Terraform modules and dev/prod environment definitions delivered | Apply with an authorized AWS account and bind real identities |
+| S3 photos | Optional private/versioned Terraform module delivered | Enable, provision, validate lifecycle/CORS, and approve retention |
+| Notification delivery | Webhook worker contract delivered | Select provider, configure authenticated gateway/callback, dashboards, alerts, and ownership |
+| Full AWS application stack | Direction only | Networking, compute, database, eventing, deployment, and operations remain demand-gated |
+
 ## Cognito and Photo Storage
 
 Terraform now manages separate Cognito environments and includes an optional S3 photo-storage module:
@@ -44,7 +60,10 @@ bash scripts/validate-cognito-hosted-pilot.sh
 
 See `docs/hosted-pilot-runbook.md` for first-owner creation and membership binding.
 
-## Recommended Starting Layout
+## Future AWS layout
+
+The following remains a growth target, not a claim about directories currently
+implemented in this repository:
 
 ```text
 infra/

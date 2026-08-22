@@ -37,7 +37,11 @@ Cognito groups provide coarse application roles:
 - `PropertyManager`
 - `SupportAdmin`
 
-Manager/owner/support roles can change day-plan structure. Crew roles can read assigned operational data and update stop progress. Customer roles are denied access to unscoped operational APIs until organization and property scoping is persisted.
+Manager/owner/support roles can change authorized operational structure. Crew
+roles can read assigned operational data and update field progress. Property
+owners use separate self-scoped acquisition and customer-safe routes; property
+managers use tenant/property-scoped customer views. No frontend persona choice
+or hidden navigation item substitutes for backend resource authorization.
 
 ## Local Authenticated Runtime
 

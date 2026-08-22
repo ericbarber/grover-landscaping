@@ -10,7 +10,9 @@ moving their existing canonical documents.
 | --- | --- |
 | [ROADMAP.md](ROADMAP.md) | Consolidated continuation plan and phased roadmap |
 | [FEATURE_CATALOG.md](FEATURE_CATALOG.md) | Index of product capabilities and their source specifications |
+| [PROTOTYPE_ADOPTION.md](PROTOTYPE_ADOPTION.md) | Approved design-to-production status and ordered adoption queue |
 | [VERSION_HISTORY.md](VERSION_HISTORY.md) | Human-readable history of project milestones and releases |
+| [CURRENT_HANDOFF.md](CURRENT_HANDOFF.md) | Current restart point, validation baseline, and next implementable slice |
 | [WORKING_AGREEMENTS.md](WORKING_AGREEMENTS.md) | Durable collaboration, commit, and validation expectations |
 | [`../design/`](../design/) | Visual gallery, information architecture, wireframes, and design decisions |
 

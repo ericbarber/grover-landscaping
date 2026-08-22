@@ -9,7 +9,8 @@ Use Render for the first protected production pilot:
 - Render terminates TLS, runs readiness health checks, deploys only after GitHub checks pass, and retains deploys for rollback.
 - The repository-root `render.yaml` defines both resources.
 
-The starter web service and Basic-256mb PostgreSQL plan currently total approximately $13 USD per month before bandwidth or other usage. Confirm current pricing before creating the resources.
+Confirm current Render and database pricing before creating resources; this
+document does not treat a historical plan price as a deployment guarantee.
 
 This is materially simpler and less expensive for the current single-service MVP than immediately operating Amplify, App Runner or ECS, a VPC connector, and RDS. AWS remains the growth path when Cognito, S3 photo storage, queues, or stricter network isolation are required.
 
@@ -17,15 +18,24 @@ This is materially simpler and less expensive for the current single-service MVP
 
 The application uses Amazon Cognito managed login with OAuth authorization code and PKCE. The browser sends Cognito access tokens to the Rust API, which verifies the RS256 signature, issuer, client ID, expiry, and token type before applying role gates. Health endpoints, runtime auth configuration, frontend assets, tokenized shared reports, and expiring tokenized bid reviews are public; operational APIs require authentication.
 
-Before storing real customer or employee data or opening access broadly:
+Persisted organization memberships, tenant-scoped operational repositories,
+customer accounts, notification outbox processing, and production-rejected local
+authentication modes are delivered foundations. Before storing real customer or
+employee data or opening access broadly:
 
-1. Add persisted organization memberships and organization-scoped database queries; current Cognito groups provide coarse role authorization only.
-2. Replace placeholder photo URLs with private object storage and expiring signed URLs.
-3. Remove runtime seed fallbacks from production repository error paths.
-4. Persist customer account data instead of returning seeded account summaries.
-5. Choose a database tier and backup/restore policy that meet the business recovery target.
-6. Configure and validate an email/SMS webhook gateway before enabling `NOTIFICATION_DISPATCH_MODE=webhook`; delivery remains explicitly disabled in `render.yaml` until those credentials exist.
-6. Add an email/SMS outbox dispatcher before treating queued project-bid notifications as delivered; the current runtime persists delivery work but does not call a provider.
+1. Provision and validate real Cognito identities plus their organization/owner
+   bindings; local reviewers are never production principals.
+2. Enable private S3 storage and expiring signed reads before treating placeholder
+   photo tickets as production evidence.
+3. Verify every hosted core workflow fails closed rather than using seed/browser
+   fallback when production persistence is unavailable.
+4. Choose a database tier plus backup, restore, and recovery objectives and
+   exercise them with owned evidence.
+5. Configure and validate an authenticated email/SMS gateway before enabling
+   `NOTIFICATION_DISPATCH_MODE=webhook`; delivery remains disabled in
+   `render.yaml` until those credentials and callbacks exist.
+6. Configure live dashboards, pager routing, calibrated thresholds, named
+   responders, privacy/security approval, and launch signoff.
 
 ## Provisioning
 

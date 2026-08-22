@@ -5,6 +5,11 @@ application experiences. It intentionally mirrors the product architecture so a
 reviewer can discuss page hierarchy, content, actions, and responsive behavior
 before implementation changes begin.
 
+Approved behavior is adopted deliberately into React; a prototype is not proof
+that production behavior shipped. The current mapping and implementation order
+live in the
+[`prototype adoption tracker`](../project-planning/PROTOTYPE_ADOPTION.md).
+
 Open [`index.html`](index.html) in a browser to review the complete visual set.
 The individual SVG files can also be opened directly in a browser, Figma, or an
 SVG-capable editor.
@@ -175,52 +180,30 @@ renderer or a design-tool account to see a proposed screen.
 
 ## Current review order
 
-1. Launch the
-   [working Yard Crew acquisition journey](prototypes/yard-crew-acquisition/index.html)
-   and review provider fit, solo/company/invited paths, business readiness,
-   service opportunity discovery, owner-approved details, site assessment,
-   proposal, work preparation, owner communication, team authority, saved
-   alerts, pilot governance, work-order handoff, and provider support.
-2. Review its
-   [phased product plan](review/yard-crew-acquisition-plan.md) and
-   [production handoff](review/yard-crew-acquisition-handoff.md), then use the
-   [professional V2 review](review/yard-crew-acquisition-professional-review-v2.md)
-   to assess the prioritized navigation, readiness, decision, assessment, and
-   estimating improvements; the
-   [V3 extension review](review/yard-crew-acquisition-extension-review-v3.md)
-   to assess owner communication, team authority, saved alerts, and pilot
-   governance; and the
-   [industry language review](review/yard-crew-industry-language-review.md) to
-   assess terminology consistency and the open eligibility, trust, privacy,
-   role, abuse, support, and monetization gates.
-3. Launch the
-   [working Yard Owner acquisition journey](prototypes/yard-owner-acquisition/index.html)
-   and review private setup, optional photographs, known-provider and directory
-   branches, consent, assessment, proposal, activation, and relationship control.
-4. Review its
-   [phased contract](review/yard-owner-entry-provider-connection-plan.md) and
-   [production handoff](review/yard-owner-acquisition-handoff.md), then inspect
-   the [professional UX review](review/yard-owner-acquisition-professional-review.md)
-   for resolved workflow, wording, consent, and accessibility findings.
-5. Launch the [working V2 public homepage](prototypes/public-homepage/index.html)
-   and review audience, workflow, responsive, recovery, and success behavior.
-6. Launch the [working Yard Owner V2 portal](prototypes/yard-owner-portal/index.html)
-   and review service-day confidence, contextual questions, proof feedback,
-   concern recovery, recommendation collaboration, customer-controlled
-   preferences, and customer-safe boundaries.
-7. Review the [V2 phased plan](review/yard-owner-portal-v2-enhancement-plan.md)
-   and [V2 production handoff](review/yard-owner-portal-v2-handoff.md).
-8. Review the
-   [application working-design delivery plan](review/application-working-design-delivery-plan.md)
-   and its seven completion gates.
-9. Review the [shared visual consistency review](review/cross-prototype-visual-consistency-review.md),
-   [navigation contract](foundations/navigation.md), and
-   [V1 visual foundation](foundations/visual-system-v1.svg).
-10. Compare the [homepage](high-fidelity/public/homepage-desktop-v1.svg),
-   [crew route](high-fidelity/field/crew-route-mobile-v1.svg), and
-   [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) as one brand.
-11. Review the field mobile sequence: Home → Route → Jobs → Job.
-12. Review the manager hierarchy: hub → category → tool → record/action.
-13. Review customer-safe pages and the separation from internal operations.
-14. Confirm that homeowner self-service and multi-vendor management remain
-   distinct product modes rather than being mixed into the core provider UI.
+1. Start with the
+   [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see
+   what is adopted, partial, design ready, product-gated, or only a future concept.
+2. Review the [working Yard Owner acquisition](prototypes/yard-owner-acquisition/index.html)
+   at assessment completion, proposal comparison/decision, accepted-but-
+   unactivated setup, and relationship control. Those are the active production
+   handoff boundaries.
+3. Read its [production handoff](review/yard-owner-acquisition-handoff.md) and
+   [proposal contract](../docs/owner-provider-initial-service-proposal-design.md)
+   before changing production proposal behavior.
+4. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg)
+   and [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) directions
+   with `/app`; these are the next shared application convergence targets after
+   the current acquisition boundary.
+5. Review the [application working-design delivery plan](review/application-working-design-delivery-plan.md)
+   for the seven completion gates and cross-application sequence.
+6. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
+   before its customer read-model and React adoption phases.
+7. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
+   before provider public routing/readiness adoption; keep curated discovery and
+   alerts behind their product and operational gates.
+8. Use the [working public homepage](prototypes/public-homepage/index.html) as a
+   regression reference. Its core production adoption is complete; remaining
+   captures and proof require approved evidence.
+9. Confirm that homeowner self-service, full multi-vendor management, curated
+   marketplace behavior, and billing remain distinct gated concepts rather than
+   being mixed into delivered core workflows.

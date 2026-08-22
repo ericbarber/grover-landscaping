@@ -1,5 +1,12 @@
 # V2 Working Homepage Handoff
 
+Production adoption status: core adoption complete. The React landing experience
+preserves the approved visual foundation, persona continuity, Plan–Care–Proof
+interaction, direct signup paths, real lead states, metadata, attribution, and
+responsive/accessibility contracts. Illustrative captures and customer proof
+remain evidence-gated. See the
+[`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Outcome
 
 The public homepage design is now a complete, responsive, dependency-free

@@ -10,6 +10,16 @@ from the development server at:
 http://<vpn-ip>:5173/design/prototypes/yard-owner-portal/
 ```
 
+## Production adoption status
+
+The production application already has customer-scoped properties, portfolio
+summaries, delivered reports, photo evidence, and bid history foundations, but
+the connected V2 Home/Visits/Proof/Account portal composition is not yet adopted.
+The required next-visit read model, service-day states, concern recovery,
+recommendation collaboration, and customer-controlled preferences remain planned.
+Billing remains product-gated. See the
+[adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Product journey
 
 - **Home** leads with live service-day status, preparation expectations, an

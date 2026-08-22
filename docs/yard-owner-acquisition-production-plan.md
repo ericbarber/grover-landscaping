@@ -72,7 +72,10 @@ The approved experience is defined by:
 | 4A2c5 | Delivered | Provider-authored replacement window after an owner change request, with optimistic concurrency, exact replay, and fresh owner confirmation |
 | 4B0 | Delivered | Acquisition-specific immutable proposal/version/decision/accepted-snapshot contract and project-bid separation |
 | 4B1a | Delivered | Constrained immutable proposal-version, owner-decision, accepted-snapshot, and minimized-event schema |
-| 4B1b–3 | Planned | Proposal repositories, authenticated APIs, and production provider/owner interfaces |
+| 4B1b | Delivered | Immutable proposal repository versions, expiration, exact replay/conflict, owner isolation, accepted-but-unactivated snapshots, minimized events, and PostgreSQL coverage |
+| 4B2a | Delivered | Authenticated provider publish/revise and owner list/detail/exact-version decision APIs with explicit lifecycle and outage mapping |
+| 4B2b | Planned | Proposal questions and change requests stored separately from decisions, assessment messages, and minimized lifecycle events |
+| 4B3 | Next | Responsive provider authoring/revision and neutral Yard Owner comparison/decision interfaces against the delivered APIs |
 | 4C–D | Planned | Activation and governed pilot convergence |
 
 ## Delivery principles
@@ -274,6 +277,13 @@ Phase 4A2c5 closes the on-site recovery loop: only the same verified provider
 with current authority can replace a requested-change window, and the new
 version returns to owner confirmation without scheduling service.
 
+Phase 4B1 and 4B2a deliver immutable proposal persistence plus authenticated
+provider publication/revision and owner list/detail/exact-version decisions.
+Acceptance creates an accepted-but-unactivated snapshot only. Phase 4B3
+production interfaces are the current implementation slice. Phase 4B2b proposal
+questions/change requests remain a separate contract and must not be represented
+as decisions or assessment messages.
+
 - Add versioned initial-service proposals with scope, exclusions, cadence,
   arrival/weather/cancellation policy, proof expectation, price, expiration,
   revision, and immutable accepted snapshot.
@@ -330,26 +340,14 @@ without weakening existing tenant, evidence, notification, or portal contracts.
 
 ## Active delivery order
 
-1. Phase 3 — known-provider connection pilot.
-2. Phase 4 — assessment, proposal, and activation.
+1. Phase 4B3 — provider and owner proposal interfaces against the delivered APIs.
+2. Phase 4B2b — separately contracted proposal questions/change requests.
+3. Phase 4C — explicit accepted-proposal activation and first-visit confirmation.
+4. Phase 4D/6 — relationship continuity and governed known-provider convergence.
+5. Phase 5 curated discovery only after eligibility, density, abuse, support, and
+   marketplace-governance gates have accountable owners.
 
-Phase 3 should proceed in these implementation slices:
-
-1. Recipient-specific invitation persistence, token security, delivery mapping,
-   suppression, expiry, revoke, retry, and audit. The creation/list foundation
-   verified-owner API, internal outcome mapping, expiry, and retry foundations
-   are delivered, together with verified-recipient opt-out, block/report,
-   durable suppression, and minimized case intake. Authenticated delivery
-   integration remains pending; recipient-safe invitation entry is next.
-2. The Provider Operations duplicate/dispute workflow, existing-provider inbox,
-   and explicit opportunity-response capability are delivered.
-3. Provider question/interest/decline/report writes are delivered; build the
-   owner/provider progress read models with fail-closed authorization next.
-4. Versioned provider-specific grants and approved/withheld disclosure receipts,
-   followed by revocation reconciliation and support views.
-5. Pilot hardening: idempotency, stale-tab conflict, monitoring, runbooks,
-   human/AT/device evidence, cross-functional signoff, and launch rehearsal.
-
-Phases 5–7 follow only after the preceding data and authorization boundaries are
-validated. No external address, messaging, identity-fact, or marketplace vendor
-is selected by this plan; those choices require separate operational review.
+Phase 3 repository behavior is complete except for the 3A5 live authenticated
+delivery integration and the Phase 3E5 external evidence gates. No external
+address, messaging, identity-fact, or marketplace vendor is selected by this
+plan; those choices require separate operational review.

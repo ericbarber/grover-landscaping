@@ -13,6 +13,33 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Prototype adoption and documentation convergence
+
+Goal: keep repository guidance aligned with delivered behavior and move approved
+working designs into production through explicit, validated phases.
+
+Current state:
+
+- Every tracked README now describes the implemented Rust/React system rather
+  than the repository’s original proposed skeleton.
+- [`project-planning/PROTOTYPE_ADOPTION.md`](project-planning/PROTOTYPE_ADOPTION.md)
+  maps each approved artifact to Adopted, Partial, Design ready, Product-gated,
+  or Future concept status and records the ordered production queue.
+- The current handoff, design index, high-fidelity index, prototype READMEs,
+  application design delivery tracker, roadmap, feature catalog, and version
+  history use the same adoption boundary.
+
+Next slice:
+
+- Adopt the delivered Phase 4B initial-service proposal APIs into the owner and
+  provider acquisition interfaces. Preserve immutable versions, exact-version
+  decisions, expiry/conflict recovery, provider-private production assumptions,
+  and the accepted-but-unactivated boundary.
+- Define proposal questions/change requests separately before implementing them;
+  do not repurpose assessment messages, owner decisions, or audit notes.
+- Continue through the ordered repository-owned adoption queue, leaving the
+  external and product gates in the tracker explicitly unresolved.
+
 ### Persona-specific public landing experiences
 
 Goal: give each public audience a complete landing-page narrative that reflects
@@ -241,31 +268,23 @@ Current state:
 
 Next design work:
 
+- Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
+  explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application
-  shell: adopt the validated desktop rail, operational density, status
-  components, and outlined icon family while retaining role-aware destinations
-  and local-review behavior.
-- Review the Yard Owner working design for phased production React adoption,
-  including a customer-specific next-visit read model and removal of raw billing
-  notes from customer completion reports.
-- Review the Yard Owner V2 package remotely, then adopt it in the production
-  React portal through the documented privacy/read-model, service-day, proof,
-  conversation, recommendation, and preference slices.
-- Adopt the design-complete Yard Owner known-provider connection as production
-  Phase 3, using the authority, visibility, receipt, lifecycle, support, and
-  acceptance gates in the V2 handoff; keep curated discovery deferred.
+  shell, field execution, manager daily operations, and completion-proof
+  handoff in the order recorded by
+  [`project-planning/PROTOTYPE_ADOPTION.md`](project-planning/PROTOTYPE_ADOPTION.md).
+- Adopt the Yard Owner V2 portal after its customer-specific next-visit read
+  model is delivered, then return to the property-manager portfolio working
+  design; keep billing product-gated.
 - Execute the prepared owner/provider usability, assistive-technology, physical-
   device, privacy/security, and support/operations signoff sessions against the
   committed assurance build; treat any critical disclosure misunderstanding as
   a release-blocking P1.
-- Review the Yard Crew acquisition V3 prototype and resolve provider eligibility,
+- Adopt Yard Crew public routing and identity/readiness, then resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
-  levels before production adoption. Begin with public routing and provider
-  identity/readiness, then pilot known-owner connections before curated
-  opportunities. Use the completed V3 owner-notification, team-authority,
-  saved-alert, and pilot-governance contracts during that adoption.
-- Resume Phase 0 of the broader application working-design plan; within customer
-  Phase 5, return to the property-manager portfolio and keep billing product-gated.
+  levels before curated opportunities. Use the completed V3 owner-notification,
+  team-authority, saved-alert, and pilot-governance contracts during adoption.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.
@@ -639,8 +658,9 @@ Active slice:
   routes now preserve invalid, missing, expired/current-state, conflict, replay,
   and persistence-outage distinctions. The authorization policy explicitly
   permits only these methods and paths, and route tests fail closed without
-  storage. Proposal questions and change requests need their separate
-  persistence contract next; they are not stored as decisions or audit events.
+  storage. Phase 4B2b owner/provider interface adoption is next. Proposal
+  questions and change requests still need their separate persistence contract;
+  they are not stored as decisions, assessment messages, or audit events.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,
@@ -649,10 +669,12 @@ Active slice:
   as the phased production tracker and preserve the design handoff’s consent,
   assessment, proposal, activation, and relationship boundaries.
 
-Exit condition: a verified signed-in owner can complete and reload their own
-private profile, property, yard brief, and optional guided photographs without
-creating a provider customer, service property, job, contract, route, crew
-assignment, public listing, or provider-access grant.
+Current Phase 4B exit condition: a verified provider can publish or revise an
+owner-visible proposal after an authorized completed assessment, and a verified
+owner can inspect immutable versions and make an exact-version decision in the
+production interfaces. Acceptance must remain explicitly unactivated and create
+no provider customer, service property, job, contract, route, schedule, payment,
+or crew assignment.
 
 ### Operational exception activity integration
 

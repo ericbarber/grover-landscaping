@@ -14,6 +14,13 @@ All identities, properties, photographs, providers, trust facts, proposals,
 prices, and dates are illustrative. The prototype does not persist or transmit
 data.
 
+Production adoption is partial: private intake, known-provider connection,
+provider claims, disclosure, assessments, and versioned proposal APIs are
+delivered. Owner/provider proposal interfaces are next; questions/change
+requests, explicit activation, relationship continuity, and curated discovery
+remain incomplete. See the
+[`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Review artifacts
 
 - [Interactive acquisition journey](../prototypes/yard-owner-acquisition/index.html)

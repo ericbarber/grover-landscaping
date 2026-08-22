@@ -11,6 +11,18 @@ development server at:
 http://<vpn-ip>:5173/design/prototypes/yard-owner-acquisition/
 ```
 
+## Production adoption status
+
+Production React and PostgreSQL now cover private owner/property intake,
+versioned yard briefs, guided media, known-provider invitation and progress,
+provider claims, affirmative disclosure and immutable receipts, access
+revocation, remote/on-site assessment, replacement windows, and separated
+owner/provider communication. Versioned proposal APIs are delivered, but their
+owner/provider interfaces are the next adoption slice. Proposal questions/change
+requests, explicit activation, relationship continuity, and curated discovery
+remain incomplete. See the
+[adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Complete journey
 
 1. Enter from a private-first Yard Owner invitation.

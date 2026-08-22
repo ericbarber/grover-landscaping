@@ -1,7 +1,10 @@
 # High-Fidelity Concepts
 
 These concepts apply the first Grover visual direction to representative product
-surfaces. They are design-review artifacts, not screenshots of implemented code.
+surfaces. They remain design-review artifacts rather than production screenshots,
+but several of their approved decisions have now been adopted in React. Track
+that distinction in the
+[`prototype adoption matrix`](../../project-planning/PROTOTYPE_ADOPTION.md).
 
 ## V2 working public design
 
@@ -9,10 +12,21 @@ surfaces. They are design-review artifacts, not screenshots of implemented code.
 | --- | --- | --- |
 | [`../prototypes/public-homepage/index.html`](../prototypes/public-homepage/index.html) | [Desktop](public/homepage-desktop-v2.png) · [Mobile](public/homepage-mobile-v2.png) | Responsive, persona-aware public journey with workflow and conversion states |
 
-The V2 public artifact is interactive and browser-validated. It remains a design
-prototype rather than the production React page. See the
+The V2 public artifact is interactive and browser-validated. Its theme, split
+hero, persona continuity, Plan–Care–Proof tour, direct signup paths, and
+conversion-state contracts are adopted in the production React page; the static
+prototype remains the review reference. See the
 [`V2 handoff`](../review/v2-working-homepage-handoff.md) for behavior, validation,
 and adoption guidance.
+
+## Production adoption status
+
+| Direction | Status |
+| --- | --- |
+| Public homepage V2 | Adopted, with illustrative previews retained until approved production captures exist |
+| Visual foundation V1 | Partial; shared tokens, typography, wordmark, controls, and shell materials are adopted |
+| Crew route mobile V1 | Partial; workflow foundations exist, but connected field composition adoption remains |
+| Manager schedule desktop V1 | Partial; marketing dashboard adopted, authenticated schedule/inspector convergence remains |
 
 ## V1 review set
 
@@ -35,12 +49,12 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Decide whether to adopt the working public design in the production React
-   homepage as one slice or as smaller foundation, hero, workflow, and conversion
-   slices.
-2. Add a responsive manager schedule interaction model.
-3. Design Job Detail, Recovery, and customer report states.
-4. Link validated artifacts from each matching implementation slice.
+1. Finish the shared authenticated shell’s outlined icons, operational density,
+   status primitives, and tablet rail behavior.
+2. Adopt the crew-route hierarchy across the connected field journey.
+3. Converge the authenticated manager schedule, inspector, and Recovery workflow.
+4. Link each implementation slice back to the adoption matrix and validated
+   artifact rather than treating the image itself as shipped behavior.
 
 The SVG files are editable source artifacts. PNG files are validated browser
 renders for review, sharing, and comparison.

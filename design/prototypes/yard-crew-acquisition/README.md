@@ -12,6 +12,17 @@ Open [`index.html`](index.html) from the design gallery or at:
 http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 ```
 
+## Production adoption status
+
+The public landscaping-company persona and reciprocal known-owner provider entry
+are partially adopted, including recipient verification, provider organization
+claims, bounded opportunity response, owner-approved disclosure, assessment, and
+separate shared/private notes. The complete provider acquisition, readiness,
+first-service preparation, team-authority, saved-alert, and curated-opportunity
+journey remains design ready. Production adoption begins with provider public
+routing and identity/readiness; curated opportunities remain product-gated. See
+the [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Review journey
 
 1. Review the evidence-based Yard Crew marketing promise.

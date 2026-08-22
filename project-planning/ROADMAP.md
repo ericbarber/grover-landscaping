@@ -5,8 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current UX priority is a complete persona-specific public landing
-experience. Yard Owner, property-manager, landscaping-company, and crew-lead
+The current production-adoption priority is the Yard Owner/provider initial-
+service proposal interface against the delivered Phase 4B APIs. The immediately
+preceding UX priority—a complete persona-specific public landing experience—is
+delivered. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
 signals, outcome stories, proof, capabilities, and final invitations instead of
 changing only first-screen copy. The landscaping-company route now makes its
@@ -394,29 +396,36 @@ schedule, remaining work, or a completed day.
 
 ## Immediate Continuation Work
 
-**Current — Persona-specific public landing experience**
+**Current — Yard Owner acquisition proposal interfaces**
 
-   - Keep all four audience routes coherent from hero through final conversion,
-     with direct signup paths still visible and persona-relevant primary actions.
-   - Replace illustrative product previews with approved production captures as
-     each workspace becomes review-ready.
-   - Add only verified, approved proof and use measured campaign behavior to
-     guide future conversion changes.
+   - Adopt the delivered versioned initial-service proposal APIs into the owner
+     and provider acquisition interfaces.
+   - Preserve immutable versions, owner-visible scope/exclusions/cadence/terms,
+     provider-private production assumptions, expiration, exact-version
+     decisions, conflict recovery, and accepted-but-unactivated meaning.
+   - Keep proposal questions and change requests out of decisions, assessment
+     messages, and audit notes until their separate contract is delivered.
 
-**Parallel product foundation — Yard Owner acquisition**
+**Next — Shared application and workflow convergence**
 
-   - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
-   - Delivered the self-scoped verified-identity APIs and responsive production React private entry.
-   - Versioned private yard briefs and optional owner-scoped guided media are delivered with upload, processing, replacement, explicit deletion, owner isolation, and responsive recovery.
-   - Build the known-provider invitation and per-provider disclosure pilot next from the completed V2 handoff; defer curated discovery until the direct connection loop is safe.
-   - Preserve recipient-specific tokens, separate provider relationship/capability checks, immutable disclosure receipts, terminal invitation states, and fail-closed identity/safety support.
-   - Implement Phase 3 in five reviewable slices: invitation/delivery; provider claim/authority; bounded response/read models; versioned grants/receipts/revocation; then pilot hardening and signed human/operational evidence.
+   - Finish outlined icons, operational density/status primitives, and tablet
+     navigation in the authenticated shell.
+   - Converge field execution against Crew Route V1, then manager daily
+     operations against Schedule V1 and Recovery.
+   - Connect completion proof from crew handoff through manager review and
+     customer-safe delivery before expanding customer and team surfaces.
 
-**Design-ready — Yard Crew acquisition production handoff**
+**Design-ready — Customer and provider adoption**
 
-   - Review the validated V3 provider prototype and use its owner-communication, team-authority, saved-alert, and pilot-governance contracts to close the recorded eligibility, pre-consent data, and support-level product gates.
-   - Adopt public audience routing and provider identity/readiness first, then connect the known-owner pilot to the Yard Owner invitation flow.
-   - Defer curated opportunity discovery until disclosure, safety, abuse, density, and marketplace-governance gates are operationally owned.
+   - Adopt the Yard Owner V2 portal after its next-visit read model exists, then
+     create the connected property-manager portfolio working design.
+   - Adopt Yard Crew public routing and provider identity/readiness before the
+     larger provider journey.
+   - Defer curated opportunity discovery, billing, customer proof, and production
+     captures until their recorded evidence and product gates are satisfied.
+
+The exact artifact mapping and ordered implementation queue live in
+[`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md).
 
 0. **Local mobile runtime readiness**
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.

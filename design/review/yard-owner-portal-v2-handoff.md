@@ -1,5 +1,11 @@
 # Yard Owner Portal V2 Working-Design Handoff
 
+Production adoption status: design ready with partial underlying customer-safe
+report, bid, property, and portfolio contracts. Production still needs the
+customer next-visit read model and connected Home/Visits/Proof/Account adoption;
+billing is product-gated. See the
+[`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Outcome
 
 Yard Owner V2 is a validated service-lifecycle companion. It preserves the V1

@@ -1,5 +1,11 @@
 # Yard Owner Portal Working-Design Handoff
 
+Production adoption status: design ready with partial customer/report/portfolio
+foundations. The connected portal composition and its next-visit, service-day,
+concern, recommendation, and preference contracts are not yet fully adopted.
+Billing remains product-gated. See the
+[`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
+
 > This document preserves the V1 production audit. The completed service-lifecycle
 > extension is documented in the [Yard Owner V2 handoff](yard-owner-portal-v2-handoff.md).
 

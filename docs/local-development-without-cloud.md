@@ -1,97 +1,99 @@
 # Local Development Without Cloud Hosting
 
-## Goal
+Grover can be developed and reviewed locally without AWS, Render, Cognito, S3,
+or a notification provider. The local stack intentionally substitutes bounded,
+visible development behavior without pretending cloud effects occurred.
 
-Continue developing Grover Landscaping without setting up an AWS account, billing, or hosted review environment yet.
+## Start the complete stack
 
-## Recommended Workflow
-
-```text
-ChatGPT-assisted development
-  -> commits to GitHub
-  -> GitHub Actions validates the repository
-  -> local checkout for manual review when needed
-  -> cloud deployment added later
+```bash
+cp .env.example .env
+docker compose up --build
+bash scripts/apply-local-migrations.sh
 ```
 
-## What We Can Build Without AWS
-
-We can develop most of the application locally before using cloud infrastructure:
-
-- React/Tailwind frontend shell
-- Rust Axum API
-- PostgreSQL-backed domain model
-- Authentication abstraction
-- Job and photo metadata APIs
-- Local file-backed photo upload simulation
-- Docker Compose development environment
-- Unit tests and integration tests
-- GitHub Actions CI
-
-## What We Should Defer Until AWS
-
-These pieces should be integrated once an AWS account is available:
-
-- Cognito user pools
-- S3 presigned upload URLs
-- ECS Fargate deployment
-- RDS or Aurora PostgreSQL
-- EventBridge and SQS workflows
-- Lambda image processing
-- CloudFront distribution
-- Production secrets management
-
-## Local Substitutes
-
-| Production Concern | Local Substitute |
-| --- | --- |
-| S3 photo storage | local filesystem or MinIO later |
-| Cognito auth | mock user identity / local JWT later |
-| RDS PostgreSQL | Docker Compose PostgreSQL |
-| EventBridge/SQS | in-process events or local queue table |
-| ECS Fargate | local Rust process or Docker Compose service |
-| Hosted frontend | Vite dev server |
-
-## Review Without a Hosted Web App
-
-Until a cloud review site exists, review can happen through:
-
-- local app runs from a cloned repo
-- screenshots committed or attached to issues later
-- GitHub Actions build/test results
-- PR diffs and Markdown documentation
-- generated static build artifacts later
-
-## Local Developer Commands
-
-Once the frontend exists:
+Open:
 
 ```text
+Frontend: http://localhost:5173
+Application: http://localhost:5173/app
+Backend: http://localhost:8080
+Readiness: http://localhost:8080/health/ready
+```
+
+The default `AUTH_MODE=local_review` publishes seven fixed reviewer profiles.
+Use the application header’s `Review as` selector to inspect Organization Owner,
+Manager, Crew Lead, Crew Member, Property Manager, Property Owner, and Support
+Administrator. Selection is tab-scoped. The backend derives roles and virtual
+demo membership from its own allowlist and rejects unknown reviewers.
+
+## Local substitutes and honest boundaries
+
+| Hosted concern | Local behavior |
+| --- | --- |
+| Cognito | Production-rejected fixed local reviewers |
+| RDS/managed PostgreSQL | Docker Compose PostgreSQL |
+| S3 | Local placeholder tickets or browser-held photo blobs where supported |
+| Notification provider | Durable outbox with dispatch disabled unless a test webhook is explicitly configured |
+| Hosted frontend/API | Vite and Axum containers with watchdog restart |
+| Cloud monitoring | Local logs, health/readiness, diagnostics, and synthetic assurance checks |
+
+Local-only or queued results are labeled. They are not production delivery,
+object storage, monitoring, or signed launch evidence.
+
+## Review on a phone
+
+With the workstation and phone on the same Tailscale or local network:
+
+```bash
+bash scripts/mobile-review.sh
+```
+
+The script detects a reachable address, starts local authenticated services with
+safe fallbacks, and prints the phone URL. Override detection when necessary:
+
+```bash
+MOBILE_REVIEW_HOST=192.168.1.20 bash scripts/mobile-review.sh
+```
+
+See [`mobile-docker-access.md`](mobile-docker-access.md),
+[`dev-review-environment.md`](dev-review-environment.md), and
+[`local-validation-sequence.md`](local-validation-sequence.md).
+
+## Frontend-only fallback
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Once the backend exists:
+Supported views use seeded/browser-local behavior when the API is unavailable.
+Authenticated persistence workflows still require the API and PostgreSQL.
 
-```text
-cd backend
-cargo run
+## Validation through Compose
+
+```bash
+docker compose exec -T frontend npm run typecheck
+docker compose exec -T frontend npm test
+docker compose exec -T frontend npm run build
+docker compose exec -T backend cargo fmt --all -- --check
+docker compose exec -T backend cargo test --all
 ```
 
-Once Docker Compose exists:
+Playwright Firefox and WebKit projects require their browser executables. Use the
+Chromium mobile/desktop projects as the compatible local baseline when those
+executables are unavailable, and keep the full cross-browser matrix for CI or an
+environment where all browsers are installed.
 
-```text
-docker compose up --build
-```
+## What still requires external infrastructure or authority
 
-## Near-Term Direction
+- Provisioned Cognito identities and production tenant bindings
+- Private S3 validation against real objects and lifecycle rules
+- Live notification gateway/callback and delivery receipts
+- Hosted deployment, domain, secrets, dashboards, pager routing, backups, and
+  rollback evidence
+- Human/device/privacy/security and go/no-go signoff
 
-The next development step is to scaffold:
-
-1. React/Tailwind frontend shell.
-2. Rust Axum backend shell.
-3. Docker Compose with PostgreSQL.
-4. CI checks for both projects.
-
-This lets development proceed without AWS costs while keeping the future AWS deployment path clean.
+Those dependencies do not prevent normal local feature development; they do
+prevent claiming a production pilot is ready.

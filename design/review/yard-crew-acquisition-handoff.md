@@ -1,5 +1,11 @@
 # Yard Crew Acquisition Working-Design Handoff
 
+Production adoption status: the public landscaping-company persona and reciprocal
+known-owner provider entry are partial foundations; the complete acquisition,
+readiness, first-service, team-authority, alert, and curated-opportunity journey
+is not yet adopted. Curated marketplace behavior remains product-gated. See the
+[`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
+
 ## Outcome
 
 The Yard Crew acquisition working design is complete as a connected journey from

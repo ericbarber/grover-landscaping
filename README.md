@@ -6,9 +6,22 @@ The project is built as a Rust + React application with local-first and remote-f
 
 ## Delivery Status
 
-Phase 3E repository-owned pilot assurance is complete. The current build includes the Yard Owner entry experience, private property intake, known-provider invitations, provider organization claims, administrative review and appeal paths, explicit disclosure grants and revocation, provider connection progress, and automated pilot assurance validation.
+Repository-owned Yard Owner pilot assurance is complete through Phase 3E, and
+production adoption has advanced through assessment interfaces and versioned
+initial-service proposal APIs. The current build includes private property
+intake, known-provider invitations, provider organization claims, administrative
+review and appeals, explicit disclosure grants and revocation, owner/provider
+connection progress, remote/on-site assessments with separated communication,
+and immutable proposal publication and owner-decision persistence.
 
-Production launch remains gated on external operational work: live authenticated delivery and monitoring integration, production dashboards and pager routing, calibrated alert thresholds, named pilot staffing, human usability and assistive-technology testing, physical-device verification, privacy/security review, and a signed go/no-go decision. Product development has begun Phase 4 assessment, proposal, and activation with an authorized assessment-persistence foundation; those launch gates remain unchanged.
+The public site now carries four complete persona journeys and reuses the
+prototype-aligned “Today’s operation” dashboard in the landscaping-company hero
+and product tour. The next implementable product slice is the owner/provider
+proposal interface; explicit activation and relationship continuity follow.
+Production launch remains gated on live authenticated delivery and monitoring,
+production dashboards and pager routing, calibrated alerts, named staffing,
+human usability and assistive-technology testing, physical-device verification,
+privacy/security review, and a signed go/no-go decision.
 
 Start with these records when reviewing or continuing development:
 
@@ -16,6 +29,7 @@ Start with these records when reviewing or continuing development:
 - [Current handoff](project-planning/CURRENT_HANDOFF.md) — concise implementation and validation context
 - [Roadmap](project-planning/ROADMAP.md) — ordered product phases
 - [Feature catalog](project-planning/FEATURE_CATALOG.md) — delivered and planned capability inventory
+- [Prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) — approved design-to-production map and ordered queue
 - [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
 - [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
@@ -53,6 +67,9 @@ Start with these records when reviewing or continuing development:
 - Provider organization discovery, organization claims, administrative review, appeal, and remediation workflows
 - Explicit per-capability disclosure review, grant, access, receipt, and revocation controls
 - Yard Owner provider-connection progress and recovery guidance
+- Owner/provider assessment lifecycle with customer-safe conversation and separate provider-private notes
+- Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
+- Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
 - Responsive and accessibility-focused owner/provider browser coverage
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
@@ -248,10 +265,14 @@ Current backend endpoints include:
 | POST | `/provider-assessments/{assessment_id}/transitions` | Begin, complete, mark unable to assess, or cancel an authorized provider assessment |
 | POST | `/provider-assessments/{assessment_id}/messages` | Add a verified provider's customer-safe assessment message |
 | POST | `/provider-assessments/{assessment_id}/private-notes` | Add a verified provider-private assessment note |
+| POST | `/provider-assessments/{assessment_id}/initial-service-proposals` | Publish or revise a versioned owner-visible initial-service proposal after an authorized completed assessment |
 | GET | `/owner-properties/{property_id}/provider-assessments` | List an owner's property-scoped assessment history |
 | POST | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/window-decision` | Confirm a proposed on-site assessment window or request another |
 | GET | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/messages` | List only customer-safe messages for an owner's assessment |
 | POST | `/owner-properties/{property_id}/provider-assessments/{assessment_id}/messages` | Add an owner-authored customer-safe assessment message |
+| GET | `/owner-properties/{property_id}/initial-service-proposals` | List property-scoped initial-service proposal history |
+| GET | `/owner-properties/{property_id}/initial-service-proposals/{proposal_id}` | Read one owner-scoped proposal and its immutable versions |
+| POST | `/owner-properties/{property_id}/initial-service-proposals/{proposal_id}/decision` | Accept or decline an exact proposal version without activating service |
 | GET | `/provider-organization-claim-reviews` | List administrative provider-claim review work |
 | POST | `/provider-organization-claim-reviews/{claim_id}/decisions` | Record a claim review or appeal decision |
 | GET | `/jobs` | List assigned jobs |
@@ -349,6 +370,8 @@ The project currently includes migrations for:
 - Provider organizations, claims, reviews, appeals, remediation state, and invitation responses
 - Capability-scoped disclosure grants, access records, receipts, decisions, and revocations
 - Separate customer-safe assessment messages and provider-private assessment notes
+- Acquisition-specific immutable proposal versions, exact-version owner decisions,
+  and accepted-but-unactivated snapshots
 - Route-planning seed data
 
 The API can fall back to seeded local data where persistence is not fully wired yet. This keeps the product usable for frontend development and demos before a hosted environment exists.
@@ -378,6 +401,12 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Verifying provider recipients and resolving provider organization claims
 - Reviewing, granting, auditing, and revoking individual disclosure capabilities
 - Tracking connection progress with explicit recovery paths for owners and providers
+- Reviewing and coordinating owner/provider assessments without leaking provider-private notes
+
+The next frontend acquisition slice adopts the delivered initial-service proposal
+APIs. Until that interface ships, the API foundation must not be described as a
+complete owner proposal experience. See the
+[prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment
 

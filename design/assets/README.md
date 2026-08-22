@@ -1,11 +1,18 @@
 # Design Assets
 
+Assets in this directory support source-controlled design review. Their presence
+does not grant customer-evidence rights or require production use. The current
+sunrise image is used by the public-homepage and Yard Crew design prototypes; the
+production React landing page currently uses code-native composition instead of
+shipping this image.
+
 ## `grover-southwest-sunrise-hero.png`
 
 - Mode: built-in image generation
 - Use case: `photorealistic-natural`
 - Intended use: public homepage and high-fidelity brand direction
 - Generated: 2026-08-08
+- Production adoption: not currently bundled into the React production build
 
 Final prompt:
 
