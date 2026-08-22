@@ -174,24 +174,28 @@ test('the landscaping-company hero demonstrates route workload balancing', async
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/for-landscaping-companies');
 
-  await expect(page.getByRole('heading', { name: 'Balance tomorrow’s crews' })).toBeVisible();
-  await expect(page.getByText('1 stop needs assignment', { exact: true })).toBeVisible();
-  await expect(page.getByText('Illustrative planning only. No route or schedule is saved.')).toBeVisible();
+  const planner = page.locator('section[aria-labelledby="marketing-operations-planner-title"]');
+  await expect(planner.getByRole('heading', { name: 'Today’s operation' })).toBeVisible();
+  await expect(planner.getByText('8 / 9', { exact: true })).toBeVisible();
+  await expect(planner.getByText('46%', { exact: true })).toBeVisible();
+  await expect(planner.getByText('1 stop needs assignment', { exact: true })).toBeVisible();
+  await expect(planner.getByText('Illustrative planning only. Live counts are sample data; no route or schedule is saved.')).toBeVisible();
 
-  const assignmentGroup = page.getByRole('group', { name: 'Assign Copper Ridge HOA · 90 min' });
+  const assignmentGroup = planner.getByRole('group', { name: 'Dispatch focus · Copper Ridge HOA · 90 min' });
   await assignmentGroup.getByText('North crew', { exact: true }).click();
-  await expect(page.getByRole('radio', { name: 'North crew' })).toBeChecked();
-  await expect(page.getByText('North crew is 10 minutes over capacity', { exact: true })).toBeVisible();
-  await expect(page.getByText('Over capacity', { exact: true })).toBeVisible();
-  await expect(page.getByText('5 stops · 430 planned minutes', { exact: true })).toBeVisible();
+  await expect(planner.getByRole('radio', { name: 'North crew' })).toBeChecked();
+  await expect(planner.getByText('North crew is 10 minutes over capacity', { exact: true })).toBeVisible();
+  await expect(planner.getByText('Over capacity', { exact: true })).toBeVisible();
+  await expect(planner.getByText('5 stops · 430 planned minutes', { exact: true })).toBeVisible();
+  await expect(planner.getByText('4', { exact: true })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Use suggested balance' }).click();
-  await expect(page.getByRole('radio', { name: 'West crew' })).toBeChecked();
-  await expect(page.getByText('Balanced plan · all 8 stops assigned', { exact: true })).toBeVisible();
-  await expect(page.getByText('5 stops · 430 planned minutes', { exact: true })).not.toBeVisible();
+  await planner.getByRole('button', { name: 'Use suggested balance' }).click();
+  await expect(planner.getByRole('radio', { name: 'West crew' })).toBeChecked();
+  await expect(planner.getByText('Balanced plan · all 8 stops assigned', { exact: true })).toBeVisible();
+  await expect(planner.getByText('5 stops · 430 planned minutes', { exact: true })).not.toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
-  await expect(page.getByRole('heading', { name: 'Balance tomorrow’s crews' })).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Today’s operation' })).not.toBeVisible();
   await expect(page.getByText('Your latest service is ready', { exact: true })).toBeVisible();
 });

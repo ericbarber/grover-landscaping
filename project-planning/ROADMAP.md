@@ -10,8 +10,9 @@ experience. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
 signals, outcome stories, proof, capabilities, and final invitations instead of
 changing only first-screen copy. The landscaping-company route now makes its
-operations promise tangible with an interactive, explicitly non-persistent hero
-planner that demonstrates stop assignment, workload risk, and suggested crew
+operations promise tangible by adapting the approved “Today’s operation”
+schedule concept into an interactive, explicitly non-persistent hero overview
+of executive day signals, crew capacity, dispatch focus, and suggested
 balancing. The source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,

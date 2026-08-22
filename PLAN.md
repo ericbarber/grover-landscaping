@@ -23,10 +23,11 @@ Current state:
 - Yard Owner, property-manager, landscaping-company, and crew-lead campaign
   routes now personalize the hero, action hierarchy, product preview, trust
   signals, outcome story, proof cards, capability set, and final invitation.
-- The landscaping-company hero now demonstrates the delivered operations value
-  with a responsive, non-persistent workload planner: visitors can assign an
-  unplanned stop, expose crew-capacity risk, apply the suggested balance, and
-  see the resulting stop/minute totals without changing a real schedule.
+- The landscaping-company hero now adapts the approved “Today’s operation”
+  prototype into a responsive, non-persistent owner overview with crews active,
+  route progress, unassigned and at-risk signals, crew schedule/capacity, and an
+  interactive dispatch decision. Visitors can expose capacity risk and apply a
+  suggested balance without changing a real schedule.
 - The audience selector switches the complete page story and canonical route
   without a reload while retaining campaign query parameters and first-party
   measurement.
