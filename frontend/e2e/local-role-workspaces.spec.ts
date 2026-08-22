@@ -365,3 +365,78 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
   await expect(upNextStop.getByText('Citrus Grove', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('field Jobs supports compact status and customer filtering', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+  });
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'job_oak',
+        organization_id: 'org_demo_landscaping',
+        assigned_crew_id: 'crew_1001',
+        customer_name: 'Oak Street Residence',
+        property_address: '123 Oak Street',
+        status: 'in_progress',
+        scheduled_date: '2026-08-22',
+        before_photos: 1,
+        after_photos: 0,
+        checklist_items: 6,
+        completed_checklist_items: 4,
+      },
+      {
+        id: 'job_mesa',
+        organization_id: 'org_demo_landscaping',
+        assigned_crew_id: 'crew_1001',
+        customer_name: 'Mesa HOA entrance',
+        property_address: '42 Gate Way',
+        status: 'scheduled',
+        scheduled_date: '2026-08-22',
+        before_photos: 0,
+        after_photos: 0,
+        checklist_items: 4,
+        completed_checklist_items: 0,
+      },
+      {
+        id: 'job_citrus',
+        organization_id: 'org_demo_landscaping',
+        assigned_crew_id: 'crew_1001',
+        customer_name: 'Citrus Grove',
+        property_address: '789 Citrus Way',
+        status: 'completed',
+        scheduled_date: '2026-08-22',
+        before_photos: 2,
+        after_photos: 2,
+        checklist_items: 5,
+        completed_checklist_items: 5,
+      },
+    ]),
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Jobs', exact: true }).click();
+
+  const jobs = page.locator('#assigned-jobs').locator('..');
+  await expect(jobs.getByText('3 shown', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('Oak Street Residence', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('4/6 checklist · 1 before · 0 after', { exact: true })).toBeVisible();
+
+  await jobs.getByLabel('Filter assigned jobs by status').selectOption('in_progress');
+  await expect(jobs.getByText('1 shown', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('Oak Street Residence', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('Mesa HOA entrance', { exact: true })).toHaveCount(0);
+
+  await jobs.getByLabel('Filter assigned jobs by status').selectOption('all');
+  await jobs.getByLabel('Search assigned jobs').fill('Citrus Way');
+  await expect(jobs.getByText('1 shown', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('Citrus Grove', { exact: true })).toBeVisible();
+  await expect(jobs.getByText('Oak Street Residence', { exact: true })).toHaveCount(0);
+
+  await jobs.getByLabel('Search assigned jobs').fill('no matching property');
+  await expect(jobs.getByText('No assigned jobs match these filters.')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

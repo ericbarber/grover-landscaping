@@ -153,6 +153,7 @@ import {
   countReadyCustomerReports,
   customerNeedsOnboardingAttention,
   filterCrewsForCompany,
+  filterAssignedJobs,
   filterPropertiesForCustomerPortal,
   filterWorkSummariesForCustomerPortal,
   getCompletionProgress,
@@ -337,45 +338,48 @@ function JobCard({
   job,
   isSelected,
   onSelect,
+  position,
 }: {
   job: YardCareJob;
   isSelected: boolean;
   onSelect: (jobId: string) => void;
+  position: number;
 }) {
   const progress = getCompletionProgress(job);
 
   return (
     <article
-      className={`rounded-2xl border bg-white p-4 shadow-sm sm:p-5 ${
+      className={`rounded-2xl border bg-paper p-4 shadow-sm ${
         isSelected ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-slate-200'
       }`}
     >
-      <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{job.scheduledDate}</p>
-          <h3 className="mt-1 text-lg font-semibold text-slate-950">{job.customerName}</h3>
+      <div className="flex items-start gap-3">
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-black ${
+          isSelected ? 'bg-forest text-white' : 'bg-slate-100 text-forest'
+        }`}>
+          {position}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{job.scheduledDate}</p>
+              <h3 className="mt-1 text-lg font-black text-slate-950">{job.customerName}</h3>
+            </div>
+            <StatusBadge status={job.status} />
+          </div>
           <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
+          <p className="mt-3 text-xs font-semibold text-slate-600">
+            {job.completedChecklistItems}/{job.checklistItems} checklist · {job.beforePhotos} before · {job.afterPhotos} after
+          </p>
         </div>
-        <StatusBadge status={job.status} />
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{job.beforePhotos}</p>
-          <p className="text-xs text-slate-500">Before</p>
-        </div>
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{job.afterPhotos}</p>
-          <p className="text-xs text-slate-500">After</p>
-        </div>
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{progress}%</p>
-          <p className="text-xs text-slate-500">Ready</p>
-        </div>
+      <div aria-label={`${progress}% checklist complete`} className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-emerald-700" style={{ width: `${progress}%` }} />
       </div>
 
       <button
-        className="mt-5 w-full rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800"
+        className="mt-4 min-h-11 w-full rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-900"
         onClick={() => onSelect(job.id)}
       >
         {isSelected ? 'Selected Job' : 'Open Job'}
@@ -1048,7 +1052,13 @@ export function App() {
     || auth.roles.includes('SupportAdmin');
   const canReviewMarketingLeads = auth.roles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
+  const [jobSearch, setJobSearch] = useState('');
+  const [jobStatusFilter, setJobStatusFilter] = useState<YardCareJob['status'] | 'all'>('all');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
+  const visibleAssignedJobs = useMemo(
+    () => filterAssignedJobs(jobs, jobSearch, jobStatusFilter),
+    [jobSearch, jobStatusFilter, jobs],
+  );
   const [activePersonaId, setActivePersonaId] = useState<WorkspacePersonaId>(
     initialPersona.id,
   );
@@ -3045,17 +3055,56 @@ export function App() {
                 </button>
               </div>
             )}
+            <div className="mt-4 grid gap-2 rounded-2xl border border-slate-200 bg-paper p-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-center">
+              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
+                Search
+                <input
+                  aria-label="Search assigned jobs"
+                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
+                  onChange={(event) => setJobSearch(event.target.value)}
+                  placeholder="Customer or address"
+                  type="search"
+                  value={jobSearch}
+                />
+              </label>
+              <label className="text-xs font-black uppercase tracking-wide text-slate-600">
+                Status
+                <select
+                  aria-label="Filter assigned jobs by status"
+                  className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium normal-case tracking-normal text-slate-900"
+                  onChange={(event) => setJobStatusFilter(event.target.value as YardCareJob['status'] | 'all')}
+                  value={jobStatusFilter}
+                >
+                  <option value="all">All jobs</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </label>
+              <WorkspaceStatusBadge className="justify-self-start sm:mt-5" tone="neutral">
+                {visibleAssignedJobs.length} shown
+              </WorkspaceStatusBadge>
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {jobs.map((job) => (
+          <div className="grid gap-3 md:grid-cols-2">
+            {visibleAssignedJobs.map((job) => (
               <JobCard
                 key={job.id}
                 job={job}
                 isSelected={job.id === selectedJobId}
                 onSelect={selectJobForReview}
+                position={jobs.findIndex((item) => item.id === job.id) + 1}
               />
             ))}
+            {visibleAssignedJobs.length === 0 ? (
+              <WorkspaceStatusNotice
+                className="md:col-span-2"
+                detail="Clear or change the search and status filters to see other assignments."
+                title="No assigned jobs match these filters."
+                tone="neutral"
+              />
+            ) : null}
           </div>
           </section>
 

@@ -372,7 +372,7 @@ different product decision, missing authority, or unavailable required contract.
 | --- | --- | --- |
 | 0. Foundation and shell | Core production adoption delivered | Outlined icons, responsive rails, single-destination desktop density, and shared status contract delivered; migrate legacy feedback by owning phase |
 | 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
-| 2. Field execution | In progress · Route hierarchy adopted | Converge Jobs → Job overview/checklist/photos/add-ons/report while preserving offline and conflict recovery |
+| 2. Field execution | In progress · Route and Jobs adopted | Converge Job overview/checklist/photos/add-ons/report while preserving offline and conflict recovery |
 | 3. Manager daily operations | Partial production adoption | Converge authenticated Schedule, inspector, publish/capacity risk, and Recovery composition |
 | 4. Completion proof | Partial production adoption | Connect existing report, evidence, delivery, and bid contracts as one responsive handoff |
 | 5. Customers and portfolios | In progress · Yard Owner designs complete, production partial | Finish acquisition proposal/activation; adopt Yard Owner portal; then produce property-manager working design; keep billing gated |

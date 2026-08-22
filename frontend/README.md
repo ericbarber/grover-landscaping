@@ -38,6 +38,8 @@ not currently depend on React Router.
   diagnostics behavior
 - Prototype-aligned field Route hierarchy with accessible progress, Current
   stop, Up next, bounded route expansion, and lower-priority amendment controls
+- Compact ordered Assigned Jobs with lifecycle/readiness context, search,
+  status filters, counts, and no-match recovery
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

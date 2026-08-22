@@ -9,6 +9,7 @@ import {
   customerNeedsOnboardingAttention,
   filterCrewAssignmentHistoryForProperty,
   filterCrewsForCompany,
+  filterAssignedJobs,
   filterPropertiesForCustomerPortal,
   filterPropertiesForOrganization,
   filterWorkSummariesForCustomerPortal,
@@ -192,6 +193,23 @@ describe('getCompletionProgress', () => {
     const job = makeJob({ checklistItems: 0, completedChecklistItems: 0 });
 
     expect(getCompletionProgress(job)).toBe(0);
+  });
+});
+
+describe('filterAssignedJobs', () => {
+  const jobs = [
+    makeJob({ id: 'job_oak', customerName: 'Oak Street Residence', status: 'in_progress' }),
+    makeJob({ id: 'job_mesa', customerName: 'Mesa HOA', propertyAddress: '42 Gate Way' }),
+  ];
+
+  it('searches customer and address without changing route order', () => {
+    expect(filterAssignedJobs(jobs, 'gate', 'all').map(({ id }) => id)).toEqual(['job_mesa']);
+    expect(filterAssignedJobs(jobs, 'oak', 'all').map(({ id }) => id)).toEqual(['job_oak']);
+  });
+
+  it('combines status and search filters', () => {
+    expect(filterAssignedJobs(jobs, '', 'in_progress').map(({ id }) => id)).toEqual(['job_oak']);
+    expect(filterAssignedJobs(jobs, 'mesa', 'in_progress')).toEqual([]);
   });
 });
 

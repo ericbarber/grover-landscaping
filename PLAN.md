@@ -110,8 +110,9 @@ Current state:
 
 Next slice:
 
-- Continue the approved field-execution hierarchy convergence through Jobs →
-  Job while preserving offline, conflict, evidence, and recovery behavior.
+- Continue the approved field-execution hierarchy convergence into Job overview
+  and its Checklist, Photos, Add-ons, and Report panels while preserving
+  offline, conflict, evidence, and recovery behavior.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -961,6 +962,10 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Route progress exposes an accessible percentage, planned and remaining
   minutes, shared state pills, full-route expansion, and correct advancement
   from a server-provided in-progress stop to finished.
+- Assigned Jobs now follows the compact-list working design with preserved route
+  order, explicit lifecycle pills, checklist/photo readiness at a glance,
+  customer/address search, status filtering, filtered counts, and a clear empty
+  result without mutating the underlying assignment order.
 - Daily crew day-plan panel
 - Ordered route stops
 - Drive and service time estimates

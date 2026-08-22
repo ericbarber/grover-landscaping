@@ -49,8 +49,9 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Continue the adopted crew-route hierarchy through Jobs and Job execution;
-   route progress, Current stop, Up next, and bounded expansion are in production.
+1. Continue the adopted field hierarchy into Job execution; Route progress,
+   Current stop, Up next, bounded expansion, and compact/filterable Jobs are in
+   production.
 2. Migrate remaining field-local feedback to shared primitives without
    weakening offline and conflict recovery.
 3. Converge the authenticated manager schedule, inspector, and Recovery workflow.

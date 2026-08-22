@@ -120,6 +120,22 @@ export function getCompletionProgress(job: YardCareJob): number {
   return Math.round((job.completedChecklistItems / job.checklistItems) * 100);
 }
 
+export function filterAssignedJobs(
+  jobs: YardCareJob[],
+  query: string,
+  status: YardCareJobStatus | 'all',
+): YardCareJob[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+
+  return jobs.filter((job) => {
+    const matchesStatus = status === 'all' || job.status === status;
+    const matchesQuery = normalizedQuery.length === 0
+      || job.customerName.toLocaleLowerCase().includes(normalizedQuery)
+      || job.propertyAddress.toLocaleLowerCase().includes(normalizedQuery);
+    return matchesStatus && matchesQuery;
+  });
+}
+
 export function customerNeedsOnboardingAttention(customer: CustomerAccountProfile): boolean {
   return customer.onboardingStatus === 'invited' || customer.onboardingStatus === 'incomplete';
 }
