@@ -66,6 +66,46 @@ test('a checked recipient loads status without retaining the bearer fragment', a
   await expect(page.getByRole('heading', { name: 'Interest recorded; waiting for the owner’s next decision' })).toBeVisible();
 });
 
+test('an activated provider sees setup status without implied first-visit authority', async ({ page }) => {
+  await page.route('**/auth/config', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
+  }));
+  await page.route('**/me/access', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user_id: 'recipient-user-activation', username: 'Provider User',
+      verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [],
+    }),
+  }));
+  await page.route('**/provider-invitations/progress', async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ token: 'activated_relationship_secret' });
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        invitation_id: 'invitation_activated', progress_stage: 'relationship_activated',
+        status_label: 'Provider relationship activated',
+        next_action: 'complete_provider_setup', recipient_email_checked: true,
+        organization_relationship_checked: false,
+        opportunity_response_capability: false, response_action: null,
+        response_label: null, responded_at_epoch_seconds: null, closed: true,
+      }),
+    });
+  });
+
+  await page.goto('/app/provider-invitation#invitation=activated_relationship_secret');
+  await expect(page.getByRole('heading', { name: 'Provider relationship activated' })).toBeVisible();
+  await expect(page.getByText('Relationship active', { exact: true })).toBeVisible();
+  await expect(page.getByText('Provider setup', { exact: true })).toBeVisible();
+  await expect(page.locator('article p').filter({
+    hasText: 'Safe next step: Continue customer and property onboarding',
+  })).toBeVisible();
+  await expect(page.getByText(/no first visit, payment, route, schedule, or crew assignment was created/)).toBeVisible();
+  await expect(page.getByText('Owner-approved assessment access')).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('activated_relationship_secret');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test('a provider sees only owner-approved assessment details and loses future access after revocation', async ({ page }) => {
   let accessActive = true;
   let assessment: Record<string, unknown> | null = null;

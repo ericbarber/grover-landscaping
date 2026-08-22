@@ -21,7 +21,9 @@ The public site now carries four complete persona journeys and reuses the
 prototype-aligned “Today’s operation” dashboard in the landscaping-company hero
 and product tour. Proposal questions, change requests, provider replies, and
 newer-revision links are delivered in both acquisition workspaces. Explicit
-activation and relationship continuity are the active follow-on.
+activation is now delivered through the responsive owner/provider workspaces;
+separate first-visit confirmation and relationship continuity are the active
+follow-on.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -75,6 +77,7 @@ Start with these records when reviewing or continuing development:
 - Yard Owner provider-connection progress and recovery guidance
 - Owner/provider assessment lifecycle with customer-safe conversation and separate provider-private notes
 - Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
+- Explicit accepted-proposal activation into provider customer/property setup with property-scoped portal access and no implicit first visit or crew assignment
 - Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
 - Responsive and accessibility-focused owner/provider browser coverage
 - Executable pilot monitoring and launch-assurance contract
@@ -410,11 +413,12 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Reviewing and coordinating owner/provider assessments without leaking provider-private notes
 - Authoring, revising, and reloading customer-safe initial-service proposals
   after a completed assessment
-- Reviewing immutable proposal history and explicitly accepting or declining one
-  exact current version without activating service
+- Reviewing immutable proposal history, explicitly accepting or declining one
+  exact current version, then separately activating provider customer/property
+  setup without creating a first visit, payment, schedule, route, or crew assignment
 
-The next acquisition slice is explicit accepted-proposal activation and first-
-visit confirmation. The delivered proposal conversation remains separate from
+The next acquisition slice is separate first-visit confirmation after explicit
+activation. The delivered proposal conversation remains separate from
 assessment messages and decision notes. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 

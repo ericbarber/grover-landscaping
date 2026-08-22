@@ -621,6 +621,32 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
     proposal = { ...proposal, status: 'accepted' };
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ decision_id: 'decision_4', proposal_id: 'proposal_4', action: 'accept', reason_code: null, customer_safe_note: null, proposal_version: 2, affirmation_text_version: 'initial_service_proposal_acceptance_v1', decided_at_epoch_seconds: Math.floor(Date.now() / 1000), acceptance_snapshot_id: 'snapshot_4', acceptance_snapshot_sha256: 'a'.repeat(64), persisted: true }) });
   });
+  let activation: Record<string, unknown> | null = null;
+  await page.route('**/owner-properties/owner_property_4/initial-service-proposals/proposal_4/activation', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill(activation
+        ? { contentType: 'application/json', body: JSON.stringify(activation) }
+        : { status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'owner_provider_relationship_activation_not_found', message: 'No activation yet.' }) });
+      return;
+    }
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      expected_proposal_version: 2,
+      activation_affirmation_text_version: 'owner_provider_relationship_activation_v1',
+      owner_confirmed: true,
+    });
+    activation = {
+      activation_id: 'activation_4', owner_property_id: 'owner_property_4',
+      invitation_id: 'invitation_4', organization_id: 'organization_4',
+      proposal_id: 'proposal_4', proposal_version: 2,
+      acceptance_snapshot_id: 'snapshot_4', acceptance_snapshot_sha256: 'a'.repeat(64),
+      customer_account_id: 'account_4', customer_property_id: 'customer_property_4',
+      owner_membership_id: 'membership_4', portal_access_id: 'portal_4',
+      status: 'provider_setup', closed_competing_invitation_count: 1,
+      activated_at_epoch_seconds: Math.floor(Date.now() / 1000), persisted: true,
+    };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activation) });
+  });
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
@@ -640,6 +666,15 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await affirmation.check();
   await page.getByRole('button', { name: 'Accept this exact version' }).click();
   await expect(page.getByText(/Proposal accepted for provider setup. No visit was scheduled/)).toBeVisible();
-  await expect(page.getByText(/Accepted for provider setup only/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Create the provider relationship' })).toBeVisible();
+  await page.getByRole('button', { name: 'Review provider setup' }).click();
+  const activationAffirmation = page.getByLabel(/I want Grover to create this provider relationship/);
+  await expect(page.getByRole('button', { name: 'Activate provider setup' })).toBeDisabled();
+  await activationAffirmation.check();
+  await page.getByRole('button', { name: 'Activate provider setup' }).click();
+  await expect(page.getByText(/Provider relationship activated. Customer and property setup is ready/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Provider setup is underway' })).toBeVisible();
+  await expect(page.getByText(/1 other open request was closed for this yard/)).toBeVisible();
+  await expect(page.getByText(/No visit, payment, schedule, or crew assignment exists yet/)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

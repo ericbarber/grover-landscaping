@@ -5,10 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the explicit owner-confirmed
-activation transaction. The proposal question and change-request contract and
-the activation authority/projection design are delivered; activation
-persistence, API, interface, and separate first-visit lifecycle follow.
+The current production-adoption priority is the separate first-visit lifecycle.
+Proposal collaboration and explicit owner-confirmed activation are delivered
+through persistence, API, and responsive owner/provider interfaces; first-visit
+proposal and confirmation must remain independent of crew and route work.
 The initial-service proposal interface against the delivered Phase 4B APIs is
 now adopted. The immediately
 preceding UX priority—a complete persona-specific public landing experience—is
@@ -288,7 +288,11 @@ owner/provider routes and provider reload are now delivered with explicit
 authorization and fail-closed outcomes. Both responsive workspace interfaces
 are now delivered with exact-version labels, retry-safe controls, explicit
 newer-revision linkage, and no-decision/no-activation guidance. Phase 4B2b is
-complete; Phase 4C explicit activation is next.
+complete. Phase 4C0–3 now delivers the separate owner-confirmed activation
+contract, atomic provider customer/property and portal-access projection,
+authenticated owner API, activated progress, and responsive owner/provider
+setup states without first-visit, payment, route, schedule, or crew side
+effects. Phase 4C4 separate first-visit confirmation is next.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and
@@ -428,10 +432,17 @@ schedule, remaining work, or a completed day.
    - Proposal questions and change requests now have their own persistence,
      authorization, reload, version-link, and responsive interface boundary.
 
-**Current — Explicit activation**
+**Delivered — Explicit activation**
 
-   - Project an explicitly accepted immutable snapshot into provider setup and
-     first-visit confirmation without silently scheduling or assigning work.
+   - An owner separately projects an explicitly accepted immutable snapshot
+     into provider customer/property setup and property-scoped portal access.
+   - Owner and provider interfaces expose authoritative setup status without
+     silently scheduling, collecting payment, routing, or assigning work.
+
+**Current — First-visit confirmation**
+
+   - Add a separate provider proposal and owner confirm/change-request lifecycle
+     without assigning a crew or route merely because the relationship exists.
 
 **Next — Shared application and workflow convergence**
 

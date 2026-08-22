@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
 import {
+  activateOwnerProviderRelationship,
   completeOwnerIntakeMediaUpload,
   createOwnerProperty,
   createOwnerIntakeMediaUpload,
@@ -18,6 +19,7 @@ import {
   fetchOwnerProviderDisclosureReview,
   fetchOwnerInitialServiceProposals,
   fetchOwnerInitialServiceProposalMessages,
+  fetchOwnerProviderRelationshipActivation,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
@@ -316,6 +318,55 @@ describe('Yard Owner acquisition API client', () => {
       expected_proposal_version: 2,
       idempotency_key: 'message-key',
     });
+  });
+
+  it('loads and creates an exact-version relationship activation', async () => {
+    const proposal = {
+      proposalId: 'proposal_2', assessmentId: 'assessment_1', invitationId: 'invitation_1',
+      propertyId: 'property_1', organizationId: 'organization_1', disclosureGrantId: 'grant_1',
+      proposalVersion: 2, status: 'accepted' as const, title: 'Routine yard care',
+      customerSummary: 'Visible summary.', includedScope: ['Mow'], exclusions: ['Trees'],
+      cadenceCode: 'every_two_weeks' as const, cadenceDetail: 'Every other Tuesday',
+      arrivalPolicy: 'Confirm first.', weatherPolicy: 'Weather notice.',
+      cancellationPolicy: '24 hours.', proofExpectation: 'Completion note.',
+      priceAmountMinor: 12000, priceBasis: 'per_visit' as const, currencyCode: 'USD',
+      issuedAtEpochSeconds: 1_799_000_000, expiresAtEpochSeconds: 1_800_000_000,
+      persisted: true,
+    };
+    const activationApi = {
+      activation_id: 'activation_1', owner_property_id: 'property_1',
+      invitation_id: 'invitation_1', organization_id: 'organization_1',
+      proposal_id: 'proposal_2', proposal_version: 2,
+      acceptance_snapshot_id: 'snapshot_1', acceptance_snapshot_sha256: 'a'.repeat(64),
+      customer_account_id: 'account_1', customer_property_id: 'customer_property_1',
+      owner_membership_id: 'membership_1', portal_access_id: 'portal_1',
+      status: 'provider_setup', closed_competing_invitation_count: 1,
+      activated_at_epoch_seconds: 1_799_500_000, persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        error: 'owner_provider_relationship_activation_not_found', message: 'Not found.',
+      }), { status: 404, headers: { 'content-type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(activationApi), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(activationApi), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchOwnerProviderRelationshipActivation('property_1', 'proposal_2'))
+      .resolves.toBeUndefined();
+    await expect(activateOwnerProviderRelationship(
+      'property_1', proposal, 'owner_provider_relationship_activation_v1', 'activation-key',
+    )).resolves.toEqual(expect.objectContaining({
+      activationId: 'activation_1', status: 'provider_setup',
+      closedCompetingInvitationCount: 1,
+    }));
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
+      expected_proposal_version: 2,
+      activation_affirmation_text_version: 'owner_provider_relationship_activation_v1',
+      owner_confirmed: true,
+      idempotency_key: 'activation-key',
+    });
+    await expect(fetchOwnerProviderRelationshipActivation('property_1', 'proposal_2'))
+      .resolves.toEqual(expect.objectContaining({ customerPropertyId: 'customer_property_1' }));
   });
 
   it('creates an independently scoped guided-media upload without provider identifiers', async () => {

@@ -126,8 +126,10 @@ the relationship was activated.
    activation-status reads with invalid, missing, stale, conflict, replay, and
    unavailable recovery mappings. See the
    [API contract](owner-provider-activation-api.md).
-4. **4C3 — Production interfaces:** an explicit post-acceptance activation
-   review and provider setup status in the owner/provider workspaces.
+4. **4C3 — Production interfaces (delivered):** an explicit post-acceptance
+   activation review, stable retry recovery, authoritative status reload, and
+   responsive owner/provider setup states that repeat the no-first-visit,
+   payment, schedule, route, and crew boundary.
 5. **4C4 — First visit:** separate provider proposal and owner confirmation or
    change-request lifecycle, without implicit crew assignment.
 

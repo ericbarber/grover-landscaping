@@ -58,16 +58,15 @@ authority, atomic projection, property-scoped portal access, immutable
 provenance, competing-request closure, and the first-visit boundary. Phase 4C1
 now delivers the constrained schema, atomic repository transaction, safe
 activated progress, PostgreSQL concurrency/side-effect proof, and authenticated
-owner activation/status routes. The next slice is Phase 4C3 interface adoption:
+owner activation/status routes and responsive owner/provider setup interfaces.
+The next slice is Phase 4C4 first-visit confirmation:
 
-1. Add a distinct post-acceptance activation review to the Yard Owner proposal
-   workspace with the current activation affirmation and stable retry key.
-2. Reload activation status authoritatively after unknown responses and show the
-   projected provider-setup state without implying a first visit, payment,
-   schedule, or crew assignment.
-3. Show the provider an activated/setup status through an authorized existing
-   projection, with responsive browser coverage for success, replay, conflict,
-   and unavailable recovery.
+1. Define provider-proposed first-visit windows and owner confirm/change-request
+   transitions against an active relationship.
+2. Keep visit confirmation independent of customer/property activation and do
+   not assign a crew, route, or work order in the confirmation transaction.
+3. Prove owner/provider isolation, version/replay/conflict/outage recovery, then
+   adopt the responsive owner/provider controls.
 
 ## Read first
 

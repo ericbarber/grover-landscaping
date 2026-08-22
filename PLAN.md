@@ -66,11 +66,16 @@ Current state:
   created-versus-replayed responses, missing/not-ready/conflict distinctions,
   and persistence-outage recovery are explicit; the browser supplies no
   provider or operational record identifier.
+- Phase 4C3 now adopts the boundary into both responsive workspaces. After
+  acceptance, the owner must separately review and affirm provider setup using
+  a retry-stable request and authoritative status reload. Both owner and
+  provider see an activated setup state that repeats that no first visit,
+  payment, schedule, route, or crew assignment exists.
 
 Next slice:
 
-- Deliver the Phase 4C3 owner-confirmed activation interface and provider setup
-  status, then proceed to the separate first-visit lifecycle.
+- Deliver the Phase 4C4 separate first-visit proposal/owner-confirmation
+  lifecycle without coupling it to crew assignment or route work.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

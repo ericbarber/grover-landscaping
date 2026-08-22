@@ -24,6 +24,7 @@ function actionLabel(action: string): string {
     wait_for_owner: 'Wait for the owner’s next decision',
     review_owner_approved_details: 'Review the owner-approved assessment details',
     contact_owner: 'Contact the owner about renewed access',
+    complete_provider_setup: 'Continue customer and property onboarding',
     request_new_invitation: 'Ask the owner for a new invitation',
     none: 'No further action on this invitation',
   }[action] ?? 'Review invitation status';
@@ -119,8 +120,9 @@ export function ProviderInvitationProgressPage() {
           {error ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Progress was not loaded.</strong><p className="mt-1 text-sm leading-6">{error}</p></div> : null}
           {progress ? (
             <article className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5" aria-live="polite">
-              <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-wide text-emerald-800">{progress.closed ? 'Invitation closed' : 'Current step'}</p><h3 className="mt-2 text-xl font-black">{progress.statusLabel}</h3></div><span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-700">{progress.closed ? 'Closed' : 'Limited access'}</span></div>
+              <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-wide text-emerald-800">{progress.progressStage === 'relationship_activated' ? 'Relationship active' : progress.closed ? 'Invitation closed' : 'Current step'}</p><h3 className="mt-2 text-xl font-black">{progress.statusLabel}</h3></div><span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-700">{progress.progressStage === 'relationship_activated' ? 'Provider setup' : progress.closed ? 'Closed' : 'Limited access'}</span></div>
               {progress.responseLabel ? <p className="mt-4 text-sm leading-6 text-slate-700">{progress.responseLabel}</p> : null}
+              {progress.progressStage === 'relationship_activated' ? <p className="mt-4 rounded-xl bg-white p-4 text-sm font-semibold leading-6 text-emerald-950">The owner completed the separate activation step. Continue customer and property onboarding; no first visit, payment, route, schedule, or crew assignment was created.</p> : null}
               <p className="mt-4 border-t border-emerald-200 pt-4 text-sm"><strong>Safe next step:</strong> {actionLabel(progress.nextAction)}</p>
               {!progress.closed ? <ul className="mt-4 grid gap-2 text-xs text-slate-700 sm:grid-cols-3"><li>Email checked: <strong>{progress.recipientEmailChecked ? 'Yes' : 'No'}</strong></li><li>Organization checked: <strong>{progress.organizationRelationshipChecked ? 'Yes' : 'Not yet'}</strong></li><li>Limited response: <strong>{progress.opportunityResponseCapability ? 'Available' : 'Not available'}</strong></li></ul> : null}
             </article>

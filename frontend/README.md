@@ -12,7 +12,7 @@ customer-safe report and bid pages, and mobile diagnostics.
 | `/` and `/for-*` | Persona-specific public landing journeys |
 | `/app` | Authenticated role-aware workspace |
 | `/app/yard-owner` | Private Yard Owner acquisition |
-| `/provider-invitation` | Verified-recipient provider connection entry; bearer token is consumed from the URL fragment |
+| `/app/provider-invitation` | Verified-recipient provider connection entry; bearer token is consumed from the URL fragment |
 | `/organization-invitations/{token}` | Organization invitation acceptance |
 | `/report-view/{token}` | Customer-safe completion report |
 | `/bid-review/{token}` | Customer-safe project-bid decision |
@@ -36,10 +36,12 @@ not currently depend on React Router.
 - Yard Owner private property and brief intake, guided media, provider connection
   progress, disclosure consent/history/revocation, assessment collaboration,
   immutable proposal review/decisions, and version-specific questions/change
-  requests
+  requests, followed by separate owner-confirmed provider activation and
+  authoritative setup status
 - Provider recipient progress, disclosure-limited assessment workspace, and
   separate customer-safe versus provider-private notes, proposal
-  authoring/revision, and exact-message proposal responses
+  authoring/revision, exact-message proposal responses, and activated provider
+  setup status without implied first-visit authority
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records

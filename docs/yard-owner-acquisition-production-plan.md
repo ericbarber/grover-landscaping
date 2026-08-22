@@ -76,7 +76,8 @@ The approved experience is defined by:
 | 4B2a | Delivered | Authenticated provider publish/revise and owner list/detail/exact-version decision APIs with explicit lifecycle and outage mapping |
 | 4B2b | Delivered | Append-only owner questions/change requests and provider replies persist with exact proposal-version context, revised-version linkage, replay safety, isolation, authenticated routes/reload, responsive owner/provider interfaces, and no decision/lifecycle/activation side effects |
 | 4B3 | Delivered | Responsive provider authoring/revision with latest-version reload and neutral Yard Owner immutable-history comparison/exact-version decisions against the delivered APIs |
-| 4C–D | Planned | Activation and governed pilot convergence |
+| 4C0–3 | Delivered | Separate owner-confirmed accepted-proposal activation contract, persistence, atomic customer/property/portal projection, authenticated API, safe activated progress, and responsive owner/provider interfaces with no first-visit or operational work side effects |
+| 4C4–D | Planned | Separate first-visit confirmation and governed pilot convergence |
 
 ## Delivery principles
 

@@ -69,6 +69,25 @@ export interface InitialServiceProposalMessage {
   persisted: boolean;
 }
 
+export interface OwnerProviderRelationshipActivation {
+  activationId: string;
+  ownerPropertyId: string;
+  invitationId: string;
+  organizationId: string;
+  proposalId: string;
+  proposalVersion: number;
+  acceptanceSnapshotId: string;
+  acceptanceSnapshotSha256: string;
+  customerAccountId: string;
+  customerPropertyId: string;
+  ownerMembershipId: string;
+  portalAccessId: string;
+  status: 'provider_setup';
+  closedCompetingInvitationCount: number;
+  activatedAtEpochSeconds: number;
+  persisted: boolean;
+}
+
 export interface PublishInitialServiceProposalInput {
   expectedProposalVersion: number;
   title: string;
@@ -93,6 +112,12 @@ export const INITIAL_SERVICE_PROPOSAL_ACCEPTANCE_VERSION =
 
 export const INITIAL_SERVICE_PROPOSAL_ACCEPTANCE_TEXT =
   'I accept this exact proposal for provider setup. I understand that acceptance does not schedule service, collect payment, or assign a crew.';
+
+export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_VERSION =
+  'owner_provider_relationship_activation_v1';
+
+export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT =
+  'I want Grover to create this provider relationship and my provider-facing customer and property setup from the accepted proposal. I understand that this does not confirm a first visit, collect payment, create a schedule, or assign a crew.';
 
 export function formatProposalMoney(amountMinor: number, currencyCode: string): string {
   return new Intl.NumberFormat(undefined, {

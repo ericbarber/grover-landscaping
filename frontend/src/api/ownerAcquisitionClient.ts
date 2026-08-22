@@ -1,4 +1,4 @@
-import { apiRequestError } from './apiError';
+import { ApiRequestError, apiRequestError } from './apiError';
 import { authenticatedFetch } from './authenticatedFetch';
 import { API_BASE_URL } from './baseUrl';
 import type {
@@ -7,6 +7,7 @@ import type {
   InitialServiceProposalDecisionAction,
   InitialServiceProposalMessage,
   InitialServiceProposalStatus,
+  OwnerProviderRelationshipActivation,
 } from '../domain/initialServiceProposals';
 
 interface ApiOwnerWorkspace {
@@ -222,6 +223,25 @@ interface ApiInitialServiceProposalMessage {
   persisted: boolean;
 }
 
+interface ApiOwnerProviderRelationshipActivation {
+  activation_id: string;
+  owner_property_id: string;
+  invitation_id: string;
+  organization_id: string;
+  proposal_id: string;
+  proposal_version: number;
+  acceptance_snapshot_id: string;
+  acceptance_snapshot_sha256: string;
+  customer_account_id: string;
+  customer_property_id: string;
+  owner_membership_id: string;
+  portal_access_id: string;
+  status: 'provider_setup';
+  closed_competing_invitation_count: number;
+  activated_at_epoch_seconds: number;
+  persisted: boolean;
+}
+
 export interface OwnerWorkspace {
   ownerUserId: string;
   verifiedEmail: string;
@@ -322,7 +342,8 @@ export interface OwnerProviderConnectionProgress {
   deliveryStatus: string;
   progressStage: 'sending' | 'delivery_failed' | 'awaiting_open' | 'provider_reviewing'
     | 'question_received' | 'disclosure_decision' | 'declined' | 'contact_closed'
-    | 'withdrawn' | 'expired' | 'assessment_access_approved' | 'assessment_access_ended';
+    | 'withdrawn' | 'expired' | 'assessment_access_approved' | 'assessment_access_ended'
+    | 'relationship_activated';
   statusLabel: string;
   ownerActionRequired: boolean;
   nextAction: string;
@@ -603,6 +624,29 @@ function mapInitialServiceProposalMessage(
   };
 }
 
+function mapOwnerProviderRelationshipActivation(
+  value: ApiOwnerProviderRelationshipActivation,
+): OwnerProviderRelationshipActivation {
+  return {
+    activationId: value.activation_id,
+    ownerPropertyId: value.owner_property_id,
+    invitationId: value.invitation_id,
+    organizationId: value.organization_id,
+    proposalId: value.proposal_id,
+    proposalVersion: value.proposal_version,
+    acceptanceSnapshotId: value.acceptance_snapshot_id,
+    acceptanceSnapshotSha256: value.acceptance_snapshot_sha256,
+    customerAccountId: value.customer_account_id,
+    customerPropertyId: value.customer_property_id,
+    ownerMembershipId: value.owner_membership_id,
+    portalAccessId: value.portal_access_id,
+    status: value.status,
+    closedCompetingInvitationCount: value.closed_competing_invitation_count,
+    activatedAtEpochSeconds: value.activated_at_epoch_seconds,
+    persisted: value.persisted,
+  };
+}
+
 async function ownerRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await authenticatedFetch(`${API_BASE_URL}${path}`, init);
   if (!response.ok) {
@@ -832,6 +876,47 @@ export async function createOwnerInitialServiceProposalMessage(
   );
   return mapInitialServiceProposalMessage(
     await response.json() as ApiInitialServiceProposalMessage,
+  );
+}
+
+export async function fetchOwnerProviderRelationshipActivation(
+  propertyId: string,
+  proposalId: string,
+): Promise<OwnerProviderRelationshipActivation | undefined> {
+  try {
+    const response = await ownerRequest(
+      `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals/${encodeURIComponent(proposalId)}/activation`,
+    );
+    return mapOwnerProviderRelationshipActivation(
+      await response.json() as ApiOwnerProviderRelationshipActivation,
+    );
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) return undefined;
+    throw error;
+  }
+}
+
+export async function activateOwnerProviderRelationship(
+  propertyId: string,
+  proposal: InitialServiceProposal,
+  activationAffirmationTextVersion: string,
+  idempotencyKey: string,
+): Promise<OwnerProviderRelationshipActivation> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/initial-service-proposals/${encodeURIComponent(proposal.proposalId)}/activation`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        expected_proposal_version: proposal.proposalVersion,
+        activation_affirmation_text_version: activationAffirmationTextVersion,
+        owner_confirmed: true,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  return mapOwnerProviderRelationshipActivation(
+    await response.json() as ApiOwnerProviderRelationshipActivation,
   );
 }
 
