@@ -150,8 +150,8 @@ export function WorkspaceHomePanel({
   const progressLanguage = personaProgressLanguage(persona);
 
   return (
-    <section className="space-y-4 lg:hidden">
-      <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md">
+    <section className="space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
+      <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md lg:hidden">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
@@ -191,7 +191,7 @@ export function WorkspaceHomePanel({
         </div>
       </article>
 
-      <article className="grover-card p-4">
+      <article className="grover-card p-4 lg:col-span-4">
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -223,6 +223,7 @@ export function WorkspaceHomePanel({
       </article>
 
       <WorkspaceStatusNotice
+        className="lg:col-span-4"
         detail={priorityStatus.detail}
         title={priorityStatus.title}
         tone={priorityStatus.tone === 'attention'
@@ -234,7 +235,7 @@ export function WorkspaceHomePanel({
 
       {primaryAction ? (
         <button
-          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15"
+          className="group flex min-h-24 w-full items-center justify-between gap-4 rounded-2xl bg-emerald-800 p-4 text-left text-white shadow-lg shadow-emerald-950/15 lg:col-span-4"
           onClick={() => onOpen(primaryAction.view)}
           type="button"
         >
@@ -257,7 +258,7 @@ export function WorkspaceHomePanel({
       ) : null}
 
       {secondaryActions.length > 0 ? (
-        <section className="grover-card p-4">
+        <section className="grover-card p-4 lg:col-span-8">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>
@@ -280,7 +281,7 @@ export function WorkspaceHomePanel({
         </section>
       ) : null}
 
-      <article className="grover-card p-4 text-sm text-slate-600">
+      <article className="grover-card p-4 text-sm text-slate-600 lg:col-span-4">
         <p className="font-bold text-slate-900">Signed in as {signedInName}</p>
         <p className="mt-1 text-xs leading-5">
           {persona.description}

@@ -1,4 +1,5 @@
 import type { WorkspacePersona, WorkspacePersonaId } from '../domain/workspacePersona';
+import { GroverBrand } from './GroverBrand';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
 export type MobileWorkspaceView = 'home' | 'route' | 'jobs' | 'job' | 'manager' | 'customer';
@@ -144,6 +145,57 @@ interface MobileWorkspaceNavigationProps {
   hasSelectedJob: boolean;
   navigationItems: WorkspacePersona['navigation'];
   onChange: (view: MobileWorkspaceView) => void;
+}
+
+interface DesktopWorkspaceNavigationProps extends MobileWorkspaceNavigationProps {
+  personaLabel: string;
+  signedInName: string;
+}
+
+export function DesktopWorkspaceNavigation({
+  activeView,
+  hasSelectedJob,
+  navigationItems,
+  onChange,
+  personaLabel,
+  signedInName,
+}: DesktopWorkspaceNavigationProps) {
+  return (
+    <aside className="fixed bottom-0 left-0 top-[3.25rem] z-30 hidden w-60 flex-col bg-forest px-5 py-8 text-white shadow-grover-md lg:flex">
+      <GroverBrand className="text-sand" />
+      <p className="mt-5 text-[0.68rem] font-black uppercase tracking-[0.16em] text-emerald-200">
+        {personaLabel}
+      </p>
+      <nav aria-label="Desktop workspace" className="mt-7 space-y-1.5">
+        {navigationItems.map((item) => {
+          const disabled = item.view === 'job' && !hasSelectedJob;
+          const active = activeView === item.view;
+
+          return (
+            <button
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
+                active
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'text-emerald-50 hover:bg-white/10 disabled:text-emerald-950/60'
+              }`}
+              disabled={disabled}
+              key={item.view}
+              onClick={() => onChange(item.view)}
+              type="button"
+            >
+              <WorkspaceIcon className="size-5 shrink-0" name={item.icon} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+      <div className="mt-auto rounded-xl border border-white/10 bg-slate-950/20 p-3">
+        <p className="truncate text-sm font-black text-white">{signedInName}</p>
+        <p className="mt-1 truncate text-xs text-emerald-100">{personaLabel}</p>
+      </div>
+    </aside>
+  );
 }
 
 export function MobileWorkspaceNavigation({

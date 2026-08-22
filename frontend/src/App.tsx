@@ -84,6 +84,7 @@ import {
   type WorkspacePersonaId,
 } from './domain/workspacePersona';
 import {
+  DesktopWorkspaceNavigation,
   MobileWorkspaceHeader,
   MobileWorkspaceNavigation,
   mobileWorkspaceScrollTop,
@@ -112,7 +113,6 @@ import {
   personaProgressLanguage,
   WorkspaceHomePanel,
 } from './components/WorkspaceHomePanel';
-import { GroverBrand } from './components/GroverBrand';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
@@ -2649,8 +2649,22 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink md:pb-0 md:pl-24 lg:pl-0">
-      <section className="relative hidden min-h-[25rem] overflow-hidden bg-emerald-950 px-6 py-10 text-white lg:block">
+    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink md:pb-0 md:pl-24 lg:pl-60">
+      <DesktopWorkspaceNavigation
+        activeView={mobileView}
+        hasSelectedJob={Boolean(selectedJobId)}
+        navigationItems={activePersona.navigation}
+        onChange={(view) => {
+          if (view === 'manager') {
+            setManagerWorkspaceSection(null);
+            setManagerWorkspaceTool(null);
+          }
+          changeMobileView(view, true);
+        }}
+        personaLabel={activePersona.label}
+        signedInName={auth.displayName || 'Signed-in user'}
+      />
+      <section className={`relative min-h-[20rem] overflow-hidden bg-emerald-950 px-8 py-8 text-white ${mobileView === 'home' ? 'hidden lg:block' : 'hidden'}`} id="workspace-home-hero">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
@@ -2658,9 +2672,8 @@ export function App() {
         />
         <span className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-emerald-950/20" />
         <span className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
-        <div className="relative mx-auto flex min-h-[20rem] max-w-6xl flex-col">
-          <div className="flex items-center justify-between gap-5">
-            <GroverBrand className="text-sand" />
+        <div className="relative mx-auto flex min-h-[16rem] max-w-6xl flex-col">
+          <div className="flex items-center justify-end gap-5">
             <p className="rounded-xl border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-sm">
               {new Date().toLocaleDateString(undefined, {
                 weekday: 'long',
@@ -2738,11 +2751,7 @@ export function App() {
         view={mobileView}
       />
 
-      <section className={`mx-auto grid max-w-7xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 ${
-        workspaceSurfaces.fieldOperations
-          ? 'lg:grid-cols-[minmax(0,1fr)_420px]'
-          : 'lg:grid-cols-1'
-      }`}>
+      <section className="mx-auto grid max-w-7xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-1 lg:gap-4 lg:px-8 lg:py-6">
         <div className="min-w-0">
           <div className={mobileView === 'home' ? 'block' : 'hidden'}>
             <WorkspaceHomePanel
@@ -2765,14 +2774,14 @@ export function App() {
               signedInName={auth.displayName || 'Signed-in user'}
             />
           </div>
-          <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16 ${workspaceSurfaces.fieldOperations ? 'lg:block' : ''}`} id="today-route">
+          <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
             />
           </div>
-          <section className={`${workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'} ${workspaceSurfaces.fieldOperations ? 'lg:block' : ''}`}>
+          <section className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}>
           <div className="mb-4 mt-0 scroll-mt-16 lg:mt-6" id="assigned-jobs">
             <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Assigned jobs</h2>
             <p className="mt-1 text-sm text-slate-600" role="status">{statusMessage}</p>
@@ -3050,7 +3059,7 @@ export function App() {
           </div>
           </section>
 
-          <div className={`${workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} ${workspaceSurfaces.customerCare ? 'lg:block lg:space-y-6' : ''}`} id="customer-workspace">
+          <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
             <CustomerPortalPreviewPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
@@ -3071,7 +3080,7 @@ export function App() {
           </div>
 
           {canUseManagerTools ? (
-          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-grover-sm open:bg-transparent open:p-0 open:shadow-none lg:mt-6 lg:block`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
+          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-grover-sm open:bg-transparent open:p-0 open:shadow-none`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
             <summary className="cursor-pointer list-none rounded-xl bg-forest px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               {managerWorkspaceHeading}
               <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>
@@ -3449,7 +3458,7 @@ export function App() {
           ) : null}
         </div>
 
-        <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 ${workspaceSurfaces.fieldOperations ? 'lg:sticky lg:top-4 lg:block lg:self-start' : ''}`} id="job-detail" ref={jobDetailRef}>
+        <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 lg:mx-auto lg:w-full lg:max-w-3xl`} id="job-detail" ref={jobDetailRef}>
           {jobDetailUnavailable ? (
             <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
               Persisted job access could not be verified. Job details remain hidden until API readiness recovers.

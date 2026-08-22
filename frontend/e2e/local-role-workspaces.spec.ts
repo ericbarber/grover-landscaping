@@ -23,6 +23,9 @@ test.beforeEach(async ({ page }) => {
   await page.route('http://localhost:8080/**', (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    if (path === '/health/ready') {
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ status: 'ok' }) });
+    }
     if (path === '/auth/config') {
       return route.fulfill({
         contentType: 'application/json',
@@ -91,11 +94,47 @@ test('desktop local review changes the rendered workspace, not only its title', 
       await expect(page.getByLabel('Local reviewer account')).toHaveValue(reviewCase.id);
     }
 
-    await expect(page.locator('#customer-workspace')).toBeVisible({ visible: reviewCase.customer });
-    await expect(page.locator('#today-route')).toBeVisible({ visible: reviewCase.field });
-    await expect(page.locator('#assigned-jobs')).toBeVisible({ visible: reviewCase.field });
-    await expect(page.locator('#job-detail')).toBeVisible({ visible: reviewCase.field });
-    await expect(page.locator('#manager-tools')).toBeVisible({ visible: reviewCase.manager });
+    const desktopNavigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+    await expect(desktopNavigation).toBeVisible();
+    await expect(desktopNavigation.getByRole('button', { name: 'Home', exact: true }))
+      .toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('#customer-workspace')).toBeHidden();
+    await expect(page.locator('#today-route')).toBeHidden();
+    await expect(page.locator('#assigned-jobs')).toBeHidden();
+    await expect(page.locator('#job-detail')).toBeHidden();
+    await expect(page.locator('#manager-tools')).toBeHidden();
+
+    if (reviewCase.customer) {
+      const customerLabel = reviewCase.id === 'property-owner' ? 'My yard' : 'Portfolio';
+      await desktopNavigation.getByRole('button', { name: customerLabel, exact: true }).click();
+      await expect(page.locator('#customer-workspace')).toBeVisible();
+      await expect(page.locator('#today-route')).toBeHidden();
+    } else {
+      await expect(desktopNavigation.getByRole('button', { name: /My yard|Portfolio/ })).toHaveCount(0);
+    }
+
+    if (reviewCase.field) {
+      await desktopNavigation.getByRole('button', { name: 'Route', exact: true }).click();
+      await expect(page.locator('#today-route')).toBeVisible();
+      await expect(page.locator('#assigned-jobs')).toBeHidden();
+      await desktopNavigation.getByRole('button', { name: 'Jobs', exact: true }).click();
+      await expect(page.locator('#today-route')).toBeHidden();
+      await expect(page.locator('#assigned-jobs')).toBeVisible();
+      await desktopNavigation.getByRole('button', { name: 'Job', exact: true }).click();
+      await expect(page.locator('#assigned-jobs')).toBeHidden();
+      await expect(page.locator('#job-detail')).toBeVisible();
+    } else {
+      await expect(desktopNavigation.getByRole('button', { name: 'Route', exact: true })).toHaveCount(0);
+    }
+
+    if (reviewCase.manager) {
+      const managerLabel = reviewCase.id === 'support-admin' ? 'Support' : 'Manage';
+      await desktopNavigation.getByRole('button', { name: managerLabel, exact: true }).click();
+      await expect(page.locator('#manager-tools')).toBeVisible();
+      await expect(page.locator('#assigned-jobs')).toBeHidden();
+    } else {
+      await expect(desktopNavigation.getByRole('button', { name: /Manage|Support/ })).toHaveCount(0);
+    }
   }
 });
 
@@ -107,8 +146,9 @@ test('desktop management categories are filtered for portfolio and support roles
   });
   await page.goto('/app');
 
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
   await expect(page.locator('#manager-tools > summary')).toContainText('Portfolio management tools');
-  await page.locator('#manager-tools > summary').click();
   await expect(page.getByRole('button', { name: /Customers/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Schedule/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Recovery/ })).toHaveCount(0);
@@ -118,8 +158,9 @@ test('desktop management categories are filtered for portfolio and support roles
     page.getByLabel('Local reviewer account').selectOption('support-admin'),
   ]);
   await expect(page.getByLabel('Local reviewer account')).toHaveValue('support-admin');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Support', exact: true }).click();
   await expect(page.locator('#manager-tools > summary')).toContainText('Support and recovery tools');
-  await page.locator('#manager-tools > summary').click();
   await expect(page.getByRole('button', { name: /Team/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Reports/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Recovery/ })).toBeVisible();
@@ -129,22 +170,21 @@ test('desktop management categories are filtered for portfolio and support roles
 
 test('authenticated home retains the shared shell materials and type roles', async ({ page }) => {
   await page.goto('/app');
+  await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.locator('#manager-tools > summary')).toBeVisible();
+  await expect(page.locator('#manager-tools > summary')).toBeHidden();
 
   const shell = await page.evaluate(() => {
     const main = document.querySelector('main');
     const heading = document.querySelector('h1');
     const brandMark = document.querySelector('.grover-brand-mark');
-    const managerSummary = document.querySelector('#manager-tools > summary');
-    if (!main || !heading || !brandMark || !managerSummary) {
+    if (!main || !heading || !brandMark) {
       throw new Error('Authenticated shell theme targets were not rendered.');
     }
     return {
       canvas: getComputedStyle(main).backgroundColor,
       displayFamily: getComputedStyle(heading).fontFamily,
       brandMark: getComputedStyle(brandMark).stroke,
-      managerNavigation: getComputedStyle(managerSummary).backgroundColor,
     };
   });
 
@@ -152,8 +192,14 @@ test('authenticated home retains the shared shell materials and type roles', asy
     canvas: 'rgb(246, 242, 232)',
     displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
     brandMark: 'rgb(222, 199, 157)',
-    managerNavigation: 'rgb(15, 47, 40)',
   });
+
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
+  await expect(page.locator('#manager-tools > summary')).toBeVisible();
+  expect(await page.locator('#manager-tools > summary').evaluate((element) => (
+    getComputedStyle(element).backgroundColor
+  ))).toBe('rgb(15, 47, 40)');
 });
 
 test('authenticated navigation moves from a phone bar to a tablet rail', async ({ page }) => {
@@ -205,4 +251,24 @@ test('authenticated navigation moves from a phone bar to a tablet rail', async (
 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(navigation).toBeHidden();
+  const desktopNavigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(desktopNavigation).toBeVisible();
+  const desktop = await desktopNavigation.evaluate((element) => {
+    const box = element.parentElement?.getBoundingClientRect();
+    const main = document.querySelector('main');
+    const hero = document.querySelector('#workspace-home-hero');
+    return {
+      heroHeight: hero ? Math.round(hero.getBoundingClientRect().height) : 0,
+      left: box ? Math.round(box.left) : -1,
+      mainPaddingLeft: main ? Math.round(Number.parseFloat(getComputedStyle(main).paddingLeft)) : 0,
+      overflow: document.documentElement.scrollWidth > window.innerWidth,
+      width: box ? Math.round(box.width) : 0,
+    };
+  });
+  expect(desktop.left).toBe(0);
+  expect(desktop.mainPaddingLeft).toBe(240);
+  expect(desktop.overflow).toBe(false);
+  expect(desktop.width).toBe(240);
+  expect(desktop.heroHeight).toBeGreaterThanOrEqual(320);
+  expect(desktop.heroHeight).toBeLessThanOrEqual(340);
 });

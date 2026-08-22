@@ -125,6 +125,9 @@ identity, density, forms, status, and recovery.
 - Role-filtered workspace navigation uses one outlined SVG icon family.
 - The compact shell uses bottom navigation on phones, a left rail on tablets,
   and the existing desktop rail/category composition at the large breakpoint.
+- Desktop renders one active destination beside the persistent rail; Home uses a
+  compact editorial hero and operational summary/action grid rather than
+  stacking every surface authorized for the persona.
 - Operational feedback uses shared semantic notice and bounded status-pill
   primitives with neutral, info, success, warning, and danger tones. New phase
   work migrates legacy local variants only in the workflows it changes.
@@ -367,9 +370,9 @@ different product decision, missing authority, or unavailable required contract.
 
 | Phase | Status | Next action |
 | --- | --- | --- |
-| 0. Foundation and shell | Partial production adoption | Outlined icons, tablet rail, and shared status contract delivered; finish operational density and migrate legacy feedback by phase |
+| 0. Foundation and shell | Core production adoption delivered | Outlined icons, responsive rails, single-destination desktop density, and shared status contract delivered; migrate legacy feedback by owning phase |
 | 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
-| 2. Field execution | Partial production adoption | Adopt Crew Route V1 hierarchy across the connected Home → Route → Jobs → Job workflow |
+| 2. Field execution | In progress | Adopt Crew Route V1 hierarchy across the connected Home → Route → Jobs → Job workflow |
 | 3. Manager daily operations | Partial production adoption | Converge authenticated Schedule, inspector, publish/capacity risk, and Recovery composition |
 | 4. Completion proof | Partial production adoption | Connect existing report, evidence, delivery, and bid contracts as one responsive handoff |
 | 5. Customers and portfolios | In progress · Yard Owner designs complete, production partial | Finish acquisition proposal/activation; adopt Yard Owner portal; then produce property-manager working design; keep billing gated |

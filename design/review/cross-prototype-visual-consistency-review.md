@@ -85,8 +85,8 @@ same brand, palette, active treatment, geometry, and responsive standards.
 - Extend the delivered production outlined SVG icon family only when new
   authenticated workflows require additional approved meanings.
 - Extend the delivered shared status primitives into legacy workflow panels as
-  their owning phases are adopted; finish desktop density rules without
-  collapsing the distinct phone, tablet, and desktop compositions.
+  their owning phases are adopted. The delivered single-destination desktop
+  rail and compact Home grid remain distinct from phone and tablet compositions.
 - Extract shared HTML/React shell components during production adoption; the
   current static prototype foundation intentionally shares CSS without coupling
   prototype JavaScript.

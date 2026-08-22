@@ -7,7 +7,7 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: shared authenticated-shell convergence
+- Active product boundary: field-execution hierarchy convergence
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -28,6 +28,10 @@
   sync feedback, job lifecycle badges, persisted-job failures, and route
   storage/availability recovery across neutral, info, success, warning, and
   danger tones.
+- Desktop uses a persistent role-filtered forest rail, a compact Home summary,
+  and one active destination at a time instead of stacking every authorized
+  field, customer, and manager surface. Phone and tablet compositions retain
+  their bottom-bar and compact-rail behavior.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -80,15 +84,16 @@ requests in the responsive workspaces. Mobile and desktop browser journeys
 preserve the no-operational-work boundary and the confirmed owner view links to
 the existing portal.
 
-The outlined-icon, tablet-navigation, and first shared-status portions of
-authenticated-shell convergence are delivered. The next repository-owned slice
-is:
+The core shared-shell phase is delivered: outlined icons, phone/tablet/desktop
+navigation, semantic status primitives, and denser single-destination desktop
+composition are in production. The next repository-owned slice is:
 
-1. Tighten desktop information density without weakening role-based composition
-   or the phone/tablet navigation behavior.
-2. Continue migrating workflow-local feedback to the shared status contract
-   inside each affected adoption slice.
-3. Validate the remaining Phase 0 gates, then begin field-workflow convergence.
+1. Converge field Home → Route → Jobs → Job hierarchy with the Crew Route V1
+   direction.
+2. Preserve durable offline queues, conflict review, route amendments,
+   checklist/photo evidence, and completion recovery while changing composition.
+3. Migrate field-local feedback to the shared status contract and validate the
+   full responsive field journey.
 
 ## Read first
 

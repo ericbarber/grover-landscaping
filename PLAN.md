@@ -102,12 +102,19 @@ Current state:
   Authenticated Home sync/priority feedback, field job states, persisted-work
   failures, and crew-route storage/availability recovery use the same icon,
   color, spacing, and live-region contract.
+- Authenticated desktop density now follows the approved operational shell: a
+  persistent role-filtered forest rail replaces the all-surfaces stack, Home
+  uses a shorter editorial hero plus a compact summary/action grid, and Route,
+  Jobs, Job, customer, and manager destinations render one at a time. Phone and
+  tablet navigation behavior is unchanged.
 
 Next slice:
 
-- Finish authenticated desktop operational density and migrate remaining
-  workflow-local feedback onto the shared status contract as each phase is
-  adopted, then begin the approved field-execution hierarchy convergence.
+- Begin the approved field-execution hierarchy convergence across Home → Route
+  → Jobs → Job while preserving offline, conflict, evidence, and recovery
+  behavior.
+- Migrate remaining workflow-local feedback onto the shared status contract as
+  each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

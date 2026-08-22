@@ -29,7 +29,9 @@ not currently depend on React Router.
 - Cognito, disabled, and production-rejected local-review authentication modes
 - Role-filtered Home, field, customer, manager, and support destinations
 - Shared outlined SVG workspace icons with phone bottom navigation, a fixed
-  tablet rail, and handoff to the desktop shell at the large breakpoint
+  tablet rail, and a persistent role-filtered desktop rail
+- Single-destination desktop rendering with a compact Home hero and operational
+  summary/action grid rather than an all-authorized-surfaces stack
 - Shared semantic notice and status-pill primitives for neutral, information,
   success, warning, and dangerous authenticated workflow feedback
 - Mobile route, jobs, checklist, photos, completion, offline queue, replay, and

@@ -20,7 +20,7 @@ remains the canonical delivery-status record for all product and platform work.
 | --- | --- | --- | --- |
 | Public homepage and persona journeys | [Working homepage](../design/prototypes/public-homepage/README.md) and [V2 handoff](../design/review/v2-working-homepage-handoff.md) | Adopted | Replace illustrative workspace previews only when approved production captures exist; add customer proof only with verified provenance and approval. |
 | Landscaping-company “Today’s operation” preview | [Manager schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png) | Adopted for marketing | The hero and Plan tour use the responsive, interactive, explicitly non-persistent dashboard. Production manager scheduling remains tracked separately below. |
-| Shared visual foundation | [Consistency review](../design/review/cross-prototype-visual-consistency-review.md) | Partial | The production authenticated shell now uses one outlined SVG icon family, explicit phone-bottom/tablet-rail/desktop-shell navigation, and shared semantic notices/status pills adopted in Home and core field recovery. Finish desktop operational density and migrate legacy panel feedback during its owning phases. |
+| Shared visual foundation | [Consistency review](../design/review/cross-prototype-visual-consistency-review.md) | Adopted core / incremental migration | The production authenticated shell uses one outlined SVG icon family, phone bottom bar, tablet rail, persistent desktop rail, single-destination desktop composition, and shared semantic notices/status pills. Migrate legacy panel feedback only during its owning workflow phase. |
 | Access and persona Home | [Access wireframe](../design/wireframes/auth/01-access-and-onboarding.svg) and [application delivery plan](../design/review/application-working-design-delivery-plan.md) | Partial | Finish entry/recovery state convergence and validate each role’s first-task path within the shared shell. |
 | Crew field route and execution | [Crew route V1](../design/high-fidelity/field/crew-route-mobile-v1.png) and [field wireframes](../design/wireframes/field/01-home.svg) | Partial | Adopt the field hierarchy across Home → Route → Jobs → Job; keep offline queue, photo, checklist, amendment, and completion recovery behavior intact. |
 | Manager daily operations | [Schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png) and [manager wireframes](../design/wireframes/manager/00-manager-hub.svg) | Partial | Converge the production hub, schedule, dispatch, inspector, publish, capacity-risk, and Recovery compositions across desktop, tablet, and mobile. |
@@ -39,11 +39,10 @@ remains the canonical delivery-status record for all product and platform work.
 The next repository-owned phases are ordered by an existing approved contract,
 user value, and dependency safety:
 
-1. Finish shared authenticated-shell adoption: outlined icons, tablet
-   navigation, and the reusable status contract are delivered; desktop density
-   and phased migration of legacy panel feedback remain.
-2. Converge field execution from Home through completion without weakening
-   offline, conflict, evidence, or recovery contracts.
+1. Shared authenticated-shell core is delivered; migrate legacy feedback only
+   inside the owning workflow phases.
+2. **Active:** converge field execution from Home through completion without
+   weakening offline, conflict, evidence, or recovery contracts.
 3. Converge manager daily operations and Recovery around the approved schedule
    direction.
 4. Connect completion proof from crew handoff through manager review and

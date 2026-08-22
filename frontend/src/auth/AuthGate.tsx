@@ -105,7 +105,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <aside className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900 bg-slate-950 px-4 py-2 text-sm text-slate-200">
+      <aside className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900 bg-slate-950 px-4 py-2 text-sm text-slate-200">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-white">{auth.displayName}</span>
           <span className="text-xs text-slate-400">{auth.roles.join(', ') || 'No assigned role'}</span>
