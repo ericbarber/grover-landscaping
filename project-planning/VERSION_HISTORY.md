@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Added persistent public-hero invitations for private Yard Owner signup and authenticated landscaping-company onboarding, with persona-aware visual emphasis and direct route coverage.
 - 2026-08-20: Added the acquisition proposal schema foundation with immutable published versions, bounded scope/terms and price controls, one open/accepted proposal per assessment, actor-scoped replay keys, owner decision records, accepted-but-unactivated JSON/digest snapshots, minimized events, and successful clean replay of every migration.
 - 2026-08-20: Defined the acquisition-specific initial-service proposal contract with completed-assessment authority, immutable revisions, structured scope/terms/price, exact-version owner decisions, accepted-but-unactivated snapshots, separate question/change requests, minimized audit, and an explicit boundary from existing-customer project bids.
 - 2026-08-20: Closed on-site assessment scheduling recovery with verified-provider replacement windows after owner change requests, current-authority and expected-version checks, exact replay, changed/stale conflict, minimized schedule-free audit, fresh owner confirmation, retry-preserving provider controls, and browser coverage.

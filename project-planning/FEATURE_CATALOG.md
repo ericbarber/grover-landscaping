@@ -10,6 +10,8 @@
   acquisition-progress, and authenticated-destination models without changing
   their common brand treatment
 - Public outcome-led homepage with direct workspace entry
+- Persistent hero invitations for private Yard Owner signup and authenticated
+  landscaping-company onboarding
 - Interactive benefit stories for yard owners, property managers, landscaping companies, and crew leads
 - Plan-Care-Proof product narrative and representative workspace preview
 - Responsive product capability and trust sections

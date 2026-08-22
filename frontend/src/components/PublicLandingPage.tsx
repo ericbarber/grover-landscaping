@@ -149,23 +149,25 @@ export function PublicLandingPage({
             <p className="mt-7 max-w-2xl text-lg font-medium leading-8 text-slate-200 sm:text-xl">
               {activePersona.description} Grover connects the people, properties, and proof behind exceptional landscape care.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              {activePersona.id === 'owner' ? (
-                <a
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-6 py-3 font-black text-emerald-950 transition hover:bg-emerald-300"
-                  href={OWNER_ACQUISITION_PATH}
-                  onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_private_setup')}
-                >
-                  Set up my yard <span className="ml-2" aria-hidden="true">→</span>
-                </a>
-              ) : null}
-              <button className={`inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-black transition ${activePersona.id === 'owner' ? 'border border-white/25 bg-white/10 text-white hover:bg-white/15' : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'}`} onClick={() => openLeadDialog(activeMarketingPersona, 'hero')} type="button">
-                {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
-              </button>
-              <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 bg-white/10 px-6 py-3 font-black text-white backdrop-blur-sm transition hover:bg-white/15" href="#who-its-for">
-                See who it’s for
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Get started with Grover">
+              <a
+                className={`inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-black transition ${activePersona.id === 'owner' ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300' : 'border border-white/25 bg-white/10 text-white hover:bg-white/15'}`}
+                href={OWNER_ACQUISITION_PATH}
+                onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}
+              >
+                Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
+              </a>
+              <a
+                className={`inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-black transition ${activePersona.id === 'owner' ? 'border border-white/25 bg-white/10 text-white hover:bg-white/15' : 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300'}`}
+                href="/app"
+                onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}
+              >
+                Sign up your company <span className="ml-2" aria-hidden="true">→</span>
               </a>
             </div>
+            <button className="mt-5 text-sm font-black text-slate-200 underline decoration-white/35 underline-offset-4 transition hover:text-white" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
+              {activeCallToAction.label}
+            </button>
           </div>
 
           <div className="hidden justify-self-end lg:block">

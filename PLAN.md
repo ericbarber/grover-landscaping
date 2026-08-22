@@ -635,6 +635,9 @@ the outcome, and return to its recovery workflow from persisted activity history
 
 - Public root homepage introduces Grover without requiring authentication
 - Outcome-led hero positions Grover around the plan, field care, and customer-ready proof
+- Hero signup invitations now keep both acquisition paths visible: Yard Owners
+  enter the private yard workspace and landscaping companies enter authenticated
+  organization onboarding without first changing the audience selector
 - Interactive audience selector tailors benefits for yard owners, property managers, landscaping companies, and crew leads
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing

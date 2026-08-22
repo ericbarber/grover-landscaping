@@ -285,6 +285,10 @@ persona-selectable benefits for yard owners, property managers, landscaping
 companies, and crew leads, the Plan-Care-Proof workflow, a product preview,
 capability proof points, and clear workspace calls to action. `/app` remains the
 direct workspace entry.
+The hero now presents both acquisition invitations at once: private Yard Owner
+signup enters `/app/yard-owner`, while company signup enters `/app` for identity
+and first-organization onboarding. Persona selection changes emphasis, not
+access to either path.
 Persona-specific conversion actions now open a consent-based request flow for
 demos, portfolio discussions, or early access. Production requests persist with
 audience, intent, landing path, and UTM attribution; local preview mode reports
