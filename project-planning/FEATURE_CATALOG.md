@@ -43,6 +43,10 @@
 ## Persona Workspaces
 
 - Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
+- Prototype-aligned authenticated Home shell with canonical desktop/mobile
+  wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
+  navigation, mobile header and bottom-navigation surfaces, and exact style
+  regression coverage
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history

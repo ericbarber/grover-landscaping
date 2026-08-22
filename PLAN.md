@@ -51,6 +51,12 @@ Current state:
   its metadata, analytics, lead, or direct Yard Owner/company entry contracts.
   Access and Yard Owner acquisition surfaces consume the same foundation, and a
   computed-style browser check guards the production token contract.
+- Production visual convergence phase 2 is delivered for the authenticated Home
+  shell. Desktop and mobile Home now use the shared leaf lockup, editorial
+  greeting hierarchy, warm canvas and paper surfaces, restrained prototype
+  shadows, forest manager navigation, and canonical mobile header/bottom-nav
+  materials. Exact browser assertions cover the canvas, display stack, sand
+  wordmark, and deep-navigation surface without changing role or tool access.
 - Original Southwestern hero photography is stored with its generation brief and
   project-local usage guidance.
 - Professional V2 review retains the split hero and Plan–Care–Proof narrative,
@@ -192,9 +198,9 @@ Current state:
 Next design work:
 
 - Continue production visual convergence through the authenticated application
-  shell: adopt the validated desktop rail, mobile navigation materials,
-  operational density, status components, and outlined icon family while
-  retaining role-aware destinations and local-review behavior.
+  shell: adopt the validated desktop rail, operational density, status
+  components, and outlined icon family while retaining role-aware destinations
+  and local-review behavior.
 - Review the Yard Owner working design for phased production React adoption,
   including a customer-specific next-visit read model and removal of raw billing
   notes from customer completion reports.

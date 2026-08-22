@@ -126,3 +126,32 @@ test('desktop management categories are filtered for portfolio and support roles
   await expect(page.getByRole('button', { name: /Schedule/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Customers/ })).toHaveCount(0);
 });
+
+test('authenticated home retains the shared shell materials and type roles', async ({ page }) => {
+  await page.goto('/app');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.locator('#manager-tools > summary')).toBeVisible();
+
+  const shell = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const heading = document.querySelector('h1');
+    const brandMark = document.querySelector('.grover-brand-mark');
+    const managerSummary = document.querySelector('#manager-tools > summary');
+    if (!main || !heading || !brandMark || !managerSummary) {
+      throw new Error('Authenticated shell theme targets were not rendered.');
+    }
+    return {
+      canvas: getComputedStyle(main).backgroundColor,
+      displayFamily: getComputedStyle(heading).fontFamily,
+      brandMark: getComputedStyle(brandMark).stroke,
+      managerNavigation: getComputedStyle(managerSummary).backgroundColor,
+    };
+  });
+
+  expect(shell).toEqual({
+    canvas: 'rgb(246, 242, 232)',
+    displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
+    brandMark: 'rgb(222, 199, 157)',
+    managerNavigation: 'rgb(15, 47, 40)',
+  });
+});

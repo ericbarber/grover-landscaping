@@ -92,12 +92,12 @@ export function MobileWorkspaceHeader({
   const context = mobileWorkspaceContext(input);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-paper/95 px-4 py-3 shadow-grover-sm backdrop-blur lg:hidden">
       <div className="mx-auto flex max-w-lg items-center gap-3">
         {input.view === 'job' ? (
           <button
             aria-label="Back to assigned jobs"
-            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-slate-300 bg-white text-xl font-bold text-slate-800"
+            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-slate-300 bg-paper text-xl font-bold text-slate-800"
             onClick={onBackToJobs}
             type="button"
           >
@@ -118,7 +118,7 @@ export function MobileWorkspaceHeader({
             </span>
             <select
               aria-label="Active workspace persona"
-              className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-xs font-semibold normal-case tracking-normal text-slate-800"
+              className="mt-1 block w-full rounded-lg border border-slate-300 bg-paper px-2 py-2 text-xs font-semibold normal-case tracking-normal text-slate-800"
               onChange={(event) => onPersonaChange(event.target.value as WorkspacePersonaId)}
               value={activePersonaId}
             >
@@ -154,7 +154,7 @@ export function MobileWorkspaceNavigation({
   return (
     <nav
       aria-label="Mobile workspace"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-300 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-paper/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(15,47,40,0.10)] backdrop-blur lg:hidden"
     >
       <div
         className="mx-auto grid max-w-lg gap-1"

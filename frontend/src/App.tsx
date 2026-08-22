@@ -112,6 +112,7 @@ import {
   personaProgressLanguage,
   WorkspaceHomePanel,
 } from './components/WorkspaceHomePanel';
+import { GroverBrand } from './components/GroverBrand';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -2642,7 +2643,7 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-slate-100 pb-20 lg:pb-0">
+    <main className="min-h-screen overflow-x-hidden bg-bone pb-20 text-ink lg:pb-0">
       <section className="relative hidden min-h-[25rem] overflow-hidden bg-emerald-950 px-6 py-10 text-white lg:block">
         <img
           alt=""
@@ -2653,11 +2654,8 @@ export function App() {
         <span className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
         <div className="relative mx-auto flex min-h-[20rem] max-w-6xl flex-col">
           <div className="flex items-center justify-between gap-5">
-            <p className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.3em] text-emerald-200">
-              <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.16)]" />
-              Grover
-            </p>
-            <p className="rounded-full border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-sm">
+            <GroverBrand className="text-sand" />
+            <p className="rounded-xl border border-white/15 bg-slate-950/30 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur-sm">
               {new Date().toLocaleDateString(undefined, {
                 weekday: 'long',
                 month: 'long',
@@ -2670,7 +2668,7 @@ export function App() {
               <p className="text-base font-bold text-emerald-200">
                 {homeGreeting(new Date().getHours())}, {auth.displayName?.split(/[\s@]/)[0] || 'there'}
               </p>
-              <h1 className="mt-3 max-w-3xl text-5xl font-black leading-[0.98] tracking-tight xl:text-6xl">
+              <h1 className="mt-3 max-w-3xl font-display text-5xl font-bold leading-[0.98] tracking-tight xl:text-6xl">
                 {personaHomeHeadline(activePersona)}
               </h1>
               <p className="mt-4 max-w-xl text-lg font-medium leading-7 text-slate-100">
@@ -2687,7 +2685,7 @@ export function App() {
                 <span className="text-emerald-300">Proof</span>
               </div>
             </div>
-            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-xl backdrop-blur-md">
+            <aside className="rounded-2xl border border-white/15 bg-slate-950/45 p-5 shadow-grover-md backdrop-blur-md">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
                 {personaProgressLanguage(activePersona).eyebrow}
               </p>
@@ -2734,7 +2732,7 @@ export function App() {
         view={mobileView}
       />
 
-      <section className={`mx-auto grid max-w-6xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 ${
+      <section className={`mx-auto grid max-w-7xl gap-5 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 ${
         workspaceSurfaces.fieldOperations
           ? 'lg:grid-cols-[minmax(0,1fr)_420px]'
           : 'lg:grid-cols-1'
@@ -3063,8 +3061,8 @@ export function App() {
           </div>
 
           {canUseManagerTools ? (
-          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-300 bg-slate-200/70 p-3 open:bg-transparent open:p-0 lg:mt-6 lg:block lg:open:bg-transparent`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
-            <summary className="cursor-pointer list-none rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
+          <details className={`${mobileView === 'manager' ? 'block' : 'hidden'} mt-0 scroll-mt-16 rounded-2xl border border-slate-200 bg-paper p-3 shadow-grover-sm open:bg-transparent open:p-0 open:shadow-none lg:mt-6 lg:block`} id="manager-tools" open={mobileView === 'manager' ? true : undefined}>
+            <summary className="cursor-pointer list-none rounded-xl bg-forest px-4 py-3 font-semibold text-white [&::-webkit-details-marker]:hidden">
               {managerWorkspaceHeading}
               <span className="ml-2 text-xs font-normal text-slate-300">{managerWorkspaceDescription}</span>
             </summary>

@@ -1,5 +1,6 @@
 import type { WorkspacePersona } from '../domain/workspacePersona';
 import type { MobileWorkspaceView } from './MobileWorkspaceShell';
+import { GroverBrand } from './GroverBrand';
 
 const viewDescriptions: Record<MobileWorkspaceView, string> = {
   home: 'Your signed-in workspace summary',
@@ -148,7 +149,7 @@ export function WorkspaceHomePanel({
 
   return (
     <section className="space-y-4 lg:hidden">
-      <article className="relative min-h-[19rem] overflow-hidden rounded-[1.75rem] bg-emerald-950 p-5 text-white shadow-xl shadow-emerald-950/20">
+      <article className="relative min-h-[19rem] overflow-hidden rounded-2xl bg-emerald-950 p-5 text-white shadow-grover-md">
         <img
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-center"
@@ -158,11 +159,8 @@ export function WorkspaceHomePanel({
         <span className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-950/80 to-transparent" />
         <div className="relative flex min-h-[16.5rem] flex-col">
           <div className="flex items-center justify-between gap-3">
-            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.16)]" />
-              Grover
-            </p>
-            <p className="rounded-full border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
+            <GroverBrand className="text-sand" />
+            <p className="rounded-lg border border-white/15 bg-slate-950/30 px-2.5 py-1 text-xs font-semibold text-slate-100 backdrop-blur-sm">
               {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>
           </div>
@@ -170,7 +168,7 @@ export function WorkspaceHomePanel({
             <p className="text-sm font-semibold text-emerald-200">
               {homeGreeting(now.getHours())}, {firstName}
             </p>
-            <h2 className="mt-2 max-w-xs text-3xl font-black leading-[1.02] tracking-tight">
+            <h2 className="mt-2 max-w-xs font-display text-3xl font-bold leading-[1.02] tracking-tight">
               {personaHomeHeadline(persona)}
             </h2>
             <p className="mt-3 max-w-xs text-sm font-medium leading-5 text-slate-100">
@@ -191,7 +189,7 @@ export function WorkspaceHomePanel({
         </div>
       </article>
 
-      <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <article className="grover-card p-4">
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -278,7 +276,7 @@ export function WorkspaceHomePanel({
       ) : null}
 
       {secondaryActions.length > 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="grover-card p-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>
@@ -301,7 +299,7 @@ export function WorkspaceHomePanel({
         </section>
       ) : null}
 
-      <article className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+      <article className="grover-card p-4 text-sm text-slate-600">
         <p className="font-bold text-slate-900">Signed in as {signedInName}</p>
         <p className="mt-1 text-xs leading-5">
           {persona.description}

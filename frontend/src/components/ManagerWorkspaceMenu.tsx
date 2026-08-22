@@ -149,7 +149,7 @@ export function ManagerWorkspaceMenu({
   const sections = managerWorkspaceSectionsForPersona(personaId);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="grover-card p-4">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
         Manager home
       </p>
@@ -204,9 +204,9 @@ export function ManagerWorkspaceToolMenu({
 
   if (selectedTool) {
     return (
-      <section className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <section className="grover-card flex items-center gap-3 p-3">
         <button
-          className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
+          className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
           onClick={onClear}
           type="button"
         >
@@ -223,9 +223,9 @@ export function ManagerWorkspaceToolMenu({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="grover-card p-4">
       <button
-        className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700"
+        className="min-h-11 rounded-xl border border-slate-300 bg-paper px-3 text-sm font-bold text-slate-700"
         onClick={onBack}
         type="button"
       >

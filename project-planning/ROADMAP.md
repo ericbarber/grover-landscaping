@@ -28,9 +28,11 @@ roles, leaf wordmark, split hero composition, persona-specific product preview,
 trust strip, controls, focus treatment, and PWA chrome into React while
 preserving the existing campaign, metadata, analytics, persisted-lead, and
 direct Yard Owner/company entry contracts. The shared theme also reaches access,
-acquisition, and authenticated utility classes; desktop rail, mobile navigation,
-operational density, and icon convergence remain the next application-shell
-slice.
+acquisition, and authenticated utility classes. The subsequent Home-shell slice
+adds the shared wordmark and editorial greeting, paper cards, warm canvas,
+forest manager navigation, and canonical mobile header/bottom-navigation
+materials without changing role-aware access. Desktop rail, operational density,
+status, and icon convergence remain the next application-shell work.
 The [application working-design delivery plan](../design/review/application-working-design-delivery-plan.md)
 now sequences the remaining current product through shared application
 foundations, access and Home, field execution, manager daily operations,
