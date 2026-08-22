@@ -5,8 +5,11 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current UX priority is a design-first review of the eventual application
-before further interface expansion. The source-controlled [`../design/`](../design/)
+The current UX priority is a complete persona-specific public landing
+experience. Yard Owner, property-manager, landscaping-company, and crew-lead
+routes now carry their audience through tailored hero actions, previews, trust
+signals, outcome stories, proof, capabilities, and final invitations instead of
+changing only first-screen copy. The source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,
 a browsable gallery, information architecture, state checklist, and decision log.
@@ -316,10 +319,10 @@ Persona-specific conversion actions now open a consent-based request flow for
 demos, portfolio discussions, or early access. Production requests persist with
 audience, intent, landing path, and UTM attribution; local preview mode reports
 that it does not retain the submission.
-Dedicated audience paths now tailor the hero, metadata, and conversion action for
-yard owners, property managers, landscaping companies, and crew leads while
-preserving campaign attribution. Public crawler rules exclude operational and
-customer-share routes from indexing.
+Dedicated audience paths now tailor the complete landing-page narrative,
+metadata, and conversion action for yard owners, property managers, landscaping
+companies, and crew leads while preserving campaign attribution. Public crawler
+rules exclude operational and customer-share routes from indexing.
 The static workflow explanation has been replaced with a compact interactive
 Plan-Care-Proof tour. Persona-specific outcomes connect the same working product
 capabilities to each audience, while a capability-backed credibility section
@@ -337,10 +340,9 @@ persona and campaign segments, operational failure counts, and explicit
 low-volume guidance. Overdue next actions are counted, prioritized, and visibly
 distinguished in the lead inbox.
 
-The current delivery priority is a mobile-first navigation redesign before the
-remaining pilot-readiness hardening. The first slice separates Route, Jobs, Job,
-and Manager into explicit mobile workspace views with stable bottom navigation
-and a contextual header. Follow-up slices will group manager capabilities into a
+The delivered mobile-first navigation redesign separates Route, Jobs, Job, and
+Manager into explicit mobile workspace views with stable bottom navigation and
+a contextual header. Follow-up slices can continue grouping manager capabilities into a
 manager home, make route and job summaries more compact, preserve per-view scroll
 position, and validate the complete interaction model on iPhone. Persona-aware
 navigation now separates yard owners, property managers, field crews, yard-care
@@ -385,7 +387,16 @@ schedule, remaining work, or a completed day.
 
 ## Immediate Continuation Work
 
-**Current — Yard Owner acquisition production foundation**
+**Current — Persona-specific public landing experience**
+
+   - Keep all four audience routes coherent from hero through final conversion,
+     with direct signup paths still visible and persona-relevant primary actions.
+   - Replace illustrative product previews with approved production captures as
+     each workspace becomes review-ready.
+   - Add only verified, approved proof and use measured campaign behavior to
+     guide future conversion changes.
+
+**Parallel product foundation — Yard Owner acquisition**
 
    - Delivered authenticated owner workspace and private pre-provider property persistence outside organization tenants, including isolation and lifecycle audit coverage.
    - Delivered the self-scoped verified-identity APIs and responsive production React private entry.

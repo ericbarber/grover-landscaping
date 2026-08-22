@@ -30,6 +30,27 @@ const marketingPersonas: Array<{
     metaOne: string;
     metaTwo: string;
   };
+  trust: {
+    heading: string;
+    items: string[];
+  };
+  proof: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    cards: Array<{ title: string; description: string; label: string }>;
+  };
+  product: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    capabilities: Array<{ title: string; description: string }>;
+  };
+  invitation: {
+    eyebrow: string;
+    title: string;
+    description: string;
+  };
 }> = [
   {
     id: 'owner',
@@ -51,6 +72,37 @@ const marketingPersonas: Array<{
       progressLabel: 'Latest service report complete',
       metaOne: 'Service complete',
       metaTwo: '1 recommendation',
+    },
+    trust: {
+      heading: 'Confidence before and after care',
+      items: ['Private yard setup', 'Upcoming care in one place', 'Evidence tied to each visit', 'Recommendations you control'],
+    },
+    proof: {
+      eyebrow: 'Clarity for your yard',
+      title: 'Yard care should never feel like a mystery.',
+      description: 'Grover keeps your property private while you get started, then connects each visit, update, and recommendation into a story you can actually follow.',
+      cards: [
+        { title: 'Start privately', description: 'Describe your yard before choosing what any provider can see.', label: 'Owner control' },
+        { title: 'Know the plan', description: 'Find upcoming service expectations without chasing an update.', label: 'Service confidence' },
+        { title: 'See what changed', description: 'Review photos, notes, and completion details together.', label: 'Visible care' },
+        { title: 'Choose what comes next', description: 'Consider recommendations and proposals with their full context.', label: 'Informed decisions' },
+      ],
+    },
+    product: {
+      eyebrow: 'Your yard, one connected story',
+      title: 'From finding care to understanding every visit.',
+      description: 'A private place to describe the yard, connect a provider, follow service, and keep proof of the work without learning an operations system.',
+      capabilities: [
+        { title: 'Private yard brief', description: 'Start with your goals and property context.' },
+        { title: 'Connection controls', description: 'Choose who can review each detail.' },
+        { title: 'Service-day visibility', description: 'Know what is planned and completed.' },
+        { title: 'Proof and recommendations', description: 'Keep outcomes and next decisions together.' },
+      ],
+    },
+    invitation: {
+      eyebrow: 'Start with your yard',
+      title: 'Make the next care decision with more confidence.',
+      description: 'Create your private yard setup now, then choose when and how to connect a provider.',
     },
   },
   {
@@ -74,6 +126,37 @@ const marketingPersonas: Array<{
       metaOne: '14 on track',
       metaTwo: '2 owned needs',
     },
+    trust: {
+      heading: 'Portfolio clarity without the chase',
+      items: ['Cross-property readiness', 'Owned exceptions and due dates', 'Evidence by address', 'Stakeholder-ready updates'],
+    },
+    proof: {
+      eyebrow: 'Control across the portfolio',
+      title: 'Every address gets a clear next step.',
+      description: 'Grover turns scattered vendor updates into a portfolio view built around readiness, open needs, accountable follow-through, and property-level evidence.',
+      cards: [
+        { title: 'See portfolio readiness', description: 'Scan which properties are on track and which need review.', label: 'Portfolio view' },
+        { title: 'Own every exception', description: 'Keep open needs connected to an owner and a due date.', label: 'Accountability' },
+        { title: 'Review by property', description: 'Keep service evidence and recommendations tied to the right address.', label: 'Property context' },
+        { title: 'Report with confidence', description: 'Share a clear service story with owners and stakeholders.', label: 'Ready reporting' },
+      ],
+    },
+    product: {
+      eyebrow: 'Built for multi-property care',
+      title: 'One operating view for every property you represent.',
+      description: 'Move from portfolio health to the exact service, evidence, or decision that needs attention without rebuilding the story from vendor messages.',
+      capabilities: [
+        { title: 'Portfolio readiness', description: 'Prioritize properties that need attention.' },
+        { title: 'Vendor accountability', description: 'Keep needs, owners, and next actions visible.' },
+        { title: 'Address-level proof', description: 'Review the work in the right property context.' },
+        { title: 'Decision history', description: 'Retain approvals and follow-through over time.' },
+      ],
+    },
+    invitation: {
+      eyebrow: 'Bring the portfolio into focus',
+      title: 'Spend less time assembling status—and more time acting on it.',
+      description: 'Tell us about your portfolio and we’ll shape the conversation around the properties, vendors, and reporting you manage.',
+    },
   },
   {
     id: 'company',
@@ -95,6 +178,37 @@ const marketingPersonas: Array<{
       progressLabel: 'Six of eight properties complete',
       metaOne: 'Field progress visible',
       metaTwo: '1 review needed',
+    },
+    trust: {
+      heading: 'One shared view of the work',
+      items: ['Routes and workloads aligned', 'Offline-ready field progress', 'Evidence linked to service', 'Traceable operational decisions'],
+    },
+    proof: {
+      eyebrow: 'Operational confidence by design',
+      title: 'Run the day without losing the service story.',
+      description: 'Grover connects planning, execution, evidence, customer follow-through, and revenue readiness so the office and field can work from the same operational truth.',
+      cards: [
+        { title: 'Plan a workable day', description: 'Balance routes, crew assignments, commitments, and workload risk.', label: 'Daily operations' },
+        { title: 'Stay aligned in the field', description: 'Give crews property context and resilient progress capture.', label: 'Field execution' },
+        { title: 'Review complete evidence', description: 'Connect photos, notes, exceptions, and completion status.', label: 'Quality control' },
+        { title: 'Move work forward', description: 'Carry verified service into customer updates, approvals, and billing.', label: 'Revenue readiness' },
+      ],
+    },
+    product: {
+      eyebrow: 'Designed around your operation',
+      title: 'A calmer system from morning plan to completed revenue.',
+      description: 'Give owners, managers, dispatchers, crews, and billing staff the right view while keeping the underlying work connected.',
+      capabilities: [
+        { title: 'Route and workload planning', description: 'Build a day crews can actually deliver.' },
+        { title: 'Field-safe execution', description: 'Keep progress moving beyond the signal.' },
+        { title: 'Customer-ready proof', description: 'Turn completed work into a clear update.' },
+        { title: 'Revenue handoffs', description: 'Move verified service toward approval and billing.' },
+      ],
+    },
+    invitation: {
+      eyebrow: 'Build a clearer operation',
+      title: 'Give every team one connected way to plan, care, and prove.',
+      description: 'Open the company workspace or request a focused walkthrough of the workflows that matter most to your operation.',
     },
   },
   {
@@ -118,6 +232,37 @@ const marketingPersonas: Array<{
       metaOne: 'Details offline-ready',
       metaTwo: '2 tasks remain',
     },
+    trust: {
+      heading: 'Everything the field needs to move',
+      items: ['Route and stop context', 'Clear completion expectations', 'Offline-safe progress', 'One clean office handoff'],
+    },
+    proof: {
+      eyebrow: 'A field-ready workday',
+      title: 'The next stop should already make sense.',
+      description: 'Grover puts the route, property context, required work, evidence, and exception path together so crews can focus on the yard instead of reconstructing the plan.',
+      cards: [
+        { title: 'Start with the route', description: 'See the ordered day and the context behind each stop.', label: 'Clear direction' },
+        { title: 'Know what done means', description: 'Keep service details and required evidence close to the work.', label: 'Completion clarity' },
+        { title: 'Work beyond the signal', description: 'Queue progress safely when mobile coverage disappears.', label: 'Field resilience' },
+        { title: 'Hand off once', description: 'Send photos, notes, progress, and exceptions back together.', label: 'Clean closeout' },
+      ],
+    },
+    product: {
+      eyebrow: 'Built for the field',
+      title: 'Less office back-and-forth. More time caring for properties.',
+      description: 'A focused mobile workday keeps the next stop, service expectations, progress, and proof available without exposing office-only complexity.',
+      capabilities: [
+        { title: 'Route-first day', description: 'Keep stops ordered and easy to scan.' },
+        { title: 'Property context', description: 'Bring access and service details along.' },
+        { title: 'Offline progress', description: 'Capture work safely when coverage drops.' },
+        { title: 'Complete handoff', description: 'Return evidence and exceptions together.' },
+      ],
+    },
+    invitation: {
+      eyebrow: 'Make the field day clearer',
+      title: 'Give crews the plan before they reach the property.',
+      description: 'Request a field-workflow demo and see how Grover keeps routes, progress, and proof connected.',
+    },
   },
 ];
 
@@ -126,6 +271,13 @@ function marketingPersonaFor(id: MarketingPersonaId): MarketingPersona {
   if (id === 'property-manager') return 'property_manager';
   if (id === 'crew') return 'crew_lead';
   return 'landscaping_company';
+}
+
+function marketingTitleFor(id: MarketingPersonaId): string {
+  if (id === 'owner') return 'Clearer yard care for homeowners | Grover';
+  if (id === 'property-manager') return 'Landscaping oversight for property managers | Grover';
+  if (id === 'crew') return 'Field workflow for landscaping crews | Grover';
+  return 'Landscaping operations software | Grover';
 }
 
 export function PublicLandingPage({
@@ -141,7 +293,7 @@ export function PublicLandingPage({
   const activeCallToAction = marketingCallToAction(activeMarketingPersona);
 
   useEffect(() => {
-    const title = `${activePersona.label} landscaping software | Grover`;
+    const title = marketingTitleFor(activePersona.id);
     const description = activePersona.description;
     const canonicalUrl = new URL(marketingPathForPersona(activePersona.id), window.location.origin)
       .toString();
@@ -206,25 +358,40 @@ export function PublicLandingPage({
             <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
               {activePersona.description}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Get started with Grover">
-              <a
-                className={activePersona.id === 'owner' ? 'grover-button-primary' : 'grover-button-secondary'}
-                href={OWNER_ACQUISITION_PATH}
-                onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}
-              >
-                Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
-              </a>
-              <a
-                className={activePersona.id === 'owner' ? 'grover-button-secondary' : 'grover-button-primary'}
-                href="/app"
-                onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}
-              >
-                Sign up your company <span className="ml-2" aria-hidden="true">→</span>
-              </a>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Primary next steps">
+              {activePersona.id === 'owner' ? (
+                <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
+                  Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
+                </a>
+              ) : activePersona.id === 'company' ? (
+                <a className="grover-button-primary" href="/app" onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                  Sign up your company <span className="ml-2" aria-hidden="true">→</span>
+                </a>
+              ) : (
+                <button className="grover-button-primary" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
+                  {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
+                </button>
+              )}
+              <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
             </div>
-            <button className="mt-4 min-h-11 px-1 text-sm font-extrabold text-slate-600 underline decoration-slate-300 underline-offset-4 transition hover:text-emerald-800" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
-              {activeCallToAction.label}
-            </button>
+            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600">
+              <span className="text-xs uppercase tracking-[0.1em] text-slate-500">Ready to start?</span>
+              {activePersona.id !== 'owner' ? (
+                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
+                  Sign up your yard
+                </a>
+              ) : null}
+              {activePersona.id !== 'company' ? (
+                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href="/app" onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                  Sign up your company
+                </a>
+              ) : null}
+              {activePersona.id === 'owner' || activePersona.id === 'company' ? (
+                <button className="min-h-11 text-left underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" onClick={() => openLeadDialog(activeMarketingPersona, 'hero_conversation')} type="button">
+                  {activeCallToAction.label}
+                </button>
+              ) : null}
+            </div>
             <div className="mt-10">
               <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
               <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
@@ -267,9 +434,9 @@ export function PublicLandingPage({
       </section>
 
       <section aria-labelledby="trust-heading" className="grid gap-5 bg-emerald-800 px-4 py-6 text-white sm:px-6 lg:grid-cols-[minmax(13rem,0.8fr)_minmax(0,3.2fr)] lg:items-center lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))]">
-        <h2 className="text-xs font-black uppercase tracking-[0.14em] text-sand" id="trust-heading">One shared view of the work</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.14em] text-sand" id="trust-heading">{activePersona.trust.heading}</h2>
         <ul className="grid gap-3 text-sm font-bold text-emerald-50 sm:grid-cols-2 lg:grid-cols-4">
-          {['Offline-ready field progress', 'Role-aware workspaces', 'Evidence linked to service', 'Traceable operational decisions'].map((item) => (
+          {activePersona.trust.items.map((item) => (
             <li className="flex items-center gap-2 before:text-sand before:content-['✓']" key={item}>{item}</li>
           ))}
         </ul>
@@ -334,22 +501,17 @@ export function PublicLandingPage({
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Credibility by design</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{activePersona.proof.eyebrow}</p>
               <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">
-                Built around the moments that usually fall through the cracks.
+                {activePersona.proof.title}
               </h2>
             </div>
             <p className="max-w-2xl text-lg leading-8 text-slate-600">
-              Grover’s proof is in the workflow: durable planning, field-safe capture, traceable decisions, and customer-ready handoffs. Every claim below maps to a working product capability.
+              {activePersona.proof.description}
             </p>
           </div>
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ['Works beyond the signal', 'Offline mutations queue locally and recover when connectivity returns.', 'Field resilience'],
-              ['Keeps decisions traceable', 'Route changes, access updates, and recovery actions retain an operational record.', 'Accountability'],
-              ['Protects every perspective', 'Organization roles and persona-aware workspaces keep the right tools in view.', 'Role-aware access'],
-              ['Turns work into evidence', 'Photos, notes, checklists, reports, bids, and recommendations stay connected.', 'Visible outcomes'],
-            ].map(([title, description, label]) => (
+            {activePersona.proof.cards.map(({ title, description, label }) => (
               <article className="flex min-h-64 flex-col rounded-2xl border border-slate-200 bg-bone p-6" key={title}>
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-800 text-lg font-black text-white" aria-hidden="true">✓</span>
                 <h3 className="mt-8 text-xl font-black tracking-tight">{title}</h3>
@@ -375,19 +537,14 @@ export function PublicLandingPage({
       <section className="px-4 py-20 sm:px-6 lg:px-8" id="product">
         <div className="mx-auto grid max-w-7xl gap-10 rounded-[2rem] bg-emerald-900 p-7 text-white sm:p-10 lg:grid-cols-2 lg:items-center lg:p-14">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Designed around the work</p>
-            <h2 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">Less chasing. More confidence.</h2>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">{activePersona.product.eyebrow}</p>
+            <h2 className="mt-4 font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl">{activePersona.product.title}</h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-emerald-50/80">
-              Grover brings schedules, route context, field evidence, customer communication, and operational follow-through into one role-aware experience.
+              {activePersona.product.description}
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              ['Offline-ready field work', 'Keep moving when coverage does not.'],
-              ['Customer-ready reports', 'Show the result, not just the status.'],
-              ['Persona-aware workspaces', 'Give each role the right next step.'],
-              ['Revenue-ready handoffs', 'Move completed work toward approval and billing.'],
-            ].map(([title, description]) => (
+            {activePersona.product.capabilities.map(({ title, description }) => (
               <article className="rounded-2xl border border-white/15 bg-white/10 p-5" key={title}>
                 <p className="font-black">{title}</p>
                 <p className="mt-2 text-sm leading-6 text-emerald-50/75">{description}</p>
@@ -399,9 +556,9 @@ export function PublicLandingPage({
 
       <section className="bg-slate-950 px-4 py-20 text-center text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">Make the work visible</p>
-          <h2 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">A better property experience starts with a clearer day.</h2>
-          <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">Step into Grover and explore the role-aware workspace already taking shape.</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">{activePersona.invitation.eyebrow}</p>
+          <h2 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">{activePersona.invitation.title}</h2>
+          <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">{activePersona.invitation.description}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
               {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>

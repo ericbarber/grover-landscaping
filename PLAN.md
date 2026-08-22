@@ -13,6 +13,35 @@ This file tracks what has been delivered, what is actively being built, what is 
 
 ## In Progress
 
+### Persona-specific public landing experiences
+
+Goal: give each public audience a complete landing-page narrative that reflects
+its work, decisions, evidence needs, and most relevant next step.
+
+Current state:
+
+- Yard Owner, property-manager, landscaping-company, and crew-lead campaign
+  routes now personalize the hero, action hierarchy, product preview, trust
+  signals, outcome story, proof cards, capability set, and final invitation.
+- The audience selector switches the complete page story and canonical route
+  without a reload while retaining campaign query parameters and first-party
+  measurement.
+- Yard and company signup remain visible from every persona view; the primary
+  action instead follows the active audience through private yard setup,
+  company onboarding, a portfolio discussion, or a field-workflow demo.
+- Responsive browser coverage verifies all four direct routes, page-level
+  persona continuity, canonical metadata, live audience switching, and mobile
+  reflow.
+
+Next slices:
+
+- Replace illustrative previews with approved production captures as the
+  corresponding workspaces reach review readiness.
+- Add verified customer proof only after approval and evidence provenance are
+  available; do not introduce placeholder logos, quotes, or performance claims.
+- Review persona conversion behavior and campaign segments before changing the
+  request, signup, or onboarding hierarchy.
+
 ### Visual experience blueprint and design review
 
 Goal: review the eventual product structure and visual hierarchy before adding
@@ -679,7 +708,9 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Hero signup invitations now keep both acquisition paths visible: Yard Owners
   enter the private yard workspace and landscaping companies enter authenticated
   organization onboarding without first changing the audience selector
-- Interactive audience selector tailors benefits for yard owners, property managers, landscaping companies, and crew leads
+- Interactive audience selector tailors the complete landing-page narrative for
+  yard owners, property managers, landscaping companies, and crew leads,
+  including the hero, trust, proof, capabilities, and final invitation
 - Product preview, Plan-Care-Proof workflow, capability story, trust cues, and repeated workspace calls to action create a complete marketing narrative
 - `/app` remains the direct authenticated or auth-disabled workspace entry, while callbacks, invitations, diagnostics, shared bids, and shared reports retain dedicated routing
 - Installed application sessions now start directly at `/app`
@@ -688,7 +719,8 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Conversion form captures contact consent, audience, team or portfolio size, goals, landing path, and UTM attribution with a hidden spam honeypot
 - Public marketing-lead API validates requests and persists production submissions to PostgreSQL without requiring authentication
 - Confirmation clearly distinguishes durably recorded production requests from non-persisted local preview submissions
-- Shareable campaign paths tailor the first-screen story and conversion action for yard owners, property managers, landscaping companies, and crew leads
+- Shareable campaign paths tailor the complete page story and conversion action
+  for yard owners, property managers, landscaping companies, and crew leads
 - Persona selection keeps UTM attribution while updating the browser URL, canonical metadata, and search/social descriptions without a page reload
 - Public crawler guidance keeps workspace, authentication, invitation, diagnostics, and customer-share routes out of search results
 - Interactive Plan-Care-Proof tour lets visitors inspect shipped route, field, offline, evidence, reporting, and recommendation workflows

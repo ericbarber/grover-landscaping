@@ -12,13 +12,16 @@
 - Public outcome-led homepage with direct workspace entry
 - Persistent hero invitations for private Yard Owner signup and authenticated
   landscaping-company onboarding
-- Interactive benefit stories for yard owners, property managers, landscaping companies, and crew leads
+- Complete persona-specific landing narratives for yard owners, property
+  managers, landscaping companies, and crew leads, spanning hero actions,
+  previews, trust signals, outcomes, proof, capabilities, and final invitations
 - Plan-Care-Proof product narrative and representative workspace preview
 - Responsive product capability and trust sections
 - Persona-specific demo, portfolio-discussion, and early-access conversion paths
 - Consent-based PostgreSQL lead capture with landing-page and UTM attribution
 - Honeypot spam filtering and honest local-preview confirmation
-- Shareable persona campaign paths with tailored hero copy, calls to action, canonical metadata, and crawler controls
+- Shareable persona campaign paths with complete page narratives, calls to
+  action, canonical metadata, and crawler controls
 - Interactive persona-aware Plan-Care-Proof product tour
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
