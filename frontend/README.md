@@ -40,6 +40,9 @@ not currently depend on React Router.
   stop, Up next, bounded route expansion, and lower-priority amendment controls
 - Compact ordered Assigned Jobs with lifecycle/readiness context, search,
   status filters, counts, and no-match recovery
+- Responsive Job execution with persistent target context and guarded primary
+  actions plus one semantic Overview, Checklist, Photos, Add-ons, or Report panel
+  at a time
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

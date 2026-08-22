@@ -39,6 +39,10 @@
 - Assigned Jobs now uses compact ordered cards with lifecycle, checklist, and
   photo readiness plus customer/address search, status filtering, result count,
   and an explicit filtered empty state.
+- Job detail now keeps the current customer/property target and guarded primary
+  actions visible while semantic tabs open one Overview, Checklist, Photos,
+  Add-ons, or Report panel at a time across phone and desktop layouts. Required
+  photo-evidence gaps and the next field action are explicit.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -91,16 +95,17 @@ requests in the responsive workspaces. Mobile and desktop browser journeys
 preserve the no-operational-work boundary and the confirmed owner view links to
 the existing portal.
 
-The core shared-shell phase is delivered: outlined icons, phone/tablet/desktop
-navigation, semantic status primitives, and denser single-destination desktop
-composition are in production. The next repository-owned slice is:
+The shared-shell and core field-execution hierarchy are delivered: outlined
+icons, responsive navigation, semantic status primitives, denser desktop
+composition, Route, compact Jobs, and one-panel Job execution are in production.
+The next repository-owned slice is:
 
-1. Converge Job overview → Checklist / Photos / Add-ons / Report hierarchy and
-   connect it back to the adopted Home, Route, and Jobs direction.
-2. Preserve durable offline queues, conflict review, route amendments,
-   checklist/photo evidence, and completion recovery while changing composition.
-3. Migrate field-local feedback to the shared status contract and validate the
-   full responsive field journey.
+1. Converge authenticated manager Schedule, capacity risk, inspector, publish,
+   and Recovery composition around the existing operational contracts.
+2. Preserve day-plan drafts, assignments, amendments, exceptions, notification,
+   and completion-report recovery while changing composition.
+3. Migrate manager-local feedback to the shared status contract and validate the
+   responsive owner/manager journey.
 
 ## Read first
 
@@ -115,8 +120,8 @@ composition are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest field Jobs slice passes all 423 frontend unit tests across 104 files,
-TypeScript, the production build, and 12 phone/desktop authenticated-workspace
+The latest field-execution slice passes all 423 frontend unit tests across 104 files,
+TypeScript, the production build, and 14 phone/desktop authenticated-workspace
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

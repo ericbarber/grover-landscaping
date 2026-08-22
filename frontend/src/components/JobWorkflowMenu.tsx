@@ -14,7 +14,7 @@ export function jobWorkflowItems({
   reportReady: boolean;
 }): Array<{ id: JobWorkflowSection; label: string; context: string }> {
   return [
-    { id: 'overview', label: 'Overview', context: 'Primary actions' },
+    { id: 'overview', label: 'Overview', context: 'At a glance' },
     {
       id: 'checklist',
       label: 'Checklist',
@@ -52,17 +52,39 @@ export function JobWorkflowMenu({
   });
 
   return (
-    <nav aria-label="Job workflow" className="mt-4 grid grid-cols-3 gap-2 lg:hidden">
-      {items.map((item) => (
+    <nav aria-label="Job workflow" className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5" role="tablist">
+      {items.map((item, index) => (
         <button
-          aria-current={activeSection === item.id ? 'page' : undefined}
-          className={`min-h-14 rounded-xl border px-2 py-2 text-center ${
+          aria-controls={`job-workflow-panel-${item.id}`}
+          aria-selected={activeSection === item.id}
+          className={`min-h-14 rounded-xl border px-2 py-2 text-center transition-colors ${
             activeSection === item.id
-              ? 'border-emerald-700 bg-emerald-800 text-white'
-              : 'border-slate-200 bg-slate-50 text-slate-700'
+              ? 'border-forest bg-forest text-white shadow-sm'
+              : 'border-slate-200 bg-paper text-slate-700 hover:border-emerald-500 hover:bg-emerald-50'
           }`}
           key={item.id}
+          id={`job-workflow-tab-${item.id}`}
           onClick={() => onChange(item.id)}
+          onKeyDown={(event) => {
+            const nextIndex = event.key === 'ArrowRight'
+              ? (index + 1) % items.length
+              : event.key === 'ArrowLeft'
+                ? (index - 1 + items.length) % items.length
+                : event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? items.length - 1
+                    : null;
+            if (nextIndex === null) return;
+            event.preventDefault();
+            const nextItem = items[nextIndex];
+            onChange(nextItem.id);
+            window.requestAnimationFrame(() => {
+              document.getElementById(`job-workflow-tab-${nextItem.id}`)?.focus();
+            });
+          }}
+          role="tab"
+          tabIndex={activeSection === item.id ? 0 : -1}
           type="button"
         >
           <span className="block text-xs font-black">{item.label}</span>

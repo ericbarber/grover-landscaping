@@ -812,50 +812,132 @@ function JobDetailPanel({
     );
   }
 
+  const completedChecklistItems = job.checklist.filter((item) => item.completed).length;
+  const checklistProgress = job.checklist.length === 0
+    ? 0
+    : Math.round((completedChecklistItems / job.checklist.length) * 100);
+  const beforePhotos = Math.max(
+    job.beforePhotos,
+    uploadTickets.filter((ticket) => ticket.photoType === 'before').length,
+  );
+  const afterPhotos = Math.max(
+    job.afterPhotos,
+    uploadTickets.filter((ticket) => ticket.photoType === 'after').length,
+  );
+  const missingRequiredEvidence = [
+    ...(beforePhotos === 0 ? ['before'] : []),
+    ...(afterPhotos === 0 ? ['after'] : []),
+  ];
+  const pendingAddOns = addOns.filter((addOn) => (
+    addOn.status === 'scheduled' || addOn.status === 'in_progress'
+  )).length;
+  const nextAction = job.status === 'scheduled'
+    ? 'Start this job when the crew is ready to begin.'
+    : missingRequiredEvidence.length > 0
+      ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
+      : pendingAddOns > 0
+        ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
+        : checklistProgress < 100
+          ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
+          : 'Required field evidence is ready. Complete the job when service is finished.';
+
   return (
-    <div className="space-y-6">
-      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="space-y-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
           <div>
-            <p className="text-sm font-medium text-slate-500">Job detail</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-950">{job.customerName}</h2>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Current service target</p>
+            <h2 className="mt-2 font-display text-3xl font-black text-forest">{job.customerName}</h2>
             <p className="mt-1 text-sm text-slate-600">{job.propertyAddress}</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">Scheduled {job.scheduledDate}</p>
           </div>
           <StatusBadge status={job.status} />
         </div>
 
-        <div className="mt-5 grid gap-3 min-[380px]:grid-cols-2">
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-500">Primary action</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">Move this visit forward without losing context.</p>
+            </div>
+            <WorkspaceStatusBadge tone={missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
+              {missingRequiredEvidence.length === 0 ? 'Evidence ready' : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
+            </WorkspaceStatusBadge>
+          </div>
+          <div className="mt-3 grid gap-3 min-[380px]:grid-cols-2">
           <button
-            className="rounded-xl border border-emerald-700 px-4 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+            className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+            disabled={job.status !== 'scheduled'}
             onClick={() => void onStart()}
+            type="button"
           >
-            Start Job
+            {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
           </button>
           <button
-            className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
+            className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
+            disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
             onClick={() => void onComplete()}
+            type="button"
           >
-            Complete Job
+            {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
           </button>
+          </div>
         </div>
 
         <JobWorkflowMenu
           activeSection={activeWorkflow}
           addOnCount={addOns.length}
-          checklistComplete={job.checklist.filter((item) => item.completed).length}
+          checklistComplete={completedChecklistItems}
           checklistTotal={job.checklist.length}
           onChange={setActiveWorkflow}
           photoCount={uploadTickets.length}
           reportReady={Boolean(reportSnapshot?.readyForCustomer)}
         />
 
-        <details className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-slate-50 px-3 lg:block`}>
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600 [&::-webkit-details-marker]:hidden">
+        <div
+          aria-labelledby="job-workflow-tab-overview"
+          className={`${activeWorkflow === 'overview' ? 'block' : 'hidden'} mt-5`}
+          id="job-workflow-panel-overview"
+          role="tabpanel"
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl bg-paper p-3">
+              <p className="text-2xl font-black text-forest">{checklistProgress}%</p>
+              <p className="text-xs font-bold text-slate-500">Checklist</p>
+            </div>
+            <div className="rounded-xl bg-paper p-3">
+              <p className="text-2xl font-black text-forest">{beforePhotos}</p>
+              <p className="text-xs font-bold text-slate-500">Before</p>
+            </div>
+            <div className="rounded-xl bg-paper p-3">
+              <p className="text-2xl font-black text-forest">{afterPhotos}</p>
+              <p className="text-xs font-bold text-slate-500">After</p>
+            </div>
+            <div className="rounded-xl bg-paper p-3">
+              <p className="text-2xl font-black text-forest">{pendingAddOns}</p>
+              <p className="text-xs font-bold text-slate-500">Open add-ons</p>
+            </div>
+          </div>
+          <WorkspaceStatusNotice
+            className="mt-3"
+            detail={nextAction}
+            title="Next best action"
+            tone={missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
+          />
+        </div>
+
+        <section
+          aria-labelledby="job-workflow-tab-checklist"
+          className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-paper px-3`}
+          id="job-workflow-panel-checklist"
+          role="tabpanel"
+        >
+          <div className="flex min-h-12 items-center justify-between gap-3 text-sm font-semibold uppercase tracking-wide text-slate-600">
             Checklist
             <span className="rounded-full bg-white px-2 py-1 text-xs tracking-normal text-slate-600">
-              {job.checklist.filter((item) => item.completed).length}/{job.checklist.length} complete
+              {completedChecklistItems}/{job.checklist.length} complete
             </span>
-          </summary>
+          </div>
           <div className="mt-3 space-y-2">
             {job.checklist.map((item) => (
               <button
@@ -873,10 +955,15 @@ function JobDetailPanel({
             ))}
           </div>
           <div className="h-3" />
-        </details>
+        </section>
 
         {addOns.length > 0 ? (
-          <div className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-6 lg:block`}>
+          <div
+            aria-labelledby="job-workflow-tab-addons"
+            className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5`}
+            id="job-workflow-panel-addons"
+            role="tabpanel"
+          >
             <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-700">Approved add-on work</h3>
             <div className="mt-3 space-y-2">
               {addOns.map((addOn) => (
@@ -910,13 +997,23 @@ function JobDetailPanel({
               ))}
             </div>
           </div>
-        ) : activeWorkflow === 'addons' ? (
-          <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
+        ) : (
+          <div
+            aria-labelledby="job-workflow-tab-addons"
+            className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600`}
+            id="job-workflow-panel-addons"
+            role="tabpanel"
+          >
             No approved add-on work is attached to this job.
           </div>
-        ) : null}
+        )}
 
-        <div className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-6 rounded-2xl bg-slate-50 p-4 lg:block`}>
+        <div
+          aria-labelledby="job-workflow-tab-photos"
+          className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-5 rounded-2xl bg-paper p-4`}
+          id="job-workflow-panel-photos"
+          role="tabpanel"
+        >
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Photo evidence</h3>
           <p className="mt-2 text-sm text-slate-600">
             Use a previewable JPEG, PNG, GIF, or WebP image at least 640×480. Duplicate files are blocked, and both before and after evidence are required to complete the job.
@@ -971,9 +1068,14 @@ function JobDetailPanel({
             </div>
           )}
         </div>
-      </aside>
+      </section>
 
-      <div className={`${activeWorkflow === 'report' ? 'block' : 'hidden'} lg:block`}>
+      <div
+        aria-labelledby="job-workflow-tab-report"
+        className={activeWorkflow === 'report' ? 'block' : 'hidden'}
+        id="job-workflow-panel-report"
+        role="tabpanel"
+      >
       <CompletionReport
         job={job}
         uploadTickets={uploadTickets}
@@ -2061,6 +2163,9 @@ export function App() {
     }
 
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'in_progress' } : job)));
+    setSelectedJob((current) => (
+      current?.id === selectedJobId ? { ...current, status: 'in_progress' } : current
+    ));
   }
 
   async function handleCompleteJob() {
@@ -2106,6 +2211,16 @@ export function App() {
     }
 
     setJobs((current) => current.map((job) => (job.id === selectedJobId ? { ...job, status: 'completed' } : job)));
+    setSelectedJob((current) => (
+      current?.id === selectedJobId
+        ? {
+            ...current,
+            status: 'completed',
+            completedChecklistItems: current.checklistItems,
+            checklist: current.checklist.map((item) => ({ ...item, completed: true })),
+          }
+        : current
+    ));
   }
 
   async function handleAddOnStatusChange(addOnId: string, status: JobAddOn['status']) {
@@ -3507,21 +3622,33 @@ export function App() {
           ) : null}
         </div>
 
-        <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 lg:mx-auto lg:w-full lg:max-w-3xl`} id="job-detail" ref={jobDetailRef}>
+        <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'job' ? 'block' : 'hidden'} min-w-0 scroll-mt-16 lg:mx-auto lg:w-full lg:max-w-4xl`} id="job-detail" ref={jobDetailRef}>
           {jobDetailUnavailable ? (
-            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
-              Persisted job access could not be verified. Job details remain hidden until API readiness recovers.
-            </p>
+            <WorkspaceStatusNotice
+              className="mb-3"
+              detail="Job details remain hidden until API readiness recovers."
+              role="alert"
+              title="Persisted job access could not be verified."
+              tone="warning"
+            />
           ) : null}
           {jobAddOnsUnavailable ? (
-            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
-              Persisted add-on context could not be loaded. Add-ons remain hidden until API readiness recovers.
-            </p>
+            <WorkspaceStatusNotice
+              className="mb-3"
+              detail="Add-ons remain hidden until API readiness recovers."
+              role="alert"
+              title="Persisted add-on context could not be loaded."
+              tone="warning"
+            />
           ) : null}
           {photoEvidenceUnavailable ? (
-            <p className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-950" role="alert">
-              Persisted photo evidence could not be loaded. Proof remains hidden until API readiness recovers.
-            </p>
+            <WorkspaceStatusNotice
+              className="mb-3"
+              detail="Proof remains hidden until API readiness recovers."
+              role="alert"
+              title="Persisted photo evidence could not be loaded."
+              tone="warning"
+            />
           ) : null}
           <JobDetailPanel
             job={selectedJob}

@@ -107,12 +107,16 @@ Current state:
   uses a shorter editorial hero plus a compact summary/action grid, and Route,
   Jobs, Job, customer, and manager destinations render one at a time. Phone and
   tablet navigation behavior is unchanged.
+- Field execution now carries that hierarchy through Route, compact Assigned
+  Jobs, and the selected Job workspace. Job context and primary actions remain
+  visible while Overview, Checklist, Photos, Add-ons, and Report open one at a
+  time; completion exposes required evidence gaps and local state transitions
+  remain synchronized with the selected record.
 
 Next slice:
 
-- Continue the approved field-execution hierarchy convergence into Job overview
-  and its Checklist, Photos, Add-ons, and Report panels while preserving
-  offline, conflict, evidence, and recovery behavior.
+- Begin authenticated manager daily-operations convergence with Schedule,
+  capacity risk, inspector, publish, and Recovery composition.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -966,6 +970,11 @@ the outcome, and return to its recovery workflow from persisted activity history
   order, explicit lifecycle pills, checklist/photo readiness at a glance,
   customer/address search, status filtering, filtered counts, and a clear empty
   result without mutating the underlying assignment order.
+- Job detail now keeps customer/property context and the guarded primary action
+  visible while one of Overview, Checklist, Photos, Add-ons, or Report is active.
+  Required before/after evidence gaps are explicit, workflow tabs are semantic
+  across breakpoints, and selected-record status stays current after lifecycle
+  actions.
 - Daily crew day-plan panel
 - Ordered route stops
 - Drive and service time estimates

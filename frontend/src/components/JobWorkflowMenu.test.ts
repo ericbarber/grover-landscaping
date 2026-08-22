@@ -10,7 +10,7 @@ describe('job workflow menu', () => {
       addOnCount: 1,
       reportReady: false,
     })).toEqual([
-      { id: 'overview', label: 'Overview', context: 'Primary actions' },
+      { id: 'overview', label: 'Overview', context: 'At a glance' },
       { id: 'checklist', label: 'Checklist', context: '2/4' },
       { id: 'photos', label: 'Photos', context: '3' },
       { id: 'addons', label: 'Add-ons', context: '1' },

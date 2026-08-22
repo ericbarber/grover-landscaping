@@ -440,3 +440,76 @@ test('field Jobs supports compact status and customer filtering', async ({ page 
   await expect(jobs.getByText('No assigned jobs match these filters.')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('field Job keeps context and primary actions while opening one workflow panel', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+  });
+  const job = {
+    id: 'job_oak',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_1001',
+    customer_name: 'Oak Street Residence',
+    property_address: '123 Oak Street',
+    status: 'in_progress',
+    scheduled_date: '2026-08-22',
+    before_photos: 0,
+    after_photos: 0,
+    checklist_items: 4,
+    completed_checklist_items: 2,
+  };
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([job]),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ...job,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'before', label: 'Capture before photos', completed: true },
+        { id: 'service', label: 'Complete contracted service', completed: false },
+        { id: 'notes', label: 'Record completion notes', completed: false },
+      ],
+    }),
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_oak/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Jobs', exact: true }).click();
+  await page.getByRole('button', { name: 'Open Job', exact: true }).click();
+
+  const detail = page.locator('#job-detail');
+  await expect(detail.getByText('Current service target', { exact: true })).toBeVisible();
+  await expect(detail.getByRole('heading', { name: 'Oak Street Residence' })).toBeVisible();
+  await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeDisabled();
+  await expect(detail.getByText('2 evidence gaps', { exact: true })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+
+  await detail.getByRole('tab', { name: /Checklist/ }).click();
+  await expect(detail.getByRole('button', { name: 'Complete Job' })).toBeVisible();
+  await expect(detail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeVisible();
+  await expect(detail.getByText('Confirm arrival', { exact: true })).toBeVisible();
+
+  const photosTab = detail.getByRole('tab', { name: /Photos/ });
+  await photosTab.click();
+  await expect(detail.getByRole('tabpanel', { name: /Checklist/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeVisible();
+  await expect(detail.getByText('Photo evidence', { exact: true })).toBeVisible();
+  await photosTab.press('End');
+  await expect(detail.getByRole('tabpanel', { name: /Photos/ })).toBeHidden();
+  await expect(detail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

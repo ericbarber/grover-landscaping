@@ -49,12 +49,12 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Continue the adopted field hierarchy into Job execution; Route progress,
-   Current stop, Up next, bounded expansion, and compact/filterable Jobs are in
-   production.
-2. Migrate remaining field-local feedback to shared primitives without
-   weakening offline and conflict recovery.
-3. Converge the authenticated manager schedule, inspector, and Recovery workflow.
+1. Converge the authenticated manager schedule, inspector, capacity-risk,
+   publish, and Recovery workflow.
+2. Continue state-by-state field regression as shared primitives evolve; Route,
+   compact Jobs, and one-panel Job execution are in production.
+3. Migrate remaining manager-local feedback to shared primitives without
+   weakening operational recovery.
 4. Link each implementation slice back to the adoption matrix and validated
    artifact rather than treating the image itself as shipped behavior.
 
