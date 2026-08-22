@@ -38,12 +38,15 @@ Current state:
   exact subject and current-series proposal versions, preserve actor-scoped
   replay, link revised proposals explicitly, and stay outside decisions and
   minimized lifecycle events.
+- Phase 4B2b2 now exposes owner list/create and verified-provider response APIs
+  behind explicit authorization and fail-closed recovery mappings. Provider
+  disclosure reload includes the complete proposal conversation.
 
 Next slice:
 
-- Complete Phase 4B2b by exposing the separate proposal conversation through
-  authenticated APIs and both acquisition workspaces; do not repurpose
-  assessment messages, owner decisions, or audit notes.
+- Complete Phase 4B2b by adopting the separate proposal conversation in both
+  acquisition workspaces; do not repurpose assessment messages, owner decisions,
+  or audit notes.
 - Then deliver the Phase 4C explicit activation boundary from an accepted
   snapshot into provider setup and first-visit confirmation without coupling
   acceptance to payment, scheduling, or crew assignment.
@@ -680,7 +683,8 @@ Active slice:
   payment, or crew assignment was created. Phase 4B2b1 now persists owner
   questions/change requests and provider responses separately, with exact
   proposal-version context and no decision, audit-event, or operational side
-  effect; authenticated routes and workspace interfaces remain in progress.
+  effect. Authenticated owner/provider routes and disclosure reload are now
+  delivered; workspace interfaces remain in progress.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

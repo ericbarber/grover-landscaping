@@ -19,9 +19,9 @@ conversation separate from decisions and lifecycle audit.
 
 The public site now carries four complete persona journeys and reuses the
 prototype-aligned “Today’s operation” dashboard in the landscaping-company hero
-and product tour. The active product slice exposes the persisted proposal
-conversation through authenticated APIs and both acquisition workspaces;
-explicit activation and relationship continuity follow.
+and product tour. Authenticated proposal-conversation APIs and provider reload
+are delivered; the active product slice adopts them in both acquisition
+workspaces. Explicit activation and relationship continuity follow.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -411,10 +411,10 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Reviewing immutable proposal history and explicitly accepting or declining one
   exact current version without activating service
 
-The next acquisition slice exposes the separately persisted proposal questions,
-change requests, and provider replies through authenticated APIs and both
-workspaces; assessment messages and decision notes are not substitutes for that
-contract. See the
+The next acquisition slice adopts the separately persisted proposal questions,
+change requests, and provider replies in both workspaces; their authenticated
+APIs are delivered, and assessment messages or decision notes are not
+substitutes for that contract. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment

@@ -54,13 +54,15 @@
 
 Phase 4B3 owner/provider initial-service proposal interfaces are delivered
 against the Phase 4B2a APIs. Phase 4B2b1 now provides the proposal-collaboration
-schema, repositories, and PostgreSQL coverage. The active remainder is:
+schema, repositories, and PostgreSQL coverage. Phase 4B2b2 adds authenticated
+owner list/create and verified-provider response routes plus provider disclosure
+reload. The active remainder is:
 
-1. Expose the contract through authenticated routes and both acquisition
-   workspaces with conflict, expiry, revocation, unavailable, and retry recovery.
+1. Expose the contract through both acquisition workspaces with conflict,
+   expiry, revocation, unavailable, and retry recovery.
 2. Preserve the delivered exact subject/current-version display and explicit
    revised-proposal linkage in both interfaces.
-3. Validate API policy, client mapping, responsive browser behavior,
+3. Validate client mapping, responsive browser behavior,
    and non-activation side effects before beginning Phase 4C.
 
 ## Read first

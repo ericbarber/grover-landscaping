@@ -265,7 +265,10 @@ here does not mean every capability has been delivered.
 - Append-only proposal questions/change requests and provider responses with
   exact proposal-version context, revised-version linkage, owner isolation,
   replay safety, and separation from decisions and lifecycle audit
-- Planned authenticated proposal-conversation interfaces and explicit accepted-
+- Authenticated owner proposal-message list/create and verified-provider
+  response APIs with authoritative disclosure reload, explicit route policy,
+  and fail-closed error mapping
+- Planned proposal-conversation workspace interfaces and explicit accepted-
   proposal activation
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence

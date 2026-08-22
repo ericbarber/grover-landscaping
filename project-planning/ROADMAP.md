@@ -282,7 +282,9 @@ from lifecycle decisions and minimized audit events. Its persistence foundation
 is now delivered with immutable customer-safe messages, exact subject/current
 version snapshots, provider reply and revised-proposal linkage, actor-scoped
 replay, owner isolation, and PostgreSQL non-activation coverage. Authenticated
-routes and both workspace interfaces are the active remainder.
+owner/provider routes and provider reload are now delivered with explicit
+authorization and fail-closed outcomes. Both workspace interfaces are the
+active remainder.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

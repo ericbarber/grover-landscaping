@@ -2707,6 +2707,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         provider_proposal_workspace.initial_service_proposal,
         Some(proposal_v2.clone()),
     );
+    assert_eq!(
+        provider_proposal_workspace.initial_service_proposal_messages,
+        Some(vec![owner_change_message.clone()]),
+    );
     let provider_response_request = CreateProviderInitialServiceProposalResponseRequest {
         token: retry.delivery_token().to_string(),
         in_reply_to_message_id: owner_change_message.message_id.clone(),
@@ -2764,6 +2768,25 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(
         provider_response.related_proposal_id.as_deref(),
         Some(proposal_v2.proposal_id.as_str())
+    );
+    let OwnerProviderDisclosureAccessResult::Loaded(provider_reloaded_conversation) = repository
+        .open_provider_disclosure(
+            "recipient-user-1",
+            recipient,
+            OpenOwnerProviderDisclosureRequest {
+                token: retry.delivery_token().to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("the provider should reload the proposal conversation");
+    };
+    assert_eq!(
+        provider_reloaded_conversation.initial_service_proposal_messages,
+        Some(vec![
+            owner_change_message.clone(),
+            provider_response.clone()
+        ]),
     );
     assert!(matches!(
         repository

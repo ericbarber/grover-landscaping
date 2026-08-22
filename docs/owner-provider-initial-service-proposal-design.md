@@ -111,7 +111,8 @@ scope/exclusion text.
    questions/change requests and provider responses append-only and separate
    from decisions and minimized lifecycle events, snapshots both the subject
    and current series version, and explicitly links a newer revision when a
-   provider replies. Authenticated APIs and both production interfaces remain.
+   provider replies. Authenticated owner/provider APIs and authoritative reload
+   are delivered; both production interfaces remain.
 5. **4B3 — Production interfaces (delivered):** provider authoring/revision,
    latest-version reload, and neutral Yard Owner immutable-history
    comparison/exact-version decision experiences with responsive recovery.

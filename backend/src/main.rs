@@ -86,7 +86,8 @@ use grover_landscaping_api::{
     owner_acquisition::{
         validate_initial_service_proposal_decision_request,
         validate_initial_service_proposal_request, validate_intake_media_request,
-        validate_owner_assessment_message_request, validate_property_request,
+        validate_owner_assessment_message_request,
+        validate_owner_initial_service_proposal_message_request, validate_property_request,
         validate_provider_assessment_message_request,
         validate_provider_assessment_private_note_request, validate_provider_assessment_request,
         validate_provider_assessment_transition_request,
@@ -95,6 +96,7 @@ use grover_landscaping_api::{
         validate_provider_claim_review_decision_request, validate_provider_claim_review_filter,
         validate_provider_disclosure_access_request, validate_provider_disclosure_grant_request,
         validate_provider_disclosure_revoke_request, validate_provider_inbox_request,
+        validate_provider_initial_service_proposal_response_request,
         validate_provider_invitation_abuse_report_request,
         validate_provider_invitation_opt_out_request, validate_provider_invitation_preview_request,
         validate_provider_invitation_recipient_check_request, validate_provider_invitation_request,
@@ -106,12 +108,14 @@ use grover_landscaping_api::{
         validate_provider_response_capability_request, validate_workspace_request,
         validate_yard_brief_request, AppealOwnerProviderOrganizationClaimRequest,
         BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
-        CreateOwnerIntakeMediaRequest, CreateOwnerPropertyRequest,
-        CreateOwnerProviderAssessmentRequest, CreateOwnerProviderDisclosureGrantRequest,
-        CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
-        CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
-        CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
-        DecideOwnerProviderClaimReviewRequest, DecideOwnerProviderInitialServiceProposalRequest,
+        CreateOwnerInitialServiceProposalMessageRequest, CreateOwnerIntakeMediaRequest,
+        CreateOwnerPropertyRequest, CreateOwnerProviderAssessmentRequest,
+        CreateOwnerProviderDisclosureGrantRequest, CreateOwnerProviderInvitationRequest,
+        CreateOwnerProviderOpportunityResponseRequest, CreateOwnerProviderOrganizationClaimRequest,
+        CreateProviderAssessmentMessageRequest, CreateProviderAssessmentPrivateNoteRequest,
+        CreateProviderInitialServiceProposalResponseRequest,
+        DecideOwnerProviderAssessmentWindowRequest, DecideOwnerProviderClaimReviewRequest,
+        DecideOwnerProviderInitialServiceProposalRequest,
         IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
         OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
         OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
@@ -123,6 +127,7 @@ use grover_landscaping_api::{
         OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
         OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
         OwnerProviderInitialServiceProposalDecisionResult,
+        OwnerProviderInitialServiceProposalMessageWriteResult,
         OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
         OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
         OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
@@ -751,6 +756,11 @@ fn app_with_runtime(
             post(decide_owner_initial_service_proposal),
         )
         .route(
+            "/owner-properties/{property_id}/initial-service-proposals/{proposal_id}/messages",
+            get(list_owner_initial_service_proposal_messages)
+                .post(create_owner_initial_service_proposal_message),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
             post(revoke_owner_provider_disclosure_grant),
         )
@@ -829,6 +839,10 @@ fn app_with_runtime(
         .route(
             "/provider-assessments/{assessment_id}/initial-service-proposals",
             post(publish_provider_initial_service_proposal),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/initial-service-proposal-responses",
+            post(create_provider_initial_service_proposal_response),
         )
         .route(
             "/provider-opportunity-responses",
@@ -1907,6 +1921,92 @@ async fn decide_owner_initial_service_proposal(
             persisted_resource_unavailable_response(
                 "owner_initial_service_proposal_decision_unavailable",
                 "The proposal decision could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
+            )
+        }
+    }
+}
+
+async fn list_owner_initial_service_proposal_messages(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_owner_initial_service_proposal_messages(
+            &principal.subject,
+            &property_id,
+            &proposal_id,
+        )
+        .await
+    {
+        OwnerReadResult::Loaded(messages) => Json(messages).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_initial_service_proposal_not_found",
+            "The requested proposal was not found for this property.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_initial_service_proposal_messages_unavailable",
+            "Proposal messages could not be loaded. Existing messages are unchanged.",
+        ),
+    }
+}
+
+async fn create_owner_initial_service_proposal_message(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+    Json(request): Json<CreateOwnerInitialServiceProposalMessageRequest>,
+) -> Response {
+    if !validate_owner_initial_service_proposal_message_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_initial_service_proposal_message_invalid",
+                message: "Choose question or change request and provide customer-safe text for the exact current proposal version."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .create_owner_initial_service_proposal_message(
+            &principal.subject,
+            &property_id,
+            &proposal_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderInitialServiceProposalMessageWriteResult::Created(message) => {
+            (StatusCode::CREATED, Json(message)).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(message) => {
+            Json(message).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::NotFound => {
+            resource_not_found_response(
+                "owner_initial_service_proposal_not_found",
+                "The requested proposal was not found for this property.",
+            )
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::InvalidState(proposal) => {
+            (StatusCode::CONFLICT, Json(proposal)).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_initial_service_proposal_message_conflict",
+                message: "The proposal changed, expired, or was already decided. Reload before sending this message."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_initial_service_proposal_message_unavailable",
+                "The proposal message could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
             )
         }
     }
@@ -3475,6 +3575,77 @@ async fn publish_provider_initial_service_proposal(
             persisted_resource_unavailable_response(
                 "provider_initial_service_proposal_unavailable",
                 "The proposal could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
+            )
+        }
+    }
+}
+
+async fn create_provider_initial_service_proposal_response(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<CreateProviderInitialServiceProposalResponseRequest>,
+) -> Response {
+    if !validate_provider_initial_service_proposal_response_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_initial_service_proposal_response_invalid",
+                message: "Reply to an owner proposal message with customer-safe text and the exact current proposal version. Link the current revision when the question targets an earlier version."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before replying to a proposal message."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .create_provider_initial_service_proposal_response(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderInitialServiceProposalMessageWriteResult::Created(message) => {
+            (StatusCode::CREATED, Json(message)).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::Replayed(message) => {
+            Json(message).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::NotFound => {
+            resource_not_found_response(
+                "provider_assessment_not_found",
+                "Proposal conversation access is not available to this verified provider.",
+            )
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::InvalidState(proposal) => {
+            (StatusCode::CONFLICT, Json(proposal)).into_response()
+        }
+        OwnerProviderInitialServiceProposalMessageWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_initial_service_proposal_response_conflict",
+                message: "The proposal conversation or current revision changed. Reload before replying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInitialServiceProposalMessageWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_initial_service_proposal_response_unavailable",
+                "The response could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
             )
         }
     }
@@ -9808,6 +9979,96 @@ mod tests {
                 .unwrap();
             assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         }
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/messages")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/messages")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"message_kind":"owner_question","customer_safe_body":"Can this include the irrigation controller?","expected_proposal_version":1,"idempotency_key":"proposal-owner-message-outage-001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/messages")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"message_kind":"provider_answer","customer_safe_body":"Invalid owner kind","expected_proposal_version":1,"idempotency_key":"proposal-owner-message-invalid-001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let provider_response_payload = serde_json::json!({
+            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            "in_reply_to_message_id": "owner_provider_proposal_message_0001",
+            "customer_safe_body": "The current revision includes that change.",
+            "expected_proposal_version": 2,
+            "related_proposal_id": "owner_provider_proposal_0002",
+            "idempotency_key": "proposal-provider-response-outage-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/initial-service-proposal-responses")
+                    .header("content-type", "application/json")
+                    .body(Body::from(provider_response_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/initial-service-proposal-responses")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "token": provider_response_payload["token"],
+                            "in_reply_to_message_id": "short",
+                            "customer_safe_body": "Invalid reply target.",
+                            "expected_proposal_version": 2,
+                            "related_proposal_id": null,
+                            "idempotency_key": "proposal-provider-response-invalid-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
         let response = app
             .clone()

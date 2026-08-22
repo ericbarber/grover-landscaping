@@ -74,7 +74,7 @@ The approved experience is defined by:
 | 4B1a | Delivered | Constrained immutable proposal-version, owner-decision, accepted-snapshot, and minimized-event schema |
 | 4B1b | Delivered | Immutable proposal repository versions, expiration, exact replay/conflict, owner isolation, accepted-but-unactivated snapshots, minimized events, and PostgreSQL coverage |
 | 4B2a | Delivered | Authenticated provider publish/revise and owner list/detail/exact-version decision APIs with explicit lifecycle and outage mapping |
-| 4B2b | In progress | Append-only owner questions/change requests and provider replies now persist with exact proposal-version context, revised-version linkage, replay safety, isolation, and no lifecycle/activation side effects; authenticated routes and both workspaces remain |
+| 4B2b | In progress | Append-only owner questions/change requests and provider replies now persist with exact proposal-version context, revised-version linkage, replay safety, isolation, and no lifecycle/activation side effects; authenticated owner/provider routes and reload are delivered, while both workspaces remain |
 | 4B3 | Delivered | Responsive provider authoring/revision with latest-version reload and neutral Yard Owner immutable-history comparison/exact-version decisions against the delivered APIs |
 | 4C–D | Planned | Activation and governed pilot convergence |
 

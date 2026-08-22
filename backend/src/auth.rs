@@ -605,7 +605,8 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path.starts_with("/provider-assessments/")
         && (path.ends_with("/messages")
             || path.ends_with("/private-notes")
-            || path.ends_with("/initial-service-proposals"))
+            || path.ends_with("/initial-service-proposals")
+            || path.ends_with("/initial-service-proposal-responses"))
     {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
@@ -677,6 +678,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
                 && owner_property_suffix.contains("/initial-service-proposals/")
                 && owner_property_suffix.ends_with("/decision")
                 && *method == Method::POST)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/initial-service-proposals/")
+                && owner_property_suffix.ends_with("/messages")
+                && (*method == Method::GET || *method == Method::POST))
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1842,6 +1847,14 @@ mod tests {
                 "/owner-properties/property-1/initial-service-proposals/proposal-1/decision",
             ),
             (
+                Method::GET,
+                "/owner-properties/property-1/initial-service-proposals/proposal-1/messages",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/initial-service-proposals/proposal-1/messages",
+            ),
+            (
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations",
             ),
@@ -1887,6 +1900,10 @@ mod tests {
             (
                 Method::POST,
                 "/provider-assessments/assessment-1/initial-service-proposals",
+            ),
+            (
+                Method::POST,
+                "/provider-assessments/assessment-1/initial-service-proposal-responses",
             ),
             (
                 Method::POST,

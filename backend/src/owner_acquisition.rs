@@ -567,6 +567,9 @@ pub struct OwnerProviderDisclosureAccess {
     pub private_notes: Option<Vec<OwnerProviderAssessmentPrivateNoteRecord>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub initial_service_proposal: Option<OwnerProviderInitialServiceProposalRecord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub initial_service_proposal_messages:
+        Option<Vec<OwnerProviderInitialServiceProposalMessageRecord>>,
     pub persisted: bool,
 }
 
@@ -9018,6 +9021,7 @@ fn closed_provider_disclosure(
         customer_safe_messages: None,
         private_notes: None,
         initial_service_proposal: None,
+        initial_service_proposal_messages: None,
         persisted: true,
     }
 }
@@ -9345,59 +9349,79 @@ async fn open_owner_provider_disclosure(
     let assessment = assessment_row
         .as_ref()
         .map(owner_provider_assessment_from_row);
-    let (customer_safe_messages, private_notes, initial_service_proposal) =
-        if let Some(assessment) = &assessment {
-            let message_rows = sqlx::query(&format!(
-                "{OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT}
+    let (
+        customer_safe_messages,
+        private_notes,
+        initial_service_proposal,
+        initial_service_proposal_messages,
+    ) = if let Some(assessment) = &assessment {
+        let message_rows = sqlx::query(&format!(
+            "{OWNER_PROVIDER_ASSESSMENT_MESSAGE_SELECT}
              WHERE assessment_id = $1 ORDER BY created_at, id"
-            ))
-            .bind(&assessment.assessment_id)
-            .fetch_all(&mut *transaction)
-            .await?;
-            let note_rows = sqlx::query(&format!(
-                "{OWNER_PROVIDER_ASSESSMENT_PRIVATE_NOTE_SELECT}
+        ))
+        .bind(&assessment.assessment_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        let note_rows = sqlx::query(&format!(
+            "{OWNER_PROVIDER_ASSESSMENT_PRIVATE_NOTE_SELECT}
              WHERE assessment_id = $1 AND organization_id = $2
              ORDER BY created_at, id"
-            ))
+        ))
+        .bind(&assessment.assessment_id)
+        .bind(&assessment.organization_id)
+        .fetch_all(&mut *transaction)
+        .await?;
+        expire_owner_provider_initial_service_proposals(
+            &mut transaction,
+            &assessment.assessment_id,
+        )
+        .await?;
+        let proposal_query = format!(
+            "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+             WHERE assessment_id = $1 AND organization_id = $2
+             ORDER BY proposal_version DESC LIMIT 1"
+        );
+        let proposal_row = sqlx::query(&proposal_query)
+            .bind(&assessment.assessment_id)
+            .bind(&assessment.organization_id)
+            .fetch_optional(&mut *transaction)
+            .await?;
+        let proposal_message_query = format!(
+            "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_MESSAGE_SELECT}
+             WHERE assessment_id = $1 AND organization_id = $2
+             ORDER BY created_at, id"
+        );
+        let proposal_message_rows = sqlx::query(&proposal_message_query)
             .bind(&assessment.assessment_id)
             .bind(&assessment.organization_id)
             .fetch_all(&mut *transaction)
             .await?;
-            expire_owner_provider_initial_service_proposals(
-                &mut transaction,
-                &assessment.assessment_id,
-            )
-            .await?;
-            let proposal_query = format!(
-                "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
-             WHERE assessment_id = $1 AND organization_id = $2
-             ORDER BY proposal_version DESC LIMIT 1"
-            );
-            let proposal_row = sqlx::query(&proposal_query)
-                .bind(&assessment.assessment_id)
-                .bind(&assessment.organization_id)
-                .fetch_optional(&mut *transaction)
-                .await?;
-            (
-                Some(
-                    message_rows
-                        .iter()
-                        .map(owner_provider_assessment_message_from_row)
-                        .collect(),
-                ),
-                Some(
-                    note_rows
-                        .iter()
-                        .map(owner_provider_assessment_private_note_from_row)
-                        .collect(),
-                ),
-                proposal_row
-                    .as_ref()
-                    .map(owner_provider_initial_service_proposal_from_row),
-            )
-        } else {
-            (None, None, None)
-        };
+        (
+            Some(
+                message_rows
+                    .iter()
+                    .map(owner_provider_assessment_message_from_row)
+                    .collect(),
+            ),
+            Some(
+                note_rows
+                    .iter()
+                    .map(owner_provider_assessment_private_note_from_row)
+                    .collect(),
+            ),
+            proposal_row
+                .as_ref()
+                .map(owner_provider_initial_service_proposal_from_row),
+            Some(
+                proposal_message_rows
+                    .iter()
+                    .map(owner_provider_initial_service_proposal_message_from_row)
+                    .collect(),
+            ),
+        )
+    } else {
+        (None, None, None, None)
+    };
     let access = OwnerProviderDisclosureAccess {
         invitation_id,
         status: "active".to_string(),
@@ -9422,6 +9446,7 @@ async fn open_owner_provider_disclosure(
         customer_safe_messages,
         private_notes,
         initial_service_proposal,
+        initial_service_proposal_messages,
         persisted: true,
     };
     transaction.commit().await?;
