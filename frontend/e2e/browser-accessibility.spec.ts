@@ -148,6 +148,12 @@ test('each audience route presents a complete persona-specific landing view', as
 
 test('the audience control switches the complete landing-page story and URL', async ({ page }) => {
   await page.goto('/for-landscaping-companies');
+  await expect(page.getByRole('heading', { level: 1, name: 'Plan every visit. Care with confidence. Prove the work.' })).toBeVisible();
+  expect(await page.evaluate(() => {
+    const selector = document.querySelector('[role="tablist"][aria-label="Choose your perspective"]');
+    const actions = document.querySelector('[aria-label="Primary next steps"]');
+    return Boolean(selector && actions && selector.getBoundingClientRect().top < actions.getBoundingClientRect().top);
+  })).toBe(true);
   await page.getByRole('tab', { name: 'Property manager' }).click();
 
   await expect(page).toHaveURL(/\/for-property-managers$/);

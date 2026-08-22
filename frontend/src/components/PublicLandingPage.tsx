@@ -358,7 +358,24 @@ export function PublicLandingPage({
             <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
               {activePersona.description}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Primary next steps">
+            <div className="mt-8">
+              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
+              <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
+                {marketingPersonas.map((persona) => (
+                  <button
+                    aria-selected={persona.id === activePersona.id}
+                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-grover-sm' : 'border-slate-200 bg-paper text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
+                    key={persona.id}
+                    onClick={() => selectPersona(persona.id, 'hero_audience_tabs')}
+                    role="tab"
+                    type="button"
+                  >
+                    {persona.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Primary next steps">
               {activePersona.id === 'owner' ? (
                 <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
                   Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
@@ -391,23 +408,6 @@ export function PublicLandingPage({
                   {activeCallToAction.label}
                 </button>
               ) : null}
-            </div>
-            <div className="mt-10">
-              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
-              <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
-                {marketingPersonas.map((persona) => (
-                  <button
-                    aria-selected={persona.id === activePersona.id}
-                    className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-extrabold transition ${persona.id === activePersona.id ? 'border-emerald-800 bg-emerald-800 text-white shadow-grover-sm' : 'border-slate-200 bg-paper text-slate-600 hover:border-emerald-700 hover:text-emerald-800'}`}
-                    key={persona.id}
-                    onClick={() => selectPersona(persona.id, 'hero_audience_tabs')}
-                    role="tab"
-                    type="button"
-                  >
-                    {persona.label}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
