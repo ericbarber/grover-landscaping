@@ -36,6 +36,7 @@ Start with these records when reviewing or continuing development:
 - [Prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) — approved design-to-production map and ordered queue
 - [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
 - [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
+- [Owner–provider activation contract](docs/owner-provider-activation-design.md) — accepted-proposal projection, portal access, and first-visit boundaries
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features

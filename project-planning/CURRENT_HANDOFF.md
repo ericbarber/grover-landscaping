@@ -7,7 +7,7 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: Yard Owner acquisition Phase 4B proposal adoption
+- Active product boundary: Yard Owner acquisition Phase 4C activation
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -53,12 +53,12 @@
 ## Next implementable slice
 
 Phase 4B3 owner/provider initial-service proposal interfaces and all Phase 4B2b
-proposal-collaboration slices are delivered. Persistence, authenticated routes,
-provider reload, client mapping, and both responsive workspaces preserve exact
-version context and no-decision/no-activation meaning. The next slice is Phase
-4C explicit activation:
+proposal-collaboration slices are delivered. Phase 4C0 now defines activation
+authority, atomic projection, property-scoped portal access, immutable
+provenance, competing-request closure, and the first-visit boundary. The next
+slice is Phase 4C1 activation persistence:
 
-1. Define an idempotent transaction that projects one accepted immutable
+1. Implement an idempotent transaction that projects one accepted immutable
    proposal snapshot into the selected provider’s customer/property records
    with provenance and without creating a job, route, payment, or crew
    assignment.
@@ -71,10 +71,11 @@ version context and no-decision/no-activation meaning. The next slice is Phase
 ## Read first
 
 1. [`../docs/owner-provider-initial-service-proposal-design.md`](../docs/owner-provider-initial-service-proposal-design.md)
-2. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
-3. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
-4. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-5. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
+2. [`../docs/owner-provider-activation-design.md`](../docs/owner-provider-activation-design.md)
+3. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
+4. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
+5. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
+6. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
 
 ## Validation baseline
 

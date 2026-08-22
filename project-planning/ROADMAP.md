@@ -5,8 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the separate Yard Owner/provider
-proposal question and change-request contract, followed by explicit activation.
+The current production-adoption priority is the explicit owner-confirmed
+activation transaction. The proposal question and change-request contract and
+the activation authority/projection design are delivered; activation
+persistence, API, interface, and separate first-visit lifecycle follow.
 The initial-service proposal interface against the delivered Phase 4B APIs is
 now adopted. The immediately
 preceding UX priority—a complete persona-specific public landing experience—is

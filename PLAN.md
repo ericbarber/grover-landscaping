@@ -45,12 +45,18 @@ Current state:
   workspaces. Owners can ask or request a change without deciding; providers
   can reload and answer the exact message, with an explicit newer-revision link
   when terms changed.
+- Phase 4C0 now fixes the explicit activation contract: a separate owner
+  affirmation atomically projects an accepted snapshot into provider customer
+  and onboarding-property records, property-scoped membership and portal
+  access, immutable provenance, and same-property competing-request closure.
+  It creates no job, route, work order, payment, recurring schedule, crew
+  assignment, or first visit.
 
 Next slice:
 
-- Deliver the Phase 4C explicit activation boundary from an accepted
-  snapshot into provider setup and first-visit confirmation without coupling
-  acceptance to payment, scheduling, or crew assignment.
+- Deliver Phase 4C1 activation persistence and its atomic repository transaction,
+  then expose and adopt the owner-confirmed interface before the separate
+  first-visit lifecycle.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

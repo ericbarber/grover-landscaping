@@ -116,9 +116,10 @@ scope/exclusion text.
 5. **4B3 — Production interfaces (delivered):** provider authoring/revision,
    latest-version reload, and neutral Yard Owner immutable-history
    comparison/exact-version decision experiences with responsive recovery.
-6. **4C — Activation:** separately project an accepted snapshot into provider
-   customer/property setup, then confirm the first visit without coupling crew
-   assignment to acceptance.
+6. **4C — Activation:** the
+   [activation contract](owner-provider-activation-design.md) separately
+   projects an accepted snapshot into provider customer/property setup, then
+   confirms the first visit without coupling crew assignment to acceptance.
 
 ## Foundation acceptance criteria
 
