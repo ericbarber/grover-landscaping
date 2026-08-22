@@ -36,6 +36,8 @@ not currently depend on React Router.
   success, warning, and dangerous authenticated workflow feedback
 - Mobile route, jobs, checklist, photos, completion, offline queue, replay, and
   diagnostics behavior
+- Prototype-aligned field Route hierarchy with accessible progress, Current
+  stop, Up next, bounded route expansion, and lower-priority amendment controls
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

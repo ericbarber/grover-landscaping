@@ -32,6 +32,10 @@
   and one active destination at a time instead of stacking every authorized
   field, customer, and manager surface. Phone and tablet compositions retain
   their bottom-bar and compact-rail behavior.
+- Field Route now follows Crew Route V1 hierarchy with high-contrast progress,
+  accessible completion percentage, explicit Current stop and Up next cards,
+  two-stop focus before full-route expansion, and route-change/recovery controls
+  after the immediate work. Persisted in-progress stops advance correctly.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -88,8 +92,8 @@ The core shared-shell phase is delivered: outlined icons, phone/tablet/desktop
 navigation, semantic status primitives, and denser single-destination desktop
 composition are in production. The next repository-owned slice is:
 
-1. Converge field Home → Route → Jobs → Job hierarchy with the Crew Route V1
-   direction.
+1. Converge field Jobs → Job hierarchy and connect it back to the adopted Home
+   and Route direction.
 2. Preserve durable offline queues, conflict review, route amendments,
    checklist/photo evidence, and completion recovery while changing composition.
 3. Migrate field-local feedback to the shared status contract and validate the

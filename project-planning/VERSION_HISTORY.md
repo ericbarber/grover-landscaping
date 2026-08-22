@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Adopted Crew Route V1 hierarchy into the responsive field route with a high-contrast accessible progress summary, planned/remaining time, explicit Current stop and Up next cards, two-stop focus before full-route expansion, shared status pills, route changes after immediate work, and correct advancement from server-provided in-progress state.
 - 2026-08-22: Completed the core authenticated desktop-shell convergence with a persistent role-filtered forest rail, single-destination rendering, a shorter editorial Home hero, and a dense responsive summary/action grid; retained phone bottom and tablet rail compositions and expanded local-role browser coverage across all personas and breakpoints.
 - 2026-08-22: Added shared neutral/info/success/warning/danger notice and bounded status-pill primitives with common outlined icons and semantic live-region defaults; adopted them for authenticated Home sync/priority feedback, field job states, persisted-job failures, and crew-route storage/availability recovery.
 - 2026-08-22: Replaced shared authenticated-shell navigation and Home status Unicode symbols with one reusable outlined SVG icon family; added a fixed role-filtered tablet rail between the phone bottom bar and existing desktop shell; and covered icon contracts, phone geometry, tablet geometry/padding/overflow, and desktop handoff.

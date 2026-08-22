@@ -40,7 +40,7 @@ import {
   type StopProgressStatus,
   type StopStateMap,
 } from '../domain/stopProgress';
-import { WorkspaceStatusNotice } from './WorkspaceStatus';
+import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 type DayPlanPanelProps = {
   actorId?: string | null;
@@ -142,6 +142,14 @@ export function DayPlanPanel({
   const conflictMutationCount = offlineSummary.conflicts;
   const totalMinutes = getTotalEstimatedMinutes(dayPlan);
   const completedStops = countResolvedFinishedStops(dayPlan.stops, stopStates);
+  const completionPercent = dayPlan.stops.length > 0
+    ? Math.round((completedStops / dayPlan.stops.length) * 100)
+    : 0;
+  const remainingMinutes = dayPlan.stops.reduce((total, stop) => (
+    resolveStopStatus(stopStates[stop.id], stop.stopStatus) === 'finished'
+      ? total
+      : total + stop.estimatedDriveMinutes + stop.estimatedServiceMinutes
+  ), 0);
   const nextStopIndex = dayPlan.stops.findIndex(
     (stop) => resolveStopStatus(stopStates[stop.id], stop.stopStatus) !== 'finished',
   );
@@ -316,7 +324,8 @@ export function DayPlanPanel({
 
   function advanceStop(stopId: string) {
     setStopStates((current) => {
-      const nextState = getNextStopStatus(current[stopId]);
+      const persistedStatus = dayPlan.stops.find((stop) => stop.id === stopId)?.stopStatus;
+      const nextState = getNextStopStatus(resolveStopStatus(current[stopId], persistedStatus));
       const next = { ...current, [stopId]: nextState };
       persistStopState(stopId, next);
       return next;
@@ -597,8 +606,8 @@ export function DayPlanPanel({
   ]);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
+    <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="order-1 flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Crew day plan</p>
           <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
@@ -610,7 +619,6 @@ export function DayPlanPanel({
                 ? 'browser fallback'
                 : 'persisted route status'}
           </p>
-          <p className="mt-1 text-xs text-slate-500">Progress: {syncStatusLabel(syncStatus)}</p>
           {queueStorageUnavailable && (
             <WorkspaceStatusNotice
               className="mt-2"
@@ -741,27 +749,38 @@ export function DayPlanPanel({
             </div>
           )}
         </div>
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800">
-          {dayPlan.routeStatus}
-        </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-2 text-center sm:gap-3">
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{dayPlan.stops.length}</p>
-          <p className="text-xs text-slate-500">Stops</p>
+      <section aria-label="Today’s route progress" className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-grover-md">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">Today’s route</p>
+            <p className="mt-2 text-3xl font-black">
+              {completedStops} <span className="text-xl text-emerald-100">of {dayPlan.stops.length}</span>
+            </p>
+            <p className="mt-1 text-sm font-bold text-emerald-100">stops complete</p>
+          </div>
+          <WorkspaceStatusBadge className="border-white/15 bg-white/10 text-white" tone="neutral">
+            {syncStatusLabel(syncStatus)}
+          </WorkspaceStatusBadge>
         </div>
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{totalMinutes}</p>
-          <p className="text-xs text-slate-500">Minutes</p>
+        <div
+          aria-label={`${completionPercent}% of route complete`}
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={completionPercent}
+          className="mt-4 h-2 overflow-hidden rounded-full bg-white/20"
+          role="progressbar"
+        >
+          <div className="h-full rounded-full bg-sand" style={{ width: `${completionPercent}%` }} />
         </div>
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="text-2xl font-bold text-slate-950">{completedStops}</p>
-          <p className="text-xs text-slate-500">Finished</p>
+        <div className="mt-4 flex items-center justify-between gap-4 text-xs font-bold text-emerald-100">
+          <span>{remainingMinutes} min remaining</span>
+          <span>{totalMinutes} min planned · {dayPlan.routeStatus}</span>
         </div>
-      </div>
+      </section>
 
-      <details className="mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
+      <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-emerald-950 [&::-webkit-details-marker]:hidden">
           Route changes
           <span className="text-xs font-medium text-emerald-700">Add a stop</span>
@@ -793,7 +812,7 @@ export function DayPlanPanel({
       </details>
 
       {amendmentRequests.length > 0 ? (
-        <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <details className="order-5 mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-slate-950 [&::-webkit-details-marker]:hidden">
             Submitted requests
             <span className="rounded-full bg-white px-2 py-1 text-xs text-slate-600">{amendmentRequests.length}</span>
@@ -828,7 +847,7 @@ export function DayPlanPanel({
         </details>
       ) : null}
       {offlineAmendmentMutations.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900" role="status">
+        <div className="order-6 mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900" role="status">
           <p>
             {offlineAmendmentMutations.length} route {offlineAmendmentMutations.length === 1 ? 'request is' : 'requests are'} queued offline.
           </p>
@@ -915,7 +934,7 @@ export function DayPlanPanel({
         </div>
       )}
 
-      <div className="mt-5 space-y-3">
+      <div className="order-3 mt-5 space-y-3">
         {source === 'missing' ? (
           <WorkspaceStatusNotice
             detail="Ask a manager to publish the day plan."
@@ -951,15 +970,25 @@ export function DayPlanPanel({
             </button>
           </div>
         ) : null}
-        {visibleStops.map((stop) => {
+        {visibleStops.map((stop, index) => {
           const localState: StopProgressStatus = resolveStopStatus(stopStates[stop.id], stop.stopStatus);
           const actionLabel = stopActionLabel(localState);
           const selectedExtraServiceId = selectedExtraServices[stop.id] ?? crewExtraServiceCatalog[0]?.id ?? '';
           const selectedExtraService = crewExtraServiceCatalog.find((service) => service.id === selectedExtraServiceId);
 
           return (
-            <article key={stop.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <button className="w-full text-left" onClick={() => handleStopClick(stop.jobId, stop.customerName)}>
+            <div key={stop.id}>
+              <h3 className="mb-2 mt-5 font-display text-xl font-bold text-forest">
+                {index === 0
+                  ? completedStops >= dayPlan.stops.length ? 'Latest stop' : 'Current stop'
+                  : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}
+              </h3>
+              <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-grover-sm' : 'border-slate-200 bg-slate-50'}`}>
+              <button
+                aria-label={`Open job details for ${stop.customerName}`}
+                className="w-full text-left"
+                onClick={() => handleStopClick(stop.jobId, stop.customerName)}
+              >
                 <div className="flex flex-col items-start gap-3 min-[380px]:flex-row">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
                     {stop.stopOrder}
@@ -971,14 +1000,21 @@ export function DayPlanPanel({
                       Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
                     </p>
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                  <WorkspaceStatusBadge
+                    className="uppercase tracking-wide"
+                    tone={localState === 'finished'
+                      ? 'success'
+                      : localState === 'in_progress'
+                        ? 'warning'
+                        : 'neutral'}
+                  >
                     {localState.replace('_', ' ')}
-                  </span>
+                  </WorkspaceStatusBadge>
                 </div>
               </button>
 
               <button
-                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className={`mt-3 min-h-11 w-full rounded-xl border px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${index === 0 ? 'border-forest bg-forest text-white hover:bg-emerald-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
                 disabled={localState === 'finished'}
                 onClick={() => advanceStop(stop.id)}
               >
@@ -1039,7 +1075,8 @@ export function DayPlanPanel({
                   </div>
                 </div>
               </details>
-            </article>
+              </article>
+            </div>
           );
         })}
       </div>

@@ -272,3 +272,96 @@ test('authenticated navigation moves from a phone bar to a tablet rail', async (
   expect(desktop.heroHeight).toBeGreaterThanOrEqual(320);
   expect(desktop.heroHeight).toBeLessThanOrEqual(340);
 });
+
+test('field Route prioritizes progress, current stop, and up-next work', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
+  });
+  await page.route('http://localhost:8080/crews/crew_1001/day-plan/today', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'day_plan_field_review',
+        crew_id: 'crew_1001',
+        crew_name: 'North Route Crew',
+        organization_id: 'org_demo_landscaping',
+        service_date: '2026-08-22',
+        status: 'published',
+        route_status: 'manual',
+        stops: [
+          {
+            id: 'stop_oak',
+            job_id: 'job_oak',
+            customer_name: 'Oak Street Residence',
+            property_address: '123 Oak Street',
+            stop_order: 1,
+            job_status: 'in_progress',
+            stop_status: 'in_progress',
+            estimated_drive_minutes: 12,
+            estimated_service_minutes: 42,
+          },
+          {
+            id: 'stop_mesa',
+            job_id: 'job_mesa',
+            customer_name: 'Mesa HOA entrance',
+            property_address: '456 Mesa Drive',
+            stop_order: 2,
+            job_status: 'scheduled',
+            stop_status: 'pending',
+            estimated_drive_minutes: 10,
+            estimated_service_minutes: 55,
+          },
+          {
+            id: 'stop_citrus',
+            job_id: 'job_citrus',
+            customer_name: 'Citrus Grove',
+            property_address: '789 Citrus Way',
+            stop_order: 3,
+            job_status: 'scheduled',
+            stop_status: 'pending',
+            estimated_drive_minutes: 8,
+            estimated_service_minutes: 35,
+          },
+        ],
+      }),
+    })
+  ));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Route', exact: true }).click();
+
+  const route = page.locator('#today-route');
+  await expect(route.getByText('Today’s route', { exact: true })).toBeVisible();
+  await expect(route.getByText('0 of 3', { exact: false })).toBeVisible();
+  await expect(route.getByRole('progressbar', { name: '0% of route complete' }))
+    .toHaveAttribute('aria-valuenow', '0');
+  await expect(route.getByRole('heading', { name: 'Current stop' })).toBeVisible();
+  await expect(route.getByText('Oak Street Residence', { exact: true })).toBeVisible();
+  await expect(route.getByRole('heading', { name: 'Up next' })).toBeVisible();
+  await expect(route.getByText('Mesa HOA entrance', { exact: true })).toBeVisible();
+  await expect(route.getByText('Citrus Grove', { exact: true })).toHaveCount(0);
+
+  const hierarchy = await route.evaluate((element) => {
+    const current = Array.from(element.querySelectorAll('h3'))
+      .find((heading) => heading.textContent === 'Current stop');
+    const changes = Array.from(element.querySelectorAll('summary'))
+      .find((summary) => summary.textContent?.includes('Route changes'));
+    return {
+      currentTop: current?.getBoundingClientRect().top ?? 0,
+      changesTop: changes?.getBoundingClientRect().top ?? 0,
+    };
+  });
+  expect(hierarchy.currentTop).toBeLessThan(hierarchy.changesTop);
+
+  await route.getByRole('button', { name: 'Finish stop' }).click();
+  await expect(route.getByText('1 of 3', { exact: false })).toBeVisible();
+  await expect(route.getByRole('progressbar', { name: '33% of route complete' }))
+    .toHaveAttribute('aria-valuenow', '33');
+  const currentStop = route.getByRole('heading', { name: 'Current stop' }).locator('..');
+  const upNextStop = route.getByRole('heading', { name: 'Up next' }).locator('..');
+  await expect(currentStop.getByText('Mesa HOA entrance', { exact: true })).toBeVisible();
+  await expect(upNextStop.getByText('Citrus Grove', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

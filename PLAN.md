@@ -110,9 +110,8 @@ Current state:
 
 Next slice:
 
-- Begin the approved field-execution hierarchy convergence across Home → Route
-  → Jobs → Job while preserving offline, conflict, evidence, and recovery
-  behavior.
+- Continue the approved field-execution hierarchy convergence through Jobs →
+  Job while preserving offline, conflict, evidence, and recovery behavior.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -955,6 +954,13 @@ the outcome, and return to its recovery workflow from persisted activity history
 
 ### Crew route and stop progress
 
+- Crew Route V1 hierarchy is adopted into the responsive route: a high-contrast
+  route-progress summary precedes explicit Current stop and Up next cards, the
+  default view remains bounded to two actionable stops, and route changes plus
+  recovery controls follow the immediate work.
+- Route progress exposes an accessible percentage, planned and remaining
+  minutes, shared state pills, full-route expansion, and correct advancement
+  from a server-provided in-progress stop to finished.
 - Daily crew day-plan panel
 - Ordered route stops
 - Drive and service time estimates
