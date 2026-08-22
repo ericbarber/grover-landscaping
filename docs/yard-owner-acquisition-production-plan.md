@@ -79,7 +79,8 @@ The approved experience is defined by:
 | 4C0–3 | Delivered | Separate owner-confirmed accepted-proposal activation contract, persistence, atomic customer/property/portal projection, authenticated API, safe activated progress, and responsive owner/provider interfaces with no first-visit or operational work side effects |
 | 4C4a–b | Delivered | Separate first-visit contract and persistence with immutable windows, exact-version owner decisions, replay/concurrency/isolation proof, and no operational work side effects |
 | 4C4c | Delivered | Authenticated verified-provider status/propose and property-owner status/decision routes with explicit recovery mappings |
-| 4C4d–D | Planned | Responsive first-visit interfaces and governed pilot convergence |
+| 4C4d | Delivered | Responsive retry-safe provider window and exact-version owner confirmation/change-request workspaces with connected portal handoff |
+| 4D | Planned | Governed relationship-continuity and known-provider pilot convergence |
 
 ## Delivery principles
 

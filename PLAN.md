@@ -87,11 +87,16 @@ Current state:
   status/decision routes. The API distinguishes invalid, missing, stale,
   conflict, exact replay, and unavailable results while keeping invitation
   tokens out of URLs and operational side effects out of the lifecycle.
+- Phase 4C4d now adopts the lifecycle into both responsive workspaces. Providers
+  can propose or replace a bounded customer-facing window with a retry-stable
+  request; owners can confirm the exact version or request another window. A
+  confirmed appointment links into the Yard Owner portal while keeping crew,
+  route, work-order, recurring-schedule, and payment work separate.
 
 Next slice:
 
-- Deliver Phase 4C4d responsive provider window and owner
-  confirmation/change-request controls with authoritative reload.
+- Begin the next approved adoption item: shared authenticated-shell icon,
+  density, status-primitive, and tablet-navigation convergence.
 - Continue through the ordered repository-owned adoption queue, leaving the
   external and product gates in the tracker explicitly unresolved.
 

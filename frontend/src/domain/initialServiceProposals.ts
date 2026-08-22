@@ -88,6 +88,31 @@ export interface OwnerProviderRelationshipActivation {
   persisted: boolean;
 }
 
+export type OwnerProviderFirstVisitStatus = 'awaiting_provider' | 'proposed'
+  | 'change_requested' | 'confirmed' | 'cancelled';
+
+export interface OwnerProviderFirstVisit {
+  activationId: string;
+  ownerPropertyId: string;
+  invitationId: string;
+  organizationId: string;
+  organizationName: string;
+  customerAccountId: string;
+  customerPropertyId: string;
+  status: OwnerProviderFirstVisitStatus;
+  currentVersion: number;
+  proposalId?: string;
+  windowStartEpochSeconds?: number;
+  windowEndEpochSeconds?: number;
+  timeZone?: string;
+  customerSafeArrivalNote?: string;
+  ownerDecision?: 'confirm' | 'request_change';
+  ownerCustomerSafeNote?: string;
+  proposedAtEpochSeconds?: number;
+  decidedAtEpochSeconds?: number;
+  persisted: boolean;
+}
+
 export interface PublishInitialServiceProposalInput {
   expectedProposalVersion: number;
   title: string;
@@ -118,6 +143,29 @@ export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_VERSION =
 
 export const OWNER_PROVIDER_ACTIVATION_AFFIRMATION_TEXT =
   'I want Grover to create this provider relationship and my provider-facing customer and property setup from the accepted proposal. I understand that this does not confirm a first visit, collect payment, create a schedule, or assign a crew.';
+
+export const OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_VERSION =
+  'owner_provider_first_visit_confirmation_v1';
+
+export const OWNER_PROVIDER_FIRST_VISIT_CONFIRMATION_TEXT =
+  'I confirm this exact first-visit arrival window. I understand that this confirms the customer appointment only; the provider still manages crew assignment, route planning, and work-order release separately.';
+
+export function firstVisitWindowLabel(firstVisit: Pick<OwnerProviderFirstVisit,
+  'windowStartEpochSeconds' | 'windowEndEpochSeconds' | 'timeZone'>): string {
+  if (!firstVisit.windowStartEpochSeconds || !firstVisit.windowEndEpochSeconds) {
+    return 'Window not proposed';
+  }
+  const start = new Date(firstVisit.windowStartEpochSeconds * 1000);
+  const end = new Date(firstVisit.windowEndEpochSeconds * 1000);
+  const timeZone = firstVisit.timeZone || undefined;
+  const date = new Intl.DateTimeFormat(undefined, {
+    weekday: 'long', month: 'long', day: 'numeric', timeZone,
+  }).format(start);
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric', minute: '2-digit', timeZone,
+  });
+  return `${date} · ${time.format(start)}–${time.format(end)}`;
+}
 
 export function formatProposalMoney(amountMinor: number, currencyCode: string): string {
   return new Intl.NumberFormat(undefined, {

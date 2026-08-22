@@ -1,11 +1,14 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ApiRequestError } from '../api/apiError';
 import {
   fetchProviderDisclosureAccess,
+  fetchProviderFirstVisit,
   fetchProviderInvitationProgress,
+  proposeProviderFirstVisit,
   type ProviderDisclosureAccess,
   type ProviderInvitationProgress,
 } from '../api/providerInvitationClient';
+import { firstVisitWindowLabel, type OwnerProviderFirstVisit } from '../domain/initialServiceProposals';
 import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
 import { GroverBrand } from './GroverBrand';
@@ -46,8 +49,14 @@ export function ProviderInvitationProgressPage() {
   const [progress, setProgress] = useState<ProviderInvitationProgress | null>(null);
   const [disclosure, setDisclosure] = useState<ProviderDisclosureAccess | null>(null);
   const [disclosureError, setDisclosureError] = useState<string | null>(null);
+  const [firstVisit, setFirstVisit] = useState<OwnerProviderFirstVisit | null>(null);
+  const [firstVisitError, setFirstVisitError] = useState<string | null>(null);
+  const [windowStart, setWindowStart] = useState('');
+  const [windowEnd, setWindowEnd] = useState('');
+  const [arrivalNote, setArrivalNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const firstVisitKeys = useRef(new Map<string, string>());
 
   async function loadProgress(value: string) {
     setLoading(true);
@@ -55,6 +64,19 @@ export function ProviderInvitationProgressPage() {
     try {
       const loadedProgress = await fetchProviderInvitationProgress(value);
       setProgress(loadedProgress);
+      if (loadedProgress.progressStage === 'relationship_activated'
+        && loadedProgress.activationId) {
+        try {
+          setFirstVisit(await fetchProviderFirstVisit(value, loadedProgress.activationId));
+          setFirstVisitError(null);
+        } catch (visitError) {
+          setFirstVisit(null);
+          setFirstVisitError(message(visitError));
+        }
+      } else {
+        setFirstVisit(null);
+        setFirstVisitError(null);
+      }
       if (['assessment_access_ready', 'assessment_access_closed'].includes(loadedProgress.progressStage)) {
         try {
           setDisclosure(await fetchProviderDisclosureAccess(value));
@@ -70,6 +92,7 @@ export function ProviderInvitationProgressPage() {
     } catch (loadError) {
       setProgress(null);
       setDisclosure(null);
+      setFirstVisit(null);
       setError(message(loadError));
     } finally {
       setLoading(false);
@@ -92,6 +115,54 @@ export function ProviderInvitationProgressPage() {
       return;
     }
     void loadProgress(value);
+  }
+
+  async function proposeFirstVisit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!firstVisit) return;
+    const start = new Date(windowStart).getTime();
+    const end = new Date(windowEnd).getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start
+      || end - start > 4 * 60 * 60 * 1000) {
+      setFirstVisitError('Choose a future arrival window of four hours or less.');
+      return;
+    }
+    const keyId = `${firstVisit.activationId}:${firstVisit.currentVersion}:window`;
+    const idempotencyKey = firstVisitKeys.current.get(keyId)
+      ?? `provider-first-visit-${crypto.randomUUID()}`;
+    firstVisitKeys.current.set(keyId, idempotencyKey);
+    setLoading(true);
+    setFirstVisitError(null);
+    try {
+      const updated = await proposeProviderFirstVisit(token, firstVisit, {
+        startEpochSeconds: Math.floor(start / 1000),
+        endEpochSeconds: Math.floor(end / 1000),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        customerSafeArrivalNote: arrivalNote.trim() || undefined,
+      }, idempotencyKey);
+      firstVisitKeys.current.delete(keyId);
+      setFirstVisit(updated);
+      setWindowStart('');
+      setWindowEnd('');
+      setArrivalNote('');
+    } catch (visitError) {
+      try {
+        setFirstVisit(await fetchProviderFirstVisit(token, firstVisit.activationId));
+      } catch {
+        // Keep the last known lifecycle while showing the original write error.
+      }
+      setFirstVisitError(`${message(visitError)} Reloaded status is shown when available.`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function firstVisitWorkspace() {
+    if (!progress || progress.progressStage !== 'relationship_activated') return null;
+    if (firstVisitError && !firstVisit) return <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>First-visit status was not loaded.</strong><p className="mt-1 text-sm leading-6">{firstVisitError}</p></div>;
+    if (!firstVisit) return <p className="mt-5 rounded-xl bg-white p-4 text-sm font-semibold text-slate-600">Loading first-visit status…</p>;
+    const canPropose = ['awaiting_provider', 'change_requested'].includes(firstVisit.status);
+    return <section aria-labelledby="provider-first-visit-title" className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-5"><p className="text-xs font-black uppercase tracking-[0.16em] text-sky-800">Customer appointment</p><h3 className="mt-2 text-xl font-black" id="provider-first-visit-title">Plan the first visit separately</h3>{firstVisitError ? <p className="mt-3 rounded-xl border border-rose-300 bg-white p-3 text-sm font-semibold text-rose-900" role="alert">{firstVisitError}</p> : null}{firstVisit.status === 'proposed' ? <div className="mt-4 rounded-xl bg-white p-4"><strong>Waiting for owner confirmation</strong><p className="mt-2 font-display text-lg font-bold">{firstVisitWindowLabel(firstVisit)}</p>{firstVisit.customerSafeArrivalNote ? <p className="mt-2 text-sm text-slate-600">{firstVisit.customerSafeArrivalNote}</p> : null}</div> : null}{firstVisit.status === 'confirmed' ? <div className="mt-4 rounded-xl bg-emerald-950 p-4 text-white"><strong>Owner confirmed version {firstVisit.currentVersion}</strong><p className="mt-2 font-display text-lg font-bold">{firstVisitWindowLabel(firstVisit)}</p><p className="mt-2 text-sm text-emerald-100">Now continue mobilization separately. This confirmation did not assign a crew, create a route stop, or release a work order.</p></div> : null}{firstVisit.status === 'change_requested' ? <div className="mt-4 rounded-xl border border-amber-300 bg-white p-4"><strong>The owner requested another window</strong><p className="mt-2 text-sm leading-6 text-slate-700">{firstVisit.ownerCustomerSafeNote}</p></div> : null}{canPropose ? <form className="mt-4 grid gap-4 rounded-xl bg-white p-4 sm:grid-cols-2" onSubmit={proposeFirstVisit}><label className="text-sm font-bold">Arrival window starts<input className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-3 font-normal" onChange={(event) => setWindowStart(event.target.value)} required type="datetime-local" value={windowStart} /></label><label className="text-sm font-bold">Arrival window ends<input className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-3 font-normal" onChange={(event) => setWindowEnd(event.target.value)} required type="datetime-local" value={windowEnd} /></label><label className="text-sm font-bold sm:col-span-2">Owner-visible preparation note<textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 p-3 font-normal" maxLength={1000} onChange={(event) => setArrivalNote(event.target.value)} placeholder="For example: Please unlock the side gate and keep pets inside." value={arrivalNote} /></label><p className="text-xs font-semibold leading-5 text-slate-500 sm:col-span-2">This sends only the customer-facing appointment window. Crew, route, work-order, payment, and private production planning remain separate.</p><button className="grover-button-primary sm:col-span-2 disabled:opacity-60" disabled={loading} type="submit">{loading ? 'Saving window…' : firstVisit.status === 'change_requested' ? 'Propose replacement window' : 'Propose first-visit window'}</button></form> : null}</section>;
   }
 
   return (
@@ -127,6 +198,7 @@ export function ProviderInvitationProgressPage() {
               {!progress.closed ? <ul className="mt-4 grid gap-2 text-xs text-slate-700 sm:grid-cols-3"><li>Email checked: <strong>{progress.recipientEmailChecked ? 'Yes' : 'No'}</strong></li><li>Organization checked: <strong>{progress.organizationRelationshipChecked ? 'Yes' : 'Not yet'}</strong></li><li>Limited response: <strong>{progress.opportunityResponseCapability ? 'Available' : 'Not available'}</strong></li></ul> : null}
             </article>
           ) : null}
+          {firstVisitWorkspace()}
           {disclosureError ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Assessment details were not loaded.</strong><p className="mt-1 text-sm leading-6">{disclosureError} Your recorded invitation response is unchanged.</p></div> : null}
           {disclosure ? (
             <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5" aria-labelledby="provider-assessment-title">

@@ -65,17 +65,21 @@ confirmation/change requests, privacy, replay, concurrency, recovery, and the
 no-operational-side-effect boundary. Phase 4C4b now delivers the constrained
 schema, repository transitions, exact replay, concurrent confirmation,
 owner/provider isolation, immutable history, and PostgreSQL side-effect proof.
-Phase 4C4c now exposes authenticated provider status/propose and property-owner
+Phase 4C4c exposes authenticated provider status/propose and property-owner
 status/decision routes with explicit validation, missing/not-ready/conflict,
-replay, and unavailable mappings. The next slice is Phase 4C4d interface
-adoption:
+replay, and unavailable mappings. Phase 4C4d now adopts retry-stable provider
+window authoring/replacement and exact-version owner confirmation/change
+requests in the responsive workspaces. Mobile and desktop browser journeys
+preserve the no-operational-work boundary and the confirmed owner view links to
+the existing portal.
 
-1. Add provider window authoring after activated progress, including stable
-   retry keys and authoritative reload.
-2. Add owner window review, exact-version confirmation, and customer-safe change
-   requests after activation.
-3. Prove responsive owner/provider journeys and preserve the no-operational-work
-   boundary in both interfaces.
+The next repository-owned slice is shared authenticated-shell convergence:
+
+1. Reconcile outlined icon treatment and status primitives with the approved
+   shared-shell working design.
+2. Tighten desktop information density without weakening role-based composition.
+3. Validate tablet navigation behavior before beginning field-workflow
+   convergence.
 
 ## Read first
 

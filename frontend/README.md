@@ -37,11 +37,13 @@ not currently depend on React Router.
   progress, disclosure consent/history/revocation, assessment collaboration,
   immutable proposal review/decisions, and version-specific questions/change
   requests, followed by separate owner-confirmed provider activation and
-  authoritative setup status
+  authoritative setup status, then exact-version first-visit confirmation or a
+  customer-safe request for another window
 - Provider recipient progress, disclosure-limited assessment workspace, and
   separate customer-safe versus provider-private notes, proposal
   authoring/revision, exact-message proposal responses, and activated provider
-  setup status without implied first-visit authority
+  setup status with separate bounded first-visit window proposal/replacement
+  controls and no implied crew, route, work-order, or payment authority
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records

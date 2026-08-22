@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
-import type { InitialServiceProposal } from '../domain/initialServiceProposals';
+import type { InitialServiceProposal, OwnerProviderFirstVisit } from '../domain/initialServiceProposals';
 import {
   createProviderAssessmentMessage,
   createProviderAssessmentPrivateNote,
   createProviderInitialServiceProposalResponse,
   fetchProviderDisclosureAccess,
+  fetchProviderFirstVisit,
   fetchProviderInvitationProgress,
   proposeProviderAssessmentWindow,
+  proposeProviderFirstVisit,
   publishProviderInitialServiceProposal,
   startProviderAssessment,
   transitionProviderAssessment,
@@ -42,6 +44,40 @@ describe('provider invitation progress client', () => {
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       token: 'owner_provider_secret',
+    });
+  });
+
+  it('loads and proposes a first-visit window without putting the token in the URL', async () => {
+    const firstVisitApi = {
+      activation_id: 'activation_1', owner_property_id: 'property_1',
+      invitation_id: 'invitation_1', organization_id: 'organization_1',
+      organization_name: 'Desert Bloom', customer_account_id: 'account_1',
+      customer_property_id: 'customer_property_1', status: 'awaiting_provider',
+      current_version: 0, persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(firstVisitApi), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        ...firstVisitApi, status: 'proposed', current_version: 1,
+        proposal_id: 'first_visit_1', window_start_epoch_seconds: 1_800_000_000,
+        window_end_epoch_seconds: 1_800_007_200, time_zone: 'America/Phoenix',
+      }), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const firstVisit = await fetchProviderFirstVisit('secret', 'activation_1');
+    await expect(proposeProviderFirstVisit(
+      'secret', firstVisit as OwnerProviderFirstVisit,
+      { startEpochSeconds: 1_800_000_000, endEpochSeconds: 1_800_007_200,
+        timeZone: 'America/Phoenix', customerSafeArrivalNote: 'Unlock the gate.' },
+      'first-visit-key',
+    )).resolves.toEqual(expect.objectContaining({ status: 'proposed', currentVersion: 1 }));
+    expect(fetchMock.mock.calls[1][0]).not.toContain('secret');
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
+      token: 'secret', expected_series_version: 0,
+      window_start_epoch_seconds: 1_800_000_000,
+      window_end_epoch_seconds: 1_800_007_200,
+      time_zone: 'America/Phoenix', customer_safe_arrival_note: 'Unlock the gate.',
+      idempotency_key: 'first-visit-key',
     });
   });
 

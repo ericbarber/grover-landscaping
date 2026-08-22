@@ -7,6 +7,7 @@ import type {
   InitialServiceProposalDecisionAction,
   InitialServiceProposalMessage,
   InitialServiceProposalStatus,
+  OwnerProviderFirstVisit,
   OwnerProviderRelationshipActivation,
 } from '../domain/initialServiceProposals';
 
@@ -239,6 +240,28 @@ interface ApiOwnerProviderRelationshipActivation {
   status: 'provider_setup';
   closed_competing_invitation_count: number;
   activated_at_epoch_seconds: number;
+  persisted: boolean;
+}
+
+interface ApiOwnerProviderFirstVisit {
+  activation_id: string;
+  owner_property_id: string;
+  invitation_id: string;
+  organization_id: string;
+  organization_name: string;
+  customer_account_id: string;
+  customer_property_id: string;
+  status: OwnerProviderFirstVisit['status'];
+  current_version: number;
+  proposal_id?: string | null;
+  window_start_epoch_seconds?: number | null;
+  window_end_epoch_seconds?: number | null;
+  time_zone?: string | null;
+  customer_safe_arrival_note?: string | null;
+  owner_decision?: OwnerProviderFirstVisit['ownerDecision'] | null;
+  owner_customer_safe_note?: string | null;
+  proposed_at_epoch_seconds?: number | null;
+  decided_at_epoch_seconds?: number | null;
   persisted: boolean;
 }
 
@@ -647,6 +670,32 @@ function mapOwnerProviderRelationshipActivation(
   };
 }
 
+export function mapOwnerProviderFirstVisit(
+  value: ApiOwnerProviderFirstVisit,
+): OwnerProviderFirstVisit {
+  return {
+    activationId: value.activation_id,
+    ownerPropertyId: value.owner_property_id,
+    invitationId: value.invitation_id,
+    organizationId: value.organization_id,
+    organizationName: value.organization_name,
+    customerAccountId: value.customer_account_id,
+    customerPropertyId: value.customer_property_id,
+    status: value.status,
+    currentVersion: value.current_version,
+    proposalId: value.proposal_id ?? undefined,
+    windowStartEpochSeconds: value.window_start_epoch_seconds ?? undefined,
+    windowEndEpochSeconds: value.window_end_epoch_seconds ?? undefined,
+    timeZone: value.time_zone ?? undefined,
+    customerSafeArrivalNote: value.customer_safe_arrival_note ?? undefined,
+    ownerDecision: value.owner_decision ?? undefined,
+    ownerCustomerSafeNote: value.owner_customer_safe_note ?? undefined,
+    proposedAtEpochSeconds: value.proposed_at_epoch_seconds ?? undefined,
+    decidedAtEpochSeconds: value.decided_at_epoch_seconds ?? undefined,
+    persisted: value.persisted,
+  };
+}
+
 async function ownerRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await authenticatedFetch(`${API_BASE_URL}${path}`, init);
   if (!response.ok) {
@@ -918,6 +967,41 @@ export async function activateOwnerProviderRelationship(
   return mapOwnerProviderRelationshipActivation(
     await response.json() as ApiOwnerProviderRelationshipActivation,
   );
+}
+
+export async function fetchOwnerProviderFirstVisit(
+  propertyId: string,
+  activationId: string,
+): Promise<OwnerProviderFirstVisit> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-relationships/${encodeURIComponent(activationId)}/first-visit`,
+  );
+  return mapOwnerProviderFirstVisit(await response.json() as ApiOwnerProviderFirstVisit);
+}
+
+export async function decideOwnerProviderFirstVisit(
+  propertyId: string,
+  firstVisit: OwnerProviderFirstVisit,
+  action: 'confirm' | 'request_change',
+  options: { customerSafeNote?: string; confirmationAffirmationTextVersion?: string },
+  idempotencyKey: string,
+): Promise<OwnerProviderFirstVisit> {
+  const response = await ownerRequest(
+    `/owner-properties/${encodeURIComponent(propertyId)}/provider-relationships/${encodeURIComponent(firstVisit.activationId)}/first-visit/decision`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        expected_window_version: firstVisit.currentVersion,
+        action,
+        customer_safe_note: options.customerSafeNote,
+        confirmation_affirmation_text_version:
+          options.confirmationAffirmationTextVersion,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  return mapOwnerProviderFirstVisit(await response.json() as ApiOwnerProviderFirstVisit);
 }
 
 export async function fetchOwnerProviderDisclosureReview(

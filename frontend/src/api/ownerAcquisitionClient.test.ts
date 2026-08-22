@@ -9,6 +9,7 @@ import {
   approveOwnerProviderDisclosure,
   deleteOwnerIntakeMedia,
   decideOwnerProviderAssessmentWindow,
+  decideOwnerProviderFirstVisit,
   createOwnerProviderAssessmentMessage,
   decideOwnerInitialServiceProposal,
   fetchOwnerIntakeMedia,
@@ -20,6 +21,7 @@ import {
   fetchOwnerInitialServiceProposals,
   fetchOwnerInitialServiceProposalMessages,
   fetchOwnerProviderRelationshipActivation,
+  fetchOwnerProviderFirstVisit,
   fetchOwnerYardBrief,
   fetchOwnerProperties,
   saveOwnerYardBrief,
@@ -367,6 +369,41 @@ describe('Yard Owner acquisition API client', () => {
     });
     await expect(fetchOwnerProviderRelationshipActivation('property_1', 'proposal_2'))
       .resolves.toEqual(expect.objectContaining({ customerPropertyId: 'customer_property_1' }));
+  });
+
+  it('loads and decides the exact first-visit window version', async () => {
+    const firstVisitApi = {
+      activation_id: 'activation_1', owner_property_id: 'property_1',
+      invitation_id: 'invitation_1', organization_id: 'organization_1',
+      organization_name: 'Desert Bloom', customer_account_id: 'account_1',
+      customer_property_id: 'customer_property_1', status: 'proposed', current_version: 2,
+      proposal_id: 'first_visit_2', window_start_epoch_seconds: 1_800_000_000,
+      window_end_epoch_seconds: 1_800_007_200, time_zone: 'America/Phoenix',
+      customer_safe_arrival_note: 'Unlock the gate.', owner_decision: null,
+      owner_customer_safe_note: null, proposed_at_epoch_seconds: 1_799_500_000,
+      decided_at_epoch_seconds: null, persisted: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(firstVisitApi), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        ...firstVisitApi, status: 'confirmed', owner_decision: 'confirm',
+      }), { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const firstVisit = await fetchOwnerProviderFirstVisit('property_1', 'activation_1');
+    expect(firstVisit).toEqual(expect.objectContaining({
+      activationId: 'activation_1', currentVersion: 2, status: 'proposed',
+    }));
+    await expect(decideOwnerProviderFirstVisit(
+      'property_1', firstVisit, 'confirm', {
+        confirmationAffirmationTextVersion: 'owner_provider_first_visit_confirmation_v1',
+      }, 'first-visit-key',
+    )).resolves.toEqual(expect.objectContaining({ status: 'confirmed' }));
+    expect(JSON.parse((fetchMock.mock.calls[1][1] as RequestInit).body as string)).toEqual({
+      expected_window_version: 2, action: 'confirm',
+      confirmation_affirmation_text_version: 'owner_provider_first_visit_confirmation_v1',
+      idempotency_key: 'first-visit-key',
+    });
   });
 
   it('creates an independently scoped guided-media upload without provider identifiers', async () => {

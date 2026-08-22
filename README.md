@@ -417,10 +417,14 @@ The application is responsive across owner, provider, crew, manager, administrat
 - Reviewing immutable proposal history, explicitly accepting or declining one
   exact current version, then separately activating provider customer/property
   setup without creating a first visit, payment, schedule, route, or crew assignment
+- Proposing a separate customer-safe first-visit window, requesting a timing
+  change, or explicitly confirming the exact version without creating route or
+  crew work
 
-The next acquisition slice adopts the delivered first-visit API into the
-responsive owner/provider workspaces. The delivered proposal conversation
-remains separate from assessment messages and decision notes. See the
+The next repository-owned adoption slice converges the shared authenticated
+shell's icons, density, status primitives, and tablet navigation. The delivered
+proposal and first-visit conversations remain separate from assessment messages
+and operational mobilization. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Production Deployment

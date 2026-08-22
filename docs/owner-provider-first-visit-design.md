@@ -128,9 +128,10 @@ operational workflows create and execute authorized work.
    status/decision routes with explicit invalid, missing, stale, conflict, and
    unavailable recovery. See the
    [API contract](owner-provider-first-visit-api.md).
-4. **4C4d — Production interfaces:** responsive provider proposal and owner
-   confirmation/change-request controls, authoritative reload, and the connected
-   transition toward the Yard Owner portal.
+4. **4C4d — Production interfaces (delivered):** responsive provider proposal
+   and owner confirmation/change-request controls, retry-stable writes,
+   authoritative reload, and the connected transition toward the Yard Owner
+   portal.
 
 ## Acceptance criteria
 

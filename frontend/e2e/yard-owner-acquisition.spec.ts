@@ -622,6 +622,18 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ decision_id: 'decision_4', proposal_id: 'proposal_4', action: 'accept', reason_code: null, customer_safe_note: null, proposal_version: 2, affirmation_text_version: 'initial_service_proposal_acceptance_v1', decided_at_epoch_seconds: Math.floor(Date.now() / 1000), acceptance_snapshot_id: 'snapshot_4', acceptance_snapshot_sha256: 'a'.repeat(64), persisted: true }) });
   });
   let activation: Record<string, unknown> | null = null;
+  let firstVisit: Record<string, unknown> = {
+    activation_id: 'activation_4', owner_property_id: 'owner_property_4',
+    invitation_id: 'invitation_4', organization_id: 'organization_4',
+    organization_name: 'Desert Bloom Landscaping', customer_account_id: 'account_4',
+    customer_property_id: 'customer_property_4', status: 'proposed', current_version: 1,
+    proposal_id: 'first_visit_4', window_start_epoch_seconds: 1_800_000_000,
+    window_end_epoch_seconds: 1_800_007_200, time_zone: 'America/Phoenix',
+    customer_safe_arrival_note: 'Please unlock the side gate and keep pets inside.',
+    owner_decision: null, owner_customer_safe_note: null,
+    proposed_at_epoch_seconds: Math.floor(Date.now() / 1000),
+    decided_at_epoch_seconds: null, persisted: true,
+  };
   await page.route('**/owner-properties/owner_property_4/initial-service-proposals/proposal_4/activation', async (route) => {
     if (route.request().method() === 'GET') {
       await route.fulfill(activation
@@ -646,6 +658,19 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
       activated_at_epoch_seconds: Math.floor(Date.now() / 1000), persisted: true,
     };
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(activation) });
+  });
+  await page.route('**/owner-properties/owner_property_4/provider-relationships/activation_4/first-visit', (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(firstVisit) }));
+  await page.route('**/owner-properties/owner_property_4/provider-relationships/activation_4/first-visit/decision', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      expected_window_version: 1, action: 'confirm',
+      confirmation_affirmation_text_version: 'owner_provider_first_visit_confirmation_v1',
+    });
+    firstVisit = {
+      ...firstVisit, status: 'confirmed', owner_decision: 'confirm',
+      decided_at_epoch_seconds: Math.floor(Date.now() / 1000),
+    };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(firstVisit) });
   });
 
   await page.goto('/app/yard-owner');
@@ -675,6 +700,15 @@ test('an owner reviews and explicitly accepts an exact initial-service proposal 
   await expect(page.getByText(/Provider relationship activated. Customer and property setup is ready/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Provider setup is underway' })).toBeVisible();
   await expect(page.getByText(/1 other open request was closed for this yard/)).toBeVisible();
-  await expect(page.getByText(/No visit, payment, schedule, or crew assignment exists yet/)).toBeVisible();
+  await expect(page.getByText(/No payment, recurring schedule, route, work order, or crew assignment exists yet/)).toBeVisible();
+  await expect(page.getByText('First-visit proposal · version 1')).toBeVisible();
+  await page.getByRole('button', { name: 'Review and confirm window' }).click();
+  const firstVisitAffirmation = page.getByLabel(/I confirm this exact first-visit arrival window/);
+  await expect(page.getByRole('button', { name: 'Confirm this exact window' })).toBeDisabled();
+  await firstVisitAffirmation.check();
+  await page.getByRole('button', { name: 'Confirm this exact window' }).click();
+  await expect(page.getByText(/First visit confirmed. The provider still assigns crews/)).toBeVisible();
+  await expect(page.getByText('First visit confirmed', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open my Yard Owner portal' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

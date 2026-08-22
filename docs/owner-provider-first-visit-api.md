@@ -30,6 +30,10 @@ returns `200` for an authorized active relationship, `404` for invalid or
 foreign authority, `409` for an ended/not-ready relationship, and `503` when
 status cannot be loaded.
 
+The existing verified provider invitation-progress response includes
+`activation_id` only after that invitation becomes the activated relationship.
+The client uses that server-derived identifier for these routes.
+
 ## Propose a window
 
 ```http

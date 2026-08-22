@@ -67,6 +67,16 @@ test('a checked recipient loads status without retaining the bearer fragment', a
 });
 
 test('an activated provider sees setup status without implied first-visit authority', async ({ page }) => {
+  let firstVisit: Record<string, unknown> = {
+    activation_id: 'activation_activated', owner_property_id: 'owner_property_activated',
+    invitation_id: 'invitation_activated', organization_id: 'organization_activated',
+    organization_name: 'Desert Bloom Landscaping', customer_account_id: 'account_activated',
+    customer_property_id: 'customer_property_activated', status: 'awaiting_provider',
+    current_version: 0, proposal_id: null, window_start_epoch_seconds: null,
+    window_end_epoch_seconds: null, time_zone: null, customer_safe_arrival_note: null,
+    owner_decision: null, owner_customer_safe_note: null,
+    proposed_at_epoch_seconds: null, decided_at_epoch_seconds: null, persisted: true,
+  };
   await page.route('**/auth/config', (route) => route.fulfill({
     contentType: 'application/json',
     body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
@@ -83,7 +93,8 @@ test('an activated provider sees setup status without implied first-visit author
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        invitation_id: 'invitation_activated', progress_stage: 'relationship_activated',
+        invitation_id: 'invitation_activated', activation_id: 'activation_activated',
+        progress_stage: 'relationship_activated',
         status_label: 'Provider relationship activated',
         next_action: 'complete_provider_setup', recipient_email_checked: true,
         organization_relationship_checked: false,
@@ -91,6 +102,28 @@ test('an activated provider sees setup status without implied first-visit author
         response_label: null, responded_at_epoch_seconds: null, closed: true,
       }),
     });
+  });
+  await page.route('**/provider-relationships/activation_activated/first-visit/status', async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ token: 'activated_relationship_secret' });
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(firstVisit) });
+  });
+  await page.route('**/provider-relationships/activation_activated/first-visit/proposal', async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body).toMatchObject({
+      token: 'activated_relationship_secret', expected_series_version: 0,
+      customer_safe_arrival_note: 'Please unlock the side gate.',
+    });
+    expect(body.window_end_epoch_seconds - body.window_start_epoch_seconds).toBe(7_200);
+    firstVisit = {
+      ...firstVisit, status: 'proposed', current_version: 1,
+      proposal_id: 'first_visit_activated',
+      window_start_epoch_seconds: body.window_start_epoch_seconds,
+      window_end_epoch_seconds: body.window_end_epoch_seconds,
+      time_zone: body.time_zone,
+      customer_safe_arrival_note: body.customer_safe_arrival_note,
+      proposed_at_epoch_seconds: Math.floor(Date.now() / 1000),
+    };
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(firstVisit) });
   });
 
   await page.goto('/app/provider-invitation#invitation=activated_relationship_secret');
@@ -101,6 +134,14 @@ test('an activated provider sees setup status without implied first-visit author
     hasText: 'Safe next step: Continue customer and property onboarding',
   })).toBeVisible();
   await expect(page.getByText(/no first visit, payment, route, schedule, or crew assignment was created/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Plan the first visit separately' })).toBeVisible();
+  await page.getByLabel('Arrival window starts').fill('2027-01-15T08:00');
+  await page.getByLabel('Arrival window ends').fill('2027-01-15T10:00');
+  await page.getByLabel('Owner-visible preparation note').fill('Please unlock the side gate.');
+  await expect(page.getByText(/Crew, route, work-order, payment, and private production planning remain separate/)).toBeVisible();
+  await page.getByRole('button', { name: 'Propose first-visit window' }).click();
+  await expect(page.getByText('Waiting for owner confirmation')).toBeVisible();
+  await expect(page.getByText('Please unlock the side gate.')).toBeVisible();
   await expect(page.getByText('Owner-approved assessment access')).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('activated_relationship_secret');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

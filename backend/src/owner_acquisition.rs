@@ -407,6 +407,8 @@ pub struct OwnerProviderConnectionProgressEntry {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct OwnerProviderProgressEntry {
     pub invitation_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activation_id: Option<String>,
     pub progress_stage: String,
     pub status_label: String,
     pub next_action: String,
@@ -6173,6 +6175,12 @@ async fn get_owner_provider_progress(
                 response.response_code,
                 response.responded_at_epoch_seconds,
                 (
+                    SELECT activation.id
+                    FROM owner_provider_relationship_activations activation
+                    WHERE activation.invitation_id = invitation.id
+                    LIMIT 1
+                ) AS activation_id,
+                (
                     SELECT CASE
                         WHEN disclosure_grant.status = 'active'
                              AND disclosure_grant.expires_at <= NOW() THEN 'expired'
@@ -6264,6 +6272,7 @@ async fn get_owner_provider_progress(
     let response_action: Option<String> = row.get("response_action");
     let response_code: Option<String> = row.get("response_code");
     let responded_at: Option<i64> = row.get("responded_at_epoch_seconds");
+    let activation_id: Option<String> = row.get("activation_id");
     let disclosure_status: Option<String> = row.get("disclosure_status");
     let terminal_status = if invitation_expired
         && matches!(
@@ -6320,6 +6329,7 @@ async fn get_owner_provider_progress(
         };
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: stage.to_string(),
             status_label: label.to_string(),
             next_action: next_action.to_string(),
@@ -6334,6 +6344,7 @@ async fn get_owner_provider_progress(
     } else if !relationship_effective {
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "organization_check_required".to_string(),
             status_label: "Provider organization relationship required".to_string(),
             next_action: "complete_organization_check".to_string(),
@@ -6348,6 +6359,7 @@ async fn get_owner_provider_progress(
     } else if !capability_effective {
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "response_authorization_required".to_string(),
             status_label: "Limited response acknowledgement required".to_string(),
             next_action: "acknowledge_withheld_data".to_string(),
@@ -6364,6 +6376,7 @@ async fn get_owner_provider_progress(
     {
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "assessment_access_ready".to_string(),
             status_label: "Owner-approved assessment details are ready".to_string(),
             next_action: "review_owner_approved_details".to_string(),
@@ -6381,6 +6394,7 @@ async fn get_owner_provider_progress(
     {
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "assessment_access_closed".to_string(),
             status_label: "Owner-approved assessment access has ended".to_string(),
             next_action: "contact_owner".to_string(),
@@ -6412,6 +6426,7 @@ async fn get_owner_provider_progress(
         };
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "response_recorded".to_string(),
             status_label: label.clone(),
             next_action: "wait_for_owner".to_string(),
@@ -6426,6 +6441,7 @@ async fn get_owner_provider_progress(
     } else {
         OwnerProviderProgressEntry {
             invitation_id,
+            activation_id,
             progress_stage: "response_ready".to_string(),
             status_label: "Limited request ready for response".to_string(),
             next_action: "respond_to_limited_request".to_string(),

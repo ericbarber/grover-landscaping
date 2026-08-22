@@ -25,7 +25,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Crew field route and execution | [Crew route V1](../design/high-fidelity/field/crew-route-mobile-v1.png) and [field wireframes](../design/wireframes/field/01-home.svg) | Partial | Adopt the field hierarchy across Home → Route → Jobs → Job; keep offline queue, photo, checklist, amendment, and completion recovery behavior intact. |
 | Manager daily operations | [Schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png) and [manager wireframes](../design/wireframes/manager/00-manager-hub.svg) | Partial | Converge the production hub, schedule, dispatch, inspector, publish, capacity-risk, and Recovery compositions across desktop, tablet, and mobile. |
 | Completion proof and communication | [Reports wireframe](../design/wireframes/manager/04-reports.svg) and [shared proof wireframe](../design/wireframes/public/04-shared-customer-proof.svg) | Partial | Link crew completion, manager evidence review, customer-safe delivery, recommendation/bid decision, and recovery as one responsive journey. |
-| Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, provider/owner proposals, version-aware proposal collaboration, and explicit activation are delivered. Next: separate first-visit confirmation, relationship continuity, and only afterward any curated discovery. |
+| Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, proposals, collaboration, activation, and separate first-visit confirmation are delivered. Next: relationship continuity; curated discovery remains later and governed. |
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Design ready / partial foundations | Adopt the customer next-visit read model, service-day states, delivered proof, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md) and [handoff](../design/review/yard-crew-acquisition-handoff.md) | Design ready / reciprocal entry partial | Adopt provider public routing and identity/readiness first, then connect known-owner invitation, assessment, proposal, and first-service preparation. Curated opportunities and alerts remain gated on marketplace operations. |
 | Property-manager portfolios | [Portfolio wireframe](../design/wireframes/customer/02-property-manager-portfolio.svg) | Partial foundations | Produce and validate the connected working design, then adopt portfolio readiness, exceptions, property proof, and vendor accountability without exposing provider-private data. |
@@ -39,19 +39,17 @@ remains the canonical delivery-status record for all product and platform work.
 The next repository-owned phases are ordered by an existing approved contract,
 user value, and dependency safety:
 
-1. Deliver the separate first-visit confirmation lifecycle after explicit
-   activation. Curated discovery stays deferred.
-2. Finish shared authenticated-shell adoption: outlined icons, desktop density,
+1. Finish shared authenticated-shell adoption: outlined icons, desktop density,
    status primitives, and tablet navigation behavior.
-3. Converge field execution from Home through completion without weakening
+2. Converge field execution from Home through completion without weakening
    offline, conflict, evidence, or recovery contracts.
-4. Converge manager daily operations and Recovery around the approved schedule
+3. Converge manager daily operations and Recovery around the approved schedule
    direction.
-5. Connect completion proof from crew handoff through manager review and
+4. Connect completion proof from crew handoff through manager review and
    customer-safe delivery.
-6. Adopt the Yard Owner portal, then produce and adopt the property-manager
+5. Adopt the Yard Owner portal, then produce and adopt the property-manager
    portfolio working design.
-7. Converge team/organization administration and run the cross-application
+6. Converge team/organization administration and run the cross-application
    critical-journey regression phase.
 
 Phases may be split into smaller implementation commits. A phase is not complete

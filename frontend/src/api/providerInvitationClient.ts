@@ -5,11 +5,13 @@ import type {
   InitialServiceProposal,
   InitialServiceProposalMessage,
   InitialServiceProposalStatus,
+  OwnerProviderFirstVisit,
   PublishInitialServiceProposalInput,
 } from '../domain/initialServiceProposals';
 
 interface ApiProviderInvitationProgress {
   invitation_id: string;
+  activation_id?: string | null;
   progress_stage: string;
   status_label: string;
   next_action: string;
@@ -20,6 +22,18 @@ interface ApiProviderInvitationProgress {
   response_label?: string | null;
   responded_at_epoch_seconds?: number | null;
   closed: boolean;
+}
+
+interface ApiOwnerProviderFirstVisit {
+  activation_id: string; owner_property_id: string; invitation_id: string;
+  organization_id: string; organization_name: string; customer_account_id: string;
+  customer_property_id: string; status: OwnerProviderFirstVisit['status'];
+  current_version: number; proposal_id?: string | null;
+  window_start_epoch_seconds?: number | null; window_end_epoch_seconds?: number | null;
+  time_zone?: string | null; customer_safe_arrival_note?: string | null;
+  owner_decision?: OwnerProviderFirstVisit['ownerDecision'] | null;
+  owner_customer_safe_note?: string | null; proposed_at_epoch_seconds?: number | null;
+  decided_at_epoch_seconds?: number | null; persisted: boolean;
 }
 
 interface ApiProviderDisclosureAccess {
@@ -139,6 +153,7 @@ interface ApiProviderAssessmentPrivateNote {
 
 export interface ProviderInvitationProgress {
   invitationId: string;
+  activationId?: string;
   progressStage: string;
   statusLabel: string;
   nextAction: string;
@@ -149,6 +164,25 @@ export interface ProviderInvitationProgress {
   responseLabel?: string;
   respondedAtEpochSeconds?: number;
   closed: boolean;
+}
+
+function mapFirstVisit(value: ApiOwnerProviderFirstVisit): OwnerProviderFirstVisit {
+  return {
+    activationId: value.activation_id, ownerPropertyId: value.owner_property_id,
+    invitationId: value.invitation_id, organizationId: value.organization_id,
+    organizationName: value.organization_name, customerAccountId: value.customer_account_id,
+    customerPropertyId: value.customer_property_id, status: value.status,
+    currentVersion: value.current_version, proposalId: value.proposal_id ?? undefined,
+    windowStartEpochSeconds: value.window_start_epoch_seconds ?? undefined,
+    windowEndEpochSeconds: value.window_end_epoch_seconds ?? undefined,
+    timeZone: value.time_zone ?? undefined,
+    customerSafeArrivalNote: value.customer_safe_arrival_note ?? undefined,
+    ownerDecision: value.owner_decision ?? undefined,
+    ownerCustomerSafeNote: value.owner_customer_safe_note ?? undefined,
+    proposedAtEpochSeconds: value.proposed_at_epoch_seconds ?? undefined,
+    decidedAtEpochSeconds: value.decided_at_epoch_seconds ?? undefined,
+    persisted: value.persisted,
+  };
 }
 
 export interface ProviderDisclosureAccess {
@@ -338,6 +372,7 @@ export async function fetchProviderInvitationProgress(
   const progress = await response.json() as ApiProviderInvitationProgress;
   return {
     invitationId: progress.invitation_id,
+    activationId: progress.activation_id ?? undefined,
     progressStage: progress.progress_stage,
     statusLabel: progress.status_label,
     nextAction: progress.next_action,
@@ -349,6 +384,51 @@ export async function fetchProviderInvitationProgress(
     respondedAtEpochSeconds: progress.responded_at_epoch_seconds ?? undefined,
     closed: progress.closed,
   };
+}
+
+export async function fetchProviderFirstVisit(
+  token: string,
+  activationId: string,
+): Promise<OwnerProviderFirstVisit> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-relationships/${encodeURIComponent(activationId)}/first-visit/status`,
+    {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token }),
+    },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, `First-visit status failed with status ${response.status}.`);
+  }
+  return mapFirstVisit(await response.json() as ApiOwnerProviderFirstVisit);
+}
+
+export async function proposeProviderFirstVisit(
+  token: string,
+  firstVisit: OwnerProviderFirstVisit,
+  window: { startEpochSeconds: number; endEpochSeconds: number; timeZone: string;
+    customerSafeArrivalNote?: string },
+  idempotencyKey: string,
+): Promise<OwnerProviderFirstVisit> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-relationships/${encodeURIComponent(firstVisit.activationId)}/first-visit/proposal`,
+    {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        expected_series_version: firstVisit.currentVersion,
+        window_start_epoch_seconds: window.startEpochSeconds,
+        window_end_epoch_seconds: window.endEpochSeconds,
+        time_zone: window.timeZone,
+        customer_safe_arrival_note: window.customerSafeArrivalNote,
+        idempotency_key: idempotencyKey,
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, `First-visit proposal failed with status ${response.status}.`);
+  }
+  return mapFirstVisit(await response.json() as ApiOwnerProviderFirstVisit);
 }
 
 export async function fetchProviderDisclosureAccess(token: string): Promise<ProviderDisclosureAccess> {
