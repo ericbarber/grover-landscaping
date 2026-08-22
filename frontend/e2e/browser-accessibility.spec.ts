@@ -196,6 +196,29 @@ test('the landscaping-company hero demonstrates route workload balancing', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
-  await expect(page.getByRole('heading', { name: 'Today’s operation' })).not.toBeVisible();
+  await expect(page.locator('section[aria-labelledby="marketing-operations-planner-title"]')).not.toBeVisible();
+  await expect(page.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]')).toBeVisible();
   await expect(page.getByText('Your latest service is ready', { exact: true })).toBeVisible();
+});
+
+test('the product tour Plan step presents the landscaping operations dashboard', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/for-yard-owners#tour');
+
+  const tour = page.locator('#tour');
+  const dashboard = tour.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]');
+  await expect(tour.getByRole('tab', { name: /01 · Plan/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(dashboard.getByRole('heading', { name: 'Today’s operation' })).toBeVisible();
+  await expect(dashboard.getByText('Crews active', { exact: true })).toBeVisible();
+  await expect(dashboard.getByText('Route progress', { exact: true })).toBeVisible();
+  await expect(dashboard.getByText('Dispatch focus · Copper Ridge HOA · 90 min')).toBeVisible();
+
+  await dashboard.getByRole('button', { name: 'Use suggested balance' }).click();
+  await expect(dashboard.getByRole('radio', { name: 'West crew' })).toBeChecked();
+  await expect(dashboard.getByText('Balanced plan · all 8 stops assigned', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await tour.getByRole('tab', { name: /02 · Care/ }).click();
+  await expect(dashboard).not.toBeVisible();
+  await expect(tour.getByText('Desert Willow Commons', { exact: true })).toBeVisible();
 });

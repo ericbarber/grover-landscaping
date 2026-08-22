@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Replaced the public product tour’s abbreviated Plan route card with the reusable, interactive “Today’s operation” landscaping-company dashboard, isolated its hero and tour controls, retained persona-specific outcomes, and added responsive tour interaction coverage.
 - 2026-08-22: Adapted the approved “Today’s operation” schedule concept into the landscaping-company hero with crews-active, route-progress, unassigned, and at-risk signals; crew workload/capacity; interactive dispatch assignment; suggested balancing; and an explicit non-persistent preview boundary.
 - 2026-08-22: Made persona-specific public landing experiences the active UX priority and extended Yard Owner, property-manager, landscaping-company, and crew-lead views beyond the hero with tailored primary actions, previews, trust signals, outcome proof, capability sets, and final invitations while preserving both direct signup paths and adding route/switching/reflow coverage.
 - 2026-08-22: Separated the production Yard Owner acquisition journey into four independently rendered screens, made its progress header navigate available steps for review and editing, added explicit back/continue controls, and covered step isolation plus backward navigation in the browser suite.

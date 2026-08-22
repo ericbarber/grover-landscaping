@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 type Assignment = 'unassigned' | 'north' | 'west';
+type MarketingOperationsPlannerPlacement = 'hero' | 'tour';
 
 const candidateMinutes = 90;
 const crewPlans = {
@@ -8,8 +9,17 @@ const crewPlans = {
   west: { label: 'West crew', baseMinutes: 225, capacityMinutes: 420, baseStops: 3 },
 } as const;
 
-export function MarketingOperationsPlanner() {
+export function MarketingOperationsPlanner({
+  placement = 'hero',
+}: {
+  placement?: MarketingOperationsPlannerPlacement;
+}) {
   const [assignment, setAssignment] = useState<Assignment>('unassigned');
+  const isTourPreview = placement === 'tour';
+  const titleId = isTourPreview
+    ? 'marketing-tour-operations-planner-title'
+    : 'marketing-operations-planner-title';
+  const assignmentName = `marketing-operations-assignment-${placement}`;
   const northMinutes = crewPlans.north.baseMinutes + (assignment === 'north' ? candidateMinutes : 0);
   const westMinutes = crewPlans.west.baseMinutes + (assignment === 'west' ? candidateMinutes : 0);
   const unassignedCount = assignment === 'unassigned' ? 7 : 6;
@@ -23,13 +33,21 @@ export function MarketingOperationsPlanner() {
 
   return (
     <section
-      aria-labelledby="marketing-operations-planner-title"
-      className="absolute bottom-4 left-3 right-3 rounded-[1.35rem] border border-white/60 bg-paper/95 p-4 text-ink shadow-grover-lg backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] sm:p-5 lg:bottom-8 lg:right-8"
+      aria-labelledby={titleId}
+      className={`${
+        isTourPreview
+          ? 'relative w-full border-slate-200 bg-paper'
+          : 'absolute bottom-4 left-3 right-3 border-white/60 bg-paper/95 backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] lg:bottom-8 lg:right-8'
+      } rounded-[1.35rem] border p-4 text-ink shadow-grover-lg sm:p-5`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[0.68rem] font-black uppercase tracking-[0.15em] text-emerald-700">Landscaping owner workspace</p>
-          <h2 className="mt-1 text-xl font-black leading-tight sm:text-2xl" id="marketing-operations-planner-title">Today’s operation</h2>
+          {isTourPreview ? (
+            <h4 className="mt-1 text-xl font-black leading-tight sm:text-2xl" id={titleId}>Today’s operation</h4>
+          ) : (
+            <h2 className="mt-1 text-xl font-black leading-tight sm:text-2xl" id={titleId}>Today’s operation</h2>
+          )}
           <p className="mt-1 max-w-md text-xs leading-4 text-slate-600">Balance route progress, available capacity, and the work that still needs an owner.</p>
         </div>
         <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-wide text-emerald-900">Live · 8:42 AM</span>
@@ -70,7 +88,7 @@ export function MarketingOperationsPlanner() {
               <input
                 checked={assignment === value}
                 className="sr-only"
-                name="marketing-operations-assignment"
+                name={assignmentName}
                 onChange={() => setAssignment(value)}
                 type="radio"
                 value={value}

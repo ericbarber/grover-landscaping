@@ -18,7 +18,8 @@
 - Prototype-aligned “Today’s operation” landscaping-company hero overview with
   executive day signals, crew schedule/capacity, interactive dispatch
   assignment, suggested balancing, and an explicit non-persistent boundary
-- Plan-Care-Proof product narrative and representative workspace preview
+- Plan-Care-Proof product narrative with the interactive “Today’s operation”
+  company dashboard embedded in Plan and representative Care and Prove previews
 - Responsive product capability and trust sections
 - Persona-specific demo, portfolio-discussion, and early-access conversion paths
 - Consent-based PostgreSQL lead capture with landing-page and UTM attribution

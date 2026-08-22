@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { MarketingPersonaId } from '../domain/marketingRoute';
 import { trackMarketingEvent } from '../api/marketingAnalyticsClient';
 import type { MarketingPersona } from '../api/marketingLeadsClient';
+import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
 
 type TourStepId = 'plan' | 'care' | 'prove';
 
@@ -107,14 +108,20 @@ export function MarketingProductTour({ persona }: { persona: MarketingPersonaId 
                 </p>
                 <h3 className="mt-2 text-2xl font-black">{activeStep.title}</h3>
               </div>
-              <span className="rounded-full border border-white/15 px-3 py-1 text-xs font-black text-slate-300">
+              <span className="whitespace-nowrap rounded-full border border-white/15 px-3 py-1 text-xs font-black text-slate-300">
                 {activeIndex + 1} / {tourSteps.length}
               </span>
             </div>
 
-            <div className="mt-7 rounded-2xl bg-bone p-4 text-slate-950 shadow-grover-md sm:p-6">
-              <TourPreview step={activeStepId} />
-            </div>
+            {activeStepId === 'plan' ? (
+              <div className="mt-7" data-testid="product-tour-plan-preview">
+                <MarketingOperationsPlanner placement="tour" />
+              </div>
+            ) : (
+              <div className="mt-7 rounded-2xl bg-bone p-4 text-slate-950 shadow-grover-md sm:p-6">
+                <TourPreview step={activeStepId} />
+              </div>
+            )}
 
             <p className="mt-6 text-base leading-7 text-slate-300">{activeStep.description}</p>
             <div className="mt-5 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 p-4">
@@ -137,7 +144,7 @@ function marketingPersonaForTour(persona: MarketingPersonaId): MarketingPersona 
   return 'landscaping_company';
 }
 
-function TourPreview({ step }: { step: TourStepId }) {
+function TourPreview({ step }: { step: Exclude<TourStepId, 'plan'> }) {
   if (step === 'care') {
     return (
       <>
@@ -164,53 +171,25 @@ function TourPreview({ step }: { step: TourStepId }) {
     );
   }
 
-  if (step === 'prove') {
-    return (
-      <>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Completion review</p>
-            <p className="mt-2 text-xl font-black">Service story ready</p>
-          </div>
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">Evidence complete</span>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {['Arrival condition', 'Completed result'].map((label, index) => (
-            <div className={`flex aspect-[4/3] items-end rounded-xl p-3 ${index === 0 ? 'bg-amber-100' : 'bg-emerald-100'}`} key={label}>
-              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black">{label}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <div className="rounded-xl bg-white p-3 text-sm font-bold">Customer report ready</div>
-          <div className="rounded-xl bg-white p-3 text-sm font-bold">Recommendation captured</div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Monday route</p>
-          <p className="mt-2 text-xl font-black">North Phoenix · Crew A</p>
-          <p className="mt-1 text-sm text-slate-500">8 properties · 6h 40m planned</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Completion review</p>
+          <p className="mt-2 text-xl font-black">Service story ready</p>
         </div>
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">Ready to publish</span>
+        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-800">Evidence complete</span>
       </div>
-      <div className="mt-5 space-y-2">
-        {[
-          ['01', 'Ocotillo Court', '7:30 AM'],
-          ['02', 'Saguaro Ridge', '8:25 AM'],
-          ['03', 'Desert Willow Commons', '9:40 AM'],
-        ].map(([number, property, time]) => (
-          <div className="flex items-center gap-3 rounded-xl bg-white p-3" key={number}>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-black text-white">{number}</span>
-            <span className="min-w-0 flex-1 truncate font-black">{property}</span>
-            <span className="text-sm font-bold text-slate-500">{time}</span>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {['Arrival condition', 'Completed result'].map((label, index) => (
+          <div className={`flex aspect-[4/3] items-end rounded-xl p-3 ${index === 0 ? 'bg-amber-100' : 'bg-emerald-100'}`} key={label}>
+            <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black">{label}</span>
           </div>
         ))}
+      </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-xl bg-white p-3 text-sm font-bold">Customer report ready</div>
+        <div className="rounded-xl bg-white p-3 text-sm font-bold">Recommendation captured</div>
       </div>
     </>
   );

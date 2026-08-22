@@ -13,7 +13,10 @@ changing only first-screen copy. The landscaping-company route now makes its
 operations promise tangible by adapting the approved “Today’s operation”
 schedule concept into an interactive, explicitly non-persistent hero overview
 of executive day signals, crew capacity, dispatch focus, and suggested
-balancing. The source-controlled [`../design/`](../design/)
+balancing. The Plan step of the shared product tour now embeds the same dashboard
+and interactions, giving every audience a concrete view of the landscaping
+company’s operating workspace before the Care and Prove steps. The
+source-controlled [`../design/`](../design/)
 workspace mirrors the public, access, field, manager, customer, revenue, and
 future product areas. Its first low-fidelity set contains twenty SVG wireframes,
 a browsable gallery, information architecture, state checklist, and decision log.

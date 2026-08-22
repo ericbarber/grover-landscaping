@@ -28,6 +28,10 @@ Current state:
   route progress, unassigned and at-risk signals, crew schedule/capacity, and an
   interactive dispatch decision. Visitors can expose capacity risk and apply a
   suggested balance without changing a real schedule.
+- The Plan step in the public product tour now embeds that same interactive
+  “Today’s operation” dashboard for every persona, replacing its abbreviated
+  route card while preserving persona-specific outcomes and the Care and Prove
+  previews.
 - The audience selector switches the complete page story and canonical route
   without a reload while retaining campaign query parameters and first-party
   measurement.
@@ -35,8 +39,8 @@ Current state:
   action instead follows the active audience through private yard setup,
   company onboarding, a portfolio discussion, or a field-workflow demo.
 - Responsive browser coverage verifies all four direct routes, page-level
-  persona continuity, canonical metadata, live audience switching, and mobile
-  reflow.
+  persona continuity, canonical metadata, live audience switching, the embedded
+  operations tour, and mobile reflow.
 
 Next slices:
 
