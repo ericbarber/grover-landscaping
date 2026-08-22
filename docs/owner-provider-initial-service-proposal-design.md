@@ -105,11 +105,13 @@ scope/exclusion text.
 2. **4B1b — Repository foundation (delivered):** immutable proposal versions,
    constrained scope/terms, current-series uniqueness, expiration, accepted
    snapshot, minimized events, and PostgreSQL isolation/replay coverage.
-3. **4B2 — Authenticated APIs:** verified-provider create/revise, owner-scoped
-   list/detail, question/change requests, and versioned accept/decline.
-4. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard
+3. **4B2a — Authenticated lifecycle APIs (delivered):** verified-provider
+   create/revise plus owner-scoped list/detail and versioned accept/decline.
+4. **4B2b — Proposal conversation:** persist and expose owner questions and
+   change requests separately from decisions and minimized lifecycle events.
+5. **4B3 — Production interfaces:** provider authoring/revision and neutral Yard
    Owner comparison/decision experiences with responsive recovery coverage.
-5. **4C — Activation:** separately project an accepted snapshot into provider
+6. **4C — Activation:** separately project an accepted snapshot into provider
    customer/property setup, then confirm the first visit without coupling crew
    assignment to acceptance.
 

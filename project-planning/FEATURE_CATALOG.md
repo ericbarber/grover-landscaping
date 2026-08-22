@@ -227,6 +227,9 @@ here does not mean every capability has been delivered.
   authorization, immutable revisions, server-derived expiration, owner-scoped
   history and exact-version decisions, hashed unactivated acceptance snapshots,
   replay/concurrency/isolation coverage, and no operational side effects
+- Authenticated acquisition-proposal lifecycle APIs for verified-provider
+  publication/revision and owner-scoped list, detail, and exact-version
+  decisions with explicit route authorization and fail-closed error mapping
 - Scheduled-work and service-history timelines
 - Immutable completion reports and customer-safe evidence
 - Bid review and bid history

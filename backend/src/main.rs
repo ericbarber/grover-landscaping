@@ -84,8 +84,10 @@ use grover_landscaping_api::{
         UpdateOrganizationMembershipStatusRequest, UpdateOrganizationProfileRequest,
     },
     owner_acquisition::{
-        validate_intake_media_request, validate_owner_assessment_message_request,
-        validate_property_request, validate_provider_assessment_message_request,
+        validate_initial_service_proposal_decision_request,
+        validate_initial_service_proposal_request, validate_intake_media_request,
+        validate_owner_assessment_message_request, validate_property_request,
+        validate_provider_assessment_message_request,
         validate_provider_assessment_private_note_request, validate_provider_assessment_request,
         validate_provider_assessment_transition_request,
         validate_provider_assessment_window_decision_request,
@@ -109,10 +111,10 @@ use grover_landscaping_api::{
         CreateOwnerProviderInvitationRequest, CreateOwnerProviderOpportunityResponseRequest,
         CreateOwnerProviderOrganizationClaimRequest, CreateProviderAssessmentMessageRequest,
         CreateProviderAssessmentPrivateNoteRequest, DecideOwnerProviderAssessmentWindowRequest,
-        DecideOwnerProviderClaimReviewRequest, IssueOwnerProviderResponseCapabilityRequest,
-        ListOwnerProviderOrganizationOptionsRequest, OpenOwnerProviderDisclosureRequest,
-        OpenOwnerProviderInboxRequest, OptOutOwnerProviderInvitationRequest,
-        OwnerAcquisitionRepository, OwnerMutationResult,
+        DecideOwnerProviderClaimReviewRequest, DecideOwnerProviderInitialServiceProposalRequest,
+        IssueOwnerProviderResponseCapabilityRequest, ListOwnerProviderOrganizationOptionsRequest,
+        OpenOwnerProviderDisclosureRequest, OpenOwnerProviderInboxRequest,
+        OptOutOwnerProviderInvitationRequest, OwnerAcquisitionRepository, OwnerMutationResult,
         OwnerProviderAssessmentCommunicationWriteResult, OwnerProviderAssessmentCreateResult,
         OwnerProviderAssessmentTransitionResult, OwnerProviderAssessmentWindowDecisionResult,
         OwnerProviderClaimAppealResult, OwnerProviderClaimReviewDecisionResult,
@@ -120,17 +122,18 @@ use grover_landscaping_api::{
         OwnerProviderClaimReviewMetricsResult, OwnerProviderDisclosureAccessResult,
         OwnerProviderDisclosureGrantCreateResult, OwnerProviderDisclosureGrantRevokeResult,
         OwnerProviderDisclosureReviewResult, OwnerProviderInboxResult,
-        OwnerProviderInvitationAbuseReportResult, OwnerProviderInvitationCreateResult,
-        OwnerProviderInvitationMutationResult, OwnerProviderInvitationPreviewResult,
-        OwnerProviderInvitationRecipientCheckResult, OwnerProviderOpportunityResponseResult,
-        OwnerProviderOrganizationBootstrapResult, OwnerProviderOrganizationClaimResult,
-        OwnerProviderOrganizationOptionsResult, OwnerProviderProgressResult,
-        OwnerProviderResponseCapabilityResult, OwnerReadResult,
+        OwnerProviderInitialServiceProposalDecisionResult,
+        OwnerProviderInitialServiceProposalWriteResult, OwnerProviderInvitationAbuseReportResult,
+        OwnerProviderInvitationCreateResult, OwnerProviderInvitationMutationResult,
+        OwnerProviderInvitationPreviewResult, OwnerProviderInvitationRecipientCheckResult,
+        OwnerProviderOpportunityResponseResult, OwnerProviderOrganizationBootstrapResult,
+        OwnerProviderOrganizationClaimResult, OwnerProviderOrganizationOptionsResult,
+        OwnerProviderProgressResult, OwnerProviderResponseCapabilityResult, OwnerReadResult,
         PreviewOwnerProviderInvitationRequest, ProposeProviderAssessmentWindowRequest,
-        ProviderAssessmentWindowProposalResult, ReportOwnerProviderInvitationAbuseRequest,
-        RevokeOwnerProviderDisclosureGrantRequest, SaveOwnerWorkspaceRequest,
-        SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
-        VerifyOwnerProviderInvitationRecipientRequest,
+        ProviderAssessmentWindowProposalResult, PublishOwnerProviderInitialServiceProposalRequest,
+        ReportOwnerProviderInvitationAbuseRequest, RevokeOwnerProviderDisclosureGrantRequest,
+        SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
+        TransitionOwnerProviderAssessmentRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
@@ -736,6 +739,18 @@ fn app_with_runtime(
                 .post(create_owner_provider_assessment_message),
         )
         .route(
+            "/owner-properties/{property_id}/initial-service-proposals",
+            get(list_owner_initial_service_proposals),
+        )
+        .route(
+            "/owner-properties/{property_id}/initial-service-proposals/{proposal_id}",
+            get(get_owner_initial_service_proposal),
+        )
+        .route(
+            "/owner-properties/{property_id}/initial-service-proposals/{proposal_id}/decision",
+            post(decide_owner_initial_service_proposal),
+        )
+        .route(
             "/owner-properties/{property_id}/provider-disclosure-grants/{grant_id}/revoke",
             post(revoke_owner_provider_disclosure_grant),
         )
@@ -810,6 +825,10 @@ fn app_with_runtime(
         .route(
             "/provider-assessments/{assessment_id}/private-notes",
             post(create_provider_assessment_private_note),
+        )
+        .route(
+            "/provider-assessments/{assessment_id}/initial-service-proposals",
+            post(publish_provider_initial_service_proposal),
         )
         .route(
             "/provider-opportunity-responses",
@@ -1788,6 +1807,108 @@ async fn list_owner_provider_assessments(
             "owner_provider_assessments_unavailable",
             "Assessment progress could not be loaded. Existing assessment state is unchanged.",
         ),
+    }
+}
+
+async fn list_owner_initial_service_proposals(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(property_id): Path<String>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .list_owner_initial_service_proposals(&principal.subject, &property_id)
+        .await
+    {
+        OwnerReadResult::Loaded(proposals) => Json(proposals).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_property_not_found",
+            "The requested property was not found.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_initial_service_proposals_unavailable",
+            "Initial service proposals could not be loaded. Existing proposal state is unchanged.",
+        ),
+    }
+}
+
+async fn get_owner_initial_service_proposal(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+) -> Response {
+    match state
+        .owner_acquisition
+        .get_owner_initial_service_proposal(&principal.subject, &property_id, &proposal_id)
+        .await
+    {
+        OwnerReadResult::Loaded(proposal) => Json(proposal).into_response(),
+        OwnerReadResult::NotFound => resource_not_found_response(
+            "owner_initial_service_proposal_not_found",
+            "The requested proposal was not found for this property.",
+        ),
+        OwnerReadResult::Unavailable => persisted_resource_unavailable_response(
+            "owner_initial_service_proposal_unavailable",
+            "The proposal could not be loaded. Existing proposal state is unchanged.",
+        ),
+    }
+}
+
+async fn decide_owner_initial_service_proposal(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((property_id, proposal_id)): Path<(String, String)>,
+    Json(request): Json<DecideOwnerProviderInitialServiceProposalRequest>,
+) -> Response {
+    if !validate_initial_service_proposal_decision_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "owner_initial_service_proposal_decision_invalid",
+                message: "Choose accept or a supported decline reason for the exact proposal version. Acceptance requires the current affirmation text."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .owner_acquisition
+        .decide_initial_service_proposal(
+            &principal.subject,
+            &property_id,
+            &proposal_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderInitialServiceProposalDecisionResult::Decided(decision)
+        | OwnerProviderInitialServiceProposalDecisionResult::Replayed(decision) => {
+            Json(decision).into_response()
+        }
+        OwnerProviderInitialServiceProposalDecisionResult::NotFound => {
+            resource_not_found_response(
+                "owner_initial_service_proposal_not_found",
+                "The requested proposal was not found for this property.",
+            )
+        }
+        OwnerProviderInitialServiceProposalDecisionResult::InvalidState(proposal) => {
+            (StatusCode::CONFLICT, Json(proposal)).into_response()
+        }
+        OwnerProviderInitialServiceProposalDecisionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "owner_initial_service_proposal_decision_conflict",
+                message: "The proposal changed, expired, or was already decided. Reload the exact version before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInitialServiceProposalDecisionResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "owner_initial_service_proposal_decision_unavailable",
+                "The proposal decision could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
+            )
+        }
     }
 }
 
@@ -3278,6 +3399,83 @@ async fn create_provider_assessment_private_note(
         }
         OwnerProviderAssessmentCommunicationWriteResult::Unavailable => {
             assessment_communication_unavailable_response()
+        }
+    }
+}
+
+async fn publish_provider_initial_service_proposal(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(assessment_id): Path<String>,
+    Json(request): Json<PublishOwnerProviderInitialServiceProposalRequest>,
+) -> Response {
+    if !validate_initial_service_proposal_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_initial_service_proposal_invalid",
+                message: "Provide bounded customer-safe scope, terms, price, expiration, current proposal version, and request key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    let Some(verified_email) = principal.verified_email.as_deref() else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "verified_email_required",
+                message: "Verify the invited business email before publishing a proposal."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    };
+    match state
+        .owner_acquisition
+        .publish_initial_service_proposal(
+            &principal.subject,
+            verified_email,
+            &assessment_id,
+            request,
+        )
+        .await
+    {
+        OwnerProviderInitialServiceProposalWriteResult::Published(proposal) => {
+            (StatusCode::CREATED, Json(proposal)).into_response()
+        }
+        OwnerProviderInitialServiceProposalWriteResult::Replayed(proposal) => {
+            Json(proposal).into_response()
+        }
+        OwnerProviderInitialServiceProposalWriteResult::NotFound => {
+            resource_not_found_response(
+                "provider_assessment_not_found",
+                "The completed assessment is not available to this verified provider.",
+            )
+        }
+        OwnerProviderInitialServiceProposalWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_initial_service_proposal_invalid_state",
+                message: "The assessment is not completed, current authority ended, or an accepted proposal already closes this series."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInitialServiceProposalWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_initial_service_proposal_conflict",
+                message: "The proposal series changed or this request key was used for different content. Reload before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        OwnerProviderInitialServiceProposalWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "provider_initial_service_proposal_unavailable",
+                "The proposal could not be confirmed. Existing proposal state is unchanged; reload before retrying.",
+            )
         }
     }
 }
@@ -9527,6 +9725,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let response = app
+            .clone()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -9541,6 +9740,99 @@ mod tests {
                             "idempotency_key": "assessment-provider-note-outage-001"
                         })
                         .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let proposal_payload = serde_json::json!({
+            "token": "owner_provider_0000000000000000000000000000000000000000000000000000000000000000",
+            "expected_proposal_version": 0,
+            "title": "Every-two-week yard care",
+            "customer_summary": "Routine care based on the completed assessment.",
+            "included_scope": ["Mow and edge turf"],
+            "exclusions": ["Tree work above eight feet"],
+            "cadence_code": "every_two_weeks",
+            "cadence_detail": "One visit every two weeks",
+            "arrival_policy": "Confirm the first service day with the owner.",
+            "weather_policy": "Unsafe weather may move the visit.",
+            "cancellation_policy": "Cancel at least 24 hours before service.",
+            "proof_expectation": "Send a completion note after each visit.",
+            "price_amount_minor": 12_000,
+            "price_basis": "per_visit",
+            "currency_code": "USD",
+            "revision_note": null,
+            "expires_at_epoch_seconds": 1_800_000_000_i64,
+            "idempotency_key": "proposal-api-outage-001"
+        });
+        let mut invalid_proposal_payload = proposal_payload.clone();
+        invalid_proposal_payload["currency_code"] = serde_json::json!("usd");
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/initial-service-proposals")
+                    .header("content-type", "application/json")
+                    .body(Body::from(proposal_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-assessments/assessment-1/initial-service-proposals")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_proposal_payload.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        for uri in [
+            "/owner-properties/property-1/initial-service-proposals",
+            "/owner-properties/property-1/initial-service-proposals/proposal-1",
+        ] {
+            let response = app
+                .clone()
+                .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        }
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"accept","expected_proposal_version":1,"reason_code":null,"customer_safe_note":null,"affirmation_text_version":null,"idempotency_key":"proposal-decision-invalid-001"}"#,
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/owner-properties/property-1/initial-service-proposals/proposal-1/decision")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        r#"{"action":"accept","expected_proposal_version":1,"reason_code":null,"customer_safe_note":null,"affirmation_text_version":"initial_service_proposal_acceptance_v1","idempotency_key":"proposal-decision-outage-001"}"#,
                     ))
                     .unwrap(),
             )

@@ -240,7 +240,10 @@ accepted snapshots, and PostgreSQL concurrency/isolation coverage is now
 delivered. Provider publication reuses the completed-assessment authority
 boundary, revisions insert immutable versions, owner reads reconcile expiration,
 and exact-version acceptance creates only a hashed unactivated snapshot. Phase
-4B2 authenticated provider and owner APIs are next.
+4B2a now exposes verified-provider publication/revision and owner-scoped list,
+detail, and decision APIs behind explicit fail-closed route authorization.
+Phase 4B2b proposal questions and change requests are next and remain separate
+from lifecycle decisions and minimized audit events.
 The subsequent professional assurance cycle found and fixed the remaining
 workflow, consent, content, session, keyboard, forced-colors, history, and deep-
 link defects. A second validator covers contrast, motion, high-risk states, and

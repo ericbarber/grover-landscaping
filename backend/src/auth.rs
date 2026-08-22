@@ -603,7 +603,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return principal.verified_email.is_some() && *method == Method::POST;
     }
     if path.starts_with("/provider-assessments/")
-        && (path.ends_with("/messages") || path.ends_with("/private-notes"))
+        && (path.ends_with("/messages")
+            || path.ends_with("/private-notes")
+            || path.ends_with("/initial-service-proposals"))
     {
         return principal.verified_email.is_some() && *method == Method::POST;
     }
@@ -665,6 +667,16 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
                 && owner_property_suffix.contains("/provider-assessments/")
                 && owner_property_suffix.ends_with("/messages")
                 && (*method == Method::GET || *method == Method::POST))
+            || (segment_count == 2
+                && owner_property_suffix.ends_with("/initial-service-proposals")
+                && *method == Method::GET)
+            || (segment_count == 3
+                && owner_property_suffix.contains("/initial-service-proposals/")
+                && *method == Method::GET)
+            || (segment_count == 4
+                && owner_property_suffix.contains("/initial-service-proposals/")
+                && owner_property_suffix.ends_with("/decision")
+                && *method == Method::POST)
             || (segment_count == 3
                 && owner_property_suffix.contains("/provider-invitations/")
                 && *method == Method::GET)
@@ -1818,6 +1830,18 @@ mod tests {
                 "/owner-properties/property-1/provider-assessments/assessment-1/messages",
             ),
             (
+                Method::GET,
+                "/owner-properties/property-1/initial-service-proposals",
+            ),
+            (
+                Method::GET,
+                "/owner-properties/property-1/initial-service-proposals/proposal-1",
+            ),
+            (
+                Method::POST,
+                "/owner-properties/property-1/initial-service-proposals/proposal-1/decision",
+            ),
+            (
                 Method::POST,
                 "/owner-properties/property-1/provider-invitations",
             ),
@@ -1859,6 +1883,10 @@ mod tests {
             (
                 Method::POST,
                 "/provider-assessments/assessment-1/private-notes",
+            ),
+            (
+                Method::POST,
+                "/provider-assessments/assessment-1/initial-service-proposals",
             ),
             (
                 Method::POST,

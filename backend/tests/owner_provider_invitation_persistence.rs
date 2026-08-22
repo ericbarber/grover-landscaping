@@ -2644,6 +2644,26 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(owner_proposals[0], proposal_v2);
     assert_eq!(owner_proposals[1].proposal_id, proposal_v1.proposal_id);
     assert_eq!(owner_proposals[1].status, "superseded");
+    assert!(matches!(
+        repository
+            .get_owner_initial_service_proposal(
+                owner_b,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+            )
+            .await,
+        OwnerReadResult::NotFound
+    ));
+    assert!(matches!(
+        repository
+            .get_owner_initial_service_proposal(
+                owner_a,
+                &property.property_id,
+                &proposal_v2.proposal_id,
+            )
+            .await,
+        OwnerReadResult::Loaded(proposal) if proposal == proposal_v2
+    ));
     assert!(sqlx::query(
         "UPDATE owner_provider_initial_service_proposals
          SET title = 'Mutated published title' WHERE id = $1",

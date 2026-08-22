@@ -569,7 +569,13 @@ Active slice:
   acceptance creates a hashed accepted-but-unactivated snapshot. PostgreSQL
   coverage verifies concurrency, isolation, immutability, minimized audit, and
   the absence of customer, service-property, job, plan, or crew side effects.
-  Authenticated proposal APIs are next.
+- Phase 4B2a is delivered. Authenticated verified-provider publication/revision
+  and owner/property-scoped proposal list, detail, and exact-version decision
+  routes now preserve invalid, missing, expired/current-state, conflict, replay,
+  and persistence-outage distinctions. The authorization policy explicitly
+  permits only these methods and paths, and route tests fail closed without
+  storage. Proposal questions and change requests need their separate
+  persistence contract next; they are not stored as decisions or audit events.
 - The Phase 3 working design and production acceptance contract are complete in
   [`design/review/yard-owner-known-provider-connection-handoff.md`](design/review/yard-owner-known-provider-connection-handoff.md);
   overall delivery remains incomplete until server authorization, messaging,

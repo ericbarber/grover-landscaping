@@ -3718,6 +3718,32 @@ impl OwnerAcquisitionRepository {
         }
     }
 
+    pub async fn get_owner_initial_service_proposal(
+        &self,
+        owner_user_id: &str,
+        property_id: &str,
+        proposal_id: &str,
+    ) -> OwnerReadResult<OwnerProviderInitialServiceProposalRecord> {
+        let Some(pool) = &self.pool else {
+            return OwnerReadResult::Unavailable;
+        };
+        match get_owner_provider_initial_service_proposal(
+            pool,
+            owner_user_id,
+            property_id,
+            proposal_id,
+        )
+        .await
+        {
+            Ok(Some(proposal)) => OwnerReadResult::Loaded(proposal),
+            Ok(None) => OwnerReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, owner_user_id, property_id, proposal_id, "initial service proposal read failed");
+                OwnerReadResult::Unavailable
+            }
+        }
+    }
+
     pub async fn decide_initial_service_proposal(
         &self,
         owner_user_id: &str,
@@ -11145,6 +11171,41 @@ async fn list_owner_provider_initial_service_proposals(
             .map(owner_provider_initial_service_proposal_from_row)
             .collect(),
     ))
+}
+
+async fn get_owner_provider_initial_service_proposal(
+    pool: &PgPool,
+    owner_user_id: &str,
+    property_id: &str,
+    proposal_id: &str,
+) -> Result<Option<OwnerProviderInitialServiceProposalRecord>, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    let query = format!(
+        "{OWNER_PROVIDER_INITIAL_SERVICE_PROPOSAL_SELECT}
+         WHERE id = $1 AND owner_user_id = $2 AND property_id = $3"
+    );
+    let proposal = sqlx::query(&query)
+        .bind(proposal_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_optional(&mut *transaction)
+        .await?;
+    let Some(proposal) = proposal else {
+        transaction.rollback().await?;
+        return Ok(None);
+    };
+    let assessment_id: String = proposal.get("assessment_id");
+    expire_owner_provider_initial_service_proposals(&mut transaction, &assessment_id).await?;
+    let proposal = sqlx::query(&query)
+        .bind(proposal_id)
+        .bind(owner_user_id)
+        .bind(property_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    transaction.commit().await?;
+    Ok(Some(owner_provider_initial_service_proposal_from_row(
+        &proposal,
+    )))
 }
 
 fn owner_provider_initial_service_proposal_decision_from_row(
