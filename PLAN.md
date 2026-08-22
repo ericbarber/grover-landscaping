@@ -250,6 +250,10 @@ Active slice:
   experience to the production API, the public Yard Owner journey links directly
   to it, and responsive browser coverage proves profile/property recovery,
   address reconfirmation, authority attestation, and privacy wording.
+- Phase 1D is delivered: the four-step acquisition header is now the workflow
+  navigation, completed steps can be reopened for review or editing, and
+  Property, Yard brief, and Connect care render as independent screens with
+  explicit back/continue actions and browser regression coverage.
 - Phase 2A is delivered: owners can create, revise, and reload append-only private
   yard-brief versions with areas, goals, cadence, considerations, draft/ready
   state, owner/source provenance, minimized audit events, and fail-closed owner

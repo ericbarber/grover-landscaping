@@ -30,12 +30,13 @@ test('a verified owner creates a private profile and reconfirms a changed addres
       });
       return;
     }
+    const request = route.request().postDataJSON();
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
         owner_user_id: 'local-development-user',
         verified_email: 'owner@example.com',
-        display_name: 'Morgan Reyes',
+        display_name: request.display_name,
         status: 'active',
         persisted: true,
       }),
@@ -207,10 +208,20 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Home is saved privately. No provider can see it yet.')).toBeVisible();
   await expect(page.getByText('125 Oak Street')).toBeVisible();
   await expect(page.getByText('Private draft')).toBeVisible();
+  await page.getByRole('button', { name: 'Your details, complete' }).click();
+  await page.getByLabel('Your name').fill('Morgan Reyes-Smith');
+  await page.getByRole('button', { name: 'Save changes and continue' }).click();
+  await expect(page.getByRole('heading', { name: 'Your properties' })).toBeVisible();
+  await expect(page.getByText('Private to Morgan Reyes-Smith until a provider connection is approved.')).toBeVisible();
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
   await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
-  await expect(page.getByText('No provider connection has started.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your properties' })).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Provider connection progress' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Property, complete' }).click();
+  await expect(page.getByRole('heading', { name: 'Your properties' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Yard brief', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
   await page.getByLabel('Front yard').check();
   await page.getByLabel('Routine upkeep').check();
   await page.getByLabel('Preferred care cadence').selectOption('every_two_weeks');
@@ -218,11 +229,17 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await page.getByRole('button', { name: 'Save private draft' }).click();
   await expect(page.getByText('Private draft version 1 is saved.')).toBeVisible();
   await page.getByLabel('Back yard').check();
-  await page.getByRole('button', { name: 'Save brief and continue' }).click();
+  await page.getByRole('button', { name: 'Save ready brief' }).click();
   await expect(page.getByText('Yard brief version 2 is ready and still private.')).toBeVisible();
   await expect(page.getByText('Version 2 · ready')).toBeVisible();
   await expect(page.getByText('This is your starting brief—not a measurement, diagnosis, price, work order, or provider instruction.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Add useful views without diagnosing the yard' })).toBeVisible();
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
+  await expect(page.getByText('No provider connection has started.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Yard brief, complete' }).click();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
   await page.getByLabel('Choose photograph').setInputFiles({
     name: 'front-yard.jpg',
     mimeType: 'image/jpeg',
@@ -249,14 +266,16 @@ test('a verified owner creates a private profile and reconfirms a changed addres
   await expect(page.getByText('Your latest brief is a draft. Existing photos remain private and deletable; mark the current brief ready before adding or replacing a photo.')).toBeVisible();
   await expect(page.getByText('front-yard-new.jpg')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Replace' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Save brief and continue' }).click();
+  await page.getByRole('button', { name: 'Save ready brief' }).click();
   await expect(page.getByText('Yard brief version 4 is ready and still private.')).toBeVisible();
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Delete' }).last().click();
   await expect(page.getByText('The private photograph was deleted.')).toBeVisible();
   await expect(page.getByText('front-yard.jpg')).not.toBeVisible();
-  await page.getByRole('button', { name: 'Finish without more photos' }).click();
+  await page.getByRole('button', { name: 'Continue to connect care' }).click();
   await expect(page.getByText('Private intake is complete. No provider connection or sharing has started.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Provider connection progress' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).not.toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -381,6 +400,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
   await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
   await expect(page.getByRole('heading', { name: 'Review access for Desert Green Care' })).toBeFocused();
@@ -501,6 +521,7 @@ test('an owner confirms an assessment window and uses only the shared conversati
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Review the yard before agreeing on care' })).toBeVisible();
   await expect(page.getByText('Assessment time needs your review')).toBeVisible();
   await expect(page.getByText(/America\/Phoenix/)).toBeVisible();

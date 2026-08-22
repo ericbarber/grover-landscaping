@@ -63,6 +63,10 @@ silently schedule work. Production adoption should still deliver
 known-provider invitations before directory matching, then gate marketplace
 scale on provider eligibility, abuse handling, support readiness, and regional
 provider density.
+The production private-intake path now presents identity, property, yard brief,
+and provider connection as four independently rendered screens. Its progress
+header reopens available earlier steps for review and editing, while explicit
+back and continue actions preserve the same navigation model on small screens.
 The subsequent professional review closes the working design’s remaining trust
 and accessibility gaps with verified email, affirmative sensitive-data consent,
 stale-address reconfirmation, semantic progress and errors, working provider

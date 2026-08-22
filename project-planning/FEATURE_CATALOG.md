@@ -53,6 +53,9 @@
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
+- Navigable four-step Yard Owner acquisition flow with reopenable completed
+  steps, editable profile and yard brief state, and separate Property, Yard
+  brief, and Connect care screens
 - Validated Yard Owner V2 working design with service-day confidence, contextual
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,
