@@ -4,7 +4,7 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:5173';
 const chromiumLaunchOptions = process.env.PLAYWRIGHT_EXECUTABLE_PATH
   ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
   : undefined;
-const acquisitionBrowserTests = /(?:browser-accessibility|local-role-workspaces|yard-owner-acquisition|provider-invitation-progress)\.spec\.ts/;
+const acquisitionBrowserTests = /(?:browser-accessibility|local-role-workspaces|shared-customer-proof|yard-owner-acquisition|provider-invitation-progress)\.spec\.ts/;
 
 export default defineConfig({
   testDir: './e2e',

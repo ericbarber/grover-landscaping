@@ -49,6 +49,9 @@ not currently depend on React Router.
   lifecycle actions, and return-to-affected-work routing
 - Branded manager completion-review board that opens the exact selected Job with
   its Report workflow active across desktop and mobile
+- Customer-safe shared completion proof with service identity, immutable snapshot
+  context, responsive evidence, completed add-ons, trust boundaries, and retry
+  recovery without exposing internal billing or operating identifiers
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

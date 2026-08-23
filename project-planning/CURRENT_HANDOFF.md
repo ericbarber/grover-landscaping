@@ -52,6 +52,10 @@
 - Manager Reports now carries the same command-center treatment into completion
   review. Opening a ready or blocked record selects that exact Job and activates
   its Report workflow on phone and desktop.
+- The secure shared completion report now follows the public proof design with
+  service identity, evidence, completed add-ons, and a trust boundary. It omits
+  internal billing and operating identifiers and offers explicit retry when the
+  persisted report is temporarily unavailable.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -108,11 +112,10 @@ The shared shell plus core field and manager-operation hierarchies are delivered
 responsive navigation, semantic status, Route, Jobs, Job, Schedule, and Recovery
 are in production. The next repository-owned slice is:
 
-1. Converge customer-safe delivery and the shared completion report with the
-   adopted manager review and Job Report direction.
-2. Continue from delivered proof into recommendation/add-on or bid decision
+1. Continue from adopted manager review and customer-safe delivered proof into
+   recommendation/add-on or bid decision
    without weakening immutable snapshots, notification history, or authorization.
-3. Preserve report readiness, change requests, retries, photo processing, and
+2. Preserve report readiness, change requests, retries, photo processing, and
    customer delivery recovery while migrating local feedback.
 
 ## Read first
@@ -128,8 +131,8 @@ are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest completion-review slice passes all 425 frontend unit tests across 105 files,
-TypeScript, the production build, and 20 phone/desktop authenticated-workspace
+The latest shared-proof slice passes all 425 frontend unit tests across 105 files,
+TypeScript, the production build, and 24 phone/desktop authenticated-workspace and public-proof
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

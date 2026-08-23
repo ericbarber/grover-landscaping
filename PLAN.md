@@ -125,11 +125,15 @@ Current state:
   responsive completion-review board. Opening an item transitions to the exact
   selected Job with its Report workflow active, preserving report readiness,
   evidence, review, change-request, delivery, and notification behavior.
+- Shared completion proof now adopts the public prototype hierarchy for service
+  identity, delivered evidence, completed add-ons, and customer trust. It uses the
+  shared visual system, supports explicit retry, and omits internal billing notes,
+  organization identifiers, crew identifiers, and unrelated account data.
 
 Next slice:
 
-- Continue completion-proof convergence through customer delivery, shared proof,
-  and recommendation/add-on or bid decisions.
+- Continue completion-proof convergence from delivered proof into
+  recommendation/add-on or bid decisions.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1361,6 +1365,9 @@ Current state:
   selected-record inspector with lifecycle summaries and return-to-work routing.
 - Manager completion review opens the exact selected Job directly in its Report
   workflow across desktop and mobile rather than leaving the manager tool active.
+- The secure customer completion-report link presents responsive, immutable
+  delivered proof using the public Grover hierarchy without rendering internal
+  billing or operating identifiers, and can retry transient report outages.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters
