@@ -121,6 +121,7 @@ export function WorkspaceHomePanel({
   assignedJobCount,
   completedJobCount,
   hasSelectedJob,
+  hasWorkspaceRole,
   onOpen,
   pendingChangeCount,
   persona,
@@ -129,11 +130,34 @@ export function WorkspaceHomePanel({
   assignedJobCount: number;
   completedJobCount: number;
   hasSelectedJob: boolean;
+  hasWorkspaceRole: boolean;
   onOpen: (view: MobileWorkspaceView) => void;
   pendingChangeCount: number;
   persona: WorkspacePersona;
   signedInName: string;
 }) {
+  if (!hasWorkspaceRole) {
+    return (
+      <section className="mx-auto grid max-w-3xl gap-4 lg:grid-cols-2" aria-labelledby="workspace-access-heading">
+        <WorkspaceStatusNotice
+          detail="This signed-in account has no active organization membership. Ask an organization owner to send a new invitation or restore the membership before opening protected work."
+          role="alert"
+          title="No active workspace role"
+          tone="warning"
+        />
+        <article className="grover-card p-5 text-sm text-slate-600">
+          <p className="grover-eyebrow">Signed-in identity</p>
+          <h2 className="mt-2 font-display text-2xl font-black text-forest" id="workspace-access-heading">
+            {signedInName}
+          </h2>
+          <p className="mt-2 leading-6">
+            Workspace navigation remains limited to Home until active access is assigned and verified.
+          </p>
+        </article>
+      </section>
+    );
+  }
+
   const actions = workspaceHomeActions(persona, hasSelectedJob);
   const primaryAction = actions[0];
   const secondaryActions = actions.slice(1);

@@ -77,7 +77,7 @@ import {
   photoQualityMessage,
   requiredPhotoEvidence,
 } from './domain/photoQuality';
-import { workspaceGuidanceForRoles } from './domain/workspaceAccess';
+import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
 import {
   workspacePersonasForRoles,
   workspaceSurfacesForPersona,
@@ -1178,15 +1178,19 @@ function mergePhotoEvidence(
 
 export function App() {
   const auth = useAuth();
-  const workspaceGuidance = workspaceGuidanceForRoles(auth.roles);
+  const workspaceRoles = useMemo(
+    () => workspaceRolesForAccess(auth.roles, auth.memberships),
+    [auth.memberships, auth.roles],
+  );
+  const workspaceGuidance = workspaceGuidanceForRoles(workspaceRoles);
   const availablePersonas = useMemo(
-    () => workspacePersonasForRoles(auth.roles),
-    [auth.roles],
+    () => workspacePersonasForRoles(workspaceRoles),
+    [workspaceRoles],
   );
   const initialPersona = availablePersonas[0];
-  const canManageDispatchHierarchy = auth.roles.includes('OrganizationOwner')
-    || auth.roles.includes('SupportAdmin');
-  const canReviewMarketingLeads = auth.roles.includes('SupportAdmin');
+  const canManageDispatchHierarchy = workspaceRoles.includes('OrganizationOwner')
+    || workspaceRoles.includes('SupportAdmin');
+  const canReviewMarketingLeads = workspaceRoles.includes('SupportAdmin');
   const [jobs, setJobs] = useState<YardCareJob[]>(seedJobs);
   const [jobSearch, setJobSearch] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState<YardCareJob['status'] | 'all'>('all');
@@ -2870,10 +2874,16 @@ export function App() {
                 {personaProgressLanguage(activePersona).eyebrow}
               </p>
               <p className="mt-3 text-4xl font-black">
-                {isLoadingJobs ? '…' : `${jobs.filter((job) => job.status === 'completed').length}/${jobs.length}`}
+                {workspaceRoles.length === 0
+                  ? '—'
+                  : isLoadingJobs
+                    ? '…'
+                    : `${jobs.filter((job) => job.status === 'completed').length}/${jobs.length}`}
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-200">
-                {personaProgressLanguage(activePersona).completed}
+                {workspaceRoles.length === 0
+                  ? 'Protected work stays hidden'
+                  : personaProgressLanguage(activePersona).completed}
               </p>
               <div className="my-4 h-px bg-white/15" />
               <p className="text-sm font-bold text-white">{workspaceGuidance.label}</p>
@@ -2919,6 +2929,7 @@ export function App() {
               assignedJobCount={jobs.length}
               completedJobCount={jobs.filter((job) => job.status === 'completed').length}
               hasSelectedJob={Boolean(selectedJobId)}
+              hasWorkspaceRole={workspaceRoles.length > 0}
               onOpen={(view) => {
                 if (view === 'manager') {
                   setManagerWorkspaceSection(null);

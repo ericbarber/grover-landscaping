@@ -121,9 +121,11 @@ const personaDefinitions: Record<WorkspacePersonaId, WorkspacePersona> = {
   general: {
     id: 'general',
     label: 'Team member',
-    description: 'Available work for the signed-in organization role',
+    description: 'No active organization role is assigned to this account',
     defaultView: 'home',
-    navigation: fieldNavigation,
+    navigation: [
+      { view: 'home', label: 'Home', icon: 'home' },
+    ],
   },
 };
 
@@ -170,8 +172,11 @@ export function workspaceSurfacesForPersona(
   if (personaId === 'property-manager' || personaId === 'billing-admin') {
     return { fieldOperations: false, customerCare: true, management: true };
   }
-  if (personaId === 'crew-lead' || personaId === 'crew-member' || personaId === 'general') {
+  if (personaId === 'crew-lead' || personaId === 'crew-member') {
     return { fieldOperations: true, customerCare: false, management: false };
+  }
+  if (personaId === 'general') {
+    return { fieldOperations: false, customerCare: false, management: false };
   }
   if (personaId === 'support') {
     return { fieldOperations: false, customerCare: false, management: true };

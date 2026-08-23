@@ -27,7 +27,10 @@ not currently depend on React Router.
 - Prototype-aligned public theme, persona journeys, direct yard/company signup,
   first-party lead flow, and interactive “Today’s operation” product tour
 - Cognito, disabled, and production-rejected local-review authentication modes
-- Role-filtered Home, field, customer, manager, and support destinations
+- Fail-closed active-access verification with in-place retry before protected
+  navigation is rendered
+- Membership-scoped Home, field, customer, manager, and support destinations,
+  explicit Support/first-owner exceptions, and Home-only no-role recovery
 - Shared outlined SVG workspace icons with phone bottom navigation, a fixed
   tablet rail, and a persistent role-filtered desktop rail
 - Single-destination desktop rendering with a compact Home hero and operational

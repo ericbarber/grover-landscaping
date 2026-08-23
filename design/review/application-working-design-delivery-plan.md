@@ -371,7 +371,7 @@ different product decision, missing authority, or unavailable required contract.
 | Phase | Status | Next action |
 | --- | --- | --- |
 | 0. Foundation and shell | Core production adoption delivered | Outlined icons, responsive rails, single-destination desktop density, and shared status contract delivered; migrate legacy feedback by owning phase |
-| 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
+| 1. Access, setup, and Home | Core responsive hierarchy adopted | Authentication/access loading, fail-closed retry, membership-scoped personas, first-owner bootstrap, no-role Home, and seven local first paths delivered; regress as identity contracts evolve |
 | 2. Field execution | Core responsive hierarchy adopted | Continue state-by-state regression as shared recovery primitives evolve |
 | 3. Manager daily operations | Core responsive hierarchy adopted | Continue state regression as Schedule and Recovery contracts evolve |
 | 4. Completion proof | Core responsive hierarchy adopted | Manager review, narrowed shared proof, bid decisions, and completed recommendation/add-on continuity delivered; regress as contracts evolve |

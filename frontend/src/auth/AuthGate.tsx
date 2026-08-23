@@ -1,6 +1,28 @@
 import type { ReactNode } from 'react';
-import { useAuth } from './AuthProvider';
+import { useAuth, type AccessVerificationStatus } from './AuthProvider';
 import { GroverBrand } from '../components/GroverBrand';
+
+export type AuthGateState =
+  | 'authentication-loading'
+  | 'authentication-error'
+  | 'signed-out'
+  | 'access-loading'
+  | 'access-unavailable'
+  | 'ready';
+
+export function authGateState(input: {
+  loading: boolean;
+  error: string | null;
+  authenticated: boolean;
+  accessStatus: AccessVerificationStatus;
+}): AuthGateState {
+  if (input.loading) return 'authentication-loading';
+  if (input.error) return 'authentication-error';
+  if (!input.authenticated) return 'signed-out';
+  if (input.accessStatus === 'unavailable') return 'access-unavailable';
+  if (input.accessStatus !== 'ready') return 'access-loading';
+  return 'ready';
+}
 
 function FullScreenMessage({ children }: { children: ReactNode }) {
   return (
@@ -45,8 +67,9 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const state = authGateState(auth);
 
-  if (auth.loading) {
+  if (state === 'authentication-loading') {
     return (
       <FullScreenMessage>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Preparing your workspace</p>
@@ -59,7 +82,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (auth.error) {
+  if (state === 'authentication-error') {
     return (
       <FullScreenMessage>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-400">Authentication error</p>
@@ -79,7 +102,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!auth.authenticated) {
+  if (state === 'signed-out') {
     return (
       <FullScreenMessage>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Your workspace is ready</p>
@@ -99,6 +122,41 @@ export function AuthGate({ children }: { children: ReactNode }) {
           Open my workspace
         </button>
         <p className="mt-4 text-xs text-slate-400">Secure access keeps customer and property details protected.</p>
+      </FullScreenMessage>
+    );
+  }
+
+  if (state === 'access-loading') {
+    return (
+      <FullScreenMessage>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-400">Verifying workspace access</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Checking your active organization and role…</h1>
+        <p className="mt-3 text-sm leading-6 text-slate-300">
+          Protected workspace navigation stays hidden until access verification completes.
+        </p>
+        <div className="mx-auto mt-7 h-1.5 w-24 overflow-hidden rounded-full bg-white/10" role="status">
+          <span className="block h-full w-2/3 animate-pulse rounded-full bg-emerald-400" />
+          <span className="sr-only">Verifying active organization access</span>
+        </div>
+      </FullScreenMessage>
+    );
+  }
+
+  if (state === 'access-unavailable') {
+    return (
+      <FullScreenMessage>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">Access verification unavailable</p>
+        <h1 className="mt-4 text-2xl font-bold text-white">Unable to safely open your workspace</h1>
+        <p className="mt-3 text-sm leading-6 text-slate-300">
+          {auth.accessError ?? 'Active organization access could not be verified.'} No role or workspace data is being assumed.
+        </p>
+        <button
+          className="mt-6 w-full rounded-xl bg-emerald-500 px-5 py-3 font-black text-emerald-950 hover:bg-emerald-400"
+          onClick={() => void auth.refreshAccess()}
+          type="button"
+        >
+          Retry access verification
+        </button>
       </FullScreenMessage>
     );
   }

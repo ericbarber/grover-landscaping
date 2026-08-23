@@ -88,6 +88,8 @@ Start with these records when reviewing or continuing development:
 - Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
 - Organization Owner Team and access command center with live staffing/access
   summaries and direct administration and audit paths
+- Fail-closed workspace-access verification, retry recovery, membership-scoped
+  personas, and a Home-only state for accounts without an active role
 - Responsive and accessibility-focused owner/provider browser coverage
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development

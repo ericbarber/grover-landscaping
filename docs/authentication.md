@@ -8,7 +8,12 @@
 4. The browser exchanges the code with PKCE and keeps the resulting session in session storage.
 5. API clients attach the Cognito access token as `Authorization: Bearer <token>`.
 6. The Rust API verifies the RS256 signature with Cognito JWKS, issuer, app client ID, expiration, and `token_use=access`.
-7. The API maps `cognito:groups` to application roles and applies route-level authorization.
+7. The browser loads `GET /me/access` and keeps protected navigation hidden until
+   active organization access is verified.
+8. If access persistence is unavailable, the browser shows a dedicated retry
+   state and does not infer an empty membership, role, or workspace.
+9. The API maps `cognito:groups` to coarse claims and applies route-level,
+   membership, tenant, and resource authorization.
 
 Frontend assets, health probes, `GET /auth/config`, tokenized shared-report reads, and tokenized shared-bid reads/decisions remain public. Job, crew, day-plan, and manager bid APIs are protected.
 
@@ -43,6 +48,13 @@ owners use separate self-scoped acquisition and customer-safe routes; property
 managers use tenant/property-scoped customer views. No frontend persona choice
 or hidden navigation item substitutes for backend resource authorization.
 
+Authenticated persona navigation is derived from active membership roles. An
+unscoped group claim does not expose protected field or manager destinations.
+`SupportAdmin` remains a deliberate cross-tenant support exception, and an
+unscoped `OrganizationOwner` claim can reach first-owner organization bootstrap.
+An otherwise authenticated account without active membership receives Home only
+with invitation/restoration guidance.
+
 ## Local Authenticated Runtime
 
 ### Local role review without AWS
@@ -59,6 +71,9 @@ reviewer identifier. The backend rejects unknown identifiers, derives the
 identity and single role from its own allowlist, and overlays an organization
 membership for the local demo organization. No reviewer rows are added to a
 production database.
+
+The local browser matrix covers all seven fixed identities, including separate
+Crew Lead and Crew Member paths, across phone and desktop compositions.
 
 Start the complete local stack with:
 

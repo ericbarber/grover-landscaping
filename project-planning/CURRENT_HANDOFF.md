@@ -79,6 +79,10 @@
   production handoff.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
+- Authenticated entry now keeps protected navigation hidden until active access
+  verification succeeds. Access outages fail closed with retry; active membership
+  roles drive personas, while Support and first-owner bootstrap remain explicit
+  exceptions. Unscoped roles receive a Home-only invitation/restoration state.
 
 ### Yard Owner production adoption
 
@@ -117,9 +121,10 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently continue remaining Access/Home entry and recovery convergence.
-   Completion-proof recommendation/add-on continuity and Team/organization core
-   adoption are complete and return to regression when their contracts change.
+2. Independently produce the connected property-manager portfolio design, then
+   adopt Yard Crew reciprocal public entry and provider identity/readiness.
+   Access/Home, completion proof, and Team/organization core adoption return to
+   regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
    continue service-day, proof/recommendation, concern, and preference adoption.
 
@@ -136,10 +141,12 @@ aligned overview composition.
 
 ## Validation baseline
 
-The latest completed baseline passes all 430 frontend unit tests across 107 files,
-TypeScript, the production build, and the 30-test phone/desktop Chromium local-
-role workspace matrix, including Team staffing recovery, partial-read isolation,
-self-impact, unavailable-versus-empty, keyboard activation, and focus transfer.
+The latest completed baseline passes all 436 frontend unit tests across 108 files,
+TypeScript, the production build, and the 34-test phone/desktop Chromium local-
+role workspace matrix. That matrix covers all seven fixed identities, fail-closed
+access retry, unscoped-role Home-only recovery, Team staffing recovery, partial-
+read isolation, self-impact, unavailable-versus-empty, keyboard activation, and
+focus transfer.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

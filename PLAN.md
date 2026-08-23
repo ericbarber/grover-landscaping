@@ -153,6 +153,11 @@ Current state:
   before self-role or self-suspension confirmation, preserves last-owner guards,
   and distinguishes persistence outages from a valid empty team. The production
   handoff maps the adopted journey to its APIs, authorization, states, and tests.
+- Phase 1 Access/Home core convergence is now delivered. Authenticated work waits
+  for `/me/access`; unavailable verification fails closed with retry; personas
+  derive from active membership roles with explicit Support and first-owner
+  bootstrap exceptions; unscoped claims receive Home-only guidance; and all seven
+  local-review identities are covered across phone and desktop.
 
 Next slice:
 
@@ -161,7 +166,8 @@ Next slice:
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
 - While that product/security boundary is open, continue the next independent
-  repository-owned gap: remaining Access/Home entry and recovery convergence.
+  repository-owned gap: the connected property-manager portfolio design, then
+  Yard Crew reciprocal public entry and provider identity/readiness adoption.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

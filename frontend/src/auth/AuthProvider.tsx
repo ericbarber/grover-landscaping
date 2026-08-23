@@ -13,6 +13,7 @@ import { fetchPrincipalAccessSummary, type OrganizationMembership } from '../api
 import { configureApiAuthentication } from '../api/authenticatedFetch';
 
 type AuthMode = 'disabled' | 'local_review' | 'cognito';
+export type AccessVerificationStatus = 'idle' | 'loading' | 'ready' | 'unavailable';
 export const LOCAL_DEVELOPMENT_USER_ID = 'local-development-user';
 export const LOCAL_REVIEWER_STORAGE_KEY = 'grover.local-reviewer-id';
 
@@ -36,6 +37,8 @@ interface AuthContextValue {
   loading: boolean;
   authenticated: boolean;
   error: string | null;
+  accessStatus: AccessVerificationStatus;
+  accessError: string | null;
   displayName: string;
   userId: string | null;
   verifiedEmail: string | null;
@@ -149,6 +152,8 @@ function displayNameFromUser(user: User | null): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessStatus, setAccessStatus] = useState<AccessVerificationStatus>('idle');
+  const [accessError, setAccessError] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [manager, setManager] = useState<UserManager | null>(null);
   const [config, setConfig] = useState<RuntimeAuthConfig | null>(null);
@@ -269,6 +274,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setManager(null);
     setConfig(null);
     setUser(null);
+    setAccessStatus('idle');
+    setAccessError(null);
     setLocalReviewers([]);
     setActiveLocalReviewerId(null);
     setInitializationAttempt((current) => current + 1);
@@ -292,17 +299,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [config, manager]);
 
   const refreshAccess = useCallback(async () => {
+    setAccessStatus((current) => current === 'ready' ? current : 'loading');
+    setAccessError(null);
     try {
       const access = await fetchPrincipalAccessSummary();
       setUserId(access.userId);
       setMemberships(access.memberships);
       setMembershipRoles(access.memberships.map((membership) => membership.role));
       setVerifiedEmail(access.verifiedEmail);
+      setAccessStatus('ready');
     } catch {
       setUserId(null);
       setMemberships([]);
       setMembershipRoles([]);
       setVerifiedEmail(null);
+      setAccessStatus('unavailable');
+      setAccessError('Active organization access could not be verified.');
     }
   }, []);
 
@@ -320,6 +332,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMemberships([]);
       setMembershipRoles([]);
       setVerifiedEmail(null);
+      setAccessStatus('idle');
+      setAccessError(null);
     }
   }, [authMode, refreshAccess, user]);
 
@@ -337,6 +351,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           || authMode === 'local_review'
           || Boolean(user && !user.expired),
         error,
+        accessStatus,
+        accessError,
         displayName: authMode === 'disabled'
           ? 'Local development user'
           : localReviewer?.display_name ?? displayNameFromUser(user),
@@ -356,6 +372,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [
       activeLocalReviewerId,
+      accessError,
+      accessStatus,
       authMode,
       error,
       loading,

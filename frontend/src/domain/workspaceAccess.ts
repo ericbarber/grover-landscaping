@@ -4,6 +4,26 @@ export type WorkspaceGuidance = {
   managerTools: boolean;
 };
 
+export function workspaceRolesForAccess(
+  claimedRoles: string[],
+  memberships: Array<{ role: string; status: string }>,
+): string[] {
+  const roles = new Set(
+    memberships
+      .filter((membership) => membership.status === 'active')
+      .map((membership) => membership.role),
+  );
+
+  if (claimedRoles.includes('SupportAdmin')) {
+    roles.add('SupportAdmin');
+  }
+  if (memberships.length === 0 && claimedRoles.includes('OrganizationOwner')) {
+    roles.add('OrganizationOwner');
+  }
+
+  return Array.from(roles);
+}
+
 export function workspaceGuidanceForRoles(roles: string[]): WorkspaceGuidance {
   if (roles.includes('SupportAdmin')) {
     return {
@@ -41,8 +61,8 @@ export function workspaceGuidanceForRoles(roles: string[]): WorkspaceGuidance {
     };
   }
   return {
-    label: 'Access refreshing',
-    description: 'Checking active organization memberships for this signed-in account.',
+    label: 'No active workspace role',
+    description: 'Ask an organization owner to send or restore an invitation for this account.',
     managerTools: false,
   };
 }

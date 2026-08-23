@@ -4,6 +4,7 @@ const reviewers = [
   ['organization-owner', 'Olivia — Organization Owner', 'OrganizationOwner'],
   ['manager', 'Marcus — Manager', 'Manager'],
   ['crew-lead', 'Leah — Crew Lead', 'CrewLead'],
+  ['crew-member', 'Carlos — Crew Member', 'CrewMember'],
   ['property-manager', 'Priya — Property Manager', 'PropertyManager'],
   ['property-owner', 'Jamie — Property Owner', 'PropertyOwner'],
   ['support-admin', 'Sam — Support Administrator', 'SupportAdmin'],
@@ -13,6 +14,7 @@ const reviewCases = [
   { id: 'property-owner', customer: true, field: false, manager: false },
   { id: 'property-manager', customer: true, field: false, manager: true },
   { id: 'crew-lead', customer: false, field: true, manager: false },
+  { id: 'crew-member', customer: false, field: true, manager: false },
   { id: 'manager', customer: false, field: true, manager: true },
   { id: 'organization-owner', customer: false, field: true, manager: true },
   { id: 'support-admin', customer: false, field: false, manager: true },
@@ -79,6 +81,79 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify({ error: { code: 'storage_unavailable', message: 'Test fallback' } }),
     });
   });
+});
+
+test('workspace access verification fails closed and recovers without a reload', async ({ page }) => {
+  let accessRequests = 0;
+  await page.route('http://localhost:8080/me/access', (route) => {
+    accessRequests += 1;
+    if (accessRequests === 1) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'principal_access_unavailable',
+          message: 'Persisted organization access could not be loaded.',
+        }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        user_id: 'local-review-organization-owner',
+        username: 'Olivia — Organization Owner',
+        verified_email: 'organization-owner@example.test',
+        claim_roles: ['OrganizationOwner'],
+        memberships: [{
+          id: 'membership-organization-owner',
+          organization_id: 'org_demo_landscaping',
+          organization_name: 'Grover Demo Landscaping',
+          organization_type: 'yard_care_company',
+          user_id: 'local-review-organization-owner',
+          display_name: 'Olivia — Organization Owner',
+          role: 'OrganizationOwner',
+          status: 'active',
+          scope_type: 'organization',
+          scope_id: 'org_demo_landscaping',
+        }],
+      }),
+    });
+  });
+
+  await page.goto('/app');
+  await expect(page.getByRole('heading', { name: 'Unable to safely open your workspace' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Retry access verification' }).click();
+
+  await expect(page.getByLabel('Local reviewer account')).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();
+  expect(accessRequests).toBeGreaterThanOrEqual(2);
+});
+
+test('an unscoped role claim receives Home only until membership is assigned', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-member');
+  });
+  await page.route('http://localhost:8080/me/access', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user_id: 'local-review-crew-member',
+      username: 'Carlos — Crew Member',
+      verified_email: 'crew-member@example.test',
+      claim_roles: ['CrewMember'],
+      memberships: [],
+    }),
+  }));
+
+  await page.goto('/app');
+
+  await expect(page.getByRole('alert').getByText('No active workspace role', { exact: true })).toBeVisible();
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await expect(navigation.getByRole('button', { name: 'Home', exact: true })).toBeVisible();
+  await expect(navigation.getByRole('button', { name: 'Route', exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole('button', { name: 'Jobs', exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole('button', { name: /Manage|Support/ })).toHaveCount(0);
 });
 
 test('desktop local review changes the rendered workspace, not only its title', async ({ page }) => {

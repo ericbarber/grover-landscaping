@@ -395,6 +395,10 @@ Selected properties preview the two newest reports on mobile and expand older
 completion-report history only when requested.
 The authenticated application now opens on a persona-aware Home with signed-in
 identity, work and sync summaries, and role-relevant shortcuts.
+Authentication configuration and active organization-access verification now
+have separate loading/recovery states. Protected navigation stays hidden until
+access succeeds; membership roles determine personas; Support and first-owner
+bootstrap remain explicit exceptions; and unscoped accounts receive Home only.
 Development review no longer requires an AWS identity deployment: a
 production-rejected local-review runtime provides seven fixed role identities,
 virtual demo-organization memberships, and per-tab account switching while
