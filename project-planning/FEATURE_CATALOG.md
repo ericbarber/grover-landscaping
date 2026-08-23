@@ -57,6 +57,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   profile and setup-progress reads, with distinct provider-supplied, recorded
   preference, operational setup, missing, not-collected credential, and not-
   evaluated marketplace states instead of a broad verified-provider badge
+- Production first-time known-owner provider connection with verified-recipient
+  confirmation, own-membership organization selection, duplicate-safe new-
+  organization bootstrap, explicit withheld-data acknowledgement, resumable
+  bounded capability/inbox reads, and controlled question/interest/decline
+  responses before owner-approved disclosure
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces

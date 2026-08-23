@@ -14,13 +14,15 @@ http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 
 ## Production adoption status
 
-Public provider fit/entry routing and reciprocal known-owner provider entry are
-adopted foundations, including recipient verification, provider organization
-claims, bounded opportunity response, owner-approved disclosure, assessment, and
-separate shared/private notes. The complete provider acquisition, readiness,
-first-service preparation, team-authority, saved-alert, and curated-opportunity
-journey remains design ready. Production adoption continues with provider
-identity/readiness; curated opportunities remain product-gated. See
+Public provider fit/entry routing, identity/readiness core, and reciprocal
+known-owner provider entry are adopted foundations. A first-time browser journey
+now connects recipient verification, provider organization selection or
+duplicate-safe bootstrap, bounded opportunity response, owner-approved
+disclosure, assessment, proposal, activation, and first-visit preparation. The
+complete provider acquisition, operating-readiness, team-authority, saved-alert,
+and curated-opportunity journey remains design ready. Production adoption
+continues with lifecycle orientation and safe operating preparation; curated
+opportunities remain product-gated. See
 the [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Review journey

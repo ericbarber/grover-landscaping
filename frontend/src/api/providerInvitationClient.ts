@@ -12,6 +12,9 @@ import type {
 interface ApiProviderInvitationProgress {
   invitation_id: string;
   activation_id?: string | null;
+  organization_claim_id?: string | null;
+  organization_claim_status?: string | null;
+  organization_claim_version?: number | null;
   progress_stage: string;
   status_label: string;
   next_action: string;
@@ -154,6 +157,9 @@ interface ApiProviderAssessmentPrivateNote {
 export interface ProviderInvitationProgress {
   invitationId: string;
   activationId?: string;
+  organizationClaimId?: string;
+  organizationClaimStatus?: string;
+  organizationClaimVersion?: number;
   progressStage: string;
   statusLabel: string;
   nextAction: string;
@@ -164,6 +170,122 @@ export interface ProviderInvitationProgress {
   responseLabel?: string;
   respondedAtEpochSeconds?: number;
   closed: boolean;
+}
+
+interface ApiProviderInvitationRecipientEntry {
+  invitation_id: string;
+  status: string;
+  can_review_limited_request: boolean;
+  provider_name?: string | null;
+  owner_name?: string | null;
+  coarse_area?: string | null;
+  care_goals: string[];
+  cadence?: string | null;
+  recipient_email_hint?: string | null;
+  still_private_categories: string[];
+  recipient_email_checked: boolean;
+  organization_relationship_checked: boolean;
+  opportunity_response_capability: boolean;
+}
+
+export interface ProviderInvitationRecipientEntry {
+  invitationId: string;
+  status: string;
+  canReviewLimitedRequest: boolean;
+  providerName?: string;
+  ownerName?: string;
+  coarseArea?: string;
+  careGoals: string[];
+  cadence?: string;
+  recipientEmailHint?: string;
+  stillPrivateCategories: string[];
+  recipientEmailChecked: boolean;
+  organizationRelationshipChecked: boolean;
+  opportunityResponseCapability: boolean;
+}
+
+export interface ProviderOrganizationOption {
+  organizationId: string;
+  displayName: string;
+  membershipRole: string;
+  relationshipChecked: boolean;
+}
+
+export interface ProviderOrganizationClaim {
+  claimId: string;
+  invitationId: string;
+  claimKind: 'existing_relationship' | 'new_organization';
+  proposedDisplayName: string;
+  organizationId?: string;
+  status: string;
+  assignedFunction?: string;
+  version: number;
+  organizationRelationshipChecked: boolean;
+  opportunityResponseCapability: boolean;
+  persisted: boolean;
+}
+
+export interface ProviderResponseCapability {
+  capabilityId: string;
+  invitationId: string;
+  claimId: string;
+  organizationId: string;
+  briefVersion: number;
+  purpose: string;
+  allowedActions: string[];
+  withheldCategories: string[];
+  status: string;
+  expiresAtEpochSeconds: number;
+  version: number;
+  opportunityResponseCapability: boolean;
+  persisted: boolean;
+}
+
+export interface ProviderInvitationInbox {
+  invitationId: string;
+  status: string;
+  canReviewLimitedRequest: boolean;
+  capabilityId?: string;
+  capabilityVersion?: number;
+  organizationId?: string;
+  organizationName?: string;
+  providerName?: string;
+  ownerName?: string;
+  coarseArea?: string;
+  careGoals: string[];
+  cadence?: string;
+  allowedActions: string[];
+  withheldCategories: string[];
+  opportunityResponseCapability: boolean;
+  recoveryAction?: string;
+}
+
+export interface ProviderOpportunityResponse {
+  responseId: string;
+  capabilityId: string;
+  invitationId: string;
+  organizationId: string;
+  action: string;
+  responseCode: string;
+  status: string;
+  capabilityStatus: string;
+  capabilityVersion: number;
+  opportunityResponseCapability: boolean;
+  persisted: boolean;
+}
+
+function mapRecipientEntry(value: ApiProviderInvitationRecipientEntry): ProviderInvitationRecipientEntry {
+  return {
+    invitationId: value.invitation_id, status: value.status,
+    canReviewLimitedRequest: value.can_review_limited_request,
+    providerName: value.provider_name ?? undefined, ownerName: value.owner_name ?? undefined,
+    coarseArea: value.coarse_area ?? undefined, careGoals: value.care_goals,
+    cadence: value.cadence ?? undefined, recipientEmailHint: value.recipient_email_hint ?? undefined,
+    stillPrivateCategories: value.still_private_categories,
+    recipientEmailChecked: value.recipient_email_checked,
+    organizationRelationshipChecked: value.organization_relationship_checked,
+    opportunityResponseCapability: value.opportunity_response_capability,
+  };
 }
 
 function mapFirstVisit(value: ApiOwnerProviderFirstVisit): OwnerProviderFirstVisit {
@@ -355,6 +477,198 @@ function mapInitialServiceProposalMessage(
   };
 }
 
+export async function previewProviderInvitation(token: string): Promise<ProviderInvitationRecipientEntry> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-invitations/preview`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok && response.status !== 410) {
+    throw await apiRequestError(response, `Provider invitation preview failed with status ${response.status}.`);
+  }
+  return mapRecipientEntry(await response.json() as ApiProviderInvitationRecipientEntry);
+}
+
+export async function verifyProviderInvitationRecipient(token: string): Promise<ProviderInvitationRecipientEntry> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-invitations/verify-recipient`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider recipient verification failed with status ${response.status}.`);
+  }
+  return mapRecipientEntry(await response.json() as ApiProviderInvitationRecipientEntry);
+}
+
+export async function fetchProviderOrganizationOptions(token: string): Promise<ProviderOrganizationOption[]> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-invitations/organization-options`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  });
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider organization options failed with status ${response.status}.`);
+  }
+  const values = await response.json() as Array<{
+    organization_id: string; display_name: string; membership_role: string;
+    relationship_checked: boolean;
+  }>;
+  return values.map((value) => ({
+    organizationId: value.organization_id, displayName: value.display_name,
+    membershipRole: value.membership_role, relationshipChecked: value.relationship_checked,
+  }));
+}
+
+function mapOrganizationClaim(value: {
+  claim_id: string; invitation_id: string; claim_kind: 'existing_relationship' | 'new_organization';
+  proposed_display_name: string; organization_id?: string | null; status: string;
+  assigned_function?: string | null; version: number; organization_relationship_checked: boolean;
+  opportunity_response_capability: boolean; persisted: boolean;
+}): ProviderOrganizationClaim {
+  return {
+    claimId: value.claim_id, invitationId: value.invitation_id, claimKind: value.claim_kind,
+    proposedDisplayName: value.proposed_display_name,
+    organizationId: value.organization_id ?? undefined, status: value.status,
+    assignedFunction: value.assigned_function ?? undefined, version: value.version,
+    organizationRelationshipChecked: value.organization_relationship_checked,
+    opportunityResponseCapability: value.opportunity_response_capability,
+    persisted: value.persisted,
+  };
+}
+
+export async function createProviderOrganizationClaim(
+  token: string,
+  input: { organizationId: string } | { providerDisplayName: string },
+  idempotencyKey: string,
+): Promise<ProviderOrganizationClaim> {
+  const existing = 'organizationId' in input;
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-invitations/organization-claims`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      token, claim_kind: existing ? 'existing_relationship' : 'new_organization',
+      organization_id: existing ? input.organizationId : undefined,
+      provider_display_name: existing ? undefined : input.providerDisplayName,
+      authority_attested: !existing, idempotency_key: idempotencyKey,
+    }),
+  });
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider organization claim failed with status ${response.status}.`);
+  }
+  return mapOrganizationClaim(await response.json());
+}
+
+export async function bootstrapProviderOrganizationClaim(
+  token: string, claimId: string, expectedVersion: number, idempotencyKey: string,
+): Promise<ProviderOrganizationClaim> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-invitation-organization-claims/${encodeURIComponent(claimId)}/bootstrap`,
+    { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      token, expected_version: expectedVersion, idempotency_key: idempotencyKey,
+    }) },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider organization setup failed with status ${response.status}.`);
+  }
+  return mapOrganizationClaim(await response.json());
+}
+
+function mapResponseCapability(value: {
+  capability_id: string; invitation_id: string; claim_id: string; organization_id: string;
+  brief_version: number; purpose: string; allowed_actions: string[]; withheld_categories: string[];
+  status: string; expires_at_epoch_seconds: number; version: number;
+  opportunity_response_capability: boolean; persisted: boolean;
+}): ProviderResponseCapability {
+  return {
+    capabilityId: value.capability_id, invitationId: value.invitation_id,
+    claimId: value.claim_id, organizationId: value.organization_id,
+    briefVersion: value.brief_version, purpose: value.purpose,
+    allowedActions: value.allowed_actions, withheldCategories: value.withheld_categories,
+    status: value.status, expiresAtEpochSeconds: value.expires_at_epoch_seconds,
+    version: value.version, opportunityResponseCapability: value.opportunity_response_capability,
+    persisted: value.persisted,
+  };
+}
+
+export async function issueProviderResponseCapability(
+  token: string, claimId: string, idempotencyKey: string,
+): Promise<ProviderResponseCapability> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/provider-invitation-organization-claims/${encodeURIComponent(claimId)}/response-capabilities`,
+    { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      token, withheld_categories_acknowledged: true, idempotency_key: idempotencyKey,
+    }) },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider response authorization failed with status ${response.status}.`);
+  }
+  return mapResponseCapability(await response.json());
+}
+
+export async function fetchProviderInvitationInbox(token: string): Promise<ProviderInvitationInbox> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-invitations/inbox`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }),
+  });
+  if (!response.ok && response.status !== 410) {
+    throw await apiRequestError(response, `Provider invitation inbox failed with status ${response.status}.`);
+  }
+  const value = await response.json() as {
+    invitation_id: string; status: string; can_review_limited_request: boolean;
+    capability_id?: string | null; capability_version?: number | null;
+    organization_id?: string | null; organization_name?: string | null;
+    provider_name?: string | null; owner_name?: string | null; coarse_area?: string | null;
+    care_goals: string[]; cadence?: string | null; allowed_actions: string[];
+    withheld_categories: string[]; opportunity_response_capability: boolean;
+    recovery_action?: string | null;
+  };
+  return {
+    invitationId: value.invitation_id, status: value.status,
+    canReviewLimitedRequest: value.can_review_limited_request,
+    capabilityId: value.capability_id ?? undefined,
+    capabilityVersion: value.capability_version ?? undefined,
+    organizationId: value.organization_id ?? undefined,
+    organizationName: value.organization_name ?? undefined,
+    providerName: value.provider_name ?? undefined, ownerName: value.owner_name ?? undefined,
+    coarseArea: value.coarse_area ?? undefined, careGoals: value.care_goals,
+    cadence: value.cadence ?? undefined, allowedActions: value.allowed_actions,
+    withheldCategories: value.withheld_categories,
+    opportunityResponseCapability: value.opportunity_response_capability,
+    recoveryAction: value.recovery_action ?? undefined,
+  };
+}
+
+export async function createProviderOpportunityResponse(
+  token: string, inbox: ProviderInvitationInbox,
+  input: { action: string; responseCode: string; blockFutureInvitations?: boolean },
+  idempotencyKey: string,
+): Promise<ProviderOpportunityResponse> {
+  if (!inbox.capabilityId || inbox.capabilityVersion === undefined) {
+    throw new Error('Reload the authorized limited request before responding.');
+  }
+  const response = await authenticatedFetch(`${API_BASE_URL}/provider-opportunity-responses`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      token, capability_id: inbox.capabilityId,
+      expected_capability_version: inbox.capabilityVersion,
+      action: input.action, response_code: input.responseCode,
+      block_future_invitations: input.blockFutureInvitations ?? false,
+      idempotency_key: idempotencyKey,
+    }),
+  });
+  if (!response.ok) {
+    throw await apiRequestError(response, `Provider invitation response failed with status ${response.status}.`);
+  }
+  const value = await response.json() as {
+    response_id: string; capability_id: string; invitation_id: string; organization_id: string;
+    action: string; response_code: string; status: string; capability_status: string;
+    capability_version: number; opportunity_response_capability: boolean; persisted: boolean;
+  };
+  return {
+    responseId: value.response_id, capabilityId: value.capability_id,
+    invitationId: value.invitation_id, organizationId: value.organization_id,
+    action: value.action, responseCode: value.response_code, status: value.status,
+    capabilityStatus: value.capability_status, capabilityVersion: value.capability_version,
+    opportunityResponseCapability: value.opportunity_response_capability,
+    persisted: value.persisted,
+  };
+}
+
 export async function fetchProviderInvitationProgress(
   token: string,
 ): Promise<ProviderInvitationProgress> {
@@ -373,6 +687,9 @@ export async function fetchProviderInvitationProgress(
   return {
     invitationId: progress.invitation_id,
     activationId: progress.activation_id ?? undefined,
+    organizationClaimId: progress.organization_claim_id ?? undefined,
+    organizationClaimStatus: progress.organization_claim_status ?? undefined,
+    organizationClaimVersion: progress.organization_claim_version ?? undefined,
     progressStage: progress.progress_stage,
     statusLabel: progress.status_label,
     nextAction: progress.next_action,

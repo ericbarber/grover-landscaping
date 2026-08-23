@@ -4,8 +4,11 @@ import {
   fetchProviderDisclosureAccess,
   fetchProviderFirstVisit,
   fetchProviderInvitationProgress,
+  previewProviderInvitation,
   proposeProviderFirstVisit,
+  verifyProviderInvitationRecipient,
   type ProviderDisclosureAccess,
+  type ProviderInvitationRecipientEntry,
   type ProviderInvitationProgress,
 } from '../api/providerInvitationClient';
 import { firstVisitWindowLabel, type OwnerProviderFirstVisit } from '../domain/initialServiceProposals';
@@ -13,6 +16,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { providerInvitationTokenFromFragment } from '../domain/providerInvitationRoute';
 import { GroverBrand } from './GroverBrand';
 import { ProviderAssessmentWorkspace } from './ProviderAssessmentWorkspace';
+import { ProviderInvitationConnectionPanel } from './ProviderInvitationConnectionPanel';
 
 function message(error: unknown): string {
   if (error instanceof ApiRequestError || error instanceof Error) return error.message;
@@ -47,6 +51,7 @@ export function ProviderInvitationProgressPage() {
   const auth = useAuth();
   const [token, setToken] = useState('');
   const [progress, setProgress] = useState<ProviderInvitationProgress | null>(null);
+  const [preview, setPreview] = useState<ProviderInvitationRecipientEntry | null>(null);
   const [disclosure, setDisclosure] = useState<ProviderDisclosureAccess | null>(null);
   const [disclosureError, setDisclosureError] = useState<string | null>(null);
   const [firstVisit, setFirstVisit] = useState<OwnerProviderFirstVisit | null>(null);
@@ -99,12 +104,30 @@ export function ProviderInvitationProgressPage() {
     }
   }
 
+  async function inspectInvitation(value: string) {
+    setLoading(true);
+    setError(null);
+    setProgress(null);
+    setDisclosure(null);
+    setFirstVisit(null);
+    try {
+      const loadedPreview = await previewProviderInvitation(value);
+      setPreview(loadedPreview);
+      if (loadedPreview.recipientEmailChecked) await loadProgress(value);
+    } catch (loadError) {
+      setPreview(null);
+      setError(message(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     const fragmentToken = providerInvitationTokenFromFragment(window.location.hash);
     if (!fragmentToken) return;
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     setToken(fragmentToken);
-    void loadProgress(fragmentToken);
+    void inspectInvitation(fragmentToken);
   }, []);
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -114,7 +137,20 @@ export function ProviderInvitationProgressPage() {
       setError('Open the invitation link again or enter the invitation code.');
       return;
     }
-    void loadProgress(value);
+    void inspectInvitation(value);
+  }
+
+  async function verifyRecipient() {
+    setLoading(true);
+    setError(null);
+    try {
+      setPreview(await verifyProviderInvitationRecipient(token));
+      await loadProgress(token);
+    } catch (verificationError) {
+      setError(message(verificationError));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function proposeFirstVisit(event: FormEvent<HTMLFormElement>) {
@@ -189,6 +225,7 @@ export function ProviderInvitationProgressPage() {
             <button className="grover-button-primary mt-4 disabled:opacity-60" disabled={loading || !auth.verifiedEmail} type="submit">{loading ? 'Checking progress…' : 'Check invitation progress'}</button>
           </form>
           {error ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Progress was not loaded.</strong><p className="mt-1 text-sm leading-6">{error}</p></div> : null}
+          {preview && !progress ? <section aria-labelledby="provider-limited-preview-title" className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-5"><p className="text-xs font-black uppercase tracking-wide text-sky-800">Limited invitation preview</p><h3 className="mt-2 text-xl font-black" id="provider-limited-preview-title">{preview.providerName ?? 'Provider connection request'}</h3>{preview.canReviewLimitedRequest ? <><p className="mt-3 text-sm leading-6 text-slate-700">{preview.ownerName} shared a limited request for {preview.coarseArea}. Goals: {preview.careGoals.join(', ')}. Cadence: {preview.cadence?.split('_').join(' ')}.</p><p className="mt-3 text-xs font-bold leading-5 text-slate-500">Still private: {preview.stillPrivateCategories.map(disclosureCategoryLabel).join(', ')}.</p>{!preview.recipientEmailChecked ? <button className="grover-button-primary mt-4 disabled:opacity-60" disabled={loading || !auth.verifiedEmail} onClick={() => void verifyRecipient()} type="button">{loading ? 'Checking email…' : `Continue as ${auth.verifiedEmail ?? 'the invited email'}`}</button> : null}</> : <p className="mt-3 text-sm font-semibold text-slate-700">This invitation is {preview.status.split('_').join(' ')} and cannot be reopened from this link.</p>}</section> : null}
           {progress ? (
             <article className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5" aria-live="polite">
               <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-wide text-emerald-800">{progress.progressStage === 'relationship_activated' ? 'Relationship active' : progress.closed ? 'Invitation closed' : 'Current step'}</p><h3 className="mt-2 text-xl font-black">{progress.statusLabel}</h3></div><span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-700">{progress.progressStage === 'relationship_activated' ? 'Provider setup' : progress.closed ? 'Closed' : 'Limited access'}</span></div>
@@ -198,6 +235,7 @@ export function ProviderInvitationProgressPage() {
               {!progress.closed ? <ul className="mt-4 grid gap-2 text-xs text-slate-700 sm:grid-cols-3"><li>Email checked: <strong>{progress.recipientEmailChecked ? 'Yes' : 'No'}</strong></li><li>Organization checked: <strong>{progress.organizationRelationshipChecked ? 'Yes' : 'Not yet'}</strong></li><li>Limited response: <strong>{progress.opportunityResponseCapability ? 'Available' : 'Not available'}</strong></li></ul> : null}
             </article>
           ) : null}
+          {progress ? <ProviderInvitationConnectionPanel progress={progress} token={token} onReload={() => loadProgress(token)} /> : null}
           {firstVisitWorkspace()}
           {disclosureError ? <div className="mt-5 rounded-xl border border-rose-300 bg-rose-50 p-4" role="alert"><strong>Assessment details were not loaded.</strong><p className="mt-1 text-sm leading-6">{disclosureError} Your recorded invitation response is unchanged.</p></div> : null}
           {disclosure ? (

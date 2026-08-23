@@ -181,9 +181,11 @@ update fail once.
    area, capacity, crew readiness, and precise supplied/recorded/not-collected/
    not-evaluated facts are adopted. Service categories, languages, provider-
    facing pause/availability, and governed credential checking remain.
-3. **Known-owner connection pilot:** let an owner invite a provider, then validate
-   provider inbox, disclosure, assessment, proposal, and operational projection
-   before search-based acquisition.
+3. **Known-owner connection pilot — adopted core:** first-time recipient
+   confirmation, existing/new organization connection, bounded response, owner-
+   approved disclosure, assessment, proposal, activation, and first-visit
+   preparation are connected. Continue lifecycle navigation and operating-
+   preparation convergence before search-based acquisition.
 4. **Curated opportunity pilot:** add bounded owner-authorized previews, coarse
    eligibility/matching, statement of interest, decline, pause, report, rate limits, support,
    and honest empty/unavailable states in one supported region.

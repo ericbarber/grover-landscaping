@@ -295,6 +295,10 @@ pub struct OwnerProviderInboxEntry {
     pub invitation_id: String,
     pub status: String,
     pub can_review_limited_request: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capability_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capability_version: Option<i64>,
     pub organization_id: Option<String>,
     pub organization_name: Option<String>,
     pub provider_name: Option<String>,
@@ -409,6 +413,12 @@ pub struct OwnerProviderProgressEntry {
     pub invitation_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub activation_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub organization_claim_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub organization_claim_status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub organization_claim_version: Option<i64>,
     pub progress_stage: String,
     pub status_label: String,
     pub next_action: String,
@@ -6166,7 +6176,9 @@ async fn get_owner_provider_progress(
                 recipient_check.recipient_user_id,
                 recipient_check.verified_email_fingerprint,
                 recipient_check.status AS recipient_check_status,
-                claim.status AS claim_status, claim.organization_id,
+                claim.id AS claim_id, claim.status AS claim_status,
+                claim.version AS claim_version,
+                claim.organization_id,
                 organization.status AS organization_status,
                 organization.organization_type,
                 capability.status AS capability_status,
@@ -6255,6 +6267,8 @@ async fn get_owner_provider_progress(
     let invitation_status: String = row.get("invitation_status");
     let invitation_expired: bool = row.get("invitation_expired");
     let claim_status: Option<String> = row.get("claim_status");
+    let claim_id: Option<String> = row.get("claim_id");
+    let claim_version: Option<i64> = row.get("claim_version");
     let relationship_checked = claim_status
         .as_deref()
         .is_some_and(|status| matches!(status, "relationship_checked" | "claimed"));
@@ -6330,6 +6344,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: None,
+            organization_claim_status: None,
+            organization_claim_version: None,
             progress_stage: stage.to_string(),
             status_label: label.to_string(),
             next_action: next_action.to_string(),
@@ -6345,6 +6362,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: claim_id.clone(),
+            organization_claim_status: claim_status.clone(),
+            organization_claim_version: claim_version,
             progress_stage: "organization_check_required".to_string(),
             status_label: "Provider organization relationship required".to_string(),
             next_action: "complete_organization_check".to_string(),
@@ -6360,6 +6380,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: claim_id.clone(),
+            organization_claim_status: claim_status.clone(),
+            organization_claim_version: claim_version,
             progress_stage: "response_authorization_required".to_string(),
             status_label: "Limited response acknowledgement required".to_string(),
             next_action: "acknowledge_withheld_data".to_string(),
@@ -6377,6 +6400,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: None,
+            organization_claim_status: None,
+            organization_claim_version: None,
             progress_stage: "assessment_access_ready".to_string(),
             status_label: "Owner-approved assessment details are ready".to_string(),
             next_action: "review_owner_approved_details".to_string(),
@@ -6395,6 +6421,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: None,
+            organization_claim_status: None,
+            organization_claim_version: None,
             progress_stage: "assessment_access_closed".to_string(),
             status_label: "Owner-approved assessment access has ended".to_string(),
             next_action: "contact_owner".to_string(),
@@ -6427,6 +6456,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: None,
+            organization_claim_status: None,
+            organization_claim_version: None,
             progress_stage: "response_recorded".to_string(),
             status_label: label.clone(),
             next_action: "wait_for_owner".to_string(),
@@ -6442,6 +6474,9 @@ async fn get_owner_provider_progress(
         OwnerProviderProgressEntry {
             invitation_id,
             activation_id,
+            organization_claim_id: None,
+            organization_claim_status: None,
+            organization_claim_version: None,
             progress_stage: "response_ready".to_string(),
             status_label: "Limited request ready for response".to_string(),
             next_action: "respond_to_limited_request".to_string(),
@@ -13397,6 +13432,7 @@ async fn open_owner_provider_inbox(
                 organization.status AS organization_status,
                 organization.organization_type,
                 capability.id AS capability_id, capability.status AS capability_status,
+                capability.version AS capability_version,
                 capability.expires_at <= NOW() AS capability_expired,
                 capability.allowed_actions, capability.withheld_categories,
                 EXISTS (
@@ -13490,6 +13526,8 @@ async fn open_owner_provider_inbox(
                 invitation_id: row.get("invitation_id"),
                 status: next_status.to_string(),
                 can_review_limited_request: false,
+                capability_id: None,
+                capability_version: None,
                 organization_id: None,
                 organization_name: None,
                 provider_name: None,
@@ -13516,6 +13554,8 @@ async fn open_owner_provider_inbox(
             invitation_id: row.get("invitation_id"),
             status: "active".to_string(),
             can_review_limited_request: true,
+            capability_id: row.get("capability_id"),
+            capability_version: row.get("capability_version"),
             organization_id: row.get("organization_id"),
             organization_name: row.get("organization_name"),
             provider_name: Some(row.get("provider_name")),

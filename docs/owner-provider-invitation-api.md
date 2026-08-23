@@ -275,6 +275,20 @@ expiry. It rechecks invitation, relationship, active yard-care organization,
 membership, capability status, and expiry, and reconciles stale active
 capabilities without reopening access.
 
+For resumable browser continuation, organization-check and response-
+authorization stages include the actor's linked `organization_claim_id`,
+customer-safe claim status, and current claim version when present. Later and
+closed progress stages omit them. These identifiers are not bearer credentials
+and remain usable only with the same checked recipient, verified mailbox, body
+token, and server-side authority rechecks.
+
+An active `POST /provider-invitations/inbox` response includes the bounded
+capability identifier and current version required by
+`POST /provider-opportunity-responses`. Closed inbox responses omit both. The
+capability identifier is not a bearer token; every write still rechecks the
+recipient, mailbox, invitation token, claim, organization, membership, scope,
+version, and expiry.
+
 The provider progress model never repeats owner name, location, goals, cadence,
 photos, contact, or access considerations. It never exposes owner disclosure
 choices before a Phase 3D grant, capability IDs, other actors' responses, or

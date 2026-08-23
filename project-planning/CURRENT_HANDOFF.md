@@ -8,8 +8,8 @@
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 - Active product boundary: Yard Owner customer authorization decision; Yard Crew
-  known-owner lifecycle reconciliation is the active independent production-
-  adoption slice after public fit/entry and identity/readiness core adoption
+  lifecycle orientation is the active independent production-adoption slice
+  after public fit/entry, identity/readiness, and known-owner core adoption
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -100,6 +100,12 @@
   recorded timezone/capacity, operational crew setup, missing facts, credentials
   not collected, and marketplace eligibility not evaluated remain distinct; no
   broad verified-provider claim is made.
+- The first-time known-owner provider path now removes the bearer fragment,
+  confirms the invited verified mailbox explicitly, connects an actor-scoped
+  existing or duplicate-safe new provider organization, requires withheld-data
+  acknowledgement, opens a resumable bounded inbox, and records controlled
+  question/interest/decline responses. Owner-approved disclosure, assessment,
+  proposal, activation, and first-visit preparation continue from that path.
 
 ### Yard Owner production adoption
 
@@ -138,10 +144,10 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently reconcile the delivered Yard Crew known-owner connection,
-   assessment, proposal, activation, and first-visit loop against the working
-   prototype, closing only safe production-journey gaps without promoting
-   curated discovery past its gates.
+2. Independently add stable lifecycle orientation across the connected Yard
+   Crew known-owner invitation, disclosure, assessment, proposal, activation,
+   and first-visit stages, then close safe operating-preparation gaps without
+   promoting curated discovery past its gates.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
@@ -182,6 +188,10 @@ company CTA routing, authenticated handoff, authority language, and reflow.
 Provider identity/readiness additionally passes seven focused domain/component/
 onboarding checks, the production build, and two phone/desktop Chromium journeys
 covering precise fact states and no-verification/no-publication boundaries.
+Known-owner entry additionally passes nine focused client/component checks,
+backend formatting and compilation, the production build, and ten phone/desktop
+Chromium journeys including the first-time connection path and downstream
+assessment/proposal/first-visit regressions.
 
 ## Stop conditions
 

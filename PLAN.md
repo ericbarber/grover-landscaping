@@ -174,6 +174,13 @@ Current state:
   supplied identity/contact/website/service area, recorded timezone/capacity,
   operational crew setup, missing facts, credentials not collected, and
   marketplace eligibility not evaluated without implying broad verification.
+- The known-owner provider connection is now executable from a first invitation
+  open: explicit verified-mailbox binding leads into actor-scoped existing/new
+  organization connection, withheld-data acknowledgement, resumable bounded
+  inbox authority, and controlled question/interest/decline responses. The
+  delivered disclosure, assessment, proposal, activation, and first-visit
+  workspaces continue from that response without exposing owner-private details
+  or granting operational work authority.
 
 Next slice:
 
@@ -181,10 +188,10 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, reconcile the already delivered
-  Yard Crew known-owner connection, assessment, proposal, activation, and first-
-  visit loop against the working prototype. Close only safe production-journey
-  gaps without widening curated discovery past its product and operational gates.
+- While that product/security boundary is open, add stable lifecycle orientation
+  across the now-connected Yard Crew known-owner invitation, disclosure,
+  assessment, proposal, activation, and first-visit stages. Then close only safe
+  operating-preparation gaps without widening curated discovery past its gates.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

@@ -91,6 +91,10 @@ not currently depend on React Router.
 - Provider identity/readiness facts derived from the current organization
   profile and setup-progress reads, with precise supplied, recorded,
   operational, missing, not-collected, and not-evaluated states
+- First-time known-owner provider connection with transient fragment-token
+  removal, explicit mailbox binding, actor-scoped organization selection or
+  duplicate-safe bootstrap, withheld-data acknowledgement, resumable bounded
+  inbox authority, and controlled question/interest/decline responses
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records

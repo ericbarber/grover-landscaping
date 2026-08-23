@@ -34,6 +34,10 @@ separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
 Authenticated Company setup now presents precise provider identity/readiness
 facts from current profile and operating records without a broad verified badge.
+The known-owner provider route now carries a first-time recipient through
+verified-mailbox confirmation, provider-organization connection, explicit
+withheld-data acknowledgement, a bounded limited-request inbox, and controlled
+interest/question/decline responses before any owner-approved yard disclosure.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -108,6 +112,8 @@ Start with these records when reviewing or continuing development:
 - Provider identity/readiness projection separating supplied profile facts,
   recorded operating preferences, crew setup, missing information, uncollected
   credentials, and unevaluated marketplace eligibility
+- Resumable known-owner provider connection from recipient confirmation through
+  organization selection/bootstrap and bounded pre-disclosure response
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
 - Rust API endpoints for operations, customer delivery, Yard Owner acquisition, provider connection, and administration

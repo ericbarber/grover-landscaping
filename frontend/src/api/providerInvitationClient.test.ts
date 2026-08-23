@@ -4,15 +4,22 @@ import type { InitialServiceProposal, OwnerProviderFirstVisit } from '../domain/
 import {
   createProviderAssessmentMessage,
   createProviderAssessmentPrivateNote,
+  createProviderOpportunityResponse,
+  createProviderOrganizationClaim,
   createProviderInitialServiceProposalResponse,
   fetchProviderDisclosureAccess,
   fetchProviderFirstVisit,
+  fetchProviderInvitationInbox,
   fetchProviderInvitationProgress,
+  fetchProviderOrganizationOptions,
+  issueProviderResponseCapability,
+  previewProviderInvitation,
   proposeProviderAssessmentWindow,
   proposeProviderFirstVisit,
   publishProviderInitialServiceProposal,
   startProviderAssessment,
   transitionProviderAssessment,
+  verifyProviderInvitationRecipient,
 } from './providerInvitationClient';
 
 afterEach(() => {
@@ -44,6 +51,47 @@ describe('provider invitation progress client', () => {
     expect(fetchMock.mock.calls[0][0]).not.toContain('owner_provider_secret');
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string)).toEqual({
       token: 'owner_provider_secret',
+    });
+  });
+
+  it('carries the token through recipient, organization, capability, inbox, and response bodies', async () => {
+    const responses = [
+      { invitation_id: 'invitation_1', status: 'opened', can_review_limited_request: true, provider_name: 'Desert Green', owner_name: 'Morgan', coarse_area: 'North Phoenix', care_goals: ['routine'], cadence: 'weekly', recipient_email_hint: 'd***', still_private_categories: ['exact_address'], recipient_email_checked: false, organization_relationship_checked: false, opportunity_response_capability: false },
+      { invitation_id: 'invitation_1', status: 'opened', can_review_limited_request: true, provider_name: 'Desert Green', owner_name: 'Morgan', coarse_area: 'North Phoenix', care_goals: ['routine'], cadence: 'weekly', recipient_email_hint: 'd***', still_private_categories: ['exact_address'], recipient_email_checked: true, organization_relationship_checked: false, opportunity_response_capability: false },
+      [{ organization_id: 'org_1', display_name: 'Desert Green', membership_role: 'organization_owner', relationship_checked: false }],
+      { claim_id: 'claim_1', invitation_id: 'invitation_1', claim_kind: 'existing_relationship', proposed_display_name: 'Desert Green', organization_id: 'org_1', status: 'relationship_checked', version: 1, organization_relationship_checked: true, opportunity_response_capability: false, persisted: true },
+      { capability_id: 'capability_1', invitation_id: 'invitation_1', claim_id: 'claim_1', organization_id: 'org_1', brief_version: 1, purpose: 'known_provider_yard_assessment_response', allowed_actions: ['express_interest'], withheld_categories: ['exact_address'], status: 'active', expires_at_epoch_seconds: 1_900_000_000, version: 1, opportunity_response_capability: true, persisted: true },
+      { invitation_id: 'invitation_1', status: 'active', can_review_limited_request: true, capability_id: 'capability_1', capability_version: 1, organization_id: 'org_1', organization_name: 'Desert Green', provider_name: 'Desert Green', owner_name: 'Morgan', coarse_area: 'North Phoenix', care_goals: ['routine'], cadence: 'weekly', allowed_actions: ['express_interest'], withheld_categories: ['exact_address'], opportunity_response_capability: true },
+      { response_id: 'response_1', capability_id: 'capability_1', invitation_id: 'invitation_1', organization_id: 'org_1', action: 'express_interest', response_code: 'ready_for_owner_disclosure', status: 'recorded', capability_status: 'active', capability_version: 1, opportunity_response_capability: true, persisted: true },
+    ];
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(
+      JSON.stringify(responses.shift()), { status: 200 },
+    )));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await previewProviderInvitation('secret');
+    await verifyProviderInvitationRecipient('secret');
+    await fetchProviderOrganizationOptions('secret');
+    await createProviderOrganizationClaim('secret', { organizationId: 'org_1' }, 'claim-key');
+    await issueProviderResponseCapability('secret', 'claim_1', 'capability-key');
+    const inbox = await fetchProviderInvitationInbox('secret');
+    await createProviderOpportunityResponse('secret', inbox, {
+      action: 'express_interest', responseCode: 'ready_for_owner_disclosure',
+    }, 'response-key');
+
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      expect.stringContaining('/provider-invitations/preview'),
+      expect.stringContaining('/provider-invitations/verify-recipient'),
+      expect.stringContaining('/provider-invitations/organization-options'),
+      expect.stringContaining('/provider-invitations/organization-claims'),
+      expect.stringContaining('/provider-invitation-organization-claims/claim_1/response-capabilities'),
+      expect.stringContaining('/provider-invitations/inbox'),
+      expect.stringContaining('/provider-opportunity-responses'),
+    ]);
+    expect(fetchMock.mock.calls.every((call) => !(call[0] as string).includes('secret'))).toBe(true);
+    expect(JSON.parse((fetchMock.mock.calls[6][1] as RequestInit).body as string)).toMatchObject({
+      token: 'secret', capability_id: 'capability_1', expected_capability_version: 1,
+      action: 'express_interest', response_code: 'ready_for_owner_disclosure',
     });
   });
 

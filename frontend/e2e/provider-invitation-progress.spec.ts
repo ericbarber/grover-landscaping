@@ -5,6 +5,104 @@ test.beforeEach(async ({ page }) => {
     contentType: 'application/json',
     body: JSON.stringify({ status: 'ready', service: 'grover-landscaping-api' }),
   }));
+  await page.route('**/provider-invitations/preview', async (route) => {
+    const token = route.request().postDataJSON().token;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        invitation_id: 'preview_invitation', status: 'opened',
+        can_review_limited_request: true, provider_name: 'Desert Green Care',
+        owner_name: 'Morgan', coarse_area: 'North Phoenix',
+        care_goals: ['routine_maintenance'], cadence: 'every_two_weeks',
+        recipient_email_hint: 'd***@provider.example',
+        still_private_categories: ['exact_address', 'yard_photos', 'owner_contact', 'access_considerations'],
+        recipient_email_checked: token !== 'first_connection_secret',
+        organization_relationship_checked: false,
+        opportunity_response_capability: false,
+      }),
+    });
+  });
+});
+
+test('a first-time recipient completes the bounded known-owner connection path', async ({ page }) => {
+  let recipientChecked = false;
+  let organizationChecked = false;
+  let responseAuthorized = false;
+  let responseRecorded = false;
+  await page.route('**/auth/config', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ mode: 'disabled', issuer_url: null, client_id: null, login_domain: null }),
+  }));
+  await page.route('**/me/access', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({ user_id: 'recipient-first', username: 'Provider User', verified_email: 'dispatch@provider.example', claim_roles: [], memberships: [] }),
+  }));
+  await page.route('**/provider-invitations/verify-recipient', async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ token: 'first_connection_secret' });
+    recipientChecked = true;
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+      invitation_id: 'invitation_first', status: 'opened', can_review_limited_request: true,
+      provider_name: 'Desert Green Care', owner_name: 'Morgan', coarse_area: 'North Phoenix',
+      care_goals: ['routine_maintenance'], cadence: 'every_two_weeks', recipient_email_hint: 'd***@provider.example',
+      still_private_categories: ['exact_address', 'yard_photos', 'owner_contact', 'access_considerations'],
+      recipient_email_checked: true, organization_relationship_checked: false,
+      opportunity_response_capability: false,
+    }) });
+  });
+  await page.route('**/provider-invitations/progress', async (route) => {
+    expect(recipientChecked).toBe(true);
+    const progress = responseRecorded ? {
+      progress_stage: 'response_recorded', status_label: 'Interest recorded; waiting for the owner’s next decision', next_action: 'wait_for_owner', response_action: 'express_interest', response_label: 'Interest recorded',
+    } : responseAuthorized ? {
+      progress_stage: 'response_ready', status_label: 'Limited request ready for response', next_action: 'respond_to_limited_request',
+    } : organizationChecked ? {
+      progress_stage: 'response_authorization_required', status_label: 'Limited response acknowledgement required', next_action: 'acknowledge_withheld_data', organization_claim_id: 'claim_first', organization_claim_status: 'relationship_checked', organization_claim_version: 1,
+    } : {
+      progress_stage: 'organization_check_required', status_label: 'Provider organization relationship required', next_action: 'complete_organization_check',
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+      invitation_id: 'invitation_first', recipient_email_checked: true,
+      organization_relationship_checked: organizationChecked,
+      opportunity_response_capability: responseAuthorized,
+      closed: false, ...progress,
+    }) });
+  });
+  await page.route('**/provider-invitations/organization-options', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify([{ organization_id: 'org_existing', display_name: 'Desert Green Care', membership_role: 'organization_owner', relationship_checked: false }]),
+  }));
+  await page.route('**/provider-invitations/organization-claims', async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ token: 'first_connection_secret', claim_kind: 'existing_relationship', organization_id: 'org_existing' });
+    organizationChecked = true;
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ claim_id: 'claim_first', invitation_id: 'invitation_first', claim_kind: 'existing_relationship', proposed_display_name: 'Desert Green Care', organization_id: 'org_existing', status: 'relationship_checked', assigned_function: null, version: 1, organization_relationship_checked: true, opportunity_response_capability: false, persisted: true }) });
+  });
+  await page.route('**/provider-invitation-organization-claims/claim_first/response-capabilities', async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ token: 'first_connection_secret', withheld_categories_acknowledged: true });
+    responseAuthorized = true;
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ capability_id: 'capability_first', invitation_id: 'invitation_first', claim_id: 'claim_first', organization_id: 'org_existing', brief_version: 1, purpose: 'known_provider_yard_assessment_response', allowed_actions: ['preliminary_question', 'express_interest', 'decline', 'report'], withheld_categories: ['exact_address', 'yard_photos', 'owner_contact', 'access_considerations'], status: 'active', expires_at_epoch_seconds: 1_900_000_000, version: 1, opportunity_response_capability: true, persisted: true }) });
+  });
+  await page.route('**/provider-invitations/inbox', (route) => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({ invitation_id: 'invitation_first', status: 'active', can_review_limited_request: true, capability_id: 'capability_first', capability_version: 1, organization_id: 'org_existing', organization_name: 'Desert Green Care', provider_name: 'Desert Green Care', owner_name: 'Morgan', coarse_area: 'North Phoenix', care_goals: ['routine_maintenance'], cadence: 'every_two_weeks', allowed_actions: ['preliminary_question', 'express_interest', 'decline', 'report'], withheld_categories: ['exact_address', 'yard_photos', 'owner_contact', 'access_considerations'], opportunity_response_capability: true, recovery_action: null }),
+  }));
+  await page.route('**/provider-opportunity-responses', async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ token: 'first_connection_secret', capability_id: 'capability_first', expected_capability_version: 1, action: 'express_interest', response_code: 'ready_for_owner_disclosure' });
+    responseRecorded = true;
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ response_id: 'response_first', capability_id: 'capability_first', invitation_id: 'invitation_first', organization_id: 'org_existing', action: 'express_interest', response_code: 'ready_for_owner_disclosure', status: 'recorded', capability_status: 'active', capability_version: 1, opportunity_response_capability: true, persisted: true }) });
+  });
+
+  await page.goto('/app/provider-invitation#invitation=first_connection_secret');
+  await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue as dispatch@provider.example' }).click();
+  await expect(page.getByRole('heading', { name: 'Connect the provider organization' })).toBeVisible();
+  await page.getByLabel(/Desert Green Care/).check();
+  await page.getByRole('button', { name: 'Continue with this organization' }).click();
+  await expect(page.getByRole('heading', { name: 'Open a bounded response path' })).toBeVisible();
+  await page.getByLabel(/I understand these details remain private/).check();
+  await page.getByRole('button', { name: 'Open limited response' }).click();
+  await expect(page.getByRole('heading', { name: 'Review the limited request' })).toBeVisible();
+  await expect(page.getByText('Morgan · North Phoenix')).toBeVisible();
+  await page.getByRole('button', { name: 'Request owner-approved assessment review' }).click();
+  await expect(page.getByRole('heading', { name: 'Interest recorded; waiting for the owner’s next decision' })).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('first_connection_secret');
 });
 
 test('a checked recipient loads status without retaining the bearer fragment', async ({ page }) => {
