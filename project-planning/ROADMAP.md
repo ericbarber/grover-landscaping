@@ -5,14 +5,17 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is stable lifecycle orientation across
-the connected Yard Crew known-owner journey. Public fit/entry and
+The current production-adoption priority is safe Yard Crew operating preparation
+after known-owner lifecycle orientation adoption. Public fit/entry and
 provider identity/readiness core are adopted with distinct owner-operator,
 company-owner, team-invitation, and known-owner paths plus precise supplied,
 recorded, operational, missing, not-collected, and not-evaluated fact states.
 First-time recipient confirmation, provider-organization connection, bounded
 response, disclosure, assessment, proposal, activation, and first-visit
 preparation now form one executable production path.
+One responsive six-stage navigator now keeps Invitation, Organization,
+Disclosure, Assessment, Proposal & setup, and First visit oriented without
+collapsing customer approval into provider work authority.
 The property-manager
 portfolio V1 command center is adopted in React, while the Yard Owner portal persisted visit
 projection still waits for an explicit choice between customer-account owner
@@ -475,9 +478,9 @@ schedule, remaining work, or a completed day.
    - Property-manager portfolio core is adopted with explicit local-review
      readiness provenance and protected proof/recommendation reads.
    - Resume Yard Owner V2 portal adoption after that read boundary is explicit.
-   - Public Yard Crew fit/entry routing, provider identity/readiness, and the
-     known-owner connection core are adopted; add stable lifecycle orientation
-     and close safe operating-preparation gaps before larger discovery work.
+   - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
+     connection core, and lifecycle orientation are adopted; close safe
+     operating-preparation gaps before larger discovery work.
    - Defer curated opportunity discovery, billing, customer proof, and production
      captures until their recorded evidence and product gates are satisfied.
 

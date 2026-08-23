@@ -93,6 +93,7 @@ test('a first-time recipient completes the bounded known-owner connection path',
   await expect(page.getByRole('heading', { name: 'Desert Green Care' })).toBeVisible();
   await page.getByRole('button', { name: 'Continue as dispatch@provider.example' }).click();
   await expect(page.getByRole('heading', { name: 'Connect the provider organization' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current: Organization' })).toBeVisible();
   await page.getByLabel(/Desert Green Care/).check();
   await page.getByRole('button', { name: 'Continue with this organization' }).click();
   await expect(page.getByRole('heading', { name: 'Open a bounded response path' })).toBeVisible();
@@ -102,6 +103,7 @@ test('a first-time recipient completes the bounded known-owner connection path',
   await expect(page.getByText('Morgan · North Phoenix')).toBeVisible();
   await page.getByRole('button', { name: 'Request owner-approved assessment review' }).click();
   await expect(page.getByRole('heading', { name: 'Interest recorded; waiting for the owner’s next decision' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current: Disclosure' })).toBeVisible();
   await expect(page.locator('body')).not.toContainText('first_connection_secret');
 });
 
@@ -233,6 +235,7 @@ test('an activated provider sees setup status without implied first-visit author
   })).toBeVisible();
   await expect(page.getByText(/no first visit, payment, route, schedule, or crew assignment was created/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Plan the first visit separately' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Current: First visit' })).toBeVisible();
   await page.getByLabel('Arrival window starts').fill('2027-01-15T08:00');
   await page.getByLabel('Arrival window ends').fill('2027-01-15T10:00');
   await page.getByLabel('Owner-visible preparation note').fill('Please unlock the side gate.');

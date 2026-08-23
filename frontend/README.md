@@ -95,6 +95,8 @@ not currently depend on React Router.
   removal, explicit mailbox binding, actor-scoped organization selection or
   duplicate-safe bootstrap, withheld-data acknowledgement, resumable bounded
   inbox authority, and controlled question/interest/decline responses
+- Responsive six-stage provider connection navigator with current, completed,
+  upcoming, and closed states plus links only to currently available workspaces
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records

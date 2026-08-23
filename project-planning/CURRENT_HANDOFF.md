@@ -8,8 +8,9 @@
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 - Active product boundary: Yard Owner customer authorization decision; Yard Crew
-  lifecycle orientation is the active independent production-adoption slice
-  after public fit/entry, identity/readiness, and known-owner core adoption
+  operating preparation is the active independent production-adoption slice
+  after public fit/entry, identity/readiness, known-owner core, and lifecycle
+  orientation adoption
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -106,6 +107,9 @@
   acknowledgement, opens a resumable bounded inbox, and records controlled
   question/interest/decline responses. Owner-approved disclosure, assessment,
   proposal, activation, and first-visit preparation continue from that path.
+- A stable responsive navigator keeps Invitation, Organization, Disclosure,
+  Assessment, Proposal & setup, and First visit visible with precise current,
+  completed, upcoming, and closed states; only available workspaces are linked.
 
 ### Yard Owner production adoption
 
@@ -144,10 +148,9 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently add stable lifecycle orientation across the connected Yard
-   Crew known-owner invitation, disclosure, assessment, proposal, activation,
-   and first-visit stages, then close safe operating-preparation gaps without
-   promoting curated discovery past its gates.
+2. Independently close safe Yard Crew operating-preparation gaps such as service
+   categories, languages, and provider-facing availability without promoting
+   curated discovery past its gates.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
@@ -192,6 +195,10 @@ Known-owner entry additionally passes nine focused client/component checks,
 backend formatting and compilation, the production build, and ten phone/desktop
 Chromium journeys including the first-time connection path and downstream
 assessment/proposal/first-visit regressions.
+Lifecycle orientation additionally passes three focused domain/rendering checks
+and the production build. A browser rerun was attempted twice but Chromium could
+not launch under exhausted host swap and exited 137; the same ten underlying
+phone/desktop journeys passed immediately before this navigator-only slice.
 
 ## Stop conditions
 

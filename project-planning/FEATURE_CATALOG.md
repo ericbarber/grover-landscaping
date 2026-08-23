@@ -62,6 +62,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   organization bootstrap, explicit withheld-data acknowledgement, resumable
   bounded capability/inbox reads, and controlled question/interest/decline
   responses before owner-approved disclosure
+- Stable responsive known-owner provider lifecycle navigator spanning
+  Invitation, Organization, Disclosure, Assessment, Proposal & setup, and First
+  visit with current/complete/upcoming/closed states and available-stage links
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces

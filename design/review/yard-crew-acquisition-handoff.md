@@ -184,8 +184,9 @@ update fail once.
 3. **Known-owner connection pilot — adopted core:** first-time recipient
    confirmation, existing/new organization connection, bounded response, owner-
    approved disclosure, assessment, proposal, activation, and first-visit
-   preparation are connected. Continue lifecycle navigation and operating-
-   preparation convergence before search-based acquisition.
+   preparation are connected, with a stable six-stage navigator across the
+   complete direct journey. Continue operating-preparation convergence before
+   search-based acquisition.
 4. **Curated opportunity pilot:** add bounded owner-authorized previews, coarse
    eligibility/matching, statement of interest, decline, pause, report, rate limits, support,
    and honest empty/unavailable states in one supported region.

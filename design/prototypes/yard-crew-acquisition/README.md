@@ -21,8 +21,8 @@ duplicate-safe bootstrap, bounded opportunity response, owner-approved
 disclosure, assessment, proposal, activation, and first-visit preparation. The
 complete provider acquisition, operating-readiness, team-authority, saved-alert,
 and curated-opportunity journey remains design ready. Production adoption
-continues with lifecycle orientation and safe operating preparation; curated
-opportunities remain product-gated. See
+continues with safe operating preparation; curated opportunities remain
+product-gated. See
 the [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Review journey

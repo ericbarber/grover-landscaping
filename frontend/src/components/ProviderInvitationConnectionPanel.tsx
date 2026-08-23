@@ -188,7 +188,7 @@ export function ProviderInvitationConnectionPanel({
   if (!['organization_check_required', 'response_authorization_required', 'response_ready'].includes(progress.progressStage)) return null;
 
   return (
-    <section aria-labelledby="provider-connection-step-title" className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-5" data-provider-connection-setup>
+    <section aria-labelledby="provider-connection-step-title" className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-5" data-provider-connection-setup id="provider-connection-step">
       <p className="text-xs font-black uppercase tracking-[0.16em] text-sky-800">Known-owner connection</p>
       <h3 className="mt-2 text-xl font-black" id="provider-connection-step-title">
         {progress.progressStage === 'organization_check_required'

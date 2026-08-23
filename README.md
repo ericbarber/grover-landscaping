@@ -38,6 +38,8 @@ The known-owner provider route now carries a first-time recipient through
 verified-mailbox confirmation, provider-organization connection, explicit
 withheld-data acknowledgement, a bounded limited-request inbox, and controlled
 interest/question/decline responses before any owner-approved yard disclosure.
+That route retains a six-stage lifecycle navigator through disclosure,
+assessment, proposal/setup, and the separately confirmed first visit.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -114,6 +116,8 @@ Start with these records when reviewing or continuing development:
   credentials, and unevaluated marketplace eligibility
 - Resumable known-owner provider connection from recipient confirmation through
   organization selection/bootstrap and bounded pre-disclosure response
+- Stable known-owner lifecycle orientation separating owner disclosure,
+  assessment, proposal/activation, and first-visit confirmation
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
 - Rust API endpoints for operations, customer delivery, Yard Owner acquisition, provider connection, and administration

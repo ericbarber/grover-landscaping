@@ -181,6 +181,10 @@ Current state:
   delivered disclosure, assessment, proposal, activation, and first-visit
   workspaces continue from that response without exposing owner-private details
   or granting operational work authority.
+- Stable provider lifecycle orientation now keeps Invitation, Organization,
+  Disclosure, Assessment, Proposal & setup, and First visit visible as one
+  responsive sequence. It links only to available workspaces and preserves the
+  explicit boundary between customer approval and provider operations.
 
 Next slice:
 
@@ -188,10 +192,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, add stable lifecycle orientation
-  across the now-connected Yard Crew known-owner invitation, disclosure,
-  assessment, proposal, activation, and first-visit stages. Then close only safe
-  operating-preparation gaps without widening curated discovery past its gates.
+- While that product/security boundary is open, close safe Yard Crew operating-
+  preparation gaps such as service categories, languages, and provider-facing
+  availability without widening curated discovery past its gates.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
