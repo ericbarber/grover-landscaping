@@ -49,6 +49,9 @@
 - Manager Recovery now leads with queue health, then pairs a selectable exception
   queue with a bounded detail inspector. Managers can assign, start, resolve,
   reopen, and return directly to linked Job, property, or Schedule context.
+- Manager Reports now carries the same command-center treatment into completion
+  review. Opening a ready or blocked record selects that exact Job and activates
+  its Report workflow on phone and desktop.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -105,8 +108,8 @@ The shared shell plus core field and manager-operation hierarchies are delivered
 responsive navigation, semantic status, Route, Jobs, Job, Schedule, and Recovery
 are in production. The next repository-owned slice is:
 
-1. Connect crew completion, manager report/evidence review, customer-safe
-   delivery, and the shared report as one responsive proof journey.
+1. Converge customer-safe delivery and the shared completion report with the
+   adopted manager review and Job Report direction.
 2. Continue from delivered proof into recommendation/add-on or bid decision
    without weakening immutable snapshots, notification history, or authorization.
 3. Preserve report readiness, change requests, retries, photo processing, and
@@ -125,8 +128,8 @@ are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest manager-Recovery slice passes all 425 frontend unit tests across 105 files,
-TypeScript, the production build, and 18 phone/desktop authenticated-workspace
+The latest completion-review slice passes all 425 frontend unit tests across 105 files,
+TypeScript, the production build, and 20 phone/desktop authenticated-workspace
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

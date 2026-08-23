@@ -121,11 +121,15 @@ Current state:
   urgent, and resolved-today summaries; filtered selectable work; a bounded
   exception inspector; ownership, start, resolve, and reopen actions; and direct
   return into affected Job, property, or Schedule context.
+- Manager Reports now uses the branded command-center hierarchy and a denser
+  responsive completion-review board. Opening an item transitions to the exact
+  selected Job with its Report workflow active, preserving report readiness,
+  evidence, review, change-request, delivery, and notification behavior.
 
 Next slice:
 
-- Begin completion-proof convergence from crew completion through manager review,
-  customer delivery, shared proof, and recommendation/bid decisions.
+- Continue completion-proof convergence through customer delivery, shared proof,
+  and recommendation/add-on or bid decisions.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1355,6 +1359,8 @@ Current state:
   board, and a bounded selected-route planning inspector.
 - Manager Recovery presents operational exceptions as a responsive queue and
   selected-record inspector with lifecycle summaries and return-to-work routing.
+- Manager completion review opens the exact selected Job directly in its Report
+  workflow across desktop and mobile rather than leaving the manager tool active.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters

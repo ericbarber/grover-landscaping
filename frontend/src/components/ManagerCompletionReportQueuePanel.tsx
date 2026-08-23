@@ -119,11 +119,20 @@ export function ManagerCompletionReportQueuePanel({
   }, []);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+    <div className="space-y-5">
+      <section className="rounded-2xl bg-forest p-5 text-white shadow-grover-sm sm:p-6">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Manager reports</p>
+        <h2 className="mt-2 font-display text-3xl font-black">Reports and communication</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-mist">
+          Review field proof, resolve readiness gaps, and move customer-safe reports toward delivery.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Manager reports</p>
-          <h2 className="mt-1 text-xl font-bold text-slate-950">Completion review queue</h2>
+          <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Completion review</p>
+          <h3 className="mt-1 text-xl font-black text-slate-950">Completion review queue</h3>
         </div>
         <div className="grid gap-2 sm:grid-cols-3">
           <label className="text-xs font-semibold text-slate-600">
@@ -257,24 +266,24 @@ export function ManagerCompletionReportQueuePanel({
         ) : null}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
-        <div className="rounded-lg bg-amber-50 p-3">
+      <div aria-label="Completion report summary" className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-5">
+        <div className="rounded-xl bg-amber-50 p-3">
           <p className="text-lg font-bold text-amber-900">{summary.changesRequested}</p>
           <p className="text-xs text-amber-700">Changes</p>
         </div>
-        <div className="rounded-lg bg-emerald-50 p-3">
+        <div className="rounded-xl bg-emerald-50 p-3">
           <p className="text-lg font-bold text-emerald-900">{summary.needsReview}</p>
           <p className="text-xs text-emerald-700">Review</p>
         </div>
-        <div className="rounded-lg bg-sky-50 p-3">
+        <div className="rounded-xl bg-sky-50 p-3">
           <p className="text-lg font-bold text-sky-900">{summary.inReview}</p>
           <p className="text-xs text-sky-700">In review</p>
         </div>
-        <div className="rounded-lg bg-slate-50 p-3">
+        <div className="rounded-xl bg-slate-50 p-3">
           <p className="text-lg font-bold text-slate-900">{summary.draft}</p>
           <p className="text-xs text-slate-600">Draft</p>
         </div>
-        <div className="rounded-lg bg-indigo-50 p-3">
+        <div className="rounded-xl bg-indigo-50 p-3">
           <p className="text-lg font-bold text-indigo-900">{summary.delivered}</p>
           <p className="text-xs text-indigo-700">Delivered</p>
         </div>
@@ -340,7 +349,7 @@ export function ManagerCompletionReportQueuePanel({
           No completion reports match the selected filters.
         </p>
       ) : (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
           {visibleItems.map((item) => (
             <article key={item.reportId} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start justify-between gap-3">
@@ -385,6 +394,7 @@ export function ManagerCompletionReportQueuePanel({
           ))}
         </div>
       )}
-    </section>
+      </section>
+    </div>
   );
 }

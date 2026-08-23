@@ -703,3 +703,102 @@ test('manager Recovery inspects an exception and returns to affected work', asyn
   await expect(page.getByRole('heading', { name: 'Day plans' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('manager completion review opens the selected Job report workflow', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+  });
+  const job = {
+    id: 'job_report',
+    organization_id: 'org_demo_landscaping',
+    assigned_crew_id: 'crew_north',
+    customer_name: 'Oak Street Residence',
+    property_address: '123 Oak Street',
+    status: 'completed',
+    scheduled_date: '2026-08-22',
+    before_photos: 1,
+    after_photos: 1,
+    checklist_items: 4,
+    completed_checklist_items: 4,
+  };
+  const report = {
+    report_id: 'report_job_report',
+    job_id: 'job_report',
+    report_status: 'submitted',
+    persisted: true,
+    ready_for_customer: true,
+    readiness_blockers: [],
+    checklist_progress: 100,
+    before_photos: 1,
+    after_photos: 1,
+    issue_photos: 0,
+    pending_add_ons: 0,
+    route_stop: null,
+    share_url: null,
+    job: {
+      ...job,
+      checklist: [
+        { id: 'arrival', label: 'Confirm arrival', completed: true },
+        { id: 'before', label: 'Capture before photos', completed: true },
+        { id: 'service', label: 'Complete contracted service', completed: true },
+        { id: 'notes', label: 'Record completion notes', completed: true },
+      ],
+    },
+    account: {
+      job_id: 'job_report',
+      account_id: 'account_oak',
+      customer_name: 'Oak Street Residence',
+      billing_model: 'per_job',
+      payment_status: 'paid',
+      service_approval_status: 'approved',
+      contracted_services_per_period: 1,
+      completed_services_this_period: 1,
+      billing_notes: 'Ready for manager review.',
+    },
+    photo_evidence: [],
+    completed_add_ons: [],
+  };
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([job]),
+  }));
+  await page.route('http://localhost:8080/completion-reports', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([report]),
+  }));
+  await page.route('http://localhost:8080/jobs/job_report', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(report.job),
+  }));
+  await page.route('http://localhost:8080/jobs/job_report/add-ons', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_report/photos', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/jobs/job_report/report', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(report),
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Reports/ }).click();
+  await page.getByRole('button', { name: /Completion reports/ }).click();
+
+  const review = page.getByRole('heading', { name: 'Reports and communication' }).locator('xpath=ancestor::div[1]');
+  await expect(review.getByRole('heading', { name: 'Completion review queue' })).toBeVisible();
+  await expect(review.getByText('Oak Street Residence', { exact: true })).toBeVisible();
+  await review.getByRole('button', { name: 'Open report' }).click();
+
+  const jobDetail = page.locator('#job-detail');
+  await expect(jobDetail).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
+  await expect(jobDetail.getByRole('tabpanel', { name: /Overview/ })).toBeHidden();
+  await expect(jobDetail.getByText('Completion report', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

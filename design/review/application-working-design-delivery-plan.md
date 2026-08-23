@@ -374,7 +374,7 @@ different product decision, missing authority, or unavailable required contract.
 | 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
 | 2. Field execution | Core responsive hierarchy adopted | Continue state-by-state regression as shared recovery primitives evolve |
 | 3. Manager daily operations | Core responsive hierarchy adopted | Continue state regression as Schedule and Recovery contracts evolve |
-| 4. Completion proof | In progress · production partial | Connect existing report, evidence, delivery, and bid contracts as one responsive handoff |
+| 4. Completion proof | In progress · manager review connected | Converge customer delivery, shared proof, recommendation, and bid decision |
 | 5. Customers and portfolios | In progress · Yard Owner designs complete, production partial | Finish acquisition proposal/activation; adopt Yard Owner portal; then produce property-manager working design; keep billing gated |
 | 6. Team and organization | Partial production adoption | Converge delivered invitation, membership, crew, hierarchy, and audit controls in the shared shell |
 | 7. Revenue operations | Product-gated | Confirm planned product contracts before high fidelity |

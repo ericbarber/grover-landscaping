@@ -47,6 +47,8 @@ not currently depend on React Router.
   summaries, compact target controls, responsive route board, and planning inspector
 - Manager Recovery with queue-health summaries, responsive exception queue/detail,
   lifecycle actions, and return-to-affected-work routing
+- Branded manager completion-review board that opens the exact selected Job with
+  its Report workflow active across desktop and mobile
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

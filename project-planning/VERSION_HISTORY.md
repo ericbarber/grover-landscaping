@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Connected manager completion review to the exact selected Job Report workflow across desktop and mobile, and adopted the branded Reports and communication command-center hierarchy plus a denser responsive review board without changing report lifecycle or delivery contracts.
 - 2026-08-22: Adopted the manager Recovery queue/detail hierarchy with open/assigned/urgent/resolved-today summaries, responsive filtered queue and selected inspector, shared status feedback, preserved optimistic lifecycle actions, and direct routing back to affected Job, property, or Schedule work.
 - 2026-08-22: Adopted the first authenticated manager Schedule command-center slice with Today’s operation, service-date crew/work/risk summaries, compact route-target controls, a desktop route board plus selected-route planning inspector, responsive stacking, shared status feedback, and preserved draft/capacity/publish/amendment behavior.
 - 2026-08-22: Completed the core field-execution hierarchy adoption by keeping selected Job context and guarded primary actions visible while Overview, Checklist, Photos, Add-ons, and Report open one at a time; added semantic workflow tabs, evidence-gap and next-action guidance, responsive coverage, shared availability notices, and immediate selected-record lifecycle updates.

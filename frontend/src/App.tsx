@@ -767,6 +767,7 @@ function JobDetailPanel({
   onDeliverReport,
   onQueueReportDeliveryNotification,
   reportActionStatus,
+  requestedWorkflow,
 }: {
   job: JobDetail | null;
   isLoading: boolean;
@@ -788,13 +789,14 @@ function JobDetailPanel({
     recipient: string,
   ) => Promise<void>;
   reportActionStatus: string | null;
+  requestedWorkflow: JobWorkflowSection;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
-  const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>('overview');
+  const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
 
   useEffect(() => {
-    setActiveWorkflow('overview');
-  }, [job?.id]);
+    setActiveWorkflow(requestedWorkflow);
+  }, [job?.id, requestedWorkflow]);
 
   if (isLoading) {
     return (
@@ -1157,6 +1159,7 @@ export function App() {
   const [jobSearch, setJobSearch] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState<YardCareJob['status'] | 'all'>('all');
   const [selectedJobId, setSelectedJobId] = useState<string | null>(seedJobs[0]?.id ?? null);
+  const [requestedJobWorkflow, setRequestedJobWorkflow] = useState<JobWorkflowSection>('overview');
   const visibleAssignedJobs = useMemo(
     () => filterAssignedJobs(jobs, jobSearch, jobStatusFilter),
     [jobSearch, jobStatusFilter, jobs],
@@ -1361,6 +1364,7 @@ export function App() {
 
   function selectJobForReview(jobId: string) {
     setSelectedJobId(jobId);
+    setRequestedJobWorkflow('overview');
     if (window.innerWidth < 1024) {
       changeMobileView('job', jobId !== selectedJobId);
     }
@@ -3635,7 +3639,11 @@ export function App() {
               reports={managerReportQueueReports}
               isLoading={isLoadingReportQueue}
               onRefresh={(filters) => void refreshManagerReportQueue(filters)}
-              onSelectJob={selectJobForReview}
+              onSelectJob={(jobId) => {
+                setSelectedJobId(jobId);
+                setRequestedJobWorkflow('report');
+                changeMobileView('job', true);
+              }}
             />
           </div>
             </div>
@@ -3688,6 +3696,7 @@ export function App() {
             onDeliverReport={handleDeliverReport}
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
             reportActionStatus={completionReportActionStatus}
+            requestedWorkflow={requestedJobWorkflow}
           />
         </div>
       </section>
