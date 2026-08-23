@@ -6,11 +6,11 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 ## Active UX Priority
 
 The current production-adoption priority is the Yard Owner portal read boundary
-and Team/organization convergence. The portal shell is adopted locally, but its
-persisted visit projection must wait for an explicit choice between customer-
-account owner scope and one grant per property. The independent Team stream now
-has a live prototype-aligned overview and continues through staffing recovery,
-hierarchy handoffs, and final state/accessibility regression. Proposal
+and the remaining completion-proof continuity. The portal shell is adopted
+locally, but its persisted visit projection must wait for an explicit choice
+between customer-account owner scope and one grant per property. Team/organization core
+convergence is now adopted with its command center, recovery, access safety,
+responsive regression, and production handoff. Proposal
 collaboration, explicit owner-confirmed activation, and separate first-visit
 confirmation are delivered through persistence, API, and responsive owner/
 provider interfaces without granting crew or route authority. The immediately

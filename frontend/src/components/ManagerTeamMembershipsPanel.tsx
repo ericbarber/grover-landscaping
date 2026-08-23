@@ -34,6 +34,13 @@ export function canSuspendMembership(
     && (membership.role !== 'OrganizationOwner' || activeOwnerCount > 1);
 }
 
+export function isCurrentMembershipActor(
+  membership: OrganizationMembership,
+  actorUserId?: string | null,
+): boolean {
+  return Boolean(actorUserId && membership.userId === actorUserId);
+}
+
 export type MembershipStatusFilter = 'all' | 'active' | 'suspended';
 export type MembershipSort = 'name' | 'role' | 'status';
 
@@ -115,9 +122,11 @@ export function teamMembershipsCsv(memberships: OrganizationMembership[]): strin
 
 export function ManagerTeamMembershipsPanel({
   organizationId,
+  actorUserId,
   onTeamChanged,
 }: {
   organizationId: string;
+  actorUserId?: string | null;
   onTeamChanged?: () => void;
 }) {
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
@@ -397,6 +406,7 @@ export function ManagerTeamMembershipsPanel({
       </div>
       <ul className="mt-4 space-y-3">
         {filteredMemberships.map((membership) => {
+          const isCurrentActor = isCurrentMembershipActor(membership, actorUserId);
           const canChange = canChangeMembershipRole(membership, activeOwnerCount);
           const canSuspend = canSuspendMembership(membership, activeOwnerCount);
           const draftRole = draftRoles[membership.id] ?? membership.role;
@@ -404,10 +414,21 @@ export function ManagerTeamMembershipsPanel({
           const nameChanged = draftName.trim() !== (membership.displayName ?? membership.userId);
           const changed = draftRole !== membership.role;
           return (
-            <li className="rounded-lg bg-slate-50 p-3" key={membership.id}>
-              <p className="break-all text-sm font-semibold text-slate-900">
-                {membership.displayName ?? membership.userId}
-              </p>
+            <li
+              aria-current={isCurrentActor ? 'true' : undefined}
+              className="rounded-lg bg-slate-50 p-3"
+              key={membership.id}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="break-all text-sm font-semibold text-slate-900">
+                  {membership.displayName ?? membership.userId}
+                </p>
+                {isCurrentActor ? (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-900">
+                    You
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-0.5 break-all text-xs text-slate-500">{membership.userId}</p>
               <button
                 className="mt-1 min-h-11 rounded-lg border border-slate-300 px-3 text-xs font-semibold"
@@ -485,29 +506,36 @@ export function ManagerTeamMembershipsPanel({
               ) : null}
               {changed ? (
                 confirmingMembershipId === membership.id ? (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button
-                      className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
-                      disabled={isLoading}
-                      onClick={() => {
-                        setDraftRoles((current) => ({
-                          ...current,
-                          [membership.id]: membership.role,
-                        }));
-                        setConfirmingMembershipId('');
-                      }}
-                      type="button"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="min-h-11 rounded-lg bg-slate-950 text-xs font-bold text-white disabled:opacity-60"
-                      disabled={isLoading}
-                      onClick={() => void saveRole(membership)}
-                      type="button"
-                    >
-                      Confirm role
-                    </button>
+                  <div className="mt-3">
+                    {isCurrentActor ? (
+                      <p className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-950" role="alert">
+                        You are changing your own role. Saving may immediately remove Team or manager access; confirm another active owner can restore access.
+                      </p>
+                    ) : null}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
+                        disabled={isLoading}
+                        onClick={() => {
+                          setDraftRoles((current) => ({
+                            ...current,
+                            [membership.id]: membership.role,
+                          }));
+                          setConfirmingMembershipId('');
+                        }}
+                        type="button"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="min-h-11 rounded-lg bg-slate-950 text-xs font-bold text-white disabled:opacity-60"
+                        disabled={isLoading}
+                        onClick={() => void saveRole(membership)}
+                        type="button"
+                      >
+                        Confirm role
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <button
@@ -522,23 +550,30 @@ export function ManagerTeamMembershipsPanel({
               {membership.status === 'active' && !changed ? (
                 canSuspend ? (
                   confirmingLifecycleId === membership.id ? (
-                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
-                      <button
-                        className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
-                        disabled={isLoading}
-                        onClick={() => setConfirmingLifecycleId('')}
-                        type="button"
-                      >
-                        Keep active
-                      </button>
-                      <button
-                        className="min-h-11 rounded-lg bg-red-700 text-xs font-bold text-white disabled:opacity-60"
-                        disabled={isLoading}
-                        onClick={() => void changeStatus(membership, 'suspended')}
-                        type="button"
-                      >
-                        Confirm suspend
-                      </button>
+                    <div className="mt-3 border-t border-slate-200 pt-3">
+                      {isCurrentActor ? (
+                        <p className="mb-3 rounded-lg border border-rose-300 bg-rose-50 p-3 text-xs font-semibold leading-5 text-rose-950" role="alert">
+                          You are suspending your own membership. Confirming ends this organization’s workspace access immediately; another active owner must reactivate it.
+                        </p>
+                      ) : null}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          className="min-h-11 rounded-lg border border-slate-300 text-xs font-semibold"
+                          disabled={isLoading}
+                          onClick={() => setConfirmingLifecycleId('')}
+                          type="button"
+                        >
+                          Keep active
+                        </button>
+                        <button
+                          className="min-h-11 rounded-lg bg-red-700 text-xs font-bold text-white disabled:opacity-60"
+                          disabled={isLoading}
+                          onClick={() => void changeStatus(membership, 'suspended')}
+                          type="button"
+                        >
+                          Confirm suspend
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <button
@@ -590,7 +625,7 @@ export function ManagerTeamMembershipsPanel({
           No team members match these filters.
         </p>
       ) : null}
-      {!isLoading && memberships.length === 0 ? (
+      {!isLoading && !membershipsUnavailable && memberships.length === 0 ? (
         <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No active or suspended memberships found.
         </p>

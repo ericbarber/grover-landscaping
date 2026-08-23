@@ -193,9 +193,11 @@ renderer or a design-tool account to see a proposed screen.
 4. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg),
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg), and
    [Team and access](wireframes/manager/03-team.svg) directions with `/app`;
-   Route and Schedule core composition plus the Team overview are adopted.
+   Route, Schedule, and Team core production composition are adopted.
 5. Review the [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    for the seven completion gates and cross-application sequence.
+   The [Team and organization production handoff](../docs/team-organization-production-handoff.md)
+   maps that wireframe to the current React, API, state, authorization, and test boundaries.
 6. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
    against the adopted four-destination shell before settling its customer-
    scoped persisted visit read model.

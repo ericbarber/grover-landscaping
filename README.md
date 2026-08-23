@@ -44,6 +44,7 @@ Start with these records when reviewing or continuing development:
 - [Owner–provider activation contract](docs/owner-provider-activation-design.md) — accepted-proposal projection, portal access, and first-visit boundaries
 - [First-visit contract](docs/owner-provider-first-visit-design.md) and [API](docs/owner-provider-first-visit-api.md) — post-activation provider windows, owner decisions, recovery, and operational separation
 - [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
+- [Team and organization handoff](docs/team-organization-production-handoff.md) — adopted command center, access-impact, recovery, API, and validation boundaries
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features

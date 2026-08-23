@@ -3466,6 +3466,7 @@ export function App() {
           </div>
           <div className={`${managerWorkspaceTool === 'team-members' ? 'block' : 'hidden'} mt-6 scroll-mt-20`}>
             <ManagerTeamMembershipsPanel
+              actorUserId={auth.userId}
               onTeamChanged={() => {
                 setTeamActivityRefreshSignal((current) => current + 1);
                 setFirstOwnerProgressRefreshSignal((current) => current + 1);

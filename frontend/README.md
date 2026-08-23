@@ -63,7 +63,8 @@ not currently depend on React Router.
   reporting
 - Organization Owner Team and access command center with live membership,
   invitation, crew, and unstaffed-territory summaries plus direct administration
-  and audit paths
+  and audit paths, partial-read isolation, staffing recovery, signed-in access-
+  impact warnings, and unavailable-versus-empty state handling
 - Yard Owner private property and brief intake, guided media, provider connection
   progress, disclosure consent/history/revocation, assessment collaboration,
   immutable proposal review/decisions, and version-specific questions/change

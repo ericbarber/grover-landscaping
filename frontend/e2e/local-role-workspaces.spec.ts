@@ -301,7 +301,9 @@ test('organization owner Team opens the responsive team and access command cente
   await expect(overview.getByRole('button', { name: 'Open team activity' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-  await overview.getByRole('button', { name: 'Review unstaffed territories' }).click();
+  const territoryRecovery = overview.getByRole('button', { name: 'Review unstaffed territories' });
+  await territoryRecovery.focus();
+  await territoryRecovery.press('Enter');
   await expect(page.getByRole('heading', { name: 'Branches and territories' })).toBeVisible();
   await expect(page.locator('#dispatch-hierarchy-administration')).toBeFocused();
 });
@@ -344,6 +346,87 @@ test('team overview preserves available counts during a partial API outage', asy
   await expect(overview.getByLabel('Invited team summary')).toContainText('—');
   await expect(overview.getByText('Part of the team overview could not be refreshed.')).toBeVisible();
   await expect(overview.getByText(/invitation history, crew roster, territory structure/)).toBeVisible();
+});
+
+test('member directory warns before changing the signed-in owner access', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+  });
+  const member = (id: string, userId: string, displayName: string) => ({
+    id,
+    organization_id: 'org_demo_landscaping',
+    organization_name: 'Grover Demo Landscaping',
+    organization_type: 'yard_care_company',
+    user_id: userId,
+    display_name: displayName,
+    role: 'OrganizationOwner',
+    status: 'active',
+    scope_type: 'organization',
+    scope_id: 'org_demo_landscaping',
+  });
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        member(
+          'membership_current_owner',
+          'local-review-organization-owner',
+          'Olivia — Organization Owner',
+        ),
+        member('membership_backup_owner', 'backup-owner', 'Morgan — Backup Owner'),
+      ]),
+    })
+  ));
+
+  await page.goto('/app');
+  const workspaceNavigation = page.getByRole('navigation', {
+    name: page.viewportSize()?.width && page.viewportSize()!.width >= 1024
+      ? 'Desktop workspace'
+      : 'Mobile workspace',
+  });
+  await workspaceNavigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Team Members, invitations, and access/ }).click();
+  await page.getByRole('button', { name: 'Open member directory' }).click();
+
+  const currentMember = page.locator('li[aria-current="true"]');
+  await expect(currentMember.getByText('You', { exact: true })).toBeVisible();
+  await currentMember.getByLabel('Role').selectOption('Manager');
+  await currentMember.getByRole('button', { name: 'Review role change' }).click();
+  await expect(currentMember.getByRole('alert')).toContainText('changing your own role');
+
+  await currentMember.getByLabel('Role').selectOption('OrganizationOwner');
+  await currentMember.getByRole('button', { name: 'Suspend membership' }).click();
+  await expect(currentMember.getByRole('alert')).toContainText('suspending your own membership');
+});
+
+test('member directory distinguishes unavailable persistence from an empty team', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+  });
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
+    route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: 'organization_memberships_unavailable',
+        message: 'Persisted memberships are unavailable.',
+      }),
+    })
+  ));
+  await page.goto('/app');
+  const workspaceNavigation = page.getByRole('navigation', {
+    name: page.viewportSize()?.width && page.viewportSize()!.width >= 1024
+      ? 'Desktop workspace'
+      : 'Mobile workspace',
+  });
+  await workspaceNavigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Team Members, invitations, and access/ }).click();
+  await page.getByRole('button', { name: 'Open member directory' }).click();
+
+  await expect(page.getByRole('alert').filter({
+    hasText: 'no empty or seeded membership list',
+  })).toBeVisible();
+  await expect(page.getByText('No active or suspended memberships found.')).toHaveCount(0);
 });
 
 test('authenticated home retains the shared shell materials and type roles', async ({ page }) => {

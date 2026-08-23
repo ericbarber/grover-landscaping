@@ -56,8 +56,8 @@ and adoption guidance.
    compact Jobs, and one-panel Job execution are in production.
 4. Migrate remaining manager-local feedback to shared primitives without
    weakening operational recovery.
-5. Continue Team and organization convergence from the delivered live overview
-   into staffing recovery and hierarchy handoffs.
+5. Keep the adopted Team and organization command center in regression as its
+   authorization and hierarchy contracts evolve.
 6. Link each implementation slice back to the adoption matrix and validated
    artifact rather than treating the image itself as shipped behavior.
 

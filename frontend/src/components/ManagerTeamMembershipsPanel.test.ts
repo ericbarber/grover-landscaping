@@ -4,6 +4,7 @@ import {
   canChangeMembershipRole,
   canSuspendMembership,
   filterTeamMemberships,
+  isCurrentMembershipActor,
   teamMembershipActiveFilterCount,
   summarizeTeamMemberships,
   sortTeamMemberships,
@@ -41,6 +42,12 @@ describe('team membership role controls', () => {
     expect(canSuspendMembership(membership('OrganizationOwner'), 2)).toBe(true);
     expect(canSuspendMembership(membership('Manager'), 1)).toBe(true);
     expect(canSuspendMembership(membership('Manager', 'suspended'), 1)).toBe(false);
+  });
+
+  it('identifies only the signed-in membership for self-impact guidance', () => {
+    expect(isCurrentMembershipActor(membership('OrganizationOwner'), 'user_1')).toBe(true);
+    expect(isCurrentMembershipActor(membership('OrganizationOwner'), 'user_2')).toBe(false);
+    expect(isCurrentMembershipActor(membership('OrganizationOwner'), null)).toBe(false);
   });
 
   it('filters members by readable name, immutable identity, role, and status', () => {

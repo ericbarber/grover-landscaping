@@ -29,7 +29,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · shell/Home locally adopted | Home, Visits, Proof, and Account plus property context, local-review visit summaries, delivered proof, and recommendation history are adopted. Next persist customer visit reads, then service-day states, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md) and [handoff](../design/review/yard-crew-acquisition-handoff.md) | Design ready / reciprocal entry partial | Adopt provider public routing and identity/readiness first, then connect known-owner invitation, assessment, proposal, and first-service preparation. Curated opportunities and alerts remain gated on marketplace operations. |
 | Property-manager portfolios | [Portfolio wireframe](../design/wireframes/customer/02-property-manager-portfolio.svg) | Partial foundations | Produce and validate the connected working design, then adopt portfolio readiness, exceptions, property proof, and vendor accountability without exposing provider-private data. |
-| Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) | Partial · overview/recovery adopted | The Organization Owner now enters a live Team and access command center with active-member, pending-invitation, active-crew, and unstaffed-territory summaries; partial-read isolation; and direct member, invitation, crew, hierarchy-recovery, and audit paths. Next complete permission/self-impact, empty-state, keyboard, responsive, and handoff regression. |
+| Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) and [production handoff](../docs/team-organization-production-handoff.md) | Adopted core | The Organization Owner enters a live Team and access command center with partial-read isolation; direct member, invitation, crew, hierarchy-recovery, and audit paths; self-impact and last-owner safety; unavailable-versus-empty distinction; keyboard focus transfer; responsive regression; and a production map. Continue regression as authorization and hierarchy contracts evolve. |
 | Revenue operations | [Revenue wireframe](../design/wireframes/revenue/01-revenue-operations.svg) | Product-gated | Keep current bid and billing-readiness foundations visible as delivered; do not imply invoices, payments, taxes, or accounting integration until ownership and compliance contracts are approved. |
 | Homeowner assistant | [Future concept](../design/wireframes/future/01-homeowner-assistant.svg) | Future concept | No current adoption commitment. |
 | Multi-vendor property management | [Future concept](../design/wireframes/future/02-multi-vendor-portfolio.svg) | Future concept | No current adoption commitment; the current property-manager view must not imply full marketplace governance. |
@@ -48,9 +48,8 @@ user value, and dependency safety:
    add-on continuity remains.
 5. **Active:** continue Yard Owner portal adoption after the customer-account
    versus per-property authorization decision; property-manager design follows.
-6. **Active independent stream:** continue Team/organization convergence from
-   the delivered overview through staffing recovery and final state/accessibility
-   regression, then run cross-application critical journeys.
+6. Team/organization core convergence is adopted. Run the cross-application
+   critical journeys after the remaining customer and completion boundaries close.
 
 Phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff

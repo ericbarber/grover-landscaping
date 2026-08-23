@@ -145,6 +145,11 @@ Current state:
   activity. Partial outages preserve independently available counts, identify
   each missing source, and never collapse missing values into false zeroes;
   staffing warnings link directly to crew-lead and territory recovery.
+- Phase 6 access safety and handoff are now complete at the core production
+  boundary. The member directory identifies the signed-in membership, warns
+  before self-role or self-suspension confirmation, preserves last-owner guards,
+  and distinguishes persistence outages from a valid empty team. The production
+  handoff maps the adopted journey to its APIs, authorization, states, and tests.
 
 Next slice:
 
@@ -152,9 +157,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, complete Phase 6 permission,
-  self-impact, empty-state, keyboard, and responsive regression from the
-  delivered Team overview and staffing-recovery handoffs.
+- While that product/security boundary is open, continue the next independent
+  repository-owned gap: completion-proof recommendation/add-on continuity, then
+  remaining Access/Home recovery convergence.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

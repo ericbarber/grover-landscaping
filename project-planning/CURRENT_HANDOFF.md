@@ -71,6 +71,10 @@
   crew, hierarchy, and audit workflows. Partial outages preserve independently
   available counts, identify missing sources, and never infer false zeroes;
   staffing alerts open crew-lead or unstaffed-territory recovery directly.
+- The member directory labels the signed-in membership, warns before self-role
+  and self-suspension confirmation, keeps the last-owner guard, distinguishes
+  unavailable persistence from an empty team, and is mapped in the Phase 6
+  production handoff.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -111,9 +115,9 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently finish Team and organization state convergence: permission/
-   self-impact guidance, empty-state review, keyboard/responsive regression, and
-   final production handoff.
+2. Independently continue completion-proof recommendation/add-on continuity,
+   then remaining Access/Home entry and recovery convergence. Team/organization
+   core adoption is complete and returns to regression only when its contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
    continue service-day, proof/recommendation, concern, and preference adoption.
 
@@ -130,10 +134,11 @@ aligned overview composition.
 
 ## Validation baseline
 
-The latest completed baseline passes all 429 frontend unit tests across 107 files,
-TypeScript, the production build, and the 26-test phone/desktop Chromium local-
-role workspace matrix, including four focused journeys for live staffing
-recovery and partial-read isolation. The immediately preceding public-
+The latest completed baseline passes all 430 frontend unit tests across 107 files,
+TypeScript, the production build, and the 30-test phone/desktop Chromium local-
+role workspace matrix, including Team staffing recovery, partial-read isolation,
+self-impact, unavailable-versus-empty, keyboard activation, and focus transfer.
+The immediately preceding public-
 proof checks remain part of the broader browser baseline. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
