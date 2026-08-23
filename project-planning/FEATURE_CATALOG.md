@@ -72,6 +72,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,
   notification/access preferences, responsive references, and production handoff
+- Validated property-manager portfolio V1 working design with responsive
+  Overview, Properties, Proof, and Approvals destinations; prioritized readiness
+  and exceptions; property search; customer-safe provider accountability; and
+  all-clear, new, loading, partial, and unavailable states
 - Validated owner-first acquisition working design with independent identity,
   private address, guided yard brief/photos, known-provider invitation, curated
   provider discovery, assessment, versioned initial proposal, consented
@@ -245,6 +249,9 @@ here does not mean every capability has been delivered.
 ### Customer experience
 
 - Authenticated account, property, and portfolio portal
+- Connected property-manager portfolio design and production handoff for
+  readiness, exceptions, property coverage, completion proof, and approvals,
+  with provider-private operating data explicitly excluded
 - Validated working design for owner-created private property and pre-service Home
 - Validated working design for guided yard intake, optional photographs, and shareable care brief
 - Validated working design for existing-provider invitations and curated provider discovery

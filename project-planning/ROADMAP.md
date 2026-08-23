@@ -5,12 +5,13 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the Yard Owner portal read boundary
-and the remaining completion-proof continuity. The portal shell is adopted
-locally, but its persisted visit projection must wait for an explicit choice
-between customer-account owner scope and one grant per property. Team/organization core
-convergence is now adopted with its command center, recovery, access safety,
-responsive regression, and production handoff. Proposal
+The current production-adoption priority is the connected property-manager
+portfolio command center. Its V1 responsive working design and production
+handoff are validated, while the Yard Owner portal persisted visit projection
+still waits for an explicit choice between customer-account owner scope and one
+grant per property. Team/organization core convergence is adopted with its
+command center, recovery, access safety, responsive regression, and production
+handoff. Proposal
 collaboration, explicit owner-confirmed activation, and separate first-visit
 confirmation are delivered through persistence, API, and responsive owner/
 provider interfaces without granting crew or route authority. The immediately
@@ -70,8 +71,9 @@ preferences; and covers responsive happy, empty, unavailable, failure, retry,
 and success states. Production adoption requires a dedicated next-visit read
 model, removal of raw billing notes from shared reports, and new customer-safe
 conversation, concern, preference, access, and provider-contact contracts.
-Billing remains product-gated. Provider onboarding and property-manager portfolio
-design remain in the broader customer phase.
+Billing remains product-gated. The broader customer phase now has a connected
+property-manager portfolio design with Overview, Properties, Proof, and Approvals;
+production adoption is active. Provider onboarding remains in the phase.
 The focused Yard Owner acquisition slice is also complete as a validated working
 design. It connects private identity/property creation, guided yard briefs and
 optional photos, known-provider invitation or curated discovery, per-provider
@@ -463,8 +465,9 @@ schedule, remaining work, or a completed day.
 
 **Design-ready — Customer and provider adoption**
 
-   - Adopt the Yard Owner V2 portal after its next-visit read model exists, then
-     create the connected property-manager portfolio working design.
+   - Adopt the validated property-manager portfolio command center while the
+     Yard Owner next-visit read model waits on its authorization decision.
+   - Resume Yard Owner V2 portal adoption after that read boundary is explicit.
    - Adopt Yard Crew public routing and provider identity/readiness before the
      larger provider journey.
    - Defer curated opportunity discovery, billing, customer proof, and production

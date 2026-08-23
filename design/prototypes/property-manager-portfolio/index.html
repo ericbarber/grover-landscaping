@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A connected working design for the Grover property-manager portfolio workspace.">
+  <meta name="theme-color" content="#173f35">
+  <title>Portfolio overview · Grover working design</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../shared/grover-foundation.css">
+  <script src="app.js" defer></script>
+</head>
+<body data-prototype="property-manager-portfolio" data-active-view="overview" data-review-state="default">
+  <a class="skip-link" href="#main-content">Skip to portfolio</a>
+
+  <div class="prototype-note" role="note">
+    <span><strong>Working design</strong> · Illustrative portfolio data · No provider-private operations or persistence</span>
+    <label>Review state
+      <select data-review-state aria-label="Review state">
+        <option value="default">Ready with exceptions</option>
+        <option value="clear">All clear</option>
+        <option value="empty">New portfolio</option>
+        <option value="loading">Loading</option>
+        <option value="partial">Partial data</option>
+        <option value="unavailable">Unavailable</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="app-shell">
+    <aside class="desktop-rail" aria-label="Property portfolio workspace">
+      <a class="brand" href="#overview" data-nav="overview" aria-label="Grover, go to portfolio overview">
+        <svg aria-hidden="true" viewBox="0 0 32 32"><path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22"/><path d="M7 25c5-7 10-12 18-18"/></svg>
+        <span>Grover</span>
+      </a>
+      <div class="rail-context">
+        <p class="micro-label">Customer workspace</p>
+        <strong>Property portfolio</strong>
+        <span>Service confidence across every location</span>
+      </div>
+      <nav class="primary-nav" aria-label="Portfolio destinations">
+        <button type="button" data-nav="overview" aria-current="page"><span aria-hidden="true">⌂</span><span>Overview</span></button>
+        <button type="button" data-nav="properties"><span aria-hidden="true">▦</span><span>Properties</span></button>
+        <button type="button" data-nav="proof"><span aria-hidden="true">✓</span><span>Proof</span><span class="nav-count">2</span></button>
+        <button type="button" data-nav="approvals"><span aria-hidden="true">◇</span><span>Approvals</span><span class="nav-count">1</span></button>
+      </nav>
+      <div class="privacy-note"><strong>Customer-safe by design</strong><span>Provider routes, crew notes, costs, and margins stay private.</span></div>
+    </aside>
+
+    <div class="app-content">
+      <header class="mobile-header">
+        <a class="brand" href="#overview" data-nav="overview" aria-label="Grover, go to portfolio overview">
+          <svg aria-hidden="true" viewBox="0 0 32 32"><path d="M6 23C7 11 15 4 27 4c0 12-7 21-19 22"/><path d="M7 25c5-7 10-12 18-18"/></svg><span>Grover</span>
+        </a>
+        <span class="avatar" aria-label="Signed in as Jordan Kim">JK</span>
+      </header>
+
+      <header class="context-bar">
+        <div><p class="micro-label">Property portfolio</p><h1 tabindex="-1" data-page-title>Overview</h1></div>
+        <label class="portfolio-control"><span>Viewing portfolio</span><select data-portfolio-select><option value="phoenix">Phoenix residential · 12 properties</option><option value="retail">West Valley retail · 4 properties</option></select></label>
+        <div class="account-chip"><span class="avatar" aria-hidden="true">JK</span><span><strong>Jordan Kim</strong><small>Property manager</small></span></div>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <section class="global-state loading-state" role="status" aria-live="polite"><span class="state-icon" aria-hidden="true">···</span><h2>Bringing your portfolio together…</h2><p>Coverage, proof, and approval records are loading.</p></section>
+        <section class="global-state unavailable-state" role="alert"><span class="state-icon" aria-hidden="true">↻</span><h2>Portfolio details are unavailable.</h2><p>Your records remain protected. Try again to restore this workspace.</p><button class="button button-primary" type="button" data-retry>Try again</button></section>
+        <section class="global-state empty-state"><span class="state-icon" aria-hidden="true">◇</span><p class="eyebrow">New portfolio</p><h2>Add the first property to see service coverage.</h2><p>Properties appear here after an authorized account manager connects them to this customer portfolio.</p><button class="button button-secondary" type="button">Contact account manager</button></section>
+
+        <div class="partial-banner" role="status"><strong>Some updates are delayed.</strong><span>Last-service proof for two properties could not be refreshed. Other portfolio records are current.</span><button type="button" data-retry>Refresh</button></div>
+
+        <div class="view-stack">
+          <section class="view-panel overview-view" data-view-panel="overview" aria-labelledby="overview-heading">
+            <div class="view-heading"><div><p class="eyebrow">Monday, August 10</p><h2 id="overview-heading">Your portfolio, ready for the week.</h2><p>Start with the locations that need a decision or follow-up.</p></div><span class="freshness"><i aria-hidden="true"></i> Updated 8:14 AM</span></div>
+            <div class="metric-grid" aria-label="Portfolio summary">
+              <article><span>Properties</span><strong data-property-count>12</strong><small>All connected locations</small></article>
+              <article class="positive"><span>Service ready</span><strong data-ready-percent>83%</strong><small data-ready-copy>10 of 12 on track</small></article>
+              <article class="warning"><span>Open exceptions</span><strong data-exception-count>2</strong><small>Access and schedule</small></article>
+              <article class="clay"><span>Waiting on you</span><strong data-approval-count>1</strong><small>Recommendation due Aug 14</small></article>
+            </div>
+            <div class="overview-grid">
+              <section class="panel priority-panel" aria-labelledby="priority-heading"><div class="section-heading"><div><p class="micro-label">Priority queue</p><h3 id="priority-heading">What needs attention</h3></div><button class="text-button" type="button" data-nav="properties">All properties →</button></div>
+                <div class="exception-list">
+                  <article><span class="tone-dot warning-dot" aria-hidden="true"></span><div><div class="card-top"><strong>Roosevelt Courtyard</strong><span>Access</span></div><p>Gate code expires before Wednesday service.</p><small>Provider requested an update · 42 minutes ago</small></div><button type="button">Review</button></article>
+                  <article><span class="tone-dot clay-dot" aria-hidden="true"></span><div><div class="card-top"><strong>Arcadia Commons</strong><span>Delayed</span></div><p>Tuesday care moved to Thursday because of weather.</p><small>Customer-safe provider update · 7:52 AM</small></div><button type="button">Details</button></article>
+                </div>
+                <div class="all-clear"><span aria-hidden="true">✓</span><div><strong>No portfolio actions need attention.</strong><p>All connected properties are ready and customer decisions are current.</p></div></div>
+              </section>
+              <section class="panel coverage-panel" aria-labelledby="coverage-heading"><div class="section-heading"><div><p class="micro-label">Coverage</p><h3 id="coverage-heading">Next service window</h3></div><span>12 properties</span></div>
+                <div class="coverage-bar" aria-label="10 ready, one needs access, one delayed"><span style="--portion:83%"></span><i style="--portion:9%"></i><b style="--portion:8%"></b></div>
+                <ul class="legend"><li><i class="ready-key"></i>10 ready</li><li><i class="access-key"></i>1 access</li><li><i class="delay-key"></i>1 delayed</li></ul>
+                <button class="button button-secondary" type="button" data-nav="properties">Review property coverage</button>
+              </section>
+            </div>
+            <section class="panel activity-panel" aria-labelledby="activity-heading"><div class="section-heading"><div><p class="micro-label">Recent activity</p><h3 id="activity-heading">Delivered updates</h3></div><button class="text-button" type="button" data-nav="proof">Open proof queue →</button></div>
+              <div class="activity-grid"><article><span class="activity-mark">✓</span><div><strong>Weekly care complete</strong><p>Desert Ridge Offices · proof delivered</p><small>Today · 7:46 AM</small></div></article><article><span class="activity-mark">✓</span><div><strong>Irrigation check complete</strong><p>Camelback Villas · 4 photos delivered</p><small>Yesterday · 4:18 PM</small></div></article><article><span class="activity-mark decision-mark">◇</span><div><strong>Recommendation shared</strong><p>North Central Homes · tree clearance</p><small>Due Friday · $285</small></div></article></div>
+            </section>
+          </section>
+
+          <section class="view-panel" data-view-panel="properties" aria-labelledby="properties-heading" hidden>
+            <div class="view-heading"><div><p class="eyebrow">Portfolio coverage</p><h2 id="properties-heading">Every property, one accountable view.</h2><p>Provider status is customer-safe; private crew and route details are never shown.</p></div><label class="search-control">Search properties<input type="search" data-property-search placeholder="Name or address"></label></div>
+            <div class="property-table" role="region" aria-label="Property coverage" tabindex="0"><table><thead><tr><th>Property</th><th>Provider</th><th>Cadence</th><th>Next service</th><th>Status</th></tr></thead><tbody>
+              <tr data-property-row><td><strong>Roosevelt Courtyard</strong><small>825 E Roosevelt St</small></td><td>Desert Bloom</td><td>Weekly</td><td>Wed · 8–10 AM</td><td><span class="status warning-status">Access needed</span></td></tr>
+              <tr data-property-row><td><strong>Arcadia Commons</strong><small>4430 E Oak St</small></td><td>Desert Bloom</td><td>Weekly</td><td>Thu · 9–11 AM</td><td><span class="status clay-status">Delayed</span></td></tr>
+              <tr data-property-row><td><strong>Desert Ridge Offices</strong><small>21001 N Tatum Blvd</small></td><td>Desert Bloom</td><td>Weekly</td><td>Fri · 6–8 AM</td><td><span class="status ready-status">Ready</span></td></tr>
+              <tr data-property-row><td><strong>Camelback Villas</strong><small>3300 E Camelback Rd</small></td><td>Desert Bloom</td><td>Biweekly</td><td>Aug 18 · 7–9 AM</td><td><span class="status ready-status">Ready</span></td></tr>
+            </tbody></table><p class="no-results" role="status">No properties match that search.</p></div>
+          </section>
+
+          <section class="view-panel" data-view-panel="proof" aria-labelledby="proof-heading" hidden>
+            <div class="view-heading"><div><p class="eyebrow">Delivered evidence</p><h2 id="proof-heading">Proof ready for review.</h2><p>Open customer-safe completion records without exposing provider operations.</p></div><span class="queue-count">2 new</span></div>
+            <div class="record-grid"><article class="proof-card"><div class="proof-visual after-one"><span>4 photos</span></div><div><p class="micro-label">Delivered today · 7:46 AM</p><h3>Desert Ridge Offices</h3><p>Weekly landscape care complete. Lawn, edges, shrubs, and cleanup verified.</p><button class="button button-secondary" type="button" data-open-record>Open completion report</button></div></article><article class="proof-card"><div class="proof-visual after-two"><span>3 photos</span></div><div><p class="micro-label">Delivered yesterday · 4:18 PM</p><h3>Camelback Villas</h3><p>Irrigation inspection complete. One customer-safe observation is included.</p><button class="button button-secondary" type="button" data-open-record>Open completion report</button></div></article></div>
+          </section>
+
+          <section class="view-panel" data-view-panel="approvals" aria-labelledby="approvals-heading" hidden>
+            <div class="view-heading"><div><p class="eyebrow">Approval center</p><h2 id="approvals-heading">One decision is waiting.</h2><p>Compare property, scope, total, and timing before responding.</p></div></div>
+            <article class="approval-card"><div><p class="micro-label">North Central Homes · Due Aug 14</p><h3>Tree clearance recommendation</h3><p>Remove one damaged limb above the west parking edge and haul debris.</p><dl><div><dt>Provider</dt><dd>Desert Bloom Landscaping</dd></div><div><dt>Timing</dt><dd>Within 10 business days</dd></div><div><dt>Proposed total</dt><dd>$285</dd></div></dl></div><div class="approval-actions"><button class="button button-primary" type="button">Review recommendation</button><button class="text-button" type="button">Ask a question</button></div></article>
+          </section>
+        </div>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Portfolio destinations"><button type="button" data-nav="overview" aria-current="page"><span aria-hidden="true">⌂</span>Overview</button><button type="button" data-nav="properties"><span aria-hidden="true">▦</span>Properties</button><button type="button" data-nav="proof"><span aria-hidden="true">✓</span>Proof</button><button type="button" data-nav="approvals"><span aria-hidden="true">◇</span>Approvals</button></nav>
+    </div>
+  </div>
+
+  <dialog data-record-dialog aria-labelledby="record-title"><div class="dialog-header"><div><p class="micro-label">Customer-safe completion record</p><h2 id="record-title">Weekly care complete</h2></div><button type="button" data-close-dialog aria-label="Close completion report">×</button></div><p>Delivered work and approved evidence appear here. Crew notes, routes, internal pricing, and margins remain private to the provider.</p><ul><li>Lawn mowed and edged</li><li>Shrubs shaped</li><li>Hard surfaces cleared</li></ul><button class="button button-primary" type="button" data-close-dialog>Done</button></dialog>
+  <div class="dialog-backdrop" data-dialog-backdrop></div>
+  <p class="sr-only" role="status" aria-live="polite" data-announcer></p>
+</body>
+</html>

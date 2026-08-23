@@ -1,6 +1,8 @@
 # Property Portfolio Coverage Workflow
 
-This note defines the next customer-portal workflow for yards that are not yet placed into a portfolio group.
+This note defines the implemented portfolio-grouping foundation and the next
+property-manager command-center adoption for yards that may or may not be placed
+into a portfolio group.
 
 ## Goal
 
@@ -30,16 +32,21 @@ The customer portal should show three sections:
 - Portfolio grouping must not change crew assignment.
 - Portfolio grouping must not change customer or yard ownership.
 
-## Implementation checklist
+## Delivered grouping behavior
 
-- Add fixture data for at least one grouped yard and one ungrouped yard in the customer portal preview.
-- Pass portfolio links and customer-owned yards into `CustomerPortfolioSummaryPanel`.
-- Render portfolio groups first, using existing `PropertyPortfolioDetail` data.
-- Render ungrouped yards in a separate customer-visible section below grouped portfolios.
-- Show the empty-state message only when the account has no portfolio groups.
-- Keep crew assignment controls out of the portfolio grouping UI.
-- Add focused tests for ungrouped-yard display behavior when component testing is available.
+- Fixture data includes grouped and ungrouped customer yards.
+- `CustomerPortfolioSummaryPanel` receives portfolio links and customer-owned yards.
+- Portfolio groups render before the separate ungrouped-yard list.
+- The empty state is distinct from unavailable portfolio persistence.
+- Portfolio grouping and crew assignment remain separate operations.
+- Tenant-scoped portfolio list/create/link APIs and customer grouping reads are implemented.
 
-## Next implementation slice
+## Connected command-center adoption
 
-Wire portfolio and crew-assignment API routes after organization membership and tenant-aware access boundaries are persisted.
+The validated [property-manager portfolio working design](../design/prototypes/property-manager-portfolio/README.md)
+and [production handoff](../design/review/property-manager-portfolio-handoff.md)
+extend grouping into Overview, Properties, Proof, and Approvals. The next React
+slice replaces the PropertyManager persona's generic customer/grouping stack with
+that hierarchy while reusing current authorized grouping, completion-report, and
+bid data. Any illustrative visit readiness remains labeled until the customer
+owner/delegate authorization choice permits a persisted customer visit read.

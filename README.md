@@ -25,8 +25,10 @@ activation is now delivered through the responsive owner/provider workspaces;
 first-visit confirmation is delivered separately from crew, route, work-order,
 and payment authority. The authenticated Property Owner now has a four-
 destination portal shell, while Organization Owners have a prototype-aligned
-Team and access command center. Persisted customer visit reads await an explicit
-customer-account versus per-property owner-authorization decision.
+Team and access command center. A validated property-manager portfolio working
+design now provides the next React adoption contract for readiness, exceptions,
+property coverage, proof, and approvals. Persisted customer visit reads await an
+explicit customer-account versus per-property owner-authorization decision.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -45,6 +47,7 @@ Start with these records when reviewing or continuing development:
 - [First-visit contract](docs/owner-provider-first-visit-design.md) and [API](docs/owner-provider-first-visit-api.md) — post-activation provider windows, owner decisions, recovery, and operational separation
 - [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
 - [Team and organization handoff](docs/team-organization-production-handoff.md) — adopted command center, access-impact, recovery, API, and validation boundaries
+- [Property-manager portfolio handoff](design/review/property-manager-portfolio-handoff.md) — connected design, privacy boundary, states, and production adoption contract
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features

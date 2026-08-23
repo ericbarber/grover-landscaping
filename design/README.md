@@ -41,6 +41,7 @@ design/
 ├── README.md                          # Workflow and ownership
 ├── prototypes/
 │   ├── public-homepage/                # Responsive working V2 design
+│   ├── property-manager-portfolio/     # Connected portfolio command center
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
@@ -53,6 +54,8 @@ design/
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
+│   ├── property-manager-portfolio-plan.md # Portfolio audit and design phases
+│   ├── property-manager-portfolio-handoff.md # Production adoption contract
 │   ├── yard-owner-entry-provider-connection-plan.md # Owner acquisition and provider matching
 │   ├── yard-owner-acquisition-handoff.md # Acquisition production contract map
 │   ├── yard-owner-acquisition-professional-review.md # Workflow, content, and accessibility review
@@ -69,6 +72,7 @@ design/
 │   ├── validate-yard-owner-acquisition.mjs # Acquisition workflow checks
 │   ├── validate-yard-crew-acquisition.mjs # Provider acquisition workflow checks
 │   ├── validate-yard-owner-portal.mjs  # Responsive customer-flow checks
+│   ├── validate-property-manager-portfolio.mjs # Portfolio command-center checks
 │   └── validate-prototype-foundation.mjs # Cross-prototype style checks
 └── wireframes/
     ├── public/                         # Homepage, campaigns, conversion, shares
@@ -161,6 +165,13 @@ with:
 node design/tools/validate-yard-owner-acquisition.mjs --capture
 ```
 
+Validate the connected property-manager portfolio and refresh its desktop and
+mobile gallery references with:
+
+```bash
+node design/tools/validate-property-manager-portfolio.mjs --capture
+```
+
 Validate Yard Crew provider acquisition and refresh its marketing/opportunity
 references with:
 
@@ -201,12 +212,16 @@ renderer or a design-tool account to see a proposed screen.
 6. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
    against the adopted four-destination shell before settling its customer-
    scoped persisted visit read model.
-7. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
+7. Review the [connected property-manager portfolio](prototypes/property-manager-portfolio/index.html)
+   and its [production handoff](review/property-manager-portfolio-handoff.md).
+   The working design establishes the responsive command-center hierarchy while
+   keeping its illustrative visit/readiness data and privacy boundary explicit.
+8. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
    before provider public routing/readiness adoption; keep curated discovery and
    alerts behind their product and operational gates.
-8. Use the [working public homepage](prototypes/public-homepage/index.html) as a
+9. Use the [working public homepage](prototypes/public-homepage/index.html) as a
    regression reference. Its core production adoption is complete; remaining
    captures and proof require approved evidence.
-9. Confirm that homeowner self-service, full multi-vendor management, curated
+10. Confirm that homeowner self-service, full multi-vendor management, curated
    marketplace behavior, and billing remain distinct gated concepts rather than
    being mixed into delivered core workflows.

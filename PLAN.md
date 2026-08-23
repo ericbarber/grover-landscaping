@@ -158,6 +158,12 @@ Current state:
   derive from active membership roles with explicit Support and first-owner
   bootstrap exceptions; unscoped claims receive Home-only guidance; and all seven
   local-review identities are covered across phone and desktop.
+- Phase 5 now has a validated connected property-manager portfolio V1 design and
+  production handoff. Its responsive Overview, Properties, Proof, and Approvals
+  destinations prioritize readiness, exceptions, property coverage, delivered
+  records, and decisions; explicitly cover all-clear, new, loading, partial, and
+  unavailable states; and exclude provider-private operations. Production still
+  shows only the earlier grouping summary for this persona.
 
 Next slice:
 
@@ -165,9 +171,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, continue the next independent
-  repository-owned gap: the connected property-manager portfolio design, then
-  Yard Crew reciprocal public entry and provider identity/readiness adoption.
+- While that product/security boundary is open, adopt the validated property-
+  manager portfolio command center into the PropertyManager React workspace,
+  then continue Yard Crew reciprocal public entry and provider identity/readiness.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -407,9 +413,9 @@ Next design work:
   shell, field execution, manager daily operations, and completion-proof
   handoff in the order recorded by
   [`project-planning/PROTOTYPE_ADOPTION.md`](project-planning/PROTOTYPE_ADOPTION.md).
-- Adopt the Yard Owner V2 portal after its customer-specific next-visit read
-  model is delivered, then return to the property-manager portfolio working
-  design; keep billing product-gated.
+- Adopt the connected property-manager portfolio design while the Yard Owner
+  next-visit authorization choice is open; then resume the Yard Owner V2 portal
+  after its read model is authorized. Keep billing product-gated.
 - Execute the prepared owner/provider usability, assistive-technology, physical-
   device, privacy/security, and support/operations signoff sessions against the
   committed assurance build; treat any critical disclosure misunderstanding as

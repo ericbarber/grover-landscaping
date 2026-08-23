@@ -7,8 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: Yard Owner customer authorization decision; Team and
-  organization convergence remains independently implementable
+- Active product boundary: Yard Owner customer authorization decision; the
+  validated property-manager portfolio design is the active independent
+  production-adoption slice
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -83,6 +84,11 @@
   verification succeeds. Access outages fail closed with retry; active membership
   roles drive personas, while Support and first-owner bootstrap remain explicit
   exceptions. Unscoped roles receive a Home-only invitation/restoration state.
+- Property-manager portfolio V1 is now a validated connected working design with
+  Overview, Properties, Proof, and Approvals, responsive state coverage,
+  customer-safe provider accountability, review captures, and a production
+  handoff. The production PropertyManager view still uses the earlier generic
+  Yard Owner plus property-group summaries until the next React slice lands.
 
 ### Yard Owner production adoption
 
@@ -121,8 +127,9 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently produce the connected property-manager portfolio design, then
-   adopt Yard Crew reciprocal public entry and provider identity/readiness.
+2. Independently adopt the connected property-manager portfolio design into the
+   PropertyManager React workspace, then adopt Yard Crew reciprocal public entry
+   and provider identity/readiness.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
@@ -137,7 +144,8 @@ aligned overview composition.
 5. [`../design/review/yard-owner-acquisition-handoff.md`](../design/review/yard-owner-acquisition-handoff.md)
 6. [`../docs/yard-owner-acquisition-production-plan.md`](../docs/yard-owner-acquisition-production-plan.md)
 7. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-8. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
+8. [`../design/review/property-manager-portfolio-handoff.md`](../design/review/property-manager-portfolio-handoff.md)
+9. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
 
 ## Validation baseline
 
@@ -153,6 +161,9 @@ Chromium shared-proof/proposal journeys. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
 baseline.
+The property-manager portfolio design additionally passes its 1440px and 390px
+browser validator for navigation, state switching, search, dialog focus return,
+touch targets, and overflow.
 
 ## Stop conditions
 

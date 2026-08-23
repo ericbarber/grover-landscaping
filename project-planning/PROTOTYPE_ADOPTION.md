@@ -28,7 +28,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, proposals, collaboration, activation, and separate first-visit confirmation are delivered. Next: relationship continuity; curated discovery remains later and governed. |
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · shell/Home locally adopted | Home, Visits, Proof, and Account plus property context, local-review visit summaries, delivered proof, and recommendation history are adopted. Next persist customer visit reads, then service-day states, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md) and [handoff](../design/review/yard-crew-acquisition-handoff.md) | Design ready / reciprocal entry partial | Adopt provider public routing and identity/readiness first, then connect known-owner invitation, assessment, proposal, and first-service preparation. Curated opportunities and alerts remain gated on marketplace operations. |
-| Property-manager portfolios | [Portfolio wireframe](../design/wireframes/customer/02-property-manager-portfolio.svg) | Partial foundations | Produce and validate the connected working design, then adopt portfolio readiness, exceptions, property proof, and vendor accountability without exposing provider-private data. |
+| Property-manager portfolios | [Connected working design](../design/prototypes/property-manager-portfolio/README.md) and [production handoff](../design/review/property-manager-portfolio-handoff.md) | Design ready / grouping foundations adopted | Adopt the four-destination command center for the PropertyManager persona using current portfolio grouping, customer-safe proof, and proposal data. Keep illustrative readiness explicit until authorized persisted customer visit reads exist. |
 | Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) and [production handoff](../docs/team-organization-production-handoff.md) | Adopted core | The Organization Owner enters a live Team and access command center with partial-read isolation; direct member, invitation, crew, hierarchy-recovery, and audit paths; self-impact and last-owner safety; unavailable-versus-empty distinction; keyboard focus transfer; responsive regression; and a production map. Continue regression as authorization and hierarchy contracts evolve. |
 | Revenue operations | [Revenue wireframe](../design/wireframes/revenue/01-revenue-operations.svg) | Product-gated | Keep current bid and billing-readiness foundations visible as delivered; do not imply invoices, payments, taxes, or accounting integration until ownership and compliance contracts are approved. |
 | Homeowner assistant | [Future concept](../design/wireframes/future/01-homeowner-assistant.svg) | Future concept | No current adoption commitment. |
@@ -46,8 +46,9 @@ user value, and dependency safety:
 3. Manager Schedule, Recovery, and completion-review core convergence is adopted.
 4. Shared completion proof, proposal decisions, and completed recommendation/
    add-on continuity are adopted at the core production boundary.
-5. **Active:** continue Yard Owner portal adoption after the customer-account
-   versus per-property authorization decision; property-manager design follows.
+5. **Active:** adopt the validated property-manager command center while Yard
+   Owner persisted visit reads wait on the customer-account versus per-property
+   authorization decision.
 6. Team/organization core convergence is adopted. Run the cross-application
    critical journeys after the remaining customer and completion boundaries close.
 
