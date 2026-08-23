@@ -49,8 +49,8 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Converge the authenticated manager schedule, inspector, capacity-risk,
-   publish, and Recovery workflow.
+1. Continue the adopted authenticated Schedule command center through capacity,
+   publish-conflict, and stale-state convergence, then connect Recovery.
 2. Continue state-by-state field regression as shared primitives evolve; Route,
    compact Jobs, and one-panel Job execution are in production.
 3. Migrate remaining manager-local feedback to shared primitives without

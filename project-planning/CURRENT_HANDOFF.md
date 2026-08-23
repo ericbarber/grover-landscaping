@@ -43,6 +43,9 @@
   actions visible while semantic tabs open one Overview, Checklist, Photos,
   Add-ons, or Report panel at a time across phone and desktop layouts. Required
   photo-evidence gaps and the next field action are explicit.
+- Authenticated manager Schedule now leads with Today’s operation and selected-
+  date crew/work/risk summaries, then opens the existing route builder beside a
+  bounded planning inspector on desktop and in task order on smaller screens.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -100,12 +103,12 @@ icons, responsive navigation, semantic status primitives, denser desktop
 composition, Route, compact Jobs, and one-panel Job execution are in production.
 The next repository-owned slice is:
 
-1. Converge authenticated manager Schedule, capacity risk, inspector, publish,
-   and Recovery composition around the existing operational contracts.
-2. Preserve day-plan drafts, assignments, amendments, exceptions, notification,
-   and completion-report recovery while changing composition.
-3. Migrate manager-local feedback to the shared status contract and validate the
-   responsive owner/manager journey.
+1. Finish capacity warning, publish conflict, and stale-schedule state convergence
+   within the adopted Schedule command center.
+2. Converge Recovery around exception ownership, resolution, reopening, and a
+   return path to the affected schedule/report/photo context.
+3. Preserve day-plan drafts, assignments, amendments, exceptions, notifications,
+   and completion-report recovery while migrating manager-local feedback.
 
 ## Read first
 
@@ -120,8 +123,8 @@ The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest field-execution slice passes all 423 frontend unit tests across 104 files,
-TypeScript, the production build, and 14 phone/desktop authenticated-workspace
+The latest manager-Schedule slice passes all 424 frontend unit tests across 105 files,
+TypeScript, the production build, and 16 phone/desktop authenticated-workspace
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

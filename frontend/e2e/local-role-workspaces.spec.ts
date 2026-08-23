@@ -513,3 +513,119 @@ test('field Job keeps context and primary actions while opening one workflow pan
   await expect(detail.getByRole('tabpanel', { name: /Report/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('manager Schedule opens a responsive route board and planning inspector', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+  });
+  await page.route('http://localhost:8080/crews', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'crew_north',
+        name: 'North crew',
+        organization_id: 'org_demo_landscaping',
+        status: 'active',
+        daily_stop_capacity: 8,
+        lead_membership_id: 'membership_lead',
+        persisted: true,
+      },
+      {
+        id: 'crew_south',
+        name: 'South crew',
+        organization_id: 'org_demo_landscaping',
+        status: 'active',
+        daily_stop_capacity: 8,
+        lead_membership_id: null,
+        persisted: true,
+      },
+    ]),
+  }));
+  await page.route('http://localhost:8080/jobs', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'job_oak',
+        organization_id: 'org_demo_landscaping',
+        assigned_crew_id: 'crew_north',
+        customer_name: 'Oak Street Residence',
+        property_address: '123 Oak Street',
+        status: 'scheduled',
+        scheduled_date: '2026-08-22',
+        before_photos: 0,
+        after_photos: 0,
+        checklist_items: 4,
+        completed_checklist_items: 0,
+      },
+      {
+        id: 'job_mesa',
+        organization_id: 'org_demo_landscaping',
+        assigned_crew_id: null,
+        customer_name: 'Mesa HOA entrance',
+        property_address: '42 Gate Way',
+        status: 'scheduled',
+        scheduled_date: '2026-08-22',
+        before_photos: 0,
+        after_photos: 0,
+        checklist_items: 4,
+        completed_checklist_items: 0,
+      },
+    ]),
+  }));
+  await page.route('http://localhost:8080/day-plans', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    const input = route.request().postDataJSON() as { crew_id: string; service_date: string };
+    return route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'day_plan_north',
+        crew_id: input.crew_id,
+        service_date: input.service_date,
+        status: 'draft',
+        route_status: 'manual',
+        time_zone: 'America/Phoenix',
+        service_area_label: 'North Phoenix',
+        stop_capacity: 8,
+        persisted: true,
+      }),
+    });
+  });
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Schedule/ }).click();
+  await page.getByRole('button', { name: /Day plans/ }).click();
+
+  const schedule = page.locator('#first-owner-day-plan');
+  await schedule.getByLabel('Service date').fill('2026-08-22');
+  await expect(schedule.getByRole('heading', { name: 'Today’s operation' })).toBeVisible();
+  const summary = schedule.getByRole('region', { name: 'Operation summary' });
+  await expect(summary.getByText('2 / 2', { exact: true })).toBeVisible();
+  await expect(summary.locator('article').filter({ hasText: 'Unassigned' }).getByText('1', { exact: true })).toBeVisible();
+  await expect(summary.locator('article').filter({ hasText: 'Crew risks' }).getByText('1', { exact: true })).toBeVisible();
+  await expect(schedule.getByText('No route is selected.', { exact: true })).toBeVisible();
+
+  await schedule.getByRole('button', { name: 'Create draft day plan' }).click();
+  const board = schedule.getByRole('heading', { name: 'Route board' });
+  const inspector = schedule.getByRole('heading', { name: 'Planning inspector' });
+  await expect(board).toBeVisible();
+  await expect(inspector).toBeVisible();
+  const desktopPositions = await Promise.all([
+    board.boundingBox(),
+    inspector.boundingBox(),
+  ]);
+  expect(desktopPositions[0]?.x).toBeLessThan(desktopPositions[1]?.x ?? 0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(board).toBeVisible();
+  await expect(inspector).toBeVisible();
+  const mobilePositions = await Promise.all([
+    board.boundingBox(),
+    inspector.boundingBox(),
+  ]);
+  expect(mobilePositions[0]?.y).toBeLessThan(mobilePositions[1]?.y ?? 0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

@@ -112,11 +112,16 @@ Current state:
   visible while Overview, Checklist, Photos, Add-ons, and Report open one at a
   time; completion exposes required evidence gaps and local state transitions
   remain synchronized with the selected record.
+- Authenticated manager Schedule now adopts the command-center hierarchy:
+  Today’s operation and service-date crew/work/risk summaries lead into a compact
+  draft target, then a wide route board and selected-route planning inspector on
+  desktop that stack in task order on smaller screens. Existing draft, capacity,
+  publish, persistence, and amendment contracts remain authoritative.
 
 Next slice:
 
-- Begin authenticated manager daily-operations convergence with Schedule,
-  capacity risk, inspector, publish, and Recovery composition.
+- Continue manager daily-operations convergence through capacity/publish states,
+  Recovery composition, and return-to-affected-work context.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1341,6 +1346,9 @@ Current state:
 - Frontend manager route planner shows retry controls for failed route mutation sync attempts
 - Frontend manager route planner shows next-step guidance while drafting
 - Frontend manager route planner explains publish blockers from the publish guard
+- Authenticated Schedule presents a responsive Today’s operation command center
+  with selected-date crew/work/risk metrics, a compact draft target, a wide route
+  board, and a bounded selected-route planning inspector.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters

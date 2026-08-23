@@ -43,6 +43,8 @@ not currently depend on React Router.
 - Responsive Job execution with persistent target context and guarded primary
   actions plus one semantic Overview, Checklist, Photos, Add-ons, or Report panel
   at a time
+- Authenticated manager Schedule command center with selected-date operation
+  summaries, compact target controls, responsive route board, and planning inspector
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting
