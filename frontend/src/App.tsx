@@ -116,6 +116,7 @@ import {
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
+import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
@@ -179,6 +180,7 @@ import {
 } from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import { operationsToManagerActivity } from './domain/operationalManagerActivity';
+import type { CustomerPortalVisitSummary } from './domain/customerPortalVisits';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
@@ -312,6 +314,35 @@ const customerPortalPreviewWorkSummaries: CustomerPortalWorkSummary[] = [
     status: 'scheduled',
     reportReady: false,
     bidReviewRequired: false,
+  },
+];
+
+const customerPortalPreviewVisits: CustomerPortalVisitSummary[] = [
+  {
+    id: 'visit_1001',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    propertyId: 'property_1001',
+    scheduledDate: '2026-08-27',
+    arrivalWindow: '8:00–10:00 AM',
+    serviceTitle: 'Weekly yard care',
+    scope: ['Mow and edge the lawn', 'Clear hard surfaces', 'Check irrigation coverage'],
+    status: 'confirmed',
+    preparationMessage: 'Please unlock the side gate and keep pets inside during the arrival window.',
+    nextUpdateMessage: 'We will update this visit when your care team is on the way.',
+  },
+  {
+    id: 'visit_1002',
+    customerId: 'customer_1001',
+    organizationId: 'org_demo_landscaping',
+    propertyId: 'property_1002',
+    scheduledDate: '2026-09-05',
+    arrivalWindow: '10:00 AM–12:00 PM',
+    serviceTitle: 'Seasonal tree care',
+    scope: ['Inspect the renovation area', 'Trim approved limbs', 'Remove green waste'],
+    status: 'confirmed',
+    preparationMessage: 'Keep the backyard work area clear during the arrival window.',
+    nextUpdateMessage: 'We will confirm when the care team begins traveling to this property.',
   },
 ];
 
@@ -3228,10 +3259,10 @@ export function App() {
           </section>
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
-            <CustomerPortalPreviewPanel
+            <YardOwnerPortalPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
-              workSummaries={customerPortalPreviewWorkSummaries}
+              visits={customerPortalPreviewVisits}
               completionReportsByProperty={propertyCompletionReports}
               isLoadingReportHistory={isLoadingPropertyCompletionReports}
               hasReportHistoryError={hasPropertyCompletionReportHistoryError}

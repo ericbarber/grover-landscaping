@@ -49,8 +49,8 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Complete recommendation/add-on continuity from the adopted manager review,
-   customer-safe shared proof, and proposal decision path.
+1. Continue Yard Owner portal adoption from the delivered four-destination shell
+   into persisted service-day visits, proof/recommendation context, and recovery.
 2. Continue Schedule and Recovery state regression as operational contracts evolve.
 3. Continue state-by-state field regression as shared primitives evolve; Route,
    compact Jobs, and one-panel Job execution are in production.

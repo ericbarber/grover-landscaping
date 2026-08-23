@@ -60,6 +60,10 @@
   scope, pricing, explicit approval/decline confirmation, and recorded outcomes.
   Its API response omits internal bid, line-item, and service identifiers plus
   manager notes and delivery metadata.
+- Property Owner now enters a customer-density Yard Owner portal with Home, Visits,
+  Proof, and Account, plus portal-wide property selection, local-review next-visit
+  summaries, delivered proof, and recommendation history. The visit summary is an
+  explicit frontend contract and is not yet backed by a persisted customer API.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -116,11 +120,10 @@ The shared shell plus core field and manager-operation hierarchies are delivered
 responsive navigation, semantic status, Route, Jobs, Job, Schedule, and Recovery
 are in production. The next repository-owned slice is:
 
-1. Complete recommendation/add-on continuity from adopted manager review,
-   customer-safe delivered proof, and proposal decisions without weakening
-   immutable snapshots, notification history, or authorization.
-2. Begin the customer and portfolio hierarchy after the remaining completion-proof
-   continuity is adopted.
+1. Add a persisted, customer-and-organization-scoped visit read model matching the
+   adopted portal contract without exposing jobs, routes, crews, or provider notes.
+2. Continue service-day lifecycle, proof/recommendation context, concern recovery,
+   and customer-controlled preferences after that read boundary is authoritative.
 
 ## Read first
 
@@ -135,8 +138,8 @@ are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest shared-proposal slice passes all 425 frontend unit tests across 105 files,
-all 187 backend library tests, TypeScript, the production build, and 28 phone/desktop authenticated-workspace and public-proof
+The latest Yard Owner portal slice passes all 427 frontend unit tests across 106 files,
+TypeScript, the production build, and 30 phone/desktop authenticated-workspace and public-proof
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this

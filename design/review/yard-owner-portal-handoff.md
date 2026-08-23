@@ -1,8 +1,9 @@
 # Yard Owner Portal Working-Design Handoff
 
-Production adoption status: design ready with partial customer/report/portfolio
-foundations. The connected portal composition and its next-visit, service-day,
-concern, recommendation, and preference contracts are not yet fully adopted.
+Production adoption status: four-destination shell, portal-wide property context,
+local-review next visit, delivered proof, and recommendation history adopted on
+partial customer/report/portfolio foundations. The customer visit API, complete
+service-day, concern, recommendation, and preference contracts are not yet fully adopted.
 Billing remains product-gated. See the
 [`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
 

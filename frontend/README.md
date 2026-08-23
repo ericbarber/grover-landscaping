@@ -55,6 +55,9 @@ not currently depend on React Router.
 - Customer-safe shared proposal decisions with responsive scope/pricing, explicit
   approve/decline confirmation, recorded outcomes, closed-link recovery, and a
   shared trust boundary
+- Yard Owner portal shell with Home, Visits, Proof, and Account destinations,
+  portal-wide property selection, local-review next-visit summaries, delivered
+  proof, and recommendation history
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

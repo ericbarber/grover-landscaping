@@ -802,3 +802,56 @@ test('manager completion review opens the selected Job report workflow', async (
   await expect(jobDetail.getByText('Completion report', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('yard owner portal keeps property context across Home, Visits, Proof, and Account', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+  });
+  await page.route('http://localhost:8080/properties/property_1001/completion-reports', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([{
+      report_id: 'report_property_1001',
+      job_id: 'job_property_1001',
+      property_id: 'property_1001',
+      organization_id: 'org_demo_landscaping',
+      customer_name: 'Sample Customer',
+      property_address: '123 Oak Street',
+      delivered_at: '2026-08-22T17:00:00Z',
+      share_url: '/report-view/property-proof',
+    }]),
+  }));
+  await page.route('http://localhost:8080/properties/property_1002/completion-reports', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+  await page.route('http://localhost:8080/accounts/customer_1001/bids', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: '[]',
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'My yard', exact: true }).click();
+
+  const portal = page.locator('#customer-workspace');
+  await expect(portal.getByRole('navigation', { name: 'Yard Owner portal' })).toBeVisible();
+  await expect(portal.getByRole('heading', { name: 'Welcome back, Sample Customer' })).toBeVisible();
+  await expect(portal.getByText('Next confirmed visit')).toBeVisible();
+  await expect(portal.getByText('Mow and edge the lawn')).toBeVisible();
+
+  await portal.getByRole('button', { name: 'Visits', exact: true }).click();
+  await expect(portal.getByRole('heading', { name: 'Visits' })).toBeVisible();
+  await expect(portal.getByText('8:00–10:00 AM · Weekly yard care')).toBeVisible();
+
+  await portal.getByRole('button', { name: 'Proof', exact: true }).click();
+  await expect(portal.getByRole('heading', { name: 'Proof' })).toBeVisible();
+  await expect(portal.getByRole('link', { name: /Care completed/ })).toHaveAttribute('href', /\/report-view\/property-proof$/);
+
+  await portal.getByRole('button', { name: 'Account', exact: true }).click();
+  await expect(portal.getByRole('heading', { name: 'Account' })).toBeVisible();
+  await portal.getByRole('button', { name: /Backyard Renovation Area/ }).click();
+  await expect(portal.getByRole('heading', { name: 'Welcome back, Sample Customer' })).toBeVisible();
+  await expect(portal.getByText('Seasonal tree care')).toBeVisible();
+  await expect(portal.getByLabel('Choose portal property')).toHaveValue('property_1002');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

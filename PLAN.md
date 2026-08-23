@@ -133,11 +133,16 @@ Current state:
   customer-facing scope, pricing, confirmation, recorded decisions, and closed-link
   recovery. The public API projection omits bid IDs, line-item IDs, service IDs,
   manager notes, delivery recipients, and unrelated account data.
+- The Property Owner workspace now adopts the Yard Owner portal shell with stable
+  Home, Visits, Proof, and Account destinations, portal-wide property selection,
+  a customer-safe next-visit hierarchy, delivered proof, and recommendation
+  history. The visit summary is currently an explicit local-review/frontend
+  contract; persisted customer-scoped visit reads remain the next production step.
 
 Next slice:
 
-- Complete recommendation/add-on continuity from delivered proof, then begin the
-  customer and portfolio hierarchy adoption.
+- Persist and scope the customer visit read model, then continue Yard Owner
+  service-day, proof/recommendation context, concern, and preference adoption.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1375,6 +1380,9 @@ Current state:
 - The secure proposal link presents customer-safe scope and pricing, requires
   explicit decision confirmation, renders recorded outcomes, and does not
   serialize internal bid/line-item/service identifiers or manager notes.
+- Property Owner local review uses a distinct customer-density portal composition
+  with four stable destinations and property context preserved across next visit,
+  delivered proof, and account history.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters
