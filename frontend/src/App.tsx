@@ -3551,7 +3551,28 @@ export function App() {
             />
           </div>
           <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6`}>
-            <ManagerOperationalExceptionsPanel organizationId={activeManagerOrganizationId} />
+            <ManagerOperationalExceptionsPanel
+              organizationId={activeManagerOrganizationId}
+              onOpenAffectedResource={(resourceType, resourceId) => {
+                if (resourceType === 'job') {
+                  setSelectedJobId(resourceId);
+                  changeMobileView('job', true);
+                  return;
+                }
+                if (resourceType === 'property') {
+                  openPropertyWorkspace(resourceId, 'operational-profile');
+                  return;
+                }
+                setManagerWorkspaceSection('schedule');
+                setManagerWorkspaceTool('day-plan');
+                window.setTimeout(() => {
+                  document.getElementById('first-owner-day-plan')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  });
+                }, 0);
+              }}
+            />
           </div>
           <div className={`${managerWorkspaceTool === 'customer-privacy' ? 'block' : 'hidden'} mt-6`}>
             <ManagerCustomerPrivacyPanel

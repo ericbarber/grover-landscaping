@@ -49,13 +49,14 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Continue the adopted authenticated Schedule command center through capacity,
-   publish-conflict, and stale-state convergence, then connect Recovery.
-2. Continue state-by-state field regression as shared primitives evolve; Route,
+1. Connect existing completion report, evidence review, customer delivery, shared
+   proof, recommendation, and bid contracts as one responsive handoff.
+2. Continue Schedule and Recovery state regression as operational contracts evolve.
+3. Continue state-by-state field regression as shared primitives evolve; Route,
    compact Jobs, and one-panel Job execution are in production.
-3. Migrate remaining manager-local feedback to shared primitives without
+4. Migrate remaining manager-local feedback to shared primitives without
    weakening operational recovery.
-4. Link each implementation slice back to the adoption matrix and validated
+5. Link each implementation slice back to the adoption matrix and validated
    artifact rather than treating the image itself as shipped behavior.
 
 The SVG files are editable source artifacts. PNG files are validated browser

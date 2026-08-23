@@ -117,11 +117,15 @@ Current state:
   draft target, then a wide route board and selected-route planning inspector on
   desktop that stack in task order on smaller screens. Existing draft, capacity,
   publish, persistence, and amendment contracts remain authoritative.
+- Manager Recovery now adopts the queue/detail hierarchy with open, assigned,
+  urgent, and resolved-today summaries; filtered selectable work; a bounded
+  exception inspector; ownership, start, resolve, and reopen actions; and direct
+  return into affected Job, property, or Schedule context.
 
 Next slice:
 
-- Continue manager daily-operations convergence through capacity/publish states,
-  Recovery composition, and return-to-affected-work context.
+- Begin completion-proof convergence from crew completion through manager review,
+  customer delivery, shared proof, and recommendation/bid decisions.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1349,6 +1353,8 @@ Current state:
 - Authenticated Schedule presents a responsive Today’s operation command center
   with selected-date crew/work/risk metrics, a compact draft target, a wide route
   board, and a bounded selected-route planning inspector.
+- Manager Recovery presents operational exceptions as a responsive queue and
+  selected-record inspector with lifecycle summaries and return-to-work routing.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters

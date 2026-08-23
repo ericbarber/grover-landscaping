@@ -629,3 +629,77 @@ test('manager Schedule opens a responsive route board and planning inspector', a
   expect(mobilePositions[0]?.y).toBeLessThan(mobilePositions[1]?.y ?? 0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('manager Recovery inspects an exception and returns to affected work', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const today = new Date().toISOString().slice(0, 10);
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+  });
+  await page.route(/http:\/\/localhost:8080\/operational-exceptions(?:\?.*)?$/, (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'exception_route',
+        organization_id: 'org_demo_landscaping',
+        category: 'weather',
+        priority: 'critical',
+        status: 'open',
+        title: 'Lightning delay on North route',
+        description: 'Crew is holding at a safe location pending manager review.',
+        affected_resource_type: 'route',
+        affected_resource_id: 'day_plan_north',
+        assigned_user_id: 'local-review-manager',
+        reported_by_user_id: 'crew_lead_1',
+        resolved_by_user_id: null,
+        resolution_note: null,
+        resolved_at: null,
+        created_at: '2026-08-22T15:00:00Z',
+        updated_at: '2026-08-22T15:05:00Z',
+      },
+      {
+        id: 'exception_access',
+        organization_id: 'org_demo_landscaping',
+        category: 'access',
+        priority: 'medium',
+        status: 'resolved',
+        title: 'Gate code confirmed',
+        description: null,
+        affected_resource_type: 'property',
+        affected_resource_id: 'property_1001',
+        assigned_user_id: 'local-review-manager',
+        reported_by_user_id: 'manager_2',
+        resolved_by_user_id: 'manager_2',
+        resolution_note: 'Customer confirmed updated code.',
+        resolved_at: `${today}T16:00:00Z`,
+        created_at: '2026-08-22T14:00:00Z',
+        updated_at: '2026-08-22T16:00:00Z',
+      },
+    ]),
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Desktop workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Recovery/ }).click();
+  await page.getByRole('button', { name: /Operational exceptions/ }).click();
+
+  const recovery = page.getByRole('heading', { name: 'Recovery and exceptions' }).locator('xpath=ancestor::div[1]');
+  await expect(recovery.getByRole('region', { name: 'Recovery summary' }).getByText('1', { exact: true })).toHaveCount(4);
+  await expect(recovery.getByRole('heading', { name: 'Work needing recovery' })).toBeVisible();
+  await expect(recovery.getByRole('heading', { name: 'Lightning delay on North route' })).toBeVisible();
+  await expect(recovery.getByText('Route · day_plan_north', { exact: true })).toBeVisible();
+
+  const queueHeading = recovery.getByRole('heading', { name: 'Work needing recovery' });
+  const detailHeading = recovery.getByRole('heading', { name: 'Lightning delay on North route' });
+  const desktopPositions = await Promise.all([queueHeading.boundingBox(), detailHeading.boundingBox()]);
+  expect(desktopPositions[0]?.x).toBeLessThan(desktopPositions[1]?.x ?? 0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobilePositions = await Promise.all([queueHeading.boundingBox(), detailHeading.boundingBox()]);
+  expect(mobilePositions[0]?.y).toBeLessThan(mobilePositions[1]?.y ?? 0);
+  await recovery.getByRole('button', { name: 'Open affected work' }).click();
+  await expect(page.locator('#first-owner-day-plan')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Day plans' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
