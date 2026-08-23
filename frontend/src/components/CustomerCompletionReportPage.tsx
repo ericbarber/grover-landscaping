@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isApiErrorCode } from '../api/apiError';
-import { fetchSharedCompletionReport, type CompletionReportSnapshot } from '../api/client';
+import { fetchSharedCompletionReport, type CustomerCompletionReport } from '../api/client';
 import { PublicCustomerLinkHeader, PublicCustomerTrustBoundary } from './PublicCustomerLink';
 import { WorkspaceIcon } from './WorkspaceIcon';
 
@@ -19,7 +19,7 @@ function serviceDateLabel(value: string): string {
   });
 }
 
-function evidenceLabel(report: CompletionReportSnapshot): string {
+function evidenceLabel(report: CustomerCompletionReport): string {
   const parts = [
     `${report.beforePhotos} before`,
     `${report.afterPhotos} after`,
@@ -32,10 +32,10 @@ function evidenceLabel(report: CompletionReportSnapshot): string {
   return `${parts.join(' · ')} photo${report.beforePhotos + report.afterPhotos + report.issuePhotos === 1 ? '' : 's'}`;
 }
 
-function capturedLabel(report: CompletionReportSnapshot): string | null {
-  if (!report.snapshotMetadata) return null;
+function capturedLabel(report: CustomerCompletionReport): string | null {
+  if (!report.capturedAtEpochSeconds) return null;
 
-  return new Date(report.snapshotMetadata.capturedAtEpochSeconds * 1000).toLocaleString(undefined, {
+  return new Date(report.capturedAtEpochSeconds * 1000).toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -45,7 +45,7 @@ function capturedLabel(report: CompletionReportSnapshot): string | null {
 }
 
 export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionReportPageProps) {
-  const [report, setReport] = useState<CompletionReportSnapshot | null>(null);
+  const [report, setReport] = useState<CustomerCompletionReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
 
@@ -62,6 +62,8 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
           setError(
             isApiErrorCode(requestError, 'shared_report_unavailable')
               ? 'Report storage is temporarily unavailable. Retry after service readiness recovers.'
+              : isApiErrorCode(requestError, 'shared_report_snapshot_invalid')
+                ? 'The delivered report could not be safely prepared. Retry after service readiness recovers.'
               : isApiErrorCode(requestError, 'completion_report_route_unavailable')
                 ? 'Route storage is temporarily unavailable, so this report cannot be safely assembled yet.'
                 : 'This completion report link is invalid or no longer available.',
@@ -119,7 +121,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               <div>
                 <h1 className="font-display text-4xl font-black sm:text-5xl">Service completion report</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
-                  A customer-safe record of completed work for {report.job.customerName}.
+                  A customer-safe record of completed work for {report.customerName}.
                 </p>
               </div>
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-black text-emerald-900">
@@ -133,12 +135,12 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
             <section aria-labelledby="service-identity-heading">
               <p className="grover-eyebrow">Service identity</p>
               <h2 className="mt-2 font-display text-3xl font-black text-forest" id="service-identity-heading">
-                {report.job.propertyAddress}
+                {report.propertyAddress}
               </h2>
               <dl className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl bg-emerald-50 p-4">
                   <dt className="text-xs font-black uppercase tracking-wide text-emerald-800">Service date</dt>
-                  <dd className="mt-2 text-base font-black text-forest">{serviceDateLabel(report.job.scheduledDate)}</dd>
+                  <dd className="mt-2 text-base font-black text-forest">{serviceDateLabel(report.scheduledDate)}</dd>
                 </div>
                 <div className="rounded-2xl bg-slate-100 p-4">
                   <dt className="text-xs font-black uppercase tracking-wide text-slate-600">Provided by</dt>
@@ -165,13 +167,13 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               {report.photoEvidence.length > 0 ? (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {report.photoEvidence.map((photo) => (
-                    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50" key={photo.photoId}>
-                      {photo.thumbnailUrl ? (
+                    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50" key={`${photo.photoType}-${photo.fileName}`}>
+                      {photo.imageUrl ? (
                         <img
-                          alt={`${photo.photoType} service evidence for ${report.job.propertyAddress}`}
+                          alt={`${photo.photoType} service evidence for ${report.propertyAddress}`}
                           className="aspect-video w-full object-cover"
                           loading="lazy"
-                          src={photo.thumbnailUrl}
+                          src={photo.imageUrl}
                         />
                       ) : (
                         <div className="grid aspect-video place-items-center bg-slate-100 text-slate-500">
@@ -190,8 +192,8 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               <div className="mt-5 rounded-2xl border border-slate-200 p-4 sm:p-5">
                 <h3 className="text-lg font-black text-forest">Completed checklist</h3>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {report.job.checklist.map((item) => (
-                    <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3" key={item.id}>
+                  {report.checklist.map((item, index) => (
+                    <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3" key={`${item.label}-${index}`}>
                       <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${item.completed ? 'bg-emerald-700 text-white' : 'border border-slate-300 bg-paper text-slate-500'}`}>
                         {item.completed ? <WorkspaceIcon className="h-4 w-4" name="check" /> : <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />}
                       </span>
@@ -202,14 +204,22 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
               </div>
             </section>
 
-            {report.completedAddOns.length > 0 ? (
-              <section className="rounded-2xl border border-slate-200 p-5">
-                <h2 className="font-display text-2xl font-black text-forest">Completed add-on work</h2>
+            {report.completedRecommendations.length > 0 ? (
+              <section className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5" aria-labelledby="recommendation-proof-heading">
+                <p className="grover-eyebrow">Recommendation outcome</p>
+                <h2 className="mt-2 font-display text-2xl font-black text-forest" id="recommendation-proof-heading">Approved recommendations delivered</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  These customer-approved additions are complete and included in this service proof.
+                </p>
                 <div className="mt-4 space-y-3">
-                  {report.completedAddOns.map((addOn) => (
-                    <article className="rounded-xl bg-slate-50 p-4" key={addOn.id}>
-                      <p className="font-black text-forest">{addOn.serviceName}</p>
-                      {addOn.serviceDescription ? <p className="mt-1 text-sm text-slate-600">{addOn.serviceDescription}</p> : null}
+                  {report.completedRecommendations.map((recommendation, index) => (
+                    <article className="rounded-xl border border-emerald-100 bg-paper p-4" key={`${recommendation.serviceName}-${index}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <p className="font-black text-forest">{recommendation.serviceName}</p>
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-800">Completed</span>
+                      </div>
+                      {recommendation.serviceDescription ? <p className="mt-1 text-sm text-slate-600">{recommendation.serviceDescription}</p> : null}
+                      {recommendation.quantity > 1 ? <p className="mt-2 text-xs font-bold text-slate-500">Quantity {recommendation.quantity}</p> : null}
                     </article>
                   ))}
                 </div>
@@ -217,7 +227,7 @@ export function CustomerCompletionReportPage({ shareToken }: CustomerCompletionR
             ) : null}
 
             <PublicCustomerTrustBoundary>
-              This secure page contains delivered service proof only. It excludes manager-only identifiers, internal notes, billing details, and unrelated account data.
+              This secure page contains delivered service proof and customer-approved recommendation outcomes only. Its API excludes manager-only identifiers, internal notes, pricing, billing details, and unrelated account data.
             </PublicCustomerTrustBoundary>
           </div>
         </section>

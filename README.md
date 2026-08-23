@@ -69,6 +69,8 @@ Start with these records when reviewing or continuing development:
 - PostgreSQL-backed completion report state
 - Audited manager start-review transition for submitted completion reports
 - Stable shareable completion report links
+- Narrowed public completion-proof responses with customer-safe service,
+  checklist, photo, and completed approved-recommendation fields only
 - Organization-scoped manager completion-report queue and notification recovery controls
 - Customer portal preview with scoped delivered report history
 - Customer portal preview with authenticated bid history
@@ -331,7 +333,7 @@ Current backend endpoints include:
 | POST | `/photo-processing-jobs/{id}/resolve` | Mark an in-organization failed or dead-letter photo processing job as manually resolved |
 | GET | `/jobs/{id}/add-ons` | List approved add-on work scheduled for a job |
 | PUT | `/jobs/{id}/add-ons/{add_on_id}/status` | Start or complete approved add-on work |
-| GET | `/reports/{share_token}` | Read a shared completion report by token |
+| GET | `/reports/{share_token}` | Read the narrowed customer-safe completion proof by token; internal IDs, notes, pricing, billing, and operating context are excluded |
 | GET | `/report-view/{share_token}` | Open the customer-facing delivered report page |
 | GET | `/properties/{property_id}/completion-reports` | List delivered completion reports for a scoped property |
 | POST | `/jobs/{id}/start` | Mark a job started |

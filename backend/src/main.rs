@@ -36,6 +36,7 @@ use axum::{
 use completion_reports::{
     apply_completion_report_persistence, attach_delivered_snapshot_metadata,
     build_completion_report, completion_report_is_active_manager_queue_status,
+    customer_completion_report_response, customer_completion_report_snapshot_response,
     is_valid_completion_report_lifecycle_status, CompletionReportActionResult,
     CompletionReportDeliveryNotificationResult, CompletionReportResponse,
 };
@@ -8294,7 +8295,15 @@ async fn get_shared_completion_report(
         .delivered_snapshot_for_report_share_token(&share_token)
         .await
     {
-        ResourceReadResult::Loaded(snapshot) => return Json(snapshot).into_response(),
+        ResourceReadResult::Loaded(snapshot) => {
+            return match customer_completion_report_snapshot_response(&snapshot) {
+                Some(report) => Json(report).into_response(),
+                None => persisted_resource_unavailable_response(
+                    "shared_report_snapshot_invalid",
+                    "The persisted shared report snapshot could not be safely projected.",
+                ),
+            };
+        }
         ResourceReadResult::Unavailable => {
             return persisted_resource_unavailable_response(
                 "shared_report_unavailable",
@@ -8325,7 +8334,7 @@ async fn get_shared_completion_report(
     };
 
     match build_and_persist_completion_report(&state, &job_id).await {
-        Ok(report) => Json(report).into_response(),
+        Ok(report) => Json(customer_completion_report_response(&report)).into_response(),
         Err(response) => response,
     }
 }

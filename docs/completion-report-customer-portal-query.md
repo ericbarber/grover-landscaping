@@ -1,6 +1,8 @@
 # Completion Report Customer Portal Query
 
-This note describes the query shape future customer-portal report routes should follow.
+This note describes the query shape implemented customer-portal report routes
+follow and the authorization decision still required for persisted Yard Owner
+visit reads.
 
 ## Query starting point
 
@@ -24,14 +26,21 @@ A list response should include enough information for the portal timeline withou
 - report ID,
 - property ID,
 - job ID,
-- crew ID,
 - delivered timestamp,
-- current approved summary text,
 - share link when available,
-- counts for before photos, after photos, issue photos, service steps, and completed add-ons.
+- customer-safe customer/property identity.
+
+The public share-token detail route has a stricter contract: it omits report,
+job, account, property, organization, crew, photo, add-on, bid, line-item, and
+service identifiers and returns only safe service/checklist/photo/completed-
+recommendation content.
 
 ## Guardrails
 
 The customer query should not return draft, submitted, in-review, or change-requested reports.
 
 The customer query should not expose manager review notes, quality-check failure details, internal status history, or manager queue fields.
+
+Persisted signed-in Yard Owner visit/history reads must not expand beyond the
+current authorization model until customer-account inheritance for owners versus
+per-property grants is explicitly decided.

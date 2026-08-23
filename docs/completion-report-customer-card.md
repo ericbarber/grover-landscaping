@@ -26,9 +26,12 @@ The evidence area should show safe counts and links into delivered evidence:
 - after photos,
 - issue photos when present,
 - completed service steps,
-- completed add-ons.
+- completed approved recommendations.
 
 Photo and service-step details should come from persisted report snapshots so later job edits do not silently change the delivered card.
+The public detail response is a narrowed projection of that snapshot and does
+not include internal identifiers, notes, object keys, pricing, billing, route,
+crew, or organization context.
 
 ## Summary and link
 

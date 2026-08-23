@@ -240,6 +240,60 @@ export interface CompletionReportSnapshotMetadata {
   };
 }
 
+export interface ApiCustomerCompletionReport {
+  report_status: 'delivered';
+  checklist_progress: number;
+  before_photos: number;
+  after_photos: number;
+  issue_photos: number;
+  service: {
+    customer_name: string;
+    property_address: string;
+    scheduled_date: string;
+    checklist: Array<{
+      label: string;
+      completed: boolean;
+    }>;
+  };
+  photo_evidence: Array<{
+    photo_type: 'before' | 'after' | 'issue' | 'extra';
+    file_name: string;
+    image_url: string;
+  }>;
+  completed_recommendations: Array<{
+    service_name: string;
+    service_description?: string | null;
+    quantity: number;
+  }>;
+  captured_at_epoch_seconds?: number;
+}
+
+export interface CustomerCompletionReport {
+  reportStatus: 'delivered';
+  checklistProgress: number;
+  beforePhotos: number;
+  afterPhotos: number;
+  issuePhotos: number;
+  customerName: string;
+  propertyAddress: string;
+  scheduledDate: string;
+  checklist: Array<{
+    label: string;
+    completed: boolean;
+  }>;
+  photoEvidence: Array<{
+    photoType: 'before' | 'after' | 'issue' | 'extra';
+    fileName: string;
+    imageUrl: string;
+  }>;
+  completedRecommendations: Array<{
+    serviceName: string;
+    serviceDescription?: string;
+    quantity: number;
+  }>;
+  capturedAtEpochSeconds?: number;
+}
+
 export interface ApiCompletionReportAction {
   report_id: string;
   job_id: string;
@@ -1161,6 +1215,33 @@ export function toCompletionReport(apiReport: ApiCompletionReport): CompletionRe
           },
         }
       : undefined,
+  };
+}
+
+export function toCustomerCompletionReport(
+  report: ApiCustomerCompletionReport,
+): CustomerCompletionReport {
+  return {
+    reportStatus: report.report_status,
+    checklistProgress: report.checklist_progress,
+    beforePhotos: report.before_photos,
+    afterPhotos: report.after_photos,
+    issuePhotos: report.issue_photos,
+    customerName: report.service.customer_name,
+    propertyAddress: report.service.property_address,
+    scheduledDate: report.service.scheduled_date,
+    checklist: report.service.checklist,
+    photoEvidence: report.photo_evidence.map((photo) => ({
+      photoType: photo.photo_type,
+      fileName: photo.file_name,
+      imageUrl: photo.image_url,
+    })),
+    completedRecommendations: report.completed_recommendations.map((recommendation) => ({
+      serviceName: recommendation.service_name,
+      serviceDescription: recommendation.service_description ?? undefined,
+      quantity: recommendation.quantity,
+    })),
+    capturedAtEpochSeconds: report.captured_at_epoch_seconds,
   };
 }
 
@@ -2821,15 +2902,15 @@ export async function eraseCustomerPhotoEvidence(
   return toCustomerPhotoErasureSummary(summary);
 }
 
-export async function fetchSharedCompletionReport(shareToken: string): Promise<CompletionReportSnapshot> {
+export async function fetchSharedCompletionReport(shareToken: string): Promise<CustomerCompletionReport> {
   const response = await fetch(`${API_BASE_URL}/reports/${encodeURIComponent(shareToken)}`);
 
   if (!response.ok) {
     throw await apiRequestError(response);
   }
 
-  const report = await response.json() as ApiCompletionReport;
-  return toCompletionReport(report);
+  const report = await response.json() as ApiCustomerCompletionReport;
+  return toCustomerCompletionReport(report);
 }
 
 export async function startCompletionReportReview(reportId: string): Promise<CompletionReportAction> {

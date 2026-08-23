@@ -23,6 +23,7 @@ import {
   propertyOnboardingPath,
   propertyCompletionReportsPath,
   toCompletionReport,
+  toCustomerCompletionReport,
   toCompletionReportAction,
   toCompletionReportDeliveryNotification,
   toCustomerPhotoErasureSummary,
@@ -42,10 +43,61 @@ import {
   toPropertyCompletionReportSummary,
   type ApiCompletionReport,
   type ApiCompletionReportAction,
+  type ApiCustomerCompletionReport,
   type ApiCustomerPrivacyExport,
 } from './client';
 
 describe('core API client mapping', () => {
+  it('maps the narrowed customer completion proof contract', () => {
+    const report: ApiCustomerCompletionReport = {
+      report_status: 'delivered',
+      checklist_progress: 100,
+      before_photos: 1,
+      after_photos: 2,
+      issue_photos: 0,
+      service: {
+        customer_name: 'Sample Customer',
+        property_address: '123 Oak Street',
+        scheduled_date: '2026-08-22',
+        checklist: [{ label: 'Mowed and edged lawn', completed: true }],
+      },
+      photo_evidence: [{
+        photo_type: 'after',
+        file_name: 'after.jpg',
+        image_url: '/proof/after.jpg',
+      }],
+      completed_recommendations: [{
+        service_name: 'Hedge trim',
+        service_description: 'Shaped the front hedge.',
+        quantity: 1,
+      }],
+      captured_at_epoch_seconds: 1_787_416_400,
+    };
+
+    expect(toCustomerCompletionReport(report)).toEqual({
+      reportStatus: 'delivered',
+      checklistProgress: 100,
+      beforePhotos: 1,
+      afterPhotos: 2,
+      issuePhotos: 0,
+      customerName: 'Sample Customer',
+      propertyAddress: '123 Oak Street',
+      scheduledDate: '2026-08-22',
+      checklist: [{ label: 'Mowed and edged lawn', completed: true }],
+      photoEvidence: [{
+        photoType: 'after',
+        fileName: 'after.jpg',
+        imageUrl: '/proof/after.jpg',
+      }],
+      completedRecommendations: [{
+        serviceName: 'Hedge trim',
+        serviceDescription: 'Shaped the front hedge.',
+        quantity: 1,
+      }],
+      capturedAtEpochSeconds: 1_787_416_400,
+    });
+  });
+
   it('builds completion report list paths with optional filters', () => {
     expect(completionReportsPath()).toBe('/completion-reports');
     expect(completionReportsPath({ status: 'active', readiness: 'blocked' })).toBe(

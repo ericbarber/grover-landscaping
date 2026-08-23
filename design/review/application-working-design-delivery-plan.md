@@ -374,7 +374,7 @@ different product decision, missing authority, or unavailable required contract.
 | 1. Access, setup, and Home | Partial production adoption | Converge remaining entry/recovery states and validate each role’s first-task path |
 | 2. Field execution | Core responsive hierarchy adopted | Continue state-by-state regression as shared recovery primitives evolve |
 | 3. Manager daily operations | Core responsive hierarchy adopted | Continue state regression as Schedule and Recovery contracts evolve |
-| 4. Completion proof | In progress · manager review, shared proof, and bid decision adopted | Complete recommendation/add-on continuity |
+| 4. Completion proof | Core responsive hierarchy adopted | Manager review, narrowed shared proof, bid decisions, and completed recommendation/add-on continuity delivered; regress as contracts evolve |
 | 5. Customers and portfolios | In progress · Yard Owner shell/Home adopted locally | Persist customer visit reads; continue service-day, proof/recommendation, concern, and preferences; then property-manager design; keep billing gated |
 | 6. Team and organization | Core responsive hierarchy adopted | Overview, partial-read recovery, staffing handoffs, self-impact/last-owner safety, empty/unavailable distinction, keyboard focus, responsive regression, and production handoff delivered; regress as contracts evolve |
 | 7. Revenue operations | Product-gated | Confirm planned product contracts before high fidelity |

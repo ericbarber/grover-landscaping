@@ -126,9 +126,12 @@ Current state:
   selected Job with its Report workflow active, preserving report readiness,
   evidence, review, change-request, delivery, and notification behavior.
 - Shared completion proof now adopts the public prototype hierarchy for service
-  identity, delivered evidence, completed add-ons, and customer trust. It uses the
-  shared visual system, supports explicit retry, and omits internal billing notes,
-  organization identifiers, crew identifiers, and unrelated account data.
+  identity, delivered evidence, approved-recommendation outcomes, and customer
+  trust. Completed bid-derived add-ons are labeled as approved recommendations
+  delivered. The public endpoint enforces a narrowed projection that excludes
+  report/job/account/add-on identifiers, internal notes, object keys, pricing,
+  billing state, organization/crew context, and unrelated account data instead of
+  relying on the browser to hide those fields.
 - Shared project proposals now use the same secure customer-link system for
   customer-facing scope, pricing, confirmation, recorded decisions, and closed-link
   recovery. The public API projection omits bid IDs, line-item IDs, service IDs,
@@ -158,8 +161,7 @@ Next slice:
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
 - While that product/security boundary is open, continue the next independent
-  repository-owned gap: completion-proof recommendation/add-on continuity, then
-  remaining Access/Home recovery convergence.
+  repository-owned gap: remaining Access/Home entry and recovery convergence.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

@@ -25,6 +25,11 @@ The base report table keeps the current status. Status history keeps each transi
 ## Customer delivery
 
 Delivered reports can use a share token to produce stable customer-facing report links. Share tokens are unique when present and are indexed for delivery lookup.
+The stored delivered snapshot remains the immutable internal source of truth.
+The public token route applies a strict customer projection and does not serialize
+internal IDs, notes, object keys, pricing, billing, route, crew, or organization
+context. Completed bid-derived add-ons become completed approved-recommendation
+outcomes in that projection.
 
 ## Route implementation notes
 

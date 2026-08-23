@@ -277,7 +277,8 @@ here does not mean every capability has been delivered.
   recovery, and explicit no-decision/no-activation meaning
 - Planned explicit accepted-proposal activation
 - Scheduled-work and service-history timelines
-- Immutable completion reports and customer-safe evidence
+- Immutable completion reports with a narrowed customer-safe service, checklist,
+  photo, and completed approved-recommendation projection
 - Bid review and bid history
 - Notification preferences and communication history
 - Support and service-issue requests

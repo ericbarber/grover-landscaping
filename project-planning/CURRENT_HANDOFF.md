@@ -54,9 +54,11 @@
   review. Opening a ready or blocked record selects that exact Job and activates
   its Report workflow on phone and desktop.
 - The secure shared completion report now follows the public proof design with
-  service identity, evidence, completed add-ons, and a trust boundary. It omits
-  internal billing and operating identifiers and offers explicit retry when the
-  persisted report is temporarily unavailable.
+  service identity, evidence, and completed approved-recommendation outcomes.
+  The API itself projects only customer-safe service/checklist/photo/outcome
+  fields and excludes internal IDs, notes, object keys, pricing, billing, and
+  operating context. Explicit retry remains available for storage or safe-
+  projection failures.
 - The secure shared proposal now uses the same public hierarchy for customer-facing
   scope, pricing, explicit approval/decline confirmation, and recorded outcomes.
   Its API response omits internal bid, line-item, and service identifiers plus
@@ -115,9 +117,9 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently continue completion-proof recommendation/add-on continuity,
-   then remaining Access/Home entry and recovery convergence. Team/organization
-   core adoption is complete and returns to regression only when its contracts change.
+2. Independently continue remaining Access/Home entry and recovery convergence.
+   Completion-proof recommendation/add-on continuity and Team/organization core
+   adoption are complete and return to regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
    continue service-day, proof/recommendation, concern, and preference adoption.
 
@@ -138,8 +140,9 @@ The latest completed baseline passes all 430 frontend unit tests across 107 file
 TypeScript, the production build, and the 30-test phone/desktop Chromium local-
 role workspace matrix, including Team staffing recovery, partial-read isolation,
 self-impact, unavailable-versus-empty, keyboard activation, and focus transfer.
-The immediately preceding public-
-proof checks remain part of the broader browser baseline. Re-run the checks
+The completion-proof continuity slice additionally passes 32 targeted backend
+tests, 24 API-client tests, the production build, and eight mobile/desktop
+Chromium shared-proof/proposal journeys. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
 baseline.

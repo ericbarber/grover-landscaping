@@ -50,8 +50,9 @@ not currently depend on React Router.
 - Branded manager completion-review board that opens the exact selected Job with
   its Report workflow active across desktop and mobile
 - Customer-safe shared completion proof with service identity, immutable snapshot
-  context, responsive evidence, completed add-ons, trust boundaries, and retry
-  recovery without exposing internal billing or operating identifiers
+  context, responsive evidence, and completed approved-recommendation outcomes.
+  Its narrowed API contract excludes internal IDs, notes, object keys, pricing,
+  billing, and operating context and supports explicit retry recovery.
 - Customer-safe shared proposal decisions with responsive scope/pricing, explicit
   approve/decline confirmation, recorded outcomes, closed-link recovery, and a
   shared trust boundary

@@ -1,6 +1,8 @@
 # Completion Report API Contract
 
-This document defines the planned API surface for persisted proof-of-completion reports.
+This document defines the implemented lifecycle and public-read contracts for
+persisted proof-of-completion reports, plus the remaining planned generation
+endpoint.
 
 ## Existing foundation
 
@@ -119,8 +121,46 @@ Expected behavior:
 
 - allow public token reads,
 - require the report to be delivered with delivery metadata,
-- return the persisted delivered snapshot fields, including `snapshot_metadata`,
+- project the immutable internal snapshot into a purpose-built customer response,
+- return only report status, evidence counts, customer/service identity,
+  checklist labels and state, displayable photo evidence, completed approved-
+  recommendation names/descriptions/quantity, and the optional capture timestamp,
+- omit report, job, account, organization, crew, photo, add-on, bid, line-item,
+  and service identifiers,
+- omit internal notes, object keys, upload metadata, prices, billing state,
+  delivery recipients, route state, readiness internals, and unrelated account data,
+- return `shared_report_snapshot_invalid` rather than exposing a stored snapshot
+  that cannot be safely projected,
 - reject draft, submitted, in-review, and change-requested reports.
+
+Current response shape:
+
+```json
+{
+  "report_status": "delivered",
+  "checklist_progress": 100,
+  "before_photos": 1,
+  "after_photos": 1,
+  "issue_photos": 0,
+  "service": {
+    "customer_name": "Oak Street Residence",
+    "property_address": "123 Oak Street",
+    "scheduled_date": "2026-08-22",
+    "checklist": [{ "label": "Mowed and edged lawn", "completed": true }]
+  },
+  "photo_evidence": [{
+    "photo_type": "after",
+    "file_name": "front-yard-after.jpg",
+    "image_url": "/customer-safe/photo-url"
+  }],
+  "completed_recommendations": [{
+    "service_name": "Hedge trim",
+    "service_description": "Shaped the front hedge and removed clippings.",
+    "quantity": 1
+  }],
+  "captured_at_epoch_seconds": 1787392800
+}
+```
 
 ### GET `/report-view/{share_token}`
 
@@ -147,4 +187,9 @@ Expected behavior:
 - Manager review does not change property ownership, portfolio grouping, or crew assignment.
 - Customer portal reads must be property scoped.
 - Share links should only expose delivered reports.
+- Public report safety is enforced by server-side response projection; clients
+  must not receive internal snapshot fields and merely hide them visually.
+- Completed recommendations in the public response are completed job add-ons
+  created by the approved-bid conversion contract; active proposal tokens are
+  not embedded in completion proof.
 - Every lifecycle transition should write status history.

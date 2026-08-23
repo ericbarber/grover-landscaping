@@ -16,7 +16,8 @@ A delivered report can show these customer-facing evidence groups:
 - after photos,
 - issue photos when present,
 - completed service steps,
-- completed add-ons.
+- completed approved recommendations (the customer-facing projection of
+  completed bid-derived add-ons).
 
 Each group should use persisted rows tied to the completion report.
 
@@ -26,7 +27,9 @@ Before and after photos should be easy to compare.
 
 Issue photos should appear only when issue evidence exists for the delivered report.
 
-Completed service steps and completed add-ons should show customer-friendly labels and counts.
+Completed service steps and approved-recommendation outcomes should show
+customer-friendly labels and counts. Pricing, internal notes, source bid IDs,
+and add-on IDs are not part of the public evidence response.
 
 ## Hidden review data
 
@@ -38,6 +41,8 @@ Customer evidence views should not show:
 - manager queue labels,
 - manager queue priority,
 - draft, submitted, in-review, or change-requested report content.
+- report/job/account/add-on identifiers, photo object keys, pricing, billing,
+  route, crew, or organization context from the internal snapshot.
 
 ## Guardrails
 

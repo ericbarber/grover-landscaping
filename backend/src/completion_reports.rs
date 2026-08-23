@@ -1,5 +1,6 @@
 use crate::{accounts::CustomerAccountSummary, JobAddOn, JobDetail, PhotoEvidence};
 use serde::Serialize;
+use serde_json::Value;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const COMPLETION_REPORT_SNAPSHOT_VERSION: u32 = 1;
@@ -114,6 +115,167 @@ pub struct CompletionReportSnapshotEvidenceMetadata {
     pub issue_photos: u32,
     pub total_photo_evidence: u32,
     pub completed_add_ons: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerCompletionReportResponse {
+    pub report_status: String,
+    pub checklist_progress: u32,
+    pub before_photos: u32,
+    pub after_photos: u32,
+    pub issue_photos: u32,
+    pub service: CustomerCompletionService,
+    pub photo_evidence: Vec<CustomerCompletionPhotoEvidence>,
+    pub completed_recommendations: Vec<CustomerCompletedRecommendation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub captured_at_epoch_seconds: Option<u64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerCompletionService {
+    pub customer_name: String,
+    pub property_address: String,
+    pub scheduled_date: String,
+    pub checklist: Vec<CustomerCompletionChecklistItem>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerCompletionChecklistItem {
+    pub label: String,
+    pub completed: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerCompletionPhotoEvidence {
+    pub photo_type: String,
+    pub file_name: String,
+    pub image_url: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct CustomerCompletedRecommendation {
+    pub service_name: String,
+    pub service_description: Option<String>,
+    pub quantity: u32,
+}
+
+pub fn customer_completion_report_response(
+    report: &CompletionReportResponse,
+) -> CustomerCompletionReportResponse {
+    CustomerCompletionReportResponse {
+        report_status: report.report_status.clone(),
+        checklist_progress: report.checklist_progress,
+        before_photos: report.before_photos,
+        after_photos: report.after_photos,
+        issue_photos: report.issue_photos,
+        service: CustomerCompletionService {
+            customer_name: report.job.customer_name.clone(),
+            property_address: report.job.property_address.clone(),
+            scheduled_date: report.job.scheduled_date.clone(),
+            checklist: report
+                .job
+                .checklist
+                .iter()
+                .map(|item| CustomerCompletionChecklistItem {
+                    label: item.label.clone(),
+                    completed: item.completed,
+                })
+                .collect(),
+        },
+        photo_evidence: report
+            .photo_evidence
+            .iter()
+            .map(|photo| CustomerCompletionPhotoEvidence {
+                photo_type: photo.photo_type.clone(),
+                file_name: photo.file_name.clone(),
+                image_url: photo
+                    .thumbnail_url
+                    .clone()
+                    .unwrap_or_else(|| photo.display_url.clone()),
+            })
+            .collect(),
+        completed_recommendations: report
+            .completed_add_ons
+            .iter()
+            .map(|add_on| CustomerCompletedRecommendation {
+                service_name: add_on.service_name.clone(),
+                service_description: add_on.service_description.clone(),
+                quantity: add_on.quantity,
+            })
+            .collect(),
+        captured_at_epoch_seconds: report
+            .snapshot_metadata
+            .as_ref()
+            .map(|metadata| metadata.captured_at_epoch_seconds),
+    }
+}
+
+pub fn customer_completion_report_snapshot_response(
+    snapshot: &Value,
+) -> Option<CustomerCompletionReportResponse> {
+    let job = snapshot.get("job")?.as_object()?;
+    let checklist = job
+        .get("checklist")?
+        .as_array()?
+        .iter()
+        .map(|item| {
+            Some(CustomerCompletionChecklistItem {
+                label: item.get("label")?.as_str()?.to_string(),
+                completed: item.get("completed")?.as_bool()?,
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    let photo_evidence = snapshot
+        .get("photo_evidence")?
+        .as_array()?
+        .iter()
+        .map(|photo| {
+            let image_url = photo
+                .get("thumbnail_url")
+                .and_then(Value::as_str)
+                .or_else(|| photo.get("display_url").and_then(Value::as_str))?;
+            Some(CustomerCompletionPhotoEvidence {
+                photo_type: photo.get("photo_type")?.as_str()?.to_string(),
+                file_name: photo.get("file_name")?.as_str()?.to_string(),
+                image_url: image_url.to_string(),
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    let completed_recommendations = snapshot
+        .get("completed_add_ons")?
+        .as_array()?
+        .iter()
+        .map(|add_on| {
+            Some(CustomerCompletedRecommendation {
+                service_name: add_on.get("service_name")?.as_str()?.to_string(),
+                service_description: add_on
+                    .get("service_description")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+                quantity: u32::try_from(add_on.get("quantity")?.as_u64()?).ok()?,
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+
+    Some(CustomerCompletionReportResponse {
+        report_status: snapshot.get("report_status")?.as_str()?.to_string(),
+        checklist_progress: u32::try_from(snapshot.get("checklist_progress")?.as_u64()?).ok()?,
+        before_photos: u32::try_from(snapshot.get("before_photos")?.as_u64()?).ok()?,
+        after_photos: u32::try_from(snapshot.get("after_photos")?.as_u64()?).ok()?,
+        issue_photos: u32::try_from(snapshot.get("issue_photos")?.as_u64()?).ok()?,
+        service: CustomerCompletionService {
+            customer_name: job.get("customer_name")?.as_str()?.to_string(),
+            property_address: job.get("property_address")?.as_str()?.to_string(),
+            scheduled_date: job.get("scheduled_date")?.as_str()?.to_string(),
+            checklist,
+        },
+        photo_evidence,
+        completed_recommendations,
+        captured_at_epoch_seconds: snapshot
+            .get("snapshot_metadata")
+            .and_then(|metadata| metadata.get("captured_at_epoch_seconds"))
+            .and_then(Value::as_u64),
+    })
 }
 
 pub fn is_valid_completion_report_lifecycle_status(status: &str) -> bool {
@@ -403,9 +565,10 @@ mod tests {
         completion_report_manager_queue_priority,
         completion_report_request_changes_action_is_available,
         completion_report_resubmit_action_is_available, completion_report_share_link_is_available,
-        completion_report_start_review_action_is_available,
-        is_valid_completion_report_lifecycle_status, CompletionReportPersistence,
-        CompletionReportRouteStopContext, COMPLETION_REPORT_SNAPSHOT_VERSION,
+        completion_report_start_review_action_is_available, customer_completion_report_response,
+        customer_completion_report_snapshot_response, is_valid_completion_report_lifecycle_status,
+        CompletionReportPersistence, CompletionReportRouteStopContext,
+        COMPLETION_REPORT_SNAPSHOT_VERSION,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -553,6 +716,65 @@ mod tests {
         assert_eq!(metadata.evidence.total_photo_evidence, 3);
         assert_eq!(metadata.evidence.completed_add_ons, 1);
         assert!(metadata.captured_at_epoch_seconds > 0);
+    }
+
+    #[test]
+    fn customer_report_projects_approved_recommendations_without_internal_fields() {
+        let mut completed_add_on = add_on("add_on_internal", "completed");
+        completed_add_on.note = Some("manager-only note".to_string());
+        let report = attach_delivered_snapshot_metadata(&build_completion_report(
+            job(4, 1, 1),
+            account(),
+            vec![photo("photo_internal", "after")],
+            vec![completed_add_on],
+        ));
+
+        let customer_report = customer_completion_report_response(&report);
+        let json = serde_json::to_value(customer_report).unwrap();
+        let serialized = json.to_string();
+
+        assert_eq!(json["service"]["property_address"], "123 Oak Street");
+        assert_eq!(
+            json["completed_recommendations"][0]["service_name"],
+            "Sprinkler repair"
+        );
+        assert_eq!(
+            json["photo_evidence"][0]["image_url"],
+            "local://local/jobs/job_1001/after/photo_internal.jpg"
+        );
+        for internal_value in [
+            "org_demo_landscaping",
+            "crew_1001",
+            "acct_1001",
+            "manager-only note",
+            "add_on_internal",
+        ] {
+            assert!(!serialized.contains(internal_value));
+        }
+        assert!(json.get("account").is_none());
+        assert!(json.get("job_id").is_none());
+        assert!(json["completed_recommendations"][0]
+            .get("unit_price_cents")
+            .is_none());
+    }
+
+    #[test]
+    fn persisted_customer_report_snapshot_uses_the_same_safe_projection() {
+        let report = attach_delivered_snapshot_metadata(&build_completion_report(
+            job(4, 1, 1),
+            account(),
+            vec![photo("photo_internal", "before")],
+            vec![add_on("add_on_internal", "completed")],
+        ));
+        let snapshot = serde_json::to_value(report).unwrap();
+
+        let projected = customer_completion_report_snapshot_response(&snapshot)
+            .expect("valid stored snapshots should produce a customer response");
+
+        assert_eq!(projected.service.customer_name, "Sample Customer");
+        assert_eq!(projected.completed_recommendations.len(), 1);
+        assert_eq!(projected.photo_evidence.len(), 1);
+        assert!(projected.captured_at_epoch_seconds.is_some());
     }
 
     fn add_on(id: &str, status: &str) -> JobAddOn {

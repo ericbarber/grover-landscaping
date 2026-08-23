@@ -31,7 +31,8 @@ Delivered reports can omit individual evidence groups when no delivered snapshot
 Examples:
 
 - issue photos can be hidden when no issue photos were captured,
-- completed add-ons can be hidden when no add-ons were performed,
+- completed approved recommendations can be hidden when no approved add-on work
+  was performed,
 - service steps should show only delivered customer-facing labels.
 
 ## Hidden data

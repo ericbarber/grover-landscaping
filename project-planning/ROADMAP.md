@@ -442,19 +442,20 @@ schedule, remaining work, or a completed day.
    - Owner and provider interfaces expose authoritative setup status without
      silently scheduling, collecting payment, routing, or assigning work.
 
-**Current — First-visit confirmation**
+**Delivered — First-visit confirmation**
 
-   - Add a separate provider proposal and owner confirm/change-request lifecycle
-     without assigning a crew or route merely because the relationship exists.
+   - A separate provider proposal and owner confirm/change-request lifecycle is
+     adopted without assigning a crew or route merely because the relationship exists.
 
-**Next — Shared application and workflow convergence**
+**Delivered core — Shared application and workflow convergence**
 
-   - Finish outlined icons, operational density/status primitives, and tablet
-     navigation in the authenticated shell.
-   - Converge field execution against Crew Route V1, then manager daily
-     operations against Schedule V1 and Recovery.
-   - Connect completion proof from crew handoff through manager review and
-     customer-safe delivery before expanding customer and team surfaces.
+   - Outlined icons, operational density/status primitives, and responsive shell
+     navigation are adopted at the shared core.
+   - Field execution, Schedule, Recovery, manager Reports, Team/organization,
+     shared proposal decisions, and completion-proof recommendation continuity
+     are adopted at their core responsive boundaries.
+   - Remaining repository-owned convergence moves to Access/Home entry and
+     recovery states while the Yard Owner authorization choice is open.
 
 **Design-ready — Customer and provider adoption**
 
