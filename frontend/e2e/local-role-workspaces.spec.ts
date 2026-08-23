@@ -293,14 +293,57 @@ test('organization owner Team opens the responsive team and access command cente
   await expect(overview.getByLabel('Crews team summary')).toContainText('2');
   await expect(overview.getByLabel('Unstaffed team summary')).toContainText('1');
   await expect(overview.getByText('Staffing needs attention.')).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Assign crew leads' })).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Review unstaffed territories' })).toBeVisible();
   await expect(overview.getByRole('button', { name: 'Open member directory' })).toBeVisible();
   await expect(overview.getByRole('button', { name: 'Open invitations' })).toBeVisible();
   await expect(overview.getByRole('button', { name: 'Open crew administration' })).toBeVisible();
   await expect(overview.getByRole('button', { name: 'Open team activity' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-  await overview.getByRole('button', { name: 'Open member directory' }).click();
-  await expect(page.getByRole('heading', { name: 'Active memberships' })).toBeVisible();
+  await overview.getByRole('button', { name: 'Review unstaffed territories' }).click();
+  await expect(page.getByRole('heading', { name: 'Branches and territories' })).toBeVisible();
+  await expect(page.locator('#dispatch-hierarchy-administration')).toBeFocused();
+});
+
+test('team overview preserves available counts during a partial API outage', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+  });
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'membership_owner',
+          organization_id: 'org_demo_landscaping',
+          organization_name: 'Grover Demo Landscaping',
+          organization_type: 'yard_care_company',
+          user_id: 'local-review-organization-owner',
+          display_name: 'Olivia — Organization Owner',
+          role: 'OrganizationOwner',
+          status: 'active',
+          scope_type: 'organization',
+          scope_id: 'org_demo_landscaping',
+        },
+      ]),
+    })
+  ));
+
+  await page.goto('/app');
+  const workspaceNavigation = page.getByRole('navigation', {
+    name: page.viewportSize()?.width && page.viewportSize()!.width >= 1024
+      ? 'Desktop workspace'
+      : 'Mobile workspace',
+  });
+  await workspaceNavigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Team Members, invitations, and access/ }).click();
+
+  const overview = page.locator('#team-organization-overview');
+  await expect(overview.getByLabel('Active team summary')).toContainText('1');
+  await expect(overview.getByLabel('Invited team summary')).toContainText('—');
+  await expect(overview.getByText('Part of the team overview could not be refreshed.')).toBeVisible();
+  await expect(overview.getByText(/invitation history, crew roster, territory structure/)).toBeVisible();
 });
 
 test('authenticated home retains the shared shell materials and type roles', async ({ page }) => {

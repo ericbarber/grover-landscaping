@@ -3485,15 +3485,29 @@ export function App() {
               onOpenMembers={() => setManagerWorkspaceTool('team-members')}
               onOpenInvitations={() => setManagerWorkspaceTool('team-invitations')}
               onOpenActivity={() => setManagerWorkspaceTool('team-activity')}
+              onOpenHierarchy={() => {
+                setManagerWorkspaceSection('schedule');
+                setManagerWorkspaceTool('dispatch-hierarchy');
+                window.setTimeout(() => {
+                  const target = document.getElementById('dispatch-hierarchy-administration');
+                  target?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  });
+                  target?.focus({ preventScroll: true });
+                }, 0);
+              }}
               onOpenCrews={() => {
                 setManagerWorkspaceSection('overview');
                 setManagerWorkspaceTool('owner-setup');
                 setCrewAdministrationReturnTarget(undefined);
                 window.setTimeout(() => {
-                  document.getElementById('crew-administration')?.scrollIntoView({
+                  const target = document.getElementById('crew-administration');
+                  target?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start',
                   });
+                  target?.focus({ preventScroll: true });
                 }, 0);
               }}
             />

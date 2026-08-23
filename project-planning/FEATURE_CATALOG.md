@@ -220,7 +220,8 @@ here does not mean every capability has been delivered.
 - Branch, territory, region, and service-area hierarchy
 - Prototype-aligned Team and access command center with live active-member,
   pending-invitation, active-crew, unstaffed-territory, and lead-coverage signals
-  plus direct administration and audit handoffs
+  plus partial-read isolation and direct administration, staffing-recovery,
+  hierarchy, and audit handoffs
 
 ### Crew field workflow
 

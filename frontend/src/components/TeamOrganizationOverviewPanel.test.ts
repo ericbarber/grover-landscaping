@@ -43,4 +43,22 @@ describe('team organization overview', () => {
       crewsWithoutLead: 1,
     });
   });
+
+  it('preserves available counts without inferring unavailable staffing data', () => {
+    const territories = [
+      { id: 'territory_north', organizationId: 'org_demo', status: 'active' },
+    ] as ServiceTerritoryRecord[];
+    expect(summarizeTeamOrganization(
+      [{ id: 'member_owner', status: 'active' }] as OrganizationMembership[],
+      null,
+      null,
+      territories,
+    )).toEqual({
+      activeMembers: 1,
+      pendingInvitations: null,
+      activeCrews: null,
+      unstaffedTerritories: null,
+      crewsWithoutLead: null,
+    });
+  });
 });

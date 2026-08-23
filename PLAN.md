@@ -142,7 +142,9 @@ Current state:
   hierarchy for Organization Owners. Live membership, pending-invitation, active-
   crew, and unstaffed-territory counts lead into direct paths for the member
   directory, invitation lifecycle, crew administration, and audited team
-  activity; unavailable reads never collapse into false zeroes.
+  activity. Partial outages preserve independently available counts, identify
+  each missing source, and never collapse missing values into false zeroes;
+  staffing warnings link directly to crew-lead and territory recovery.
 
 Next slice:
 
@@ -150,9 +152,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, continue Phase 6 state and
-  accessibility convergence from the delivered Team and access overview into
-  staffing recovery and hierarchy handoffs.
+- While that product/security boundary is open, complete Phase 6 permission,
+  self-impact, empty-state, keyboard, and responsive regression from the
+  delivered Team overview and staffing-recovery handoffs.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

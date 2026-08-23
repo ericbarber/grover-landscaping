@@ -68,7 +68,9 @@
 - Organization Owner Team now opens a prototype-aligned Team and access command
   center with live active-member, pending-invitation, active-crew, and unstaffed-
   territory summaries. It links directly to the existing member, invitation,
-  crew, and audit workflows and reports unavailable reads without false counts.
+  crew, hierarchy, and audit workflows. Partial outages preserve independently
+  available counts, identify missing sources, and never infer false zeroes;
+  staffing alerts open crew-lead or unstaffed-territory recovery directly.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -109,9 +111,9 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently continue Team and organization state convergence: staffing
-   attention/recovery, branch and territory handoff, permission/self-impact
-   guidance, and responsive/accessibility regression.
+2. Independently finish Team and organization state convergence: permission/
+   self-impact guidance, empty-state review, keyboard/responsive regression, and
+   final production handoff.
 3. After the owner scope decision, add the minimized customer visit read and
    continue service-day, proof/recommendation, concern, and preference adoption.
 
@@ -128,10 +130,11 @@ aligned overview composition.
 
 ## Validation baseline
 
-The latest completed baseline passes all 428 frontend unit tests across 107 files,
-TypeScript, the production build, and all 24 phone/desktop Chromium local-role
-workspace journeys. The immediately preceding public-proof checks remain part of
-the broader browser baseline. Re-run the checks
+The latest completed baseline passes all 429 frontend unit tests across 107 files,
+TypeScript, the production build, and the 26-test phone/desktop Chromium local-
+role workspace matrix, including four focused journeys for live staffing
+recovery and partial-read isolation. The immediately preceding public-
+proof checks remain part of the broader browser baseline. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
 baseline.

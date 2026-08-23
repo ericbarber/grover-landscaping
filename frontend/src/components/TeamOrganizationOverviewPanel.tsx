@@ -13,33 +13,41 @@ import { WorkspaceIcon, type WorkspaceIconName } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 export type TeamOrganizationSummary = {
-  activeMembers: number;
-  pendingInvitations: number;
-  activeCrews: number;
-  unstaffedTerritories: number;
-  crewsWithoutLead: number;
+  activeMembers: number | null;
+  pendingInvitations: number | null;
+  activeCrews: number | null;
+  unstaffedTerritories: number | null;
+  crewsWithoutLead: number | null;
 };
 
 export function summarizeTeamOrganization(
-  memberships: OrganizationMembership[],
-  invitations: OrganizationInvitationSummary[],
-  crews: CrewRecord[],
-  territories: ServiceTerritoryRecord[],
+  memberships: OrganizationMembership[] | null,
+  invitations: OrganizationInvitationSummary[] | null,
+  crews: CrewRecord[] | null,
+  territories: ServiceTerritoryRecord[] | null,
 ): TeamOrganizationSummary {
-  const activeCrews = crews.filter((crew) => crew.status === 'active');
+  const activeCrews = crews?.filter((crew) => crew.status === 'active') ?? null;
   const staffedTerritoryIds = new Set(
-    activeCrews.map((crew) => crew.territoryId).filter((id): id is string => Boolean(id)),
+    activeCrews?.map((crew) => crew.territoryId).filter((id): id is string => Boolean(id)) ?? [],
   );
 
   return {
-    activeMembers: memberships.filter((membership) => membership.status === 'active').length,
-    pendingInvitations: invitations.filter((invitation) => invitation.status === 'pending').length,
-    activeCrews: activeCrews.length,
-    unstaffedTerritories: territories.filter((territory) => (
-      territory.status === 'active'
-      && !staffedTerritoryIds.has(territory.id)
-    )).length,
-    crewsWithoutLead: activeCrews.filter((crew) => !crew.leadMembershipId).length,
+    activeMembers: memberships
+      ? memberships.filter((membership) => membership.status === 'active').length
+      : null,
+    pendingInvitations: invitations
+      ? invitations.filter((invitation) => invitation.status === 'pending').length
+      : null,
+    activeCrews: activeCrews?.length ?? null,
+    unstaffedTerritories: territories && activeCrews
+      ? territories.filter((territory) => (
+        territory.status === 'active'
+        && !staffedTerritoryIds.has(territory.id)
+      )).length
+      : null,
+    crewsWithoutLead: activeCrews
+      ? activeCrews.filter((crew) => !crew.leadMembershipId).length
+      : null,
   };
 }
 
@@ -56,6 +64,7 @@ export function TeamOrganizationOverviewPanel({
   onOpenMembers,
   onOpenInvitations,
   onOpenCrews,
+  onOpenHierarchy,
   onOpenActivity,
   refreshSignal = 0,
 }: {
@@ -63,38 +72,44 @@ export function TeamOrganizationOverviewPanel({
   onOpenMembers: () => void;
   onOpenInvitations: () => void;
   onOpenCrews: () => void;
+  onOpenHierarchy: () => void;
   onOpenActivity: () => void;
   refreshSignal?: number;
 }) {
   const [summary, setSummary] = useState<TeamOrganizationSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUnavailable, setIsUnavailable] = useState(false);
+  const [unavailableSources, setUnavailableSources] = useState<string[]>([]);
   const [reloadSignal, setReloadSignal] = useState(0);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    setIsUnavailable(false);
-    void Promise.all([
+    setUnavailableSources([]);
+    void Promise.allSettled([
       fetchOrganizationMemberships(organizationId),
       fetchOrganizationInvitations(organizationId),
       fetchOrganizationCrews(organizationId),
       fetchServiceTerritories(),
-    ]).then(([memberships, invitations, crews, allTerritories]) => {
+    ]).then(([membershipResult, invitationResult, crewResult, territoryResult]) => {
       if (!active) return;
-      const territories = allTerritories.filter((territory) => (
-        territory.organizationId === organizationId
-      ));
+      const memberships = membershipResult.status === 'fulfilled' ? membershipResult.value : null;
+      const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value : null;
+      const crews = crewResult.status === 'fulfilled' ? crewResult.value : null;
+      const territories = territoryResult.status === 'fulfilled'
+        ? territoryResult.value.filter((territory) => territory.organizationId === organizationId)
+        : null;
+      setUnavailableSources([
+        membershipResult.status === 'rejected' ? 'member directory' : null,
+        invitationResult.status === 'rejected' ? 'invitation history' : null,
+        crewResult.status === 'rejected' ? 'crew roster' : null,
+        territoryResult.status === 'rejected' ? 'territory structure' : null,
+      ].filter((source): source is string => Boolean(source)));
       setSummary(summarizeTeamOrganization(
         memberships,
         invitations,
         crews,
         territories,
       ));
-    }).catch(() => {
-      if (!active) return;
-      setSummary(null);
-      setIsUnavailable(true);
     }).finally(() => {
       if (active) setIsLoading(false);
     });
@@ -141,6 +156,14 @@ export function TeamOrganizationOverviewPanel({
     { label: 'Crews', value: summary?.activeCrews },
     { label: 'Unstaffed', value: summary?.unstaffedTerritories },
   ];
+  const unstaffedTerritories = summary?.unstaffedTerritories;
+  const crewsWithoutLead = summary?.crewsWithoutLead;
+  const hasKnownStaffing = unstaffedTerritories !== null
+    && unstaffedTerritories !== undefined
+    && crewsWithoutLead !== null
+    && crewsWithoutLead !== undefined;
+  const needsStaffingAttention = hasKnownStaffing
+    && (unstaffedTerritories > 0 || crewsWithoutLead > 0);
 
   return (
     <section aria-labelledby="team-organization-heading" className="space-y-5" id="team-organization-overview">
@@ -159,10 +182,10 @@ export function TeamOrganizationOverviewPanel({
         </div>
       </div>
 
-      {isUnavailable ? (
+      {unavailableSources.length > 0 ? (
         <WorkspaceStatusNotice
-          detail="No team counts are being inferred while membership or hierarchy data is unavailable. The administration tools remain available."
-          title="Team overview could not be refreshed."
+          detail={`Unavailable: ${unavailableSources.join(', ')}. Other live counts remain visible; missing values use an em dash and are never inferred as zero.`}
+          title="Part of the team overview could not be refreshed."
           tone="warning"
         >
           <button
@@ -190,13 +213,34 @@ export function TeamOrganizationOverviewPanel({
         ))}
       </div>
 
-      {summary && (summary.unstaffedTerritories > 0 || summary.crewsWithoutLead > 0) ? (
+      {summary && needsStaffingAttention ? (
         <WorkspaceStatusNotice
-          detail={`${summary.unstaffedTerritories} active ${summary.unstaffedTerritories === 1 ? 'territory has' : 'territories have'} no active crew · ${summary.crewsWithoutLead} active ${summary.crewsWithoutLead === 1 ? 'crew has' : 'crews have'} no lead.`}
+          detail={`${unstaffedTerritories} active ${unstaffedTerritories === 1 ? 'territory has' : 'territories have'} no active crew · ${crewsWithoutLead} active ${crewsWithoutLead === 1 ? 'crew has' : 'crews have'} no lead.`}
           title="Staffing needs attention."
           tone="warning"
-        />
-      ) : summary ? (
+        >
+          <div className="flex flex-wrap gap-2">
+            {crewsWithoutLead > 0 ? (
+              <button
+                className="min-h-11 rounded-xl border border-amber-500 bg-white px-4 text-sm font-black text-amber-950"
+                onClick={onOpenCrews}
+                type="button"
+              >
+                Assign crew leads
+              </button>
+            ) : null}
+            {unstaffedTerritories > 0 ? (
+              <button
+                className="min-h-11 rounded-xl border border-amber-500 bg-white px-4 text-sm font-black text-amber-950"
+                onClick={onOpenHierarchy}
+                type="button"
+              >
+                Review unstaffed territories
+              </button>
+            ) : null}
+          </div>
+        </WorkspaceStatusNotice>
+      ) : summary && hasKnownStaffing ? (
         <WorkspaceStatusNotice
           detail="Every active territory has an active crew, and every active crew has a lead."
           title="Operating structure is staffed."
