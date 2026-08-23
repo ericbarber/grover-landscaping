@@ -25,10 +25,10 @@ activation is now delivered through the responsive owner/provider workspaces;
 first-visit confirmation is delivered separately from crew, route, work-order,
 and payment authority. The authenticated Property Owner now has a four-
 destination portal shell, while Organization Owners have a prototype-aligned
-Team and access command center. A validated property-manager portfolio working
-design now provides the next React adoption contract for readiness, exceptions,
-property coverage, proof, and approvals. Persisted customer visit reads await an
-explicit customer-account versus per-property owner-authorization decision.
+Team and access command center. Property Managers now enter a dedicated,
+prototype-aligned portfolio command center for readiness, exceptions, property
+coverage, proof, and approvals. Persisted customer visit reads await an explicit
+customer-account versus per-property owner-authorization decision.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -85,6 +85,9 @@ Start with these records when reviewing or continuing development:
 - Provider organization discovery, organization claims, administrative review, appeal, and remediation workflows
 - Explicit per-capability disclosure review, grant, access, receipt, and revocation controls
 - Yard Owner provider-connection progress and recovery guidance
+- Property-manager portfolio workspace with Overview, Properties, Proof, and
+  Approvals; property search; partial-data isolation; customer-safe provider
+  accountability; and an explicit local-review visit boundary
 - Owner/provider assessment lifecycle with customer-safe conversation and separate provider-private notes
 - Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
 - Explicit accepted-proposal activation into provider customer/property setup with property-scoped portal access and no implicit first visit or crew assignment

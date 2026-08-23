@@ -158,12 +158,12 @@ Current state:
   derive from active membership roles with explicit Support and first-owner
   bootstrap exceptions; unscoped claims receive Home-only guidance; and all seven
   local-review identities are covered across phone and desktop.
-- Phase 5 now has a validated connected property-manager portfolio V1 design and
-  production handoff. Its responsive Overview, Properties, Proof, and Approvals
-  destinations prioritize readiness, exceptions, property coverage, delivered
-  records, and decisions; explicitly cover all-clear, new, loading, partial, and
-  unavailable states; and exclude provider-private operations. Production still
-  shows only the earlier grouping summary for this persona.
+- Phase 5 property-manager core adoption is delivered. The PropertyManager
+  persona now receives responsive Overview, Properties, Proof, and Approvals;
+  scoped grouping and search; labeled local-review readiness; protected proof
+  and recommendation history with partial-source isolation; and customer-safe
+  provider accountability. PropertyOwner retains the Yard Owner portal, and
+  provider-side portfolio administration remains a separate tool.
 
 Next slice:
 
@@ -171,9 +171,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, adopt the validated property-
-  manager portfolio command center into the PropertyManager React workspace,
-  then continue Yard Crew reciprocal public entry and provider identity/readiness.
+- While that product/security boundary is open, continue Yard Crew reciprocal
+  public entry and provider identity/readiness without widening curated discovery
+  past its recorded product and operational gates.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -413,9 +413,8 @@ Next design work:
   shell, field execution, manager daily operations, and completion-proof
   handoff in the order recorded by
   [`project-planning/PROTOTYPE_ADOPTION.md`](project-planning/PROTOTYPE_ADOPTION.md).
-- Adopt the connected property-manager portfolio design while the Yard Owner
-  next-visit authorization choice is open; then resume the Yard Owner V2 portal
-  after its read model is authorized. Keep billing product-gated.
+- Property-manager portfolio core is adopted. Resume the Yard Owner V2 portal
+  after its next-visit read model is authorized. Keep billing product-gated.
 - Execute the prepared owner/provider usability, assistive-technology, physical-
   device, privacy/security, and support/operations signoff sessions against the
   committed assurance build; treat any critical disclosure misunderstanding as

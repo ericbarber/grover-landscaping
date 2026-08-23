@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: Yard Owner customer authorization decision; the
-  validated property-manager portfolio design is the active independent
-  production-adoption slice
+- Active product boundary: Yard Owner customer authorization decision; Yard Crew
+  reciprocal public entry and provider identity/readiness are the active
+  independent production-adoption slices
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -84,11 +84,12 @@
   verification succeeds. Access outages fail closed with retry; active membership
   roles drive personas, while Support and first-owner bootstrap remain explicit
   exceptions. Unscoped roles receive a Home-only invitation/restoration state.
-- Property-manager portfolio V1 is now a validated connected working design with
-  Overview, Properties, Proof, and Approvals, responsive state coverage,
-  customer-safe provider accountability, review captures, and a production
-  handoff. The production PropertyManager view still uses the earlier generic
-  Yard Owner plus property-group summaries until the next React slice lands.
+- Property-manager portfolio V1 is now adopted in React with Overview,
+  Properties, Proof, and Approvals; scoped grouping and property search; labeled
+  local-review readiness; protected proof and recommendation history with
+  partial-source isolation; customer-safe provider accountability; responsive
+  browser coverage; and a production handoff. PropertyOwner retains the Yard
+  Owner portal, while provider portfolio administration remains separate.
 
 ### Yard Owner production adoption
 
@@ -127,9 +128,8 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently adopt the connected property-manager portfolio design into the
-   PropertyManager React workspace, then adopt Yard Crew reciprocal public entry
-   and provider identity/readiness.
+2. Independently adopt Yard Crew reciprocal public entry and provider identity/
+   readiness without promoting curated discovery past its gates.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
@@ -149,12 +149,12 @@ aligned overview composition.
 
 ## Validation baseline
 
-The latest completed baseline passes all 436 frontend unit tests across 108 files,
-TypeScript, the production build, and the 34-test phone/desktop Chromium local-
+The latest completed baseline passes all 439 frontend unit tests across 109 files,
+TypeScript, the production build, and the 36-test phone/desktop Chromium local-
 role workspace matrix. That matrix covers all seven fixed identities, fail-closed
 access retry, unscoped-role Home-only recovery, Team staffing recovery, partial-
 read isolation, self-impact, unavailable-versus-empty, keyboard activation, and
-focus transfer.
+focus transfer, plus the direct property-manager portfolio journey.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks
@@ -163,7 +163,7 @@ PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from thi
 baseline.
 The property-manager portfolio design additionally passes its 1440px and 390px
 browser validator for navigation, state switching, search, dialog focus return,
-touch targets, and overflow.
+touch targets, and overflow. Its React adoption is included in the baseline above.
 
 ## Stop conditions
 

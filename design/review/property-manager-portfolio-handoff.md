@@ -11,15 +11,16 @@ The property-manager customer workspace uses four stable destinations:
 | Proof | What completed work is ready to review? | Customer-safe completion-report summaries and delivered evidence |
 | Approvals | Which recommendations need a decision? | Customer-safe project-bid projection and current decision status |
 
-## First production adoption
+## Adopted production slice
 
-The first safe slice should replace the generic grouping-only view for the
-PropertyManager persona with a portfolio command center. It may derive an
-illustrative readiness summary from the current local-review visit fixture, but
-must label that source in the UI. Existing persisted completion reports and bids
-remain authoritative when available.
+The PropertyManager persona now replaces the generic Yard Owner plus grouping
+stack with a four-destination portfolio command center. It derives its readiness
+summary from the labeled local-review visit fixture, while existing protected
+completion reports and bids remain authoritative when available. Property search
+is bounded to the current customer account, and source failures retain available
+records without presenting missing counts as zero.
 
-PropertyOwner keeps the Yard Owner portal. Provider managers may retain the
+PropertyOwner keeps the Yard Owner portal. Provider managers retain the
 grouping summary inside customer-management tools until an editing contract is
 approved; the customer-facing portfolio command center must not become a
 provider-side grouping editor by accident.

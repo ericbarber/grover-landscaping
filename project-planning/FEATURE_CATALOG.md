@@ -76,6 +76,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   Overview, Properties, Proof, and Approvals destinations; prioritized readiness
   and exceptions; property search; customer-safe provider accountability; and
   all-clear, new, loading, partial, and unavailable states
+- Production PropertyManager command center with customer-scoped portfolio and
+  property filtering, labeled illustrative next-service readiness, partial
+  protected-history isolation, completion proof, recommendations, and explicit
+  exclusion of provider-private operating data
 - Validated owner-first acquisition working design with independent identity,
   private address, guided yard brief/photos, known-provider invitation, curated
   provider discovery, assessment, versioned initial proposal, consented

@@ -62,6 +62,10 @@ not currently depend on React Router.
 - Yard Owner portal shell with Home, Visits, Proof, and Account destinations,
   portal-wide property selection, local-review next-visit summaries, delivered
   proof, and recommendation history
+- Property-manager portfolio command center with Overview, Properties, Proof,
+  and Approvals; scoped property search; readiness and exception summaries;
+  partial-source isolation; customer-safe provider identity; and explicit
+  provenance for illustrative next-service data
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

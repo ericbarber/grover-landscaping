@@ -116,6 +116,7 @@ import {
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
+import { PropertyManagerPortfolioPanel } from './components/PropertyManagerPortfolioPanel';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
@@ -3271,23 +3272,42 @@ export function App() {
           </section>
 
           <div className={workspaceSurfaces.customerCare && mobileView === 'customer' ? 'space-y-6' : 'hidden'} id="customer-workspace">
-            <YardOwnerPortalPanel
-              customer={customerPortalPreviewCustomer}
-              properties={customerPortalPreviewProperties}
-              visits={customerPortalPreviewVisits}
-              completionReportsByProperty={propertyCompletionReports}
-              isLoadingReportHistory={isLoadingPropertyCompletionReports}
-              hasReportHistoryError={hasPropertyCompletionReportHistoryError}
-              projectBids={customerProjectBids}
-              isLoadingProjectBids={isLoadingCustomerProjectBids}
-              hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
-            />
-            <CustomerPortfolioSummaryPanel
-              customer={customerPortalPreviewCustomer}
-              portfolios={customerPortalPreviewPortfolios}
-              properties={customerPortalPreviewProperties}
-              links={customerPortalPreviewPortfolioLinks}
-            />
+            {activePersona.id === 'property-manager' ? (
+              <PropertyManagerPortfolioPanel
+                customer={customerPortalPreviewCustomer}
+                portfolios={customerPortalPreviewPortfolios}
+                properties={customerPortalPreviewProperties}
+                links={customerPortalPreviewPortfolioLinks}
+                visits={customerPortalPreviewVisits}
+                completionReportsByProperty={propertyCompletionReports}
+                isLoadingReportHistory={isLoadingPropertyCompletionReports}
+                hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+                projectBids={customerProjectBids}
+                isLoadingProjectBids={isLoadingCustomerProjectBids}
+                hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
+                providerDisplayName="Grover Demo Landscaping"
+              />
+            ) : (
+              <>
+                <YardOwnerPortalPanel
+                  customer={customerPortalPreviewCustomer}
+                  properties={customerPortalPreviewProperties}
+                  visits={customerPortalPreviewVisits}
+                  completionReportsByProperty={propertyCompletionReports}
+                  isLoadingReportHistory={isLoadingPropertyCompletionReports}
+                  hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+                  projectBids={customerProjectBids}
+                  isLoadingProjectBids={isLoadingCustomerProjectBids}
+                  hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
+                />
+                <CustomerPortfolioSummaryPanel
+                  customer={customerPortalPreviewCustomer}
+                  portfolios={customerPortalPreviewPortfolios}
+                  properties={customerPortalPreviewProperties}
+                  links={customerPortalPreviewPortfolioLinks}
+                />
+              </>
+            )}
           </div>
 
           {canUseManagerTools ? (

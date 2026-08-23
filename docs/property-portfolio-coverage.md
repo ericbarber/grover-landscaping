@@ -45,8 +45,9 @@ The customer portal should show three sections:
 
 The validated [property-manager portfolio working design](../design/prototypes/property-manager-portfolio/README.md)
 and [production handoff](../design/review/property-manager-portfolio-handoff.md)
-extend grouping into Overview, Properties, Proof, and Approvals. The next React
-slice replaces the PropertyManager persona's generic customer/grouping stack with
-that hierarchy while reusing current authorized grouping, completion-report, and
-bid data. Any illustrative visit readiness remains labeled until the customer
-owner/delegate authorization choice permits a persisted customer visit read.
+are adopted into the PropertyManager persona as Overview, Properties, Proof, and
+Approvals. The React view reuses scoped grouping, protected completion-report,
+and bid history; filters property search within the active customer account; and
+retains usable data when proof or recommendation history is unavailable. Its
+next-service readiness remains explicitly labeled as local-review data until the
+customer owner/delegate authorization choice permits a persisted visit read.

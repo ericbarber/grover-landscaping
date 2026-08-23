@@ -243,6 +243,44 @@ test('desktop management categories are filtered for portfolio and support roles
   await expect(page.getByRole('button', { name: /Customers/ })).toHaveCount(0);
 });
 
+test('property manager enters the connected portfolio command center on phone and desktop', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-manager');
+  });
+
+  for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/app');
+
+    const workspaceNavigation = page.getByRole('navigation', {
+      name: viewport.width >= 768 ? 'Desktop workspace' : 'Mobile workspace',
+    });
+    await workspaceNavigation.getByRole('button', { name: 'Portfolio', exact: true }).click();
+
+    const portfolio = page.locator('[data-property-manager-portfolio]');
+    await expect(portfolio).toBeVisible();
+    await expect(portfolio.getByText('Local review data boundary', { exact: true })).toBeVisible();
+    await expect(portfolio.getByRole('navigation', { name: 'Property portfolio' })).toBeVisible();
+    await expect(portfolio.getByRole('heading', { name: 'Start with what needs attention.' })).toBeVisible();
+    await expect(portfolio.getByText('Provider routes, crew notes, cost basis, margins', { exact: false })).toBeVisible();
+    await expect(portfolio.getByRole('heading', { name: /Welcome back/ })).toHaveCount(0);
+
+    await portfolio.getByRole('button', { name: 'Properties', exact: true }).click();
+    await expect(portfolio.getByRole('heading', { name: 'Every property, one accountable view.' })).toBeVisible();
+    await portfolio.getByLabel('Search portfolio properties').fill('Backyard');
+    await expect(portfolio.getByRole('heading', { name: 'Backyard Renovation Area' })).toBeVisible();
+    await expect(portfolio.getByRole('heading', { name: 'Sample Customer Home' })).toHaveCount(0);
+
+    await portfolio.getByRole('button', { name: 'Proof', exact: true }).click();
+    await expect(portfolio.getByRole('heading', { name: 'Proof ready for review.' })).toBeVisible();
+    await portfolio.getByRole('button', { name: 'Approvals', exact: true }).click();
+    await expect(portfolio.getByRole('heading', { name: 'Recommendations and recorded decisions.' })).toBeVisible();
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  }
+});
+
 test('organization owner Team opens the responsive team and access command center', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
