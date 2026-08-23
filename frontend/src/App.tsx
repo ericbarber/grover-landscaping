@@ -137,6 +137,7 @@ import { ManagerPropertySetupPanel } from './components/ManagerPropertySetupPane
 import { ManagerTeamInvitationsPanel } from './components/ManagerTeamInvitationsPanel';
 import { ManagerTeamMembershipsPanel } from './components/ManagerTeamMembershipsPanel';
 import { ManagerTeamActivityPanel } from './components/ManagerTeamActivityPanel';
+import { TeamOrganizationOverviewPanel } from './components/TeamOrganizationOverviewPanel';
 import {
   ManagerNotificationHistoryPanel,
   type NotificationHistoryFilters,
@@ -3290,7 +3291,11 @@ export function App() {
               activeSection={managerWorkspaceSection}
               onChange={(section) => {
                 setManagerWorkspaceSection(section);
-                setManagerWorkspaceTool(null);
+                setManagerWorkspaceTool(
+                  section === 'team' && activePersona.id === 'company-owner'
+                    ? 'team-overview'
+                    : null,
+                );
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
@@ -3466,6 +3471,31 @@ export function App() {
                 setFirstOwnerProgressRefreshSignal((current) => current + 1);
               }}
               organizationId={activeManagerOrganizationId}
+            />
+          </div>
+          <div className={`${managerWorkspaceTool === 'team-overview' ? 'block' : 'hidden'} mt-6`}>
+            <TeamOrganizationOverviewPanel
+              organizationId={activeManagerOrganizationId}
+              refreshSignal={
+                teamActivityRefreshSignal
+                + firstOwnerProgressRefreshSignal
+                + crewRefreshSignal
+                + dispatchHierarchyRefreshSignal
+              }
+              onOpenMembers={() => setManagerWorkspaceTool('team-members')}
+              onOpenInvitations={() => setManagerWorkspaceTool('team-invitations')}
+              onOpenActivity={() => setManagerWorkspaceTool('team-activity')}
+              onOpenCrews={() => {
+                setManagerWorkspaceSection('overview');
+                setManagerWorkspaceTool('owner-setup');
+                setCrewAdministrationReturnTarget(undefined);
+                window.setTimeout(() => {
+                  document.getElementById('crew-administration')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  });
+                }, 0);
+              }}
             />
           </div>
           <div className={`${managerWorkspaceTool === 'team-invitations' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="first-owner-team-invitations">

@@ -7,7 +7,8 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: field-execution hierarchy convergence
+- Active product boundary: Yard Owner customer authorization decision; Team and
+  organization convergence remains independently implementable
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -64,6 +65,10 @@
   Proof, and Account, plus portal-wide property selection, local-review next-visit
   summaries, delivered proof, and recommendation history. The visit summary is an
   explicit frontend contract and is not yet backed by a persisted customer API.
+- Organization Owner Team now opens a prototype-aligned Team and access command
+  center with live active-member, pending-invitation, active-crew, and unstaffed-
+  territory summaries. It links directly to the existing member, invitation,
+  crew, and audit workflows and reports unavailable reads without false counts.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -95,35 +100,20 @@
 
 ## Next implementable slice
 
-Phase 4B3 owner/provider initial-service proposal interfaces and all Phase 4B2b
-proposal-collaboration slices are delivered. Phase 4C0 now defines activation
-authority, atomic projection, property-scoped portal access, immutable
-provenance, competing-request closure, and the first-visit boundary. Phase 4C1
-now delivers the constrained schema, atomic repository transaction, safe
-activated progress, PostgreSQL concurrency/side-effect proof, and authenticated
-owner activation/status routes and responsive owner/provider setup interfaces.
-Phase 4C4a defines the separate first-visit contract, including
-post-activation provider authority, immutable windows, exact-version owner
-confirmation/change requests, privacy, replay, concurrency, recovery, and the
-no-operational-side-effect boundary. Phase 4C4b now delivers the constrained
-schema, repository transitions, exact replay, concurrent confirmation,
-owner/provider isolation, immutable history, and PostgreSQL side-effect proof.
-Phase 4C4c exposes authenticated provider status/propose and property-owner
-status/decision routes with explicit validation, missing/not-ready/conflict,
-replay, and unavailable mappings. Phase 4C4d now adopts retry-stable provider
-window authoring/replacement and exact-version owner confirmation/change
-requests in the responsive workspaces. Mobile and desktop browser journeys
-preserve the no-operational-work boundary and the confirmed owner view links to
-the existing portal.
+The shared shell; core Route, Jobs, Job, Schedule, Recovery, manager review;
+public proof and proposal decisions; and the Yard Owner four-destination shell
+are delivered. The Team and organization phase now also has its prototype-
+aligned overview composition.
 
-The shared shell plus core field and manager-operation hierarchies are delivered:
-responsive navigation, semantic status, Route, Jobs, Job, Schedule, and Recovery
-are in production. The next repository-owned slice is:
-
-1. Add a persisted, customer-and-organization-scoped visit read model matching the
-   adopted portal contract without exposing jobs, routes, crews, or provider notes.
-2. Continue service-day lifecycle, proof/recommendation context, concern recovery,
-   and customer-controlled preferences after that read boundary is authoritative.
+1. Make the product/security choice for Property Owner scope: recommended
+   customer-account membership for an owner who should inherit multiple yards,
+   with property-scoped grants retained for delegates. Do not add the persisted
+   visit projection until this boundary is explicit and fail-closed.
+2. Independently continue Team and organization state convergence: staffing
+   attention/recovery, branch and territory handoff, permission/self-impact
+   guidance, and responsive/accessibility regression.
+3. After the owner scope decision, add the minimized customer visit read and
+   continue service-day, proof/recommendation, concern, and preference adoption.
 
 ## Read first
 
@@ -138,9 +128,10 @@ are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest Yard Owner portal slice passes all 427 frontend unit tests across 106 files,
-TypeScript, the production build, and 30 phone/desktop authenticated-workspace and public-proof
-checks across both compatible Chromium profiles. Re-run the checks
+The latest completed baseline passes all 428 frontend unit tests across 107 files,
+TypeScript, the production build, and all 24 phone/desktop Chromium local-role
+workspace journeys. The immediately preceding public-proof checks remain part of
+the broader browser baseline. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
 baseline.

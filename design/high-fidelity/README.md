@@ -25,8 +25,8 @@ and adoption guidance.
 | --- | --- |
 | Public homepage V2 | Adopted, with illustrative previews retained until approved production captures exist |
 | Visual foundation V1 | Partial; shared tokens, typography, wordmark, controls, and shell materials are adopted |
-| Crew route mobile V1 | Partial; workflow foundations exist, but connected field composition adoption remains |
-| Manager schedule desktop V1 | Partial; marketing dashboard adopted, authenticated schedule/inspector convergence remains |
+| Crew route mobile V1 | Adopted core; Route, compact Jobs, and one-panel Job execution carry the approved hierarchy |
+| Manager schedule desktop V1 | Adopted core; authenticated Today’s operation, route board, and planning inspector are delivered |
 
 ## V1 review set
 
@@ -56,7 +56,9 @@ and adoption guidance.
    compact Jobs, and one-panel Job execution are in production.
 4. Migrate remaining manager-local feedback to shared primitives without
    weakening operational recovery.
-5. Link each implementation slice back to the adoption matrix and validated
+5. Continue Team and organization convergence from the delivered live overview
+   into staffing recovery and hierarchy handoffs.
+6. Link each implementation slice back to the adoption matrix and validated
    artifact rather than treating the image itself as shipped behavior.
 
 The SVG files are editable source artifacts. PNG files are validated browser

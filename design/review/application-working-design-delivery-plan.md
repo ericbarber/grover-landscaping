@@ -376,7 +376,7 @@ different product decision, missing authority, or unavailable required contract.
 | 3. Manager daily operations | Core responsive hierarchy adopted | Continue state regression as Schedule and Recovery contracts evolve |
 | 4. Completion proof | In progress · manager review, shared proof, and bid decision adopted | Complete recommendation/add-on continuity |
 | 5. Customers and portfolios | In progress · Yard Owner shell/Home adopted locally | Persist customer visit reads; continue service-day, proof/recommendation, concern, and preferences; then property-manager design; keep billing gated |
-| 6. Team and organization | Partial production adoption | Converge delivered invitation, membership, crew, hierarchy, and audit controls in the shared shell |
+| 6. Team and organization | In progress · overview adopted | Continue staffing recovery, hierarchy handoffs, permission/self-impact states, and final responsive/accessibility regression from the live Team and access command center |
 | 7. Revenue operations | Product-gated | Confirm planned product contracts before high fidelity |
 | 8. Convergence | Partial foundation | Continue shared visual/browser regression now; complete linked critical journeys after phases 0–7 meet applicable gates |
 

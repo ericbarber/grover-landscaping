@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Adopted the Team and access command center for Organization Owners with live active-member, pending-invitation, active-crew, and unstaffed-territory summaries; explicit unavailable recovery; staffing attention; direct member, invitation, crew, and audit paths; focused unit coverage; and phone/desktop Chromium validation.
 - 2026-08-22: Adopted the first Yard Owner portal production slice with stable Home/Visits/Proof/Account navigation, portal-wide property selection, an explicit customer-safe local-review visit model, next-visit confidence hierarchy, delivered-proof archive, recommendation history, and responsive property-context coverage; persisted customer visit reads remain planned.
 - 2026-08-22: Adopted secure customer proposal decisions with the shared public visual hierarchy, responsive scope and pricing, explicit approval/decline confirmation, recorded outcomes, closed-link recovery, and a narrowed public API projection that omits internal bid/line-item/service IDs, manager notes, and delivery metadata.
 - 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Grover service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.

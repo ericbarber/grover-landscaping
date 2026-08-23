@@ -32,7 +32,12 @@ describe('manager workspace menu', () => {
       'customer-portal',
       'customer-portfolios',
     ]);
-    expect(managerWorkspaceTools.team).toHaveLength(3);
+    expect(managerWorkspaceTools.team.map((tool) => tool.id)).toEqual([
+      'team-overview',
+      'team-members',
+      'team-invitations',
+      'team-activity',
+    ]);
     expect(managerWorkspaceTools.recovery).toHaveLength(4);
   });
 

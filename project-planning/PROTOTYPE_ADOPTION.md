@@ -29,7 +29,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · shell/Home locally adopted | Home, Visits, Proof, and Account plus property context, local-review visit summaries, delivered proof, and recommendation history are adopted. Next persist customer visit reads, then service-day states, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md) and [handoff](../design/review/yard-crew-acquisition-handoff.md) | Design ready / reciprocal entry partial | Adopt provider public routing and identity/readiness first, then connect known-owner invitation, assessment, proposal, and first-service preparation. Curated opportunities and alerts remain gated on marketplace operations. |
 | Property-manager portfolios | [Portfolio wireframe](../design/wireframes/customer/02-property-manager-portfolio.svg) | Partial foundations | Produce and validate the connected working design, then adopt portfolio readiness, exceptions, property proof, and vendor accountability without exposing provider-private data. |
-| Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) | Partial | Converge invitation, membership, role, crew, branch, territory, hierarchy, and audit interfaces in the shared manager shell. |
+| Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) | Partial · overview adopted | The Organization Owner now enters a live Team and access command center with active-member, pending-invitation, active-crew, and unstaffed-territory summaries plus direct member, invitation, crew, and audit paths. Next converge staffing recovery, hierarchy handoffs, permission/self-impact states, and final phase regression. |
 | Revenue operations | [Revenue wireframe](../design/wireframes/revenue/01-revenue-operations.svg) | Product-gated | Keep current bid and billing-readiness foundations visible as delivered; do not imply invoices, payments, taxes, or accounting integration until ownership and compliance contracts are approved. |
 | Homeowner assistant | [Future concept](../design/wireframes/future/01-homeowner-assistant.svg) | Future concept | No current adoption commitment. |
 | Multi-vendor property management | [Future concept](../design/wireframes/future/02-multi-vendor-portfolio.svg) | Future concept | No current adoption commitment; the current property-manager view must not imply full marketplace governance. |
@@ -41,16 +41,16 @@ user value, and dependency safety:
 
 1. Shared authenticated-shell core is delivered; migrate legacy feedback only
    inside the owning workflow phases.
-2. **Active:** converge field execution from Home through completion without
-   weakening offline, conflict, evidence, or recovery contracts.
-3. Converge manager daily operations and Recovery around the approved schedule
-   direction.
-4. Connect completion proof from crew handoff through manager review and
-   customer-safe delivery.
-5. Adopt the Yard Owner portal, then produce and adopt the property-manager
-   portfolio working design.
-6. Converge team/organization administration and run the cross-application
-   critical-journey regression phase.
+2. Field execution core convergence is adopted; keep its offline, conflict,
+   evidence, and recovery regression intact.
+3. Manager Schedule, Recovery, and completion-review core convergence is adopted.
+4. Shared completion proof and proposal decisions are adopted; recommendation/
+   add-on continuity remains.
+5. **Active:** continue Yard Owner portal adoption after the customer-account
+   versus per-property authorization decision; property-manager design follows.
+6. **Active independent stream:** continue Team/organization convergence from
+   the delivered overview through staffing recovery and final state/accessibility
+   regression, then run cross-application critical journeys.
 
 Phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff

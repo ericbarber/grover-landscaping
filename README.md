@@ -22,8 +22,11 @@ prototype-aligned “Today’s operation” dashboard in the landscaping-company
 and product tour. Proposal questions, change requests, provider replies, and
 newer-revision links are delivered in both acquisition workspaces. Explicit
 activation is now delivered through the responsive owner/provider workspaces;
-separate first-visit confirmation and relationship continuity are the active
-follow-on.
+first-visit confirmation is delivered separately from crew, route, work-order,
+and payment authority. The authenticated Property Owner now has a four-
+destination portal shell, while Organization Owners have a prototype-aligned
+Team and access command center. Persisted customer visit reads await an explicit
+customer-account versus per-property owner-authorization decision.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -80,6 +83,8 @@ Start with these records when reviewing or continuing development:
 - Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
 - Explicit accepted-proposal activation into provider customer/property setup with property-scoped portal access and no implicit first visit or crew assignment
 - Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
+- Organization Owner Team and access command center with live staffing/access
+  summaries and direct administration and audit paths
 - Responsive and accessibility-focused owner/provider browser coverage
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development

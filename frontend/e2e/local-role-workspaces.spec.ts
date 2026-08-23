@@ -168,6 +168,141 @@ test('desktop management categories are filtered for portfolio and support roles
   await expect(page.getByRole('button', { name: /Customers/ })).toHaveCount(0);
 });
 
+test('organization owner Team opens the responsive team and access command center', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'organization-owner');
+  });
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/memberships', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'membership_owner',
+          organization_id: 'org_demo_landscaping',
+          organization_name: 'Grover Demo Landscaping',
+          organization_type: 'yard_care_company',
+          user_id: 'local-review-organization-owner',
+          display_name: 'Olivia — Organization Owner',
+          role: 'OrganizationOwner',
+          status: 'active',
+          scope_type: 'organization',
+          scope_id: 'org_demo_landscaping',
+        },
+        {
+          id: 'membership_lead',
+          organization_id: 'org_demo_landscaping',
+          organization_name: 'Grover Demo Landscaping',
+          organization_type: 'yard_care_company',
+          user_id: 'crew-lead',
+          display_name: 'Leah — Crew Lead',
+          role: 'CrewLead',
+          status: 'active',
+          scope_type: 'organization',
+          scope_id: 'org_demo_landscaping',
+        },
+      ]),
+    })
+  ));
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/invitations', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'invitation_pending',
+          organization_id: 'org_demo_landscaping',
+          invitee_email: 'new.lead@example.test',
+          role: 'crew_lead',
+          status: 'pending',
+          scope_type: 'organization',
+          scope_id: 'org_demo_landscaping',
+          membership_id: 'membership_pending',
+          expires_at: '2026-08-29T12:00:00Z',
+          delivery_status: 'sent',
+          delivery_attempt_count: 1,
+          persisted: true,
+        },
+      ]),
+    })
+  ));
+  await page.route('http://localhost:8080/organizations/org_demo_landscaping/crews', (route) => (
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'crew_north',
+          name: 'North crew',
+          organization_id: 'org_demo_landscaping',
+          branch_id: 'branch_main',
+          territory_id: 'territory_north',
+          status: 'active',
+          daily_stop_capacity: 8,
+          lead_membership_id: 'membership_lead',
+          persisted: true,
+        },
+        {
+          id: 'crew_south',
+          name: 'South crew',
+          organization_id: 'org_demo_landscaping',
+          branch_id: 'branch_main',
+          territory_id: 'territory_south',
+          status: 'active',
+          daily_stop_capacity: 8,
+          lead_membership_id: null,
+          persisted: true,
+        },
+      ]),
+    })
+  ));
+  await page.route('http://localhost:8080/service-territories', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify([
+      {
+        id: 'territory_north',
+        organization_id: 'org_demo_landscaping',
+        branch_id: 'branch_main',
+        name: 'North territory',
+        status: 'active',
+      },
+      {
+        id: 'territory_south',
+        organization_id: 'org_demo_landscaping',
+        branch_id: 'branch_main',
+        name: 'South territory',
+        status: 'active',
+      },
+      {
+        id: 'territory_east',
+        organization_id: 'org_demo_landscaping',
+        branch_id: 'branch_main',
+        name: 'East territory',
+        status: 'active',
+      },
+    ]),
+  }));
+
+  await page.goto('/app');
+  await page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Manage', exact: true }).click();
+  await page.getByRole('button', { name: /Team Members, invitations, and access/ }).click();
+
+  const overview = page.locator('#team-organization-overview');
+  await expect(overview.getByRole('heading', { name: 'Team and access' })).toBeVisible();
+  await expect(overview.getByLabel('Active team summary')).toContainText('2');
+  await expect(overview.getByLabel('Invited team summary')).toContainText('1');
+  await expect(overview.getByLabel('Crews team summary')).toContainText('2');
+  await expect(overview.getByLabel('Unstaffed team summary')).toContainText('1');
+  await expect(overview.getByText('Staffing needs attention.')).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Open member directory' })).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Open invitations' })).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Open crew administration' })).toBeVisible();
+  await expect(overview.getByRole('button', { name: 'Open team activity' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  await overview.getByRole('button', { name: 'Open member directory' }).click();
+  await expect(page.getByRole('heading', { name: 'Active memberships' })).toBeVisible();
+});
+
 test('authenticated home retains the shared shell materials and type roles', async ({ page }) => {
   await page.goto('/app');
   await expect(page.getByRole('navigation', { name: 'Desktop workspace' })).toBeVisible();

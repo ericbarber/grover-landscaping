@@ -190,14 +190,15 @@ renderer or a design-tool account to see a proposed screen.
 3. Read its [production handoff](review/yard-owner-acquisition-handoff.md) and
    [proposal contract](../docs/owner-provider-initial-service-proposal-design.md)
    before changing production proposal behavior.
-4. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg)
-   and [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg) directions
-   with `/app`; these are the next shared application convergence targets after
-   the current acquisition boundary.
+4. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg),
+   [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg), and
+   [Team and access](wireframes/manager/03-team.svg) directions with `/app`;
+   Route and Schedule core composition plus the Team overview are adopted.
 5. Review the [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    for the seven completion gates and cross-application sequence.
 6. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
-   before its customer read-model and React adoption phases.
+   against the adopted four-destination shell before settling its customer-
+   scoped persisted visit read model.
 7. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
    before provider public routing/readiness adoption; keep curated discovery and
    alerts behind their product and operational gates.

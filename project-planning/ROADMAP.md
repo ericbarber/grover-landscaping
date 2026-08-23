@@ -5,12 +5,15 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the separate first-visit lifecycle.
-Proposal collaboration and explicit owner-confirmed activation are delivered
-through persistence, API, and responsive owner/provider interfaces; first-visit
-proposal and confirmation must remain independent of crew and route work.
-The initial-service proposal interface against the delivered Phase 4B APIs is
-now adopted. The immediately
+The current production-adoption priority is the Yard Owner portal read boundary
+and Team/organization convergence. The portal shell is adopted locally, but its
+persisted visit projection must wait for an explicit choice between customer-
+account owner scope and one grant per property. The independent Team stream now
+has a live prototype-aligned overview and continues through staffing recovery,
+hierarchy handoffs, and final state/accessibility regression. Proposal
+collaboration, explicit owner-confirmed activation, and separate first-visit
+confirmation are delivered through persistence, API, and responsive owner/
+provider interfaces without granting crew or route authority. The immediately
 preceding UX priority—a complete persona-specific public landing experience—is
 delivered. Yard Owner, property-manager, landscaping-company, and crew-lead
 routes now carry their audience through tailored hero actions, previews, trust
@@ -44,11 +47,11 @@ roles, leaf wordmark, split hero composition, persona-specific product preview,
 trust strip, controls, focus treatment, and PWA chrome into React while
 preserving the existing campaign, metadata, analytics, persisted-lead, and
 direct Yard Owner/company entry contracts. The shared theme also reaches access,
-acquisition, and authenticated utility classes. The subsequent Home-shell slice
-adds the shared wordmark and editorial greeting, paper cards, warm canvas,
-forest manager navigation, and canonical mobile header/bottom-navigation
-materials without changing role-aware access. Desktop rail, operational density,
-status, and icon convergence remain the next application-shell work.
+acquisition, and authenticated utility classes. The subsequent Home-shell and
+operational convergence slices add the shared wordmark and editorial greeting,
+paper cards, warm canvas, forest manager navigation, responsive rails, single-
+destination desktop density, semantic status, and outlined icon system without
+changing role-aware access.
 The reciprocal provider-invitation entry now also consumes the acquisition
 family's shared brand lockup, editorial title, bone/paper/forest composition,
 control geometry, and exact browser style contract while preserving its

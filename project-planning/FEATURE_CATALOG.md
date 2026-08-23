@@ -218,6 +218,9 @@ here does not mean every capability has been delivered.
 - Owner-managed member display names with immutable identity references
 - Role administration and audited access changes
 - Branch, territory, region, and service-area hierarchy
+- Prototype-aligned Team and access command center with live active-member,
+  pending-invitation, active-crew, unstaffed-territory, and lead-coverage signals
+  plus direct administration and audit handoffs
 
 ### Crew field workflow
 

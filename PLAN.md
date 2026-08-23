@@ -138,11 +138,21 @@ Current state:
   a customer-safe next-visit hierarchy, delivered proof, and recommendation
   history. The visit summary is currently an explicit local-review/frontend
   contract; persisted customer-scoped visit reads remain the next production step.
+- Phase 6 working composition now adopts the Team and access command-center
+  hierarchy for Organization Owners. Live membership, pending-invitation, active-
+  crew, and unstaffed-territory counts lead into direct paths for the member
+  directory, invitation lifecycle, crew administration, and audited team
+  activity; unavailable reads never collapse into false zeroes.
 
 Next slice:
 
-- Persist and scope the customer visit read model, then continue Yard Owner
-  service-day, proof/recommendation context, concern, and preference adoption.
+- Settle whether Property Owner authorization inherits all properties through a
+  customer-account grant or is issued separately per property before persisting
+  the customer visit read model. The recommended default is customer-account
+  scope for owners and property scope for delegates.
+- While that product/security boundary is open, continue Phase 6 state and
+  accessibility convergence from the delivered Team and access overview into
+  staffing recovery and hierarchy handoffs.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the

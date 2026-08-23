@@ -61,6 +61,9 @@ not currently depend on React Router.
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting
+- Organization Owner Team and access command center with live membership,
+  invitation, crew, and unstaffed-territory summaries plus direct administration
+  and audit paths
 - Yard Owner private property and brief intake, guided media, provider connection
   progress, disclosure consent/history/revocation, assessment collaboration,
   immutable proposal review/decisions, and version-specific questions/change

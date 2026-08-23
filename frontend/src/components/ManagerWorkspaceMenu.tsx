@@ -21,6 +21,7 @@ export type ManagerWorkspaceTool =
   | 'customer-accounts'
   | 'customer-portal'
   | 'customer-portfolios'
+  | 'team-overview'
   | 'team-members'
   | 'team-invitations'
   | 'team-activity'
@@ -81,6 +82,7 @@ export const managerWorkspaceTools: Record<
     { id: 'customer-portfolios', label: 'Portfolios', description: 'Grouped property coverage' },
   ],
   team: [
+    { id: 'team-overview', label: 'Team overview', description: 'Staffing, access, and administration' },
     { id: 'team-members', label: 'Members', description: 'Roles, status, and names' },
     { id: 'team-invitations', label: 'Invitations', description: 'Invite and onboard teammates' },
     { id: 'team-activity', label: 'Team activity', description: 'Audited access and crew changes' },
@@ -113,7 +115,7 @@ const toolAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceTool[]>> = 
   'company-owner': [
     'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
     'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
-    'customer-portal', 'customer-portfolios', 'team-members', 'team-invitations',
+    'customer-portal', 'customer-portfolios', 'team-overview', 'team-members', 'team-invitations',
     'team-activity', 'operations-activity', 'notifications', 'completion-reports',
     'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
   ],
