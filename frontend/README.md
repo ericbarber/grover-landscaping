@@ -13,6 +13,7 @@ customer-safe report and bid pages, and mobile diagnostics.
 | `/app` | Authenticated role-aware workspace |
 | `/app/yard-owner` | Private Yard Owner acquisition |
 | `/app/provider-invitation` | Verified-recipient provider connection entry; bearer token is consumed from the URL fragment |
+| `/providers/start` | Public provider-path selection for owner-operators, company owners, invited workers, and known-owner recipients |
 | `/organization-invitations/{token}` | Organization invitation acceptance |
 | `/report-view/{token}` | Customer-safe completion report |
 | `/bid-review/{token}` | Customer-safe project-bid decision |
@@ -84,6 +85,9 @@ not currently depend on React Router.
   authoring/revision, exact-message proposal responses, and activated provider
   setup status with separate bounded first-visit window proposal/replacement
   controls and no implied crew, route, work-order, or payment authority
+- Public provider entry routing that carries an allowlisted owner-operator or
+  company-owner context into Company setup while leaving claims, memberships,
+  invitation scope, publication, and opportunity access unchanged
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records

@@ -164,6 +164,11 @@ Current state:
   and recommendation history with partial-source isolation; and customer-safe
   provider accountability. PropertyOwner retains the Yard Owner portal, and
   provider-side portfolio administration remains a separate tool.
+- Yard Crew public fit and entry routing is delivered. Landscaping-company
+  signup now separates owner-operators, company owners, invited workers, and
+  known-owner recipients; only the two owner paths carry allowlisted guidance
+  into authenticated Company setup; and the UI states that claims, memberships,
+  publication, eligibility, and opportunity access do not change.
 
 Next slice:
 
@@ -171,9 +176,9 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, continue Yard Crew reciprocal
-  public entry and provider identity/readiness without widening curated discovery
-  past its recorded product and operational gates.
+- While that product/security boundary is open, continue precise Yard Crew
+  provider identity and readiness on top of the adopted public entry route
+  without widening curated discovery past its product and operational gates.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -419,7 +424,8 @@ Next design work:
   device, privacy/security, and support/operations signoff sessions against the
   committed assurance build; treat any critical disclosure misunderstanding as
   a release-blocking P1.
-- Adopt Yard Crew public routing and identity/readiness, then resolve provider eligibility,
+- Continue Yard Crew provider identity/readiness after the adopted public route,
+  then resolve provider eligibility,
   pre-consent opportunity fields, provider roles, and safety/support service
   levels before curated opportunities. Use the completed V3 owner-notification,
   team-authority, saved-alert, and pilot-governance contracts during adoption.

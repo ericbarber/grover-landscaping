@@ -8,8 +8,8 @@
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 - Active product boundary: Yard Owner customer authorization decision; Yard Crew
-  reciprocal public entry and provider identity/readiness are the active
-  independent production-adoption slices
+  provider identity/readiness is the active independent production-adoption
+  slice after public fit/entry routing
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -90,6 +90,11 @@
   partial-source isolation; customer-safe provider accountability; responsive
   browser coverage; and a production handoff. PropertyOwner retains the Yard
   Owner portal, while provider portfolio administration remains separate.
+- Yard Crew public fit/entry routing is adopted at `/providers/start` with
+  distinct owner-operator, company-owner, invited-worker, and known-owner paths.
+  Only allowlisted owner context opens authenticated Company setup, and the
+  selected query never changes claims, memberships, publication, or opportunity
+  access.
 
 ### Yard Owner production adoption
 
@@ -128,7 +133,7 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently adopt Yard Crew reciprocal public entry and provider identity/
+2. Independently continue precise Yard Crew provider organization identity and
    readiness without promoting curated discovery past its gates.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
@@ -164,6 +169,9 @@ baseline.
 The property-manager portfolio design additionally passes its 1440px and 390px
 browser validator for navigation, state switching, search, dialog focus return,
 touch targets, and overflow. Its React adoption is included in the baseline above.
+Provider entry additionally passes four focused domain/component tests, the
+production build, and six phone/desktop Chromium journeys covering path choice,
+company CTA routing, authenticated handoff, authority language, and reflow.
 
 ## Stop conditions
 

@@ -12,6 +12,7 @@ import { InstallAppBanner } from './components/InstallAppBanner';
 import { isDiagnosticsPath } from './domain/diagnosticsRoute';
 import { isApplicationPath } from './domain/applicationRoute';
 import { marketingPersonaFromPath } from './domain/marketingRoute';
+import { isProviderEntryPath } from './domain/providerEntryRoute';
 import './styles.css';
 
 registerProductionServiceWorker();
@@ -36,6 +37,10 @@ const PublicLandingPage = React.lazy(
   () => import('./components/PublicLandingPage')
     .then((module) => ({ default: module.PublicLandingPage })),
 );
+const ProviderEntryPage = React.lazy(
+  () => import('./components/ProviderEntryPage')
+    .then((module) => ({ default: module.ProviderEntryPage })),
+);
 
 const diagnosticsRoute = isDiagnosticsPath(window.location.pathname);
 const applicationRoute = isApplicationPath(window.location.pathname);
@@ -43,6 +48,7 @@ const sharedBidToken = sharedBidTokenFromPath(window.location.pathname);
 const sharedReportToken = sharedReportTokenFromPath(window.location.pathname);
 const organizationInvitationToken = organizationInvitationTokenFromPath(window.location.pathname);
 const marketingPersona = marketingPersonaFromPath(window.location.pathname);
+const providerEntryRoute = isProviderEntryPath(window.location.pathname);
 const showOperationalBanners = diagnosticsRoute
   || applicationRoute
   || Boolean(sharedBidToken)
@@ -75,6 +81,8 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           <CustomerCompletionReportPage shareToken={sharedReportToken} />
         ) : applicationRoute || organizationInvitationToken ? (
           <AuthenticatedExperience organizationInvitationToken={organizationInvitationToken} />
+        ) : providerEntryRoute ? (
+          <ProviderEntryPage />
         ) : (
           <PublicLandingPage initialPersonaId={marketingPersona} />
         )}

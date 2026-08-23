@@ -13,6 +13,7 @@ import { MarketingProductTour } from './MarketingProductTour';
 import { MarketingOperationsPlanner } from './MarketingOperationsPlanner';
 import { OWNER_ACQUISITION_PATH } from '../domain/ownerAcquisitionRoute';
 import { GroverBrand } from './GroverBrand';
+import { PROVIDER_ENTRY_PATH } from '../domain/providerEntryRoute';
 
 const marketingPersonas: Array<{
   id: MarketingPersonaId;
@@ -382,7 +383,7 @@ export function PublicLandingPage({
                   Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : activePersona.id === 'company' ? (
-                <a className="grover-button-primary" href="/app" onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                <a className="grover-button-primary" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
                   Sign up your company <span className="ml-2" aria-hidden="true">→</span>
                 </a>
               ) : (
@@ -400,7 +401,7 @@ export function PublicLandingPage({
                 </a>
               ) : null}
               {activePersona.id !== 'company' ? (
-                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href="/app" onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
+                <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'hero_company_signup')}>
                   Sign up your company
                 </a>
               ) : null}
@@ -561,9 +562,15 @@ export function PublicLandingPage({
           <h2 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">{activePersona.invitation.title}</h2>
           <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">{activePersona.invitation.description}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
-              {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
-            </button>
+            {activePersona.id === 'company' ? (
+              <a className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" href={PROVIDER_ENTRY_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'landscaping_company', 'final_company_signup')}>
+                Sign up your company <span className="ml-2" aria-hidden="true">→</span>
+              </a>
+            ) : (
+              <button className="inline-flex min-h-12 items-center justify-center rounded-full bg-emerald-400 px-7 py-3 font-black text-emerald-950 transition hover:bg-emerald-300" onClick={() => openLeadDialog(activeMarketingPersona, 'final_cta')} type="button">
+                {activeCallToAction.label} <span className="ml-2" aria-hidden="true">→</span>
+              </button>
+            )}
             <a className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3 font-black text-white transition hover:bg-white/10" href="/app">
               Existing user sign in
             </a>

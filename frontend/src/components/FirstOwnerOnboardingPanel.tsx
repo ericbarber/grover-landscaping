@@ -14,6 +14,7 @@ import {
 import { OwnerCrewAdministrationPanel } from './OwnerCrewAdministrationPanel';
 
 type Props = {
+  providerEntryMode?: 'owner-operator' | 'company-owner' | null;
   onOrganizationReady?: (organizationName: string, organizationId: string) => void;
   onOpenSetupStep?: (target: FirstOwnerSetupTarget) => void;
   refreshSignal?: number;
@@ -81,6 +82,7 @@ export function firstOwnerNextMilestone(progress: FirstOwnerSetupProgress) {
 }
 
 export function FirstOwnerOnboardingPanel({
+  providerEntryMode = null,
   onOrganizationReady,
   onOpenSetupStep,
   refreshSignal = 0,
@@ -259,6 +261,20 @@ export function FirstOwnerOnboardingPanel({
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      {providerEntryMode ? (
+        <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4" role="note">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-800">Provider entry path</p>
+          <h2 className="mt-2 text-lg font-black text-emerald-950">
+            {providerEntryMode === 'owner-operator' ? 'Owner-operator setup' : 'Company-owner setup'}
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-emerald-900">
+            {providerEntryMode === 'owner-operator'
+              ? 'Grover still creates a provider organization of one. Combined owner and field responsibilities do not bypass organization-scoped access.'
+              : 'Create or continue one landscaping provider organization, then add crews and team roles through explicit invitations.'}
+          </p>
+          <p className="mt-2 text-xs font-bold text-emerald-800">This entry choice is guidance only. Signed-in claims and active memberships remain authoritative.</p>
+        </div>
+      ) : null}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">First-user setup</p>

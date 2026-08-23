@@ -5,9 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is Yard Crew reciprocal public entry
-and provider identity/readiness. The property-manager portfolio V1 command
-center is adopted in React, while the Yard Owner portal persisted visit
+The current production-adoption priority is Yard Crew provider identity and
+readiness. Its public fit/entry route is adopted with distinct owner-operator,
+company-owner, team-invitation, and known-owner paths. The property-manager
+portfolio V1 command center is adopted in React, while the Yard Owner portal persisted visit
 projection still waits for an explicit choice between customer-account owner
 scope and one grant per property. Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
@@ -53,7 +54,7 @@ operational convergence slices add the shared wordmark and editorial greeting,
 paper cards, warm canvas, forest manager navigation, responsive rails, single-
 destination desktop density, semantic status, and outlined icon system without
 changing role-aware access.
-The reciprocal provider-invitation entry now also consumes the acquisition
+The public provider-path selector and reciprocal provider-invitation entry now consume the acquisition
 family's shared brand lockup, editorial title, bone/paper/forest composition,
 control geometry, and exact browser style contract while preserving its
 privacy-limited progress and assessment behavior.
@@ -468,8 +469,8 @@ schedule, remaining work, or a completed day.
    - Property-manager portfolio core is adopted with explicit local-review
      readiness provenance and protected proof/recommendation reads.
    - Resume Yard Owner V2 portal adoption after that read boundary is explicit.
-   - Adopt Yard Crew public routing and provider identity/readiness before the
-     larger provider journey.
+   - Public Yard Crew fit/entry routing is adopted; continue precise provider
+     organization identity and readiness before the larger provider journey.
    - Defer curated opportunity discovery, billing, customer proof, and production
      captures until their recorded evidence and product gates are satisfied.
 

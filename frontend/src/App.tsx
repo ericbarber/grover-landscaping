@@ -118,6 +118,7 @@ import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
 import { PropertyManagerPortfolioPanel } from './components/PropertyManagerPortfolioPanel';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
+import { providerEntryModeFromSearch } from './domain/providerEntryRoute';
 import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
@@ -1179,6 +1180,7 @@ function mergePhotoEvidence(
 
 export function App() {
   const auth = useAuth();
+  const providerEntryMode = providerEntryModeFromSearch(window.location.search);
   const workspaceRoles = useMemo(
     () => workspaceRolesForAccess(auth.roles, auth.memberships),
     [auth.memberships, auth.roles],
@@ -1308,6 +1310,7 @@ export function App() {
   );
   const [isManagerActivityPersisted, setIsManagerActivityPersisted] = useState(true);
   const jobDetailRef = useRef<HTMLDivElement>(null);
+  const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
   const activePersona = availablePersonas.find(
     (persona) => persona.id === activePersonaId,
@@ -1330,6 +1333,14 @@ export function App() {
     setActivePersonaId(initialPersona.id);
     setMobileView(initialPersona.defaultView);
   }, [activePersonaId, availablePersonas, initialPersona]);
+
+  useEffect(() => {
+    if (!providerEntryMode || providerEntryOpened.current || activePersona.id !== 'company-owner') return;
+    providerEntryOpened.current = true;
+    setMobileView('manager');
+    setManagerWorkspaceSection('overview');
+    setManagerWorkspaceTool('owner-setup');
+  }, [activePersona.id, providerEntryMode]);
 
   useEffect(() => {
     const sections = managerWorkspaceSectionsForPersona(activePersona.id);
@@ -3350,6 +3361,7 @@ export function App() {
           ) : null}
           <div className={managerWorkspaceTool === 'owner-setup' ? 'block' : 'hidden'}>
           <FirstOwnerOnboardingPanel
+            providerEntryMode={providerEntryMode}
             crewBranchRequest={crewAdministrationBranch}
             crewSelectionRequest={crewAdministrationSelection}
             crewSelectionSignal={crewAdministrationSelectionSignal}

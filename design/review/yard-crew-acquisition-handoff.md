@@ -1,7 +1,8 @@
 # Yard Crew Acquisition Working-Design Handoff
 
-Production adoption status: the public landscaping-company persona and reciprocal
-known-owner provider entry are partial foundations; the complete acquisition,
+Production adoption status: public provider fit/entry routing and the reciprocal
+known-owner provider entry are adopted foundations; provider identity/readiness
+is partial. The complete acquisition,
 readiness, first-service, team-authority, alert, and curated-opportunity journey
 is not yet adopted. Curated marketplace behavior remains product-gated. See the
 [`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
@@ -172,9 +173,10 @@ update fail once.
 
 ## Recommended production design/adoption slices
 
-1. **Public fit and entry routing:** adopt the Yard Crew marketing story and
-   correct-path decision without implying opportunity availability.
-2. **Provider identity and organization qualification:** deliver owner-operator,
+1. **Public fit and entry routing — adopted:** the public route separates owner-
+   operator, company-owner, invited-worker, and known-owner paths without
+   implying opportunity availability; the authenticated query is guidance only.
+2. **Provider identity and organization qualification — active:** deliver owner-operator,
    provider claim/bootstrap, profile, service territory, response ownership,
    invitations, and precise credential facts.
 3. **Known-owner connection pilot:** let an owner invite a provider, then validate

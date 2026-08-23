@@ -29,6 +29,9 @@ Team and access command center. Property Managers now enter a dedicated,
 prototype-aligned portfolio command center for readiness, exceptions, property
 coverage, proof, and approvals. Persisted customer visit reads await an explicit
 customer-account versus per-property owner-authorization decision.
+Landscaping-company signup now opens a dedicated provider entry route that
+separates owner-operators, company owners, invited workers, and known-owner
+recipients before authentication without implying public marketplace access.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -48,6 +51,7 @@ Start with these records when reviewing or continuing development:
 - [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
 - [Team and organization handoff](docs/team-organization-production-handoff.md) — adopted command center, access-impact, recovery, API, and validation boundaries
 - [Property-manager portfolio handoff](design/review/property-manager-portfolio-handoff.md) — connected design, privacy boundary, states, and production adoption contract
+- [Provider entry routing](docs/provider-entry-routing.md) — public path selection, authenticated context, and authority boundaries
 - [Pilot hardening plan](docs/yard-owner-acquisition-pilot-hardening-plan.md) — assurance scenarios and acceptance criteria
 
 ## Features
@@ -97,6 +101,8 @@ Start with these records when reviewing or continuing development:
 - Fail-closed workspace-access verification, retry recovery, membership-scoped
   personas, and a Home-only state for accounts without an active role
 - Responsive and accessibility-focused owner/provider browser coverage
+- Public provider fit routing with owner-operator, company-owner, team-invitation,
+  and known-owner paths plus an authority-safe authenticated setup handoff
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
 - Rust API endpoints for operations, customer delivery, Yard Owner acquisition, provider connection, and administration

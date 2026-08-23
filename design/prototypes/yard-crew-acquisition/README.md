@@ -14,13 +14,13 @@ http://<vpn-ip>:5173/design/prototypes/yard-crew-acquisition/
 
 ## Production adoption status
 
-The public landscaping-company persona and reciprocal known-owner provider entry
-are partially adopted, including recipient verification, provider organization
+Public provider fit/entry routing and reciprocal known-owner provider entry are
+adopted foundations, including recipient verification, provider organization
 claims, bounded opportunity response, owner-approved disclosure, assessment, and
 separate shared/private notes. The complete provider acquisition, readiness,
 first-service preparation, team-authority, saved-alert, and curated-opportunity
-journey remains design ready. Production adoption begins with provider public
-routing and identity/readiness; curated opportunities remain product-gated. See
+journey remains design ready. Production adoption continues with provider
+identity/readiness; curated opportunities remain product-gated. See
 the [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Review journey

@@ -50,6 +50,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Validated Yard Crew acquisition marketing with distinct solo provider,
   provider-company, and invited-worker paths, evidence-based capability claims,
   lifecycle explanation, opportunity preview, and contextual support entry
+- Production public provider entry with owner-operator, company-owner, invited-
+  worker, and known-owner paths; allowlisted authenticated setup context; and
+  explicit no-publication/no-opportunity authority boundaries
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces
