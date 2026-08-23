@@ -8,8 +8,8 @@
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 - Active product boundary: Yard Owner customer authorization decision; Yard Crew
-  provider identity/readiness is the active independent production-adoption
-  slice after public fit/entry routing
+  known-owner lifecycle reconciliation is the active independent production-
+  adoption slice after public fit/entry and identity/readiness core adoption
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -95,6 +95,11 @@
   Only allowlisted owner context opens authenticated Company setup, and the
   selected query never changes claims, memberships, publication, or opportunity
   access.
+- Company setup now projects provider identity/readiness from current profile
+  and setup-progress reads. Supplied identity/contact/website/service area,
+  recorded timezone/capacity, operational crew setup, missing facts, credentials
+  not collected, and marketplace eligibility not evaluated remain distinct; no
+  broad verified-provider claim is made.
 
 ### Yard Owner production adoption
 
@@ -133,8 +138,10 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently continue precise Yard Crew provider organization identity and
-   readiness without promoting curated discovery past its gates.
+2. Independently reconcile the delivered Yard Crew known-owner connection,
+   assessment, proposal, activation, and first-visit loop against the working
+   prototype, closing only safe production-journey gaps without promoting
+   curated discovery past its gates.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and
@@ -172,6 +179,9 @@ touch targets, and overflow. Its React adoption is included in the baseline abov
 Provider entry additionally passes four focused domain/component tests, the
 production build, and six phone/desktop Chromium journeys covering path choice,
 company CTA routing, authenticated handoff, authority language, and reflow.
+Provider identity/readiness additionally passes seven focused domain/component/
+onboarding checks, the production build, and two phone/desktop Chromium journeys
+covering precise fact states and no-verification/no-publication boundaries.
 
 ## Stop conditions
 

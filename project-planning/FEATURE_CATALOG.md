@@ -53,6 +53,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Production public provider entry with owner-operator, company-owner, invited-
   worker, and known-owner paths; allowlisted authenticated setup context; and
   explicit no-publication/no-opportunity authority boundaries
+- Production provider identity/readiness projection using current organization-
+  profile and setup-progress reads, with distinct provider-supplied, recorded
+  preference, operational setup, missing, not-collected credential, and not-
+  evaluated marketplace states instead of a broad verified-provider badge
 - Planned extensions: verified customer proof, production screenshots, and lead notifications
 
 ## Persona Workspaces

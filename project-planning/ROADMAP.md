@@ -5,9 +5,12 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is Yard Crew provider identity and
-readiness. Its public fit/entry route is adopted with distinct owner-operator,
-company-owner, team-invitation, and known-owner paths. The property-manager
+The current production-adoption priority is reconciling the delivered Yard Crew
+known-owner connection loop against its working prototype. Public fit/entry and
+provider identity/readiness core are adopted with distinct owner-operator,
+company-owner, team-invitation, and known-owner paths plus precise supplied,
+recorded, operational, missing, not-collected, and not-evaluated fact states.
+The property-manager
 portfolio V1 command center is adopted in React, while the Yard Owner portal persisted visit
 projection still waits for an explicit choice between customer-account owner
 scope and one grant per property. Team/organization core convergence is adopted with its
@@ -469,8 +472,9 @@ schedule, remaining work, or a completed day.
    - Property-manager portfolio core is adopted with explicit local-review
      readiness provenance and protected proof/recommendation reads.
    - Resume Yard Owner V2 portal adoption after that read boundary is explicit.
-   - Public Yard Crew fit/entry routing is adopted; continue precise provider
-     organization identity and readiness before the larger provider journey.
+   - Public Yard Crew fit/entry routing and provider identity/readiness core are
+     adopted; reconcile the delivered known-owner connection, assessment,
+     proposal, activation, and first-visit loop before any larger discovery work.
    - Defer curated opportunity discovery, billing, customer proof, and production
      captures until their recorded evidence and product gates are satisfied.
 

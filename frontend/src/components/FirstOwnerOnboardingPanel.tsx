@@ -12,6 +12,7 @@ import {
   type CrewRecord,
 } from '../api/client';
 import { OwnerCrewAdministrationPanel } from './OwnerCrewAdministrationPanel';
+import { ProviderIdentityReadinessPanel } from './ProviderIdentityReadinessPanel';
 
 type Props = {
   providerEntryMode?: 'owner-operator' | 'company-owner' | null;
@@ -363,6 +364,17 @@ export function FirstOwnerOnboardingPanel({
               Access scope: {membership.scopeType}
             </p>
           </div>
+          <ProviderIdentityReadinessPanel
+            contactEmail={contactEmail}
+            contactPhone={contactPhone}
+            defaultDailyStopCapacity={defaultDailyStopCapacity}
+            displayName={organizationName}
+            onEditProfile={() => setIsEditingProfile(true)}
+            serviceAreaLabel={serviceAreaLabel}
+            setupProgress={setupProgress}
+            timeZone={timeZone}
+            websiteUrl={websiteUrl}
+          />
           <div className="mt-4 rounded-xl border border-slate-200 p-4">
             <div className="flex items-center justify-between gap-3">
               <div>

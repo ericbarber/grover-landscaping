@@ -32,6 +32,8 @@ customer-account versus per-property owner-authorization decision.
 Landscaping-company signup now opens a dedicated provider entry route that
 separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
+Authenticated Company setup now presents precise provider identity/readiness
+facts from current profile and operating records without a broad verified badge.
 Production launch remains gated on live authenticated delivery and monitoring,
 production dashboards and pager routing, calibrated alerts, named staffing,
 human usability and assistive-technology testing, physical-device verification,
@@ -103,6 +105,9 @@ Start with these records when reviewing or continuing development:
 - Responsive and accessibility-focused owner/provider browser coverage
 - Public provider fit routing with owner-operator, company-owner, team-invitation,
   and known-owner paths plus an authority-safe authenticated setup handoff
+- Provider identity/readiness projection separating supplied profile facts,
+  recorded operating preferences, crew setup, missing information, uncollected
+  credentials, and unevaluated marketplace eligibility
 - Executable pilot monitoring and launch-assurance contract
 - Browser fallback mode for demos and frontend-only development
 - Rust API endpoints for operations, customer delivery, Yard Owner acquisition, provider connection, and administration

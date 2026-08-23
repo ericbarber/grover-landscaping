@@ -176,9 +176,11 @@ update fail once.
 1. **Public fit and entry routing — adopted:** the public route separates owner-
    operator, company-owner, invited-worker, and known-owner paths without
    implying opportunity availability; the authenticated query is guidance only.
-2. **Provider identity and organization qualification — active:** deliver owner-operator,
-   provider claim/bootstrap, profile, service territory, response ownership,
-   invitations, and precise credential facts.
+2. **Provider identity and organization qualification — core partial:** owner-
+   operator/company routing, organization bootstrap, profile, coarse service
+   area, capacity, crew readiness, and precise supplied/recorded/not-collected/
+   not-evaluated facts are adopted. Service categories, languages, provider-
+   facing pause/availability, and governed credential checking remain.
 3. **Known-owner connection pilot:** let an owner invite a provider, then validate
    provider inbox, disclosure, assessment, proposal, and operational projection
    before search-based acquisition.

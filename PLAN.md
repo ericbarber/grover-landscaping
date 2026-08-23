@@ -169,6 +169,11 @@ Current state:
   known-owner recipients; only the two owner paths carry allowlisted guidance
   into authenticated Company setup; and the UI states that claims, memberships,
   publication, eligibility, and opportunity access do not change.
+- Yard Crew provider identity/readiness core is now adopted in Company setup.
+  Current organization-profile and setup-progress reads distinguish provider-
+  supplied identity/contact/website/service area, recorded timezone/capacity,
+  operational crew setup, missing facts, credentials not collected, and
+  marketplace eligibility not evaluated without implying broad verification.
 
 Next slice:
 
@@ -176,9 +181,10 @@ Next slice:
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, continue precise Yard Crew
-  provider identity and readiness on top of the adopted public entry route
-  without widening curated discovery past its product and operational gates.
+- While that product/security boundary is open, reconcile the already delivered
+  Yard Crew known-owner connection, assessment, proposal, activation, and first-
+  visit loop against the working prototype. Close only safe production-journey
+  gaps without widening curated discovery past its product and operational gates.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -424,11 +430,12 @@ Next design work:
   device, privacy/security, and support/operations signoff sessions against the
   committed assurance build; treat any critical disclosure misunderstanding as
   a release-blocking P1.
-- Continue Yard Crew provider identity/readiness after the adopted public route,
-  then resolve provider eligibility,
-  pre-consent opportunity fields, provider roles, and safety/support service
-  levels before curated opportunities. Use the completed V3 owner-notification,
-  team-authority, saved-alert, and pilot-governance contracts during adoption.
+- Reconcile the delivered Yard Crew known-owner connection loop after the
+  adopted public entry and identity/readiness core, then resolve provider
+  eligibility, pre-consent opportunity fields, provider roles, and safety/support
+  service levels before curated opportunities. Use the completed V3 owner-
+  notification, team-authority, saved-alert, and pilot-governance contracts
+  during adoption.
 
 Exit condition: each next UI implementation slice links to an approved page,
 responsive behavior, required states, and design decision record.

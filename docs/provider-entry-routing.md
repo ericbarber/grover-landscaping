@@ -31,14 +31,24 @@ explains the selected model. The query is presentation context only:
 - it does not accept team-member or marketplace values;
 - it does not publish a provider profile or enable opportunity discovery.
 
-## Readiness boundary
+## Adopted readiness projection
 
-Public entry explains the current preparation sequence: verified account,
-provider organization, business profile, and operating setup. Existing company
-setup persists customer-facing contact, website, timezone, service-area label,
-daily stop capacity, crews, routes, and invitations. Provider eligibility,
-credential checking, opportunity matching, ranking, and marketplace publication
-remain separate product/operations contracts.
+Public entry explains the preparation sequence: verified account, provider
+organization, business profile, and operating setup. Authenticated Company setup
+now projects the fields Grover actually reads into distinct fact states:
+
+- business identity, contact, website, and service area are **supplied by the
+  provider** or explicitly need information;
+- timezone and default daily capacity are **operating preferences recorded**;
+- first-crew configuration is an **operational setup record**;
+- insurance, license, and certification facts are **not collected**;
+- opportunity publication, ranking, and eligibility are **not evaluated**.
+
+The projection deliberately does not collapse these states into a “verified
+provider” badge. Existing company setup persists contact, website, timezone,
+service-area label, daily stop capacity, crews, routes, and invitations. Provider
+eligibility, credential checking, opportunity matching, ranking, and marketplace
+publication remain separate product/operations contracts.
 
 ## Validation
 
@@ -46,6 +56,8 @@ remain separate product/operations contracts.
   allowlisted query parsing, and invalid-value rejection.
 - Component coverage verifies all four paths and the no-publication/no-
   opportunity language.
+- Readiness domain/component checks preserve supplied, recorded, operational,
+  missing, not-collected, and not-evaluated states.
 - Phone and desktop Chromium journeys verify the public page, company CTA, exact
   link destinations, authenticated setup opening, authority wording, and
   horizontal reflow.

@@ -88,6 +88,9 @@ not currently depend on React Router.
 - Public provider entry routing that carries an allowlisted owner-operator or
   company-owner context into Company setup while leaving claims, memberships,
   invitation scope, publication, and opportunity access unchanged
+- Provider identity/readiness facts derived from the current organization
+  profile and setup-progress reads, with precise supplied, recorded,
+  operational, missing, not-collected, and not-evaluated states
 - Customer-safe completion-report and bid review links
 
 The [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) records
