@@ -129,11 +129,15 @@ Current state:
   identity, delivered evidence, completed add-ons, and customer trust. It uses the
   shared visual system, supports explicit retry, and omits internal billing notes,
   organization identifiers, crew identifiers, and unrelated account data.
+- Shared project proposals now use the same secure customer-link system for
+  customer-facing scope, pricing, confirmation, recorded decisions, and closed-link
+  recovery. The public API projection omits bid IDs, line-item IDs, service IDs,
+  manager notes, delivery recipients, and unrelated account data.
 
 Next slice:
 
-- Continue completion-proof convergence from delivered proof into
-  recommendation/add-on or bid decisions.
+- Complete recommendation/add-on continuity from delivered proof, then begin the
+  customer and portfolio hierarchy adoption.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
 - Continue through the ordered repository-owned adoption queue, leaving the
@@ -1368,6 +1372,9 @@ Current state:
 - The secure customer completion-report link presents responsive, immutable
   delivered proof using the public Grover hierarchy without rendering internal
   billing or operating identifiers, and can retry transient report outages.
+- The secure proposal link presents customer-safe scope and pricing, requires
+  explicit decision confirmation, renders recorded outcomes, and does not
+  serialize internal bid/line-item/service identifiers or manager notes.
 - Frontend manager activity history panel surfaces route review, completion evidence, and sync fallback events
 - Frontend manager activity history records runtime manager events for route publishes, job lifecycle changes, photo evidence, and sync fallback
 - Frontend manager activity history can filter by source and tone, summarize active filters, show filtered empty states, persist filter preferences, and reset saved filters

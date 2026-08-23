@@ -105,14 +105,21 @@ pub struct ProjectBidDecisionRequest {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct CustomerProjectBidResponse {
-    pub id: String,
     pub status: String,
-    pub line_items: Vec<ProjectBidLineItemResponse>,
+    pub line_items: Vec<CustomerProjectBidLineItemResponse>,
     pub customer_message: Option<String>,
     pub total_cents: u64,
     pub sent_at: Option<String>,
     pub responded_at: Option<String>,
     pub expires_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct CustomerProjectBidLineItemResponse {
+    pub service_name: String,
+    pub service_description: Option<String>,
+    pub quantity: u32,
+    pub unit_price_cents: u32,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -293,9 +300,17 @@ pub fn validate_project_bid_decision(request: &ProjectBidDecisionRequest) -> Res
 
 pub fn customer_project_bid_response(bid: &ProjectBidResponse) -> CustomerProjectBidResponse {
     CustomerProjectBidResponse {
-        id: bid.id.clone(),
         status: bid.status.clone(),
-        line_items: bid.line_items.clone(),
+        line_items: bid
+            .line_items
+            .iter()
+            .map(|item| CustomerProjectBidLineItemResponse {
+                service_name: item.service_name.clone(),
+                service_description: item.service_description.clone(),
+                quantity: item.quantity,
+                unit_price_cents: item.unit_price_cents,
+            })
+            .collect(),
         customer_message: bid.customer_message.clone(),
         total_cents: bid.total_cents,
         sent_at: bid.sent_at.clone(),
@@ -417,9 +432,10 @@ fn project_bid_total_cents(line_items: &[ProjectBidLineItemResponse]) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        local_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
-        validate_send_project_bid_request, CreateProjectBidLineItemRequest,
-        CreateProjectBidRequest, ProjectBidDecisionRequest, SendProjectBidRequest,
+        customer_project_bid_response, local_project_bid_response, validate_project_bid_decision,
+        validate_project_bid_request, validate_send_project_bid_request,
+        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidDecisionRequest,
+        SendProjectBidRequest,
     };
 
     fn valid_request() -> CreateProjectBidRequest {
@@ -463,6 +479,26 @@ mod tests {
             decision: "defer".to_string(),
         })
         .is_err());
+    }
+
+    #[test]
+    fn customer_bid_response_excludes_internal_ids_and_notes() {
+        let mut bid = local_project_bid_response("plan_1", "amendment_1", valid_request());
+        bid.status = "sent".to_string();
+        bid.line_items[0].note = Some("Internal manager note".to_string());
+
+        let response = serde_json::to_value(customer_project_bid_response(&bid)).unwrap();
+        let serialized = response.to_string();
+
+        assert_eq!(
+            response["line_items"][0]["service_name"],
+            "Sprinkler repair"
+        );
+        assert!(!serialized.contains(&bid.id));
+        assert!(!serialized.contains("service_sprinkler_repair"));
+        assert!(!serialized.contains("Internal manager note"));
+        assert!(response["line_items"][0].get("id").is_none());
+        assert!(response["line_items"][0].get("note").is_none());
     }
 
     #[test]

@@ -68,11 +68,8 @@ describe('project bid API mapping', () => {
 
   it('maps the public customer bid without manager identifiers', () => {
     const customerBid = toCustomerProjectBid({
-      id: 'bid_1001',
       status: 'sent',
       line_items: [{
-        id: 'line_1001',
-        service_id: 'service_sprinkler_repair',
         service_name: 'Sprinkler repair',
         quantity: 1,
         unit_price_cents: 8500,
@@ -83,7 +80,7 @@ describe('project bid API mapping', () => {
 
     expect(customerBid.status).toBe('sent');
     expect(customerBid.totalCents).toBe(8500);
-    expect(customerBid.lineItems[0]?.service.name).toBe('Sprinkler repair');
+    expect(customerBid.lineItems[0]?.serviceName).toBe('Sprinkler repair');
     expect(customerBid.sentAt).toBe('2026-06-29 19:00:00+00');
   });
 

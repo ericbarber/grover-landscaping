@@ -348,8 +348,8 @@ Current backend endpoints include:
 | POST | `/day-plans/{day_plan_id}/bids/{bid_id}/send` | Issue a review link and queue email/SMS delivery |
 | POST | `/day-plans/{day_plan_id}/bids/{bid_id}/revoke` | Revoke an unanswered customer review link |
 | POST | `/day-plans/{day_plan_id}/bids/{bid_id}/convert` | Convert an approved bid into scheduled job add-ons |
-| GET | `/shared-bids/{share_token}` | Read a customer-safe shared bid |
-| POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once |
+| GET | `/shared-bids/{share_token}` | Read customer-facing scope, pricing, and status without internal IDs or manager notes |
+| POST | `/shared-bids/{share_token}/decision` | Approve or reject a shared bid once and return the same customer-safe projection |
 
 The day-plan route reads from PostgreSQL when a persisted route is available and falls back to seeded API data when persistence is unavailable. Job, photo, completion-report action, organization invitation, role administration, portfolio, customer property portfolio, property onboarding, property crew-assignment, crew, and day-plan endpoints resolve the owning service organization and require an active membership in that organization before returning or mutating scoped operational data.
 

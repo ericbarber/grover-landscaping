@@ -41,9 +41,13 @@ export interface ApiProjectBid {
 }
 
 export interface ApiCustomerProjectBid {
-  id: string;
   status: CustomerProjectBid['status'];
-  line_items: ApiProjectBidLineItem[];
+  line_items: Array<{
+    service_name: string;
+    service_description?: string | null;
+    quantity: number;
+    unit_price_cents: number;
+  }>;
   customer_message?: string | null;
   total_cents: number;
   sent_at?: string | null;
@@ -105,9 +109,13 @@ export function toProjectBid(bid: ApiProjectBid): ProjectBid {
 
 export function toCustomerProjectBid(bid: ApiCustomerProjectBid): CustomerProjectBid {
   return {
-    id: bid.id,
     status: bid.status,
-    lineItems: bid.line_items.map(toProjectBidLineItem),
+    lineItems: bid.line_items.map((item) => ({
+      serviceName: item.service_name,
+      serviceDescription: item.service_description ?? undefined,
+      quantity: item.quantity,
+      unitPriceCents: item.unit_price_cents,
+    })),
     customerMessage: bid.customer_message ?? undefined,
     totalCents: bid.total_cents,
     sentAt: bid.sent_at ?? undefined,

@@ -49,8 +49,8 @@ and adoption guidance.
 
 ## Next design expansion
 
-1. Continue the adopted manager review and customer-safe shared proof path into
-   recommendation/add-on and bid decisions as one responsive handoff.
+1. Complete recommendation/add-on continuity from the adopted manager review,
+   customer-safe shared proof, and proposal decision path.
 2. Continue Schedule and Recovery state regression as operational contracts evolve.
 3. Continue state-by-state field regression as shared primitives evolve; Route,
    compact Jobs, and one-panel Job execution are in production.

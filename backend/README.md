@@ -37,7 +37,8 @@ persistent model. Focused API contracts and runbooks live in [`../docs/`](../doc
 - Jobs, checklists, photos, processing recovery, day plans, amendments, dispatch,
   operational exceptions, and activity history
 - Completion-report review, immutable delivery snapshots, customer-safe share
-  links, notification recovery, project bids, and approved add-ons
+  links, notification recovery, project bids with customer-safe public projections,
+  and approved add-ons
 - Customer accounts, properties, onboarding, portfolios, crew assignments,
   privacy export, and photo-erasure recovery
 - Private Yard Owner identity/property intake, yard briefs, guided media, known-

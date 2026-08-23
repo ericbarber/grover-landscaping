@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-22: Adopted secure customer proposal decisions with the shared public visual hierarchy, responsive scope and pricing, explicit approval/decline confirmation, recorded outcomes, closed-link recovery, and a narrowed public API projection that omits internal bid/line-item/service IDs, manager notes, and delivery metadata.
 - 2026-08-22: Adopted the customer-safe shared completion-proof hierarchy with Grover service identity, immutable snapshot context, responsive photo/checklist/add-on evidence, explicit retry recovery, and a trust boundary that omits internal billing notes and operating identifiers.
 - 2026-08-22: Connected manager completion review to the exact selected Job Report workflow across desktop and mobile, and adopted the branded Reports and communication command-center hierarchy plus a denser responsive review board without changing report lifecycle or delivery contracts.
 - 2026-08-22: Adopted the manager Recovery queue/detail hierarchy with open/assigned/urgent/resolved-today summaries, responsive filtered queue and selected inspector, shared status feedback, preserved optimistic lifecycle actions, and direct routing back to affected Job, property, or Schedule work.

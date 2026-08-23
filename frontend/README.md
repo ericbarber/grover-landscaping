@@ -52,6 +52,9 @@ not currently depend on React Router.
 - Customer-safe shared completion proof with service identity, immutable snapshot
   context, responsive evidence, completed add-ons, trust boundaries, and retry
   recovery without exposing internal billing or operating identifiers
+- Customer-safe shared proposal decisions with responsive scope/pricing, explicit
+  approve/decline confirmation, recorded outcomes, closed-link recovery, and a
+  shared trust boundary
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

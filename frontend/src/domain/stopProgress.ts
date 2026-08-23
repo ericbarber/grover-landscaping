@@ -64,9 +64,13 @@ export type ProjectBid = {
 };
 
 export type CustomerProjectBid = {
-  id: string;
   status: Extract<ProjectBidStatus, 'sent' | 'approved' | 'rejected' | 'converted'>;
-  lineItems: ProjectBidLineItem[];
+  lineItems: Array<{
+    serviceName: string;
+    serviceDescription?: string;
+    quantity: number;
+    unitPriceCents: number;
+  }>;
   customerMessage?: string;
   totalCents: number;
   sentAt?: string;

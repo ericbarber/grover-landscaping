@@ -56,6 +56,10 @@
   service identity, evidence, completed add-ons, and a trust boundary. It omits
   internal billing and operating identifiers and offers explicit retry when the
   persisted report is temporarily unavailable.
+- The secure shared proposal now uses the same public hierarchy for customer-facing
+  scope, pricing, explicit approval/decline confirmation, and recorded outcomes.
+  Its API response omits internal bid, line-item, and service identifiers plus
+  manager notes and delivery metadata.
 - Local role review exposes seven fixed personas without AWS and the `/app`
   composition follows the selected persona rather than changing only its title.
 
@@ -112,11 +116,11 @@ The shared shell plus core field and manager-operation hierarchies are delivered
 responsive navigation, semantic status, Route, Jobs, Job, Schedule, and Recovery
 are in production. The next repository-owned slice is:
 
-1. Continue from adopted manager review and customer-safe delivered proof into
-   recommendation/add-on or bid decision
-   without weakening immutable snapshots, notification history, or authorization.
-2. Preserve report readiness, change requests, retries, photo processing, and
-   customer delivery recovery while migrating local feedback.
+1. Complete recommendation/add-on continuity from adopted manager review,
+   customer-safe delivered proof, and proposal decisions without weakening
+   immutable snapshots, notification history, or authorization.
+2. Begin the customer and portfolio hierarchy after the remaining completion-proof
+   continuity is adopted.
 
 ## Read first
 
@@ -131,8 +135,8 @@ are in production. The next repository-owned slice is:
 
 ## Validation baseline
 
-The latest shared-proof slice passes all 425 frontend unit tests across 105 files,
-TypeScript, the production build, and 24 phone/desktop authenticated-workspace and public-proof
+The latest shared-proposal slice passes all 425 frontend unit tests across 105 files,
+all 187 backend library tests, TypeScript, the production build, and 28 phone/desktop authenticated-workspace and public-proof
 checks across both compatible Chromium profiles. Re-run the checks
 appropriate to each subsequent phase; do not infer that unrelated backend,
 PostgreSQL, Firefox, WebKit, hosted, human, or production checks passed from this
