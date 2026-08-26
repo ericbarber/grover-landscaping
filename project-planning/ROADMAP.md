@@ -6,11 +6,11 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 ## Active UX Priority
 
 The current production-adoption priority is adopting accepted decision D-060's
-delivered visit-question persistence, minimized customer/provider APIs, and
-organization-owner/manager queue in the responsive workspaces. Each service
-release now has one random non-bearer visit reference and hybrid-authorized
-immutable-message thread; concerns, attachments, notifications, and service-
-level promises remain separate.
+delivered unanswered-first queue and exact response API in the responsive
+owner/manager provider workspace. Yard Owner Home and Visits now use the random
+non-bearer reference to load and ask through the hybrid-authorized immutable-
+message thread; concerns, attachments, notifications, and service-level promises
+remain separate.
 Safe Yard Crew operating
 preparation is adopted through service and language facts; public fit/entry and
 provider identity/readiness core are adopted with distinct owner-operator,

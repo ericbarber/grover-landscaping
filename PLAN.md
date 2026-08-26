@@ -159,6 +159,13 @@ Current state:
   omit actor and release/job/organization/account/property/membership/route/crew
   identifiers and preserve explicit invalid, missing, stale, replayed, and
   unavailable recovery without implying notification or response timing.
+- Phase 5B3 now adopts visit questions in Yard Owner Home and Visits. Released
+  visits open their exact authoritative thread, show customer/provider messages,
+  and submit bounded topic/text questions with a retry key retained across
+  unknown writes and an authoritative reload after success or conflict.
+  Unreleased visits explain why questions are not available; load, access,
+  inconsistency, stale, and outage recovery never falls back to illustrative
+  messages or claims an alert, read receipt, or response time.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -274,9 +281,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-060 persistence and APIs are delivered. Adopt the contextual
-  question experience in Yard Owner and its owner/manager provider workspace,
-  retaining retry keys across unknown writes and authoritative thread reloads.
+- Decision D-060 persistence, APIs, and Yard Owner question experience are
+  delivered. Adopt the unanswered-first queue and exact response experience in
+  the owner/manager provider workspace, retaining authoritative reload and retry
+  behavior.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

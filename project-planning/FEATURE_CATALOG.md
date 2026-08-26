@@ -115,6 +115,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Minimized customer visit-thread read/write APIs and unanswered-first provider
   owner/manager queue with exact database authority, explicit recovery states,
   safe visit context, and no actor or operational identifiers
+- Yard Owner Home/Visits question experience with released-visit availability,
+  exact authoritative history, allowlisted topics, bounded text, retry-key
+  retention, conflict/outage reload recovery, and no notification/SLA claim
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

@@ -1,5 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { PropertyCompletionReportSummary } from '../api/client';
+import {
+  createCustomerVisitQuestion,
+  fetchCustomerVisitThread,
+} from '../api/customerVisitCommunicationClient';
+import type {
+  CustomerVisitQuestionTopic,
+  CustomerVisitThread,
+} from '../domain/customerVisitCommunication';
 import {
   customerVisitStatusLabel,
   visitsForPortalProperty,
@@ -135,6 +143,118 @@ function ServiceStatusDetail({ visit }: { visit: CustomerPortalVisitSummary }) {
     );
   }
   return null;
+}
+
+const questionTopics: Array<{ value: CustomerVisitQuestionTopic; label: string }> = [
+  { value: 'timing', label: 'Timing' },
+  { value: 'preparation', label: 'Preparation' },
+  { value: 'access', label: 'Property access' },
+  { value: 'service_scope', label: 'Planned service' },
+  { value: 'other', label: 'Something else' },
+];
+
+function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSummary }) {
+  const reference = visit.customerVisitReference;
+  const [open, setOpen] = useState(false);
+  const [thread, setThread] = useState<CustomerVisitThread | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [topic, setTopic] = useState<CustomerVisitQuestionTopic>('timing');
+  const [body, setBody] = useState('');
+  const retryKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    setOpen(false);
+    setThread(null);
+    setError(null);
+    setBody('');
+    retryKey.current = null;
+  }, [reference]);
+
+  async function loadThread() {
+    if (!reference) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setThread(await fetchCustomerVisitThread(reference));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'The visit conversation could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openThread() {
+    setOpen(true);
+    if (!thread) void loadThread();
+  }
+
+  async function submitQuestion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!thread || !body.trim()) return;
+    retryKey.current ??= `customer-visit-question-${crypto.randomUUID()}`;
+    setSaving(true);
+    setError(null);
+    try {
+      await createCustomerVisitQuestion(thread, topic, body.trim(), retryKey.current);
+      retryKey.current = null;
+      setBody('');
+      try {
+        setThread(await fetchCustomerVisitThread(thread.customerVisitReference));
+      } catch (reloadError) {
+        setError(`${reloadError instanceof Error ? reloadError.message : 'The latest conversation could not be loaded.'} Your question was confirmed; reload the conversation to see it.`);
+      }
+    } catch (writeError) {
+      try {
+        setThread(await fetchCustomerVisitThread(thread.customerVisitReference));
+      } catch {
+        // Keep the last authoritative thread and retry key when reload is unavailable.
+      }
+      setError(`${writeError instanceof Error ? writeError.message : 'The question could not be confirmed.'} Review the latest conversation before retrying.`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!reference) {
+    return (
+      <p className="mt-4 rounded-xl bg-slate-50 p-3 text-xs font-semibold leading-5 text-slate-600">
+        Visit questions become available after your provider finishes preparing this confirmed visit for service.
+      </p>
+    );
+  }
+
+  if (!open) {
+    return <button className="grover-button-secondary mt-4" onClick={openThread} type="button">Ask about this visit</button>;
+  }
+
+  return (
+    <section aria-label="Visit questions" className="mt-5 rounded-2xl border border-sky-200 bg-sky-50 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div><h3 className="font-black text-forest">Visit questions</h3><p className="mt-1 text-xs leading-5 text-slate-600">Messages stay with this visit. Sending does not promise an alert or response time.</p></div>
+        <button className="min-h-10 rounded-lg px-3 text-sm font-bold text-sky-900" onClick={() => setOpen(false)} type="button">Close</button>
+      </div>
+      {loading ? <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading conversation…</p> : null}
+      {error ? <WorkspaceStatusNotice className="mt-4" detail={error} title="Conversation needs attention." tone="warning" /> : null}
+      {!loading && !thread ? <button className="grover-button-secondary mt-4" onClick={() => void loadThread()} type="button">Try conversation again</button> : null}
+      {thread ? (
+        <>
+          {thread.messages.length ? <ol className="mt-4 space-y-3">{thread.messages.map((message) => (
+            <li className={`rounded-xl p-3 text-sm leading-6 ${message.authorRole === 'customer' ? 'bg-white' : 'bg-emerald-950 text-white'}`} key={message.messageId}>
+              <p className={`text-xs font-black uppercase tracking-wide ${message.authorRole === 'customer' ? 'text-sky-800' : 'text-emerald-100'}`}>{message.authorRole === 'customer' ? 'You asked' : 'Provider response'} · {questionTopics.find(({ value }) => value === message.topic)?.label}</p>
+              <p className="mt-1">{message.customerSafeBody}</p>
+            </li>
+          ))}</ol> : <p className="mt-4 rounded-xl bg-white p-3 text-sm text-slate-600">No questions have been asked about this visit.</p>}
+          <form className="mt-4 grid gap-3" onSubmit={submitQuestion}>
+            <label className="text-sm font-bold text-forest">Topic<select className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 font-normal" onChange={(event) => setTopic(event.target.value as CustomerVisitQuestionTopic)} value={topic}>{questionTopics.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
+            <label className="text-sm font-bold text-forest">Your question<textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" maxLength={2000} onChange={(event) => { setBody(event.target.value); retryKey.current = null; }} placeholder="What would help you prepare for this visit?" value={body} /></label>
+            <button className="grover-button-primary disabled:opacity-60" disabled={saving || !body.trim()} type="submit">{saving ? 'Confirming question…' : 'Send question'}</button>
+          </form>
+        </>
+      ) : null}
+    </section>
+  );
 }
 
 export function YardOwnerPortalPanel({
@@ -306,6 +426,7 @@ export function YardOwnerPortalPanel({
                     <strong className="text-forest">{preparationLabel(nextVisit.status)}:</strong> {nextVisit.preparationMessage}
                   </div>
                   <p className="mt-3 text-sm font-bold text-emerald-950"><strong>Next update:</strong> {nextVisit.nextUpdateMessage}</p>
+                  <CustomerVisitQuestions visit={nextVisit} />
                 </article>
               ) : (
                 <WorkspaceStatusNotice
@@ -351,6 +472,7 @@ export function YardOwnerPortalPanel({
                   <ServiceProgress status={visit.status} />
                   <ServiceStatusDetail visit={visit} />
                   <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
+                  <CustomerVisitQuestions visit={visit} />
                 </article>
               )) : (
                 <WorkspaceStatusNotice detail="A confirmed visit will appear here when your provider schedules it." title="No upcoming visits." tone="neutral" />

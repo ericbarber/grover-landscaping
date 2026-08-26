@@ -109,6 +109,18 @@ describe('Yard Owner persisted visit states', () => {
     expect(markup).not.toContain('Weekly yard care');
   });
 
+  it('offers visit questions only after a customer-safe reference exists', () => {
+    const available = renderVisit({
+      customerVisitReference: 'customer_visit_0123456789abcdef0123456789abcdef',
+    });
+    const unreleased = renderVisit({ customerVisitReference: undefined });
+
+    expect(available).toContain('Ask about this visit');
+    expect(available).not.toContain('release_id');
+    expect(unreleased).toContain('questions become available after your provider finishes preparing');
+    expect(unreleased).not.toContain('Ask about this visit');
+  });
+
   it('presents explicit en-route, care, and weather states on the shared progress rail', () => {
     const enRouteMarkup = renderVisit({
       status: 'en_route', nextUpdateMessage: 'Arrival is expected soon.',
