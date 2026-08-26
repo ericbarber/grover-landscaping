@@ -1,7 +1,7 @@
 # Customer Portal Visits API
 
-Status: Persisted read contract delivered on 2026-08-26; Yard Owner interface
-adoption remains next.
+Status: Persisted read contract and Yard Owner Home/Visits adoption delivered on
+2026-08-26.
 
 ## Read authorized properties and confirmed visits
 
@@ -83,3 +83,12 @@ internal risk/recovery state, pricing, billing, and unpublished proof.
 `delivered_proof_available` remains `false` until a separately authoritative
 visit-to-delivered-report relation exists. The API does not infer publication
 from job completion or report presence.
+
+## Yard Owner interface consumption
+
+The authenticated Yard Owner surface calls this endpoint before rendering any
+property or visit. Loading, valid-empty, missing-access, inconsistent-access,
+and unavailable states remain distinct and offer retry where applicable. A
+failed read clears prior portal properties and visits; the interface never
+substitutes seeded or illustrative visit data. Proof and recommendations keep
+their separately authorized boundaries and are not inferred from this response.

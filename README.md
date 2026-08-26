@@ -29,8 +29,10 @@ Team and access command center. Property Managers now enter a dedicated,
 prototype-aligned portfolio command center for readiness, exceptions, property
 coverage, proof, and approvals. The hybrid customer-authorization model is
 implemented: account owners inherit account properties and delegates remain
-property-scoped. Its constrained authorization foundation and minimized visit
-API are delivered; replacing illustrative Yard Owner visit data is next.
+property-scoped. Its constrained authorization foundation, minimized visit API,
+and fail-closed Yard Owner Home/Visits adoption are delivered with explicit
+loading, empty, access, unavailable, and retry states. The next customer slice
+extends this boundary into authoritative customer-safe service-day states.
 Landscaping-company signup now opens a dedicated provider entry route that
 separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
@@ -465,8 +467,9 @@ The application is responsive across owner, provider, crew, manager, administrat
 The repository-owned prototype-adoption core is now implemented through the
 Yard Crew operating profile. Customer-account owner scope with property-scoped
 delegates is delivered through a constrained migration and fail-closed property
-resolver; the minimized visit API is delivered and Yard Owner interface adoption
-is next. Curated-opportunity
+resolver; the minimized visit API and Yard Owner Home/Visits adoption are
+delivered without illustrative fallback. Customer-safe service-day lifecycle
+extension is next. Curated-opportunity
 availability/governance and governed
 credential evidence still require product/operations decisions. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) and

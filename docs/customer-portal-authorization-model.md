@@ -1,7 +1,7 @@
 # Customer Portal Authorization Model
 
-Status: Authorization foundation and minimized persisted visit read delivered
-through 2026-08-26; Yard Owner interface adoption pending.
+Status: Authorization foundation, minimized persisted visit read, and Yard Owner
+Home/Visits adoption delivered through 2026-08-26.
 
 ## Decision
 
@@ -111,7 +111,9 @@ slices.
    property-delegate coverage. **Delivered.**
 4. Add the minimized customer visit read through that resolver. **Delivered.**
 5. Replace illustrative Yard Owner visit data only after persisted read,
-   unavailable, empty, and revoked-access states pass validation. **Next.**
+   unavailable, empty, and revoked-access states pass validation. **Delivered.**
+6. Extend the projection into customer-safe service-day lifecycle and
+   preparation states without exposing provider operations. **Next.**
 
 ## Non-goals
 

@@ -150,9 +150,12 @@ Current state:
   manager notes, delivery recipients, and unrelated account data.
 - The Property Owner workspace now adopts the Yard Owner portal shell with stable
   Home, Visits, Proof, and Account destinations, portal-wide property selection,
-  a customer-safe next-visit hierarchy, delivered proof, and recommendation
-  history. The visit summary is currently an explicit local-review/frontend
-  contract; persisted customer-scoped visit reads remain the next production step.
+  a customer-safe next-visit hierarchy and delivered proof. Home and Visits now
+  load only authorized properties and confirmed visits from the persisted
+  customer portal read, preserve distinct loading, valid-empty, missing-access,
+  inconsistent-access, unavailable, and retry states, and never fall back to
+  illustrative visits. Recommendation history remains withheld until its own
+  customer authorization contract is adopted.
 - Phase 6 working composition now adopts the Team and access command-center
   hierarchy for Organization Owners. Live membership, pending-invitation, active-
   crew, and unstaffed-territory counts lead into direct paths for the member
@@ -205,15 +208,17 @@ Current state:
   receive customer-account scope across current/future properties in that
   provider account, while delegates retain explicit property scope. Its
   constrained migration, activation behavior, provenance-safe backfill, and
-  fail-closed property resolver and minimized confirmed-visit read are
-  delivered; replacing illustrative Yard Owner visit data is the next
-  implementation boundary.
+  fail-closed property resolver, minimized confirmed-visit read, and Yard Owner
+  Home/Visits adoption are delivered. The next bounded customer slice is the
+  service-day lifecycle and preparation extension; it must use an authoritative
+  customer-safe source rather than expose route, crew, or provider-only state.
 
 Next authorized slice and remaining gates:
 
-- Adopt the minimized persisted customer visit read in the Yard Owner interface.
-  Preserve loading, valid-empty, unauthorized/inconsistent, unavailable, and
-  retry states without falling back to illustrative visit data.
+- Define and adopt the next bounded Yard Owner service-day lifecycle and
+  preparation extension through the hybrid authorization resolver. Preserve the
+  confirmed-visit baseline and keep route order, live location, crew identity,
+  internal risk, unpublished proof, and provider notes outside the projection.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

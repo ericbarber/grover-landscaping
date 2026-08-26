@@ -50,6 +50,7 @@ import {
   type PropertyCompletionReportSummary,
 } from './api/client';
 import { fetchAccountProjectBids } from './api/projectBidsClient';
+import { fetchCustomerPortalVisits } from './api/customerPortalClient';
 import { useAuth } from './auth/AuthProvider';
 import {
   enqueueChecklistMutation,
@@ -183,7 +184,10 @@ import {
 } from './domain/managerActivityLocalStore';
 import { notificationsToManagerActivity } from './domain/notificationManagerActivity';
 import { operationsToManagerActivity } from './domain/operationalManagerActivity';
-import type { CustomerPortalVisitSummary } from './domain/customerPortalVisits';
+import type {
+  CustomerPortalPropertySummary,
+  CustomerPortalVisitSummary,
+} from './domain/customerPortalVisits';
 import type { PortfolioPropertyLink, PropertyPortfolio } from './domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from './domain/stopProgress';
 
@@ -1245,6 +1249,15 @@ export function App() {
   const [propertyCompletionReports, setPropertyCompletionReports] = useState<
     Record<string, PropertyCompletionReportSummary[]>
   >({});
+  const [customerPortalProperties, setCustomerPortalProperties] = useState<
+    CustomerPortalPropertySummary[]
+  >([]);
+  const [customerPortalVisits, setCustomerPortalVisits] = useState<CustomerPortalVisitSummary[]>([]);
+  const [isLoadingCustomerPortalVisits, setIsLoadingCustomerPortalVisits] = useState(false);
+  const [customerPortalVisitError, setCustomerPortalVisitError] = useState<
+    'access_required' | 'inconsistent' | 'unavailable' | null
+  >(null);
+  const [customerPortalVisitRefreshSignal, setCustomerPortalVisitRefreshSignal] = useState(0);
   const [isLoadingPropertyCompletionReports, setIsLoadingPropertyCompletionReports] = useState(false);
   const [hasPropertyCompletionReportHistoryError, setHasPropertyCompletionReportHistoryError] = useState(false);
   const [customerProjectBids, setCustomerProjectBids] = useState<ProjectBid[]>([]);
@@ -1691,12 +1704,55 @@ export function App() {
   }, [managerActivity]);
 
   useEffect(() => {
+    if (activePersona.id !== 'yard-owner' || !auth.userId) {
+      setCustomerPortalProperties([]);
+      setCustomerPortalVisits([]);
+      setCustomerPortalVisitError(null);
+      setIsLoadingCustomerPortalVisits(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingCustomerPortalVisits(true);
+    setCustomerPortalVisitError(null);
+    void fetchCustomerPortalVisits()
+      .then((collection) => {
+        if (!isMounted) return;
+        setCustomerPortalProperties(collection.properties);
+        setCustomerPortalVisits(collection.visits);
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) return;
+        setCustomerPortalProperties([]);
+        setCustomerPortalVisits([]);
+        setCustomerPortalVisitError(
+          error instanceof ApiRequestError && error.code === 'customer_portal_access_required'
+            ? 'access_required'
+            : error instanceof ApiRequestError
+                && error.code === 'customer_portal_access_inconsistent'
+              ? 'inconsistent'
+              : 'unavailable',
+        );
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingCustomerPortalVisits(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activePersona.id, auth.userId, customerPortalVisitRefreshSignal]);
+
+  useEffect(() => {
     let isMounted = true;
 
-    const visibleProperties = filterPropertiesForCustomerPortal(
-      customerPortalPreviewProperties,
-      customerPortalPreviewCustomer,
-    );
+    const visibleProperties = activePersona.id === 'yard-owner'
+      ? customerPortalProperties
+      : filterPropertiesForCustomerPortal(
+        customerPortalPreviewProperties,
+        customerPortalPreviewCustomer,
+      );
+    setPropertyCompletionReports({});
     setIsLoadingPropertyCompletionReports(true);
 
     Promise.allSettled(
@@ -1735,7 +1791,7 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activePersona.id, customerPortalProperties]);
 
   useEffect(() => {
     let isMounted = true;
@@ -3299,25 +3355,17 @@ export function App() {
                 providerDisplayName="Grover Demo Landscaping"
               />
             ) : (
-              <>
-                <YardOwnerPortalPanel
-                  customer={customerPortalPreviewCustomer}
-                  properties={customerPortalPreviewProperties}
-                  visits={customerPortalPreviewVisits}
-                  completionReportsByProperty={propertyCompletionReports}
-                  isLoadingReportHistory={isLoadingPropertyCompletionReports}
-                  hasReportHistoryError={hasPropertyCompletionReportHistoryError}
-                  projectBids={customerProjectBids}
-                  isLoadingProjectBids={isLoadingCustomerProjectBids}
-                  hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
-                />
-                <CustomerPortfolioSummaryPanel
-                  customer={customerPortalPreviewCustomer}
-                  portfolios={customerPortalPreviewPortfolios}
-                  properties={customerPortalPreviewProperties}
-                  links={customerPortalPreviewPortfolioLinks}
-                />
-              </>
+              <YardOwnerPortalPanel
+                customerDisplayName={auth.displayName}
+                properties={customerPortalProperties}
+                visits={customerPortalVisits}
+                isLoadingVisits={isLoadingCustomerPortalVisits}
+                visitReadError={customerPortalVisitError}
+                onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                completionReportsByProperty={propertyCompletionReports}
+                isLoadingReportHistory={isLoadingPropertyCompletionReports}
+                hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+              />
             )}
           </div>
 

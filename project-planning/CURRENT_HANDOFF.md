@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active authorized slice: replace illustrative Yard Owner visits with the
-  delivered minimized persisted read and its loading, empty, access, unavailable,
-  and retry states. Curated-opportunity
+- Active authorized slice: define and adopt the bounded customer-safe Yard Owner
+  service-day lifecycle extension on top of the delivered persisted Home/Visits
+  read. Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -65,10 +65,12 @@
   scope, pricing, explicit approval/decline confirmation, and recorded outcomes.
   Its API response omits internal bid, line-item, and service identifiers plus
   manager notes and delivery metadata.
-- Property Owner now enters a customer-density Yard Owner portal with Home, Visits,
-  Proof, and Account, plus portal-wide property selection, local-review next-visit
-  summaries, delivered proof, and recommendation history. The visit summary is an
-  explicit frontend contract and is not yet backed by a persisted customer API.
+- Property Owner now enters a customer-density Yard Owner portal with Home,
+  Visits, Proof, and Account. Home/Visits load authorized properties and exactly
+  confirmed visits from the minimized persisted customer API, load proof only
+  for those authorized properties, distinguish loading/empty/access/inconsistent/
+  unavailable/retry states, and never substitute illustrative visit or portfolio
+  data. Recommendations remain withheld pending their own customer contract.
 - Organization Owner Team now opens a prototype-aligned Team and access command
   center with live active-member, pending-invitation, active-crew, and unstaffed-
   territory summaries. It links directly to the existing member, invitation,
@@ -144,9 +146,10 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Adopt the minimized persisted customer visit projection in Yard Owner Home
-   and Visits. Do not fall back to illustrative visits after loading or failure;
-   preserve valid-empty, authorization, unavailable, and retry states.
+1. Define and adopt the bounded customer-safe service-day lifecycle and
+   preparation extension through the hybrid authorization boundary. Do not
+   expose route, crew, live-location, risk, provider-note, or unpublished-proof
+   state.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -154,8 +157,8 @@ aligned overview composition.
    evidence/review/correction/appeal ownership is approved.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
-3. After the minimized visit read, continue service-day, proof/recommendation,
-   concern, and preference adoption in bounded slices.
+3. After the service-day extension, continue proof/recommendation, concern, and
+   preference adoption in bounded slices.
 
 ## Read first
 
@@ -172,12 +175,17 @@ aligned overview composition.
 
 ## Validation baseline
 
-The latest completed baseline passes all 439 frontend unit tests across 109 files,
-TypeScript, the production build, and the 36-test phone/desktop Chromium local-
-role workspace matrix. That matrix covers all seven fixed identities, fail-closed
-access retry, unscoped-role Home-only recovery, Team staffing recovery, partial-
-read isolation, self-impact, unavailable-versus-empty, keyboard activation, and
-focus transfer, plus the direct property-manager portfolio journey.
+The current baseline passes all 457 frontend unit tests across 118 files,
+TypeScript, and the production build. The persisted Yard Owner adoption adds
+client mapping/error checks plus component coverage for loading, valid-empty,
+missing-access, inconsistent-access, unavailable, retry, and authorized content
+without illustrative fallback. The previously completed 36-test phone/desktop
+Chromium local-role workspace matrix remains recorded, but it was not rerun for
+this slice because the local Chromium executable cannot load `libnspr4.so`.
+That prior matrix covers all seven fixed identities, fail-closed access retry,
+unscoped-role Home-only recovery, Team staffing recovery, partial-read isolation,
+self-impact, unavailable-versus-empty, keyboard activation, and focus transfer,
+plus the direct property-manager portfolio journey.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

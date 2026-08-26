@@ -20,6 +20,18 @@ export interface CustomerPortalVisitSummary {
   nextUpdateMessage: string;
 }
 
+export interface CustomerPortalPropertySummary {
+  id: string;
+  customerId: string;
+  organizationId: string;
+  displayName: string;
+}
+
+export interface CustomerPortalVisitCollection {
+  properties: CustomerPortalPropertySummary[];
+  visits: CustomerPortalVisitSummary[];
+}
+
 export function visitsForPortalProperty(
   visits: CustomerPortalVisitSummary[],
   customerId: string,

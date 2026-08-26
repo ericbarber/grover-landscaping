@@ -87,8 +87,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Delivered hybrid customer portal authorization foundation with provider-tenant
   customer-account inheritance for verified owners, explicit property grants
   for delegates, activation-proven backfill, and fail-closed property resolution;
-  the minimized persisted confirmed-visit read is delivered and its Yard Owner
-  interface adoption remains planned
+  the minimized persisted confirmed-visit read and fail-closed Yard Owner
+  Home/Visits adoption are delivered with loading, valid-empty, missing-access,
+  inconsistent-access, unavailable, and retry states and no illustrative fallback
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

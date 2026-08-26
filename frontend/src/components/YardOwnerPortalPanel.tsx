@@ -3,14 +3,9 @@ import type { PropertyCompletionReportSummary } from '../api/client';
 import {
   customerVisitStatusLabel,
   visitsForPortalProperty,
+  type CustomerPortalPropertySummary,
   type CustomerPortalVisitSummary,
 } from '../domain/customerPortalVisits';
-import {
-  filterPropertiesForCustomerPortal,
-  type CustomerAccountProfile,
-  type CustomerPropertyProfile,
-} from '../domain/jobs';
-import { projectBidTotalCents, type ProjectBid } from '../domain/stopProgress';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
 
@@ -35,32 +30,28 @@ function deliveredDateLabel(value: string): string {
   });
 }
 
-function currencyLabel(cents: number): string {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(cents / 100);
-}
-
 export function YardOwnerPortalPanel({
-  customer,
+  customerDisplayName,
   properties,
   visits,
+  isLoadingVisits,
+  visitReadError,
+  onRetryVisits,
   completionReportsByProperty,
   isLoadingReportHistory,
   hasReportHistoryError,
-  projectBids,
-  isLoadingProjectBids,
-  hasProjectBidHistoryError,
 }: {
-  customer: CustomerAccountProfile;
-  properties: CustomerPropertyProfile[];
+  customerDisplayName: string;
+  properties: CustomerPortalPropertySummary[];
   visits: CustomerPortalVisitSummary[];
+  isLoadingVisits: boolean;
+  visitReadError: 'access_required' | 'inconsistent' | 'unavailable' | null;
+  onRetryVisits: () => void;
   completionReportsByProperty: Record<string, PropertyCompletionReportSummary[]>;
   isLoadingReportHistory: boolean;
   hasReportHistoryError: boolean;
-  projectBids: ProjectBid[];
-  isLoadingProjectBids: boolean;
-  hasProjectBidHistoryError: boolean;
 }) {
-  const visibleProperties = filterPropertiesForCustomerPortal(properties, customer);
+  const visibleProperties = properties;
   const [destination, setDestination] = useState<PortalDestination>('home');
   const [selectedPropertyId, setSelectedPropertyId] = useState(visibleProperties[0]?.id ?? '');
   const selectedProperty = visibleProperties.find(({ id }) => id === selectedPropertyId)
@@ -69,25 +60,58 @@ export function YardOwnerPortalPanel({
     () => selectedProperty
       ? visitsForPortalProperty(
         visits,
-        customer.id,
-        customer.organizationId,
+        selectedProperty.customerId,
+        selectedProperty.organizationId,
         selectedProperty.id,
       )
       : [],
-    [customer.id, customer.organizationId, selectedProperty, visits],
+    [selectedProperty, visits],
   );
   const propertyReports = selectedProperty
     ? completionReportsByProperty[selectedProperty.id] ?? []
     : [];
   const nextVisit = propertyVisits[0];
   const latestProof = propertyReports[0];
-  const sentRecommendations = projectBids.filter(({ status }) => status === 'sent');
+
+  if (isLoadingVisits) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md" aria-busy="true">
+        <p className="grover-eyebrow">My yard</p>
+        <h1 className="mt-2 font-display text-4xl font-black text-forest">Loading your yard</h1>
+        <p className="mt-4 text-sm font-semibold text-slate-600" role="status">Checking your protected properties and confirmed visits…</p>
+      </section>
+    );
+  }
+
+  if (visitReadError) {
+    const copy = visitReadError === 'access_required'
+      ? {
+        title: 'No active customer portal access is available.',
+        detail: 'Ask your landscaping provider to confirm the account or property access connected to this sign-in.',
+      }
+      : visitReadError === 'inconsistent'
+        ? {
+          title: 'Your customer portal access needs provider review.',
+          detail: 'Visit details remain protected until the provider repairs the account or property relationship.',
+        }
+        : {
+          title: 'Your visit details are temporarily unavailable.',
+          detail: 'Customer information remains protected. Try loading the portal again.',
+        };
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
+        <p className="grover-eyebrow">My yard</p>
+        <WorkspaceStatusNotice className="mt-4" detail={copy.detail} title={copy.title} tone="warning" />
+        <button className="grover-button-secondary mt-5" onClick={onRetryVisits} type="button">Try again</button>
+      </section>
+    );
+  }
 
   if (!selectedProperty) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
         <p className="grover-eyebrow">My yard</p>
-        <h1 className="mt-2 font-display text-4xl font-black text-forest">Welcome, {customer.displayName}</h1>
+        <h1 className="mt-2 font-display text-4xl font-black text-forest">Welcome, {customerDisplayName}</h1>
         <WorkspaceStatusNotice
           className="mt-6"
           detail="Ask your landscaping provider to connect an active property to this account."
@@ -144,9 +168,9 @@ export function YardOwnerPortalPanel({
           <div>
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">
-              Welcome back, {customer.displayName}
+              Welcome back, {customerDisplayName}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Here is what is next for {selectedProperty.address}.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Here is what is next for {selectedProperty.displayName}.</p>
 
             <div className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               {nextVisit ? (
@@ -249,7 +273,7 @@ export function YardOwnerPortalPanel({
           <div>
             <p className="grover-eyebrow">Customer account</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Account</h1>
-            <p className="mt-2 text-sm text-slate-600">Choose a property or review customer-facing recommendation history.</p>
+            <p className="mt-2 text-sm text-slate-600">Choose a connected property.</p>
             <section className="mt-6" aria-labelledby="account-properties-heading">
               <h2 className="text-lg font-black text-forest" id="account-properties-heading">Properties</h2>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -265,30 +289,12 @@ export function YardOwnerPortalPanel({
                     type="button"
                   >
                     <span className="block font-black text-forest">{property.displayName}</span>
-                    <span className="mt-1 block text-sm text-slate-600">{property.address}</span>
+                    <span className="mt-1 block text-sm text-slate-600">Connected property</span>
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className="mt-7 border-t border-slate-200 pt-7" aria-labelledby="recommendation-history-heading">
-              <h2 className="text-lg font-black text-forest" id="recommendation-history-heading">Recommendation history</h2>
-              {hasProjectBidHistoryError ? <WorkspaceStatusNotice className="mt-3" detail="No decision state is being inferred while recommendation history is unavailable." title="Recommendations are temporarily unavailable." tone="warning" /> : null}
-              {isLoadingProjectBids ? <p className="mt-3 text-sm font-bold text-slate-600" role="status">Loading recommendations…</p> : null}
-              <div className="mt-3 space-y-2">
-                {projectBids.map((bid) => {
-                  const content = (
-                    <>
-                      <span className="font-black text-forest">{bid.status === 'sent' ? 'Decision needed' : bid.status.replace('_', ' ')}</span>
-                      <span className="mt-1 block text-sm text-slate-600">{currencyLabel(projectBidTotalCents(bid))} · {bid.lineItems.length} scope item{bid.lineItems.length === 1 ? '' : 's'}</span>
-                    </>
-                  );
-                  return bid.shareUrl ? <a className="block rounded-xl border border-amber-200 bg-amber-50 p-4" href={bid.shareUrl} key={bid.id}>{content}</a> : <div className="rounded-xl bg-slate-50 p-4" key={bid.id}>{content}</div>;
-                })}
-                {!isLoadingProjectBids && projectBids.length === 0 && !hasProjectBidHistoryError ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">No recommendations are waiting for review.</p> : null}
-              </div>
-              {sentRecommendations.length > 0 ? <p className="mt-3 text-xs text-slate-500">Open a recommendation to review and confirm its exact scope before deciding.</p> : null}
-            </section>
           </div>
         ) : null}
       </div>

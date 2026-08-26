@@ -1,9 +1,9 @@
 # Yard Owner Portal Working-Design Handoff
 
 Production adoption status: four-destination shell, portal-wide property context,
-local-review next visit, delivered proof, and recommendation history adopted on
-partial customer/report/portfolio foundations. The customer visit API, complete
-service-day, concern, recommendation, and preference contracts are not yet fully adopted.
+persisted authorized confirmed visits, and delivered proof adopted on partial
+customer/report foundations. Complete service-day, concern, recommendation, and
+preference contracts are not yet fully adopted.
 Billing remains product-gated. See the
 [`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
 
@@ -106,11 +106,11 @@ must never appear in customer copy.
 
 ### Important data gap
 
-`CustomerPortalWorkSummary` currently contains title, status, report readiness,
-and bid-review flags but not the date, arrival window, scope, or preparation
-expectation needed for the approved first viewport. Production adoption should
-introduce a customer-specific read model instead of assembling this information
-from provider job, route, crew, or onboarding objects in the browser.
+The minimized `GET /customer-portal/visits` read now supplies authorized property
+identity, date, arrival window, accepted service scope, and customer-authored
+preparation/next-update copy for exactly confirmed first visits. Broader
+service-day states still require an authoritative customer projection instead
+of assembling provider job, route, crew, or onboarding objects in the browser.
 
 ### Important privacy gap
 

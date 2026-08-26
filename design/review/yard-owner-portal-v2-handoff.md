@@ -1,9 +1,9 @@
 # Yard Owner Portal V2 Working-Design Handoff
 
-Production adoption status: design ready with partial underlying customer-safe
-report, bid, property, and portfolio contracts. Production still needs the
-customer next-visit read model and connected Home/Visits/Proof/Account adoption;
-billing is product-gated. See the
+Production adoption status: persisted authorized Home/Visits and partial
+customer-safe report, property, and portfolio contracts are adopted. Production
+still needs broader service-day, concern, recommendation, preference, and
+provider-contact contracts; billing is product-gated. See the
 [`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
 
 ## Outcome
