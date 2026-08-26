@@ -12,6 +12,12 @@ finish onboarding and for the owner to receive property-scoped portal access.
 It does not create a service job, day plan, route stop, work order, invoice,
 payment, crew assignment, recurring schedule, or first visit.
 
+Decision D-058 now adopts customer-account scope for verified owners and
+property scope for delegates. The delivered activation transaction remains
+property-scoped until its grant/membership migration ships; the approved target
+and safe backfill rules are defined in
+[`customer-portal-authorization-model.md`](customer-portal-authorization-model.md).
+
 ## Entry authority
 
 Only the authenticated owner subject for the acquisition property can activate.
@@ -76,6 +82,11 @@ account/property allow-list. Customer-facing reads adopted after this foundation
 must use that allow-list and must not treat organization membership alone as
 access to every customer account in the provider tenant.
 
+The next authorization slice replaces the activation-created owner's property
+scope with customer-account scope. Delegates remain explicit property grants.
+Until that migration is delivered, no persisted visit read may infer account
+inheritance from the current property-scoped record.
+
 Operational managers continue to use their existing tenant-scoped account and
 property APIs. Activation does not grant the owner manager, scheduling, crew,
 billing, or organization-administration authority.
@@ -136,6 +147,9 @@ the relationship was activated.
    [first-visit contract](owner-provider-first-visit-design.md).
 6. **4C4b–d — First-visit delivery:** persistence, authenticated APIs, and
    responsive owner/provider adoption without implicit crew assignment.
+7. **4C5 — Hybrid portal authorization (planned):** constrained account/property
+   grant scopes, activation-proven owner backfill, delegate isolation, and a
+   shared fail-closed customer-read resolver before persisted visit reads.
 
 ## Acceptance criteria
 

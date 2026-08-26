@@ -98,6 +98,12 @@ retention, portfolio permissions, disputes, and support ownership.
 
 ## Production contract requirements
 
+Customer portal authorization now follows the accepted
+[hybrid authorization model](../../docs/customer-portal-authorization-model.md):
+verified owners inherit properties through an account-scoped grant, while
+delegates require explicit property grants. Persisted portal reads remain
+blocked until that migration and fail-closed resolver are delivered.
+
 | Design concept | Production requirement |
 | --- | --- |
 | Service-day visit | Customer-scoped property, display date/window, safe scope, lifecycle status, preparation, next update, delay reason, and reschedule dates. |

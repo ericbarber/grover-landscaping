@@ -189,13 +189,18 @@ Current state:
   Disclosure, Assessment, Proposal & setup, and First visit visible as one
   responsive sequence. It links only to available workspaces and preserves the
   explicit boundary between customer approval and provider operations.
+- Customer portal authorization decision D-058 is accepted: verified owners
+  receive customer-account scope across current/future properties in that
+  provider account, while delegates retain explicit property scope. The runtime
+  remains property-scoped until the constrained migration and fail-closed
+  resolver ship; persisted visit reads must wait for that implementation.
 
-Next gated decisions:
+Next authorized slice and remaining gates:
 
-- Settle whether Property Owner authorization inherits all properties through a
-  customer-account grant or is issued separately per property before persisting
-  the customer visit read model. The recommended default is customer-account
-  scope for owners and property scope for delegates.
+- Implement the accepted hybrid authorization model: add constrained account
+  and property grant scopes, backfill only activation-proven owner records,
+  retain delegate isolation, and centralize fail-closed customer-read
+  authorization. Then add the minimized persisted customer visit read.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
@@ -203,8 +208,8 @@ Next gated decisions:
   correction, appeal, and operating ownership are approved.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
-- Continue regression and maintenance while the remaining external, security,
-  and product gates in the tracker stay explicitly unresolved.
+- Continue regression and maintenance while the remaining external and product
+  gates in the tracker stay explicitly unresolved.
 
 ### Persona-specific public landing experiences
 

@@ -46,9 +46,9 @@ user value, and dependency safety:
 3. Manager Schedule, Recovery, and completion-review core convergence is adopted.
 4. Shared completion proof, proposal decisions, and completed recommendation/
    add-on continuity are adopted at the core production boundary.
-5. Property-manager command-center core is adopted. Yard Owner persisted visit
-   reads remain paused on the customer-account versus per-property authorization
-   decision.
+5. **Active:** property-manager command-center core is adopted. Implement the
+   accepted hybrid Yard Owner authorization model—account scope for verified
+   owners, explicit property scope for delegates—then add persisted visit reads.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -56,9 +56,9 @@ user value, and dependency safety:
 7. Team/organization core convergence is adopted. Run the cross-application
    critical journeys after the remaining customer and completion boundaries close.
 
-All currently approved, repository-owned prototype-adoption slices are adopted.
-The queue resumes when one of the boundaries below receives the required
-decision or evidence; repository maintenance and regression remain ongoing.
+The hybrid customer-authorization decision reopens the repository-owned queue.
+Grant/membership migration and a fail-closed resolver precede the minimized
+visit read; repository maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff

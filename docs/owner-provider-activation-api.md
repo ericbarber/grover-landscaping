@@ -6,6 +6,12 @@ require a verified authenticated user. Owner scope always comes from the token
 subject and the property path; no provider tenant or operational record ID is
 accepted from the browser.
 
+The current response reflects the delivered property-scoped activation record.
+Decision D-058 adopts customer-account scope for verified owners and property
+scope for delegates; that target is not runtime behavior until the migration in
+[`customer-portal-authorization-model.md`](customer-portal-authorization-model.md)
+is delivered.
+
 ## Read activation status
 
 ```http

@@ -7,9 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundaries: Yard Owner customer authorization scope, curated-
-  opportunity availability/governance, and governed provider credentials. All
-  currently approved repository-owned prototype-adoption slices are adopted.
+- Active authorized slice: implement accepted decision D-058—customer-account
+  scope for verified owners and explicit property scope for delegates—before
+  adding the minimized persisted Yard Owner visit read. Curated-opportunity
+  availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -143,10 +144,11 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Make the product/security choice for Property Owner scope: recommended
-   customer-account membership for an owner who should inherit multiple yards,
-   with property-scoped grants retained for delegates. Do not add the persisted
-   visit projection until this boundary is explicit and fail-closed.
+1. Implement accepted decision D-058: add customer-account membership and portal
+   grant scope for verified owners, preserve explicit property scope for
+   delegates, backfill only activation-proven owner records, and centralize
+   fail-closed authorization. Do not add the persisted visit projection until
+   this migration and resolver are delivered.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -154,8 +156,9 @@ aligned overview composition.
    evidence/review/correction/appeal ownership is approved.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
-3. After the owner scope decision, add the minimized customer visit read and
-   continue service-day, proof/recommendation, concern, and preference adoption.
+3. After the hybrid authorization slice, add the minimized customer visit read
+   and continue service-day, proof/recommendation, concern, and preference
+   adoption.
 
 ## Read first
 
@@ -168,6 +171,7 @@ aligned overview composition.
 7. [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
 8. [`../design/review/property-manager-portfolio-handoff.md`](../design/review/property-manager-portfolio-handoff.md)
 9. [`../PLAN.md`](../PLAN.md), Yard Owner acquisition and visual-experience sections
+10. [`../docs/customer-portal-authorization-model.md`](../docs/customer-portal-authorization-model.md)
 
 ## Validation baseline
 

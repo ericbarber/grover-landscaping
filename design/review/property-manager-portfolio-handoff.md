@@ -57,6 +57,8 @@ provider-side grouping editor by accident.
 
 ## Deferred boundaries
 
-Persisted customer next-visit reads wait for the customer-account versus per-
-property authorization decision. Multi-vendor governance, compliance,
-scorecards, invoice matching, and marketplace allocation remain future concepts.
+The hybrid customer authorization decision is accepted: verified owners receive
+account scope and delegates remain property-scoped. Persisted customer next-
+visit reads wait for that migration and fail-closed resolver. Multi-vendor
+governance, compliance, scorecards, invoice matching, and marketplace allocation
+remain future concepts.

@@ -62,6 +62,7 @@ silently revisit settled product structure.
 | D-055 | Professional assurance | Require zero open design P0/P1 findings plus workflow, semantics, history/refresh, consent, contrast, motion, forced-colors, 320px reflow, 200% text, and multi-viewport evidence before calling the acquisition design signoff-ready. | Accepted after assurance review | 2026-08-17 | Product/design |
 | D-056 | Human evidence | Never substitute browser automation or synthetic review for moderated participants, physical devices, real screen readers, privacy/security approval, or operational signatures; keep those states explicitly unsigned until performed. | Accepted after assurance review | 2026-08-17 | Product/design |
 | D-057 | Pilot operations | Block known-provider launch until delivery, identity dispute, opt-out, abuse, access-revocation, incident, monitoring, support ownership, service-level, and launch-rehearsal contracts are operationally approved. | Accepted after assurance review | 2026-08-17 | Product/design |
+| D-058 | Customer portal authorization | Give verified customer-account owners account scope across current and future properties in that account, retain explicit property scope for delegates, and require every customer read to revalidate the active organization/account/property grant rather than trusting role or membership alone. | Accepted | 2026-08-25 | Product/security |
 
 ## Open review questions
 
