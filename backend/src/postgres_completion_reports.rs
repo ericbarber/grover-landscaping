@@ -1,7 +1,9 @@
 use crate::completion_reports::{
-    shared_report_url, CompletionReportActionResponse, CompletionReportActionResult,
-    CompletionReportDeliveryNotificationResponse, CompletionReportDeliveryNotificationResult,
-    CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
+    is_valid_delivered_completion_report_snapshot, shared_report_url,
+    CompletionReportActionResponse, CompletionReportActionResult,
+    CompletionReportDeliveryCandidateResult, CompletionReportDeliveryNotificationResponse,
+    CompletionReportDeliveryNotificationResult, CompletionReportPersistence,
+    CompletionReportResponse, PropertyCompletionReportSummary,
 };
 use sqlx::{PgPool, Row};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -404,10 +406,49 @@ pub async fn resubmit_completion_report(
     ))
 }
 
+pub async fn completion_report_delivery_candidate(
+    pool: &PgPool,
+    report_id: &str,
+) -> Result<CompletionReportDeliveryCandidateResult, sqlx::Error> {
+    let current = sqlx::query(
+        r#"
+        SELECT
+            report.job_id,
+            report.report_status,
+            report.ready_for_customer,
+            report.checklist_progress,
+            report.before_photos,
+            report.after_photos,
+            report.reviewed_at IS NOT NULL AS reviewed_at_present
+        FROM job_completion_reports report
+        WHERE report.id = $1
+        "#,
+    )
+    .bind(report_id)
+    .fetch_optional(pool)
+    .await?;
+
+    let Some(current) = current else {
+        return Ok(CompletionReportDeliveryCandidateResult::NotFound);
+    };
+    let ready = current.get::<String, _>("report_status") == "in_review"
+        && current.get::<bool, _>("reviewed_at_present")
+        && current.get::<bool, _>("ready_for_customer")
+        && current.get::<i32, _>("checklist_progress") == 100
+        && current.get::<i32, _>("before_photos") > 0
+        && current.get::<i32, _>("after_photos") > 0;
+    Ok(if ready {
+        CompletionReportDeliveryCandidateResult::Ready(current.get("job_id"))
+    } else {
+        CompletionReportDeliveryCandidateResult::InvalidTransition
+    })
+}
+
 pub async fn deliver_completion_report(
     pool: &PgPool,
     report_id: &str,
     delivery_user_id: &str,
+    delivered_snapshot: &CompletionReportResponse,
 ) -> Result<CompletionReportActionResult, sqlx::Error> {
     let mut transaction = pool.begin().await?;
     let current = sqlx::query(
@@ -454,6 +495,16 @@ pub async fn deliver_completion_report(
         return Ok(CompletionReportActionResult::InvalidTransition);
     }
 
+    if !is_valid_delivered_completion_report_snapshot(report_id, &job_id, delivered_snapshot)
+        || delivered_snapshot.checklist_progress != checklist_progress as u32
+        || delivered_snapshot.before_photos != before_photos as u32
+        || delivered_snapshot.after_photos != after_photos as u32
+    {
+        return Ok(CompletionReportActionResult::InvalidTransition);
+    }
+    let delivered_snapshot_json = serde_json::to_string(delivered_snapshot)
+        .map_err(|error| sqlx::Error::Encode(Box::new(error)))?;
+
     let share_token = current
         .try_get::<Option<String>, _>("share_token")
         .ok()
@@ -466,6 +517,8 @@ pub async fn deliver_completion_report(
         SET report_status = 'delivered',
             share_token = $2,
             delivered_by_user_id = $3,
+            delivered_snapshot = $4::jsonb,
+            delivered_snapshot_at = now(),
             delivered_at = now(),
             sent_at = COALESCE(sent_at, now()),
             updated_at = now()
@@ -475,6 +528,7 @@ pub async fn deliver_completion_report(
     .bind(report_id)
     .bind(&share_token)
     .bind(delivery_user_id)
+    .bind(delivered_snapshot_json)
     .execute(&mut *transaction)
     .await?;
 
@@ -508,51 +562,6 @@ pub async fn deliver_completion_report(
             share_url: Some(shared_report_url(&share_token)),
         },
     ))
-}
-
-pub async fn job_id_for_share_token(
-    pool: &PgPool,
-    share_token: &str,
-) -> Result<Option<String>, sqlx::Error> {
-    sqlx::query_scalar(
-        r#"
-        SELECT job_id
-        FROM job_completion_reports
-        WHERE share_token = $1
-          AND report_status = 'delivered'
-          AND delivered_at IS NOT NULL
-        "#,
-    )
-    .bind(share_token)
-    .fetch_optional(pool)
-    .await
-}
-
-pub async fn store_delivered_snapshot(
-    pool: &PgPool,
-    report_id: &str,
-    report: &CompletionReportResponse,
-) -> Result<(), sqlx::Error> {
-    let snapshot =
-        serde_json::to_string(report).map_err(|error| sqlx::Error::Encode(Box::new(error)))?;
-
-    sqlx::query(
-        r#"
-        UPDATE job_completion_reports
-        SET delivered_snapshot = $2::jsonb,
-            delivered_snapshot_at = now(),
-            updated_at = now()
-        WHERE id = $1
-          AND report_status = 'delivered'
-          AND delivered_at IS NOT NULL
-        "#,
-    )
-    .bind(report_id)
-    .bind(snapshot)
-    .execute(pool)
-    .await?;
-
-    Ok(())
 }
 
 pub async fn delivered_snapshot_for_share_token(

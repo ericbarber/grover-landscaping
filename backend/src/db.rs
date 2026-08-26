@@ -11,8 +11,9 @@ mod postgres_write;
 
 use crate::{
     completion_reports::{
-        CompletionReportActionResult, CompletionReportDeliveryNotificationResult,
-        CompletionReportPersistence, CompletionReportResponse, PropertyCompletionReportSummary,
+        CompletionReportActionResult, CompletionReportDeliveryCandidateResult,
+        CompletionReportDeliveryNotificationResult, CompletionReportPersistence,
+        CompletionReportResponse, PropertyCompletionReportSummary,
     },
     photo_storage::{PhotoStorageConfig, UploadedPhotoInspection},
     ChecklistItem, JobAddOn, JobDetail, JobSummary, PhotoEvidence, PhotoUploadMetadata,
@@ -826,26 +827,6 @@ impl JobRepository {
         ResourceReadResult::Loaded(CompletionReportPersistence::default())
     }
 
-    pub async fn job_id_for_report_share_token(
-        &self,
-        share_token: &str,
-    ) -> ResourceReadResult<String> {
-        if let Some(pool) = &self.pool {
-            return match postgres_completion_reports::job_id_for_share_token(pool, share_token)
-                .await
-            {
-                Ok(Some(job_id)) => ResourceReadResult::Loaded(job_id),
-                Ok(None) => ResourceReadResult::NotFound,
-                Err(error) => {
-                    tracing::error!(%error, share_token, "persisted shared-report job lookup failed");
-                    ResourceReadResult::Unavailable
-                }
-            };
-        }
-
-        ResourceReadResult::NotFound
-    }
-
     pub async fn delivered_snapshot_for_report_share_token(
         &self,
         share_token: &str,
@@ -895,28 +876,6 @@ impl JobRepository {
         }
 
         ResourceReadResult::Loaded(Vec::new())
-    }
-
-    pub async fn store_delivered_completion_report_snapshot(
-        &self,
-        report_id: &str,
-        report: &CompletionReportResponse,
-    ) -> ResourceReadResult<()> {
-        if let Some(pool) = &self.pool {
-            return match postgres_completion_reports::store_delivered_snapshot(
-                pool, report_id, report,
-            )
-            .await
-            {
-                Ok(()) => ResourceReadResult::Loaded(()),
-                Err(error) => {
-                    tracing::error!(%error, report_id, "persisted delivered report snapshot write failed");
-                    ResourceReadResult::Unavailable
-                }
-            };
-        }
-
-        ResourceReadResult::Unavailable
     }
 
     pub async fn queue_completion_report_delivery_notification(
@@ -992,14 +951,33 @@ impl JobRepository {
         &self,
         report_id: &str,
         delivery_user_id: &str,
+        delivered_snapshot: &CompletionReportResponse,
     ) -> CompletionReportActionResult {
         let Some(pool) = &self.pool else {
             return CompletionReportActionResult::Unavailable;
         };
 
-        postgres_completion_reports::deliver_completion_report(pool, report_id, delivery_user_id)
+        postgres_completion_reports::deliver_completion_report(
+            pool,
+            report_id,
+            delivery_user_id,
+            delivered_snapshot,
+        )
+        .await
+        .unwrap_or(CompletionReportActionResult::Unavailable)
+    }
+
+    pub async fn completion_report_delivery_candidate(
+        &self,
+        report_id: &str,
+    ) -> CompletionReportDeliveryCandidateResult {
+        let Some(pool) = &self.pool else {
+            return CompletionReportDeliveryCandidateResult::Unavailable;
+        };
+
+        postgres_completion_reports::completion_report_delivery_candidate(pool, report_id)
             .await
-            .unwrap_or(CompletionReportActionResult::Unavailable)
+            .unwrap_or(CompletionReportDeliveryCandidateResult::Unavailable)
     }
 
     pub async fn create_photo_upload(

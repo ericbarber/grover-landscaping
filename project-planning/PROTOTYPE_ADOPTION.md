@@ -54,8 +54,9 @@ user value, and dependency safety:
    hybrid-authorized visit-question persistence, minimized APIs, provider queue,
    Yard Owner question experience, and provider owner/manager response
    experience are delivered. D-061's proof/recommendation source audit and
-   immediate legacy-route containment are delivered; atomic immutable report
-   snapshot delivery is next while concern recovery remains separately gated.
+   immediate legacy-route containment, and atomic immutable report snapshot
+   delivery are delivered. The exact-visit authenticated proof read is next
+   while concern recovery remains separately gated.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -71,8 +72,9 @@ customer projection, and Yard Owner presentation. The contextual question/
 concern audit resulted in accepted decision D-060; dedicated visit-question
 persistence, APIs, Yard Owner adoption, and provider owner/manager response
 adoption are delivered. D-061's proof/recommendation source audit and immediate
-containment are delivered; atomic immutable snapshot delivery is next while
-concern recovery remains separately gated. Repository
+containment and atomic immutable snapshot delivery are delivered; the exact-
+visit authenticated proof read is next while concern recovery remains separately
+gated. Repository
 maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete

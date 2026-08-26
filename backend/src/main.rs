@@ -34,10 +34,10 @@ use axum::{
     Json, Router,
 };
 use completion_reports::{
-    apply_completion_report_persistence, attach_delivered_snapshot_metadata,
-    build_completion_report, completion_report_is_active_manager_queue_status,
-    customer_completion_report_response, customer_completion_report_snapshot_response,
-    is_valid_completion_report_lifecycle_status, CompletionReportActionResult,
+    apply_completion_report_persistence, build_completion_report,
+    completion_report_is_active_manager_queue_status, customer_completion_report_snapshot_response,
+    is_valid_completion_report_lifecycle_status, prepare_delivered_completion_report_snapshot,
+    CompletionReportActionResult, CompletionReportDeliveryCandidateResult,
     CompletionReportDeliveryNotificationResult, CompletionReportResponse,
 };
 use day_plans::{
@@ -8500,36 +8500,47 @@ async fn deliver_completion_report(
         return response;
     }
 
-    match state
+    let delivery_job_id = match state
         .jobs
-        .deliver_completion_report(&report_id, &principal.subject)
+        .completion_report_delivery_candidate(&report_id)
         .await
     {
-        CompletionReportActionResult::Updated(report) => {
-            let delivered_snapshot =
-                match build_and_persist_completion_report(&state, &report.job_id).await {
-                    Ok(report) => report,
-                    Err(response) => return response,
-                };
-            let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
-            if !matches!(
-                state
-                    .jobs
-                    .store_delivered_completion_report_snapshot(
-                        &report.report_id,
-                        &delivered_snapshot
-                    )
-                    .await,
-                ResourceReadResult::Loaded(())
-            ) {
-                return persisted_resource_unavailable_response(
-                    "completion_report_snapshot_unavailable",
-                    "The report was delivered, but its immutable customer snapshot could not be stored.",
-                );
-            }
-
-            Json(report).into_response()
+        CompletionReportDeliveryCandidateResult::Ready(job_id) => job_id,
+        CompletionReportDeliveryCandidateResult::InvalidTransition => {
+            return (
+                StatusCode::CONFLICT,
+                Json(ErrorResponse {
+                    error: "invalid_completion_report_transition",
+                    message: "Only ready in-review completion reports can be delivered."
+                        .to_string(),
+                }),
+            )
+                .into_response();
         }
+        CompletionReportDeliveryCandidateResult::NotFound => {
+            return resource_not_found_response(
+                "completion_report_not_found",
+                "The requested completion report was not found.",
+            );
+        }
+        CompletionReportDeliveryCandidateResult::Unavailable => {
+            return persisted_resource_unavailable_response(
+                "completion_report_persistence_unavailable",
+                "Delivering a completion report requires database persistence.",
+            );
+        }
+    };
+    let snapshot = match build_and_persist_completion_report(&state, &delivery_job_id).await {
+        Ok(report) => prepare_delivered_completion_report_snapshot(&report),
+        Err(response) => return response,
+    };
+
+    match state
+        .jobs
+        .deliver_completion_report(&report_id, &principal.subject, &snapshot)
+        .await
+    {
+        CompletionReportActionResult::Updated(report) => Json(report).into_response(),
         CompletionReportActionResult::InvalidTransition => (
             StatusCode::CONFLICT,
             Json(ErrorResponse {
@@ -8803,11 +8814,6 @@ async fn get_shared_completion_report(
                 "The persisted shared report could not be loaded.",
             );
         }
-        ResourceReadResult::NotFound => {}
-    }
-
-    let job_id = match state.jobs.job_id_for_report_share_token(&share_token).await {
-        ResourceReadResult::Loaded(job_id) => job_id,
         ResourceReadResult::NotFound => {
             return (
                 StatusCode::NOT_FOUND,
@@ -8818,17 +8824,6 @@ async fn get_shared_completion_report(
             )
                 .into_response()
         }
-        ResourceReadResult::Unavailable => {
-            return persisted_resource_unavailable_response(
-                "shared_report_unavailable",
-                "The persisted shared report could not be loaded.",
-            )
-        }
-    };
-
-    match build_and_persist_completion_report(&state, &job_id).await {
-        Ok(report) => Json(customer_completion_report_response(&report)).into_response(),
-        Err(response) => response,
     }
 }
 

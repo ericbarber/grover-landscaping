@@ -2,8 +2,8 @@
 
 Status: Source and authorization audit completed on 2026-08-26. Decision D-061
 adopts an exact visit-to-delivered-snapshot source with hybrid authorization.
-The legacy property-report list is not an authorized Yard Owner source; atomic
-snapshot delivery and minimized authenticated reads remain implementation work.
+The legacy property-report list is not an authorized Yard Owner source. Atomic
+snapshot delivery is delivered; minimized authenticated reads remain next.
 
 ## Source-audit outcome
 
@@ -37,9 +37,10 @@ source:
 3. the public read falls back to rebuilding that missing snapshot from mutable
    job, checklist, photo, and add-on state.
 
-Customer proof must fail closed instead of reconstructing delivered evidence
+Customer proof now fails closed instead of reconstructing delivered evidence
 after publication. Delivery status, immutable snapshot content, snapshot time,
-and customer reference availability should become one atomic outcome.
+share token, history, and audit event are one atomic outcome. Database guards
+reject incomplete delivery rows and later snapshot rewrites.
 
 ## Adopted decision D-061
 

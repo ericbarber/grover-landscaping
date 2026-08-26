@@ -57,6 +57,14 @@ pub enum CompletionReportActionResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CompletionReportDeliveryCandidateResult {
+    Ready(String),
+    InvalidTransition,
+    NotFound,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CompletionReportDeliveryNotificationResult {
     Queued(CompletionReportDeliveryNotificationResponse),
     NotFound,
@@ -449,6 +457,41 @@ pub fn attach_delivered_snapshot_metadata(
     snapshot
 }
 
+pub fn prepare_delivered_completion_report_snapshot(
+    report: &CompletionReportResponse,
+) -> CompletionReportResponse {
+    let mut snapshot = attach_delivered_snapshot_metadata(report);
+    snapshot.report_status = "delivered".to_string();
+    snapshot.share_url = None;
+    snapshot
+}
+
+pub fn is_valid_delivered_completion_report_snapshot(
+    report_id: &str,
+    job_id: &str,
+    snapshot: &CompletionReportResponse,
+) -> bool {
+    let Some(metadata) = snapshot.snapshot_metadata.as_ref() else {
+        return false;
+    };
+    snapshot.report_id == report_id
+        && snapshot.job_id == job_id
+        && snapshot.report_status == "delivered"
+        && snapshot.persisted
+        && snapshot.ready_for_customer
+        && snapshot.checklist_progress == 100
+        && snapshot.before_photos > 0
+        && snapshot.after_photos > 0
+        && metadata.snapshot_version == COMPLETION_REPORT_SNAPSHOT_VERSION
+        && metadata.report_id == report_id
+        && metadata.job_id == job_id
+        && metadata.evidence.before_photos == snapshot.before_photos
+        && metadata.evidence.after_photos == snapshot.after_photos
+        && metadata.evidence.issue_photos == snapshot.issue_photos
+        && metadata.evidence.total_photo_evidence == snapshot.photo_evidence.len() as u32
+        && metadata.evidence.completed_add_ons == snapshot.completed_add_ons.len() as u32
+}
+
 pub fn completion_report_id(job_id: &str) -> String {
     format!("report_{job_id}")
 }
@@ -567,8 +610,9 @@ mod tests {
         completion_report_resubmit_action_is_available, completion_report_share_link_is_available,
         completion_report_start_review_action_is_available, customer_completion_report_response,
         customer_completion_report_snapshot_response, is_valid_completion_report_lifecycle_status,
-        CompletionReportPersistence, CompletionReportRouteStopContext,
-        COMPLETION_REPORT_SNAPSHOT_VERSION,
+        is_valid_delivered_completion_report_snapshot,
+        prepare_delivered_completion_report_snapshot, CompletionReportPersistence,
+        CompletionReportRouteStopContext, COMPLETION_REPORT_SNAPSHOT_VERSION,
     };
     use crate::{
         accounts::CustomerAccountSummary, ChecklistItem, JobAddOn, JobDetail, PhotoEvidence,
@@ -775,6 +819,40 @@ mod tests {
         assert_eq!(projected.completed_recommendations.len(), 1);
         assert_eq!(projected.photo_evidence.len(), 1);
         assert!(projected.captured_at_epoch_seconds.is_some());
+    }
+
+    #[test]
+    fn delivered_snapshot_requires_exact_identity_readiness_and_metadata() {
+        let mut report = build_completion_report(
+            job(4, 1, 1),
+            account(),
+            vec![photo("before", "before"), photo("after", "after")],
+            vec![add_on("completed", "completed")],
+        );
+        report.persisted = true;
+        let snapshot = prepare_delivered_completion_report_snapshot(&report);
+
+        assert!(is_valid_delivered_completion_report_snapshot(
+            &snapshot.report_id,
+            &snapshot.job_id,
+            &snapshot,
+        ));
+
+        let mut mismatched = snapshot.clone();
+        mismatched.snapshot_metadata.as_mut().unwrap().job_id = "job_other".to_string();
+        assert!(!is_valid_delivered_completion_report_snapshot(
+            &snapshot.report_id,
+            &snapshot.job_id,
+            &mismatched,
+        ));
+
+        let mut unfinished = snapshot.clone();
+        unfinished.checklist_progress = 75;
+        assert!(!is_valid_delivered_completion_report_snapshot(
+            &snapshot.report_id,
+            &snapshot.job_id,
+            &unfinished,
+        ));
     }
 
     fn add_on(id: &str, status: &str) -> JobAddOn {

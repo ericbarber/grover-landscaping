@@ -91,11 +91,13 @@ Approves the report for customer portal delivery.
 Expected behavior:
 
 - require manager, organization owner, or support admin access,
-- set delivery actor and timestamp,
-- create or reuse a share token,
-- store an immutable delivered snapshot with version and evidence metadata,
-- move status to `delivered`,
-- write a status history event.
+- prepare and validate the persisted identity/readiness-matched customer snapshot,
+- atomically set the delivery actor/timestamp, create or reuse the share token,
+  store the immutable versioned snapshot, move status to `delivered`, and write
+  status history plus the delivery audit event,
+- reject a missing/mismatched snapshot without changing the in-review report,
+  and
+- prevent later snapshot replacement.
 
 ### POST `/completion-reports/{report_id}/delivery-notifications`
 
@@ -132,6 +134,8 @@ Expected behavior:
 - return `shared_report_snapshot_invalid` rather than exposing a stored snapshot
   that cannot be safely projected,
 - reject draft, submitted, in-review, and change-requested reports.
+- fail closed when a delivered token has no valid stored snapshot; never rebuild
+  delivered proof from current job, checklist, photo, or add-on state.
 
 Current response shape:
 

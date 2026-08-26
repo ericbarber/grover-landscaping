@@ -181,6 +181,14 @@ Current state:
   property provenance. Yard Owner now withholds that route explicitly. Report
   delivery/snapshot atomicity and fail-closed immutable reads are next; active
   recommendation collaboration, proof feedback, and concerns remain separate.
+- Phase 5C1 now makes completion-report publication atomic. A deliver attempt
+  prepares a persisted, identity-matched, delivery-ready snapshot before the
+  transition; one PostgreSQL transaction then stores status, share token,
+  delivery/snapshot timestamps, immutable snapshot, status history, and audit
+  event. Database triggers reject delivered rows without complete snapshots and
+  reject later snapshot rewrites. Public share reads now fail closed when the
+  snapshot is missing or invalid and never rebuild delivered proof from mutable
+  job state.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -296,10 +304,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-061's delivered-proof source audit and immediate Yard Owner
-  containment are delivered. Make completion-report delivery plus its immutable
-  snapshot atomic and remove live-state fallback before adding the minimized
-  hybrid-authorized exact-visit proof read.
+- Decision D-061's source audit, immediate Yard Owner containment, and atomic
+  immutable snapshot publication are delivered. Add the minimized hybrid-
+  authorized exact-visit proof read and derive proof availability only through
+  that exact persisted chain.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

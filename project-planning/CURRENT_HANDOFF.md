@@ -7,10 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement D-061's atomic completion-report delivery plus
-  immutable snapshot boundary, then add the minimized hybrid-authorized exact-
-  visit proof read. The source audit and Yard Owner legacy-route containment are
-  delivered.
+- Active slice: implement D-061's minimized hybrid-authorized exact-visit proof
+  read and derive visit proof availability from that exact source. Atomic
+  delivery/snapshot publication, fail-closed public reads, the source audit, and
+  Yard Owner legacy-route containment are delivered.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -155,8 +155,9 @@ aligned overview composition.
    provider queue, customer/provider APIs, Yard Owner question experience, and
    responsive owner/manager response experience are delivered. D-061's proof
    source audit rejects the legacy property-report route for Yard Owner and its
-   immediate containment is delivered. Make delivery/snapshot storage atomic
-   next while retaining the separate recommendation-action and concern boundaries.
+   immediate containment and atomic delivery/snapshot storage are delivered.
+   Add the minimized exact-visit authenticated proof read next while retaining
+   the separate recommendation-action and concern boundaries.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -222,6 +223,12 @@ legacy property-report list, adds an explicit protected-proof state, and leaves
 provider/property-manager consumers unchanged. Its 35 focused frontend tests
 across the Yard Owner panel and shared API client, TypeScript check, and
 production build pass with the pinned runtime.
+The D-061 atomic publication slice passes all 202 backend library tests, the
+focused public-route test, and both completion-report persistence integration
+tests. The live PostgreSQL target proves invalid snapshots leave the report in
+review, valid delivery stores the snapshot with lifecycle/audit state, later
+live job edits do not alter proof, and snapshot rewrites fail. Existing unrelated
+photo-storage dead-code warnings remain.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

@@ -308,7 +308,7 @@ created_at
 updated_at
 ```
 
-The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. Once a report enters manager review, later refreshes preserve the review snapshot fields and lifecycle status. Delivery assigns or reuses a stable `share_token`, sets delivery metadata, stores an immutable `delivered_snapshot` JSON document, backs `GET /reports/{share_token}` only after delivery, and returns `/report-view/{share_token}` as the customer-facing browser link.
+The current report endpoint materializes the latest computed report state into this table when PostgreSQL is available. Once a report enters manager review, later refreshes preserve the review snapshot fields and lifecycle status. Delivery validates the persisted snapshot first, then one transaction assigns or reuses a stable `share_token`, sets delivery metadata, stores the immutable `delivered_snapshot` JSON document and timestamp, and writes lifecycle/audit records. Database triggers reject delivered rows without all publication fields and reject later snapshot rewrites. `GET /reports/{share_token}` reads only that snapshot after delivery, fails closed when it is absent/invalid, and returns `/report-view/{share_token}` as the customer-facing browser link.
 
 Delivered internal snapshots include a `snapshot_metadata` object with a schema
 version, report ID, job ID, capture timestamp, and evidence counts for before

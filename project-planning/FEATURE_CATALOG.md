@@ -126,6 +126,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   visit/release/job/report chain, with Yard Owner legacy property-report reads
   contained until atomic immutable snapshots and hybrid-authorized proof reads
   are delivered
+- Atomic completion-report publication that validates the exact persisted
+  snapshot before one transaction writes delivery state, share token, snapshot,
+  timestamps, history, and audit; database immutability guards and public reads
+  reject missing, invalid, or rewritten proof instead of rebuilding live state
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

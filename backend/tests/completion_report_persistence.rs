@@ -1,9 +1,10 @@
 use grover_landscaping_api::{
     accounts::CustomerAccountSummary,
     completion_reports::{
-        apply_completion_report_persistence, attach_delivered_snapshot_metadata,
-        build_completion_report, CompletionReportActionResult,
-        CompletionReportDeliveryNotificationResult, COMPLETION_REPORT_SNAPSHOT_VERSION,
+        apply_completion_report_persistence, build_completion_report,
+        prepare_delivered_completion_report_snapshot, CompletionReportActionResult,
+        CompletionReportDeliveryCandidateResult, CompletionReportDeliveryNotificationResult,
+        COMPLETION_REPORT_SNAPSHOT_VERSION,
     },
     db::{JobRepository, ResourceReadResult},
 };
@@ -34,12 +35,12 @@ async fn repository_distinguishes_unavailable_completion_report_reads() {
             .await,
         ResourceReadResult::Unavailable
     ));
-    assert!(matches!(
+    assert_eq!(
         repository
-            .job_id_for_report_share_token("share_outage")
+            .completion_report_delivery_candidate("report_outage")
             .await,
-        ResourceReadResult::Unavailable
-    ));
+        CompletionReportDeliveryCandidateResult::Unavailable
+    );
     assert!(matches!(
         repository
             .list_delivered_completion_reports_for_property(
@@ -113,7 +114,7 @@ async fn repository_persists_completion_report_state() {
         completed_services_this_period: 0,
         billing_notes: "Payment can be marked complete after service.".to_string(),
     };
-    let report = build_completion_report(job, account.clone(), Vec::new(), Vec::new());
+    let report = build_completion_report(job, account, Vec::new(), Vec::new());
 
     let unavailable_pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
@@ -126,13 +127,6 @@ async fn repository_persists_completion_report_state() {
             .await,
         ResourceReadResult::Unavailable
     ));
-    assert!(matches!(
-        unavailable_repository
-            .store_delivered_completion_report_snapshot("report_job_1001", &report)
-            .await,
-        ResourceReadResult::Unavailable
-    ));
-
     let persistence = loaded(
         repository.persist_completion_report(&report).await,
         "completion report should persist",
@@ -252,8 +246,38 @@ async fn repository_persists_completion_report_state() {
     .await
     .expect("report should be made ready for delivery");
 
+    let delivery_candidate = repository
+        .completion_report_delivery_candidate("report_job_1001")
+        .await;
+    assert_eq!(
+        delivery_candidate,
+        CompletionReportDeliveryCandidateResult::Ready("job_1001".to_string())
+    );
+    let mut delivery_source = report.clone();
+    apply_completion_report_persistence(&mut delivery_source, after_resubmit.clone());
+    let delivered_snapshot = prepare_delivered_completion_report_snapshot(&delivery_source);
+    let mut invalid_snapshot = delivered_snapshot.clone();
+    invalid_snapshot
+        .snapshot_metadata
+        .as_mut()
+        .expect("prepared delivery snapshot should have metadata")
+        .job_id = "job_other".to_string();
+    assert_eq!(
+        repository
+            .deliver_completion_report("report_job_1001", "manager_1001", &invalid_snapshot)
+            .await,
+        CompletionReportActionResult::InvalidTransition
+    );
+    let still_in_review: (String, bool, bool) = sqlx::query_as(
+        "SELECT report_status, delivered_at IS NULL, delivered_snapshot IS NULL FROM job_completion_reports WHERE id = $1",
+    )
+    .bind("report_job_1001")
+    .fetch_one(&pool)
+    .await
+    .expect("rejected snapshot must leave the report unchanged");
+    assert_eq!(still_in_review, ("in_review".to_string(), true, true));
     let delivery = repository
-        .deliver_completion_report("report_job_1001", "manager_1001")
+        .deliver_completion_report("report_job_1001", "manager_1001", &delivered_snapshot)
         .await;
     assert!(matches!(
         delivery,
@@ -302,22 +326,6 @@ async fn repository_persists_completion_report_state() {
     );
     assert!(other_org_property_reports.is_empty());
 
-    let ResourceReadResult::Loaded(delivered_job) =
-        repository.get_job("job_1001".to_string()).await
-    else {
-        panic!("persisted delivered job detail should load");
-    };
-    let mut delivered_snapshot =
-        build_completion_report(delivered_job, account.clone(), Vec::new(), Vec::new());
-    apply_completion_report_persistence(&mut delivered_snapshot, delivered_persistence.clone());
-    let delivered_snapshot = attach_delivered_snapshot_metadata(&delivered_snapshot);
-    assert!(matches!(
-        repository
-            .store_delivered_completion_report_snapshot("report_job_1001", &delivered_snapshot)
-            .await,
-        ResourceReadResult::Loaded(())
-    ));
-
     sqlx::query("UPDATE service_jobs SET customer_name = 'Changed Customer' WHERE id = 'job_1001'")
         .execute(&pool)
         .await
@@ -348,6 +356,16 @@ async fn repository_persists_completion_report_state() {
     assert_eq!(
         stored_snapshot["snapshot_metadata"]["evidence"]["after_photos"],
         1
+    );
+    let snapshot_rewrite = sqlx::query(
+        "UPDATE job_completion_reports SET delivered_snapshot = '{}'::jsonb WHERE id = $1",
+    )
+    .bind("report_job_1001")
+    .execute(&pool)
+    .await;
+    assert!(
+        snapshot_rewrite.is_err(),
+        "delivered snapshots must be immutable"
     );
     sqlx::query("UPDATE service_jobs SET customer_name = 'Sample Customer' WHERE id = 'job_1001'")
         .execute(&pool)

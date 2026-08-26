@@ -26,6 +26,9 @@ The base report table keeps the current status. Status history keeps each transi
 
 Delivered reports can use a share token to produce stable customer-facing report links. Share tokens are unique when present and are indexed for delivery lookup.
 The stored delivered snapshot remains the immutable internal source of truth.
+Delivery status, token, actor/time, snapshot/time, status history, and audit are
+written in one transaction. Database guards reject inserts/transitions without
+a complete snapshot and reject subsequent snapshot rewrites.
 The public token route applies a strict customer projection and does not serialize
 internal IDs, notes, object keys, pricing, billing, route, crew, or organization
 context. Completed bid-derived add-ons become completed approved-recommendation
@@ -33,10 +36,12 @@ outcomes in that projection.
 
 ## Route implementation notes
 
-Future route handlers should:
+Route handlers:
 
 - create a base report record before writing evidence snapshots,
 - snapshot photos, service steps, and completed add-ons at the time the report is generated,
 - update status history whenever the report lifecycle changes,
-- set delivery fields and share token data only after manager approval,
+- set delivery fields, share token, and immutable snapshot atomically only after
+  manager approval,
+- fail closed instead of rebuilding a missing delivered snapshot from live work,
 - keep customer portal reads scoped to the customer's own properties and delivered reports.

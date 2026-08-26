@@ -19,7 +19,11 @@ The resubmit endpoint applies the same readiness snapshot checks before moving a
 
 ## Delivery behavior
 
-Delivery should happen only after manager approval. The delivery action should set delivery metadata, create or reuse the share token, move the report to `delivered`, and record the lifecycle change.
+Delivery happens only after manager approval. The action prepares and validates
+the persisted customer snapshot first, then one transaction sets delivery
+metadata, creates or reuses the share token, stores the snapshot, moves the
+report to `delivered`, and records lifecycle/audit events. A missing or invalid
+snapshot leaves the report in review. The stored snapshot cannot be rewritten.
 
 Delivery attempts should be recorded separately so retry and failure review do not rewrite report evidence or summary history.
 
