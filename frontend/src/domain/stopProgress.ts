@@ -60,6 +60,7 @@ export type ProjectBid = {
   deliveryRecipient?: string;
   convertedJobId?: string;
   convertedAt?: string;
+  customerRecommendationVersion?: number;
   persisted?: boolean;
 };
 

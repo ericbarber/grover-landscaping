@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountProjectBidsPath,
+  projectBidRevisionRequestBody,
   projectBidSendRequestBody,
   toCustomerProjectBid,
   toProjectBid,
@@ -63,6 +64,7 @@ describe('project bid API mapping', () => {
       deliveryRecipient: undefined,
       convertedJobId: undefined,
       convertedAt: undefined,
+      customerRecommendationVersion: undefined,
       persisted: true,
     });
   });
@@ -110,6 +112,38 @@ describe('project bid API mapping', () => {
       channel: 'email',
       recipient: 'customer@example.com',
       idempotency_key: 'project-bid-send-001',
+    });
+  });
+
+  it('binds a provider revision to the expected immutable version', () => {
+    expect(projectBidRevisionRequestBody(
+      1,
+      {
+        customerMessage: 'Revised scope.',
+        lineItems: [{
+          serviceId: 'service_1',
+          serviceName: 'Revised repair',
+          quantity: 2,
+          unitPriceCents: 9000,
+        }],
+      },
+      'email',
+      'customer@example.com',
+      'project-bid-revision-001',
+    )).toEqual({
+      expected_proposal_version: 1,
+      customer_message: 'Revised scope.',
+      line_items: [{
+        service_id: 'service_1',
+        service_name: 'Revised repair',
+        service_description: undefined,
+        quantity: 2,
+        unit_price_cents: 9000,
+        note: undefined,
+      }],
+      channel: 'email',
+      recipient: 'customer@example.com',
+      idempotency_key: 'project-bid-revision-001',
     });
   });
 });

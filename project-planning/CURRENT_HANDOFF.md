@@ -7,10 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement D-062 provider revision/supersession publication and
-  reconcile the separate legacy bearer-decision lifecycle before signed-in
-  reads. Its audit, account-bid containment, constrained persistence, and exact
-  initial provider-send bridge are delivered. D-061 proof is delivered end to
+- Active slice: implement D-062 minimized hybrid-authorized exact-visit customer
+  reads and actor-scoped decisions. Its audit, containment, constrained
+  persistence, initial send, immutable provider revision/supersession, and
+  legacy bearer-decision closure are delivered. D-061 proof is delivered end to
   end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
@@ -160,10 +160,11 @@ aligned overview composition.
    immediate containment and atomic delivery/snapshot storage are delivered.
    The minimized exact-visit authenticated proof read and responsive Yard Owner
    adoption are delivered. D-062's active-recommendation audit and legacy-route
-   containment and immutable publication/version/decision persistence are
-   and exact initial provider-send bridge are delivered; build revision/
-   supersession and bearer-decision reconciliation next while retaining the
-   separate concern boundary.
+   containment, immutable publication/version/decision persistence, exact
+   initial provider-send bridge, revision/supersession publication, and legacy
+   bearer-decision closure are delivered; build minimized hybrid customer reads
+   and actor-scoped decisions next while retaining the separate concern
+   boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -189,7 +190,7 @@ aligned overview composition.
 
 ## Validation baseline
 
-The current baseline passes all 472 frontend unit tests across 120 files,
+The current baseline passes all 473 frontend unit tests across 120 files,
 TypeScript, and the production build. The persisted Yard Owner adoption adds
 client mapping/error checks plus component coverage for loading, valid-empty,
 missing-access, inconsistent-access, unavailable, retry, and authorized content
@@ -255,6 +256,13 @@ notification, exact actor-key replay duplicates neither, changed retry identity
 conflicts, private IDs/notes/token are absent from the snapshot, and legacy bids
 without the exact chain retain their current non-portal behavior. Focused
 frontend client coverage, TypeScript, and the production build also pass.
+The D-062 provider revision and transitional-decision slice passes the same live
+owner/provider fixture. It proves exact v1-to-v2 immutable supersession,
+minimized revised scope, expected-version conflict, actor-key replay without
+duplicate publication or notification, the quiet-hours delivery path, and
+legacy bearer approval closing the signed-in surface as `withdrawn` without a
+fabricated D-062 decision. Focused backend route/unit checks, frontend client
+mapping, TypeScript, and the production build pass.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

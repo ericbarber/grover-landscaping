@@ -226,6 +226,16 @@ Current state:
   Exact replay creates no duplicate publication or notification; changed or
   already-published sends conflict; non-exact legacy bids create no portal
   publication. Revision and customer API authority remain undelivered.
+- Phase 5D3 now delivers immutable provider revision/supersession publication
+  and explicit legacy decision reconciliation. An authorized provider submits
+  the expected current version, complete revised scope, enabled destination,
+  and actor retry key; one transaction preserves the prior snapshot, publishes
+  the next version, records superseded/published events, refreshes bounded link
+  delivery, and queues a quiet-hours-aware notification. Exact replay creates
+  no duplicate; stale or changed retry writes conflict. A transitional public-
+  link answer atomically closes the signed-in surface as `withdrawn` without
+  fabricating an authenticated D-062 decision or affirmation. Signed-in
+  customer read and decision APIs remain next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -342,10 +352,10 @@ Current state:
 Next authorized slice and remaining gates:
 
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
-  containment, and constrained immutable publication/version/decision
-  persistence and exact initial provider-send bridge are delivered. Add
-  immutable revision/supersession publication and reconcile the separate legacy
-  bearer decision lifecycle before signed-in customer APIs or approval UI.
+  containment, constrained immutable persistence, exact initial provider-send,
+  provider revision/supersession, and honest legacy bearer-decision closure are
+  delivered. Add minimized hybrid-authorized exact-visit customer read and
+  actor-scoped decision APIs before signed-in approval UI.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

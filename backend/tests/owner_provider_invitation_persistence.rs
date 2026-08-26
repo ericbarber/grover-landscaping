@@ -46,7 +46,8 @@ use grover_landscaping_api::owner_acquisition::{
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
 use grover_landscaping_api::project_bids::{
-    ProjectBidRepository, ProjectBidSendResult, SendProjectBidRequest,
+    CreateProjectBidLineItemRequest, ProjectBidMutationResult, ProjectBidRepository,
+    ProjectBidRevisionResult, ProjectBidSendResult, ReviseProjectBidRequest, SendProjectBidRequest,
 };
 use grover_landscaping_api::service_mobilization::{
     CustomerServiceDayEventWriteResult, PublishCustomerServiceDayEventRequest,
@@ -4529,6 +4530,187 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .is_err());
+    let revision_request = ReviseProjectBidRequest {
+        expected_proposal_version: 1,
+        customer_message: Some(
+            "We revised the hedge recommendation to include two sections.".to_string(),
+        ),
+        line_items: vec![CreateProjectBidLineItemRequest {
+            service_id: "service_fixture_hedge".to_string(),
+            service_name: "Hedge shaping".to_string(),
+            service_description: Some(
+                "Shape two front hedge sections and remove clippings.".to_string(),
+            ),
+            quantity: 2,
+            unit_price_cents: 11000,
+            note: Some("Revised provider-private note".to_string()),
+        }],
+        channel: "email".to_string(),
+        recipient: "owner-a@example.com".to_string(),
+        idempotency_key: "recommendation-revision-fixture-001".to_string(),
+    };
+    assert!(matches!(
+        recommendation_bids
+            .revise(
+                recommendation_day_plan_id,
+                recommendation_bid_id,
+                "recipient-user-1",
+                &ReviseProjectBidRequest {
+                    expected_proposal_version: 1,
+                    customer_message: Some(
+                        "We recommend shaping the hedge found during this visit.".to_string(),
+                    ),
+                    line_items: vec![CreateProjectBidLineItemRequest {
+                        service_id: "service_fixture_hedge".to_string(),
+                        service_name: "Hedge shaping".to_string(),
+                        service_description: Some(
+                            "Shape the front hedge and remove clippings.".to_string(),
+                        ),
+                        quantity: 1,
+                        unit_price_cents: 12500,
+                        note: Some("A changed private note is not customer scope".to_string()),
+                    }],
+                    channel: "email".to_string(),
+                    recipient: "owner-a@example.com".to_string(),
+                    idempotency_key: "recommendation-revision-noop-001".to_string(),
+                },
+            )
+            .await,
+        ProjectBidRevisionResult::Conflict
+    ));
+    let ProjectBidRevisionResult::Revised(revised_bid) = recommendation_bids
+        .revise(
+            recommendation_day_plan_id,
+            recommendation_bid_id,
+            "recipient-user-1",
+            &revision_request,
+        )
+        .await
+    else {
+        panic!("the exact pending recommendation should publish a revision");
+    };
+    assert_eq!(revised_bid.customer_recommendation_version, Some(2));
+    assert_eq!(revised_bid.total_cents, 22000);
+    let revised_publication = sqlx::query(
+        "SELECT publication.id, publication.supersedes_publication_id,
+                publication.customer_snapshot, series.current_version,
+                series.lifecycle_status
+         FROM customer_visit_recommendation_series series
+         JOIN customer_visit_recommendation_publications publication
+           ON publication.customer_recommendation_reference =
+              series.customer_recommendation_reference
+          AND publication.proposal_version = series.current_version
+         WHERE series.customer_recommendation_reference = $1",
+    )
+    .bind(&recommendation_reference)
+    .fetch_one(&pool)
+    .await
+    .expect("the revised recommendation publication should load");
+    let recommendation_publication_id: String = revised_publication.get("id");
+    assert_eq!(revised_publication.get::<i64, _>("current_version"), 2);
+    assert_eq!(
+        revised_publication.get::<String, _>("lifecycle_status"),
+        "pending"
+    );
+    assert_eq!(
+        revised_publication.get::<Option<String>, _>("supersedes_publication_id"),
+        Some(recommendation_publication.get::<String, _>("publication_id"))
+    );
+    let revised_snapshot = revised_publication.get::<serde_json::Value, _>("customer_snapshot");
+    assert_eq!(revised_snapshot["proposal_version"], 2);
+    assert_eq!(revised_snapshot["total_cents"], 22000);
+    assert!(!revised_snapshot
+        .to_string()
+        .contains("Revised provider-private note"));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM customer_visit_recommendation_events
+             WHERE customer_recommendation_reference = $1
+               AND event_kind = 'superseded' AND proposal_version = 1",
+        )
+        .bind(&recommendation_reference)
+        .fetch_one(&pool)
+        .await
+        .expect("the supersession event should load"),
+        1
+    );
+    let publication_count_after_revision = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM customer_visit_recommendation_publications
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(&recommendation_reference)
+    .fetch_one(&pool)
+    .await
+    .expect("the revised publication count should load");
+    let notification_count_after_revision = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*) FROM notification_outbox
+         WHERE entity_type = 'project_bid' AND entity_id = $1",
+    )
+    .bind(recommendation_bid_id)
+    .fetch_one(&pool)
+    .await
+    .expect("the revised notification count should load");
+    assert!(matches!(
+        recommendation_bids
+            .revise(
+                recommendation_day_plan_id,
+                recommendation_bid_id,
+                "recipient-user-1",
+                &revision_request,
+            )
+            .await,
+        ProjectBidRevisionResult::Revised(_)
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM customer_visit_recommendation_publications
+             WHERE customer_recommendation_reference = $1",
+        )
+        .bind(&recommendation_reference)
+        .fetch_one(&pool)
+        .await
+        .expect("the revision replay count should load"),
+        publication_count_after_revision
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM notification_outbox
+             WHERE entity_type = 'project_bid' AND entity_id = $1",
+        )
+        .bind(recommendation_bid_id)
+        .fetch_one(&pool)
+        .await
+        .expect("the revision notification replay count should load"),
+        notification_count_after_revision
+    );
+    assert!(matches!(
+        recommendation_bids
+            .revise(
+                recommendation_day_plan_id,
+                recommendation_bid_id,
+                "recipient-user-1",
+                &ReviseProjectBidRequest {
+                    customer_message: Some("Changed retry content".to_string()),
+                    ..revision_request.clone()
+                },
+            )
+            .await,
+        ProjectBidRevisionResult::Conflict
+    ));
+    assert!(matches!(
+        recommendation_bids
+            .revise(
+                recommendation_day_plan_id,
+                recommendation_bid_id,
+                "recipient-user-1",
+                &ReviseProjectBidRequest {
+                    idempotency_key: "recommendation-revision-stale-001".to_string(),
+                    ..revision_request.clone()
+                },
+            )
+            .await,
+        ProjectBidRevisionResult::Conflict
+    ));
     sqlx::query(
         "INSERT INTO customer_visit_recommendation_messages (
              id, customer_recommendation_reference, publication_id,
@@ -4536,7 +4718,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
              author_user_id, customer_safe_body, idempotency_key
          ) VALUES (
              'customer_recommendation_message_11111111111111111111111111111111',
-             $1, $2, 1, 1, 'customer_question', 'customer', $3,
+             $1, $2, 2, 1, 'customer_question', 'customer', $3,
              'Does this include clipping removal?',
              'recommendation-question-fixture-001'
          )",
@@ -4555,7 +4737,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
              idempotency_key
          ) VALUES (
              'customer_recommendation_message_22222222222222222222222222222222',
-             $1, $2, 1, 2, 'provider_response', 'provider',
+             $1, $2, 2, 2, 'provider_response', 'provider',
              'recipient-user-1', 'Yes, clipping removal is included.',
              'customer_recommendation_message_11111111111111111111111111111111',
              'recommendation-response-fixture-001'
@@ -4581,7 +4763,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
              affirmation_text_version, idempotency_key
          ) VALUES (
              'customer_recommendation_decision_11111111111111111111111111111111',
-             $1, $2, 1, $3, 'approve',
+             $1, $2, 2, $3, 'approve',
              'customer_recommendation_approval_v1',
              'recommendation-decision-fixture-001'
          )",
@@ -4598,7 +4780,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
              proposal_version, actor_user_id, event_kind, idempotency_key
          ) VALUES (
              'customer_recommendation_event_22222222222222222222222222222222',
-             $1, $2, 1, $3, 'approved', 'recommendation-approved-event-001'
+             $1, $2, 2, $3, 'approved', 'recommendation-approved-event-001'
          )",
     )
     .bind(&recommendation_reference)
@@ -4618,13 +4800,116 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .expect("the decision and event should advance the exact series lifecycle");
     assert!(sqlx::query(
         "UPDATE customer_visit_recommendation_series
-         SET current_version = 2, lifecycle_status = 'pending', updated_at = NOW()
+         SET current_version = 3, lifecycle_status = 'pending', updated_at = NOW()
          WHERE customer_recommendation_reference = $1",
     )
     .bind(&recommendation_reference)
     .execute(&pool)
     .await
     .is_err());
+
+    let bearer_amendment_id = "amendment_customer_recommendation_bearer_fixture";
+    let bearer_bid_id = "bid_customer_recommendation_bearer_fixture";
+    sqlx::query(
+        "INSERT INTO day_plan_amendment_requests (
+             id, day_plan_id, requested_by_crew_id, amendment_type, status,
+             stop_id, service_id, service_name, default_duration_minutes,
+             default_price_cents, requires_manager_approval, requires_bid
+         ) VALUES (
+             $1, $2, 'crew_customer_recommendation_fixture', 'add_service',
+             'bid_review', $3, 'service_fixture_cleanup', 'Visit cleanup',
+             30, 7500, TRUE, TRUE
+         )",
+    )
+    .bind(bearer_amendment_id)
+    .bind(recommendation_day_plan_id)
+    .bind(recommendation_stop_id)
+    .execute(&pool)
+    .await
+    .expect("the bearer reconciliation amendment should persist");
+    sqlx::query(
+        "INSERT INTO project_bids (
+             id, day_plan_id, customer_account_id, source_amendment_id,
+             status, customer_message
+         ) VALUES ($1, $2, $3, $4, 'draft', 'Optional visit cleanup.')",
+    )
+    .bind(bearer_bid_id)
+    .bind(recommendation_day_plan_id)
+    .bind(&activation.customer_account_id)
+    .bind(bearer_amendment_id)
+    .execute(&pool)
+    .await
+    .expect("the bearer reconciliation bid should persist");
+    sqlx::query(
+        "INSERT INTO project_bid_line_items (
+             id, project_bid_id, service_id, service_name, quantity,
+             unit_price_cents, sort_order
+         ) VALUES (
+             'bid_customer_recommendation_bearer_fixture_line_1', $1,
+             'service_fixture_cleanup', 'Visit cleanup', 1, 7500, 1
+         )",
+    )
+    .bind(bearer_bid_id)
+    .execute(&pool)
+    .await
+    .expect("the bearer reconciliation line item should persist");
+    assert!(matches!(
+        recommendation_bids
+            .send(
+                recommendation_day_plan_id,
+                bearer_bid_id,
+                "recipient-user-1",
+                &SendProjectBidRequest {
+                    channel: "email".to_string(),
+                    recipient: "owner-a@example.com".to_string(),
+                    idempotency_key: "recommendation-bearer-publish-001".to_string(),
+                },
+            )
+            .await,
+        ProjectBidSendResult::Sent(_)
+    ));
+    let bearer_share_token =
+        sqlx::query_scalar::<_, String>("SELECT share_token FROM project_bids WHERE id = $1")
+            .bind(bearer_bid_id)
+            .fetch_one(&pool)
+            .await
+            .expect("the bearer reconciliation token should load");
+    assert!(matches!(
+        recommendation_bids
+            .decide_shared(&bearer_share_token, "approve")
+            .await,
+        ProjectBidMutationResult::Updated(bid) if bid.status == "approved"
+    ));
+    let bearer_reconciliation = sqlx::query(
+        "SELECT series.lifecycle_status, event.event_kind, event.event_data,
+                (SELECT COUNT(*) FROM customer_visit_recommendation_decisions decision
+                  WHERE decision.customer_recommendation_reference =
+                        series.customer_recommendation_reference) AS decision_count
+         FROM customer_visit_recommendation_series series
+         JOIN customer_visit_recommendation_events event
+           ON event.customer_recommendation_reference =
+              series.customer_recommendation_reference
+          AND event.proposal_version = series.current_version
+          AND event.event_kind = 'withdrawn'
+         WHERE series.source_amendment_id = $1",
+    )
+    .bind(bearer_amendment_id)
+    .fetch_one(&pool)
+    .await
+    .expect("the legacy bearer decision should close the signed-in surface");
+    assert_eq!(
+        bearer_reconciliation.get::<String, _>("lifecycle_status"),
+        "withdrawn"
+    );
+    assert_eq!(
+        bearer_reconciliation.get::<String, _>("event_kind"),
+        "withdrawn"
+    );
+    assert_eq!(
+        bearer_reconciliation.get::<serde_json::Value, _>("event_data")["legacy_decision"],
+        "approve"
+    );
+    assert_eq!(bearer_reconciliation.get::<i64, _>("decision_count"), 0);
 
     let question_request = CreateCustomerVisitQuestionRequest {
         expected_thread_version: 0,

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   convertProjectBid,
+  reviseProjectBid,
   revokeProjectBid,
   saveProjectBidDraft,
   sendProjectBid,
@@ -70,12 +71,14 @@ export function ManagerProjectBidEditor({
   const [isSending, setIsSending] = useState(false);
   const [isRevoking, setIsRevoking] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [isPreparingRevision, setIsPreparingRevision] = useState(false);
   const [deliveryChannel, setDeliveryChannel] = useState<BidDeliveryChannel>(existingBid?.deliveryChannel ?? 'email');
   const [deliveryRecipient, setDeliveryRecipient] = useState(existingBid?.deliveryRecipient ?? '');
   const [message, setMessage] = useState(existingBid ? 'Draft loaded from the manager workspace.' : 'Build a draft before sending it to the customer.');
   const sendRetryKey = useRef<string | null>(null);
+  const revisionRetryKey = useRef<string | null>(null);
   const totalCents = projectBidDraftTotalCents(lines);
-  const isEditable = !existingBid || existingBid.status === 'draft';
+  const isEditable = !existingBid || existingBid.status === 'draft' || isPreparingRevision;
   const canIssueLink = Boolean(
     existingBid?.persisted
       && (existingBid.status === 'draft' || (existingBid.status === 'sent' && existingBid.shareRevokedAt)),
@@ -84,6 +87,24 @@ export function ManagerProjectBidEditor({
   useEffect(() => {
     sendRetryKey.current = null;
   }, [deliveryChannel, deliveryRecipient, existingBid?.id]);
+
+  useEffect(() => {
+    revisionRetryKey.current = null;
+  }, [customerMessage, deliveryChannel, deliveryRecipient, existingBid?.id, lines]);
+
+  function currentBidInput() {
+    return {
+      customerMessage: customerMessage.trim() || undefined,
+      lineItems: lines.map((line) => ({
+        serviceId: line.serviceId,
+        serviceName: line.serviceName.trim(),
+        serviceDescription: line.serviceDescription,
+        quantity: Number(line.quantity),
+        unitPriceCents: bidDollarsToCents(line.unitPriceDollars) ?? 0,
+        note: line.note.trim() || undefined,
+      })),
+    };
+  }
 
   function updateLine(id: string, update: Partial<ProjectBidDraftLine>) {
     setLines((current) => current.map((line) => (line.id === id ? { ...line, ...update } : line)));
@@ -108,17 +129,7 @@ export function ManagerProjectBidEditor({
     if (!projectBidDraftIsValid(lines)) return;
 
     setIsSaving(true);
-    void saveProjectBidDraft(dayPlanId, amendment.id, {
-      customerMessage: customerMessage.trim() || undefined,
-      lineItems: lines.map((line) => ({
-        serviceId: line.serviceId,
-        serviceName: line.serviceName.trim(),
-        serviceDescription: line.serviceDescription,
-        quantity: Number(line.quantity),
-        unitPriceCents: bidDollarsToCents(line.unitPriceDollars) ?? 0,
-        note: line.note.trim() || undefined,
-      })),
-    })
+    void saveProjectBidDraft(dayPlanId, amendment.id, currentBidInput())
       .then((bid) => {
         onSaved(bid);
         setMessage(bid.persisted ? 'Draft bid saved.' : 'Draft is local until the API can persist it.');
@@ -158,6 +169,46 @@ export function ManagerProjectBidEditor({
           : isApiErrorCode(error, 'customer_recommendation_publication_conflict')
             ? 'The customer recommendation changed or was already published. Reload this bid before sending again.'
           : 'Bid could not be sent. Confirm the draft is persisted and try again.',
+      ))
+      .finally(() => setIsSending(false));
+  }
+
+  function publishRevision() {
+    if (
+      !existingBid?.persisted
+      || existingBid.status !== 'sent'
+      || !existingBid.customerRecommendationVersion
+      || !projectBidDraftIsValid(lines)
+      || !bidDeliveryRecipientIsValid(deliveryChannel, deliveryRecipient)
+    ) return;
+
+    const idempotencyKey = revisionRetryKey.current
+      ?? `project-bid-revision-${crypto.randomUUID()}`;
+    revisionRetryKey.current = idempotencyKey;
+    setIsSending(true);
+    void reviseProjectBid(
+      dayPlanId,
+      existingBid.id,
+      existingBid.customerRecommendationVersion,
+      currentBidInput(),
+      deliveryChannel,
+      deliveryRecipient.trim(),
+      idempotencyKey,
+    )
+      .then((bid) => {
+        revisionRetryKey.current = null;
+        setIsPreparingRevision(false);
+        onSaved(bid);
+        setMessage(`Revision ${bid.customerRecommendationVersion ?? ''} published and delivery queued.`.trim());
+      })
+      .catch((error: unknown) => setMessage(
+        isApiErrorCode(error, 'project_bid_notification_preference_blocked')
+          ? 'Revision delivery is blocked by the customer’s channel preferences.'
+          : isApiErrorCode(error, 'customer_recommendation_revision_conflict')
+            ? 'The recommendation changed while this revision was open. Reload before editing again.'
+            : isApiErrorCode(error, 'project_bid_not_revisable')
+              ? 'This recommendation was already answered or is no longer open for revision.'
+              : 'The revised recommendation could not be published. Retry with the current scope unchanged.',
       ))
       .finally(() => setIsSending(false));
   }
@@ -204,7 +255,7 @@ export function ManagerProjectBidEditor({
           <p className="mt-1 text-xs text-amber-900">{message}</p>
         </div>
         <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-amber-900">
-          {existingBid?.status ?? 'draft'} · {currencyLabel(totalCents)}
+          {existingBid?.status ?? 'draft'}{existingBid?.customerRecommendationVersion ? ` · v${existingBid.customerRecommendationVersion}` : ''} · {currencyLabel(totalCents)}
         </span>
       </div>
 
@@ -245,12 +296,35 @@ export function ManagerProjectBidEditor({
         <textarea className="mt-1 min-h-20 w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs text-slate-900" onChange={(event) => setCustomerMessage(event.target.value)} value={customerMessage} />
       </label>
 
-      <button className="mt-3 w-full rounded-xl bg-amber-700 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={isSaving || !projectBidDraftIsValid(lines)} onClick={saveDraft} type="button">
-        {isSaving ? 'Saving draft...' : existingBid ? 'Update draft bid' : 'Save draft bid'}
-      </button>
+      {!isPreparingRevision ? (
+        <button className="mt-3 w-full rounded-xl bg-amber-700 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={isSaving || !projectBidDraftIsValid(lines)} onClick={saveDraft} type="button">
+          {isSaving ? 'Saving draft...' : existingBid ? 'Update draft bid' : 'Save draft bid'}
+        </button>
+      ) : null}
       </fieldset>
 
-      {canIssueLink ? (
+      {existingBid?.status === 'sent' && existingBid.customerRecommendationVersion && !isPreparingRevision ? (
+        <button className="mt-3 w-full rounded-xl border border-amber-500 bg-white px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100" onClick={() => {
+          setIsPreparingRevision(true);
+          setMessage(`Editing revision ${existingBid.customerRecommendationVersion! + 1}. The current customer version remains unchanged until publication.`);
+        }} type="button">
+          Prepare recommendation revision
+        </button>
+      ) : null}
+
+      {isPreparingRevision ? (
+        <button className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700" onClick={() => {
+          setIsPreparingRevision(false);
+          revisionRetryKey.current = null;
+          setLines(initialLines(amendment, existingBid));
+          setCustomerMessage(existingBid?.customerMessage ?? '');
+          setMessage('Revision discarded. The published recommendation is unchanged.');
+        }} type="button">
+          Discard revision
+        </button>
+      ) : null}
+
+      {canIssueLink || isPreparingRevision ? (
         <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Approval delivery</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-[120px_1fr]">
@@ -260,8 +334,8 @@ export function ManagerProjectBidEditor({
             </select>
             <input className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs" onChange={(event) => setDeliveryRecipient(event.target.value)} placeholder={deliveryChannel === 'email' ? 'customer@example.com' : '+16025550123'} value={deliveryRecipient} />
           </div>
-          <button className="mt-2 w-full rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60" disabled={isSending || !bidDeliveryRecipientIsValid(deliveryChannel, deliveryRecipient)} onClick={sendBid} type="button">
-            {isSending ? 'Queueing delivery...' : existingBid?.shareRevokedAt ? 'Reissue link and queue delivery' : 'Issue link and queue delivery'}
+          <button className="mt-2 w-full rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60" disabled={isSending || !projectBidDraftIsValid(lines) || !bidDeliveryRecipientIsValid(deliveryChannel, deliveryRecipient)} onClick={isPreparingRevision ? publishRevision : sendBid} type="button">
+            {isSending ? 'Queueing delivery...' : isPreparingRevision ? 'Publish revision and queue delivery' : existingBid?.shareRevokedAt ? 'Reissue link and queue delivery' : 'Issue link and queue delivery'}
           </button>
         </div>
       ) : null}
@@ -274,7 +348,7 @@ export function ManagerProjectBidEditor({
           <p className="mt-2">{bidDeliveryStatusLabel(existingBid.deliveryStatus)}{existingBid.deliveryChannel && existingBid.deliveryRecipient ? ` via ${existingBid.deliveryChannel} to ${existingBid.deliveryRecipient}` : ''}</p>
           {existingBid.shareExpiresAt ? <p className="mt-1">Link expires {new Date(existingBid.shareExpiresAt).toLocaleString()}.</p> : null}
           {existingBid.status === 'sent' ? (
-            <button className="mt-2 rounded-full border border-rose-300 px-3 py-1.5 font-semibold text-rose-700 disabled:opacity-60" disabled={isRevoking} onClick={revokeBid} type="button">
+            <button className="mt-2 rounded-full border border-rose-300 px-3 py-1.5 font-semibold text-rose-700 disabled:opacity-60" disabled={isRevoking || isPreparingRevision} onClick={revokeBid} type="button">
               {isRevoking ? 'Revoking...' : 'Revoke customer link'}
             </button>
           ) : null}

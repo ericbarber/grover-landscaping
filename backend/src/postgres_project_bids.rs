@@ -1,5 +1,6 @@
 use crate::project_bids::{
-    ProjectBidLineItemResponse, ProjectBidResponse, ProjectBidSendResult, SendProjectBidRequest,
+    ProjectBidLineItemResponse, ProjectBidResponse, ProjectBidRevisionResult, ProjectBidSendResult,
+    ReviseProjectBidRequest, SendProjectBidRequest,
 };
 use serde_json::json;
 use sha2::{Digest, Sha256};
@@ -121,6 +122,7 @@ pub async fn save_draft(
         delivery_recipient: None,
         converted_job_id: None,
         converted_at: None,
+        customer_recommendation_version: None,
         persisted: true,
     }))
 }
@@ -153,6 +155,7 @@ pub async fn list_for_day_plan(
             delivery.recipient AS delivery_recipient,
             conversion.job_id AS converted_job_id,
             conversion.converted_at::text AS converted_at,
+            recommendation.current_version AS customer_recommendation_version,
             item.id AS item_id,
             item.service_id,
             item.service_name,
@@ -170,6 +173,8 @@ pub async fn list_for_day_plan(
             LIMIT 1
         ) delivery ON true
         LEFT JOIN project_bid_conversions conversion ON conversion.project_bid_id = bid.id
+        LEFT JOIN customer_visit_recommendation_series recommendation
+          ON recommendation.source_amendment_id = bid.source_amendment_id
         WHERE bid.day_plan_id = $1
         ORDER BY bid.updated_at DESC, bid.id, item.sort_order
         "#,
@@ -212,6 +217,9 @@ pub async fn list_for_day_plan(
                 delivery_recipient: row.get("delivery_recipient"),
                 converted_job_id: row.get("converted_job_id"),
                 converted_at: row.get("converted_at"),
+                customer_recommendation_version: row
+                    .get::<Option<i64>, _>("customer_recommendation_version")
+                    .map(|version| version as u64),
                 persisted: true,
             });
             index
@@ -262,6 +270,7 @@ pub async fn list_for_account(
             delivery.recipient AS delivery_recipient,
             conversion.job_id AS converted_job_id,
             conversion.converted_at::text AS converted_at,
+            recommendation.current_version AS customer_recommendation_version,
             item.id AS item_id,
             item.service_id,
             item.service_name,
@@ -281,6 +290,8 @@ pub async fn list_for_account(
             LIMIT 1
         ) delivery ON true
         LEFT JOIN project_bid_conversions conversion ON conversion.project_bid_id = bid.id
+        LEFT JOIN customer_visit_recommendation_series recommendation
+          ON recommendation.source_amendment_id = bid.source_amendment_id
         WHERE bid.customer_account_id = $1
           AND crew.organization_id = ANY($2)
           AND bid.status IN ('sent', 'approved', 'rejected', 'converted')
@@ -326,6 +337,9 @@ pub async fn list_for_account(
                 delivery_recipient: row.get("delivery_recipient"),
                 converted_job_id: row.get("converted_job_id"),
                 converted_at: row.get("converted_at"),
+                customer_recommendation_version: row
+                    .get::<Option<i64>, _>("customer_recommendation_version")
+                    .map(|version| version as u64),
                 persisted: true,
             });
             index
@@ -856,6 +870,354 @@ async fn publish_exact_customer_recommendation(
     Ok(CustomerRecommendationPublicationWrite::Published)
 }
 
+pub async fn revise(
+    pool: &PgPool,
+    day_plan_id: &str,
+    bid_id: &str,
+    actor_user_id: &str,
+    request: &ReviseProjectBidRequest,
+) -> Result<ProjectBidRevisionResult, sqlx::Error> {
+    let Some(next_version) = request.expected_proposal_version.checked_add(1) else {
+        return Ok(ProjectBidRevisionResult::Conflict);
+    };
+    let mut total_cents = 0_u64;
+    let line_items = request
+        .line_items
+        .iter()
+        .map(|item| {
+            total_cents += u64::from(item.quantity) * u64::from(item.unit_price_cents);
+            json!({
+                "service_name": item.service_name,
+                "service_description": item.service_description,
+                "quantity": item.quantity,
+                "unit_price_cents": item.unit_price_cents
+            })
+        })
+        .collect::<Vec<_>>();
+    let snapshot = json!({
+        "snapshot_version": 1,
+        "proposal_version": next_version,
+        "customer_safe_reason": request.customer_message,
+        "currency_code": "USD",
+        "line_items": line_items,
+        "total_cents": total_cents
+    });
+    let snapshot_sha256 = format!("{:x}", Sha256::digest(snapshot.to_string().as_bytes()));
+    let proposed_token = Uuid::new_v4().simple().to_string();
+    let notification_id = format!("notification_{}", Uuid::new_v4().simple());
+    let mut transaction = pool.begin().await?;
+
+    let existing_retry = sqlx::query(
+        "SELECT source_project_bid_id, proposal_version, snapshot_sha256
+         FROM customer_visit_recommendation_publications
+         WHERE published_by_user_id = $1 AND provider_idempotency_key = $2",
+    )
+    .bind(actor_user_id)
+    .bind(request.idempotency_key.trim())
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(existing_retry) = existing_retry {
+        let exact = existing_retry.get::<String, _>("source_project_bid_id") == bid_id
+            && existing_retry.get::<i64, _>("proposal_version") == next_version as i64
+            && existing_retry.get::<String, _>("snapshot_sha256") == snapshot_sha256;
+        transaction.rollback().await?;
+        if exact {
+            return Ok(list_for_day_plan(pool, day_plan_id)
+                .await?
+                .into_iter()
+                .find(|bid| bid.id == bid_id)
+                .map(ProjectBidRevisionResult::Revised)
+                .unwrap_or(ProjectBidRevisionResult::NotRevisable));
+        }
+        return Ok(ProjectBidRevisionResult::Conflict);
+    }
+
+    let current = sqlx::query(
+        r#"
+        SELECT
+            series.customer_recommendation_reference,
+            series.current_version,
+            series.lifecycle_status,
+            series.organization_id,
+            series.customer_account_id,
+            series.customer_property_id,
+            series.service_job_id,
+            series.day_plan_stop_id,
+            series.source_amendment_id,
+            publication.id AS publication_id,
+            publication.customer_snapshot AS current_customer_snapshot,
+            account.email_notifications_enabled,
+            account.sms_notifications_enabled,
+            account.contact_email,
+            account.contact_phone
+        FROM project_bids bid
+        JOIN customer_visit_recommendation_series series
+          ON series.source_amendment_id = bid.source_amendment_id
+         AND series.day_plan_id = bid.day_plan_id
+         AND series.customer_account_id = bid.customer_account_id
+        JOIN customer_visit_recommendation_publications publication
+          ON publication.customer_recommendation_reference =
+             series.customer_recommendation_reference
+         AND publication.proposal_version = series.current_version
+        JOIN customer_accounts account ON account.id = bid.customer_account_id
+        WHERE bid.id = $1
+          AND bid.day_plan_id = $2
+          AND bid.status = 'sent'
+          AND bid.responded_at IS NULL
+        FOR UPDATE OF bid, series
+        "#,
+    )
+    .bind(bid_id)
+    .bind(day_plan_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(current) = current else {
+        transaction.rollback().await?;
+        return Ok(ProjectBidRevisionResult::NotRevisable);
+    };
+    let preference_allowed = match request.channel.as_str() {
+        "email" => {
+            current.get::<bool, _>("email_notifications_enabled")
+                && current
+                    .get::<Option<String>, _>("contact_email")
+                    .is_some_and(|value| value.eq_ignore_ascii_case(request.recipient.trim()))
+        }
+        "sms" => {
+            current.get::<bool, _>("sms_notifications_enabled")
+                && current.get::<Option<String>, _>("contact_phone").as_deref()
+                    == Some(request.recipient.trim())
+        }
+        _ => false,
+    };
+    if !preference_allowed {
+        transaction.rollback().await?;
+        return Ok(ProjectBidRevisionResult::PreferenceBlocked);
+    }
+    if current.get::<i64, _>("current_version") != request.expected_proposal_version as i64
+        || !matches!(
+            current.get::<String, _>("lifecycle_status").as_str(),
+            "pending" | "revision_requested"
+        )
+    {
+        transaction.rollback().await?;
+        return Ok(ProjectBidRevisionResult::Conflict);
+    }
+    let mut comparable_current_snapshot =
+        current.get::<serde_json::Value, _>("current_customer_snapshot");
+    comparable_current_snapshot["proposal_version"] = json!(next_version);
+    if comparable_current_snapshot == snapshot {
+        transaction.rollback().await?;
+        return Ok(ProjectBidRevisionResult::Conflict);
+    }
+
+    let share_token = sqlx::query_scalar::<_, String>(
+        r#"
+        UPDATE project_bids
+        SET customer_message = $3,
+            share_token = CASE
+                WHEN share_token IS NULL OR share_revoked_at IS NOT NULL
+                  OR share_expires_at <= NOW() THEN $4
+                ELSE share_token
+            END,
+            share_expires_at = NOW() + INTERVAL '7 days',
+            share_revoked_at = NULL,
+            updated_at = NOW()
+        WHERE id = $1 AND day_plan_id = $2 AND status = 'sent'
+        RETURNING share_token
+        "#,
+    )
+    .bind(bid_id)
+    .bind(day_plan_id)
+    .bind(request.customer_message.as_deref())
+    .bind(proposed_token)
+    .fetch_one(&mut *transaction)
+    .await?;
+    sqlx::query("DELETE FROM project_bid_line_items WHERE project_bid_id = $1")
+        .bind(bid_id)
+        .execute(&mut *transaction)
+        .await?;
+    for (index, item) in request.line_items.iter().enumerate() {
+        sqlx::query(
+            r#"
+            INSERT INTO project_bid_line_items (
+                id, project_bid_id, service_id, service_name,
+                service_description, quantity, unit_price_cents, note, sort_order
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            "#,
+        )
+        .bind(format!(
+            "{bid_id}_revision_{next_version}_line_{}",
+            index + 1
+        ))
+        .bind(bid_id)
+        .bind(&item.service_id)
+        .bind(&item.service_name)
+        .bind(item.service_description.as_deref())
+        .bind(item.quantity as i32)
+        .bind(item.unit_price_cents as i32)
+        .bind(item.note.as_deref())
+        .bind((index + 1) as i32)
+        .execute(&mut *transaction)
+        .await?;
+    }
+
+    let customer_recommendation_reference =
+        current.get::<String, _>("customer_recommendation_reference");
+    let prior_publication_id = current.get::<String, _>("publication_id");
+    let publication_id = format!(
+        "customer_recommendation_publication_{}",
+        Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        r#"
+        INSERT INTO customer_visit_recommendation_publications (
+            id, customer_recommendation_reference, organization_id,
+            customer_account_id, customer_property_id, service_job_id,
+            day_plan_id, day_plan_stop_id, source_amendment_id,
+            source_project_bid_id, proposal_version, supersedes_publication_id,
+            customer_snapshot, snapshot_sha256, published_by_user_id,
+            provider_idempotency_key, expires_at
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+            $13, $14, $15, $16, NOW() + INTERVAL '7 days'
+        )
+        "#,
+    )
+    .bind(&publication_id)
+    .bind(&customer_recommendation_reference)
+    .bind(current.get::<String, _>("organization_id"))
+    .bind(current.get::<String, _>("customer_account_id"))
+    .bind(current.get::<String, _>("customer_property_id"))
+    .bind(current.get::<String, _>("service_job_id"))
+    .bind(day_plan_id)
+    .bind(current.get::<String, _>("day_plan_stop_id"))
+    .bind(current.get::<String, _>("source_amendment_id"))
+    .bind(bid_id)
+    .bind(next_version as i64)
+    .bind(&prior_publication_id)
+    .bind(&snapshot)
+    .bind(&snapshot_sha256)
+    .bind(actor_user_id)
+    .bind(request.idempotency_key.trim())
+    .execute(&mut *transaction)
+    .await?;
+    for (event_kind, event_publication_id, proposal_version) in [
+        (
+            "superseded",
+            prior_publication_id.as_str(),
+            request.expected_proposal_version,
+        ),
+        ("published", publication_id.as_str(), next_version),
+    ] {
+        sqlx::query(
+            r#"
+            INSERT INTO customer_visit_recommendation_events (
+                id, customer_recommendation_reference, publication_id,
+                proposal_version, actor_user_id, event_kind, idempotency_key
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            "#,
+        )
+        .bind(format!(
+            "customer_recommendation_event_{}",
+            Uuid::new_v4().simple()
+        ))
+        .bind(&customer_recommendation_reference)
+        .bind(event_publication_id)
+        .bind(proposal_version as i64)
+        .bind(actor_user_id)
+        .bind(event_kind)
+        .bind(derived_event_idempotency_key(
+            actor_user_id,
+            request.idempotency_key.trim(),
+            event_kind,
+        ))
+        .execute(&mut *transaction)
+        .await?;
+    }
+    sqlx::query(
+        "UPDATE customer_visit_recommendation_series
+         SET current_version = $2, lifecycle_status = 'pending', updated_at = NOW()
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(&customer_recommendation_reference)
+    .bind(next_version as i64)
+    .execute(&mut *transaction)
+    .await?;
+
+    sqlx::query(
+        "UPDATE notification_outbox
+         SET status = 'skipped',
+             last_error = 'Superseded by a revised customer recommendation',
+             updated_at = NOW()
+         WHERE entity_type = 'project_bid'
+           AND entity_id = $1
+           AND status IN ('queued', 'failed', 'sending')",
+    )
+    .bind(bid_id)
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query(
+        r#"
+        INSERT INTO notification_outbox (
+            id, organization_id, entity_type, entity_id, channel, recipient,
+            template_key, payload, available_at
+        )
+        SELECT
+            $1, $2, 'project_bid', $3, $4, $5, 'project_bid_review',
+            jsonb_build_object('bid_id', $3::text, 'share_url', $6::text),
+            CASE
+                WHEN account.quiet_hours_start IS NULL THEN NOW()
+                WHEN account.quiet_hours_start < account.quiet_hours_end
+                  AND (NOW() AT TIME ZONE organization.time_zone)::time
+                      >= account.quiet_hours_start
+                  AND (NOW() AT TIME ZONE organization.time_zone)::time
+                      < account.quiet_hours_end
+                  THEN ((NOW() AT TIME ZONE organization.time_zone)::date
+                        + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                WHEN account.quiet_hours_start > account.quiet_hours_end
+                  AND (NOW() AT TIME ZONE organization.time_zone)::time
+                      >= account.quiet_hours_start
+                  THEN ((NOW() AT TIME ZONE organization.time_zone)::date + 1
+                        + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                WHEN account.quiet_hours_start > account.quiet_hours_end
+                  AND (NOW() AT TIME ZONE organization.time_zone)::time
+                      < account.quiet_hours_end
+                  THEN ((NOW() AT TIME ZONE organization.time_zone)::date
+                        + account.quiet_hours_end) AT TIME ZONE organization.time_zone
+                ELSE NOW()
+            END
+        FROM customer_accounts account
+        JOIN organizations organization ON organization.id = $2
+        WHERE account.id = $7
+        "#,
+    )
+    .bind(notification_id)
+    .bind(current.get::<String, _>("organization_id"))
+    .bind(bid_id)
+    .bind(&request.channel)
+    .bind(request.recipient.trim())
+    .bind(shared_bid_url(&share_token))
+    .bind(current.get::<String, _>("customer_account_id"))
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+
+    Ok(list_for_day_plan(pool, day_plan_id)
+        .await?
+        .into_iter()
+        .find(|bid| bid.id == bid_id)
+        .map(ProjectBidRevisionResult::Revised)
+        .unwrap_or(ProjectBidRevisionResult::NotRevisable))
+}
+
+fn derived_event_idempotency_key(actor_user_id: &str, key: &str, event_kind: &str) -> String {
+    let digest = format!(
+        "{:x}",
+        Sha256::digest(format!("{actor_user_id}:{key}:{event_kind}").as_bytes())
+    );
+    format!("customer-recommendation-{event_kind}-{digest}")
+}
+
 pub async fn revoke(
     pool: &PgPool,
     day_plan_id: &str,
@@ -926,6 +1288,7 @@ pub async fn shared_for_token(
             bid.responded_at::text AS responded_at,
             bid.share_expires_at::text AS share_expires_at,
             bid.share_revoked_at::text AS share_revoked_at,
+            recommendation.current_version AS customer_recommendation_version,
             item.id AS item_id,
             item.service_id,
             item.service_name,
@@ -935,6 +1298,8 @@ pub async fn shared_for_token(
             item.note
         FROM project_bids bid
         JOIN project_bid_line_items item ON item.project_bid_id = bid.id
+        LEFT JOIN customer_visit_recommendation_series recommendation
+          ON recommendation.source_amendment_id = bid.source_amendment_id
         WHERE bid.share_token = $1
           AND bid.status IN ('sent', 'approved', 'rejected', 'converted')
           AND bid.share_expires_at > now()
@@ -969,6 +1334,9 @@ pub async fn shared_for_token(
         delivery_recipient: None,
         converted_job_id: None,
         converted_at: None,
+        customer_recommendation_version: first
+            .get::<Option<i64>, _>("customer_recommendation_version")
+            .map(|version| version as u64),
         persisted: true,
     };
 
@@ -1021,6 +1389,73 @@ pub async fn decide_shared(
         transaction.rollback().await?;
         return Ok(None);
     };
+
+    let active_recommendation = sqlx::query(
+        r#"
+        SELECT series.customer_recommendation_reference,
+               series.current_version,
+               series.lifecycle_status,
+               publication.id AS publication_id
+        FROM project_bids bid
+        JOIN customer_visit_recommendation_series series
+          ON series.source_amendment_id = bid.source_amendment_id
+         AND series.day_plan_id = bid.day_plan_id
+        JOIN customer_visit_recommendation_publications publication
+          ON publication.customer_recommendation_reference =
+             series.customer_recommendation_reference
+         AND publication.proposal_version = series.current_version
+        WHERE bid.id = $1
+        FOR UPDATE OF series
+        "#,
+    )
+    .bind(&bid_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    if let Some(active_recommendation) = active_recommendation {
+        if active_recommendation.get::<String, _>("lifecycle_status") == "pending" {
+            let customer_recommendation_reference =
+                active_recommendation.get::<String, _>("customer_recommendation_reference");
+            let proposal_version = active_recommendation.get::<i64, _>("current_version");
+            sqlx::query(
+                r#"
+                INSERT INTO customer_visit_recommendation_events (
+                    id, customer_recommendation_reference, publication_id,
+                    proposal_version, actor_user_id, event_kind,
+                    idempotency_key, event_data
+                ) VALUES (
+                    $1, $2, $3, $4, 'customer_shared_bid_link', 'withdrawn',
+                    $5, jsonb_build_object(
+                        'reason', 'legacy_bearer_decision',
+                        'legacy_decision', $6::text
+                    )
+                )
+                "#,
+            )
+            .bind(format!(
+                "customer_recommendation_event_{}",
+                Uuid::new_v4().simple()
+            ))
+            .bind(&customer_recommendation_reference)
+            .bind(active_recommendation.get::<String, _>("publication_id"))
+            .bind(proposal_version)
+            .bind(derived_event_idempotency_key(
+                "customer_shared_bid_link",
+                share_token,
+                decision,
+            ))
+            .bind(decision)
+            .execute(&mut *transaction)
+            .await?;
+            sqlx::query(
+                "UPDATE customer_visit_recommendation_series
+                 SET lifecycle_status = 'withdrawn', updated_at = NOW()
+                 WHERE customer_recommendation_reference = $1",
+            )
+            .bind(customer_recommendation_reference)
+            .execute(&mut *transaction)
+            .await?;
+        }
+    }
 
     insert_project_bid_audit_event(
         &mut transaction,

@@ -197,9 +197,11 @@ use notifications::{
 use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig};
 use project_bids::{
     customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
-    validate_send_project_bid_request, CreateProjectBidRequest, ProjectBidDecisionRequest,
-    ProjectBidDraftResult, ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository,
-    ProjectBidSendResult, SendProjectBidRequest, SharedProjectBidReadResult,
+    validate_revise_project_bid_request, validate_send_project_bid_request,
+    CreateProjectBidRequest, ProjectBidDecisionRequest, ProjectBidDraftResult,
+    ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository, ProjectBidRevisionResult,
+    ProjectBidSendResult, ReviseProjectBidRequest, SendProjectBidRequest,
+    SharedProjectBidReadResult,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
@@ -1280,6 +1282,10 @@ fn app_with_runtime(
         .route(
             "/day-plans/{day_plan_id}/bids/{bid_id}/send",
             post(send_project_bid),
+        )
+        .route(
+            "/day-plans/{day_plan_id}/bids/{bid_id}/revise",
+            post(revise_project_bid),
         )
         .route(
             "/day-plans/{day_plan_id}/bids/{bid_id}/revoke",
@@ -9361,6 +9367,67 @@ async fn send_project_bid(
     }
 }
 
+async fn revise_project_bid(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((day_plan_id, bid_id)): Path<(String, String)>,
+    Json(request): Json<ReviseProjectBidRequest>,
+) -> Response {
+    if let Err(message) = validate_revise_project_bid_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "invalid_project_bid_revision",
+                message,
+            }),
+        )
+            .into_response();
+    }
+    if let Err(response) =
+        require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
+            .await
+    {
+        return response;
+    }
+
+    match state
+        .project_bids
+        .revise(&day_plan_id, &bid_id, &principal.subject, &request)
+        .await
+    {
+        ProjectBidRevisionResult::Revised(bid) => Json(bid).into_response(),
+        ProjectBidRevisionResult::PreferenceBlocked => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "project_bid_notification_preference_blocked",
+                message: "The selected channel or recipient is not enabled in this customer's account preferences.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidRevisionResult::NotRevisable => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "project_bid_not_revisable",
+                message: "Only an unanswered exact customer recommendation can be revised."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidRevisionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_recommendation_revision_conflict",
+                message: "The customer recommendation version or retry identity changed. Reload before revising again.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidRevisionResult::Unavailable => persisted_resource_unavailable_response(
+            "project_bid_revision_unavailable",
+            "The revised customer recommendation could not be persisted.",
+        ),
+    }
+}
+
 async fn revoke_project_bid(
     State(state): State<Arc<AppState>>,
     Extension(principal): Extension<AuthPrincipal>,
@@ -14469,6 +14536,68 @@ mod tests {
                     .uri("/day-plans/day_plan_2026_06_15_crew_1001/bids/bid_1001/send")
                     .header("content-type", "application/json")
                     .body(Body::from(request_body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn revise_project_bid_requires_persistence() {
+        let app = seed_app();
+        let body = serde_json::json!({
+            "expected_proposal_version": 1,
+            "customer_message": "Revised scope",
+            "line_items": [{
+                "service_id": "service_1",
+                "service_name": "Revised repair",
+                "quantity": 1,
+                "unit_price_cents": 9000
+            }],
+            "channel": "email",
+            "recipient": "customer@example.com",
+            "idempotency_key": "project-bid-revision-outage-001"
+        });
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_15_crew_1001/bids/bid_1001/revise")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[tokio::test]
+    async fn revise_project_bid_rejects_a_missing_expected_version() {
+        let app = seed_app();
+        let body = serde_json::json!({
+            "expected_proposal_version": 0,
+            "customer_message": "Revised scope",
+            "line_items": [{
+                "service_id": "service_1",
+                "service_name": "Revised repair",
+                "quantity": 1,
+                "unit_price_cents": 9000
+            }],
+            "channel": "email",
+            "recipient": "customer@example.com",
+            "idempotency_key": "project-bid-revision-invalid-001"
+        });
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/day-plans/day_plan_2026_06_15_crew_1001/bids/bid_1001/revise")
+                    .header("content-type", "application/json")
+                    .body(Body::from(body.to_string()))
                     .unwrap(),
             )
             .await

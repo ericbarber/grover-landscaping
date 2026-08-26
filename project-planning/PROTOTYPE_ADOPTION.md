@@ -58,9 +58,10 @@ user value, and dependency safety:
    delivery, exact-visit authenticated proof read, and responsive Yard Owner
    proof experience are delivered. D-062's active-recommendation source and
    decision audit, legacy account-route containment, and immutable publication/
-   version/decision persistence and exact initial provider-send bridge are
-   delivered; revision publication and bearer-decision reconciliation are next
-   while concern recovery remains separately gated.
+   version/decision persistence, exact initial provider-send bridge, immutable
+   revision publication, and legacy bearer-decision closure are delivered;
+   minimized hybrid customer reads and decisions are next while concern
+   recovery remains separately gated.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -79,9 +80,9 @@ adoption are delivered. D-061's proof/recommendation source audit and immediate
 containment, atomic immutable snapshot delivery, exact-visit authenticated proof
 read, and Yard Owner proof experience are delivered. D-062's active-
 recommendation audit, containment, and immutable publication/version/decision
-persistence and exact initial provider-send bridge are delivered; revision and
-bearer-decision reconciliation are next while concern recovery remains
-separately gated. Repository
+persistence, exact initial provider-send bridge, immutable revision, and legacy
+bearer-decision closure are delivered; minimized hybrid customer reads and
+decisions are next while concern recovery remains separately gated. Repository
 maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete

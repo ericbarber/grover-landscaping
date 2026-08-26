@@ -54,6 +54,7 @@ pub struct ProjectBidResponse {
     pub delivery_recipient: Option<String>,
     pub converted_job_id: Option<String>,
     pub converted_at: Option<String>,
+    pub customer_recommendation_version: Option<u64>,
     pub persisted: bool,
 }
 
@@ -97,6 +98,25 @@ pub enum ProjectBidSendResult {
     NotSendable,
     PreferenceBlocked,
     PublicationConflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct ReviseProjectBidRequest {
+    pub expected_proposal_version: u64,
+    pub customer_message: Option<String>,
+    pub line_items: Vec<CreateProjectBidLineItemRequest>,
+    pub channel: String,
+    pub recipient: String,
+    pub idempotency_key: String,
+}
+
+#[derive(Clone, Debug)]
+pub enum ProjectBidRevisionResult {
+    Revised(ProjectBidResponse),
+    NotRevisable,
+    PreferenceBlocked,
+    Conflict,
     Unavailable,
 }
 
@@ -235,6 +255,21 @@ impl ProjectBidRepository {
         }
     }
 
+    pub async fn revise(
+        &self,
+        day_plan_id: &str,
+        bid_id: &str,
+        actor_user_id: &str,
+        request: &ReviseProjectBidRequest,
+    ) -> ProjectBidRevisionResult {
+        let Some(pool) = self.pool.as_ref() else {
+            return ProjectBidRevisionResult::Unavailable;
+        };
+        postgres_project_bids::revise(pool, day_plan_id, bid_id, actor_user_id, request)
+            .await
+            .unwrap_or(ProjectBidRevisionResult::Unavailable)
+    }
+
     pub async fn convert_to_job_add_ons(
         &self,
         day_plan_id: &str,
@@ -328,6 +363,24 @@ pub fn validate_send_project_bid_request(request: &SendProjectBidRequest) -> Res
         return Err("idempotency_key must contain 8 to 128 characters".to_string());
     }
     Ok(())
+}
+
+pub fn validate_revise_project_bid_request(
+    request: &ReviseProjectBidRequest,
+) -> Result<(), String> {
+    if request.expected_proposal_version == 0
+        || request.expected_proposal_version >= i64::MAX as u64
+    {
+        return Err("expected_proposal_version must be a supported positive version".to_string());
+    }
+    validate_notification_recipient(&request.channel, &request.recipient)?;
+    if !(8..=128).contains(&request.idempotency_key.trim().chars().count()) {
+        return Err("idempotency_key must contain 8 to 128 characters".to_string());
+    }
+    validate_project_bid_request(&CreateProjectBidRequest {
+        customer_message: request.customer_message.clone(),
+        line_items: request.line_items.clone(),
+    })
 }
 
 pub fn validate_project_bid_request(request: &CreateProjectBidRequest) -> Result<(), String> {
@@ -425,6 +478,7 @@ fn local_project_bid_response(
         delivery_recipient: None,
         converted_job_id: None,
         converted_at: None,
+        customer_recommendation_version: None,
         persisted: false,
     }
 }
@@ -440,8 +494,9 @@ fn project_bid_total_cents(line_items: &[ProjectBidLineItemResponse]) -> u64 {
 mod tests {
     use super::{
         customer_project_bid_response, local_project_bid_response, validate_project_bid_decision,
-        validate_project_bid_request, validate_send_project_bid_request,
-        CreateProjectBidLineItemRequest, CreateProjectBidRequest, ProjectBidDecisionRequest,
+        validate_project_bid_request, validate_revise_project_bid_request,
+        validate_send_project_bid_request, CreateProjectBidLineItemRequest,
+        CreateProjectBidRequest, ProjectBidDecisionRequest, ReviseProjectBidRequest,
         SendProjectBidRequest,
     };
 
@@ -528,5 +583,22 @@ mod tests {
             idempotency_key: "bid-send-invalid-001".to_string(),
         })
         .is_err());
+    }
+
+    #[test]
+    fn bid_revision_requires_a_current_version_and_valid_scope() {
+        let source = valid_request();
+        let mut request = ReviseProjectBidRequest {
+            expected_proposal_version: 1,
+            customer_message: source.customer_message,
+            line_items: source.line_items,
+            channel: "email".to_string(),
+            recipient: "customer@example.com".to_string(),
+            idempotency_key: "bid-revision-email-001".to_string(),
+        };
+        assert!(validate_revise_project_bid_request(&request).is_ok());
+
+        request.expected_proposal_version = 0;
+        assert!(validate_revise_project_bid_request(&request).is_err());
     }
 }

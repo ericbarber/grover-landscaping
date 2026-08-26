@@ -3,8 +3,9 @@
 Status: Source, authorization, versioning, and decision audit completed on
 2026-08-26. Decision D-062 adopts an immutable exact-visit recommendation
 publication around the existing project-bid authoring source. The constrained
-persistence foundation and initial atomic provider-send bridge are delivered;
-provider revision publication is next, followed by authenticated customer APIs.
+persistence foundation, atomic provider-send bridge, immutable provider
+revision publication, and legacy bearer-decision reconciliation are delivered;
+authenticated customer APIs are next.
 
 ## Audit outcome
 
@@ -116,7 +117,7 @@ API are delivered.
 1. Add constrained publication-series, immutable-version, decision, message,
    and lifecycle persistence plus database guards. **Delivered.**
 2. Publish only exact-provenance recommendation versions atomically from the
-   provider send/revision workflow. **Initial send delivered; revision next.**
+   provider send/revision workflow. **Delivered.**
 3. Add minimized hybrid-authorized exact-visit list/detail and actor-scoped
    decision APIs with replay/conflict tests.
 4. Adopt pending/history/decision/recovery states in Yard Owner without public
@@ -138,8 +139,24 @@ notification. Changed-key reuse after publication returns a conflict. Bids that
 cannot prove the complete D-062 chain retain only the legacy provider/public-link
 workflow and create no signed-in recommendation publication.
 
-This bridge adds no customer read or decision authority. Before Yard Owner
-adoption, provider revision publication must supersede the prior version
-atomically, and the authenticated API design must explicitly reconcile or close
-parallel legacy bearer-link decisions so signed-in lifecycle state cannot become
-stale.
+This bridge adds no customer read or decision authority.
+
+## Delivered revision and transitional decision reconciliation
+
+An authorized provider can prepare a revision only for an unanswered exact
+recommendation. The write requires the displayed current proposal version, the
+complete revised customer-safe scope, an enabled delivery destination, and an
+actor retry key. One transaction updates the provider authoring bid, inserts the
+next minimized immutable snapshot, records exact prior-version supersession and
+new-version publication events, advances the series to pending, refreshes the
+bounded public link, and queues quiet-hours-aware delivery. Exact retry returns
+the authoritative version without duplicate publication or notification;
+changed retry content and stale expected versions conflict.
+
+The public bearer link remains a temporary compatibility channel. If it answers
+an exact D-062-backed bid, the same transaction records the legacy bid outcome
+and closes the signed-in recommendation surface as `withdrawn`, with an event
+that identifies `legacy_bearer_decision` and the legacy action. It does not
+create a D-062 customer decision, affirmation, or authenticated actor claim.
+This prevents a signed-in pending state from drifting after a bearer answer
+while preserving an honest distinction between the two authorization models.

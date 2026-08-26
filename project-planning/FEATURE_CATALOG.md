@@ -148,6 +148,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   visit/job/amendment/provider provenance, minimized hash-addressed USD snapshot,
   atomic publication/event/link/notification state, actor retry identity, exact
   replay without duplicates, conflict recovery, and no customer API authority
+- D-062 immutable provider revision bridge with expected-version and actor-key
+  conflict control, prior-publication supersession, minimized next-version
+  snapshots, atomic quiet-hours-aware redelivery, and transitional legacy
+  bearer decisions that close the signed-in surface without impersonating an
+  authenticated customer decision
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

@@ -37,6 +37,7 @@ export interface ApiProjectBid {
   delivery_recipient?: string | null;
   converted_job_id?: string | null;
   converted_at?: string | null;
+  customer_recommendation_version?: number | null;
   persisted: boolean;
 }
 
@@ -103,6 +104,7 @@ export function toProjectBid(bid: ApiProjectBid): ProjectBid {
     deliveryRecipient: bid.delivery_recipient ?? undefined,
     convertedJobId: bid.converted_job_id ?? undefined,
     convertedAt: bid.converted_at ?? undefined,
+    customerRecommendationVersion: bid.customer_recommendation_version ?? undefined,
     persisted: bid.persisted,
   };
 }
@@ -204,6 +206,60 @@ export function projectBidSendRequestBody(
   idempotencyKey: string,
 ) {
   return {
+    channel,
+    recipient,
+    idempotency_key: idempotencyKey,
+  };
+}
+
+export async function reviseProjectBid(
+  dayPlanId: string,
+  bidId: string,
+  expectedProposalVersion: number,
+  input: SaveProjectBidInput,
+  channel: 'email' | 'sms',
+  recipient: string,
+  idempotencyKey: string,
+): Promise<ProjectBid> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/day-plans/${dayPlanId}/bids/${bidId}/revise`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(projectBidRevisionRequestBody(
+        expectedProposalVersion,
+        input,
+        channel,
+        recipient,
+        idempotencyKey,
+      )),
+    },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, `Revise project bid failed with status ${response.status}`);
+  }
+
+  return toProjectBid((await response.json()) as ApiProjectBid);
+}
+
+export function projectBidRevisionRequestBody(
+  expectedProposalVersion: number,
+  input: SaveProjectBidInput,
+  channel: 'email' | 'sms',
+  recipient: string,
+  idempotencyKey: string,
+) {
+  return {
+    expected_proposal_version: expectedProposalVersion,
+    customer_message: input.customerMessage,
+    line_items: input.lineItems.map((item) => ({
+      service_id: item.serviceId,
+      service_name: item.serviceName,
+      service_description: item.serviceDescription,
+      quantity: item.quantity,
+      unit_price_cents: item.unitPriceCents,
+      note: item.note,
+    })),
     channel,
     recipient,
     idempotency_key: idempotencyKey,

@@ -548,5 +548,15 @@ all match. Its safe snapshot is derived from customer message plus public line-
 item names/descriptions/quantities/prices and a USD total; internal source IDs,
 notes, recipient/delivery data, and the bearer token are excluded. Exact actor-
 key replay rolls back the resend and creates neither another publication nor
-another notification. This bridge does not itself grant customer read/decision
-authority or implement revision publication.
+another notification.
+
+Provider revision writes require the expected current version and replace only
+the mutable provider authoring rows while preserving every prior customer
+publication. The same transaction inserts the next minimized snapshot, links
+it to the exact prior publication, records `superseded` and `published` events,
+advances the series to pending, refreshes bounded link delivery, and queues a
+quiet-hours-aware notification. Transitional bearer-link decisions update the
+legacy bid and close a pending signed-in series as `withdrawn`; their event data
+records the compatibility reason/action, but no D-062 customer decision or
+affirmation is inserted. These bridges do not themselves grant customer read or
+decision authority.
