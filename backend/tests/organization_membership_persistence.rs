@@ -262,6 +262,11 @@ async fn repository_bootstraps_first_owner_once() {
                 time_zone: "America/Phoenix".to_string(),
                 service_area_label: Some("East Valley".to_string()),
                 default_daily_stop_capacity: 16,
+                supported_service_categories: vec![
+                    "routine_maintenance".to_string(),
+                    "irrigation_checks".to_string(),
+                ],
+                supported_languages: vec!["en".to_string(), "es".to_string()],
             },
         )
         .await
@@ -285,6 +290,11 @@ async fn repository_bootstraps_first_owner_once() {
         Some("East Valley")
     );
     assert_eq!(updated_profile.default_daily_stop_capacity, 16);
+    assert_eq!(
+        updated_profile.supported_service_categories,
+        ["routine_maintenance", "irrigation_checks"]
+    );
+    assert_eq!(updated_profile.supported_languages, ["en", "es"]);
 
     let setup_progress = found(
         organizations
@@ -473,7 +483,7 @@ async fn repository_bootstraps_first_owner_once() {
                 .await,
             "organization profile should be available",
         ),
-        updated_profile
+        *updated_profile
     );
 
     let duplicate = organizations

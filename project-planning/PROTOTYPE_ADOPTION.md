@@ -27,7 +27,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Completion proof and communication | [Reports wireframe](../design/wireframes/manager/04-reports.svg) and [shared proof wireframe](../design/wireframes/public/04-shared-customer-proof.svg) | Adopted core | Manager Reports opens the exact Job Report workflow. Shared proof uses a narrowed customer-safe API projection for immutable evidence and completed approved-recommendation outcomes. Shared proposals retain customer-safe scope/pricing, explicit decisions, recorded outcomes, and closed-link recovery. Regress as proof, delivery, and recommendation contracts evolve. |
 | Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, proposals, collaboration, activation, and separate first-visit confirmation are delivered. Next: relationship continuity; curated discovery remains later and governed. |
 | Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · shell/Home locally adopted | Home, Visits, Proof, and Account plus property context, local-review visit summaries, delivered proof, and recommendation history are adopted. Next persist customer visit reads, then service-day states, concern recovery, recommendation collaboration, and preferences. Billing remains product-gated. |
-| Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md), [handoff](../design/review/yard-crew-acquisition-handoff.md), and [entry/readiness contract](../docs/provider-entry-routing.md) | Public entry/readiness/known-owner core adopted | First-time recipient confirmation through first-visit preparation is connected under a stable six-stage lifecycle navigator. Next close safe operating-preparation gaps. Curated opportunities and alerts remain gated. |
+| Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md), [handoff](../design/review/yard-crew-acquisition-handoff.md), [entry/readiness contract](../docs/provider-entry-routing.md), and [operating-profile contract](../docs/provider-operating-profile.md) | Known-owner and safe preparation core adopted | Public routing, precise readiness, service/language operating facts, and first-time recipient confirmation through first-visit preparation are connected under a stable six-stage lifecycle. Provider availability/pause, credential checking, curated opportunities, and alerts remain gated. |
 | Property-manager portfolios | [Connected working design](../design/prototypes/property-manager-portfolio/README.md) and [production handoff](../design/review/property-manager-portfolio-handoff.md) | Adopted core | PropertyManager receives Overview, Properties, Proof, and Approvals with scoped grouping/search, local-review readiness, protected proof and bids, partial-source isolation, and customer-safe provider accountability. Replace illustrative readiness only after authorized persisted customer visit reads exist. |
 | Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) and [production handoff](../docs/team-organization-production-handoff.md) | Adopted core | The Organization Owner enters a live Team and access command center with partial-read isolation; direct member, invitation, crew, hierarchy-recovery, and audit paths; self-impact and last-owner safety; unavailable-versus-empty distinction; keyboard focus transfer; responsive regression; and a production map. Continue regression as authorization and hierarchy contracts evolve. |
 | Revenue operations | [Revenue wireframe](../design/wireframes/revenue/01-revenue-operations.svg) | Product-gated | Keep current bid and billing-readiness foundations visible as delivered; do not imply invoices, payments, taxes, or accounting integration until ownership and compliance contracts are approved. |
@@ -49,11 +49,16 @@ user value, and dependency safety:
 5. Property-manager command-center core is adopted. Yard Owner persisted visit
    reads remain paused on the customer-account versus per-property authorization
    decision.
-6. **Active:** close safe Yard Crew operating-preparation gaps after lifecycle
-   orientation adoption; do not promote curated opportunity discovery past its
-   gates.
+6. Yard Crew safe operating preparation is adopted through service categories
+   and customer communication languages. Provider availability/pause,
+   credential checking, curated discovery, and alerts await their explicit
+   product/operations contracts.
 7. Team/organization core convergence is adopted. Run the cross-application
    critical journeys after the remaining customer and completion boundaries close.
+
+All currently approved, repository-owned prototype-adoption slices are adopted.
+The queue resumes when one of the boundaries below receives the required
+decision or evidence; repository maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff

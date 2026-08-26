@@ -67,6 +67,9 @@ not currently depend on React Router.
   and Approvals; scoped property search; readiness and exception summaries;
   partial-source isolation; customer-safe provider identity; and explicit
   provenance for illustrative next-service data
+- Company setup operating profile with persisted provider-supplied service
+  categories and customer communication languages, precise readiness states,
+  and no implied eligibility, ranking, availability, or credential verification
 - Manager scheduling, dispatch, reports, recovery queues, customer onboarding,
   privacy operations, team/organization controls, marketing leads, and conversion
   reporting

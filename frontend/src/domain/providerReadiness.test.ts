@@ -11,6 +11,8 @@ describe('provider readiness', () => {
       timeZone: 'America/Phoenix',
       serviceAreaLabel: 'Phoenix metro',
       defaultDailyStopCapacity: 12,
+      supportedServiceCategories: ['routine_maintenance'],
+      supportedLanguages: ['en', 'es'],
       setupProgress: {
         organizationId: 'org_1', organizationProfileComplete: false,
         teamInvitationCreated: false, crewConfigured: true, firstRoutePublished: false,
@@ -24,6 +26,8 @@ describe('provider readiness', () => {
     expect(facts.find(({ id }) => id === 'crew')?.state).toBe('operational');
     expect(facts.find(({ id }) => id === 'credentials')?.state).toBe('not_collected');
     expect(facts.find(({ id }) => id === 'eligibility')?.state).toBe('not_evaluated');
-    expect(providerSuppliedFactProgress(facts)).toEqual({ completed: 5, total: 6 });
+    expect(facts.find(({ id }) => id === 'services')?.state).toBe('supplied');
+    expect(facts.find(({ id }) => id === 'languages')?.detail).toContain('Spanish');
+    expect(providerSuppliedFactProgress(facts)).toEqual({ completed: 7, total: 8 });
   });
 });

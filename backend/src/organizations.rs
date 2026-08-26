@@ -28,7 +28,7 @@ pub enum OrganizationResourceResult<T> {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OrganizationProfileUpdateResult {
-    Updated(OrganizationProfile),
+    Updated(Box<OrganizationProfile>),
     NotFound,
     Invalid,
     Unavailable,
@@ -91,6 +91,8 @@ pub struct OrganizationProfile {
     pub time_zone: String,
     pub service_area_label: Option<String>,
     pub default_daily_stop_capacity: i32,
+    pub supported_service_categories: Vec<String>,
+    pub supported_languages: Vec<String>,
     pub status: String,
     pub persisted: bool,
 }
@@ -117,6 +119,10 @@ pub struct UpdateOrganizationProfileRequest {
     pub time_zone: String,
     pub service_area_label: Option<String>,
     pub default_daily_stop_capacity: i32,
+    #[serde(default)]
+    pub supported_service_categories: Vec<String>,
+    #[serde(default)]
+    pub supported_languages: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -573,7 +579,7 @@ impl OrganizationRepository {
             return match update_organization_profile(pool, organization_id, actor_user_id, &request)
                 .await
             {
-                Ok(Some(profile)) => OrganizationProfileUpdateResult::Updated(profile),
+                Ok(Some(profile)) => OrganizationProfileUpdateResult::Updated(Box::new(profile)),
                 Ok(None) => OrganizationProfileUpdateResult::NotFound,
                 Err(error) => {
                     tracing::error!(%error, organization_id, "persisted organization profile update failed");
@@ -585,8 +591,17 @@ impl OrganizationRepository {
             .map(|profile| OrganizationProfile {
                 display_name: request.display_name,
                 organization_type: request.organization_type,
+                contact_email: request.contact_email,
+                contact_phone: request.contact_phone,
+                website_url: request.website_url,
+                time_zone: request.time_zone,
+                service_area_label: request.service_area_label,
+                default_daily_stop_capacity: request.default_daily_stop_capacity,
+                supported_service_categories: request.supported_service_categories,
+                supported_languages: request.supported_languages,
                 ..profile
             })
+            .map(Box::new)
             .map(OrganizationProfileUpdateResult::Updated)
             .unwrap_or(OrganizationProfileUpdateResult::NotFound)
     }
@@ -922,7 +937,40 @@ pub fn validate_update_organization_profile_request(
     if !(1..=100).contains(&request.default_daily_stop_capacity) {
         return Err("default_daily_stop_capacity_invalid");
     }
+    if request.supported_service_categories.len() > 8
+        || request.supported_service_categories.iter().any(|category| {
+            !matches!(
+                category.as_str(),
+                "routine_maintenance"
+                    | "seasonal_cleanup"
+                    | "turf_care"
+                    | "shrub_care"
+                    | "irrigation_checks"
+                    | "desert_landscape_care"
+            )
+        })
+        || unique_values(&request.supported_service_categories)
+            != request.supported_service_categories.len()
+    {
+        return Err("supported_service_categories_invalid");
+    }
+    if request.supported_languages.len() > 5
+        || request
+            .supported_languages
+            .iter()
+            .any(|language| !matches!(language.as_str(), "en" | "es"))
+        || unique_values(&request.supported_languages) != request.supported_languages.len()
+    {
+        return Err("supported_languages_invalid");
+    }
     Ok(())
+}
+
+fn unique_values(values: &[String]) -> usize {
+    values
+        .iter()
+        .collect::<std::collections::HashSet<_>>()
+        .len()
 }
 
 fn normalize_update_organization_profile_request(
@@ -938,6 +986,8 @@ fn normalize_update_organization_profile_request(
         time_zone: request.time_zone.trim().to_string(),
         service_area_label: normalize_optional_profile_value(request.service_area_label),
         default_daily_stop_capacity: request.default_daily_stop_capacity,
+        supported_service_categories: request.supported_service_categories,
+        supported_languages: request.supported_languages,
     }
 }
 
@@ -1061,7 +1111,7 @@ async fn organization_profile(
     organization_id: &str,
 ) -> Result<Option<OrganizationProfile>, sqlx::Error> {
     let row = sqlx::query(
-        "SELECT id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, status FROM organizations WHERE id = $1",
+        "SELECT id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, supported_service_categories, supported_languages, status FROM organizations WHERE id = $1",
     )
     .bind(organization_id)
     .fetch_optional(pool)
@@ -1153,10 +1203,12 @@ async fn update_organization_profile(
             time_zone = $7,
             service_area_label = $8,
             default_daily_stop_capacity = $9,
+            supported_service_categories = $10,
+            supported_languages = $11,
             updated_at = NOW()
         WHERE id = $1
           AND status = 'active'
-        RETURNING id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, status
+        RETURNING id, display_name, organization_type, contact_email, contact_phone, website_url, time_zone, service_area_label, default_daily_stop_capacity, supported_service_categories, supported_languages, status
         "#,
     )
     .bind(organization_id)
@@ -1168,6 +1220,8 @@ async fn update_organization_profile(
     .bind(&request.time_zone)
     .bind(&request.service_area_label)
     .bind(request.default_daily_stop_capacity)
+    .bind(&request.supported_service_categories)
+    .bind(&request.supported_languages)
     .fetch_optional(&mut *transaction)
     .await?;
     if row.is_some() {
@@ -2586,6 +2640,8 @@ fn organization_profile_from_row(row: sqlx::postgres::PgRow) -> OrganizationProf
         time_zone: row.get("time_zone"),
         service_area_label: row.get("service_area_label"),
         default_daily_stop_capacity: row.get("default_daily_stop_capacity"),
+        supported_service_categories: row.get("supported_service_categories"),
+        supported_languages: row.get("supported_languages"),
         status: row.get("status"),
         persisted: true,
     }
@@ -2602,6 +2658,11 @@ fn local_organization_profile(organization_id: &str) -> Option<OrganizationProfi
         time_zone: "America/Phoenix".to_string(),
         service_area_label: Some("Phoenix metro".to_string()),
         default_daily_stop_capacity: 12,
+        supported_service_categories: vec![
+            "routine_maintenance".to_string(),
+            "seasonal_cleanup".to_string(),
+        ],
+        supported_languages: vec!["en".to_string(), "es".to_string()],
         status: "active".to_string(),
         persisted: false,
     })
@@ -2852,8 +2913,43 @@ mod tests {
                 time_zone: "America/Phoenix".to_string(),
                 service_area_label: Some("Phoenix metro".to_string()),
                 default_daily_stop_capacity: 12,
+                supported_service_categories: vec!["routine_maintenance".to_string()],
+                supported_languages: vec!["en".to_string()],
             }),
             Ok(())
+        );
+        assert_eq!(
+            validate_update_organization_profile_request(&UpdateOrganizationProfileRequest {
+                display_name: "Updated Landscaping".to_string(),
+                organization_type: "yard_care_company".to_string(),
+                contact_email: None,
+                contact_phone: None,
+                website_url: None,
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: None,
+                default_daily_stop_capacity: 12,
+                supported_service_categories: vec![
+                    "routine_maintenance".to_string(),
+                    "routine_maintenance".to_string(),
+                ],
+                supported_languages: vec!["en".to_string()],
+            }),
+            Err("supported_service_categories_invalid")
+        );
+        assert_eq!(
+            validate_update_organization_profile_request(&UpdateOrganizationProfileRequest {
+                display_name: "Updated Landscaping".to_string(),
+                organization_type: "yard_care_company".to_string(),
+                contact_email: None,
+                contact_phone: None,
+                website_url: None,
+                time_zone: "America/Phoenix".to_string(),
+                service_area_label: None,
+                default_daily_stop_capacity: 12,
+                supported_service_categories: vec!["routine_maintenance".to_string()],
+                supported_languages: vec!["fr".to_string()],
+            }),
+            Err("supported_languages_invalid")
         );
     }
 

@@ -111,6 +111,8 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
                     time_zone: "America/Phoenix".to_string(),
                     service_area_label: Some("Phoenix".to_string()),
                     default_daily_stop_capacity: 12,
+                    supported_service_categories: Vec::new(),
+                    supported_languages: Vec::new(),
                 },
             )
             .await,

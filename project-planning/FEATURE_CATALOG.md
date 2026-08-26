@@ -57,6 +57,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   profile and setup-progress reads, with distinct provider-supplied, recorded
   preference, operational setup, missing, not-collected credential, and not-
   evaluated marketplace states instead of a broad verified-provider badge
+- Persisted provider operating-profile facts for allowlisted service categories
+  and customer communication languages, rendered as provider-supplied readiness
+  without implying capability proof, eligibility, ranking, availability, or
+  credential verification
 - Production first-time known-owner provider connection with verified-recipient
   confirmation, own-membership organization selection, duplicate-safe new-
   organization bootstrap, explicit withheld-data acknowledgement, resumable

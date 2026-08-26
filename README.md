@@ -112,7 +112,8 @@ Start with these records when reviewing or continuing development:
 - Public provider fit routing with owner-operator, company-owner, team-invitation,
   and known-owner paths plus an authority-safe authenticated setup handoff
 - Provider identity/readiness projection separating supplied profile facts,
-  recorded operating preferences, crew setup, missing information, uncollected
+  including service categories and customer communication languages, recorded
+  operating preferences, crew setup, missing information, uncollected
   credentials, and unevaluated marketplace eligibility
 - Resumable known-owner provider connection from recipient confirmation through
   organization selection/bootstrap and bounded pre-disclosure response
@@ -458,11 +459,13 @@ The application is responsive across owner, provider, crew, manager, administrat
   change, or explicitly confirming the exact version without creating route or
   crew work
 
-The next repository-owned adoption slice converges the shared authenticated
-shell's icons, density, status primitives, and tablet navigation. The delivered
-proposal and first-visit conversations remain separate from assessment messages
-and operational mobilization. See the
-[prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md).
+The repository-owned prototype-adoption core is now implemented through the
+Yard Crew operating profile. The next production slices depend on explicit
+authorization or product/operations decisions: customer-account versus per-
+property Yard Owner access, curated-opportunity availability and governance,
+and governed credential evidence. See the
+[prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) and
+[provider operating-profile contract](docs/provider-operating-profile.md).
 
 ## Production Deployment
 

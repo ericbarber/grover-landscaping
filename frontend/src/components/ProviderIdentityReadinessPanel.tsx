@@ -24,6 +24,8 @@ export function ProviderIdentityReadinessPanel({
   serviceAreaLabel,
   defaultDailyStopCapacity,
   setupProgress,
+  supportedServiceCategories,
+  supportedLanguages,
   onEditProfile,
 }: {
   displayName: string;
@@ -34,11 +36,14 @@ export function ProviderIdentityReadinessPanel({
   serviceAreaLabel: string;
   defaultDailyStopCapacity: number;
   setupProgress: FirstOwnerSetupProgress | null;
+  supportedServiceCategories: string[];
+  supportedLanguages: string[];
   onEditProfile: () => void;
 }) {
   const facts = providerReadinessFacts({
     displayName, contactEmail, contactPhone, websiteUrl, timeZone,
     serviceAreaLabel, defaultDailyStopCapacity, setupProgress,
+    supportedServiceCategories, supportedLanguages,
   });
   const progress = providerSuppliedFactProgress(facts);
 

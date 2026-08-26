@@ -174,6 +174,10 @@ Current state:
   supplied identity/contact/website/service area, recorded timezone/capacity,
   operational crew setup, missing facts, credentials not collected, and
   marketplace eligibility not evaluated without implying broad verification.
+- Provider operating preparation now also persists allowlisted service
+  categories and customer communication languages. Both remain provider-
+  supplied facts in readiness, not capability proof, eligibility, ranking,
+  real-time availability, or credential verification.
 - The known-owner provider connection is now executable from a first invitation
   open: explicit verified-mailbox binding leads into actor-scoped existing/new
   organization connection, withheld-data acknowledgement, resumable bounded
@@ -186,19 +190,21 @@ Current state:
   responsive sequence. It links only to available workspaces and preserves the
   explicit boundary between customer approval and provider operations.
 
-Next slice:
+Next gated decisions:
 
 - Settle whether Property Owner authorization inherits all properties through a
   customer-account grant or is issued separately per property before persisting
   the customer visit read model. The recommended default is customer-account
   scope for owners and property scope for delegates.
-- While that product/security boundary is open, close safe Yard Crew operating-
-  preparation gaps such as service categories, languages, and provider-facing
-  availability without widening curated discovery past its gates.
+- Service categories and communication languages are delivered. Do not add a
+  provider pause/availability control until the curated-opportunity projection,
+  provenance, suppression, regional-density, and support contract is approved.
+- Do not add credential checking until evidence source, review, expiry,
+  correction, appeal, and operating ownership are approved.
 - Migrate remaining workflow-local feedback onto the shared status contract as
   each owning phase is adopted.
-- Continue through the ordered repository-owned adoption queue, leaving the
-  external and product gates in the tracker explicitly unresolved.
+- Continue regression and maintenance while the remaining external, security,
+  and product gates in the tracker stay explicitly unresolved.
 
 ### Persona-specific public landing experiences
 

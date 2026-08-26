@@ -40,15 +40,20 @@ now projects the fields Grover actually reads into distinct fact states:
 - business identity, contact, website, and service area are **supplied by the
   provider** or explicitly need information;
 - timezone and default daily capacity are **operating preferences recorded**;
+- service categories and customer communication languages are **supplied by the
+  provider** or explicitly need information;
 - first-crew configuration is an **operational setup record**;
 - insurance, license, and certification facts are **not collected**;
 - opportunity publication, ranking, and eligibility are **not evaluated**.
 
 The projection deliberately does not collapse these states into a “verified
-provider” badge. Existing company setup persists contact, website, timezone,
-service-area label, daily stop capacity, crews, routes, and invitations. Provider
-eligibility, credential checking, opportunity matching, ranking, and marketplace
-publication remain separate product/operations contracts.
+provider" badge. Existing company setup persists contact, website, timezone,
+service-area label, daily stop capacity, service categories, customer
+communication languages, crews, routes, and invitations. The exact operating-
+profile contract is in
+[`provider-operating-profile.md`](provider-operating-profile.md). Provider
+availability, eligibility, credential checking, opportunity matching, ranking,
+and marketplace publication remain separate product/operations contracts.
 
 ## Validation
 

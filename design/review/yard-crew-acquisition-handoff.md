@@ -176,11 +176,12 @@ update fail once.
 1. **Public fit and entry routing — adopted:** the public route separates owner-
    operator, company-owner, invited-worker, and known-owner paths without
    implying opportunity availability; the authenticated query is guidance only.
-2. **Provider identity and organization qualification — core partial:** owner-
+2. **Provider identity and organization qualification — safe core adopted:** owner-
    operator/company routing, organization bootstrap, profile, coarse service
    area, capacity, crew readiness, and precise supplied/recorded/not-collected/
-   not-evaluated facts are adopted. Service categories, languages, provider-
-   facing pause/availability, and governed credential checking remain.
+   not-evaluated facts are adopted. Allowlisted service categories and customer
+   communication languages are persisted as provider-supplied facts. Provider-
+   facing pause/availability and governed credential checking remain gated.
 3. **Known-owner connection pilot — adopted core:** first-time recipient
    confirmation, existing/new organization connection, bounded response, owner-
    approved disclosure, assessment, proposal, activation, and first-visit

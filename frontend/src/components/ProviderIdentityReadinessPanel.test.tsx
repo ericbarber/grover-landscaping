@@ -13,6 +13,8 @@ describe('ProviderIdentityReadinessPanel', () => {
       serviceAreaLabel="Phoenix metro"
       defaultDailyStopCapacity={12}
       setupProgress={null}
+      supportedServiceCategories={['routine_maintenance']}
+      supportedLanguages={['en', 'es']}
       onEditProfile={() => undefined}
     />);
 

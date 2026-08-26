@@ -683,6 +683,8 @@ interface ApiOrganizationProfile {
   time_zone: string;
   service_area_label?: string | null;
   default_daily_stop_capacity: number;
+  supported_service_categories?: string[];
+  supported_languages?: string[];
   status: string;
   persisted: boolean;
 }
@@ -697,6 +699,8 @@ export interface OrganizationProfile {
   timeZone: string;
   serviceAreaLabel: string;
   defaultDailyStopCapacity: number;
+  supportedServiceCategories: string[];
+  supportedLanguages: string[];
   status: string;
   persisted: boolean;
 }
@@ -2028,6 +2032,8 @@ export function toOrganizationProfile(profile: ApiOrganizationProfile): Organiza
     timeZone: profile.time_zone,
     serviceAreaLabel: profile.service_area_label ?? '',
     defaultDailyStopCapacity: profile.default_daily_stop_capacity,
+    supportedServiceCategories: profile.supported_service_categories ?? [],
+    supportedLanguages: profile.supported_languages ?? [],
     status: profile.status,
     persisted: profile.persisted,
   };
@@ -2076,6 +2082,8 @@ export async function updateOrganizationProfile(
   timeZone: string,
   serviceAreaLabel: string,
   defaultDailyStopCapacity: number,
+  supportedServiceCategories: string[],
+  supportedLanguages: string[],
 ): Promise<OrganizationProfile> {
   return toOrganizationProfile(await request<ApiOrganizationProfile>(
     `/organizations/${encodeURIComponent(organizationId)}`,
@@ -2090,6 +2098,8 @@ export async function updateOrganizationProfile(
         time_zone: timeZone,
         service_area_label: serviceAreaLabel || null,
         default_daily_stop_capacity: defaultDailyStopCapacity,
+        supported_service_categories: supportedServiceCategories,
+        supported_languages: supportedLanguages,
       }),
     },
   ));

@@ -347,6 +347,11 @@ manager, using direct phrases such as “get your business ready,” “request
 assessment access,” and “prepare the first service,” while the supporting
 records retain the precise qualification, disclosure, proposal, and work-order
 contracts needed for production.
+Company setup now persists allowlisted service categories and customer
+communication languages as provider-supplied operating-profile facts. They do
+not establish capability, eligibility, ranking, credential status, or real-time
+availability. The remaining pause/availability and credential workflows await
+their explicit product and operations contracts before implementation.
 Reviews should approve page composition and responsive behavior before producing
 high-fidelity screens or beginning the corresponding UI slice. Back-end and
 infrastructure work without a visual consequence can continue independently.

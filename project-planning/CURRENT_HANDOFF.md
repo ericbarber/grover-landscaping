@@ -7,10 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active product boundary: Yard Owner customer authorization decision; Yard Crew
-  operating preparation is the active independent production-adoption slice
-  after public fit/entry, identity/readiness, known-owner core, and lifecycle
-  orientation adoption
+- Active product boundaries: Yard Owner customer authorization scope, curated-
+  opportunity availability/governance, and governed provider credentials. All
+  currently approved repository-owned prototype-adoption slices are adopted.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
 
@@ -137,7 +136,7 @@
   technology/device sessions, Privacy/Security approval, and go/no-go remain
   explicitly unsigned external gates.
 
-## Next implementable slice
+## Next authorized slice
 
 The shared shell; core Route, Jobs, Job, Schedule, Recovery, manager review;
 public proof and proposal decisions; and the Yard Owner four-destination shell
@@ -148,9 +147,11 @@ aligned overview composition.
    customer-account membership for an owner who should inherit multiple yards,
    with property-scoped grants retained for delegates. Do not add the persisted
    visit projection until this boundary is explicit and fail-closed.
-2. Independently close safe Yard Crew operating-preparation gaps such as service
-   categories, languages, and provider-facing availability without promoting
-   curated discovery past its gates.
+2. Yard Crew service categories and customer communication languages are now
+   persisted and surfaced as provider-supplied preparation facts. Do not add
+   provider availability/pause until the curated-opportunity projection and
+   operating contract are approved; do not add credential checking until its
+   evidence/review/correction/appeal ownership is approved.
    Access/Home, completion proof, and Team/organization core adoption return to
    regression when their contracts change.
 3. After the owner scope decision, add the minimized customer visit read and

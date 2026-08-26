@@ -116,6 +116,12 @@ governance, and their production contracts. The production handoff must resolve
 the product gates recorded in the phased plan before curated opportunity
 discovery or credential language ships.
 
+Production Company setup now adopts the prototype's service-category and
+customer-communication-language facts through the bounded
+[provider operating-profile contract](../../../docs/provider-operating-profile.md).
+They remain provider-supplied preparation data; availability/pause, marketplace
+eligibility, ranking, and credential verification are not inferred.
+
 The reciprocal known-owner invitation, provider-organization claim, response
 authority, and disclosure receipt are defined in the
 [Yard Owner known-provider handoff](../../review/yard-owner-known-provider-connection-handoff.md).

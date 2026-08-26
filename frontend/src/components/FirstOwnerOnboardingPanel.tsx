@@ -116,6 +116,8 @@ export function FirstOwnerOnboardingPanel({
   const [timeZone, setTimeZone] = useState('America/Phoenix');
   const [serviceAreaLabel, setServiceAreaLabel] = useState('');
   const [defaultDailyStopCapacity, setDefaultDailyStopCapacity] = useState(12);
+  const [supportedServiceCategories, setSupportedServiceCategories] = useState<string[]>([]);
+  const [supportedLanguages, setSupportedLanguages] = useState<string[]>([]);
   const [crewName, setCrewName] = useState('');
   const [isCreatingCrew, setIsCreatingCrew] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -143,6 +145,8 @@ export function FirstOwnerOnboardingPanel({
         setTimeZone(profile.timeZone);
         setServiceAreaLabel(profile.serviceAreaLabel);
         setDefaultDailyStopCapacity(profile.defaultDailyStopCapacity);
+        setSupportedServiceCategories(profile.supportedServiceCategories);
+        setSupportedLanguages(profile.supportedLanguages);
         setSetupProgress(progress);
       } else {
         setSetupProgress(null);
@@ -215,6 +219,8 @@ export function FirstOwnerOnboardingPanel({
         timeZone,
         serviceAreaLabel.trim(),
         defaultDailyStopCapacity,
+        supportedServiceCategories,
+        supportedLanguages,
       );
       setMessage(`${profile.displayName} profile saved.`);
       setIsEditingProfile(false);
@@ -372,6 +378,8 @@ export function FirstOwnerOnboardingPanel({
             onEditProfile={() => setIsEditingProfile(true)}
             serviceAreaLabel={serviceAreaLabel}
             setupProgress={setupProgress}
+            supportedLanguages={supportedLanguages}
+            supportedServiceCategories={supportedServiceCategories}
             timeZone={timeZone}
             websiteUrl={websiteUrl}
           />
@@ -481,6 +489,24 @@ export function FirstOwnerOnboardingPanel({
                     value={defaultDailyStopCapacity}
                   />
                 </label>
+                <fieldset className="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                  <legend className="px-1 text-sm font-bold text-slate-800">Services currently offered</legend>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {[
+                      ['routine_maintenance', 'Routine maintenance'],
+                      ['seasonal_cleanup', 'Seasonal cleanup'],
+                      ['turf_care', 'Turf care'],
+                      ['shrub_care', 'Shrub care'],
+                      ['irrigation_checks', 'Irrigation checks'],
+                      ['desert_landscape_care', 'Desert landscape care'],
+                    ].map(([value, label]) => <label className="flex min-h-11 items-center gap-3 rounded-lg bg-slate-50 px-3 text-sm font-semibold" key={value}><input checked={supportedServiceCategories.includes(value)} onChange={(event) => setSupportedServiceCategories((current) => event.target.checked ? [...current, value] : current.filter((item) => item !== value))} type="checkbox" />{label}</label>)}
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Provider-supplied profile facts only. They do not establish eligibility, ranking, or credential status.</p>
+                </fieldset>
+                <fieldset className="rounded-xl border border-slate-200 p-3 sm:col-span-2">
+                  <legend className="px-1 text-sm font-bold text-slate-800">Customer communication languages</legend>
+                  <div className="mt-2 flex flex-wrap gap-3">{[['en', 'English'], ['es', 'Spanish']].map(([value, label]) => <label className="flex min-h-11 items-center gap-3 rounded-lg bg-slate-50 px-3 text-sm font-semibold" key={value}><input checked={supportedLanguages.includes(value)} onChange={(event) => setSupportedLanguages((current) => event.target.checked ? [...current, value] : current.filter((item) => item !== value))} type="checkbox" />{label}</label>)}</div>
+                </fieldset>
                 <button
                   className="min-h-11 rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
                   disabled={isLoading}

@@ -225,6 +225,8 @@ describe('core API client mapping', () => {
       time_zone: 'America/Phoenix',
       service_area_label: 'Phoenix metro',
       default_daily_stop_capacity: 12,
+      supported_service_categories: ['routine_maintenance', 'seasonal_cleanup'],
+      supported_languages: ['en', 'es'],
       status: 'active',
       persisted: true,
     })).toEqual({
@@ -237,8 +239,29 @@ describe('core API client mapping', () => {
       timeZone: 'America/Phoenix',
       serviceAreaLabel: 'Phoenix metro',
       defaultDailyStopCapacity: 12,
+      supportedServiceCategories: ['routine_maintenance', 'seasonal_cleanup'],
+      supportedLanguages: ['en', 'es'],
       status: 'active',
       persisted: true,
+    });
+  });
+
+  it('defaults legacy organization profiles to empty operating facts', () => {
+    expect(toOrganizationProfile({
+      id: 'org_1',
+      display_name: 'Grover Property Services',
+      organization_type: 'property_management_company',
+      contact_email: null,
+      contact_phone: null,
+      website_url: null,
+      time_zone: 'America/Phoenix',
+      service_area_label: null,
+      default_daily_stop_capacity: 12,
+      status: 'active',
+      persisted: true,
+    })).toMatchObject({
+      supportedServiceCategories: [],
+      supportedLanguages: [],
     });
   });
 

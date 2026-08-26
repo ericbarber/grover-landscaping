@@ -18,6 +18,8 @@ export interface ProviderReadinessInput {
   serviceAreaLabel: string;
   defaultDailyStopCapacity: number;
   setupProgress: FirstOwnerSetupProgress | null;
+  supportedServiceCategories: string[];
+  supportedLanguages: string[];
 }
 
 export function providerReadinessStateLabel(state: ProviderReadinessFactState): string {
@@ -63,6 +65,22 @@ export function providerReadinessFacts(input: ProviderReadinessInput): ProviderR
       label: 'Operating basis',
       detail: `${input.timeZone || 'Timezone missing'} · ${input.defaultDailyStopCapacity || 0} default stops per day`,
       state: input.timeZone && input.defaultDailyStopCapacity > 0 ? 'recorded' : 'missing',
+    },
+    {
+      id: 'services',
+      label: 'Service categories',
+      detail: input.supportedServiceCategories.length > 0
+        ? input.supportedServiceCategories.map((value) => value.split('_').join(' ')).join(' · ')
+        : 'Choose the services this provider currently offers.',
+      state: input.supportedServiceCategories.length > 0 ? 'supplied' : 'missing',
+    },
+    {
+      id: 'languages',
+      label: 'Customer communication languages',
+      detail: input.supportedLanguages.length > 0
+        ? input.supportedLanguages.map((value) => value === 'en' ? 'English' : value === 'es' ? 'Spanish' : value).join(' · ')
+        : 'Choose the languages this provider can use with customers.',
+      state: input.supportedLanguages.length > 0 ? 'supplied' : 'missing',
     },
     {
       id: 'crew',

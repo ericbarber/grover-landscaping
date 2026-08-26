@@ -23,7 +23,7 @@ async function mockProviderOwner(page: Page, includeReadiness = false) {
       });
     }
     if (includeReadiness && path === '/organizations/org_1') {
-      return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'org_1', display_name: 'Desert Bloom Landscaping', organization_type: 'yard_care_company', contact_email: 'office@desertbloom.example', contact_phone: '', website_url: '', time_zone: 'America/Phoenix', service_area_label: 'Phoenix metro', default_daily_stop_capacity: 12, status: 'active', persisted: true }) });
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id: 'org_1', display_name: 'Desert Bloom Landscaping', organization_type: 'yard_care_company', contact_email: 'office@desertbloom.example', contact_phone: '', website_url: '', time_zone: 'America/Phoenix', service_area_label: 'Phoenix metro', default_daily_stop_capacity: 12, supported_service_categories: ['routine_maintenance', 'seasonal_cleanup'], supported_languages: ['en', 'es'], status: 'active', persisted: true }) });
     }
     if (includeReadiness && path === '/organizations/org_1/setup-progress') {
       return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ organization_id: 'org_1', organization_profile_complete: false, team_invitation_created: false, crew_configured: true, first_route_published: false, completed_steps: 1, total_steps: 4, persisted: true }) });
@@ -83,6 +83,10 @@ test('provider readiness distinguishes supplied, operating, missing, and uncheck
   await expect(readiness.getByText('Supplied by provider').first()).toBeVisible();
   await expect(readiness.getByText('Operating preference recorded')).toBeVisible();
   await expect(readiness.getByText('Operational setup recorded')).toBeVisible();
+  await expect(readiness).toContainText('Service categories');
+  await expect(readiness).toContainText('routine maintenance');
+  await expect(readiness).toContainText('Customer communication languages');
+  await expect(readiness).toContainText('English · Spanish');
   await expect(readiness.getByText('Needs information').first()).toBeVisible();
   await expect(readiness.getByText('Not collected')).toBeVisible();
   await expect(readiness.getByText('Not evaluated', { exact: true })).toBeVisible();
