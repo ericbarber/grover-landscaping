@@ -7,10 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active decision: approve the customer service-day source contract before the
-  delivered persisted Home/Visits read advances beyond confirmed. The audit
-  recommends a dedicated immutable provider-authorized mobilization/work-release
-  relation; existing job/account/date/route data cannot be safely inferred.
+- Active slice: implement accepted decision D-059's dedicated immutable,
+  idempotent, provider-authorized mobilization/work-release relation before the
+  persisted Home/Visits read advances beyond confirmed. Existing job/account/
+  date/route data must not be inferred.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -148,8 +148,7 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Decide whether to adopt the recommended immutable mobilization/work-release
-   relation documented in
+1. Implement the accepted immutable mobilization/work-release relation documented in
    [`../docs/customer-service-day-projection-design.md`](../docs/customer-service-day-projection-design.md).
    Do not implement customer states beyond confirmed by inferring a job/property
    link from account, address, date, route, crew, or completion-report data.

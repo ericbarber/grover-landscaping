@@ -1,7 +1,7 @@
 # Customer Service-Day Projection Source
 
-Status: Source audit complete on 2026-08-26; mobilization/work-release decision
-required before persistence or API implementation.
+Status: Recommended mobilization/work-release model accepted as decision D-059
+on 2026-08-26; persistence implementation is next.
 
 ## Outcome of the source audit
 
@@ -23,10 +23,9 @@ visit to operational service execution:
 Therefore the portal must remain at `confirmed` until a separate provider-
 authorized mobilization and work-release contract creates an exact relationship.
 
-## Decision required
+## Accepted decision
 
-Product, operations, and security must decide whether service mobilization
-creates a dedicated immutable release record that links:
+Service mobilization creates a dedicated immutable release record that links:
 
 - the current active owner/provider relationship and activation;
 - the exact confirmed first-visit proposal and version;
@@ -36,7 +35,7 @@ creates a dedicated immutable release record that links:
 - the provider actor, explicit release authority, idempotency key, and release
   timestamp.
 
-This dedicated release is the recommended model. It preserves the distinction
+This dedicated release preserves the distinction
 between owner confirmation and provider work authority, gives later customer
 reads exact property provenance, and avoids turning mutable job or route fields
 into implicit authorization records.
@@ -49,7 +48,7 @@ route data is rejected.
 
 ## Minimum work-release contract
 
-Before implementation, the accepted decision must define:
+The implementation contract defines:
 
 1. which provider capability may mobilize and release initial service;
 2. whether release atomically creates a job or links one provider-created job;
@@ -91,5 +90,5 @@ provider notes, and unpublished evidence remain excluded.
    organization, account, property, job, route, or release IDs from the browser.
 4. Adopt service-day states and recovery in Yard Owner Home and Visits.
 
-Until the source decision is accepted and these gates pass, the delivered
-confirmed-visit response and UI remain authoritative and intentionally bounded.
+Until these persistence and projection gates pass, the delivered confirmed-
+visit response and UI remain authoritative and intentionally bounded.

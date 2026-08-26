@@ -212,16 +212,15 @@ Current state:
   Home/Visits adoption are delivered. The next bounded customer slice is the
   service-day lifecycle extension. Its source audit found no exact relationship
   from the deliberately non-operational first-visit confirmation to a property-
-  scoped service job, so the mobilization/work-release decision must be accepted
-  before implementation may advance beyond confirmed.
+  scoped service job. Decision D-059 now accepts an immutable, idempotent,
+  provider-authorized mobilization/work-release relation as that source.
 
 Next authorized slice and remaining gates:
 
-- Approve the customer service-day source contract: preferably an immutable,
-  provider-authorized mobilization/work-release relation connecting the exact
-  confirmed first visit, customer property, accepted scope, and resulting job.
-  Preserve the confirmed-visit baseline until that decision is accepted; never
-  infer the link from account, address, date, route, or crew data.
+- Implement decision D-059's constrained mobilization/work-release persistence:
+  connect the exact confirmed first visit, customer property, accepted scope,
+  provider authority, and resulting job with replay, isolation, and rollback
+  proof before projecting customer states beyond confirmed.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

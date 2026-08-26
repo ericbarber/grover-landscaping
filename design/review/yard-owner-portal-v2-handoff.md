@@ -3,8 +3,8 @@
 Production adoption status: persisted authorized Home/Visits and partial
 customer-safe report, property, and portfolio contracts are adopted. Production
 still needs broader service-day, concern, recommendation, preference, and
-provider-contact contracts. Service-day persistence is specifically blocked on
-the [mobilization/work-release source decision](../../docs/customer-service-day-projection-design.md);
+provider-contact contracts. Service-day persistence now proceeds through the
+accepted [mobilization/work-release source decision](../../docs/customer-service-day-projection-design.md);
 billing is product-gated. See the
 [`adoption tracker`](../../project-planning/PROTOTYPE_ADOPTION.md).
 
