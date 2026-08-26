@@ -177,17 +177,18 @@ export async function saveProjectBidDraft(
 }
 
 export async function sendProjectBid(
-  dayPlanId: string,
-  bidId: string,
-  channel: 'email' | 'sms',
-  recipient: string,
+    dayPlanId: string,
+    bidId: string,
+    channel: 'email' | 'sms',
+    recipient: string,
+    idempotencyKey: string,
 ): Promise<ProjectBid> {
   const response = await authenticatedFetch(
     `${API_BASE_URL}/day-plans/${dayPlanId}/bids/${bidId}/send`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ channel, recipient }),
+      body: JSON.stringify(projectBidSendRequestBody(channel, recipient, idempotencyKey)),
     },
   );
   if (!response.ok) {
@@ -195,6 +196,18 @@ export async function sendProjectBid(
   }
 
   return toProjectBid((await response.json()) as ApiProjectBid);
+}
+
+export function projectBidSendRequestBody(
+  channel: 'email' | 'sms',
+  recipient: string,
+  idempotencyKey: string,
+) {
+  return {
+    channel,
+    recipient,
+    idempotency_key: idempotencyKey,
+  };
 }
 
 export async function revokeProjectBid(dayPlanId: string, bidId: string): Promise<ProjectBid> {

@@ -7,10 +7,11 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: atomically bridge exact provider bid send/revision into D-062's
-  immutable customer publication. Its source/hybrid/decision audit, legacy
-  account-bid containment, and constrained publication/version/decision/message
-  persistence are delivered. D-061 proof is delivered end to end.
+- Active slice: implement D-062 provider revision/supersession publication and
+  reconcile the separate legacy bearer-decision lifecycle before signed-in
+  reads. Its audit, account-bid containment, constrained persistence, and exact
+  initial provider-send bridge are delivered. D-061 proof is delivered end to
+  end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -160,8 +161,9 @@ aligned overview composition.
    The minimized exact-visit authenticated proof read and responsive Yard Owner
    adoption are delivered. D-062's active-recommendation audit and legacy-route
    containment and immutable publication/version/decision persistence are
-   delivered; build the exact provider publication bridge next while retaining
-   the separate concern boundary.
+   and exact initial provider-send bridge are delivered; build revision/
+   supersession and bearer-decision reconciliation next while retaining the
+   separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -187,7 +189,7 @@ aligned overview composition.
 
 ## Validation baseline
 
-The current baseline passes all 471 frontend unit tests across 120 files,
+The current baseline passes all 472 frontend unit tests across 120 files,
 TypeScript, and the production build. The persisted Yard Owner adoption adds
 client mapping/error checks plus component coverage for loading, valid-empty,
 missing-access, inconsistent-access, unavailable, retry, and authorized content
@@ -246,6 +248,13 @@ affirmed current-version decision, rewrite rejection, and rejection of a post-
 approval revision. The same run exposed and corrected a reserved-keyword alias
 in the existing hybrid property resolver; the cross-owner expectations now
 distinguish no portal grant from an authorized-but-wrong exact reference.
+The D-062 initial provider bridge passes the live owner/provider fixture and all
+five existing amendment/project-bid persistence tests. The fixture proves that
+an exact send atomically creates one minimized version-1 publication and one
+notification, exact actor-key replay duplicates neither, changed retry identity
+conflicts, private IDs/notes/token are absent from the snapshot, and legacy bids
+without the exact chain retain their current non-portal behavior. Focused
+frontend client coverage, TypeScript, and the production build also pass.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

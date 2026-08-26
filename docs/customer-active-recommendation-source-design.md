@@ -3,8 +3,8 @@
 Status: Source, authorization, versioning, and decision audit completed on
 2026-08-26. Decision D-062 adopts an immutable exact-visit recommendation
 publication around the existing project-bid authoring source. The constrained
-persistence foundation is delivered; the atomic provider publication bridge is
-next, followed by authenticated customer APIs.
+persistence foundation and initial atomic provider-send bridge are delivered;
+provider revision publication is next, followed by authenticated customer APIs.
 
 ## Audit outcome
 
@@ -116,8 +116,30 @@ API are delivered.
 1. Add constrained publication-series, immutable-version, decision, message,
    and lifecycle persistence plus database guards. **Delivered.**
 2. Publish only exact-provenance recommendation versions atomically from the
-   provider send/revision workflow. **Next.**
+   provider send/revision workflow. **Initial send delivered; revision next.**
 3. Add minimized hybrid-authorized exact-visit list/detail and actor-scoped
    decision APIs with replay/conflict tests.
 4. Adopt pending/history/decision/recovery states in Yard Owner without public
    tokens, provider-private data, or billing claims.
+
+## Delivered initial provider bridge
+
+Provider bid delivery now requires an actor-scoped `idempotency_key`. Inside the
+existing bid/link/notification transaction, the repository attempts to resolve
+the exact active relationship, visit thread, immutable release/job, route stop,
+add-service amendment, and sent bid. An exact match atomically creates version 1
+with a minimized USD scope/price snapshot, SHA-256 digest, publication event,
+and pending series state. The snapshot omits internal IDs, service IDs, line-
+item notes, notification data, recipients, and the public share token.
+
+An exact retry with the same actor/key and snapshot rolls the attempted resend
+back and returns authoritative bid state without duplicating the publication or
+notification. Changed-key reuse after publication returns a conflict. Bids that
+cannot prove the complete D-062 chain retain only the legacy provider/public-link
+workflow and create no signed-in recommendation publication.
+
+This bridge adds no customer read or decision authority. Before Yard Owner
+adoption, provider revision publication must supersede the prior version
+atomically, and the authenticated API design must explicitly reconcile or close
+parallel legacy bearer-link decisions so signed-in lifecycle state cannot become
+stale.

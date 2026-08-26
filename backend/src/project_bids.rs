@@ -88,6 +88,7 @@ pub enum SharedProjectBidReadResult {
 pub struct SendProjectBidRequest {
     pub channel: String,
     pub recipient: String,
+    pub idempotency_key: String,
 }
 
 #[derive(Clone, Debug)]
@@ -95,6 +96,7 @@ pub enum ProjectBidSendResult {
     Sent(ProjectBidResponse),
     NotSendable,
     PreferenceBlocked,
+    PublicationConflict,
     Unavailable,
 }
 
@@ -208,12 +210,13 @@ impl ProjectBidRepository {
         &self,
         day_plan_id: &str,
         bid_id: &str,
+        actor_user_id: &str,
         request: &SendProjectBidRequest,
     ) -> ProjectBidSendResult {
         let Some(pool) = self.pool.as_ref() else {
             return ProjectBidSendResult::Unavailable;
         };
-        postgres_project_bids::send(pool, day_plan_id, bid_id, request)
+        postgres_project_bids::send(pool, day_plan_id, bid_id, actor_user_id, request)
             .await
             .unwrap_or(ProjectBidSendResult::Unavailable)
     }
@@ -320,7 +323,11 @@ pub fn customer_project_bid_response(bid: &ProjectBidResponse) -> CustomerProjec
 }
 
 pub fn validate_send_project_bid_request(request: &SendProjectBidRequest) -> Result<(), String> {
-    validate_notification_recipient(&request.channel, &request.recipient)
+    validate_notification_recipient(&request.channel, &request.recipient)?;
+    if !(8..=128).contains(&request.idempotency_key.trim().chars().count()) {
+        return Err("idempotency_key must contain 8 to 128 characters".to_string());
+    }
+    Ok(())
 }
 
 pub fn validate_project_bid_request(request: &CreateProjectBidRequest) -> Result<(), String> {
@@ -506,16 +513,19 @@ mod tests {
         assert!(validate_send_project_bid_request(&SendProjectBidRequest {
             channel: "email".to_string(),
             recipient: "customer@example.com".to_string(),
+            idempotency_key: "bid-send-email-001".to_string(),
         })
         .is_ok());
         assert!(validate_send_project_bid_request(&SendProjectBidRequest {
             channel: "sms".to_string(),
             recipient: "+16025550123".to_string(),
+            idempotency_key: "bid-send-sms-001".to_string(),
         })
         .is_ok());
         assert!(validate_send_project_bid_request(&SendProjectBidRequest {
             channel: "sms".to_string(),
             recipient: "602-555-0123".to_string(),
+            idempotency_key: "bid-send-invalid-001".to_string(),
         })
         .is_err());
     }

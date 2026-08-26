@@ -384,9 +384,11 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .send(
             day_plan_id,
             &bid.id,
+            "manager-bid-sender",
             &SendProjectBidRequest {
                 channel: "email".to_string(),
                 recipient: "customer@example.com".to_string(),
+                idempotency_key: "project-bid-send-email-001".to_string(),
             },
         )
         .await
@@ -426,9 +428,11 @@ async fn repository_persists_and_lists_day_plan_amendments() {
             .send(
                 day_plan_id,
                 &bid.id,
+                "manager-bid-sender",
                 &SendProjectBidRequest {
                     channel: "sms".to_string(),
                     recipient: "+16025550123".to_string(),
+                    idempotency_key: "project-bid-send-blocked-001".to_string(),
                 },
             )
             .await,
@@ -447,9 +451,11 @@ async fn repository_persists_and_lists_day_plan_amendments() {
         .send(
             day_plan_id,
             &bid.id,
+            "manager-bid-sender",
             &SendProjectBidRequest {
                 channel: "sms".to_string(),
                 recipient: "+16025550123".to_string(),
+                idempotency_key: "project-bid-send-sms-001".to_string(),
             },
         )
         .await

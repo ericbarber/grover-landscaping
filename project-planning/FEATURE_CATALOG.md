@@ -144,6 +144,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   provenance, immutable hash-addressed sequential publications, supersession
   and lifecycle events, version-bound decisions/messages, exact reply linkage,
   and database-enforced transition and rewrite guards
+- D-062 exact initial provider-send bridge with active relationship and full
+  visit/job/amendment/provider provenance, minimized hash-addressed USD snapshot,
+  atomic publication/event/link/notification state, actor retry identity, exact
+  replay without duplicates, conflict recovery, and no customer API authority
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

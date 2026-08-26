@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountProjectBidsPath,
+  projectBidSendRequestBody,
   toCustomerProjectBid,
   toProjectBid,
   type ApiProjectBid,
@@ -98,5 +99,17 @@ describe('project bid API mapping', () => {
     };
 
     expect(toProjectBid(bid).shareUrl).toBe('http://localhost:5173/bid-review/token-1002');
+  });
+
+  it('includes the retry identity in provider bid delivery', () => {
+    expect(projectBidSendRequestBody(
+      'email',
+      'customer@example.com',
+      'project-bid-send-001',
+    )).toEqual({
+      channel: 'email',
+      recipient: 'customer@example.com',
+      idempotency_key: 'project-bid-send-001',
+    });
   });
 });

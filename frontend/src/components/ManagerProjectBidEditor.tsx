@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   convertProjectBid,
   revokeProjectBid,
@@ -73,12 +73,17 @@ export function ManagerProjectBidEditor({
   const [deliveryChannel, setDeliveryChannel] = useState<BidDeliveryChannel>(existingBid?.deliveryChannel ?? 'email');
   const [deliveryRecipient, setDeliveryRecipient] = useState(existingBid?.deliveryRecipient ?? '');
   const [message, setMessage] = useState(existingBid ? 'Draft loaded from the manager workspace.' : 'Build a draft before sending it to the customer.');
+  const sendRetryKey = useRef<string | null>(null);
   const totalCents = projectBidDraftTotalCents(lines);
   const isEditable = !existingBid || existingBid.status === 'draft';
   const canIssueLink = Boolean(
     existingBid?.persisted
       && (existingBid.status === 'draft' || (existingBid.status === 'sent' && existingBid.shareRevokedAt)),
   );
+
+  useEffect(() => {
+    sendRetryKey.current = null;
+  }, [deliveryChannel, deliveryRecipient, existingBid?.id]);
 
   function updateLine(id: string, update: Partial<ProjectBidDraftLine>) {
     setLines((current) => current.map((line) => (line.id === id ? { ...line, ...update } : line)));
@@ -131,15 +136,27 @@ export function ManagerProjectBidEditor({
   function sendBid() {
     if (!existingBid?.persisted || !canIssueLink || !bidDeliveryRecipientIsValid(deliveryChannel, deliveryRecipient)) return;
 
+    const idempotencyKey = sendRetryKey.current
+      ?? `project-bid-send-${crypto.randomUUID()}`;
+    sendRetryKey.current = idempotencyKey;
     setIsSending(true);
-    void sendProjectBid(dayPlanId, existingBid.id, deliveryChannel, deliveryRecipient.trim())
+    void sendProjectBid(
+      dayPlanId,
+      existingBid.id,
+      deliveryChannel,
+      deliveryRecipient.trim(),
+      idempotencyKey,
+    )
       .then((bid) => {
+        sendRetryKey.current = null;
         onSaved(bid);
         setMessage('Approval link issued and notification queued for provider delivery.');
       })
       .catch((error: unknown) => setMessage(
         isApiErrorCode(error, 'project_bid_notification_preference_blocked')
           ? 'Delivery blocked by this customer’s account preferences. Enable the selected channel and use the configured account recipient.'
+          : isApiErrorCode(error, 'customer_recommendation_publication_conflict')
+            ? 'The customer recommendation changed or was already published. Reload this bid before sending again.'
           : 'Bid could not be sent. Confirm the draft is persisted and try again.',
       ))
       .finally(() => setIsSending(false));

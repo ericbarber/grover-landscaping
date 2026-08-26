@@ -1,7 +1,9 @@
 use crate::project_bids::{
     ProjectBidLineItemResponse, ProjectBidResponse, ProjectBidSendResult, SendProjectBidRequest,
 };
-use sqlx::{PgPool, Row};
+use serde_json::json;
+use sha2::{Digest, Sha256};
+use sqlx::{PgPool, Postgres, Row, Transaction};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -482,6 +484,7 @@ pub async fn send(
     pool: &PgPool,
     day_plan_id: &str,
     bid_id: &str,
+    actor_user_id: &str,
     request: &SendProjectBidRequest,
 ) -> Result<ProjectBidSendResult, sqlx::Error> {
     let proposed_token = Uuid::new_v4().simple().to_string();
@@ -556,6 +559,32 @@ pub async fn send(
         return Ok(ProjectBidSendResult::NotSendable);
     };
 
+    match publish_exact_customer_recommendation(
+        &mut transaction,
+        day_plan_id,
+        bid_id,
+        actor_user_id,
+        request.idempotency_key.trim(),
+    )
+    .await?
+    {
+        CustomerRecommendationPublicationWrite::Replayed => {
+            transaction.rollback().await?;
+            return Ok(list_for_day_plan(pool, day_plan_id)
+                .await?
+                .into_iter()
+                .find(|bid| bid.id == bid_id)
+                .map(ProjectBidSendResult::Sent)
+                .unwrap_or(ProjectBidSendResult::NotSendable));
+        }
+        CustomerRecommendationPublicationWrite::Conflict => {
+            transaction.rollback().await?;
+            return Ok(ProjectBidSendResult::PublicationConflict);
+        }
+        CustomerRecommendationPublicationWrite::NotApplicable
+        | CustomerRecommendationPublicationWrite::Published => {}
+    }
+
     let share_url = shared_bid_url(&share_token);
     sqlx::query(
         r#"
@@ -603,6 +632,228 @@ pub async fn send(
         .find(|bid| bid.id == bid_id)
         .map(ProjectBidSendResult::Sent)
         .unwrap_or(ProjectBidSendResult::NotSendable))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CustomerRecommendationPublicationWrite {
+    NotApplicable,
+    Published,
+    Replayed,
+    Conflict,
+}
+
+async fn publish_exact_customer_recommendation(
+    transaction: &mut Transaction<'_, Postgres>,
+    day_plan_id: &str,
+    bid_id: &str,
+    actor_user_id: &str,
+    idempotency_key: &str,
+) -> Result<CustomerRecommendationPublicationWrite, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT
+            thread.customer_visit_reference,
+            release.id AS release_id,
+            release.service_job_id,
+            release.organization_id,
+            release.customer_account_id,
+            release.customer_property_id,
+            amendment.stop_id AS day_plan_stop_id,
+            bid.source_amendment_id,
+            bid.customer_message,
+            item.service_name,
+            item.service_description,
+            item.quantity,
+            item.unit_price_cents
+        FROM project_bids bid
+        JOIN day_plan_amendment_requests amendment
+          ON amendment.id = bid.source_amendment_id
+         AND amendment.day_plan_id = bid.day_plan_id
+         AND amendment.amendment_type = 'add_service'
+         AND amendment.requires_bid
+         AND amendment.status = 'bid_review'
+        JOIN day_plan_stops stop
+          ON stop.id = amendment.stop_id
+         AND stop.day_plan_id = amendment.day_plan_id
+        JOIN owner_provider_service_releases release
+          ON release.service_job_id = stop.job_id
+         AND release.customer_account_id = bid.customer_account_id
+        JOIN owner_provider_active_relationships relationship
+          ON relationship.activation_id = release.activation_id
+         AND relationship.organization_id = release.organization_id
+         AND relationship.customer_account_id = release.customer_account_id
+         AND relationship.customer_property_id = release.customer_property_id
+         AND relationship.status = 'active'
+        JOIN customer_service_visit_threads thread
+          ON thread.release_id = release.id
+         AND thread.organization_id = release.organization_id
+         AND thread.customer_account_id = release.customer_account_id
+         AND thread.customer_property_id = release.customer_property_id
+        JOIN project_bid_line_items item ON item.project_bid_id = bid.id
+        WHERE bid.id = $1
+          AND bid.day_plan_id = $2
+          AND bid.status = 'sent'
+        ORDER BY item.sort_order
+        "#,
+    )
+    .bind(bid_id)
+    .bind(day_plan_id)
+    .fetch_all(&mut **transaction)
+    .await?;
+    let Some(first) = rows.first() else {
+        return Ok(CustomerRecommendationPublicationWrite::NotApplicable);
+    };
+
+    let mut total_cents = 0_u64;
+    let line_items = rows
+        .iter()
+        .map(|row| {
+            let quantity = row.get::<i32, _>("quantity") as u32;
+            let unit_price_cents = row.get::<i32, _>("unit_price_cents") as u32;
+            total_cents += u64::from(quantity) * u64::from(unit_price_cents);
+            json!({
+                "service_name": row.get::<String, _>("service_name"),
+                "service_description": row.get::<Option<String>, _>("service_description"),
+                "quantity": quantity,
+                "unit_price_cents": unit_price_cents
+            })
+        })
+        .collect::<Vec<_>>();
+    let snapshot = json!({
+        "snapshot_version": 1,
+        "proposal_version": 1,
+        "customer_safe_reason": first.get::<Option<String>, _>("customer_message"),
+        "currency_code": "USD",
+        "line_items": line_items,
+        "total_cents": total_cents
+    });
+    let snapshot_sha256 = format!("{:x}", Sha256::digest(snapshot.to_string().as_bytes()));
+
+    let existing_retry = sqlx::query(
+        "SELECT customer_recommendation_reference, source_project_bid_id,
+                snapshot_sha256
+         FROM customer_visit_recommendation_publications
+         WHERE published_by_user_id = $1 AND provider_idempotency_key = $2",
+    )
+    .bind(actor_user_id)
+    .bind(idempotency_key)
+    .fetch_optional(&mut **transaction)
+    .await?;
+    if let Some(existing_retry) = existing_retry {
+        let exact = existing_retry.get::<String, _>("source_project_bid_id") == bid_id
+            && existing_retry.get::<String, _>("snapshot_sha256") == snapshot_sha256;
+        return Ok(if exact {
+            CustomerRecommendationPublicationWrite::Replayed
+        } else {
+            CustomerRecommendationPublicationWrite::Conflict
+        });
+    }
+
+    let proposed_reference = format!("customer_recommendation_{}", Uuid::new_v4().simple());
+    sqlx::query(
+        r#"
+        INSERT INTO customer_visit_recommendation_series (
+            customer_recommendation_reference, customer_visit_reference,
+            release_id, service_job_id, organization_id, customer_account_id,
+            customer_property_id, day_plan_id, day_plan_stop_id,
+            source_amendment_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (source_amendment_id) DO NOTHING
+        "#,
+    )
+    .bind(&proposed_reference)
+    .bind(first.get::<String, _>("customer_visit_reference"))
+    .bind(first.get::<String, _>("release_id"))
+    .bind(first.get::<String, _>("service_job_id"))
+    .bind(first.get::<String, _>("organization_id"))
+    .bind(first.get::<String, _>("customer_account_id"))
+    .bind(first.get::<String, _>("customer_property_id"))
+    .bind(day_plan_id)
+    .bind(first.get::<String, _>("day_plan_stop_id"))
+    .bind(first.get::<String, _>("source_amendment_id"))
+    .execute(&mut **transaction)
+    .await?;
+
+    let series = sqlx::query(
+        "SELECT customer_recommendation_reference, current_version,
+                lifecycle_status
+         FROM customer_visit_recommendation_series
+         WHERE source_amendment_id = $1
+         FOR UPDATE",
+    )
+    .bind(first.get::<String, _>("source_amendment_id"))
+    .fetch_one(&mut **transaction)
+    .await?;
+    if series.get::<i64, _>("current_version") != 0
+        || series.get::<String, _>("lifecycle_status") != "draft"
+    {
+        return Ok(CustomerRecommendationPublicationWrite::Conflict);
+    }
+    let customer_recommendation_reference: String = series.get("customer_recommendation_reference");
+    let publication_id = format!(
+        "customer_recommendation_publication_{}",
+        Uuid::new_v4().simple()
+    );
+    sqlx::query(
+        r#"
+        INSERT INTO customer_visit_recommendation_publications (
+            id, customer_recommendation_reference, organization_id,
+            customer_account_id, customer_property_id, service_job_id,
+            day_plan_id, day_plan_stop_id, source_amendment_id,
+            source_project_bid_id, proposal_version, customer_snapshot,
+            snapshot_sha256, published_by_user_id, provider_idempotency_key,
+            expires_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1, $11, $12,
+                $13, $14, NOW() + INTERVAL '7 days')
+        "#,
+    )
+    .bind(&publication_id)
+    .bind(&customer_recommendation_reference)
+    .bind(first.get::<String, _>("organization_id"))
+    .bind(first.get::<String, _>("customer_account_id"))
+    .bind(first.get::<String, _>("customer_property_id"))
+    .bind(first.get::<String, _>("service_job_id"))
+    .bind(day_plan_id)
+    .bind(first.get::<String, _>("day_plan_stop_id"))
+    .bind(first.get::<String, _>("source_amendment_id"))
+    .bind(bid_id)
+    .bind(&snapshot)
+    .bind(&snapshot_sha256)
+    .bind(actor_user_id)
+    .bind(idempotency_key)
+    .execute(&mut **transaction)
+    .await?;
+    sqlx::query(
+        r#"
+        INSERT INTO customer_visit_recommendation_events (
+            id, customer_recommendation_reference, publication_id,
+            proposal_version, actor_user_id, event_kind, idempotency_key
+        )
+        VALUES ($1, $2, $3, 1, $4, 'published', $5)
+        "#,
+    )
+    .bind(format!(
+        "customer_recommendation_event_{}",
+        Uuid::new_v4().simple()
+    ))
+    .bind(&customer_recommendation_reference)
+    .bind(&publication_id)
+    .bind(actor_user_id)
+    .bind(idempotency_key)
+    .execute(&mut **transaction)
+    .await?;
+    sqlx::query(
+        "UPDATE customer_visit_recommendation_series
+         SET current_version = 1, lifecycle_status = 'pending', updated_at = NOW()
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(&customer_recommendation_reference)
+    .execute(&mut **transaction)
+    .await?;
+
+    Ok(CustomerRecommendationPublicationWrite::Published)
 }
 
 pub async fn revoke(

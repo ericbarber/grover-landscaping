@@ -9322,7 +9322,7 @@ async fn send_project_bid(
 
     match state
         .project_bids
-        .send(&day_plan_id, &bid_id, &request)
+        .send(&day_plan_id, &bid_id, &principal.subject, &request)
         .await
     {
         ProjectBidSendResult::Sent(bid) => Json(bid).into_response(),
@@ -9339,6 +9339,14 @@ async fn send_project_bid(
             Json(ErrorResponse {
                 error: "project_bid_not_sendable",
                 message: "Only a persisted draft bid can be sent.".to_string(),
+            }),
+        )
+            .into_response(),
+        ProjectBidSendResult::PublicationConflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_recommendation_publication_conflict",
+                message: "The customer recommendation changed or was already published. Reload the bid before retrying delivery.".to_string(),
             }),
         )
             .into_response(),
@@ -14429,7 +14437,8 @@ mod tests {
     async fn send_project_bid_requires_persistence() {
         let request_body = serde_json::json!({
             "channel": "email",
-            "recipient": "customer@example.com"
+            "recipient": "customer@example.com",
+            "idempotency_key": "project-bid-send-outage-001"
         });
         let response = seed_app()
             .oneshot(
@@ -14450,7 +14459,8 @@ mod tests {
     async fn send_project_bid_rejects_invalid_sms_recipients() {
         let request_body = serde_json::json!({
             "channel": "sms",
-            "recipient": "602-555-0123"
+            "recipient": "602-555-0123",
+            "idempotency_key": "project-bid-send-invalid-001"
         });
         let response = seed_app()
             .oneshot(

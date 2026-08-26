@@ -540,3 +540,13 @@ retains immutable publication, supersession, decision, withdrawal, expiration,
 scheduling, and completion history. None of these tables grants customer API
 authority by itself; D-058 hybrid authorization remains required on every
 signed-in operation.
+
+The initial provider bridge creates version 1 inside the existing project-bid
+send transaction only when the active relationship, visit thread, immutable
+release/job, stop, add-service amendment, bid account, and provider organization
+all match. Its safe snapshot is derived from customer message plus public line-
+item names/descriptions/quantities/prices and a USD total; internal source IDs,
+notes, recipient/delivery data, and the bearer token are excluded. Exact actor-
+key replay rolls back the resend and creates neither another publication nor
+another notification. This bridge does not itself grant customer read/decision
+authority or implement revision publication.

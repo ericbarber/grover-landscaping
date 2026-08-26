@@ -218,6 +218,14 @@ Current state:
   response; and approval, decline, or revision requests require an unexpired
   current publication, actor retry identity, event-backed lifecycle, and the
   required affirmation or customer context. No customer API authority is added.
+- Phase 5D2 now atomically bridges an exact initial provider bid send into D-062.
+  The send requires a retry key and resolves the active relationship, visit,
+  release/job, stop, add-service amendment, account, and provider organization
+  before the same transaction writes the minimized hash-addressed version-1
+  publication, event, pending series, public-link delivery, and notification.
+  Exact replay creates no duplicate publication or notification; changed or
+  already-published sends conflict; non-exact legacy bids create no portal
+  publication. Revision and customer API authority remain undelivered.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -335,8 +343,9 @@ Next authorized slice and remaining gates:
 
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, and constrained immutable publication/version/decision
-  persistence are delivered. Atomically bridge exact provider bid send/revision
-  into that publication boundary before adding signed-in customer APIs.
+  persistence and exact initial provider-send bridge are delivered. Add
+  immutable revision/supersession publication and reconcile the separate legacy
+  bearer decision lifecycle before signed-in customer APIs or approval UI.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
