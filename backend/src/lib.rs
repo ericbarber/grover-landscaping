@@ -5,6 +5,7 @@ pub mod auth;
 pub mod completion_reports;
 pub mod customer_portal_access;
 pub mod customer_visit_communication;
+pub mod customer_visit_recommendations;
 pub mod day_plans;
 pub mod db;
 pub mod local_review;

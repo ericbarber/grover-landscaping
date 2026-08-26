@@ -4,8 +4,9 @@ Status: Source, authorization, versioning, and decision audit completed on
 2026-08-26. Decision D-062 adopts an immutable exact-visit recommendation
 publication around the existing project-bid authoring source. The constrained
 persistence foundation, atomic provider-send bridge, immutable provider
-revision publication, and legacy bearer-decision reconciliation are delivered;
-authenticated customer APIs are next.
+revision publication, legacy bearer-decision reconciliation, and authenticated
+minimized list/detail reads are delivered; actor-scoped customer decisions are
+next.
 
 ## Audit outcome
 
@@ -119,7 +120,7 @@ API are delivered.
 2. Publish only exact-provenance recommendation versions atomically from the
    provider send/revision workflow. **Delivered.**
 3. Add minimized hybrid-authorized exact-visit list/detail and actor-scoped
-   decision APIs with replay/conflict tests.
+   decision APIs with replay/conflict tests. **Reads delivered; decisions next.**
 4. Adopt pending/history/decision/recovery states in Yard Owner without public
    tokens, provider-private data, or billing claims.
 
@@ -160,3 +161,17 @@ that identifies `legacy_bearer_decision` and the legacy action. It does not
 create a D-062 customer decision, affirmation, or authenticated actor claim.
 This prevents a signed-in pending state from drifting after a bearer answer
 while preserving an honest distinction between the two authorization models.
+
+## Delivered authenticated customer reads
+
+The exact visit list and recommendation detail routes start from the signed-in
+actor, validate every active portal grant against its active membership and
+organization/account/property provenance, and then repeat the exact active
+relationship/release/visit scope. The list returns current state and current
+immutable publication; detail returns the ordered immutable version history.
+Stored snapshots are decoded with an allowlist, totals are recomputed, and any
+unknown, malformed, or inconsistent content fails closed without substituting
+the mutable project bid. Internal lineage, provider notes, delivery recipients,
+and bearer tokens never enter these responses. A read durably records and
+applies `expired` when a pending current publication has passed its server
+expiration.

@@ -559,4 +559,9 @@ quiet-hours-aware notification. Transitional bearer-link decisions update the
 legacy bid and close a pending signed-in series as `withdrawn`; their event data
 records the compatibility reason/action, but no D-062 customer decision or
 affirmation is inserted. These bridges do not themselves grant customer read or
-decision authority.
+decision authority. The authenticated D-062 read repository separately repeats
+the hybrid grant and exact visit-chain checks, strictly decodes only these
+immutable snapshots, recomputes totals, and exposes current plus ordered version
+history without source IDs. When it observes a pending current publication past
+`expires_at`, it inserts the immutable system expiry event and advances the
+series to `expired` in the same transaction before returning the projection.

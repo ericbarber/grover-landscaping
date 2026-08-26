@@ -7,6 +7,10 @@ use grover_landscaping_api::customer_visit_communication::{
     CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
     CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
 };
+use grover_landscaping_api::customer_visit_recommendations::{
+    CustomerRecommendationDetailResult, CustomerRecommendationListResult,
+    CustomerVisitRecommendationRepository,
+};
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
     BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
@@ -4911,6 +4915,80 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     );
     assert_eq!(bearer_reconciliation.get::<i64, _>("decision_count"), 0);
 
+    let customer_recommendations = CustomerVisitRecommendationRepository::from_pool(pool.clone());
+    let CustomerRecommendationListResult::Loaded(recommendation_collection) =
+        customer_recommendations
+            .list_for_visit(owner_a, &customer_visit_reference)
+            .await
+    else {
+        panic!("the exact owner should load minimized visit recommendations");
+    };
+    assert_eq!(
+        recommendation_collection.customer_visit_reference,
+        customer_visit_reference
+    );
+    assert_eq!(recommendation_collection.recommendations.len(), 2);
+    let recommendation_summary = recommendation_collection
+        .recommendations
+        .iter()
+        .find(|summary| summary.customer_recommendation_reference == recommendation_reference)
+        .expect("the revised recommendation should appear in the exact visit list");
+    assert_eq!(recommendation_summary.current_version, 2);
+    assert_eq!(recommendation_summary.lifecycle_status, "approved");
+    assert_eq!(
+        recommendation_summary.current_publication.total_cents,
+        22000
+    );
+    let recommendation_collection_json = serde_json::to_string(&recommendation_collection)
+        .expect("the recommendation collection should serialize");
+    for private_value in [
+        recommendation_bid_id,
+        recommendation_amendment_id,
+        recommendation_day_plan_id,
+        recommendation_stop_id,
+        service_release.service_job_id.as_str(),
+        "Revised provider-private note",
+        "owner-a@example.com",
+        bearer_share_token.as_str(),
+    ] {
+        assert!(!recommendation_collection_json.contains(private_value));
+    }
+    let CustomerRecommendationDetailResult::Loaded(recommendation_detail) =
+        customer_recommendations
+            .get_for_visit(
+                owner_a,
+                &customer_visit_reference,
+                &recommendation_reference,
+            )
+            .await
+    else {
+        panic!("the exact owner should load immutable recommendation history");
+    };
+    assert_eq!(recommendation_detail.current_version, 2);
+    assert_eq!(recommendation_detail.versions.len(), 2);
+    assert_eq!(recommendation_detail.versions[0].proposal_version, 1);
+    assert_eq!(recommendation_detail.versions[1].proposal_version, 2);
+    assert!(matches!(
+        customer_recommendations
+            .get_for_visit(
+                owner_b,
+                &customer_visit_reference,
+                &recommendation_reference
+            )
+            .await,
+        CustomerRecommendationDetailResult::NotAuthorized
+    ));
+    assert!(matches!(
+        customer_recommendations
+            .get_for_visit(
+                owner_a,
+                "customer_visit_00000000000000000000000000000000",
+                &recommendation_reference,
+            )
+            .await,
+        CustomerRecommendationDetailResult::NotFound
+    ));
+
     let question_request = CreateCustomerVisitQuestionRequest {
         expected_thread_version: 0,
         topic: "access".to_string(),
@@ -4931,6 +5009,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
         CustomerVisitThreadReadResult::NotAuthorized
+    ));
+    assert!(matches!(
+        customer_recommendations
+            .list_for_visit(owner_a, &customer_visit_reference)
+            .await,
+        CustomerRecommendationListResult::NotAuthorized
     ));
     assert!(matches!(
         visit_communication
@@ -4963,6 +5047,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
         CustomerVisitThreadReadResult::InvalidAuthorization
+    ));
+    assert!(matches!(
+        customer_recommendations
+            .list_for_visit(owner_a, &customer_visit_reference)
+            .await,
+        CustomerRecommendationListResult::InvalidAuthorization
     ));
     assert!(matches!(
         visit_communication

@@ -236,6 +236,13 @@ Current state:
   link answer atomically closes the signed-in surface as `withdrawn` without
   fabricating an authenticated D-062 decision or affirmation. Signed-in
   customer read and decision APIs remain next.
+- Phase 5D4 now delivers minimized hybrid-authorized exact-visit recommendation
+  reads. Visit list and exact recommendation detail repeat the D-058 grant,
+  membership, organization/account/property, active relationship, release, and
+  visit checks; strictly decode only stored immutable snapshots; expose current
+  state plus version history without source IDs, notes, recipients, tokens, or
+  live-bid fallback; and durably reconcile an expired pending publication before
+  returning it. Actor-scoped customer decision APIs remain next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -354,8 +361,8 @@ Next authorized slice and remaining gates:
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are
-  delivered. Add minimized hybrid-authorized exact-visit customer read and
-  actor-scoped decision APIs before signed-in approval UI.
+  delivered. Minimized hybrid-authorized exact-visit customer reads are also
+  delivered. Add actor-scoped decision APIs before signed-in approval UI.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

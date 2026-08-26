@@ -153,6 +153,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   snapshots, atomic quiet-hours-aware redelivery, and transitional legacy
   bearer decisions that close the signed-in surface without impersonating an
   authenticated customer decision
+- D-062 hybrid-authorized exact-visit recommendation list and immutable-history
+  detail reads with strict snapshot allowlisting, recomputed totals, durable
+  server expiration, cross-owner isolation, and no mutable-bid fallback
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

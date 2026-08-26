@@ -73,6 +73,10 @@ use grover_landscaping_api::{
         CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
         CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
     },
+    customer_visit_recommendations::{
+        CustomerRecommendationDetailResult, CustomerRecommendationListResult,
+        CustomerVisitRecommendationRepository,
+    },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
         validate_update_operational_exception, CreateOperationalExceptionRequest,
@@ -238,6 +242,7 @@ struct AppState {
     customer_portal: CustomerPortalAccessRepository,
     service_mobilization: ServiceMobilizationRepository,
     customer_visit_communication: CustomerVisitCommunicationRepository,
+    customer_visit_recommendations: CustomerVisitRecommendationRepository,
 }
 
 macro_rules! organization_ids_or_return {
@@ -607,6 +612,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         customer_portal,
         service_mobilization,
         customer_visit_communication,
+        customer_visit_recommendations,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -630,6 +636,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let service_mobilization = ServiceMobilizationRepository::from_pool(pool.clone());
             let customer_visit_communication =
                 CustomerVisitCommunicationRepository::from_pool(pool.clone());
+            let customer_visit_recommendations =
+                CustomerVisitRecommendationRepository::from_pool(pool.clone());
             let owner_acquisition = OwnerAcquisitionRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
@@ -652,6 +660,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 customer_portal,
                 service_mobilization,
                 customer_visit_communication,
+                customer_visit_recommendations,
                 "postgres",
             )
         }
@@ -677,6 +686,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             CustomerPortalAccessRepository::default(),
             ServiceMobilizationRepository::default(),
             CustomerVisitCommunicationRepository::default(),
+            CustomerVisitRecommendationRepository::default(),
             "seed-local",
         ),
     };
@@ -728,6 +738,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             customer_portal,
             service_mobilization,
             customer_visit_communication,
+            customer_visit_recommendations,
         }),
         persistence,
         persistence == "postgres",
@@ -796,6 +807,14 @@ fn app_with_runtime(
         .route(
             "/customer-portal/visits/{customer_visit_reference}/proof",
             get(get_customer_visit_proof),
+        )
+        .route(
+            "/customer-portal/visits/{customer_visit_reference}/recommendations",
+            get(list_customer_visit_recommendations),
+        )
+        .route(
+            "/customer-portal/visits/{customer_visit_reference}/recommendations/{customer_recommendation_reference}",
+            get(get_customer_visit_recommendation),
         )
         .route(
             "/owner-workspace",
@@ -2292,6 +2311,104 @@ async fn get_customer_visit_proof(
             "customer_visit_proof_unavailable",
             "Delivered proof could not be loaded. No live work data was substituted.",
         ),
+    }
+}
+
+async fn list_customer_visit_recommendations(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+) -> Response {
+    match state
+        .customer_visit_recommendations
+        .list_for_visit(&principal.subject, &customer_visit_reference)
+        .await
+    {
+        CustomerRecommendationListResult::Loaded(collection) => Json(collection).into_response(),
+        CustomerRecommendationListResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationListResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before recommendations can be shown.".to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationListResult::NotFound => resource_not_found_response(
+            "customer_visit_recommendations_not_found",
+            "The visit was not found in this authenticated scope.",
+        ),
+        CustomerRecommendationListResult::InvalidSnapshot => {
+            persisted_resource_unavailable_response(
+                "customer_visit_recommendations_invalid",
+                "Recommendations could not be safely projected. No live bid data was substituted.",
+            )
+        }
+        CustomerRecommendationListResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "customer_visit_recommendations_unavailable",
+                "Recommendations could not be loaded. No live bid data was substituted.",
+            )
+        }
+    }
+}
+
+async fn get_customer_visit_recommendation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((customer_visit_reference, customer_recommendation_reference)): Path<(String, String)>,
+) -> Response {
+    match state
+        .customer_visit_recommendations
+        .get_for_visit(
+            &principal.subject,
+            &customer_visit_reference,
+            &customer_recommendation_reference,
+        )
+        .await
+    {
+        CustomerRecommendationDetailResult::Loaded(detail) => Json(detail).into_response(),
+        CustomerRecommendationDetailResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationDetailResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before this recommendation can be shown.".to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationDetailResult::NotFound => resource_not_found_response(
+            "customer_visit_recommendation_not_found",
+            "The recommendation was not found in this authenticated visit scope.",
+        ),
+        CustomerRecommendationDetailResult::InvalidSnapshot => {
+            persisted_resource_unavailable_response(
+                "customer_visit_recommendation_invalid",
+                "The recommendation could not be safely projected. No live bid data was substituted.",
+            )
+        }
+        CustomerRecommendationDetailResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "customer_visit_recommendation_unavailable",
+                "The recommendation could not be loaded. No live bid data was substituted.",
+            )
+        }
     }
 }
 
@@ -10208,6 +10325,7 @@ mod tests {
             customer_portal: CustomerPortalAccessRepository::default(),
             service_mobilization: ServiceMobilizationRepository::default(),
             customer_visit_communication: CustomerVisitCommunicationRepository::default(),
+            customer_visit_recommendations: CustomerVisitRecommendationRepository::default(),
         })
     }
 
@@ -10341,6 +10459,30 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri("/customer-portal/visits/customer_visit_1/proof")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-portal/visits/customer_visit_1/recommendations")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-portal/visits/customer_visit_1/recommendations/customer_recommendation_11111111111111111111111111111111")
                     .body(Body::empty())
                     .unwrap(),
             )
