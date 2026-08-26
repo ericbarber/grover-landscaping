@@ -4163,6 +4163,18 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         rescheduled_end
     );
     assert_eq!(
+        rescheduled_customer_visit.original_window_start_epoch_seconds,
+        Some(first_visit_start + 86_400)
+    );
+    assert_eq!(
+        rescheduled_customer_visit.original_window_end_epoch_seconds,
+        Some(first_visit_start + 93_600)
+    );
+    assert_eq!(
+        rescheduled_customer_visit.original_time_zone.as_deref(),
+        Some("America/Phoenix")
+    );
+    assert_eq!(
         rescheduled_customer_visit.next_update_message,
         "Your new arrival window is confirmed."
     );

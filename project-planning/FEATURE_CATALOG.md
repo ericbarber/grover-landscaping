@@ -104,6 +104,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   bounded weather/update copy and the latest explicit reschedule window, omits
   release/event/job and provider-operational identifiers, and keeps proof false
   until separately authorized
+- Adopted all six explicit service-day modes in Yard Owner Home and Visits with
+  one accessible progress rail, bounded weather explanation, original and
+  replacement reschedule timing, current next-update ownership, recorded
+  preparation, and proof-pending privacy without provider-operational context
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

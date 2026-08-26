@@ -13,6 +13,8 @@ export interface CustomerPortalVisitSummary {
   propertyId: string;
   scheduledDate: string;
   arrivalWindow: string;
+  originalScheduledDate?: string;
+  originalArrivalWindow?: string;
   serviceTitle: string;
   scope: string[];
   status: CustomerVisitStatus;

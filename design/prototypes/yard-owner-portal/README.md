@@ -13,11 +13,10 @@ http://<vpn-ip>:5173/design/prototypes/yard-owner-portal/
 ## Production adoption status
 
 The production application now adopts the connected Home/Visits/Proof/Account
-shell, portal-wide property selection, local-review next-visit summaries, delivered
-proof, and recommendation history on top of existing customer-scoped foundations.
-The visit summary still needs a persisted customer-scoped API; full service-day
-states, concern recovery, recommendation collaboration, and customer-controlled
-preferences remain planned.
+shell, portal-wide property selection, authorized persisted visits, all six
+explicit service-day states, and delivered proof on top of customer-scoped
+foundations. Concern recovery, recommendation collaboration, and customer-
+controlled preferences remain planned.
 Billing remains product-gated. See the
 [adoption tracker](../../../project-planning/PROTOTYPE_ADOPTION.md).
 

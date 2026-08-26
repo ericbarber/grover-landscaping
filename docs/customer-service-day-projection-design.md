@@ -1,8 +1,8 @@
 # Customer Service-Day Projection Source
 
-Status: Decision D-059, constrained persistence, provider APIs, and minimized
-hybrid customer projection delivered on 2026-08-26; full Yard Owner lifecycle
-presentation is next.
+Status: Decision D-059, constrained persistence, provider APIs, minimized hybrid
+customer projection, and Yard Owner lifecycle presentation delivered on
+2026-08-26.
 
 ## Outcome of the source audit
 
@@ -100,8 +100,19 @@ provider notes, and unpublished evidence remain excluded.
    the latest explicit customer status/reason/update, retains the latest
    explicit reschedule window, and serializes no release, event, or job IDs.
 4. Adopt the complete service-day presentation and recovery in Yard Owner Home
-   and Visits. **Next.**
+   and Visits. **Delivered.** The interface uses one four-step progress rail,
+   explicit weather/reschedule branches, original/replacement window context,
+   bounded next-update copy, and a proof-pending privacy explanation.
 
 The delivered projection remains authoritative and intentionally bounded: raw
 operational state cannot advance customer status, and delivered proof stays
 false until its own exact authorization relation exists.
+
+## Validation note
+
+Rust formatting and library tests, the compiled mobilization persistence
+fixture, all frontend unit tests, TypeScript checking, and the production build
+pass for this delivery. The existing phone/desktop Yard Owner Playwright journey
+was invoked but could not start Chromium in the current host because
+`libnspr4.so` is unavailable; no browser assertion executed. The live migration-
+backed branch also still requires `DATABASE_URL`.

@@ -129,6 +129,13 @@ Current state:
   window. The request accepts no scope or operational identifiers, the response
   adds no release/event/job identifiers, and proof remains unavailable even
   after `complete_proof_pending`.
+- Phase 5A6 now adopts the explicit service-day lifecycle in Yard Owner Home and
+  Visits. One accessible four-step progress rail presents confirmed, on-the-way,
+  care, and complete milestones while weather delay and reschedule remain
+  explicit customer-safe branches. Weather reason, next-update ownership,
+  original/replacement reschedule windows, recorded preparation, and proof-
+  pending privacy are visible without crew, route, live-location, job, release,
+  event, or unpublished-evidence context.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -244,8 +251,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Adopt the complete explicit service-day presentation and recovery in Yard
-  Owner Home and Visits without exposing provider-operational context.
+- Audit the next Yard Owner contextual-question/concern boundary before adding
+  customer writes; do not infer a conversation or concern record from existing
+  operational notes, notifications, or support state.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

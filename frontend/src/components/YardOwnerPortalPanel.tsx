@@ -5,6 +5,7 @@ import {
   visitsForPortalProperty,
   type CustomerPortalPropertySummary,
   type CustomerPortalVisitSummary,
+  type CustomerVisitStatus,
 } from '../domain/customerPortalVisits';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
@@ -28,6 +29,112 @@ function deliveredDateLabel(value: string): string {
   return new Date(value).toLocaleDateString(undefined, {
     month: 'short', day: 'numeric', year: 'numeric',
   });
+}
+
+const serviceProgressSteps = [
+  { id: 'confirmed', label: 'Confirmed' },
+  { id: 'en_route', label: 'On the way' },
+  { id: 'care_in_progress', label: 'Care' },
+  { id: 'complete_proof_pending', label: 'Complete' },
+] as const;
+
+function serviceProgressIndex(status: CustomerVisitStatus): number {
+  return {
+    confirmed: 0,
+    weather_delay: 0,
+    rescheduled: 0,
+    en_route: 1,
+    care_in_progress: 2,
+    complete_proof_pending: 3,
+  }[status];
+}
+
+function serviceStatusClass(status: CustomerVisitStatus): string {
+  return {
+    confirmed: 'bg-paper text-emerald-900',
+    en_route: 'bg-sky-100 text-sky-900',
+    care_in_progress: 'bg-emerald-800 text-white',
+    weather_delay: 'bg-amber-100 text-amber-950',
+    rescheduled: 'bg-blue-100 text-blue-950',
+    complete_proof_pending: 'bg-violet-100 text-violet-950',
+  }[status];
+}
+
+function serviceCardClass(status: CustomerVisitStatus): string {
+  return {
+    confirmed: 'bg-emerald-50',
+    en_route: 'bg-sky-50',
+    care_in_progress: 'bg-emerald-50',
+    weather_delay: 'bg-amber-50',
+    rescheduled: 'bg-blue-50',
+    complete_proof_pending: 'bg-violet-50',
+  }[status];
+}
+
+function serviceVisitEyebrow(status: CustomerVisitStatus): string {
+  if (status === 'complete_proof_pending') return 'Recent visit';
+  if (status === 'confirmed') return 'Next confirmed visit';
+  return 'Service-day update';
+}
+
+function preparationLabel(status: CustomerVisitStatus): string {
+  if (status === 'en_route') return 'Prepare for arrival';
+  if (status === 'care_in_progress' || status === 'complete_proof_pending') {
+    return 'Recorded preparation';
+  }
+  if (status === 'weather_delay') return 'Preparation on file';
+  return 'Before we arrive';
+}
+
+function ServiceProgress({ status }: { status: CustomerVisitStatus }) {
+  const currentIndex = serviceProgressIndex(status);
+  return (
+    <ol aria-label="Service progress" className="mt-5 grid grid-cols-4 gap-2">
+      {serviceProgressSteps.map((step, index) => {
+        const isDone = index < currentIndex;
+        const isCurrent = index === currentIndex;
+        return (
+          <li
+            aria-current={isCurrent ? 'step' : undefined}
+            className={`border-t-2 pt-2 text-center text-[0.68rem] font-black ${isDone || isCurrent ? 'border-emerald-700 text-emerald-900' : 'border-slate-200 text-slate-500'}`}
+            key={step.id}
+          >
+            <span className={`mx-auto mb-1 grid h-7 w-7 place-items-center rounded-full ${isDone ? 'bg-emerald-700 text-white' : isCurrent ? 'bg-forest text-white' : 'bg-slate-100 text-slate-500'}`}>
+              {isDone ? <WorkspaceIcon className="h-4 w-4" name="check" /> : index + 1}
+            </span>
+            {step.label}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function ServiceStatusDetail({ visit }: { visit: CustomerPortalVisitSummary }) {
+  if (visit.status === 'weather_delay' && visit.statusReason) {
+    return (
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+        <strong>Weather update:</strong> {visit.statusReason}
+      </div>
+    );
+  }
+  if (visit.status === 'rescheduled'
+    && visit.originalScheduledDate
+    && visit.originalArrivalWindow) {
+    return (
+      <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-950">
+        <strong>New date confirmed.</strong> Moved from {serviceDateLabel(visit.originalScheduledDate)}, {visit.originalArrivalWindow}. The replacement is {serviceDateLabel(visit.scheduledDate)}, {visit.arrivalWindow}.
+      </div>
+    );
+  }
+  if (visit.status === 'complete_proof_pending') {
+    return (
+      <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4 text-sm leading-6 text-violet-950">
+        <strong>Care is complete.</strong> Delivered proof will appear only after provider review. Unpublished evidence remains private.
+      </div>
+    );
+  }
+  return null;
 }
 
 export function YardOwnerPortalPanel({
@@ -174,17 +281,19 @@ export function YardOwnerPortalPanel({
 
             <div className="mt-7 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
               {nextVisit ? (
-                <article className="rounded-2xl bg-emerald-50 p-5 sm:p-6">
+                <article className={`rounded-2xl p-5 sm:p-6 ${serviceCardClass(nextVisit.status)}`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="grover-eyebrow">Next confirmed visit</p>
+                      <p className="grover-eyebrow">{serviceVisitEyebrow(nextVisit.status)}</p>
                       <h2 className="mt-2 font-display text-3xl font-black text-forest">{serviceDateLabel(nextVisit.scheduledDate)}</h2>
                       <p className="mt-1 font-black text-emerald-900">{nextVisit.arrivalWindow} · {nextVisit.serviceTitle}</p>
                     </div>
-                    <span className="rounded-full bg-paper px-3 py-1 text-xs font-black text-emerald-900">
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ${serviceStatusClass(nextVisit.status)}`}>
                       {customerVisitStatusLabel(nextVisit.status)}
                     </span>
                   </div>
+                  <ServiceProgress status={nextVisit.status} />
+                  <ServiceStatusDetail visit={nextVisit} />
                   <ul className="mt-5 grid gap-2 sm:grid-cols-2">
                     {nextVisit.scope.map((item) => (
                       <li className="flex gap-2 text-sm font-bold text-slate-700" key={item}>
@@ -194,9 +303,9 @@ export function YardOwnerPortalPanel({
                     ))}
                   </ul>
                   <div className="mt-5 rounded-xl bg-paper p-4 text-sm leading-6 text-slate-700">
-                    <strong className="text-forest">Before we arrive:</strong> {nextVisit.preparationMessage}
+                    <strong className="text-forest">{preparationLabel(nextVisit.status)}:</strong> {nextVisit.preparationMessage}
                   </div>
-                  <p className="mt-3 text-xs font-bold text-emerald-900">{nextVisit.nextUpdateMessage}</p>
+                  <p className="mt-3 text-sm font-bold text-emerald-950"><strong>Next update:</strong> {nextVisit.nextUpdateMessage}</p>
                 </article>
               ) : (
                 <WorkspaceStatusNotice
@@ -228,7 +337,7 @@ export function YardOwnerPortalPanel({
           <div>
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Visits</h1>
-            <p className="mt-2 text-sm text-slate-600">Upcoming care and customer-visible service-day updates.</p>
+            <p className="mt-2 text-sm text-slate-600">Scheduled care and explicit customer-visible service-day updates.</p>
             <div className="mt-6 space-y-3">
               {propertyVisits.length > 0 ? propertyVisits.map((visit) => (
                 <article className="rounded-2xl border border-slate-200 p-5" key={visit.id}>
@@ -237,9 +346,11 @@ export function YardOwnerPortalPanel({
                       <h2 className="font-display text-2xl font-black text-forest">{serviceDateLabel(visit.scheduledDate)}</h2>
                       <p className="mt-1 text-sm font-bold text-slate-700">{visit.arrivalWindow} · {visit.serviceTitle}</p>
                     </div>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-900">{customerVisitStatusLabel(visit.status)}</span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ${serviceStatusClass(visit.status)}`}>{customerVisitStatusLabel(visit.status)}</span>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-slate-600">{visit.nextUpdateMessage}</p>
+                  <ServiceProgress status={visit.status} />
+                  <ServiceStatusDetail visit={visit} />
+                  <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
                 </article>
               )) : (
                 <WorkspaceStatusNotice detail="A confirmed visit will appear here when your provider schedules it." title="No upcoming visits." tone="neutral" />

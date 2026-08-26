@@ -63,6 +63,17 @@ describe('customer portal visit client', () => {
         status: 'weather_delay', customer_safe_reason: 'Lightning is nearby.',
         next_update_message: 'We will post another update by 10:30 AM.',
         delivered_proof_available: false,
+      }, {
+        organization_id: 'org_1', account_id: 'account_1', property_id: 'property_1',
+        service_date: '2026-08-30', window_start_epoch_seconds: 1788102000,
+        window_end_epoch_seconds: 1788109200, time_zone: 'America/Phoenix',
+        original_service_date: '2026-08-29',
+        original_window_start_epoch_seconds: 1788015600,
+        original_window_end_epoch_seconds: 1788022800,
+        original_time_zone: 'America/Phoenix',
+        service_title: 'Initial yard care', service_scope: ['Mow and edge turf'],
+        status: 'rescheduled', next_update_message: 'Your new window is confirmed.',
+        delivered_proof_available: false,
       }],
     }), { status: 200 })));
 
@@ -74,5 +85,12 @@ describe('customer portal visit client', () => {
     });
     expect(collection.visits[0]).not.toHaveProperty('releaseId');
     expect(collection.visits[0]).not.toHaveProperty('serviceJobId');
+    expect(collection.visits[1]).toMatchObject({
+      status: 'rescheduled',
+      originalScheduledDate: '2026-08-29',
+      originalArrivalWindow: '8:00 AM–10:00 AM',
+      scheduledDate: '2026-08-30',
+      arrivalWindow: '8:00 AM–10:00 AM',
+    });
   });
 });

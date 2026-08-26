@@ -148,11 +148,10 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Expose provider-authorized release/status publication APIs over the delivered
-   immutable persistence documented in
-   [`../docs/customer-service-day-projection-design.md`](../docs/customer-service-day-projection-design.md),
-   then extend the hybrid customer visit projection without accepting internal
-   identifiers from the customer.
+1. Service mobilization persistence, provider release/status APIs, minimized
+   customer projection, and all six Yard Owner service-day modes are delivered.
+   Audit the next contextual-question/concern source before adding customer
+   writes or reusing operational notes/support state.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and

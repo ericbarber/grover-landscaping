@@ -23,6 +23,10 @@ interface ApiCustomerPortalVisitSummary {
   window_start_epoch_seconds: number;
   window_end_epoch_seconds: number;
   time_zone: string;
+  original_service_date?: string;
+  original_window_start_epoch_seconds?: number;
+  original_window_end_epoch_seconds?: number;
+  original_time_zone?: string;
   service_title: string;
   service_scope: string[];
   status: CustomerVisitStatus;
@@ -59,6 +63,19 @@ export function toCustomerPortalPropertySummary(
 export function toCustomerPortalVisitSummary(
   visit: ApiCustomerPortalVisitSummary,
 ): CustomerPortalVisitSummary {
+  const originalServiceDate = visit.original_service_date;
+  const originalWindowStart = visit.original_window_start_epoch_seconds;
+  const originalWindowEnd = visit.original_window_end_epoch_seconds;
+  const originalTimeZone = visit.original_time_zone;
+  const originalWindow = originalServiceDate
+    && originalWindowStart !== undefined
+    && originalWindowEnd !== undefined
+    && originalTimeZone
+    ? {
+      originalScheduledDate: originalServiceDate,
+      originalArrivalWindow: `${arrivalTimeLabel(originalWindowStart, originalTimeZone)}–${arrivalTimeLabel(originalWindowEnd, originalTimeZone)}`,
+    }
+    : {};
   return {
     id: `${visit.organization_id}:${visit.property_id}:${visit.window_start_epoch_seconds}`,
     customerId: visit.account_id,
@@ -66,6 +83,7 @@ export function toCustomerPortalVisitSummary(
     propertyId: visit.property_id,
     scheduledDate: visit.service_date,
     arrivalWindow: `${arrivalTimeLabel(visit.window_start_epoch_seconds, visit.time_zone)}–${arrivalTimeLabel(visit.window_end_epoch_seconds, visit.time_zone)}`,
+    ...originalWindow,
     serviceTitle: visit.service_title,
     scope: visit.service_scope,
     status: visit.status,

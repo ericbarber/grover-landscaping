@@ -5,9 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the complete Yard Owner service-day
-presentation over the delivered mobilization/work-release persistence, provider
-API, and minimized customer projection. Safe Yard Crew operating
+The current production-adoption priority is the next bounded Yard Owner
+contextual-question/concern source audit after completing service-day
+mobilization, provider APIs, minimized projection, and lifecycle presentation.
+Safe Yard Crew operating
 preparation is adopted through service and language facts; public fit/entry and
 provider identity/readiness core are adopted with distinct owner-operator,
 company-owner, team-invitation, and known-owner paths plus precise supplied,
@@ -23,15 +24,13 @@ portfolio V1 command center is adopted in React. Decision D-058 now implements
 customer-account scope for verified owners and explicit property scope for
 delegates; its constrained migration, fail-closed resolver, and minimized
 persisted visit projection are delivered. Yard Owner Home and Visits now consume
-that projection with fail-closed recovery and no illustrative fallback, making
-the customer-safe service-day lifecycle extension the active next slice. Its
-source audit found no exact first-visit-to-job/property release relation, so
-decision D-059's immutable provider-authorized release and explicit customer-
-status event persistence now provide that link. Provider release/reload/status
-APIs are delivered with exact membership checks, replay recovery, and minimized
-responses. The hybrid customer projection now advances only through explicit
-customer events, retains the latest explicit reschedule window, and omits
-release/event/job identifiers. Full Yard Owner lifecycle presentation is next.
+that projection with fail-closed recovery and no illustrative fallback.
+Decision D-059's immutable provider-authorized release, explicit customer-event
+persistence, provider release/reload/status APIs, and minimized customer join
+are delivered. Yard Owner Home and Visits now present all six explicit states
+with an accessible progress rail, weather reason, original and replacement
+reschedule timing, next-update ownership, and proof-pending privacy while
+omitting release/event/job identifiers and provider operations.
 Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
 handoff. Proposal
@@ -92,9 +91,9 @@ adds service-day progress, contextual questions, concern recovery, proof feedbac
 recommendation collaboration, and customer-controlled notification/access
 preferences; and covers responsive happy, empty, unavailable, failure, retry,
 and success states. Production adoption now includes the dedicated minimized
-next-visit read and its Home/Visits consumption. Remaining work requires
-authoritative customer-safe service-day, conversation, concern, preference,
-access, and provider-contact contracts.
+next-visit/service-day read and its Home/Visits consumption. Remaining work
+requires authoritative conversation, concern, preference, access, and provider-
+contact contracts.
 Billing remains product-gated. The broader customer phase now has an adopted
 property-manager portfolio command center with Overview, Properties, Proof, and
 Approvals. Provider onboarding remains in the phase.

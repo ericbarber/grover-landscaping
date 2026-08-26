@@ -28,6 +28,14 @@ pub struct CustomerPortalVisitSummary {
     pub window_start_epoch_seconds: i64,
     pub window_end_epoch_seconds: i64,
     pub time_zone: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_service_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_window_start_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_window_end_epoch_seconds: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_time_zone: Option<String>,
     pub service_title: String,
     pub service_scope: Vec<String>,
     pub status: String,
@@ -292,6 +300,19 @@ async fn list_confirmed_visits(
                 EXTRACT(EPOCH FROM COALESCE(reschedule.window_end, visit.window_end))::BIGINT
                     AS window_end_epoch_seconds,
                 COALESCE(reschedule.time_zone, visit.time_zone) AS time_zone,
+                CASE WHEN reschedule.window_start IS NULL THEN NULL ELSE TO_CHAR(
+                    visit.window_start AT TIME ZONE visit.time_zone,
+                    'YYYY-MM-DD'
+                ) END AS original_service_date,
+                CASE WHEN reschedule.window_start IS NULL THEN NULL
+                    ELSE EXTRACT(EPOCH FROM visit.window_start)::BIGINT
+                END AS original_window_start_epoch_seconds,
+                CASE WHEN reschedule.window_start IS NULL THEN NULL
+                    ELSE EXTRACT(EPOCH FROM visit.window_end)::BIGINT
+                END AS original_window_end_epoch_seconds,
+                CASE WHEN reschedule.window_start IS NULL THEN NULL
+                    ELSE visit.time_zone
+                END AS original_time_zone,
                 service.title AS service_title,
                 service.included_scope AS service_scope,
                 COALESCE(latest.event_kind, series.status) AS status,
@@ -373,6 +394,10 @@ async fn list_confirmed_visits(
                 NULL::BIGINT AS window_start_epoch_seconds,
                 NULL::BIGINT AS window_end_epoch_seconds,
                 NULL::TEXT AS time_zone,
+                NULL::TEXT AS original_service_date,
+                NULL::BIGINT AS original_window_start_epoch_seconds,
+                NULL::BIGINT AS original_window_end_epoch_seconds,
+                NULL::TEXT AS original_time_zone,
                 NULL::TEXT AS service_title,
                 NULL::TEXT[] AS service_scope,
                 NULL::TEXT AS visit_status,
@@ -391,6 +416,10 @@ async fn list_confirmed_visits(
                 visit.window_start_epoch_seconds,
                 visit.window_end_epoch_seconds,
                 visit.time_zone,
+                visit.original_service_date,
+                visit.original_window_start_epoch_seconds,
+                visit.original_window_end_epoch_seconds,
+                visit.original_time_zone,
                 visit.service_title,
                 visit.service_scope,
                 visit.status AS visit_status,
@@ -411,6 +440,10 @@ async fn list_confirmed_visits(
             portal_row.window_start_epoch_seconds,
             portal_row.window_end_epoch_seconds,
             portal_row.time_zone,
+            portal_row.original_service_date,
+            portal_row.original_window_start_epoch_seconds,
+            portal_row.original_window_end_epoch_seconds,
+            portal_row.original_time_zone,
             portal_row.service_title,
             portal_row.service_scope,
             portal_row.visit_status,
@@ -455,6 +488,10 @@ async fn list_confirmed_visits(
                 window_start_epoch_seconds: row.get("window_start_epoch_seconds"),
                 window_end_epoch_seconds: row.get("window_end_epoch_seconds"),
                 time_zone: row.get("time_zone"),
+                original_service_date: row.get("original_service_date"),
+                original_window_start_epoch_seconds: row.get("original_window_start_epoch_seconds"),
+                original_window_end_epoch_seconds: row.get("original_window_end_epoch_seconds"),
+                original_time_zone: row.get("original_time_zone"),
                 service_title: row.get("service_title"),
                 service_scope: row.get("service_scope"),
                 status: row.get("visit_status"),
@@ -552,6 +589,10 @@ mod tests {
                 window_start_epoch_seconds: 1_788_019_200,
                 window_end_epoch_seconds: 1_788_026_400,
                 time_zone: "America/Phoenix".to_string(),
+                original_service_date: None,
+                original_window_start_epoch_seconds: None,
+                original_window_end_epoch_seconds: None,
+                original_time_zone: None,
                 service_title: "Initial yard care".to_string(),
                 service_scope: vec!["Mow and edge turf".to_string()],
                 status: "confirmed".to_string(),

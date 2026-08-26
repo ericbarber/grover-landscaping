@@ -70,7 +70,10 @@ update copy come only from the latest explicit immutable customer event.
 `customer_safe_reason` appears only when the current event supplies one. The
 effective window remains the owner-confirmed first-visit window until an
 explicit `rescheduled` event replaces it; later events retain that latest
-rescheduled window.
+rescheduled window. A rescheduled response also includes optional
+`original_service_date`, `original_window_start_epoch_seconds`,
+`original_window_end_epoch_seconds`, and `original_time_zone` fields derived
+from the exact confirmed first visit.
 
 ## Failure states
 
@@ -103,6 +106,11 @@ and unavailable states remain distinct and offer retry where applicable. A
 failed read clears prior portal properties and visits; the interface never
 substitutes seeded or illustrative visit data. Proof and recommendations keep
 their separately authorized boundaries and are not inferred from this response.
+
+Home and Visits render all six statuses on one customer-facing progress rail.
+Weather delay shows only the bounded customer-safe reason and next update;
+rescheduled shows the original and replacement windows; complete/proof-pending
+states explicitly withhold unpublished evidence until delivery.
 
 States beyond `confirmed` use the explicit persisted
 [mobilization/work-release source contract](customer-service-day-projection-design.md).
