@@ -497,6 +497,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/marketing-leads/")
         || path == "/marketing-events"
         || path == "/me/access"
+        || path == "/customer-portal/visits"
         || path == "/owner-workspace"
         || path == "/owner-properties"
         || path.starts_with("/owner-properties/")
@@ -570,6 +571,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
     if path == "/me/access" {
         return *method == Method::GET;
+    }
+    if path == "/customer-portal/visits" {
+        return principal.verified_email.is_some() && *method == Method::GET;
     }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
@@ -1807,6 +1811,7 @@ mod tests {
         };
         for (method, path) in [
             (Method::GET, "/me/access"),
+            (Method::GET, "/customer-portal/visits"),
             (Method::GET, "/owner-workspace"),
             (Method::PUT, "/owner-workspace"),
             (Method::GET, "/owner-properties"),
@@ -1977,6 +1982,11 @@ mod tests {
             &unverified,
             &Method::GET,
             "/owner-workspace"
+        ));
+        assert!(!is_authorized(
+            &unverified,
+            &Method::GET,
+            "/customer-portal/visits"
         ));
     }
 

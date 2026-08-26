@@ -1,5 +1,6 @@
 use grover_landscaping_api::customer_portal_access::{
     CustomerPortalAccessRepository, CustomerPortalPropertyAccessResult,
+    CustomerPortalVisitReadResult,
 };
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
@@ -3506,6 +3507,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         portal_access.list_authorized_properties(owner_a).await,
         CustomerPortalPropertyAccessResult::InvalidAuthorization
     ));
+    assert!(matches!(
+        portal_access.list_confirmed_visits(owner_a).await,
+        CustomerPortalVisitReadResult::InvalidAuthorization
+    ));
     sqlx::query("UPDATE organization_memberships SET status = 'active' WHERE id = $1")
         .bind(&activation.owner_membership_id)
         .execute(&pool)
@@ -3698,6 +3703,65 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     };
     assert_eq!(confirmed.status, "confirmed");
     assert_eq!(confirmed.owner_decision.as_deref(), Some("confirm"));
+    let CustomerPortalVisitReadResult::Loaded(customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the authorized owner should load confirmed customer visits");
+    };
+    assert_eq!(customer_visits.properties.len(), 2);
+    assert!(customer_visits
+        .properties
+        .iter()
+        .any(|property| property.property_id == sibling_property_id));
+    assert_eq!(customer_visits.visits.len(), 1);
+    let customer_visit = &customer_visits.visits[0];
+    assert_eq!(customer_visit.property_id, activation.customer_property_id);
+    assert_eq!(customer_visit.status, "confirmed");
+    assert_eq!(customer_visit.service_title, proposal_v2.title);
+    assert_eq!(customer_visit.service_scope, proposal_v2.included_scope);
+    assert_eq!(
+        customer_visit.preparation_message.as_deref(),
+        Some("Friday afternoon arrival window.")
+    );
+    assert!(!customer_visit.delivered_proof_available);
+    let customer_visit_json =
+        serde_json::to_string(&customer_visits).expect("customer visits should serialize");
+    for private_value in [
+        "recipient-user-1",
+        "owner_provider_first_visit_confirmation_v1",
+        &activation.activation_id,
+        second_window
+            .proposal_id
+            .as_deref()
+            .expect("confirmed proposal id should exist"),
+    ] {
+        assert!(
+            !customer_visit_json.contains(private_value),
+            "customer visit JSON must exclude {private_value}"
+        );
+    }
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET status = 'revoked', revoked_at = NOW()
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should revoke");
+    assert!(matches!(
+        portal_access.list_confirmed_visits(owner_a).await,
+        CustomerPortalVisitReadResult::NotAuthorized
+    ));
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET status = 'active', revoked_at = NULL
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should restore");
     assert!(matches!(
         repository
             .decide_owner_provider_first_visit(

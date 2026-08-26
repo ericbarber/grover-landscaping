@@ -66,6 +66,7 @@ use grover_landscaping_api::{
         AccessRole,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
+    customer_portal_access::{CustomerPortalAccessRepository, CustomerPortalVisitReadResult},
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
         validate_update_operational_exception, CreateOperationalExceptionRequest,
@@ -219,6 +220,7 @@ struct AppState {
     marketing_leads: MarketingLeadRepository,
     marketing_events: MarketingEventRepository,
     owner_acquisition: OwnerAcquisitionRepository,
+    customer_portal: CustomerPortalAccessRepository,
 }
 
 macro_rules! organization_ids_or_return {
@@ -532,6 +534,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         marketing_events,
         accounts,
         owner_acquisition,
+        customer_portal,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -551,6 +554,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             let property_onboarding = PropertyOnboardingRepository::from_pool(pool.clone());
             let marketing_leads = MarketingLeadRepository::from_pool(pool.clone());
             let marketing_events = MarketingEventRepository::from_pool(pool.clone());
+            let customer_portal = CustomerPortalAccessRepository::from_pool(pool.clone());
             let owner_acquisition = OwnerAcquisitionRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
@@ -570,6 +574,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 marketing_events,
                 accounts,
                 owner_acquisition,
+                customer_portal,
                 "postgres",
             )
         }
@@ -592,6 +597,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             MarketingEventRepository::default(),
             AccountRepository::new(),
             OwnerAcquisitionRepository::new(),
+            CustomerPortalAccessRepository::default(),
             "seed-local",
         ),
     };
@@ -640,6 +646,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             marketing_leads,
             marketing_events,
             owner_acquisition,
+            customer_portal,
         }),
         persistence,
         persistence == "postgres",
@@ -700,6 +707,7 @@ fn app_with_runtime(
         .route("/marketing-events", post(create_marketing_event))
         .route("/marketing-dashboard", get(get_marketing_dashboard))
         .route("/me/access", get(get_my_access))
+        .route("/customer-portal/visits", get(list_customer_portal_visits))
         .route(
             "/owner-workspace",
             get(get_owner_workspace).put(save_owner_workspace),
@@ -2072,6 +2080,41 @@ async fn get_owner_provider_first_visit(
                 "First-visit status could not be loaded. Existing provider setup and appointment state are unchanged.",
             )
         }
+    }
+}
+
+async fn list_customer_portal_visits(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    match state
+        .customer_portal
+        .list_confirmed_visits(&principal.subject)
+        .await
+    {
+        CustomerPortalVisitReadResult::Loaded(collection) => Json(collection).into_response(),
+        CustomerPortalVisitReadResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this account."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerPortalVisitReadResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before visit details can be shown."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerPortalVisitReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_portal_visits_unavailable",
+            "Visit details could not be loaded. Customer information remains protected; try again later.",
+        ),
     }
 }
 
@@ -9588,6 +9631,7 @@ mod tests {
             marketing_leads: MarketingLeadRepository::default(),
             marketing_events: MarketingEventRepository::default(),
             owner_acquisition: OwnerAcquisitionRepository::new(),
+            customer_portal: CustomerPortalAccessRepository::default(),
         })
     }
 
@@ -10458,6 +10502,28 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-portal/visits")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body: Value = serde_json::from_slice(
+            &response
+                .into_body()
+                .collect()
+                .await
+                .expect("customer portal outage body should collect")
+                .to_bytes(),
+        )
+        .expect("customer portal outage body should be JSON");
+        assert_eq!(body["error"], "customer_portal_visits_unavailable");
 
         let first_visit_decision_payload = serde_json::json!({
             "expected_window_version": 1,

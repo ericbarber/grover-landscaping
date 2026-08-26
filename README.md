@@ -29,8 +29,8 @@ Team and access command center. Property Managers now enter a dedicated,
 prototype-aligned portfolio command center for readiness, exceptions, property
 coverage, proof, and approvals. The hybrid customer-authorization model is
 implemented: account owners inherit account properties and delegates remain
-property-scoped. Its constrained authorization foundation is delivered; the
-minimized persisted visit read is the next slice.
+property-scoped. Its constrained authorization foundation and minimized visit
+API are delivered; replacing illustrative Yard Owner visit data is next.
 Landscaping-company signup now opens a dedicated provider entry route that
 separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
@@ -105,6 +105,7 @@ Start with these records when reviewing or continuing development:
 - Owner/provider assessment lifecycle with customer-safe conversation and separate provider-private notes
 - Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
 - Explicit accepted-proposal activation into provider customer/property setup with customer-account owner access, retained property-scoped delegation, and no implicit first visit or crew assignment
+- Fail-closed customer portal property and confirmed-visit reads with a minimized customer-safe response
 - Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
 - Organization Owner Team and access command center with live staffing/access
   summaries and direct administration and audit paths
@@ -464,7 +465,8 @@ The application is responsive across owner, provider, crew, manager, administrat
 The repository-owned prototype-adoption core is now implemented through the
 Yard Crew operating profile. Customer-account owner scope with property-scoped
 delegates is delivered through a constrained migration and fail-closed property
-resolver; the minimized Yard Owner visit read is next. Curated-opportunity
+resolver; the minimized visit API is delivered and Yard Owner interface adoption
+is next. Curated-opportunity
 availability/governance and governed
 credential evidence still require product/operations decisions. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) and

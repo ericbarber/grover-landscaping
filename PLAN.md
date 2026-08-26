@@ -98,6 +98,12 @@ Current state:
   provenance; and one fail-closed resolver revalidates organization, account,
   property, membership, role, grant, and scope before returning non-archived
   properties. Explicit property scope remains isolated for delegates.
+- Phase 5A1 now exposes a purpose-built persisted customer portal read through
+  that resolver. It returns authorized non-archived property identity and only
+  exactly confirmed first visits with bounded window, accepted customer-safe
+  service scope, preparation, and next-update fields. It distinguishes empty,
+  unauthorized, inconsistent, and unavailable states and excludes operational,
+  billing, actor, token, and internal lifecycle identifiers.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -199,14 +205,15 @@ Current state:
   receive customer-account scope across current/future properties in that
   provider account, while delegates retain explicit property scope. Its
   constrained migration, activation behavior, provenance-safe backfill, and
-  fail-closed property resolver are delivered; persisted visit reads remain the
-  next implementation boundary.
+  fail-closed property resolver and minimized confirmed-visit read are
+  delivered; replacing illustrative Yard Owner visit data is the next
+  implementation boundary.
 
 Next authorized slice and remaining gates:
 
-- Add the minimized persisted customer visit read through the shared hybrid
-  authorization resolver. Preserve valid-empty, unauthorized, inconsistent,
-  and unavailable states and the customer-safe field allowlist.
+- Adopt the minimized persisted customer visit read in the Yard Owner interface.
+  Preserve loading, valid-empty, unauthorized/inconsistent, unavailable, and
+  retry states without falling back to illustrative visit data.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

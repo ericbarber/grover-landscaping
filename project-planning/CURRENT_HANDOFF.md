@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active authorized slice: add the minimized persisted Yard Owner visit read
-  through decision D-058's delivered customer-account owner/property-delegate
-  authorization resolver. Curated-opportunity
+- Active authorized slice: replace illustrative Yard Owner visits with the
+  delivered minimized persisted read and its loading, empty, access, unavailable,
+  and retry states. Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -144,9 +144,9 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Add the minimized persisted customer visit projection through the delivered
-   hybrid resolver. Preserve the customer-safe allowlist and distinct valid-
-   empty, unauthorized, inconsistent-authorization, and unavailable states.
+1. Adopt the minimized persisted customer visit projection in Yard Owner Home
+   and Visits. Do not fall back to illustrative visits after loading or failure;
+   preserve valid-empty, authorization, unavailable, and retry states.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and

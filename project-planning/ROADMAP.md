@@ -19,8 +19,9 @@ collapsing customer approval into provider work authority.
 The property-manager
 portfolio V1 command center is adopted in React. Decision D-058 now implements
 customer-account scope for verified owners and explicit property scope for
-delegates; its constrained migration and fail-closed resolver are delivered,
-making the Yard Owner persisted visit projection the active next slice.
+delegates; its constrained migration, fail-closed resolver, and minimized
+persisted visit projection are delivered, making Yard Owner interface adoption
+the active next slice.
 Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
 handoff. Proposal
