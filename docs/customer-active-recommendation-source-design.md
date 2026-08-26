@@ -5,8 +5,8 @@ Status: Source, authorization, versioning, and decision audit completed on
 publication around the existing project-bid authoring source. The constrained
 persistence foundation, atomic provider-send bridge, immutable provider
 revision publication, legacy bearer-decision reconciliation, and authenticated
-minimized list/detail reads are delivered; actor-scoped customer decisions are
-next.
+minimized list/detail reads and actor-scoped customer decisions are delivered;
+signed-in Yard Owner adoption is next.
 
 ## Audit outcome
 
@@ -120,7 +120,7 @@ API are delivered.
 2. Publish only exact-provenance recommendation versions atomically from the
    provider send/revision workflow. **Delivered.**
 3. Add minimized hybrid-authorized exact-visit list/detail and actor-scoped
-   decision APIs with replay/conflict tests. **Reads delivered; decisions next.**
+   decision APIs with replay/conflict tests. **Delivered.**
 4. Adopt pending/history/decision/recovery states in Yard Owner without public
    tokens, provider-private data, or billing claims.
 
@@ -175,3 +175,10 @@ the mutable project bid. Internal lineage, provider notes, delivery recipients,
 and bearer tokens never enter these responses. A read durably records and
 applies `expired` when a pending current publication has passed its server
 expiration.
+
+The exact recommendation route also accepts bounded approve, decline, and
+revision-request writes. It repeats the same authorization and exact scope,
+requires the displayed current unexpired version, enforces action-specific
+affirmation/context, and atomically records the immutable decision, lifecycle
+event, and series transition. Exact actor-key replay returns the recorded
+receipt; changed content or stale/closed state conflicts.

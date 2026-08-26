@@ -242,7 +242,14 @@ Current state:
   visit checks; strictly decode only stored immutable snapshots; expose current
   state plus version history without source IDs, notes, recipients, tokens, or
   live-bid fallback; and durably reconcile an expired pending publication before
-  returning it. Actor-scoped customer decision APIs remain next.
+  returning it.
+- Phase 5D5 now delivers hybrid-authorized actor-scoped decisions for the exact
+  current unexpired publication. Approve requires the versioned affirmation;
+  revision requests require customer-safe context; decline carries no approval
+  affirmation. One transaction writes the immutable decision and lifecycle
+  event before advancing series state. Exact actor-key replay returns the
+  receipt; changed content, stale versions, closed state, and reused identity
+  conflict. Signed-in Yard Owner UI adoption remains next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -361,8 +368,9 @@ Next authorized slice and remaining gates:
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are
-  delivered. Minimized hybrid-authorized exact-visit customer reads are also
-  delivered. Add actor-scoped decision APIs before signed-in approval UI.
+  delivered. Minimized hybrid-authorized exact-visit customer reads and actor-
+  scoped exact-version decisions are also delivered. Add signed-in Yard Owner
+  recommendation and decision UI.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

@@ -8,8 +8,9 @@ use grover_landscaping_api::customer_visit_communication::{
     CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
 };
 use grover_landscaping_api::customer_visit_recommendations::{
-    CustomerRecommendationDetailResult, CustomerRecommendationListResult,
-    CustomerVisitRecommendationRepository,
+    CustomerRecommendationDecisionResult, CustomerRecommendationDetailResult,
+    CustomerRecommendationListResult, CustomerVisitRecommendationRepository,
+    DecideCustomerRecommendationRequest,
 };
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
@@ -4760,48 +4761,54 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .is_err());
-    sqlx::query(
-        "INSERT INTO customer_visit_recommendation_decisions (
-             id, customer_recommendation_reference, publication_id,
-             proposal_version, actor_user_id, action,
-             affirmation_text_version, idempotency_key
-         ) VALUES (
-             'customer_recommendation_decision_11111111111111111111111111111111',
-             $1, $2, 2, $3, 'approve',
-             'customer_recommendation_approval_v1',
-             'recommendation-decision-fixture-001'
-         )",
-    )
-    .bind(&recommendation_reference)
-    .bind(&recommendation_publication_id)
-    .bind(owner_a)
-    .execute(&pool)
-    .await
-    .expect("the exact current version should accept one affirmed decision");
-    sqlx::query(
-        "INSERT INTO customer_visit_recommendation_events (
-             id, customer_recommendation_reference, publication_id,
-             proposal_version, actor_user_id, event_kind, idempotency_key
-         ) VALUES (
-             'customer_recommendation_event_22222222222222222222222222222222',
-             $1, $2, 2, $3, 'approved', 'recommendation-approved-event-001'
-         )",
-    )
-    .bind(&recommendation_reference)
-    .bind(&recommendation_publication_id)
-    .bind(owner_a)
-    .execute(&pool)
-    .await
-    .expect("the customer decision should retain an immutable approval event");
-    sqlx::query(
-        "UPDATE customer_visit_recommendation_series
-         SET lifecycle_status = 'approved', updated_at = NOW()
-         WHERE customer_recommendation_reference = $1",
-    )
-    .bind(&recommendation_reference)
-    .execute(&pool)
-    .await
-    .expect("the decision and event should advance the exact series lifecycle");
+    let customer_recommendations = CustomerVisitRecommendationRepository::from_pool(pool.clone());
+    let decision_request = DecideCustomerRecommendationRequest {
+        expected_proposal_version: 2,
+        action: "approve".to_string(),
+        reason_code: None,
+        customer_safe_note: None,
+        affirmation_text_version: Some("customer_recommendation_approval_v1".to_string()),
+        idempotency_key: "recommendation-decision-fixture-001".to_string(),
+    };
+    let CustomerRecommendationDecisionResult::Recorded(decision_receipt) = customer_recommendations
+        .decide(
+            owner_a,
+            &customer_visit_reference,
+            &recommendation_reference,
+            decision_request.clone(),
+        )
+        .await
+    else {
+        panic!("the exact current version should accept one affirmed decision");
+    };
+    assert_eq!(decision_receipt.lifecycle_status, "approved");
+    assert!(!decision_receipt.replayed);
+    assert!(matches!(
+        customer_recommendations
+            .decide(
+                owner_a,
+                &customer_visit_reference,
+                &recommendation_reference,
+                decision_request.clone(),
+            )
+            .await,
+        CustomerRecommendationDecisionResult::Replayed(receipt) if receipt.replayed
+    ));
+    assert!(matches!(
+        customer_recommendations
+            .decide(
+                owner_a,
+                &customer_visit_reference,
+                &recommendation_reference,
+                DecideCustomerRecommendationRequest {
+                    action: "decline".to_string(),
+                    affirmation_text_version: None,
+                    ..decision_request
+                },
+            )
+            .await,
+        CustomerRecommendationDecisionResult::Conflict
+    ));
     assert!(sqlx::query(
         "UPDATE customer_visit_recommendation_series
          SET current_version = 3, lifecycle_status = 'pending', updated_at = NOW()
@@ -4915,7 +4922,6 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     );
     assert_eq!(bearer_reconciliation.get::<i64, _>("decision_count"), 0);
 
-    let customer_recommendations = CustomerVisitRecommendationRepository::from_pool(pool.clone());
     let CustomerRecommendationListResult::Loaded(recommendation_collection) =
         customer_recommendations
             .list_for_visit(owner_a, &customer_visit_reference)

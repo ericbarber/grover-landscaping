@@ -565,3 +565,8 @@ immutable snapshots, recomputes totals, and exposes current plus ordered version
 history without source IDs. When it observes a pending current publication past
 `expires_at`, it inserts the immutable system expiry event and advances the
 series to `expired` in the same transaction before returning the projection.
+The authenticated decision repository then relies on the existing constrained
+decision/event guards: it locks the exact current publication, requires pending
+and unexpired state, inserts the actor-keyed immutable decision and matching
+lifecycle event, and advances the series atomically. Replay compares every
+decision field before returning the existing receipt.

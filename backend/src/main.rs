@@ -74,8 +74,9 @@ use grover_landscaping_api::{
         CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
     },
     customer_visit_recommendations::{
+        validate_decision_request, CustomerRecommendationDecisionResult,
         CustomerRecommendationDetailResult, CustomerRecommendationListResult,
-        CustomerVisitRecommendationRepository,
+        CustomerVisitRecommendationRepository, DecideCustomerRecommendationRequest,
     },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
@@ -814,7 +815,7 @@ fn app_with_runtime(
         )
         .route(
             "/customer-portal/visits/{customer_visit_reference}/recommendations/{customer_recommendation_reference}",
-            get(get_customer_visit_recommendation),
+            get(get_customer_visit_recommendation).post(decide_customer_visit_recommendation),
         )
         .route(
             "/owner-workspace",
@@ -2407,6 +2408,72 @@ async fn get_customer_visit_recommendation(
             persisted_resource_unavailable_response(
                 "customer_visit_recommendation_unavailable",
                 "The recommendation could not be loaded. No live bid data was substituted.",
+            )
+        }
+    }
+}
+
+async fn decide_customer_visit_recommendation(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path((customer_visit_reference, customer_recommendation_reference)): Path<(String, String)>,
+    Json(request): Json<DecideCustomerRecommendationRequest>,
+) -> Response {
+    if !validate_decision_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "customer_visit_recommendation_decision_invalid",
+                message: "Provide the current version, an allowed action, action-specific context, and a valid retry key.".to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .customer_visit_recommendations
+        .decide(
+            &principal.subject,
+            &customer_visit_reference,
+            &customer_recommendation_reference,
+            request,
+        )
+        .await
+    {
+        CustomerRecommendationDecisionResult::Recorded(receipt)
+        | CustomerRecommendationDecisionResult::Replayed(receipt) => Json(receipt).into_response(),
+        CustomerRecommendationDecisionResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationDecisionResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before a recommendation decision can be recorded.".to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationDecisionResult::NotFound => resource_not_found_response(
+            "customer_visit_recommendation_not_found",
+            "The active recommendation was not found in this authenticated visit scope.",
+        ),
+        CustomerRecommendationDecisionResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_visit_recommendation_decision_conflict",
+                message: "The recommendation version, state, or retry identity changed. Reload before deciding again.".to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerRecommendationDecisionResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "customer_visit_recommendation_decision_unavailable",
+                "The recommendation decision could not be persisted.",
             )
         }
     }

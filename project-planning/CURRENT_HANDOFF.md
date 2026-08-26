@@ -7,11 +7,13 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement D-062 actor-scoped exact-version customer decisions.
+- Active slice: adopt D-062 recommendations and exact-version decisions in the
+  signed-in Yard Owner experience.
   Its audit, containment, constrained
   persistence, initial send, immutable provider revision/supersession, and
   legacy bearer-decision closure plus minimized hybrid-authorized exact-visit
-  list/detail reads are delivered. D-061 proof is delivered end to end.
+  list/detail reads and actor-scoped decisions are delivered. D-061 proof is
+  delivered end to end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -163,8 +165,8 @@ aligned overview composition.
    containment, immutable publication/version/decision persistence, exact
    initial provider-send bridge, revision/supersession publication, and legacy
    bearer-decision closure and minimized hybrid exact-visit customer reads are
-   delivered; build actor-scoped exact-version decisions next while retaining
-   the separate concern boundary.
+   delivered, including actor-scoped exact-version decisions; adopt the signed-
+   in customer recommendation UI next while retaining the separate boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -269,6 +271,10 @@ immutable versions for the exact owner, rejects a different owner and revoked
 or inconsistent authorization, and verifies that bid/amendment/plan/stop/job
 IDs, provider-private notes, delivery recipient, and bearer token never enter
 the serialized collection.
+The D-062 decision slice uses the same live fixture to prove exact affirmed
+approval, immutable decision/event state advance, exact actor-key replay, and
+changed-action conflict through the repository contract. Focused validation and
+repository outage behavior also pass.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

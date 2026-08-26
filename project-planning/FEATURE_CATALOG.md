@@ -156,6 +156,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - D-062 hybrid-authorized exact-visit recommendation list and immutable-history
   detail reads with strict snapshot allowlisting, recomputed totals, durable
   server expiration, cross-owner isolation, and no mutable-bid fallback
+- D-062 actor-scoped exact-version approve, decline, and revision-request API
+  with action-specific affirmation/context, immutable decision/event advance,
+  exact replay receipts, and authoritative stale/changed conflict recovery
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens
