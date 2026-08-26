@@ -5,13 +5,15 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is auditing the exact source,
-authorization, versioning, and decision semantics for active recommendation
-collaboration. D-061's atomic publication, minimized hybrid-authorized exact-
-visit proof read, and responsive Yard Owner adoption are delivered. The source audit rejected the legacy
-organization-membership property-report list for Yard Owner and the browser now
-withholds it explicitly. Accepted decision D-060 is adopted end to end: Yard Owner Home
-and Visits use the random non-bearer reference to load and ask through the
+The current production-adoption priority is implementing D-062's constrained
+immutable recommendation publication/version/decision foundation. The audit
+accepts project bids only as provider authoring input behind the exact visit,
+release, job, stop, amendment, and versioned publication chain; signed-in reads
+and decisions repeat hybrid authorization. Yard Owner and middleware now
+withhold the legacy organization-membership account-bid route. D-061's atomic
+publication, minimized hybrid-authorized exact-visit proof read, and responsive
+Yard Owner adoption are delivered. Accepted decision D-060 is adopted end to
+end: Yard Owner Home and Visits use the random non-bearer reference to load and ask through the
 hybrid-authorized immutable-message thread, while company owners/managers use
 the unanswered-first queue to respond to the exact question. Concerns,
 attachments, notifications, and service-level promises remain separate.
@@ -509,8 +511,10 @@ schedule, remaining work, or a completed day.
      visit-question thread. The provider owner/manager response queue is also
      adopted. D-061's delivered-proof source audit and immediate containment are
      complete, and atomic immutable snapshot delivery is delivered. The exact-
-     visit authenticated proof read and Yard Owner adoption are delivered. An
-     active-recommendation source/decision audit is the next continuity slice.
+     visit authenticated proof read and Yard Owner adoption are delivered.
+     D-062's active-recommendation audit and immediate legacy-route containment
+     are complete; its immutable publication/version/decision persistence is the
+     next continuity slice.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.

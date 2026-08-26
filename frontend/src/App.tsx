@@ -1832,6 +1832,16 @@ export function App() {
 
   useEffect(() => {
     let isMounted = true;
+
+    if (activePersona.id === 'yard-owner') {
+      setCustomerProjectBids([]);
+      setIsLoadingCustomerProjectBids(false);
+      setHasCustomerProjectBidHistoryError(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
     setIsLoadingCustomerProjectBids(true);
 
     fetchAccountProjectBids(customerPortalPreviewCustomer.id)
@@ -1858,7 +1868,7 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activePersona.id]);
 
   useEffect(() => {
     let isMounted = true;

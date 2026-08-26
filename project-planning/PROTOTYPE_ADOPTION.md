@@ -56,8 +56,10 @@ user value, and dependency safety:
    experience are delivered. D-061's proof/recommendation source audit and
    immediate legacy-route containment, and atomic immutable report snapshot
    delivery, exact-visit authenticated proof read, and responsive Yard Owner
-   proof experience are delivered. Active-recommendation source auditing is
-   next while concern recovery remains separately gated.
+   proof experience are delivered. D-062's active-recommendation source and
+   decision audit plus legacy account-route containment are delivered; immutable
+   publication/version/decision persistence is next while concern recovery
+   remains separately gated.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -74,8 +76,10 @@ concern audit resulted in accepted decision D-060; dedicated visit-question
 persistence, APIs, Yard Owner adoption, and provider owner/manager response
 adoption are delivered. D-061's proof/recommendation source audit and immediate
 containment, atomic immutable snapshot delivery, exact-visit authenticated proof
-read, and Yard Owner proof experience are delivered. Active-recommendation
-source auditing is next while concern recovery remains separately gated. Repository
+read, and Yard Owner proof experience are delivered. D-062's active-
+recommendation audit and containment are delivered; immutable publication,
+version, and decision persistence is next while concern recovery remains
+separately gated. Repository
 maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete

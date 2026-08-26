@@ -136,6 +136,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Yard Owner protected-proof experience in Home, Visits, and Proof with on-demand
   exact reads, checklist/photo evidence, completed approved-work outcomes,
   explicit retry, and no live-data or share-link fallback
+- D-062 active-recommendation source and decision boundary using an immutable
+  versioned publication from the exact visit/release/job/stop/amendment/project-
+  bid chain, hybrid customer reads and decisions, actor-scoped replay, revision
+  supersession, bounded approval meaning, and legacy account-bid containment
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

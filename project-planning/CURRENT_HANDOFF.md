@@ -7,9 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: audit the exact persisted source, hybrid authorization,
-  versioning, expiration/revision behavior, and customer decision semantics for
-  active recommendation collaboration. D-061 proof is delivered end to end.
+- Active slice: implement D-062's constrained immutable recommendation
+  publication/version/decision persistence. Its source, hybrid authorization,
+  expiration/revision, decision-semantics audit and immediate legacy account-bid
+  containment are delivered. D-061 proof is delivered end to end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -72,7 +73,8 @@
   persisted customer API, load proof only
   for those authorized properties, distinguish loading/empty/access/inconsistent/
   unavailable/retry states, and never substitute illustrative visit or portfolio
-  data. Recommendations remain withheld pending their own customer contract.
+  data. Recommendations remain withheld until D-062 persistence and its exact
+  hybrid-authorized customer contract are delivered.
 - Organization Owner Team now opens a prototype-aligned Team and access command
   center with live active-member, pending-invitation, active-crew, and unstaffed-
   territory summaries. It links directly to the existing member, invitation,
@@ -156,8 +158,9 @@ aligned overview composition.
    source audit rejects the legacy property-report route for Yard Owner and its
    immediate containment and atomic delivery/snapshot storage are delivered.
    The minimized exact-visit authenticated proof read and responsive Yard Owner
-   adoption are delivered. Audit active recommendation collaboration next while
-   retaining the separate concern boundary.
+   adoption are delivered. D-062's active-recommendation audit and legacy-route
+   containment are delivered; build its immutable publication/version/decision
+   persistence next while retaining the separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -183,7 +186,7 @@ aligned overview composition.
 
 ## Validation baseline
 
-The current baseline passes all 469 frontend unit tests across 120 files,
+The current baseline passes all 471 frontend unit tests across 120 files,
 TypeScript, and the production build. The persisted Yard Owner adoption adds
 client mapping/error checks plus component coverage for loading, valid-empty,
 missing-access, inconsistent-access, unavailable, retry, and authorized content

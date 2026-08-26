@@ -6379,7 +6379,7 @@ async fn list_customer_project_bids(
         principal_active_organization_ids_for_role(
             &state,
             &principal,
-            can_view_customer_property_portfolios,
+            can_manage_property_portfolios,
         )
         .await
     );

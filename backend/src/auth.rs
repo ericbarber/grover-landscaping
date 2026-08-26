@@ -907,7 +907,7 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path.starts_with("/accounts/") && path.ends_with("/bids") {
-        return *method == Method::GET && can_view_customer_portfolios;
+        return *method == Method::GET && can_manage_portfolios;
     }
 
     if path.starts_with("/accounts/") && path.ends_with("/privacy-export") {
@@ -1688,10 +1688,10 @@ mod tests {
     }
 
     #[test]
-    fn customer_bid_history_reads_allow_customer_and_manager_roles() {
+    fn legacy_customer_bid_history_reads_are_provider_management_only() {
         let path = "/accounts/acct_1001/bids";
 
-        assert!(is_authorized(
+        assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::GET,
             path

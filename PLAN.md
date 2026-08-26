@@ -179,7 +179,7 @@ Current state:
   signed-in read. The legacy property-report list is not a Yard Owner source: it
   uses organization membership, exposes internal IDs/share links, and can infer
   property provenance. Yard Owner now withholds that route explicitly. Report
-  Delivery/snapshot atomicity, fail-closed immutable reads, the exact
+  delivery/snapshot atomicity, fail-closed immutable reads, the exact
   authenticated proof route, and Yard Owner adoption are now delivered; active
   recommendation collaboration, proof feedback, and concerns remain separate.
 - Phase 5C1 now makes completion-report publication atomic. A deliver attempt
@@ -203,6 +203,14 @@ Current state:
   and photo evidence plus completed approved-work outcomes, retries safely after
   read failures, and never falls back to live data or a bearer share link.
   Completed outcomes are explicitly not new recommendations or approval asks.
+- Phase 5D0 now audits active-recommendation continuity. Accepted decision D-062
+  uses the existing amendment-sourced project bid only as provider authoring
+  input, then requires an immutable versioned publication tied through the exact
+  visit/release/job/stop/amendment chain. Every signed-in read and decision must
+  repeat hybrid authorization; revisions supersede rather than rewrite; actor-
+  scoped replay and affirmation are required; approval authorizes only the exact
+  displayed one-time scope/total and does not schedule, complete, recur, invoice,
+  or charge. Yard Owner and middleware now withhold the legacy account-bid route.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -318,10 +326,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-061's source audit, atomic immutable publication, minimized hybrid-
-  authorized exact-visit proof read, and Yard Owner adoption are delivered.
-  Audit the exact source and decision semantics for active recommendation
-  collaboration before exposing any new approval action.
+- Decision D-061 is delivered. D-062's active-recommendation source and decision
+  audit plus immediate legacy account-route containment are delivered. Add the
+  constrained immutable recommendation publication/version/decision foundation
+  before exposing any signed-in recommendation or approval action.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
