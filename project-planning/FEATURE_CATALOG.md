@@ -112,6 +112,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   reference per exact service release, immutable versioned customer/provider
   messages, hybrid customer authorization, organization-owner/manager provider
   authority, exact reply/replay rules, and cross-property isolation
+- Minimized customer visit-thread read/write APIs and unanswered-first provider
+  owner/manager queue with exact database authority, explicit recovery states,
+  safe visit context, and no actor or operational identifiers
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

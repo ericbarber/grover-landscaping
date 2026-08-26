@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: expose delivered D-060 customer-safe visit references and
-  immutable question/response persistence through its minimized provider queue
-  and hybrid-authorized customer/provider APIs.
+- Active slice: adopt delivered D-060 visit-question persistence, hybrid-
+  authorized customer/provider APIs, and minimized provider queue in the
+  responsive Yard Owner and owner/manager provider workspaces.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -150,9 +150,9 @@ aligned overview composition.
 
 1. Service mobilization persistence, provider release/status APIs, minimized
    customer projection, and all six Yard Owner service-day modes are delivered.
-   Decision D-060's dedicated visit reference and immutable hybrid-authorized
-   question/response persistence are delivered. Implement its provider queue,
-   customer/provider APIs, and Yard Owner experience in bounded slices while
+   Decision D-060's dedicated visit reference, immutable hybrid-authorized
+   question/response persistence, provider queue, and customer/provider APIs are
+   delivered. Implement the responsive customer/provider experience while
    retaining the separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
@@ -200,6 +200,11 @@ Those database-backed branches did not run in this environment because
 library Clippy remains red on the repository's pre-existing warnings in auth,
 day-plan, organization, acquisition, bid, onboarding, and mobilization code; the
 two initially reported visit-communication findings were corrected.
+The D-060 API slice passes all 201 backend library tests, its focused binary
+request-validation/outage test, and the focused owner/provider integration
+target. The customer-reference frontend mapper was updated, but its focused
+Vitest and TypeScript checks were unavailable because this execution shell has
+neither `node` nor `npm` on `PATH`; no frontend result is inferred.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

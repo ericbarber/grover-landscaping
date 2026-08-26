@@ -24,6 +24,8 @@ pub struct CustomerPortalVisitSummary {
     pub organization_id: String,
     pub account_id: String,
     pub property_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_visit_reference: Option<String>,
     pub service_date: String,
     pub window_start_epoch_seconds: i64,
     pub window_end_epoch_seconds: i64,
@@ -315,6 +317,7 @@ async fn list_confirmed_visits(
                 END AS original_time_zone,
                 service.title AS service_title,
                 service.included_scope AS service_scope,
+                thread.customer_visit_reference,
                 COALESCE(latest.event_kind, series.status) AS status,
                 visit.customer_safe_arrival_note AS preparation_message,
                 latest.customer_safe_reason,
@@ -360,6 +363,11 @@ async fn list_confirmed_visits(
              AND release.organization_id = activation.organization_id
              AND release.customer_account_id = activation.customer_account_id
              AND release.customer_property_id = activation.customer_property_id
+            LEFT JOIN customer_service_visit_threads thread
+              ON thread.release_id = release.id
+             AND thread.organization_id = release.organization_id
+             AND thread.customer_account_id = release.customer_account_id
+             AND thread.customer_property_id = release.customer_property_id
             LEFT JOIN LATERAL (
                 SELECT event.event_version, event.event_kind,
                        event.customer_safe_reason, event.next_update_message
@@ -400,6 +408,7 @@ async fn list_confirmed_visits(
                 NULL::TEXT AS original_time_zone,
                 NULL::TEXT AS service_title,
                 NULL::TEXT[] AS service_scope,
+                NULL::TEXT AS customer_visit_reference,
                 NULL::TEXT AS visit_status,
                 NULL::TEXT AS preparation_message,
                 NULL::TEXT AS customer_safe_reason,
@@ -422,6 +431,7 @@ async fn list_confirmed_visits(
                 visit.original_time_zone,
                 visit.service_title,
                 visit.service_scope,
+                visit.customer_visit_reference,
                 visit.status AS visit_status,
                 visit.preparation_message,
                 visit.customer_safe_reason,
@@ -446,6 +456,7 @@ async fn list_confirmed_visits(
             portal_row.original_time_zone,
             portal_row.service_title,
             portal_row.service_scope,
+            portal_row.customer_visit_reference,
             portal_row.visit_status,
             portal_row.preparation_message,
             portal_row.customer_safe_reason,
@@ -484,6 +495,7 @@ async fn list_confirmed_visits(
                 organization_id: row.get("organization_id"),
                 account_id: row.get("account_id"),
                 property_id: row.get("property_id"),
+                customer_visit_reference: row.get("customer_visit_reference"),
                 service_date: row.get("service_date"),
                 window_start_epoch_seconds: row.get("window_start_epoch_seconds"),
                 window_end_epoch_seconds: row.get("window_end_epoch_seconds"),
@@ -585,6 +597,9 @@ mod tests {
                 organization_id: "org_1001".to_string(),
                 account_id: "account_1001".to_string(),
                 property_id: "property_1001".to_string(),
+                customer_visit_reference: Some(
+                    "customer_visit_0123456789abcdef0123456789abcdef".to_string(),
+                ),
                 service_date: "2026-08-29".to_string(),
                 window_start_epoch_seconds: 1_788_019_200,
                 window_end_epoch_seconds: 1_788_026_400,
@@ -607,7 +622,7 @@ mod tests {
             .as_object()
             .expect("serialized visit should be an object");
 
-        assert_eq!(visit.len(), 12);
+        assert_eq!(visit.len(), 13);
         for private_field in [
             "activation_id",
             "proposal_id",

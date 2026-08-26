@@ -40,6 +40,26 @@ pub struct CustomerVisitThreadRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ProviderVisitThreadSummary {
+    pub customer_visit_reference: String,
+    pub customer_name: String,
+    pub property_display_name: String,
+    pub service_date: String,
+    pub service_title: String,
+    pub current_version: i64,
+    pub awaiting_provider_response: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latest_message: Option<CustomerVisitMessageRecord>,
+    pub updated_at_epoch_seconds: i64,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct ProviderVisitThreadQueue {
+    pub threads: Vec<ProviderVisitThreadSummary>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CustomerVisitThreadReadResult {
     Loaded(CustomerVisitThreadRecord),
@@ -57,6 +77,13 @@ pub enum CustomerVisitMessageWriteResult {
     InvalidAuthorization,
     NotFound,
     Conflict,
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ProviderVisitThreadListResult {
+    Loaded(ProviderVisitThreadQueue),
+    NotFound,
     Unavailable,
 }
 
@@ -121,6 +148,26 @@ impl CustomerVisitCommunicationRepository {
                     "provider visit thread load failed"
                 );
                 CustomerVisitThreadReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn list_provider_threads(
+        &self,
+        actor_user_id: &str,
+    ) -> ProviderVisitThreadListResult {
+        if actor_user_id.trim().is_empty() {
+            return ProviderVisitThreadListResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return ProviderVisitThreadListResult::Unavailable;
+        };
+        match list_provider_threads(pool, actor_user_id.trim()).await {
+            Ok(Some(queue)) => ProviderVisitThreadListResult::Loaded(queue),
+            Ok(None) => ProviderVisitThreadListResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, actor_user_id, "provider visit thread queue load failed");
+                ProviderVisitThreadListResult::Unavailable
             }
         }
     }
@@ -531,6 +578,152 @@ async fn load_provider_thread(
     let record = load_thread_record(&mut transaction, &authority).await?;
     transaction.commit().await?;
     Ok(Some(record))
+}
+
+async fn list_provider_threads(
+    pool: &PgPool,
+    actor_user_id: &str,
+) -> Result<Option<ProviderVisitThreadQueue>, sqlx::Error> {
+    let has_membership = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS (
+             SELECT 1
+             FROM organization_memberships membership
+             JOIN organizations organization
+               ON organization.id = membership.organization_id
+              AND organization.status = 'active'
+             WHERE membership.user_id = $1
+               AND membership.status = 'active'
+               AND membership.role IN ('organization_owner', 'manager')
+               AND membership.scope_type = 'organization'
+               AND membership.scope_id = membership.organization_id
+         )",
+    )
+    .bind(actor_user_id)
+    .fetch_one(pool)
+    .await?;
+    if !has_membership {
+        return Ok(None);
+    }
+
+    let rows = sqlx::query(
+        "SELECT DISTINCT ON (thread.customer_visit_reference)
+                thread.customer_visit_reference, account.customer_name,
+                property.display_name AS property_display_name,
+                TO_CHAR(visit.window_start AT TIME ZONE visit.time_zone, 'YYYY-MM-DD')
+                    AS service_date,
+                service.title AS service_title,
+                thread.current_version,
+                EXTRACT(EPOCH FROM thread.updated_at)::BIGINT
+                    AS updated_at_epoch_seconds,
+                latest.id AS message_id,
+                latest.message_version, latest.message_kind,
+                latest.author_role, latest.topic, latest.customer_safe_body,
+                latest.in_reply_to_message_id,
+                EXTRACT(EPOCH FROM latest.created_at)::BIGINT
+                    AS created_at_epoch_seconds
+         FROM customer_service_visit_threads thread
+         JOIN owner_provider_service_releases release
+           ON release.id = thread.release_id
+          AND release.organization_id = thread.organization_id
+          AND release.customer_account_id = thread.customer_account_id
+          AND release.customer_property_id = thread.customer_property_id
+         JOIN owner_provider_relationship_activations activation
+           ON activation.id = release.activation_id
+          AND activation.organization_id = thread.organization_id
+          AND activation.customer_account_id = thread.customer_account_id
+          AND activation.customer_property_id = thread.customer_property_id
+         JOIN owner_provider_active_relationships relationship
+           ON relationship.activation_id = activation.id
+          AND relationship.status = 'active'
+         JOIN organizations organization
+           ON organization.id = thread.organization_id
+          AND organization.status = 'active'
+         JOIN organization_customer_accounts account_relation
+           ON account_relation.organization_id = thread.organization_id
+          AND account_relation.account_id = thread.customer_account_id
+          AND account_relation.status = 'active'
+         JOIN customer_properties property
+           ON property.id = thread.customer_property_id
+          AND property.organization_id = thread.organization_id
+          AND property.account_id = thread.customer_account_id
+          AND property.status <> 'archived'
+         JOIN customer_accounts account
+           ON account.id = thread.customer_account_id
+         JOIN owner_provider_first_visit_proposals visit
+           ON visit.id = release.first_visit_proposal_id
+          AND visit.activation_id = release.activation_id
+          AND visit.proposal_version = release.first_visit_proposal_version
+         JOIN owner_provider_initial_service_proposals service
+           ON service.id = release.initial_service_proposal_id
+          AND service.organization_id = release.organization_id
+         JOIN organization_memberships membership
+           ON membership.organization_id = thread.organization_id
+          AND membership.user_id = $1
+          AND membership.status = 'active'
+          AND membership.role IN ('organization_owner', 'manager')
+          AND membership.scope_type = 'organization'
+          AND membership.scope_id = thread.organization_id
+         LEFT JOIN LATERAL (
+             SELECT message.*
+             FROM customer_service_visit_messages message
+             WHERE message.customer_visit_reference = thread.customer_visit_reference
+             ORDER BY message.message_version DESC
+             LIMIT 1
+         ) latest ON TRUE
+         ORDER BY thread.customer_visit_reference,
+                  CASE membership.role WHEN 'organization_owner' THEN 0 ELSE 1 END,
+                  membership.id",
+    )
+    .bind(actor_user_id)
+    .fetch_all(pool)
+    .await?;
+    let mut threads = rows
+        .into_iter()
+        .map(|row| {
+            let latest_message = row
+                .get::<Option<String>, _>("message_id")
+                .map(|message_id| CustomerVisitMessageRecord {
+                    message_id,
+                    message_version: row.get("message_version"),
+                    message_kind: row.get("message_kind"),
+                    author_role: row.get("author_role"),
+                    topic: row.get("topic"),
+                    customer_safe_body: row.get("customer_safe_body"),
+                    in_reply_to_message_id: row.get("in_reply_to_message_id"),
+                    created_at_epoch_seconds: row.get("created_at_epoch_seconds"),
+                    persisted: true,
+                });
+            ProviderVisitThreadSummary {
+                customer_visit_reference: row.get("customer_visit_reference"),
+                customer_name: row.get("customer_name"),
+                property_display_name: row.get("property_display_name"),
+                service_date: row.get("service_date"),
+                service_title: row.get("service_title"),
+                current_version: row.get("current_version"),
+                awaiting_provider_response: latest_message
+                    .as_ref()
+                    .is_some_and(|message| message.message_kind == "customer_question"),
+                latest_message,
+                updated_at_epoch_seconds: row.get("updated_at_epoch_seconds"),
+                persisted: true,
+            }
+        })
+        .collect::<Vec<_>>();
+    threads.sort_by(|left, right| {
+        right
+            .awaiting_provider_response
+            .cmp(&left.awaiting_provider_response)
+            .then_with(|| {
+                right
+                    .updated_at_epoch_seconds
+                    .cmp(&left.updated_at_epoch_seconds)
+            })
+            .then_with(|| {
+                left.customer_visit_reference
+                    .cmp(&right.customer_visit_reference)
+            })
+    });
+    Ok(Some(ProviderVisitThreadQueue { threads }))
 }
 
 async fn replay_message(

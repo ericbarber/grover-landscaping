@@ -151,6 +151,14 @@ Current state:
   revalidation, exact provider owner/manager membership, relationship closure,
   and organization/account/property provenance without creating notifications,
   operational exceptions, service-level promises, or concern records.
+- Phase 5B2 now exposes the D-060 API boundary. The hybrid customer visit
+  projection returns the random reference only for released visits; verified
+  customers can read and ask through that exact reference. Organization owners
+  and managers receive a minimized unanswered-first queue, exact thread read,
+  and response write backed by current membership/relationship checks. Responses
+  omit actor and release/job/organization/account/property/membership/route/crew
+  identifiers and preserve explicit invalid, missing, stale, replayed, and
+  unavailable recovery without implying notification or response timing.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -266,10 +274,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-060 persistence is delivered. Expose the minimized visit reference
-  in the authorized customer visit projection, then add the provider queue and
-  customer/provider thread APIs before adopting the question experience in Yard
-  Owner.
+- Decision D-060 persistence and APIs are delivered. Adopt the contextual
+  question experience in Yard Owner and its owner/manager provider workspace,
+  retaining retry keys across unknown writes and authoritative thread reloads.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

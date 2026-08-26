@@ -11,6 +11,7 @@ export interface CustomerPortalVisitSummary {
   customerId: string;
   organizationId: string;
   propertyId: string;
+  customerVisitReference?: string;
   scheduledDate: string;
   arrivalWindow: string;
   originalScheduledDate?: string;

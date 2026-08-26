@@ -5,7 +5,7 @@ use grover_landscaping_api::customer_portal_access::{
 use grover_landscaping_api::customer_visit_communication::{
     CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
     CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
-    CustomerVisitThreadReadResult,
+    CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
 };
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
@@ -4071,6 +4071,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .expect("service release should create its customer-safe visit reference");
     assert!(customer_visit_reference.starts_with("customer_visit_"));
     assert_eq!(customer_visit_reference.len(), 47);
+    let CustomerPortalVisitReadResult::Loaded(released_customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the released visit should remain visible to the authorized customer");
+    };
+    assert_eq!(
+        released_customer_visits.visits[0]
+            .customer_visit_reference
+            .as_deref(),
+        Some(customer_visit_reference.as_str())
+    );
     let visit_communication = CustomerVisitCommunicationRepository::from_pool(pool.clone());
     assert!(matches!(
         visit_communication
@@ -4078,6 +4089,25 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         CustomerVisitThreadReadResult::NotFound
     ));
+    assert!(matches!(
+        visit_communication
+            .list_provider_threads("recipient-user-without-membership")
+            .await,
+        ProviderVisitThreadListResult::NotFound
+    ));
+    let ProviderVisitThreadListResult::Loaded(empty_provider_queue) = visit_communication
+        .list_provider_threads("recipient-user-1")
+        .await
+    else {
+        panic!("an exact provider owner/manager should load the visit-question queue");
+    };
+    assert_eq!(empty_provider_queue.threads.len(), 1);
+    assert_eq!(
+        empty_provider_queue.threads[0].customer_visit_reference,
+        customer_visit_reference
+    );
+    assert!(!empty_provider_queue.threads[0].awaiting_provider_response);
+    assert!(empty_provider_queue.threads[0].latest_message.is_none());
     assert!(matches!(
         visit_communication
             .get_provider_thread(
@@ -4185,6 +4215,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(question.message_kind, "customer_question");
     assert_eq!(question.author_role, "customer");
     assert_eq!(question.topic, "access");
+    let ProviderVisitThreadListResult::Loaded(question_queue) = visit_communication
+        .list_provider_threads("recipient-user-1")
+        .await
+    else {
+        panic!("the provider queue should reload after a customer question");
+    };
+    assert!(question_queue.threads[0].awaiting_provider_response);
+    assert_eq!(
+        question_queue.threads[0].latest_message.as_ref(),
+        Some(&question)
+    );
     assert!(matches!(
         visit_communication
             .create_customer_question(
@@ -4271,6 +4312,17 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert_eq!(customer_thread, provider_thread);
     assert_eq!(customer_thread.current_version, 2);
     assert_eq!(customer_thread.messages, vec![question.clone(), response]);
+    let ProviderVisitThreadListResult::Loaded(answered_queue) = visit_communication
+        .list_provider_threads("recipient-user-1")
+        .await
+    else {
+        panic!("the provider queue should reload after its exact response");
+    };
+    assert!(!answered_queue.threads[0].awaiting_provider_response);
+    assert_eq!(
+        answered_queue.threads[0].latest_message,
+        customer_thread.messages.last().cloned()
+    );
     let thread_json =
         serde_json::to_string(&customer_thread).expect("customer visit thread should serialize");
     for private_value in [
@@ -4360,6 +4412,13 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         CustomerVisitMessageWriteResult::NotFound
     ));
+    let ProviderVisitThreadListResult::Loaded(ended_queue) = visit_communication
+        .list_provider_threads("recipient-user-1")
+        .await
+    else {
+        panic!("an authorized provider should retain an empty queue after relationship closure");
+    };
+    assert!(ended_queue.threads.is_empty());
     assert!(matches!(
         mobilization
             .publish_customer_service_day_event(

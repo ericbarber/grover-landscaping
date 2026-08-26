@@ -498,6 +498,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/marketing-events"
         || path == "/me/access"
         || path == "/customer-portal/visits"
+        || path.starts_with("/customer-portal/visits/")
         || path == "/owner-workspace"
         || path == "/owner-properties"
         || path.starts_with("/owner-properties/")
@@ -514,6 +515,8 @@ fn is_protected_api_path(path: &str) -> bool {
         || path.starts_with("/provider-assessments/")
         || path.starts_with("/provider-relationships/")
         || path.starts_with("/provider-service-releases/")
+        || path == "/provider-customer-visit-threads"
+        || path.starts_with("/provider-customer-visit-threads/")
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
         || path == "/provider-organization-claim-review-metrics"
@@ -576,6 +579,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     if path == "/customer-portal/visits" {
         return principal.verified_email.is_some() && *method == Method::GET;
     }
+    if path.starts_with("/customer-portal/visits/") && path.ends_with("/messages") {
+        return principal.verified_email.is_some()
+            && (*method == Method::GET || *method == Method::POST);
+    }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::PUT);
@@ -630,6 +637,14 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
     if path.starts_with("/provider-service-releases/") && path.ends_with("/customer-status") {
         return can_mobilize_service && *method == Method::POST;
+    }
+    if path == "/provider-customer-visit-threads" {
+        return can_mobilize_service && *method == Method::GET;
+    }
+    if path.starts_with("/provider-customer-visit-threads/") {
+        return can_mobilize_service
+            && ((*method == Method::GET && !path.ends_with("/responses"))
+                || (*method == Method::POST && path.ends_with("/responses")));
     }
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
     {
@@ -1854,6 +1869,53 @@ mod tests {
             &Method::DELETE,
             "/provider-relationships/activation-1/service-release"
         ));
+    }
+
+    #[test]
+    fn visit_question_routes_separate_customer_and_provider_roles() {
+        let customer_path = "/customer-portal/visits/customer_visit_1/messages";
+        for method in [Method::GET, Method::POST] {
+            assert!(is_protected_api_path(customer_path));
+            assert!(is_authorized(
+                &principal(AccessRole::PropertyOwner),
+                &method,
+                customer_path
+            ));
+        }
+
+        for (method, path) in [
+            (Method::GET, "/provider-customer-visit-threads"),
+            (
+                Method::GET,
+                "/provider-customer-visit-threads/customer_visit_1",
+            ),
+            (
+                Method::POST,
+                "/provider-customer-visit-threads/customer_visit_1/responses",
+            ),
+        ] {
+            assert!(is_protected_api_path(path));
+            assert!(is_authorized(
+                &principal(AccessRole::OrganizationOwner),
+                &method,
+                path
+            ));
+            assert!(is_authorized(
+                &principal(AccessRole::Manager),
+                &method,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::CrewLead),
+                &method,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::PropertyOwner),
+                &method,
+                path
+            ));
+        }
     }
 
     #[test]

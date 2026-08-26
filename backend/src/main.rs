@@ -67,6 +67,12 @@ use grover_landscaping_api::{
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     customer_portal_access::{CustomerPortalAccessRepository, CustomerPortalVisitReadResult},
+    customer_visit_communication::{
+        validate_customer_question_request, validate_provider_response_request,
+        CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
+        CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
+        CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
+    },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
         validate_update_operational_exception, CreateOperationalExceptionRequest,
@@ -229,6 +235,7 @@ struct AppState {
     owner_acquisition: OwnerAcquisitionRepository,
     customer_portal: CustomerPortalAccessRepository,
     service_mobilization: ServiceMobilizationRepository,
+    customer_visit_communication: CustomerVisitCommunicationRepository,
 }
 
 macro_rules! organization_ids_or_return {
@@ -597,6 +604,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         owner_acquisition,
         customer_portal,
         service_mobilization,
+        customer_visit_communication,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -618,6 +626,8 @@ async fn app_from_env() -> Result<Router, DynError> {
             let marketing_events = MarketingEventRepository::from_pool(pool.clone());
             let customer_portal = CustomerPortalAccessRepository::from_pool(pool.clone());
             let service_mobilization = ServiceMobilizationRepository::from_pool(pool.clone());
+            let customer_visit_communication =
+                CustomerVisitCommunicationRepository::from_pool(pool.clone());
             let owner_acquisition = OwnerAcquisitionRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
@@ -639,6 +649,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 owner_acquisition,
                 customer_portal,
                 service_mobilization,
+                customer_visit_communication,
                 "postgres",
             )
         }
@@ -663,6 +674,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             OwnerAcquisitionRepository::new(),
             CustomerPortalAccessRepository::default(),
             ServiceMobilizationRepository::default(),
+            CustomerVisitCommunicationRepository::default(),
             "seed-local",
         ),
     };
@@ -713,6 +725,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             owner_acquisition,
             customer_portal,
             service_mobilization,
+            customer_visit_communication,
         }),
         persistence,
         persistence == "postgres",
@@ -774,6 +787,10 @@ fn app_with_runtime(
         .route("/marketing-dashboard", get(get_marketing_dashboard))
         .route("/me/access", get(get_my_access))
         .route("/customer-portal/visits", get(list_customer_portal_visits))
+        .route(
+            "/customer-portal/visits/{customer_visit_reference}/messages",
+            get(get_customer_visit_thread).post(create_customer_visit_question),
+        )
         .route(
             "/owner-workspace",
             get(get_owner_workspace).put(save_owner_workspace),
@@ -921,6 +938,18 @@ fn app_with_runtime(
         .route(
             "/provider-service-releases/{release_id}/customer-status",
             post(publish_provider_customer_service_status),
+        )
+        .route(
+            "/provider-customer-visit-threads",
+            get(list_provider_customer_visit_threads),
+        )
+        .route(
+            "/provider-customer-visit-threads/{customer_visit_reference}",
+            get(get_provider_customer_visit_thread),
+        )
+        .route(
+            "/provider-customer-visit-threads/{customer_visit_reference}/responses",
+            post(create_provider_customer_visit_response),
         )
         .route(
             "/provider-disclosures/access",
@@ -2189,6 +2218,211 @@ async fn list_customer_portal_visits(
             "customer_portal_visits_unavailable",
             "Visit details could not be loaded. Customer information remains protected; try again later.",
         ),
+    }
+}
+
+async fn get_customer_visit_thread(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+) -> Response {
+    customer_visit_thread_read_response(
+        state
+            .customer_visit_communication
+            .get_customer_thread(&principal.subject, &customer_visit_reference)
+            .await,
+        true,
+    )
+}
+
+async fn create_customer_visit_question(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+    Json(request): Json<CreateCustomerVisitQuestionRequest>,
+) -> Response {
+    if !validate_customer_question_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "customer_visit_question_invalid",
+                message: "Provide the current thread version, an allowed visit topic, bounded customer-safe text, and a valid retry key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    customer_visit_message_write_response(
+        state
+            .customer_visit_communication
+            .create_customer_question(&principal.subject, &customer_visit_reference, request)
+            .await,
+        true,
+    )
+}
+
+async fn list_provider_customer_visit_threads(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+) -> Response {
+    match state
+        .customer_visit_communication
+        .list_provider_threads(&principal.subject)
+        .await
+    {
+        ProviderVisitThreadListResult::Loaded(queue) => Json(queue).into_response(),
+        ProviderVisitThreadListResult::NotFound => resource_not_found_response(
+            "provider_customer_visit_threads_not_found",
+            "No visit-question queue is available for an active organization owner or manager membership.",
+        ),
+        ProviderVisitThreadListResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_customer_visit_threads_unavailable",
+            "The visit-question queue could not be loaded. Existing messages are unchanged.",
+        ),
+    }
+}
+
+async fn get_provider_customer_visit_thread(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+) -> Response {
+    customer_visit_thread_read_response(
+        state
+            .customer_visit_communication
+            .get_provider_thread(&principal.subject, &customer_visit_reference)
+            .await,
+        false,
+    )
+}
+
+async fn create_provider_customer_visit_response(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+    Json(request): Json<CreateProviderVisitResponseRequest>,
+) -> Response {
+    if !validate_provider_response_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_customer_visit_response_invalid",
+                message: "Provide the current thread version, exact customer-question reply, bounded customer-safe text, and a valid retry key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    customer_visit_message_write_response(
+        state
+            .customer_visit_communication
+            .create_provider_response(&principal.subject, &customer_visit_reference, request)
+            .await,
+        false,
+    )
+}
+
+fn customer_visit_thread_read_response(
+    result: CustomerVisitThreadReadResult,
+    customer_route: bool,
+) -> Response {
+    match result {
+        CustomerVisitThreadReadResult::Loaded(thread) => Json(thread).into_response(),
+        CustomerVisitThreadReadResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitThreadReadResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before visit messages can be shown."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitThreadReadResult::NotFound => resource_not_found_response(
+            if customer_route {
+                "customer_visit_thread_not_found"
+            } else {
+                "provider_customer_visit_thread_not_found"
+            },
+            "The visit conversation was not found in this authenticated scope.",
+        ),
+        CustomerVisitThreadReadResult::Unavailable => persisted_resource_unavailable_response(
+            if customer_route {
+                "customer_visit_thread_unavailable"
+            } else {
+                "provider_customer_visit_thread_unavailable"
+            },
+            "The visit conversation could not be loaded. Existing messages are unchanged.",
+        ),
+    }
+}
+
+fn customer_visit_message_write_response(
+    result: CustomerVisitMessageWriteResult,
+    customer_route: bool,
+) -> Response {
+    match result {
+        CustomerVisitMessageWriteResult::Created(message) => {
+            (StatusCode::CREATED, Json(message)).into_response()
+        }
+        CustomerVisitMessageWriteResult::Replayed(message) => Json(message).into_response(),
+        CustomerVisitMessageWriteResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitMessageWriteResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before a visit question can be saved."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitMessageWriteResult::NotFound => resource_not_found_response(
+            if customer_route {
+                "customer_visit_thread_not_found"
+            } else {
+                "provider_customer_visit_thread_not_found"
+            },
+            "The visit conversation was not found in this authenticated scope.",
+        ),
+        CustomerVisitMessageWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: if customer_route {
+                    "customer_visit_question_conflict"
+                } else {
+                    "provider_customer_visit_response_conflict"
+                },
+                message: "The thread changed, the question was already answered, or this retry key identifies different content. Reload the conversation before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitMessageWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                if customer_route {
+                    "customer_visit_question_unavailable"
+                } else {
+                    "provider_customer_visit_response_unavailable"
+                },
+                "The message could not be confirmed. Retain the retry key and reload the conversation before retrying.",
+            )
+        }
     }
 }
 
@@ -9849,6 +10083,7 @@ mod tests {
             owner_acquisition: OwnerAcquisitionRepository::new(),
             customer_portal: CustomerPortalAccessRepository::default(),
             service_mobilization: ServiceMobilizationRepository::default(),
+            customer_visit_communication: CustomerVisitCommunicationRepository::default(),
         })
     }
 
@@ -9954,6 +10189,118 @@ mod tests {
                     .uri("/provider-service-releases/release-1/customer-status")
                     .header("content-type", "application/json")
                     .body(Body::from(invalid_event.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn visit_question_api_validates_requests_and_fails_closed_without_persistence() {
+        let app = seed_app();
+        let customer_path = "/customer-portal/visits/customer_visit_1/messages";
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(customer_path)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let valid_question = serde_json::json!({
+            "expected_thread_version": 0,
+            "topic": "timing",
+            "customer_safe_body": "Will you arrive near the start of the window?",
+            "idempotency_key": "customer-question-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(customer_path)
+                    .header("content-type", "application/json")
+                    .body(Body::from(valid_question.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let mut invalid_question = valid_question;
+        invalid_question["topic"] = serde_json::json!("billing");
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(customer_path)
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_question.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/provider-customer-visit-threads")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/provider-customer-visit-threads/customer_visit_1")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response_path = "/provider-customer-visit-threads/customer_visit_1/responses";
+        let valid_response = serde_json::json!({
+            "expected_thread_version": 1,
+            "in_reply_to_message_id": "customer_visit_message_1",
+            "customer_safe_body": "We expect to arrive near the start of the window.",
+            "idempotency_key": "provider-response-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(response_path)
+                    .header("content-type", "application/json")
+                    .body(Body::from(valid_response.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let mut invalid_response = valid_response;
+        invalid_response["in_reply_to_message_id"] = serde_json::json!("");
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri(response_path)
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_response.to_string()))
                     .unwrap(),
             )
             .await

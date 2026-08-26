@@ -19,6 +19,7 @@ interface ApiCustomerPortalVisitSummary {
   organization_id: string;
   account_id: string;
   property_id: string;
+  customer_visit_reference?: string;
   service_date: string;
   window_start_epoch_seconds: number;
   window_end_epoch_seconds: number;
@@ -81,6 +82,9 @@ export function toCustomerPortalVisitSummary(
     customerId: visit.account_id,
     organizationId: visit.organization_id,
     propertyId: visit.property_id,
+    ...(visit.customer_visit_reference
+      ? { customerVisitReference: visit.customer_visit_reference }
+      : {}),
     scheduledDate: visit.service_date,
     arrivalWindow: `${arrivalTimeLabel(visit.window_start_epoch_seconds, visit.time_zone)}–${arrivalTimeLabel(visit.window_end_epoch_seconds, visit.time_zone)}`,
     ...originalWindow,

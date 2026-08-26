@@ -16,6 +16,7 @@ describe('customer portal visit client', () => {
       }],
       visits: [{
         organization_id: 'org_1', account_id: 'account_1', property_id: 'property_1',
+        customer_visit_reference: 'customer_visit_0123456789abcdef0123456789abcdef',
         service_date: '2026-08-29', window_start_epoch_seconds: 1788015600,
         window_end_epoch_seconds: 1788022800, time_zone: 'America/Phoenix',
         service_title: 'Initial yard care', service_scope: ['Mow and edge turf'],
@@ -31,7 +32,9 @@ describe('customer portal visit client', () => {
       }],
       visits: [{
         id: 'org_1:property_1:1788015600', customerId: 'account_1', organizationId: 'org_1',
-        propertyId: 'property_1', scheduledDate: '2026-08-29',
+        propertyId: 'property_1',
+        customerVisitReference: 'customer_visit_0123456789abcdef0123456789abcdef',
+        scheduledDate: '2026-08-29',
         arrivalWindow: '8:00 AM–10:00 AM', serviceTitle: 'Initial yard care',
         scope: ['Mow and edge turf'], status: 'confirmed',
         preparationMessage: 'Unlock the side gate.',
