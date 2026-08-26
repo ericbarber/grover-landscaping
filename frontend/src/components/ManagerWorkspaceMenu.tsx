@@ -28,6 +28,7 @@ export type ManagerWorkspaceTool =
   | 'operations-activity'
   | 'notifications'
   | 'completion-reports'
+  | 'visit-questions'
   | 'marketing-leads'
   | 'conversion-dashboard'
   | 'photo-processing'
@@ -93,6 +94,7 @@ export const managerWorkspaceTools: Record<
     { id: 'operations-activity', label: 'Operations activity', description: 'Route, job, photo, and sync events' },
     { id: 'notifications', label: 'Notifications', description: 'Delivery status and retries' },
     { id: 'completion-reports', label: 'Completion reports', description: 'Quality review and delivery' },
+    { id: 'visit-questions', label: 'Visit questions', description: 'Customer questions and exact responses' },
   ],
   recovery: [
     { id: 'operational-exceptions', label: 'Operational exceptions', description: 'Delays, risks, and escalations' },
@@ -116,14 +118,14 @@ const toolAccess: Partial<Record<WorkspacePersonaId, ManagerWorkspaceTool[]>> = 
     'owner-setup', 'company-readiness', 'day-plan', 'dispatch-hierarchy',
     'dispatch-workload', 'property-profile', 'property-service', 'customer-accounts',
     'customer-portal', 'customer-portfolios', 'team-overview', 'team-members', 'team-invitations',
-    'team-activity', 'operations-activity', 'notifications', 'completion-reports',
+    'team-activity', 'operations-activity', 'notifications', 'completion-reports', 'visit-questions',
     'photo-processing', 'operational-exceptions', 'customer-privacy', 'photo-erasure',
   ],
   'company-manager': [
     'company-readiness', 'day-plan', 'dispatch-workload', 'property-profile',
     'property-service', 'customer-accounts', 'customer-portal', 'customer-portfolios',
     'team-members', 'team-activity', 'operations-activity', 'notifications',
-    'completion-reports', 'photo-processing', 'operational-exceptions',
+    'completion-reports', 'visit-questions', 'photo-processing', 'operational-exceptions',
   ],
   'property-manager': ['customer-portal', 'customer-portfolios'],
   dispatcher: ['day-plan', 'dispatch-workload'],

@@ -50,7 +50,13 @@ describe('manager workspace menu', () => {
       .toEqual(['team', 'reports', 'recovery']);
     expect(managerWorkspaceToolsForPersona('company-owner', 'reports').map(({ id }) => id))
       .not.toContain('marketing-leads');
+    expect(managerWorkspaceToolsForPersona('company-owner', 'reports').map(({ id }) => id))
+      .toContain('visit-questions');
+    expect(managerWorkspaceToolsForPersona('company-manager', 'reports').map(({ id }) => id))
+      .toContain('visit-questions');
     expect(managerWorkspaceToolsForPersona('support', 'reports').map(({ id }) => id))
       .toContain('marketing-leads');
+    expect(managerWorkspaceToolsForPersona('support', 'reports').map(({ id }) => id))
+      .not.toContain('visit-questions');
   });
 });

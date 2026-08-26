@@ -124,6 +124,7 @@ import { DayPlanPanel } from './components/DayPlanPanel';
 import { FirstOwnerOnboardingPanel } from './components/FirstOwnerOnboardingPanel';
 import { ManagerActivityHistoryPanel } from './components/ManagerActivityHistoryPanel';
 import { ManagerCompletionReportQueuePanel } from './components/ManagerCompletionReportQueuePanel';
+import { ProviderCustomerVisitQuestionsPanel } from './components/ProviderCustomerVisitQuestionsPanel';
 import { ManagerMarketingLeadInboxPanel } from './components/ManagerMarketingLeadInboxPanel';
 import { ManagerMarketingConversionDashboard } from './components/ManagerMarketingConversionDashboard';
 import { ManagerDispatchWorkloadPanel } from './components/ManagerDispatchWorkloadPanel';
@@ -3812,6 +3813,9 @@ export function App() {
                 changeMobileView('job', true);
               }}
             />
+          </div>
+          <div className={`${managerWorkspaceTool === 'visit-questions' ? 'block' : 'hidden'} mt-6`}>
+            <ProviderCustomerVisitQuestionsPanel />
           </div>
             </div>
           </details>

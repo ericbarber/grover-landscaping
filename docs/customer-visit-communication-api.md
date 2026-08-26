@@ -1,7 +1,7 @@
 # Customer Visit Communication API
 
-Status: D-060 persistence and minimized authenticated API delivered on
-2026-08-26. Yard Owner and provider workspace adoption remain next.
+Status: D-060 persistence, minimized authenticated API, Yard Owner questions,
+and provider owner/manager response workspace delivered on 2026-08-26.
 
 ## Customer visit discovery
 
@@ -53,3 +53,13 @@ route, crew, notification, and operational-exception identifiers.
 Saving a message does not change service status, scope, schedule, assignment,
 proof, billing, or concern state. It does not claim notification delivery,
 message reading, a response time, or a service-level commitment.
+
+## Responsive workspace behavior
+
+Yard Owner Home and Visits open the exact thread only for released visits and
+retain a stable retry key until a write is confirmed. Company owners/managers
+open Visit questions from Reports, where the server-ordered queue identifies
+safe visit context and the selected exact thread determines the unanswered
+question. Provider writes supply the exact question ID and reload both thread
+and queue after success, conflict, or an uncertain write. Support, billing, and
+property-manager personas are not offered this tool.

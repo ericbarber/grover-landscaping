@@ -5,12 +5,13 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is adopting accepted decision D-060's
-delivered unanswered-first queue and exact response API in the responsive
-owner/manager provider workspace. Yard Owner Home and Visits now use the random
-non-bearer reference to load and ask through the hybrid-authorized immutable-
-message thread; concerns, attachments, notifications, and service-level promises
-remain separate.
+The current production-adoption priority is auditing the source, authorization,
+and minimized projection for the next delivered-proof/recommendation continuity
+extension. Accepted decision D-060 is now adopted end to end: Yard Owner Home
+and Visits use the random non-bearer reference to load and ask through the
+hybrid-authorized immutable-message thread, while company owners/managers use
+the unanswered-first queue to respond to the exact question. Concerns,
+attachments, notifications, and service-level promises remain separate.
 Safe Yard Crew operating
 preparation is adopted through service and language facts; public fit/entry and
 provider identity/readiness core are adopted with distinct owner-operator,
@@ -500,9 +501,11 @@ schedule, remaining work, or a completed day.
 
    - Property-manager portfolio core is adopted with explicit local-review
      readiness provenance and protected proof/recommendation reads.
-   - Yard Owner Home/Visits now use the explicit minimized persisted read; extend
-     it through the accepted mobilization/work-release source contract before
-     bounded customer-safe service-day states.
+   - Yard Owner Home/Visits now use the explicit minimized persisted read,
+     all bounded customer-safe service-day states, and the dedicated D-060
+     visit-question thread. The provider owner/manager response queue is also
+     adopted; audit delivered proof/recommendation sources before the next
+     customer continuity slice.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.

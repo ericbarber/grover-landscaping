@@ -118,6 +118,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Yard Owner Home/Visits question experience with released-visit availability,
   exact authoritative history, allowlisted topics, bounded text, retry-key
   retention, conflict/outage reload recovery, and no notification/SLA claim
+- Provider owner/manager visit-question workspace with an unanswered-first safe
+  context queue, exact-thread review, one-response-per-question targeting,
+  retry-key retention, authoritative recovery, and no authority exposed to
+  support, billing, or property-manager personas
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

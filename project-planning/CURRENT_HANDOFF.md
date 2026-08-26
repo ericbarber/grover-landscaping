@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: adopt D-060's delivered unanswered-first queue and exact
-  response API in the responsive owner/manager provider workspace. Yard Owner
-  question adoption is delivered.
+- Active slice: audit the exact persisted source, authorization, and minimized
+  projection for the next delivered-proof/recommendation continuity extension.
+  D-060 customer questions and provider owner/manager responses are delivered.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -151,9 +151,10 @@ aligned overview composition.
 1. Service mobilization persistence, provider release/status APIs, minimized
    customer projection, and all six Yard Owner service-day modes are delivered.
    Decision D-060's visit reference, immutable hybrid-authorized persistence,
-   provider queue, customer/provider APIs, and Yard Owner question experience
-   are delivered. Implement the responsive provider response experience while
-   retaining the separate concern boundary.
+   provider queue, customer/provider APIs, Yard Owner question experience, and
+   responsive owner/manager response experience are delivered. Audit delivered
+   proof/recommendation continuity sources next while retaining the separate
+   concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -179,7 +180,7 @@ aligned overview composition.
 
 ## Validation baseline
 
-The current baseline passes all 457 frontend unit tests across 118 files,
+The current baseline passes all 469 frontend unit tests across 120 files,
 TypeScript, and the production build. The persisted Yard Owner adoption adds
 client mapping/error checks plus component coverage for loading, valid-empty,
 missing-access, inconsistent-access, unavailable, retry, and authorized content
@@ -209,6 +210,11 @@ The Yard Owner question slice adds a minimized client, retry-stable
 authoritative-reload interaction, and focused client/component coverage. Its 14
 focused tests across three files, TypeScript check, and production build pass
 with that pinned runtime.
+The provider response slice adds the unanswered-first queue mapper, exact thread
+and response client, owner/manager-only manager navigation, retry-stable
+authoritative recovery, and focused queue/targeting/access coverage. Its 11
+focused tests across three files and TypeScript check pass with the same pinned
+runtime, and the production build passes.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

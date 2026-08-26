@@ -21,3 +21,19 @@ export interface CustomerVisitThread {
   currentVersion: number;
   messages: CustomerVisitMessage[];
 }
+
+export interface ProviderCustomerVisitThreadSummary {
+  customerVisitReference: string;
+  customerName: string;
+  propertyDisplayName: string;
+  serviceDate: string;
+  serviceTitle: string;
+  currentVersion: number;
+  awaitingProviderResponse: boolean;
+  latestMessage?: CustomerVisitMessage;
+  updatedAtEpochSeconds: number;
+}
+
+export interface ProviderCustomerVisitThreadQueue {
+  threads: ProviderCustomerVisitThreadSummary[];
+}

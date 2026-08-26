@@ -166,6 +166,13 @@ Current state:
   Unreleased visits explain why questions are not available; load, access,
   inconsistency, stale, and outage recovery never falls back to illustrative
   messages or claims an alert, read receipt, or response time.
+- Phase 5B4 now adopts the provider response experience in the responsive
+  owner/manager Reports workspace. The UI loads the minimized unanswered-first
+  queue and exact authoritative thread, identifies the exact unanswered
+  customer question, and sends one bounded response with a retry key retained
+  across unknown writes. Success, conflict, and uncertain writes reload the
+  authoritative conversation and queue; support, billing, and property-manager
+  personas receive no UI authority, and no alert or response-time claim is made.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -281,10 +288,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-060 persistence, APIs, and Yard Owner question experience are
-  delivered. Adopt the unanswered-first queue and exact response experience in
-  the owner/manager provider workspace, retaining authoritative reload and retry
-  behavior.
+- Decision D-060 persistence, APIs, Yard Owner questions, and owner/manager
+  provider responses are delivered. Audit the source, authorization, and
+  minimization boundary for the next delivered-proof/recommendation continuity
+  extension before exposing new customer data or actions.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
