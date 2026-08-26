@@ -1,7 +1,7 @@
 # Customer Contextual Communication Source
 
-Status: Decision D-060 accepted on 2026-08-26. The question-first persistence,
-provider queue, API, and customer experience may proceed in bounded slices.
+Status: Decision D-060 accepted on 2026-08-26. The question-first persistence
+boundary is delivered; provider queue and customer/provider APIs are next.
 
 ## Source-audit outcome
 

@@ -143,6 +143,14 @@ Current state:
   immutable customer/provider thread with a random non-bearer visit reference,
   hybrid authorization, and an owner/manager provider queue; concern workflow,
   attachments, notifications, and response-time commitments remain separate.
+- Phase 5B1 now delivers the D-060 persistence boundary. Every service release
+  atomically receives one random non-bearer customer visit reference and
+  versioned thread. Immutable customer questions and provider responses enforce
+  bounded topics/text, exact reply linkage, one response per question,
+  actor-scoped exact replay, stale-write conflicts, hybrid customer grant
+  revalidation, exact provider owner/manager membership, relationship closure,
+  and organization/account/property provenance without creating notifications,
+  operational exceptions, service-level promises, or concern records.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -258,9 +266,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-060 is accepted. Persist the customer-safe visit reference and
-  immutable thread first, then expose the provider queue and customer/provider
-  APIs before adopting the question experience in Yard Owner.
+- Decision D-060 persistence is delivered. Expose the minimized visit reference
+  in the authorized customer visit projection, then add the provider queue and
+  customer/provider thread APIs before adopting the question experience in Yard
+  Owner.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

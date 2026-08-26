@@ -50,9 +50,9 @@ user value, and dependency safety:
    Owner authorization foundation now delivers account scope for verified
    owners and explicit property scope for delegates. The minimized visit API and
    its fail-closed Yard Owner Home/Visits adoption are delivered, including the
-   bounded customer-safe service-day extension. Decision D-060 now authorizes
-   a dedicated hybrid-authorized visit-question thread; persistence is the next
-   delivery slice and concern recovery remains separately gated.
+   bounded customer-safe service-day extension. Decision D-060's dedicated
+   hybrid-authorized visit-question persistence is delivered; minimized APIs
+   and provider queue are next while concern recovery remains separately gated.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -66,8 +66,8 @@ also delivered. The customer-safe service-day lifecycle extension is delivered
 through explicit mobilization/work-release persistence, provider APIs, minimized
 customer projection, and Yard Owner presentation. The contextual question/
 concern audit resulted in accepted decision D-060; dedicated visit-question
-persistence is next while concern recovery remains separately gated. Repository
-maintenance and regression remain ongoing.
+persistence is delivered and its APIs are next while concern recovery remains
+separately gated. Repository maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff

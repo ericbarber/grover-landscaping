@@ -2,6 +2,11 @@ use grover_landscaping_api::customer_portal_access::{
     CustomerPortalAccessRepository, CustomerPortalPropertyAccessResult,
     CustomerPortalVisitReadResult,
 };
+use grover_landscaping_api::customer_visit_communication::{
+    CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
+    CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
+    CustomerVisitThreadReadResult,
+};
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
     BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
@@ -73,6 +78,36 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .fetch_all(pool)
     .await
     .expect("test service-release job identifiers should load");
+    sqlx::query(
+        "DELETE FROM customer_service_visit_messages
+         WHERE customer_visit_reference IN (
+             SELECT thread.customer_visit_reference
+             FROM customer_service_visit_threads thread
+             JOIN owner_provider_service_releases release
+               ON release.id = thread.release_id
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = release.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer visit messages should reset");
+    sqlx::query(
+        "DELETE FROM customer_service_visit_threads
+         WHERE release_id IN (
+             SELECT release.id
+             FROM owner_provider_service_releases release
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = release.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer visit threads should reset");
     sqlx::query(
         "DELETE FROM customer_service_day_events
          WHERE release_id IN (
@@ -4026,6 +4061,268 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .await
     .is_err());
 
+    let customer_visit_reference = sqlx::query_scalar::<_, String>(
+        "SELECT customer_visit_reference
+         FROM customer_service_visit_threads WHERE release_id = $1",
+    )
+    .bind(&service_release.release_id)
+    .fetch_one(&pool)
+    .await
+    .expect("service release should create its customer-safe visit reference");
+    assert!(customer_visit_reference.starts_with("customer_visit_"));
+    assert_eq!(customer_visit_reference.len(), 47);
+    let visit_communication = CustomerVisitCommunicationRepository::from_pool(pool.clone());
+    assert!(matches!(
+        visit_communication
+            .get_customer_thread(owner_b, &customer_visit_reference)
+            .await,
+        CustomerVisitThreadReadResult::NotFound
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_provider_thread(
+                "recipient-user-without-membership",
+                &customer_visit_reference,
+            )
+            .await,
+        CustomerVisitThreadReadResult::NotFound
+    ));
+    let CustomerVisitThreadReadResult::Loaded(empty_customer_thread) = visit_communication
+        .get_customer_thread(owner_a, &customer_visit_reference)
+        .await
+    else {
+        panic!("the exact hybrid-authorized customer should load the visit thread");
+    };
+    assert_eq!(empty_customer_thread.current_version, 0);
+    assert!(empty_customer_thread.messages.is_empty());
+    let question_request = CreateCustomerVisitQuestionRequest {
+        expected_thread_version: 0,
+        topic: "access".to_string(),
+        customer_safe_body: "Should I leave the side gate unlocked?".to_string(),
+        idempotency_key: "customer-visit-question-001".to_string(),
+    };
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET status = 'revoked', revoked_at = NOW()
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should revoke before question checks");
+    assert!(matches!(
+        visit_communication
+            .get_customer_thread(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitThreadReadResult::NotAuthorized
+    ));
+    assert!(matches!(
+        visit_communication
+            .create_customer_question(owner_a, &customer_visit_reference, question_request.clone(),)
+            .await,
+        CustomerVisitMessageWriteResult::NotAuthorized
+    ));
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET status = 'active', revoked_at = NULL
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should restore before question creation");
+    sqlx::query("UPDATE organization_memberships SET status = 'suspended' WHERE id = $1")
+        .bind(&activation.owner_membership_id)
+        .execute(&pool)
+        .await
+        .expect("the fixture owner membership should suspend before question checks");
+    assert!(matches!(
+        visit_communication
+            .get_customer_thread(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitThreadReadResult::InvalidAuthorization
+    ));
+    assert!(matches!(
+        visit_communication
+            .create_customer_question(owner_a, &customer_visit_reference, question_request.clone(),)
+            .await,
+        CustomerVisitMessageWriteResult::InvalidAuthorization
+    ));
+    sqlx::query("UPDATE organization_memberships SET status = 'active' WHERE id = $1")
+        .bind(&activation.owner_membership_id)
+        .execute(&pool)
+        .await
+        .expect("the fixture owner membership should restore before question creation");
+    let (first_question, second_question) = tokio::join!(
+        visit_communication.create_customer_question(
+            owner_a,
+            &customer_visit_reference,
+            question_request.clone(),
+        ),
+        visit_communication.create_customer_question(
+            owner_a,
+            &customer_visit_reference,
+            question_request.clone(),
+        ),
+    );
+    let question = match (first_question, second_question) {
+        (
+            CustomerVisitMessageWriteResult::Created(created),
+            CustomerVisitMessageWriteResult::Replayed(replayed),
+        )
+        | (
+            CustomerVisitMessageWriteResult::Replayed(replayed),
+            CustomerVisitMessageWriteResult::Created(created),
+        ) => {
+            assert_eq!(created, replayed);
+            created
+        }
+        (first, second) => panic!(
+            "concurrent exact customer question should save once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(question.message_version, 1);
+    assert_eq!(question.message_kind, "customer_question");
+    assert_eq!(question.author_role, "customer");
+    assert_eq!(question.topic, "access");
+    assert!(matches!(
+        visit_communication
+            .create_customer_question(
+                owner_a,
+                &customer_visit_reference,
+                CreateCustomerVisitQuestionRequest {
+                    customer_safe_body: "This changed after the first attempt.".to_string(),
+                    ..question_request.clone()
+                },
+            )
+            .await,
+        CustomerVisitMessageWriteResult::Conflict
+    ));
+    let response_request = CreateProviderVisitResponseRequest {
+        expected_thread_version: 1,
+        in_reply_to_message_id: question.message_id.clone(),
+        customer_safe_body: "Yes. Please leave it unlocked for the arrival window.".to_string(),
+        idempotency_key: "provider-visit-response-001".to_string(),
+    };
+    assert!(matches!(
+        visit_communication
+            .create_provider_response(
+                "recipient-user-without-membership",
+                &customer_visit_reference,
+                response_request.clone(),
+            )
+            .await,
+        CustomerVisitMessageWriteResult::NotFound
+    ));
+    let CustomerVisitMessageWriteResult::Created(response) = visit_communication
+        .create_provider_response(
+            "recipient-user-1",
+            &customer_visit_reference,
+            response_request.clone(),
+        )
+        .await
+    else {
+        panic!("an exact provider owner/manager should answer the customer question");
+    };
+    assert_eq!(response.message_version, 2);
+    assert_eq!(response.message_kind, "provider_response");
+    assert_eq!(response.author_role, "provider");
+    assert_eq!(response.topic, question.topic);
+    assert_eq!(
+        response.in_reply_to_message_id.as_deref(),
+        Some(question.message_id.as_str())
+    );
+    assert!(matches!(
+        visit_communication
+            .create_provider_response(
+                "recipient-user-1",
+                &customer_visit_reference,
+                response_request.clone(),
+            )
+            .await,
+        CustomerVisitMessageWriteResult::Replayed(record) if record == response
+    ));
+    assert!(matches!(
+        visit_communication
+            .create_provider_response(
+                "recipient-user-1",
+                &customer_visit_reference,
+                CreateProviderVisitResponseRequest {
+                    expected_thread_version: 2,
+                    idempotency_key: "provider-second-response-001".to_string(),
+                    ..response_request.clone()
+                },
+            )
+            .await,
+        CustomerVisitMessageWriteResult::Conflict
+    ));
+    let CustomerVisitThreadReadResult::Loaded(customer_thread) = visit_communication
+        .get_customer_thread(owner_a, &customer_visit_reference)
+        .await
+    else {
+        panic!("the customer should reload the authoritative visit conversation");
+    };
+    let CustomerVisitThreadReadResult::Loaded(provider_thread) = visit_communication
+        .get_provider_thread("recipient-user-1", &customer_visit_reference)
+        .await
+    else {
+        panic!("the exact provider should reload the authoritative visit conversation");
+    };
+    assert_eq!(customer_thread, provider_thread);
+    assert_eq!(customer_thread.current_version, 2);
+    assert_eq!(customer_thread.messages, vec![question.clone(), response]);
+    let thread_json =
+        serde_json::to_string(&customer_thread).expect("customer visit thread should serialize");
+    for private_value in [
+        &service_release.release_id,
+        &service_release.service_job_id,
+        &activation.activation_id,
+        &activation.customer_account_id,
+        &activation.customer_property_id,
+        "recipient-user-1",
+        owner_a,
+    ] {
+        assert!(!thread_json.contains(private_value));
+    }
+    assert!(sqlx::query(
+        "UPDATE customer_service_visit_threads
+         SET customer_property_id = $2, current_version = current_version + 1
+         WHERE customer_visit_reference = $1",
+    )
+    .bind(&customer_visit_reference)
+    .bind(sibling_property_id)
+    .execute(&pool)
+    .await
+    .is_err());
+    assert!(sqlx::query(
+        "UPDATE customer_service_visit_messages
+         SET customer_safe_body = 'changed' WHERE id = $1",
+    )
+    .bind(&question.message_id)
+    .execute(&pool)
+    .await
+    .is_err());
+    assert!(sqlx::query(
+        "INSERT INTO customer_service_visit_messages (
+             id, customer_visit_reference, organization_id,
+             customer_account_id, customer_property_id, message_version,
+             message_kind, author_role, author_user_id, topic,
+             customer_safe_body, idempotency_key
+         )
+         SELECT 'cross_property_customer_visit_message',
+                customer_visit_reference, organization_id,
+                customer_account_id, $2, 99, 'customer_question', 'customer',
+                'cross-property-actor', 'other', 'Invalid cross-property message.',
+                'cross-property-message-001'
+         FROM customer_service_visit_threads
+         WHERE customer_visit_reference = $1",
+    )
+    .bind(&customer_visit_reference)
+    .bind(sibling_property_id)
+    .execute(&pool)
+    .await
+    .is_err());
+
     let mut en_route_request = PublishCustomerServiceDayEventRequest {
         expected_event_version: 0,
         status: "en_route".to_string(),
@@ -4045,6 +4342,24 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .execute(&pool)
     .await
     .expect("the fixture relationship should end");
+    assert!(matches!(
+        visit_communication
+            .get_customer_thread(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitThreadReadResult::NotFound
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_provider_thread("recipient-user-1", &customer_visit_reference)
+            .await,
+        CustomerVisitThreadReadResult::NotFound
+    ));
+    assert!(matches!(
+        visit_communication
+            .create_customer_question(owner_a, &customer_visit_reference, question_request,)
+            .await,
+        CustomerVisitMessageWriteResult::NotFound
+    ));
     assert!(matches!(
         mobilization
             .publish_customer_service_day_event(

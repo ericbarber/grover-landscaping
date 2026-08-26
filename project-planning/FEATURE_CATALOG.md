@@ -108,6 +108,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   one accessible progress rail, bounded weather explanation, original and
   replacement reschedule timing, current next-update ownership, recorded
   preparation, and proof-pending privacy without provider-operational context
+- Dedicated customer visit-question persistence with one random non-bearer
+  reference per exact service release, immutable versioned customer/provider
+  messages, hybrid customer authorization, organization-owner/manager provider
+  authority, exact reply/replay rules, and cross-property isolation
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

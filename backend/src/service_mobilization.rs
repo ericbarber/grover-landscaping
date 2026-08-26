@@ -606,6 +606,19 @@ async fn release_initial_service(
     .bind(request.idempotency_key.trim())
     .execute(&mut *transaction)
     .await?;
+    sqlx::query(
+        "INSERT INTO customer_service_visit_threads (
+             customer_visit_reference, release_id, organization_id,
+             customer_account_id, customer_property_id
+         ) VALUES ($1, $2, $3, $4, $5)",
+    )
+    .bind(format!("customer_visit_{}", Uuid::new_v4().simple()))
+    .bind(&release_id)
+    .bind(authority.get::<String, _>("organization_id"))
+    .bind(authority.get::<String, _>("customer_account_id"))
+    .bind(authority.get::<String, _>("customer_property_id"))
+    .execute(&mut *transaction)
+    .await?;
     let record = load_release_in_transaction(&mut transaction, &release_id).await?;
     transaction.commit().await?;
     Ok(ServiceWorkReleaseWriteResult::Released(record))

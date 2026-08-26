@@ -484,3 +484,26 @@ copy, and a reschedule window only when applicable. Every write revalidates the
 active relationship and current property. Care-in-progress and proof-pending
 publication additionally require the linked job to be in progress or completed;
 raw job, stop, route, GPS, crew, or report state never publishes itself.
+
+## customer_service_visit_threads
+
+Decision D-060 creates one customer-safe visit reference and mutable version
+projection atomically with each service release. The random reference resolves
+the exact release organization/account/property provenance but is never a
+bearer credential. Every customer read or write still revalidates the full
+active portal-grant and membership set, the exact granted property/account,
+active relationship, organization, provider-account relation, and property.
+Provider access requires an active organization-scoped `organization_owner` or
+`manager` membership in the exact provider organization. Relationship closure
+removes read, write, and replay access without changing history.
+
+`customer_service_visit_messages` stores immutable, sequential
+`customer_question` and `provider_response` records. Customer questions use the
+allowlisted `timing`, `preparation`, `access`, `service_scope`, or `other` topic;
+provider responses inherit the exact question topic and retain one explicit
+reply link. Text is customer-safe and bounded to 2,000 characters. Actor-scoped
+idempotency keys replay only an exact request, optimistic thread versions reject
+stale writes, and one question accepts at most one provider response. The
+customer-safe projection omits actors and release, activation, job,
+organization, account, property, membership, notification, and operational
+identifiers.

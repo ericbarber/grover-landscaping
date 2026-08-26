@@ -5,10 +5,10 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is implementing accepted decision
-D-060 after the Yard Owner contextual-question/concern source audit found no
-reusable customer-safe conversation source. The question-first boundary uses an
-immutable hybrid-authorized thread and non-bearer customer visit reference;
+The current production-adoption priority is exposing accepted decision D-060's
+delivered visit-question persistence through minimized customer/provider APIs
+and an organization-owner/manager provider queue. Each service release now has
+one random non-bearer visit reference and hybrid-authorized immutable thread;
 concerns, attachments, notifications, and service-level promises remain separate.
 Safe Yard Crew operating
 preparation is adopted through service and language facts; public fit/entry and

@@ -7,9 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement accepted decision D-060 through a customer-safe visit
-  reference and immutable question/response persistence, then expose its
-  provider queue and hybrid-authorized customer/provider APIs.
+- Active slice: expose delivered D-060 customer-safe visit references and
+  immutable question/response persistence through its minimized provider queue
+  and hybrid-authorized customer/provider APIs.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -150,9 +150,10 @@ aligned overview composition.
 
 1. Service mobilization persistence, provider release/status APIs, minimized
    customer projection, and all six Yard Owner service-day modes are delivered.
-   Decision D-060 is accepted; implement its dedicated visit-question
-   persistence, provider queue, APIs, and Yard Owner experience in bounded
-   slices while retaining the separate concern boundary.
+   Decision D-060's dedicated visit reference and immutable hybrid-authorized
+   question/response persistence are delivered. Implement its provider queue,
+   customer/provider APIs, and Yard Owner experience in bounded slices while
+   retaining the separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -189,12 +190,16 @@ That prior matrix covers all seven fixed identities, fail-closed access retry,
 unscoped-role Home-only recovery, Team staffing recovery, partial-read isolation,
 self-impact, unavailable-versus-empty, keyboard activation, and focus transfer,
 plus the direct property-manager portfolio journey.
-The D-059 persistence slice passes all 197 backend library tests and compiles the
-expanded owner/provider PostgreSQL lifecycle fixture. That fixture contains the
-release/event replay, authority, revocation, job-state, immutability, rollback,
-and cross-property assertions, but those database-backed branches did not run in
-this environment because `DATABASE_URL` is unset and the local Docker daemon is
-unavailable.
+The D-060 persistence slice passes all 200 backend library tests and compiles
+and runs the focused owner/provider integration target. Its PostgreSQL fixture
+now covers release-created random references, customer/provider authority,
+revocation, invalid grants, exact replay, stale and changed writes, one-response
+reply linkage, immutability, cross-property provenance, and relationship closure.
+Those database-backed branches did not run in this environment because
+`DATABASE_URL` is unset; the target's unavailable-storage path passed. Strict
+library Clippy remains red on the repository's pre-existing warnings in auth,
+day-plan, organization, acquisition, bid, onboarding, and mobilization code; the
+two initially reported visit-communication findings were corrected.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks
