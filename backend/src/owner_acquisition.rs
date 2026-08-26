@@ -12769,13 +12769,16 @@ async fn activate_owner_provider_relationship(
         "INSERT INTO organization_memberships (
              id, organization_id, user_id, display_name, role, status,
              scope_type, scope_id
-         ) VALUES ($1, $2, $3, $4, 'property_owner', 'active', 'property', $5)",
+         ) VALUES (
+             $1, $2, $3, $4, 'property_owner', 'active',
+             'customer_account', $5
+         )",
     )
     .bind(&owner_membership_id)
     .bind(&organization_id)
     .bind(owner_user_id)
     .bind(&owner_display_name)
-    .bind(&customer_property_id)
+    .bind(&customer_account_id)
     .execute(&mut *transaction)
     .await?;
     sqlx::query(
@@ -12810,8 +12813,11 @@ async fn activate_owner_provider_relationship(
     sqlx::query(
         "INSERT INTO customer_portal_access_grants (
              id, activation_id, organization_id, account_id, property_id,
-             user_id, access_role, status
-         ) VALUES ($1, $2, $3, $4, $5, $6, 'property_owner', 'active')",
+             user_id, access_role, status, scope_type, scope_id
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, 'property_owner', 'active',
+             'customer_account', $4
+         )",
     )
     .bind(&portal_access_id)
     .bind(&activation_id)

@@ -1,6 +1,7 @@
 # Customer Portal Authorization Model
 
-Status: Accepted product/security decision on 2026-08-25.
+Status: Authorization foundation delivered on 2026-08-25; minimized visit read
+pending.
 
 ## Decision
 
@@ -70,8 +71,8 @@ notes, or other provider-only fields.
 
 ## Existing-data transition
 
-The currently delivered activation flow creates property-scoped owner records.
-The implementation migration may widen a record to customer-account scope only
+The pre-migration activation flow created property-scoped owner records. The
+delivered migration widens a record to customer-account scope only
 when immutable activation provenance proves that:
 
 - the grant belongs to the activation's verified owner subject;
@@ -80,7 +81,7 @@ when immutable activation provenance proves that:
 - the grant and membership are active.
 
 Unknown, manually created, mismatched, inactive, or delegate-like grants remain
-property-scoped for review. The migration must be repeatable and must not infer
+property-scoped for review. The migration is repeatable and does not infer
 ownership from email address, display name, role claim, or organization
 membership alone.
 
@@ -103,10 +104,12 @@ slices.
 ## Delivery sequence
 
 1. Add constrained account/property grant scope and account membership scope.
+   **Delivered.**
 2. Backfill only activation-proven owner grants and prove delegate isolation.
+   **Delivered.**
 3. Add one shared fail-closed authorization resolver with account-owner and
-   property-delegate coverage.
-4. Add the minimized customer visit read through that resolver.
+   property-delegate coverage. **Delivered.**
+4. Add the minimized customer visit read through that resolver. **Next.**
 5. Replace illustrative Yard Owner visit data only after persisted read,
    unavailable, empty, and revoked-access states pass validation.
 

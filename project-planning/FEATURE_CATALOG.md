@@ -84,10 +84,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
-- Accepted hybrid customer portal authorization target with provider-tenant
+- Delivered hybrid customer portal authorization foundation with provider-tenant
   customer-account inheritance for verified owners, explicit property grants
-  for delegates, activation-proven backfill, and fail-closed read resolution;
-  migration and persisted visit reads remain planned
+  for delegates, activation-proven backfill, and fail-closed property resolution;
+  the minimized persisted visit read remains planned
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

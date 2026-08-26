@@ -6,11 +6,11 @@ require a verified authenticated user. Owner scope always comes from the token
 subject and the property path; no provider tenant or operational record ID is
 accepted from the browser.
 
-The current response reflects the delivered property-scoped activation record.
-Decision D-058 adopts customer-account scope for verified owners and property
-scope for delegates; that target is not runtime behavior until the migration in
+The current response reflects the delivered customer-account-scoped owner
+activation record. Decision D-058 retains explicit property scope for delegates;
+the runtime authorization and transition rules are defined in
 [`customer-portal-authorization-model.md`](customer-portal-authorization-model.md)
-is delivered.
+and are now delivered ahead of customer visit reads.
 
 ## Read activation status
 
@@ -21,8 +21,8 @@ GET /owner-properties/{property_id}/initial-service-proposals/{proposal_id}/acti
 Returns the persisted activation only when the token subject owns the private
 property and the proposal. The response includes the immutable activation,
 proposal, accepted-snapshot, provider organization, projected account/property,
-property-scoped membership, portal-access identifiers, provider-setup status,
-same-property competing-closure count, and activation time.
+customer-account-scoped membership, portal-access identifiers, provider-setup
+status, same-property competing-closure count, and activation time.
 
 - `200`: activation found
 - `404`: no activation exists in this owner/property/proposal scope

@@ -8,14 +8,14 @@ acceptance remains a review decision only. A second owner affirmation starts
 one atomic, replay-safe activation transaction.
 
 Activation creates enough durable relationship state for the provider to
-finish onboarding and for the owner to receive property-scoped portal access.
+finish onboarding and for the owner to receive customer-account portal access.
 It does not create a service job, day plan, route stop, work order, invoice,
 payment, crew assignment, recurring schedule, or first visit.
 
-Decision D-058 now adopts customer-account scope for verified owners and
-property scope for delegates. The delivered activation transaction remains
-property-scoped until its grant/membership migration ships; the approved target
-and safe backfill rules are defined in
+Decision D-058 adopts customer-account scope for verified owners and property
+scope for delegates. The activation transaction and constrained
+grant/membership migration now implement that boundary; its safe backfill and
+read-resolution rules are defined in
 [`customer-portal-authorization-model.md`](customer-portal-authorization-model.md).
 
 ## Entry authority
@@ -58,10 +58,10 @@ A successful activation transaction creates:
 2. one active `organization_customer_accounts` relationship with type `owner`;
 3. one `customer_properties` row in `onboarding`, using the owner property's
    current display name and complete formatted service address;
-4. one active, property-scoped `property_owner` organization membership for the
-   owner subject;
-5. one explicit customer-account/property portal-access row binding the owner
-   subject to only the projected operational records;
+4. one active, customer-account-scoped `property_owner` organization membership
+   for the owner subject;
+5. one explicit customer-account-scoped portal-access row binding the owner
+   subject to that account inside the provider organization;
 6. one immutable activation record containing proposal, decision, acceptance
    snapshot, owner property, provider organization, customer account, service
    property, membership, portal-access, affirmation, and snapshot-digest
@@ -82,10 +82,11 @@ account/property allow-list. Customer-facing reads adopted after this foundation
 must use that allow-list and must not treat organization membership alone as
 access to every customer account in the provider tenant.
 
-The next authorization slice replaces the activation-created owner's property
-scope with customer-account scope. Delegates remain explicit property grants.
-Until that migration is delivered, no persisted visit read may infer account
-inheritance from the current property-scoped record.
+The delivered authorization resolver requires a matching active membership and
+portal grant, then revalidates the provider organization, customer-account
+relationship, and current property relationship. Delegates remain explicit
+property grants and never inherit sibling properties. Persisted visit reads must
+use this resolver rather than infer access from membership or role claims.
 
 Operational managers continue to use their existing tenant-scoped account and
 property APIs. Activation does not grant the owner manager, scheduling, crew,
@@ -147,7 +148,7 @@ the relationship was activated.
    [first-visit contract](owner-provider-first-visit-design.md).
 6. **4C4b–d — First-visit delivery:** persistence, authenticated APIs, and
    responsive owner/provider adoption without implicit crew assignment.
-7. **4C5 — Hybrid portal authorization (planned):** constrained account/property
+7. **4C5 — Hybrid portal authorization (delivered):** constrained account/property
    grant scopes, activation-proven owner backfill, delegate isolation, and a
    shared fail-closed customer-read resolver before persisted visit reads.
 

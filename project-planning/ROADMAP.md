@@ -17,10 +17,11 @@ One responsive six-stage navigator now keeps Invitation, Organization,
 Disclosure, Assessment, Proposal & setup, and First visit oriented without
 collapsing customer approval into provider work authority.
 The property-manager
-portfolio V1 command center is adopted in React. Decision D-058 now approves
+portfolio V1 command center is adopted in React. Decision D-058 now implements
 customer-account scope for verified owners and explicit property scope for
-delegates; its constrained migration and fail-closed resolver precede the Yard
-Owner persisted visit projection. Team/organization core convergence is adopted with its
+delegates; its constrained migration and fail-closed resolver are delivered,
+making the Yard Owner persisted visit projection the active next slice.
+Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
 handoff. Proposal
 collaboration, explicit owner-confirmed activation, and separate first-visit
@@ -460,9 +461,9 @@ schedule, remaining work, or a completed day.
 **Delivered — Explicit activation**
 
    - An owner separately projects an explicitly accepted immutable snapshot
-     into provider customer/property setup and currently property-scoped portal
-     access; accepted decision D-058 plans account scope for verified owners and
-     retained property scope for delegates before customer visit reads.
+     into provider customer/property setup and customer-account-scoped owner
+     access; decision D-058 retains explicit property scope for delegates and a
+     shared fail-closed resolver before customer visit reads.
    - Owner and provider interfaces expose authoritative setup status without
      silently scheduling, collecting payment, routing, or assigning work.
 

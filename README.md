@@ -27,9 +27,10 @@ and payment authority. The authenticated Property Owner now has a four-
 destination portal shell, while Organization Owners have a prototype-aligned
 Team and access command center. Property Managers now enter a dedicated,
 prototype-aligned portfolio command center for readiness, exceptions, property
-coverage, proof, and approvals. The hybrid customer-authorization decision is
-accepted: account owners inherit account properties and delegates remain
-property-scoped. Its migration and persisted visit read are the next slice.
+coverage, proof, and approvals. The hybrid customer-authorization model is
+implemented: account owners inherit account properties and delegates remain
+property-scoped. Its constrained authorization foundation is delivered; the
+minimized persisted visit read is the next slice.
 Landscaping-company signup now opens a dedicated provider entry route that
 separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
@@ -103,7 +104,7 @@ Start with these records when reviewing or continuing development:
   accountability; and an explicit local-review visit boundary
 - Owner/provider assessment lifecycle with customer-safe conversation and separate provider-private notes
 - Versioned acquisition-proposal publication, immutable history, exact-version owner decisions, and accepted-but-unactivated snapshots
-- Explicit accepted-proposal activation into provider customer/property setup with property-scoped portal access and no implicit first visit or crew assignment
+- Explicit accepted-proposal activation into provider customer/property setup with customer-account owner access, retained property-scoped delegation, and no implicit first visit or crew assignment
 - Persona-specific public landing journeys with an interactive “Today’s operation” operations preview
 - Organization Owner Team and access command center with live staffing/access
   summaries and direct administration and audit paths
@@ -462,8 +463,9 @@ The application is responsive across owner, provider, crew, manager, administrat
 
 The repository-owned prototype-adoption core is now implemented through the
 Yard Crew operating profile. Customer-account owner scope with property-scoped
-delegates is approved; its fail-closed migration and minimized Yard Owner visit
-read are next. Curated-opportunity availability/governance and governed
+delegates is delivered through a constrained migration and fail-closed property
+resolver; the minimized Yard Owner visit read is next. Curated-opportunity
+availability/governance and governed
 credential evidence still require product/operations decisions. See the
 [prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) and
 [customer portal authorization model](docs/customer-portal-authorization-model.md).

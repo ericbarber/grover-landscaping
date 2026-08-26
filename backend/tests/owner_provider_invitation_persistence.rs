@@ -1,3 +1,6 @@
+use grover_landscaping_api::customer_portal_access::{
+    CustomerPortalAccessRepository, CustomerPortalPropertyAccessResult,
+};
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
     BootstrapOwnerProviderOrganizationClaimRequest, CreateOwnerAssessmentMessageRequest,
@@ -3340,7 +3343,10 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
                 customer_property.status AS customer_property_status,
                 membership.user_id, membership.role, membership.scope_type,
                 membership.scope_id, portal.user_id AS portal_user_id,
-                portal.status AS portal_status, owner_property.status AS owner_property_status,
+                portal.status AS portal_status,
+                portal.scope_type AS portal_scope_type,
+                portal.scope_id AS portal_scope_id,
+                owner_property.status AS owner_property_status,
                 invitation.status AS selected_invitation_status,
                 competing.status AS competing_invitation_status
          FROM owner_provider_relationship_activations activation
@@ -3388,13 +3394,123 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         .contains("421 Private Canyon Road"));
     assert_eq!(projection.get::<String, _>("user_id"), owner_a);
     assert_eq!(projection.get::<String, _>("role"), "property_owner");
-    assert_eq!(projection.get::<String, _>("scope_type"), "property");
+    assert_eq!(
+        projection.get::<String, _>("scope_type"),
+        "customer_account"
+    );
     assert_eq!(
         projection.get::<String, _>("scope_id"),
-        activation.customer_property_id
+        activation.customer_account_id
     );
     assert_eq!(projection.get::<String, _>("portal_user_id"), owner_a);
     assert_eq!(projection.get::<String, _>("portal_status"), "active");
+    assert_eq!(
+        projection.get::<String, _>("portal_scope_type"),
+        "customer_account"
+    );
+    assert_eq!(
+        projection.get::<String, _>("portal_scope_id"),
+        activation.customer_account_id
+    );
+    assert!(sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET scope_id = property_id
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .is_err());
+    let sibling_property_id = "customer_portal_sibling_property_fixture";
+    sqlx::query(
+        "INSERT INTO customer_properties (
+             id, organization_id, account_id, display_name, service_address, status
+         ) VALUES ($1, $2, $3, 'Second owner yard', '422 Private Canyon Road', 'active')",
+    )
+    .bind(sibling_property_id)
+    .bind(&activation.organization_id)
+    .bind(&activation.customer_account_id)
+    .execute(&pool)
+    .await
+    .expect("a sibling customer property should insert");
+    let portal_access = CustomerPortalAccessRepository::from_pool(pool.clone());
+    let CustomerPortalPropertyAccessResult::Loaded(account_properties) =
+        portal_access.list_authorized_properties(owner_a).await
+    else {
+        panic!("the verified account owner should resolve authorized properties");
+    };
+    assert!(account_properties
+        .iter()
+        .any(|property| property.property_id == activation.customer_property_id));
+    assert!(account_properties.iter().any(|property| {
+        property.property_id == sibling_property_id
+            && property.effective_scope_type == "customer_account"
+    }));
+
+    sqlx::query(
+        "UPDATE organization_memberships
+         SET scope_type = 'property', scope_id = $2
+         WHERE id = $1",
+    )
+    .bind(&activation.owner_membership_id)
+    .bind(&activation.customer_property_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture membership should narrow to property scope");
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET scope_type = 'property', scope_id = property_id
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should narrow to property scope");
+    let CustomerPortalPropertyAccessResult::Loaded(delegate_properties) =
+        portal_access.list_authorized_properties(owner_a).await
+    else {
+        panic!("a matching property-scoped grant should resolve authorized properties");
+    };
+    assert_eq!(delegate_properties.len(), 1);
+    assert_eq!(
+        delegate_properties[0].property_id,
+        activation.customer_property_id
+    );
+    assert_eq!(delegate_properties[0].effective_scope_type, "property");
+
+    sqlx::query(
+        "UPDATE organization_memberships
+         SET scope_type = 'customer_account', scope_id = $2
+         WHERE id = $1",
+    )
+    .bind(&activation.owner_membership_id)
+    .bind(&activation.customer_account_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture membership should restore account scope");
+    sqlx::query(
+        "UPDATE customer_portal_access_grants
+         SET scope_type = 'customer_account', scope_id = account_id
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture portal grant should restore account scope");
+    sqlx::query("UPDATE organization_memberships SET status = 'suspended' WHERE id = $1")
+        .bind(&activation.owner_membership_id)
+        .execute(&pool)
+        .await
+        .expect("the fixture membership should suspend");
+    assert!(matches!(
+        portal_access.list_authorized_properties(owner_a).await,
+        CustomerPortalPropertyAccessResult::InvalidAuthorization
+    ));
+    sqlx::query("UPDATE organization_memberships SET status = 'active' WHERE id = $1")
+        .bind(&activation.owner_membership_id)
+        .execute(&pool)
+        .await
+        .expect("the fixture membership should reactivate");
     assert_eq!(
         projection.get::<String, _>("owner_property_status"),
         "provider_setup"

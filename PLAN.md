@@ -92,6 +92,12 @@ Current state:
   request; owners can confirm the exact version or request another window. A
   confirmed appointment links into the Yard Owner portal while keeping crew,
   route, work-order, recurring-schedule, and payment work separate.
+- Phase 4C5 now delivers decision D-058's authorization foundation. Verified
+  relationship activation creates customer-account-scoped owner membership and
+  portal grants; a constrained migration backfills only exact active activation
+  provenance; and one fail-closed resolver revalidates organization, account,
+  property, membership, role, grant, and scope before returning non-archived
+  properties. Explicit property scope remains isolated for delegates.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -191,16 +197,16 @@ Current state:
   explicit boundary between customer approval and provider operations.
 - Customer portal authorization decision D-058 is accepted: verified owners
   receive customer-account scope across current/future properties in that
-  provider account, while delegates retain explicit property scope. The runtime
-  remains property-scoped until the constrained migration and fail-closed
-  resolver ship; persisted visit reads must wait for that implementation.
+  provider account, while delegates retain explicit property scope. Its
+  constrained migration, activation behavior, provenance-safe backfill, and
+  fail-closed property resolver are delivered; persisted visit reads remain the
+  next implementation boundary.
 
 Next authorized slice and remaining gates:
 
-- Implement the accepted hybrid authorization model: add constrained account
-  and property grant scopes, backfill only activation-proven owner records,
-  retain delegate isolation, and centralize fail-closed customer-read
-  authorization. Then add the minimized persisted customer visit read.
+- Add the minimized persisted customer visit read through the shared hybrid
+  authorization resolver. Preserve valid-empty, unauthorized, inconsistent,
+  and unavailable states and the customer-safe field allowlist.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
