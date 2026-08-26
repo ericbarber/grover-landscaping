@@ -210,15 +210,18 @@ Current state:
   constrained migration, activation behavior, provenance-safe backfill, and
   fail-closed property resolver, minimized confirmed-visit read, and Yard Owner
   Home/Visits adoption are delivered. The next bounded customer slice is the
-  service-day lifecycle and preparation extension; it must use an authoritative
-  customer-safe source rather than expose route, crew, or provider-only state.
+  service-day lifecycle extension. Its source audit found no exact relationship
+  from the deliberately non-operational first-visit confirmation to a property-
+  scoped service job, so the mobilization/work-release decision must be accepted
+  before implementation may advance beyond confirmed.
 
 Next authorized slice and remaining gates:
 
-- Define and adopt the next bounded Yard Owner service-day lifecycle and
-  preparation extension through the hybrid authorization resolver. Preserve the
-  confirmed-visit baseline and keep route order, live location, crew identity,
-  internal risk, unpublished proof, and provider notes outside the projection.
+- Approve the customer service-day source contract: preferably an immutable,
+  provider-authorized mobilization/work-release relation connecting the exact
+  confirmed first visit, customer property, accepted scope, and resulting job.
+  Preserve the confirmed-visit baseline until that decision is accepted; never
+  infer the link from account, address, date, route, or crew data.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

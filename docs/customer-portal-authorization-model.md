@@ -113,7 +113,8 @@ slices.
 5. Replace illustrative Yard Owner visit data only after persisted read,
    unavailable, empty, and revoked-access states pass validation. **Delivered.**
 6. Extend the projection into customer-safe service-day lifecycle and
-   preparation states without exposing provider operations. **Next.**
+   preparation states without exposing provider operations. **Decision required:
+   see the [source audit](customer-service-day-projection-design.md).**
 
 ## Non-goals
 

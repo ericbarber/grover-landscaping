@@ -82,3 +82,7 @@ silently revisit settled product structure.
    submit proposals, and assign operational work?
 8. What support hours, safety escalation, abuse response, and verification appeal
    promise can the first provider-acquisition pilot operate credibly?
+9. Should service mobilization create a dedicated immutable work-release record
+   linking the exact confirmed first visit, customer property, accepted scope,
+   provider authority, and resulting job before customer-visible service-day
+   states may advance beyond confirmed?

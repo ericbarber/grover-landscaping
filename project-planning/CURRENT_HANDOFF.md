@@ -7,9 +7,11 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active authorized slice: define and adopt the bounded customer-safe Yard Owner
-  service-day lifecycle extension on top of the delivered persisted Home/Visits
-  read. Curated-opportunity
+- Active decision: approve the customer service-day source contract before the
+  delivered persisted Home/Visits read advances beyond confirmed. The audit
+  recommends a dedicated immutable provider-authorized mobilization/work-release
+  relation; existing job/account/date/route data cannot be safely inferred.
+  Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
   `frontend/e2e/mobile-offline-recovery.spec.ts`, `localdev/`, and `prompts/`.
@@ -146,10 +148,11 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Define and adopt the bounded customer-safe service-day lifecycle and
-   preparation extension through the hybrid authorization boundary. Do not
-   expose route, crew, live-location, risk, provider-note, or unpublished-proof
-   state.
+1. Decide whether to adopt the recommended immutable mobilization/work-release
+   relation documented in
+   [`../docs/customer-service-day-projection-design.md`](../docs/customer-service-day-projection-design.md).
+   Do not implement customer states beyond confirmed by inferring a job/property
+   link from account, address, date, route, crew, or completion-report data.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and

@@ -6,9 +6,9 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 ## Active UX Priority
 
 The current production-adoption priority is the bounded customer-safe Yard Owner
-service-day extension. Safe Yard Crew operating preparation is adopted through
-service and language facts; public fit/entry and provider identity/readiness
-core are adopted with distinct owner-operator,
+service-day source decision. Safe Yard Crew operating preparation is adopted
+through service and language facts; public fit/entry and provider identity/
+readiness core are adopted with distinct owner-operator,
 company-owner, team-invitation, and known-owner paths plus precise supplied,
 recorded, operational, missing, not-collected, and not-evaluated fact states.
 First-time recipient confirmation, provider-organization connection, bounded
@@ -23,7 +23,10 @@ customer-account scope for verified owners and explicit property scope for
 delegates; its constrained migration, fail-closed resolver, and minimized
 persisted visit projection are delivered. Yard Owner Home and Visits now consume
 that projection with fail-closed recovery and no illustrative fallback, making
-the customer-safe service-day lifecycle extension the active next slice.
+the customer-safe service-day lifecycle extension the active next slice. Its
+source audit found no exact first-visit-to-job/property release relation, so
+implementation remains at confirmed pending the mobilization/work-release
+decision.
 Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
 handoff. Proposal
@@ -491,7 +494,8 @@ schedule, remaining work, or a completed day.
    - Property-manager portfolio core is adopted with explicit local-review
      readiness provenance and protected proof/recommendation reads.
    - Yard Owner Home/Visits now use the explicit minimized persisted read; extend
-     it through bounded customer-safe service-day states next.
+     it through bounded customer-safe service-day states only after accepting the
+     explicit mobilization/work-release source contract.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.
