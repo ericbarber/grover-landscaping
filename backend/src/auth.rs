@@ -513,6 +513,7 @@ fn is_protected_api_path(path: &str) -> bool {
         || path == "/provider-assessments"
         || path.starts_with("/provider-assessments/")
         || path.starts_with("/provider-relationships/")
+        || path.starts_with("/provider-service-releases/")
         || path.starts_with("/provider-invitation-organization-claims/")
         || path == "/provider-organization-claim-reviews"
         || path == "/provider-organization-claim-review-metrics"
@@ -619,6 +620,16 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         && (path.ends_with("/first-visit/status") || path.ends_with("/first-visit/proposal"))
     {
         return principal.verified_email.is_some() && *method == Method::POST;
+    }
+    let can_mobilize_service = principal
+        .roles
+        .iter()
+        .any(|role| matches!(role, AccessRole::OrganizationOwner | AccessRole::Manager));
+    if path.starts_with("/provider-relationships/") && path.ends_with("/service-release") {
+        return can_mobilize_service && (*method == Method::GET || *method == Method::POST);
+    }
+    if path.starts_with("/provider-service-releases/") && path.ends_with("/customer-status") {
+        return can_mobilize_service && *method == Method::POST;
     }
     if path.starts_with("/provider-invitation-organization-claims/") && path.ends_with("/bootstrap")
     {
@@ -1798,6 +1809,51 @@ mod tests {
                 path
             ));
         }
+    }
+
+    #[test]
+    fn service_mobilization_routes_require_provider_owner_or_manager_role() {
+        for (method, path) in [
+            (
+                Method::GET,
+                "/provider-relationships/activation-1/service-release",
+            ),
+            (
+                Method::POST,
+                "/provider-relationships/activation-1/service-release",
+            ),
+            (
+                Method::POST,
+                "/provider-service-releases/release-1/customer-status",
+            ),
+        ] {
+            assert!(is_protected_api_path(path));
+            assert!(is_authorized(
+                &principal(AccessRole::OrganizationOwner),
+                &method,
+                path
+            ));
+            assert!(is_authorized(
+                &principal(AccessRole::Manager),
+                &method,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::CrewLead),
+                &method,
+                path
+            ));
+            assert!(!is_authorized(
+                &principal(AccessRole::SupportAdmin),
+                &method,
+                path
+            ));
+        }
+        assert!(!is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::DELETE,
+            "/provider-relationships/activation-1/service-release"
+        ));
     }
 
     #[test]

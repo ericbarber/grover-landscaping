@@ -5,9 +5,9 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is the provider API and minimized
-customer projection over the delivered Yard Owner mobilization/work-release
-persistence boundary. Safe Yard Crew operating
+The current production-adoption priority is the minimized customer projection
+over the delivered Yard Owner mobilization/work-release persistence and
+provider API boundary. Safe Yard Crew operating
 preparation is adopted through service and language facts; public fit/entry and
 provider identity/readiness core are adopted with distinct owner-operator,
 company-owner, team-invitation, and known-owner paths plus precise supplied,
@@ -27,8 +27,10 @@ that projection with fail-closed recovery and no illustrative fallback, making
 the customer-safe service-day lifecycle extension the active next slice. Its
 source audit found no exact first-visit-to-job/property release relation, so
 decision D-059's immutable provider-authorized release and explicit customer-
-status event persistence now provide that link. Provider APIs and the hybrid
-customer projection are next before the UI advances beyond confirmed.
+status event persistence now provide that link. Provider release/reload/status
+APIs are delivered with exact membership checks, replay recovery, and minimized
+responses. The hybrid customer projection is next before the UI advances beyond
+confirmed.
 Team/organization core convergence is adopted with its
 command center, recovery, access safety, responsive regression, and production
 handoff. Proposal

@@ -95,6 +95,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   organization/account/property relationship, authorized provider membership,
   and one atomically created scheduled job; exact replay, state sequencing,
   operational progress gates, revocation, and cross-property isolation fail closed
+- Delivered provider-owner/manager mobilization APIs for authoritative release
+  reload, exact-version idempotent work release, and versioned customer-safe
+  status publication, with explicit recovery responses and customer/account/
+  property/organization identifiers omitted from the HTTP projection
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

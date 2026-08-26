@@ -52,6 +52,27 @@ pub struct CustomerServiceDayEventRecord {
     pub persisted: bool,
 }
 
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct ServiceMobilizationStatusRecord {
+    pub release: ServiceWorkReleaseRecord,
+    pub service_job_status: String,
+    pub current_customer_status: String,
+    pub current_event_version: i64,
+    pub window_start_epoch_seconds: i64,
+    pub window_end_epoch_seconds: i64,
+    pub time_zone: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latest_customer_event: Option<CustomerServiceDayEventRecord>,
+    pub persisted: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ServiceMobilizationReadResult {
+    Loaded(ServiceMobilizationStatusRecord),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ServiceWorkReleaseWriteResult {
     Released(ServiceWorkReleaseRecord),
@@ -80,6 +101,27 @@ pub struct ServiceMobilizationRepository {
 impl ServiceMobilizationRepository {
     pub fn from_pool(pool: PgPool) -> Self {
         Self { pool: Some(pool) }
+    }
+
+    pub async fn get_service_release(
+        &self,
+        actor_user_id: &str,
+        activation_id: &str,
+    ) -> ServiceMobilizationReadResult {
+        if actor_user_id.trim().is_empty() || activation_id.trim().is_empty() {
+            return ServiceMobilizationReadResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return ServiceMobilizationReadResult::Unavailable;
+        };
+        match load_service_release(pool, actor_user_id.trim(), activation_id.trim()).await {
+            Ok(Some(status)) => ServiceMobilizationReadResult::Loaded(status),
+            Ok(None) => ServiceMobilizationReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, actor_user_id, activation_id, "service work release load failed");
+                ServiceMobilizationReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn release_initial_service(
@@ -138,6 +180,131 @@ impl ServiceMobilizationRepository {
             }
         }
     }
+}
+
+async fn load_service_release(
+    pool: &PgPool,
+    actor_user_id: &str,
+    activation_id: &str,
+) -> Result<Option<ServiceMobilizationStatusRecord>, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT release.id AS release_id, release.activation_id,
+                release.organization_id, release.customer_account_id,
+                release.customer_property_id, release.first_visit_proposal_version,
+                release.service_job_id,
+                EXTRACT(EPOCH FROM release.released_at)::BIGINT AS released_at_epoch_seconds,
+                job.status AS service_job_status,
+                COALESCE(latest.event_kind, 'confirmed') AS current_customer_status,
+                COALESCE(latest.event_version, 0) AS current_event_version,
+                EXTRACT(EPOCH FROM COALESCE(reschedule.window_start, visit.window_start))::BIGINT
+                    AS effective_window_start_epoch_seconds,
+                EXTRACT(EPOCH FROM COALESCE(reschedule.window_end, visit.window_end))::BIGINT
+                    AS effective_window_end_epoch_seconds,
+                COALESCE(reschedule.time_zone, visit.time_zone) AS effective_time_zone,
+                latest.event_kind AS latest_event_kind,
+                latest.customer_safe_reason AS latest_customer_safe_reason,
+                latest.next_update_message AS latest_next_update_message,
+                EXTRACT(EPOCH FROM latest.window_start)::BIGINT
+                    AS latest_window_start_epoch_seconds,
+                EXTRACT(EPOCH FROM latest.window_end)::BIGINT
+                    AS latest_window_end_epoch_seconds,
+                latest.time_zone AS latest_time_zone,
+                EXTRACT(EPOCH FROM latest.created_at)::BIGINT
+                    AS latest_created_at_epoch_seconds
+         FROM owner_provider_service_releases release
+         JOIN owner_provider_relationship_activations activation
+           ON activation.id = release.activation_id
+          AND activation.organization_id = release.organization_id
+          AND activation.customer_account_id = release.customer_account_id
+          AND activation.customer_property_id = release.customer_property_id
+         JOIN owner_provider_active_relationships relationship
+           ON relationship.activation_id = activation.id
+          AND relationship.status = 'active'
+         JOIN organizations organization
+           ON organization.id = release.organization_id
+          AND organization.status = 'active'
+         JOIN organization_customer_accounts account_relation
+           ON account_relation.organization_id = release.organization_id
+          AND account_relation.account_id = release.customer_account_id
+          AND account_relation.status = 'active'
+         JOIN customer_properties property
+           ON property.id = release.customer_property_id
+          AND property.organization_id = release.organization_id
+          AND property.account_id = release.customer_account_id
+          AND property.status <> 'archived'
+         JOIN owner_provider_first_visit_proposals visit
+           ON visit.id = release.first_visit_proposal_id
+          AND visit.activation_id = release.activation_id
+          AND visit.proposal_version = release.first_visit_proposal_version
+         JOIN service_jobs job
+           ON job.id = release.service_job_id
+          AND job.organization_id = release.organization_id
+          AND job.customer_account_id = release.customer_account_id
+         JOIN organization_memberships membership
+           ON membership.organization_id = release.organization_id
+          AND membership.user_id = $2
+          AND membership.status = 'active'
+          AND membership.role IN ('organization_owner', 'manager')
+          AND membership.scope_type = 'organization'
+          AND membership.scope_id = release.organization_id
+         LEFT JOIN LATERAL (
+             SELECT event.event_version, event.event_kind,
+                    event.customer_safe_reason, event.next_update_message,
+                    event.window_start, event.window_end, event.time_zone,
+                    event.created_at
+             FROM customer_service_day_events event
+             WHERE event.release_id = release.id
+             ORDER BY event.event_version DESC
+             LIMIT 1
+         ) latest ON TRUE
+         LEFT JOIN LATERAL (
+             SELECT event.window_start, event.window_end, event.time_zone
+             FROM customer_service_day_events event
+             WHERE event.release_id = release.id
+               AND event.event_kind = 'rescheduled'
+             ORDER BY event.event_version DESC
+             LIMIT 1
+         ) reschedule ON TRUE
+         WHERE release.activation_id = $1
+         ORDER BY CASE membership.role WHEN 'organization_owner' THEN 0 ELSE 1 END,
+                  membership.id
+         LIMIT 1",
+    )
+    .bind(activation_id)
+    .bind(actor_user_id)
+    .fetch_optional(pool)
+    .await?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let current_event_version = row.get::<i64, _>("current_event_version");
+    let latest_customer_event = if current_event_version == 0 {
+        None
+    } else {
+        Some(CustomerServiceDayEventRecord {
+            release_id: row.get("release_id"),
+            event_version: current_event_version,
+            status: row.get("latest_event_kind"),
+            customer_safe_reason: row.get("latest_customer_safe_reason"),
+            next_update_message: row.get("latest_next_update_message"),
+            window_start_epoch_seconds: row.get("latest_window_start_epoch_seconds"),
+            window_end_epoch_seconds: row.get("latest_window_end_epoch_seconds"),
+            time_zone: row.get("latest_time_zone"),
+            created_at_epoch_seconds: row.get("latest_created_at_epoch_seconds"),
+            persisted: true,
+        })
+    };
+    Ok(Some(ServiceMobilizationStatusRecord {
+        release: release_from_row(&row),
+        service_job_status: row.get("service_job_status"),
+        current_customer_status: row.get("current_customer_status"),
+        current_event_version,
+        window_start_epoch_seconds: row.get("effective_window_start_epoch_seconds"),
+        window_end_epoch_seconds: row.get("effective_window_end_epoch_seconds"),
+        time_zone: row.get("effective_time_zone"),
+        latest_customer_event,
+        persisted: true,
+    }))
 }
 
 fn valid_idempotency_key(value: &str) -> bool {

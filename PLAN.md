@@ -115,6 +115,13 @@ Current state:
   property checks, operational in-progress/completed gates, bounded customer
   copy, reschedule windows, and cross-property isolation without creating a
   route, day plan, crew assignment, or proof publication.
+- Phase 5A4 now exposes that boundary through provider-owner/manager release,
+  authoritative reload, and customer-status publication routes. HTTP role
+  checks are backed by exact active organization-membership and relationship
+  revalidation; writes preserve created-versus-replayed recovery and explicit
+  invalid/missing/conflict/unavailable states. Provider responses omit customer
+  account/property and organization identifiers, and job state never publishes
+  customer status implicitly.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -225,12 +232,13 @@ Current state:
   from the deliberately non-operational first-visit confirmation to a property-
   scoped service job. Decision D-059 now accepts an immutable, idempotent,
   provider-authorized mobilization/work-release relation as that source, and
-  its constrained persistence plus customer-status event foundation is delivered.
+  its constrained persistence, provider API, and customer-status event
+  foundation are delivered.
 
 Next authorized slice and remaining gates:
 
-- Expose provider-authorized release and customer-status publication APIs, then
-  extend the hybrid customer visit projection without accepting organization,
+- Extend the hybrid customer visit projection over the explicit release/events
+  without accepting organization,
   account, property, job, release, or route identifiers from the customer.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,

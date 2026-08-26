@@ -42,7 +42,8 @@ use grover_landscaping_api::owner_acquisition::{
 };
 use grover_landscaping_api::service_mobilization::{
     CustomerServiceDayEventWriteResult, PublishCustomerServiceDayEventRequest,
-    ReleaseInitialServiceRequest, ServiceMobilizationRepository, ServiceWorkReleaseWriteResult,
+    ReleaseInitialServiceRequest, ServiceMobilizationReadResult, ServiceMobilizationRepository,
+    ServiceWorkReleaseWriteResult,
 };
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
@@ -3923,6 +3924,27 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     assert!(service_release.persisted);
     assert!(matches!(
         mobilization
+            .get_service_release(
+                "recipient-user-without-membership",
+                &activation.activation_id,
+            )
+            .await,
+        ServiceMobilizationReadResult::NotFound
+    ));
+    let ServiceMobilizationReadResult::Loaded(initial_release_status) = mobilization
+        .get_service_release("recipient-user-1", &activation.activation_id)
+        .await
+    else {
+        panic!("an authorized provider should reload the service release");
+    };
+    assert_eq!(initial_release_status.release, service_release);
+    assert_eq!(initial_release_status.service_job_status, "scheduled");
+    assert_eq!(initial_release_status.current_customer_status, "confirmed");
+    assert_eq!(initial_release_status.current_event_version, 0);
+    assert!(initial_release_status.latest_customer_event.is_none());
+    assert_eq!(initial_release_status.time_zone, "America/Phoenix");
+    assert!(matches!(
+        mobilization
             .release_initial_service(
                 "recipient-user-1",
                 &activation.activation_id,
@@ -4033,6 +4055,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         CustomerServiceDayEventWriteResult::NotFound
     ));
+    assert!(matches!(
+        mobilization
+            .get_service_release("recipient-user-1", &activation.activation_id)
+            .await,
+        ServiceMobilizationReadResult::NotFound
+    ));
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM customer_service_day_events WHERE release_id = $1",
@@ -4074,6 +4102,18 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     };
     assert_eq!(en_route.event_version, 1);
     assert_eq!(en_route.status, "en_route");
+    let ServiceMobilizationReadResult::Loaded(en_route_status) = mobilization
+        .get_service_release("recipient-user-1", &activation.activation_id)
+        .await
+    else {
+        panic!("the provider should reload the published customer status");
+    };
+    assert_eq!(en_route_status.current_customer_status, "en_route");
+    assert_eq!(en_route_status.current_event_version, 1);
+    assert_eq!(
+        en_route_status.latest_customer_event,
+        Some(en_route.clone())
+    );
     assert!(matches!(
         mobilization
             .publish_customer_service_day_event(

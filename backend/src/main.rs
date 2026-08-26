@@ -166,6 +166,13 @@ use grover_landscaping_api::{
         CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
         PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     },
+    service_mobilization::{
+        validate_release_request, validate_service_day_event_request,
+        CustomerServiceDayEventRecord, CustomerServiceDayEventWriteResult,
+        PublishCustomerServiceDayEventRequest, ReleaseInitialServiceRequest,
+        ServiceMobilizationReadResult, ServiceMobilizationRepository,
+        ServiceMobilizationStatusRecord, ServiceWorkReleaseRecord, ServiceWorkReleaseWriteResult,
+    },
     PhotoUploadMetadata as OwnerPhotoUploadMetadata,
 };
 use marketing_events::{
@@ -221,6 +228,7 @@ struct AppState {
     marketing_events: MarketingEventRepository,
     owner_acquisition: OwnerAcquisitionRepository,
     customer_portal: CustomerPortalAccessRepository,
+    service_mobilization: ServiceMobilizationRepository,
 }
 
 macro_rules! organization_ids_or_return {
@@ -317,6 +325,59 @@ struct JobLifecycleActionResponse {
 struct ErrorResponse {
     error: &'static str,
     message: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ProviderServiceReleaseResponse {
+    release_id: String,
+    activation_id: String,
+    first_visit_proposal_version: i64,
+    service_job_id: String,
+    released_at_epoch_seconds: i64,
+    persisted: bool,
+}
+
+impl From<ServiceWorkReleaseRecord> for ProviderServiceReleaseResponse {
+    fn from(record: ServiceWorkReleaseRecord) -> Self {
+        Self {
+            release_id: record.release_id,
+            activation_id: record.activation_id,
+            first_visit_proposal_version: record.first_visit_proposal_version,
+            service_job_id: record.service_job_id,
+            released_at_epoch_seconds: record.released_at_epoch_seconds,
+            persisted: record.persisted,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct ProviderServiceMobilizationStatusResponse {
+    release: ProviderServiceReleaseResponse,
+    service_job_status: String,
+    current_customer_status: String,
+    current_event_version: i64,
+    window_start_epoch_seconds: i64,
+    window_end_epoch_seconds: i64,
+    time_zone: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    latest_customer_event: Option<CustomerServiceDayEventRecord>,
+    persisted: bool,
+}
+
+impl From<ServiceMobilizationStatusRecord> for ProviderServiceMobilizationStatusResponse {
+    fn from(record: ServiceMobilizationStatusRecord) -> Self {
+        Self {
+            release: record.release.into(),
+            service_job_status: record.service_job_status,
+            current_customer_status: record.current_customer_status,
+            current_event_version: record.current_event_version,
+            window_start_epoch_seconds: record.window_start_epoch_seconds,
+            window_end_epoch_seconds: record.window_end_epoch_seconds,
+            time_zone: record.time_zone,
+            latest_customer_event: record.latest_customer_event,
+            persisted: record.persisted,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -535,6 +596,7 @@ async fn app_from_env() -> Result<Router, DynError> {
         accounts,
         owner_acquisition,
         customer_portal,
+        service_mobilization,
         persistence,
     ) = match DatabaseConfig::from_env() {
         Some(config) => {
@@ -555,6 +617,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             let marketing_leads = MarketingLeadRepository::from_pool(pool.clone());
             let marketing_events = MarketingEventRepository::from_pool(pool.clone());
             let customer_portal = CustomerPortalAccessRepository::from_pool(pool.clone());
+            let service_mobilization = ServiceMobilizationRepository::from_pool(pool.clone());
             let owner_acquisition = OwnerAcquisitionRepository::from_pool(pool);
             let accounts = AccountRepository::from_pool(
                 jobs.pool()
@@ -575,6 +638,7 @@ async fn app_from_env() -> Result<Router, DynError> {
                 accounts,
                 owner_acquisition,
                 customer_portal,
+                service_mobilization,
                 "postgres",
             )
         }
@@ -598,6 +662,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             AccountRepository::new(),
             OwnerAcquisitionRepository::new(),
             CustomerPortalAccessRepository::default(),
+            ServiceMobilizationRepository::default(),
             "seed-local",
         ),
     };
@@ -647,6 +712,7 @@ async fn app_from_env() -> Result<Router, DynError> {
             marketing_events,
             owner_acquisition,
             customer_portal,
+            service_mobilization,
         }),
         persistence,
         persistence == "postgres",
@@ -847,6 +913,14 @@ fn app_with_runtime(
         .route(
             "/provider-relationships/{activation_id}/first-visit/proposal",
             post(propose_provider_first_visit),
+        )
+        .route(
+            "/provider-relationships/{activation_id}/service-release",
+            get(get_provider_service_release).post(release_provider_initial_service),
+        )
+        .route(
+            "/provider-service-releases/{release_id}/customer-status",
+            post(publish_provider_customer_service_status),
         )
         .route(
             "/provider-disclosures/access",
@@ -2280,6 +2354,148 @@ fn first_visit_write_response(
             persisted_resource_unavailable_response(
                 "owner_provider_first_visit_unavailable",
                 "The first-visit write could not be confirmed. Retain the retry key and reload status before retrying.",
+            )
+        }
+    }
+}
+
+async fn get_provider_service_release(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(activation_id): Path<String>,
+) -> Response {
+    match state
+        .service_mobilization
+        .get_service_release(&principal.subject, &activation_id)
+        .await
+    {
+        ServiceMobilizationReadResult::Loaded(status) => {
+            Json(ProviderServiceMobilizationStatusResponse::from(status)).into_response()
+        }
+        ServiceMobilizationReadResult::NotFound => resource_not_found_response(
+            "provider_service_release_not_found",
+            "No service release is available for this active provider relationship and organization membership.",
+        ),
+        ServiceMobilizationReadResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_service_release_unavailable",
+            "Service release status could not be loaded. Existing work and customer-visible status are unchanged.",
+        ),
+    }
+}
+
+async fn release_provider_initial_service(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(activation_id): Path<String>,
+    Json(request): Json<ReleaseInitialServiceRequest>,
+) -> Response {
+    if !validate_release_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "provider_service_release_invalid",
+                message: "Provide the confirmed first-visit version and a valid retry key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .service_mobilization
+        .release_initial_service(&principal.subject, &activation_id, request)
+        .await
+    {
+        ServiceWorkReleaseWriteResult::Released(release) => {
+            (
+                StatusCode::CREATED,
+                Json(ProviderServiceReleaseResponse::from(release)),
+            )
+                .into_response()
+        }
+        ServiceWorkReleaseWriteResult::Replayed(release) => {
+            Json(ProviderServiceReleaseResponse::from(release)).into_response()
+        }
+        ServiceWorkReleaseWriteResult::NotFound => resource_not_found_response(
+            "provider_service_release_not_found",
+            "The active provider relationship was not found for an authorized organization owner or manager.",
+        ),
+        ServiceWorkReleaseWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_service_release_not_ready",
+                message: "The accepted service and confirmed first visit are not in the expected unreleased state. Reload status before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        ServiceWorkReleaseWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "provider_service_release_conflict",
+                message: "The release version changed or this retry key identifies different content. Reload status before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        ServiceWorkReleaseWriteResult::Unavailable => persisted_resource_unavailable_response(
+            "provider_service_release_unavailable",
+            "The service release could not be confirmed. Retain the retry key and reload status before retrying.",
+        ),
+    }
+}
+
+async fn publish_provider_customer_service_status(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(release_id): Path<String>,
+    Json(request): Json<PublishCustomerServiceDayEventRequest>,
+) -> Response {
+    if !validate_service_day_event_request(&request) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "customer_service_status_invalid",
+                message: "Provide an allowed customer status, current event version, bounded customer-safe update, and valid retry key."
+                    .to_string(),
+            }),
+        )
+            .into_response();
+    }
+    match state
+        .service_mobilization
+        .publish_customer_service_day_event(&principal.subject, &release_id, request)
+        .await
+    {
+        CustomerServiceDayEventWriteResult::Published(event) => {
+            (StatusCode::CREATED, Json(event)).into_response()
+        }
+        CustomerServiceDayEventWriteResult::Replayed(event) => Json(event).into_response(),
+        CustomerServiceDayEventWriteResult::NotFound => resource_not_found_response(
+            "customer_service_status_release_not_found",
+            "The service release was not found for an active relationship and authorized organization membership.",
+        ),
+        CustomerServiceDayEventWriteResult::InvalidState => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_service_status_not_ready",
+                message: "The event version, customer-status transition, or linked job state changed. Reload service release status before continuing."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerServiceDayEventWriteResult::Conflict => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_service_status_conflict",
+                message: "The status update is invalid or this retry key identifies different content. Reload status before retrying."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerServiceDayEventWriteResult::Unavailable => {
+            persisted_resource_unavailable_response(
+                "customer_service_status_unavailable",
+                "The customer-visible update could not be confirmed. Retain the retry key and reload service release status before retrying.",
             )
         }
     }
@@ -9632,6 +9848,7 @@ mod tests {
             marketing_events: MarketingEventRepository::default(),
             owner_acquisition: OwnerAcquisitionRepository::new(),
             customer_portal: CustomerPortalAccessRepository::default(),
+            service_mobilization: ServiceMobilizationRepository::default(),
         })
     }
 
@@ -9649,6 +9866,120 @@ mod tests {
             frontend_dist,
             false,
         )
+    }
+
+    #[tokio::test]
+    async fn service_mobilization_api_validates_requests_and_fails_closed_without_persistence() {
+        let app = seed_app();
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/provider-relationships/activation-1/service-release")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let valid_release = serde_json::json!({
+            "expected_first_visit_version": 1,
+            "idempotency_key": "service-release-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-relationships/activation-1/service-release")
+                    .header("content-type", "application/json")
+                    .body(Body::from(valid_release.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-relationships/activation-1/service-release")
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "expected_first_visit_version": 0,
+                            "idempotency_key": "service-release-api-invalid-001"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let valid_event = serde_json::json!({
+            "expected_event_version": 0,
+            "status": "en_route",
+            "customer_safe_reason": null,
+            "next_update_message": "Your provider is on the way.",
+            "window_start_epoch_seconds": null,
+            "window_end_epoch_seconds": null,
+            "time_zone": null,
+            "idempotency_key": "service-status-api-001"
+        });
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-service-releases/release-1/customer-status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(valid_event.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let mut invalid_event = valid_event;
+        invalid_event["status"] = serde_json::json!("completed");
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/provider-service-releases/release-1/customer-status")
+                    .header("content-type", "application/json")
+                    .body(Body::from(invalid_event.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn provider_service_release_projection_omits_customer_and_organization_ids() {
+        let response = ProviderServiceReleaseResponse::from(ServiceWorkReleaseRecord {
+            release_id: "release-1".to_string(),
+            activation_id: "activation-1".to_string(),
+            organization_id: "organization-private".to_string(),
+            customer_account_id: "account-private".to_string(),
+            customer_property_id: "property-private".to_string(),
+            first_visit_proposal_version: 2,
+            service_job_id: "job-1".to_string(),
+            released_at_epoch_seconds: 1_800_000_000,
+            persisted: true,
+        });
+        let value = serde_json::to_value(response).expect("projection should serialize");
+        assert_eq!(value["release_id"], "release-1");
+        assert_eq!(value["service_job_id"], "job-1");
+        assert!(value.get("organization_id").is_none());
+        assert!(value.get("customer_account_id").is_none());
+        assert!(value.get("customer_property_id").is_none());
     }
 
     #[tokio::test]
