@@ -136,6 +136,13 @@ Current state:
   original/replacement reschedule windows, recorded preparation, and proof-
   pending privacy are visible without crew, route, live-location, job, release,
   event, or unpublished-evidence context.
+- Phase 5B0 now audits contextual questions and concerns. Assessment/proposal
+  messages, customer-status events, notification outbox, operational exceptions,
+  report review notes, and project-bid messages cannot safely serve as customer
+  visit conversation. Proposed decision D-060 recommends a question-first,
+  immutable customer/provider thread with a random non-bearer visit reference,
+  hybrid authorization, and an owner/manager provider queue; concern workflow,
+  attachments, notifications, and response-time commitments remain separate.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -251,9 +258,8 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Audit the next Yard Owner contextual-question/concern boundary before adding
-  customer writes; do not infer a conversation or concern record from existing
-  operational notes, notifications, or support state.
+- Product/operations/security approval of D-060 is required before adding the
+  customer-safe visit reference, thread persistence, provider queue, APIs, or UI.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

@@ -150,8 +150,8 @@ aligned overview composition.
 
 1. Service mobilization persistence, provider release/status APIs, minimized
    customer projection, and all six Yard Owner service-day modes are delivered.
-   Audit the next contextual-question/concern source before adding customer
-   writes or reusing operational notes/support state.
+   The contextual-question/concern source audit is complete; approve or revise
+   proposed decision D-060 before customer/provider thread persistence begins.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
