@@ -1,7 +1,8 @@
 # Customer Service-Day Projection Source
 
-Status: Decision D-059 and its constrained persistence foundation delivered on
-2026-08-26; provider APIs and hybrid customer projection adoption are next.
+Status: Decision D-059, constrained persistence, provider APIs, and minimized
+hybrid customer projection delivered on 2026-08-26; full Yard Owner lifecycle
+presentation is next.
 
 ## Outcome of the source audit
 
@@ -95,8 +96,12 @@ provider notes, and unpublished evidence remain excluded.
    still requires a local PostgreSQL connection.**
 3. Extend the existing hybrid-resolver visit projection without accepting
    organization, account, property, job, route, or release IDs from the browser.
-   **Next, after provider write APIs.**
-4. Adopt service-day states and recovery in Yard Owner Home and Visits.
+   **Delivered.** The join uses the exact immutable release and events, carries
+   the latest explicit customer status/reason/update, retains the latest
+   explicit reschedule window, and serializes no release, event, or job IDs.
+4. Adopt the complete service-day presentation and recovery in Yard Owner Home
+   and Visits. **Next.**
 
-Until these persistence and projection gates pass, the delivered confirmed-
-visit response and UI remain authoritative and intentionally bounded.
+The delivered projection remains authoritative and intentionally bounded: raw
+operational state cannot advance customer status, and delivered proof stays
+false until its own exact authorization relation exists.

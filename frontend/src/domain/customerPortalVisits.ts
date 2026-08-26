@@ -17,6 +17,7 @@ export interface CustomerPortalVisitSummary {
   scope: string[];
   status: CustomerVisitStatus;
   preparationMessage: string;
+  statusReason?: string;
   nextUpdateMessage: string;
 }
 

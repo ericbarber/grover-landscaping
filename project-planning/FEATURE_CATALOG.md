@@ -99,6 +99,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   reload, exact-version idempotent work release, and versioned customer-safe
   status publication, with explicit recovery responses and customer/account/
   property/organization identifiers omitted from the HTTP projection
+- Delivered minimized hybrid customer service-day projection that defaults to
+  exact confirmation, advances only from immutable customer events, carries
+  bounded weather/update copy and the latest explicit reschedule window, omits
+  release/event/job and provider-operational identifiers, and keeps proof false
+  until separately authorized
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

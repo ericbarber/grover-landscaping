@@ -1,9 +1,9 @@
 # Customer Portal Visits API
 
-Status: Persisted read contract and Yard Owner Home/Visits adoption delivered on
-2026-08-26.
+Status: Hybrid authorization, confirmed-visit read, explicit service-day event
+projection, and Yard Owner Home/Visits consumption delivered on 2026-08-26.
 
-## Read authorized properties and confirmed visits
+## Read authorized properties and customer visits
 
 ```http
 GET /customer-portal/visits
@@ -23,8 +23,9 @@ read closed.
 
 ## Success response
 
-`200 OK` returns an authorized property collection and zero or more confirmed
-first visits:
+`200 OK` returns an authorized property collection and zero or more exactly
+confirmed first visits. A visit remains `confirmed` until an explicit customer-
+safe service-day event exists for its immutable provider work release:
 
 ```json
 {
@@ -47,9 +48,10 @@ first visits:
       "time_zone": "America/Phoenix",
       "service_title": "Initial yard care",
       "service_scope": ["Mow and edge turf"],
-      "status": "confirmed",
+      "status": "weather_delay",
       "preparation_message": "Please unlock the side gate.",
-      "next_update_message": "Your provider will share the next customer-visible service update here.",
+      "customer_safe_reason": "Lightning is nearby.",
+      "next_update_message": "We will share another update in 30 minutes.",
       "delivered_proof_available": false
     }
   ]
@@ -61,6 +63,14 @@ A valid grant with no non-archived properties returns empty `properties` and
 `properties` while `visits` remains empty. Proposed, change-requested,
 cancelled, or relationally inconsistent first visits are not projected as
 confirmed service.
+
+Allowed projected statuses are `confirmed`, `en_route`, `care_in_progress`,
+`weather_delay`, `rescheduled`, and `complete_proof_pending`. Status and next-
+update copy come only from the latest explicit immutable customer event.
+`customer_safe_reason` appears only when the current event supplies one. The
+effective window remains the owner-confirmed first-visit window until an
+explicit `rescheduled` event replaces it; later events retain that latest
+rescheduled window.
 
 ## Failure states
 
@@ -74,8 +84,9 @@ confirmed service.
 
 ## Privacy boundary
 
-The response is assembled from immutable customer-safe proposal scope and the
-exact confirmed first-visit window. It omits activation/proposal/decision IDs,
+The response is assembled from immutable customer-safe proposal scope, the
+exact confirmed first-visit window, its exact work release, and explicit
+customer events. It omits activation/proposal/decision/release/event/job IDs,
 owner and provider actor IDs, invitation tokens and recipient data, affirmation
 versions, live location, route position, crew assignment, provider notes,
 internal risk/recovery state, pricing, billing, and unpublished proof.
@@ -93,9 +104,8 @@ failed read clears prior portal properties and visits; the interface never
 substitutes seeded or illustrative visit data. Proof and recommendations keep
 their separately authorized boundaries and are not inferred from this response.
 
-States beyond `confirmed` now have an explicit persisted
-[mobilization/work-release source contract](customer-service-day-projection-design.md),
-but this endpoint intentionally remains at the confirmed projection until the
-provider write APIs and minimized customer join pass validation. It must not
-infer publication from account, address, date, route, crew, stop-progress, or
-completion-report proximity.
+States beyond `confirmed` use the explicit persisted
+[mobilization/work-release source contract](customer-service-day-projection-design.md).
+The endpoint never infers publication from mutable job status, account,
+address, date, route, crew, stop progress, GPS, or completion-report proximity.
+`complete_proof_pending` still does not make proof visible.

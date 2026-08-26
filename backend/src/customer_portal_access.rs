@@ -33,6 +33,8 @@ pub struct CustomerPortalVisitSummary {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub preparation_message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub customer_safe_reason: Option<String>,
     pub next_update_message: String,
     pub delivered_proof_available: bool,
 }
@@ -281,18 +283,24 @@ async fn list_confirmed_visits(
                 property.account_id,
                 property.property_id,
                 TO_CHAR(
-                    visit.window_start AT TIME ZONE visit.time_zone,
+                    COALESCE(reschedule.window_start, visit.window_start)
+                        AT TIME ZONE COALESCE(reschedule.time_zone, visit.time_zone),
                     'YYYY-MM-DD'
                 ) AS service_date,
-                EXTRACT(EPOCH FROM visit.window_start)::BIGINT
+                EXTRACT(EPOCH FROM COALESCE(reschedule.window_start, visit.window_start))::BIGINT
                     AS window_start_epoch_seconds,
-                EXTRACT(EPOCH FROM visit.window_end)::BIGINT
+                EXTRACT(EPOCH FROM COALESCE(reschedule.window_end, visit.window_end))::BIGINT
                     AS window_end_epoch_seconds,
-                visit.time_zone,
+                COALESCE(reschedule.time_zone, visit.time_zone) AS time_zone,
                 service.title AS service_title,
                 service.included_scope AS service_scope,
-                series.status,
-                visit.customer_safe_arrival_note AS preparation_message
+                COALESCE(latest.event_kind, series.status) AS status,
+                visit.customer_safe_arrival_note AS preparation_message,
+                latest.customer_safe_reason,
+                COALESCE(
+                    latest.next_update_message,
+                    'Your provider will share the next customer-visible service update here.'
+                ) AS next_update_message
             FROM authorized_properties property
             JOIN owner_provider_relationship_activations activation
               ON activation.organization_id = property.organization_id
@@ -323,6 +331,36 @@ async fn list_confirmed_visits(
               ON service.id = activation.proposal_id
              AND service.organization_id = activation.organization_id
              AND service.status = 'accepted'
+            LEFT JOIN owner_provider_service_releases release
+              ON release.activation_id = activation.id
+             AND release.first_visit_proposal_id = visit.id
+             AND release.first_visit_proposal_version = visit.proposal_version
+             AND release.initial_service_proposal_id = service.id
+             AND release.organization_id = activation.organization_id
+             AND release.customer_account_id = activation.customer_account_id
+             AND release.customer_property_id = activation.customer_property_id
+            LEFT JOIN LATERAL (
+                SELECT event.event_version, event.event_kind,
+                       event.customer_safe_reason, event.next_update_message
+                FROM customer_service_day_events event
+                WHERE event.release_id = release.id
+                  AND event.organization_id = release.organization_id
+                  AND event.customer_account_id = release.customer_account_id
+                  AND event.customer_property_id = release.customer_property_id
+                ORDER BY event.event_version DESC
+                LIMIT 1
+            ) latest ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT event.window_start, event.window_end, event.time_zone
+                FROM customer_service_day_events event
+                WHERE event.release_id = release.id
+                  AND event.organization_id = release.organization_id
+                  AND event.customer_account_id = release.customer_account_id
+                  AND event.customer_property_id = release.customer_property_id
+                  AND event.event_kind = 'rescheduled'
+                ORDER BY event.event_version DESC
+                LIMIT 1
+            ) reschedule ON TRUE
         ),
         portal_rows AS (
             SELECT
@@ -338,7 +376,9 @@ async fn list_confirmed_visits(
                 NULL::TEXT AS service_title,
                 NULL::TEXT[] AS service_scope,
                 NULL::TEXT AS visit_status,
-                NULL::TEXT AS preparation_message
+                NULL::TEXT AS preparation_message,
+                NULL::TEXT AS customer_safe_reason,
+                NULL::TEXT AS next_update_message
             FROM authorized_properties property
             UNION ALL
             SELECT
@@ -354,7 +394,9 @@ async fn list_confirmed_visits(
                 visit.service_title,
                 visit.service_scope,
                 visit.status AS visit_status,
-                visit.preparation_message
+                visit.preparation_message,
+                visit.customer_safe_reason,
+                visit.next_update_message
             FROM confirmed_visits visit
         )
         SELECT
@@ -372,7 +414,9 @@ async fn list_confirmed_visits(
             portal_row.service_title,
             portal_row.service_scope,
             portal_row.visit_status,
-            portal_row.preparation_message
+            portal_row.preparation_message,
+            portal_row.customer_safe_reason,
+            portal_row.next_update_message
         FROM validation
         LEFT JOIN portal_rows portal_row ON TRUE
         ORDER BY
@@ -415,9 +459,8 @@ async fn list_confirmed_visits(
                 service_scope: row.get("service_scope"),
                 status: row.get("visit_status"),
                 preparation_message: row.get("preparation_message"),
-                next_update_message:
-                    "Your provider will share the next customer-visible service update here."
-                        .to_string(),
+                customer_safe_reason: row.get("customer_safe_reason"),
+                next_update_message: row.get("next_update_message"),
                 delivered_proof_available: false,
             }),
             _ => {}
@@ -513,6 +556,7 @@ mod tests {
                 service_scope: vec!["Mow and edge turf".to_string()],
                 status: "confirmed".to_string(),
                 preparation_message: None,
+                customer_safe_reason: None,
                 next_update_message: "Your provider will share an update here.".to_string(),
                 delivered_proof_available: false,
             }],
@@ -532,6 +576,9 @@ mod tests {
             "route_position",
             "billing_notes",
             "customer_safe_arrival_note",
+            "release_id",
+            "service_job_id",
+            "event_version",
         ] {
             assert!(!visit.contains_key(private_field));
         }

@@ -51,4 +51,28 @@ describe('customer portal visit client', () => {
       code: 'customer_portal_access_inconsistent',
     });
   });
+
+  it('maps explicit customer-safe service-day status and reason without internal identifiers', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      properties: [],
+      visits: [{
+        organization_id: 'org_1', account_id: 'account_1', property_id: 'property_1',
+        service_date: '2026-08-30', window_start_epoch_seconds: 1788102000,
+        window_end_epoch_seconds: 1788109200, time_zone: 'America/Phoenix',
+        service_title: 'Initial yard care', service_scope: ['Mow and edge turf'],
+        status: 'weather_delay', customer_safe_reason: 'Lightning is nearby.',
+        next_update_message: 'We will post another update by 10:30 AM.',
+        delivered_proof_available: false,
+      }],
+    }), { status: 200 })));
+
+    const collection = await fetchCustomerPortalVisits();
+    expect(collection.visits[0]).toMatchObject({
+      status: 'weather_delay',
+      statusReason: 'Lightning is nearby.',
+      nextUpdateMessage: 'We will post another update by 10:30 AM.',
+    });
+    expect(collection.visits[0]).not.toHaveProperty('releaseId');
+    expect(collection.visits[0]).not.toHaveProperty('serviceJobId');
+  });
 });

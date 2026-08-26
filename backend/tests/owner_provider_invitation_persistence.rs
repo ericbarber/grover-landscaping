@@ -4026,7 +4026,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .await
     .is_err());
 
-    let en_route_request = PublishCustomerServiceDayEventRequest {
+    let mut en_route_request = PublishCustomerServiceDayEventRequest {
         expected_event_version: 0,
         status: "en_route".to_string(),
         customer_safe_reason: None,
@@ -4090,6 +4090,84 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .await,
         CustomerServiceDayEventWriteResult::NotFound
     ));
+    let CustomerServiceDayEventWriteResult::Published(weather_delay) = mobilization
+        .publish_customer_service_day_event(
+            "recipient-user-1",
+            &service_release.release_id,
+            PublishCustomerServiceDayEventRequest {
+                expected_event_version: 0,
+                status: "weather_delay".to_string(),
+                customer_safe_reason: Some("Lightning is nearby.".to_string()),
+                next_update_message: "We will share another update in 30 minutes.".to_string(),
+                window_start_epoch_seconds: None,
+                window_end_epoch_seconds: None,
+                time_zone: None,
+                idempotency_key: "service-day-weather-delay-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("an authorized provider should publish a customer-safe weather delay");
+    };
+    assert_eq!(weather_delay.event_version, 1);
+    let CustomerPortalVisitReadResult::Loaded(weather_customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the authorized owner should load the explicit weather delay");
+    };
+    let weather_customer_visit = &weather_customer_visits.visits[0];
+    assert_eq!(weather_customer_visit.status, "weather_delay");
+    assert_eq!(
+        weather_customer_visit.customer_safe_reason.as_deref(),
+        Some("Lightning is nearby.")
+    );
+    assert_eq!(
+        weather_customer_visit.next_update_message,
+        "We will share another update in 30 minutes."
+    );
+    let rescheduled_start = first_visit_start + 172_800;
+    let rescheduled_end = rescheduled_start + 7_200;
+    let CustomerServiceDayEventWriteResult::Published(rescheduled) = mobilization
+        .publish_customer_service_day_event(
+            "recipient-user-1",
+            &service_release.release_id,
+            PublishCustomerServiceDayEventRequest {
+                expected_event_version: 1,
+                status: "rescheduled".to_string(),
+                customer_safe_reason: None,
+                next_update_message: "Your new arrival window is confirmed.".to_string(),
+                window_start_epoch_seconds: Some(rescheduled_start),
+                window_end_epoch_seconds: Some(rescheduled_end),
+                time_zone: Some("America/Phoenix".to_string()),
+                idempotency_key: "service-day-rescheduled-001".to_string(),
+            },
+        )
+        .await
+    else {
+        panic!("an authorized provider should publish a bounded reschedule");
+    };
+    assert_eq!(rescheduled.event_version, 2);
+    let CustomerPortalVisitReadResult::Loaded(rescheduled_customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the authorized owner should load the explicit reschedule");
+    };
+    let rescheduled_customer_visit = &rescheduled_customer_visits.visits[0];
+    assert_eq!(rescheduled_customer_visit.status, "rescheduled");
+    assert_eq!(
+        rescheduled_customer_visit.window_start_epoch_seconds,
+        rescheduled_start
+    );
+    assert_eq!(
+        rescheduled_customer_visit.window_end_epoch_seconds,
+        rescheduled_end
+    );
+    assert_eq!(
+        rescheduled_customer_visit.next_update_message,
+        "Your new arrival window is confirmed."
+    );
+    assert!(rescheduled_customer_visit.customer_safe_reason.is_none());
+    en_route_request.expected_event_version = 2;
     let CustomerServiceDayEventWriteResult::Published(en_route) = mobilization
         .publish_customer_service_day_event(
             "recipient-user-1",
@@ -4100,7 +4178,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     else {
         panic!("an authorized provider should publish the en-route update");
     };
-    assert_eq!(en_route.event_version, 1);
+    assert_eq!(en_route.event_version, 3);
     assert_eq!(en_route.status, "en_route");
     let ServiceMobilizationReadResult::Loaded(en_route_status) = mobilization
         .get_service_release("recipient-user-1", &activation.activation_id)
@@ -4109,10 +4187,25 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         panic!("the provider should reload the published customer status");
     };
     assert_eq!(en_route_status.current_customer_status, "en_route");
-    assert_eq!(en_route_status.current_event_version, 1);
+    assert_eq!(en_route_status.current_event_version, 3);
     assert_eq!(
         en_route_status.latest_customer_event,
         Some(en_route.clone())
+    );
+    let CustomerPortalVisitReadResult::Loaded(en_route_customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the authorized owner should load the explicit en-route update");
+    };
+    let en_route_customer_visit = &en_route_customer_visits.visits[0];
+    assert_eq!(en_route_customer_visit.status, "en_route");
+    assert_eq!(
+        en_route_customer_visit.window_start_epoch_seconds,
+        rescheduled_start
+    );
+    assert_eq!(
+        en_route_customer_visit.next_update_message,
+        "Your provider is on the way for the confirmed window."
     );
     assert!(matches!(
         mobilization
@@ -4125,7 +4218,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         CustomerServiceDayEventWriteResult::Replayed(record) if record == en_route
     ));
     let care_request = PublishCustomerServiceDayEventRequest {
-        expected_event_version: 1,
+        expected_event_version: 3,
         status: "care_in_progress".to_string(),
         customer_safe_reason: None,
         next_update_message: "Care is underway. Proof will follow after review.".to_string(),
@@ -4159,9 +4252,9 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     else {
         panic!("in-progress operational work should permit the customer update");
     };
-    assert_eq!(care.event_version, 2);
+    assert_eq!(care.event_version, 4);
     let completion_request = PublishCustomerServiceDayEventRequest {
-        expected_event_version: 2,
+        expected_event_version: 4,
         status: "complete_proof_pending".to_string(),
         customer_safe_reason: None,
         next_update_message: "Care is complete. Proof will appear after provider review."
@@ -4196,7 +4289,20 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     else {
         panic!("completed operational work should permit proof-pending publication");
     };
-    assert_eq!(completed.event_version, 3);
+    assert_eq!(completed.event_version, 5);
+    let CustomerPortalVisitReadResult::Loaded(completed_customer_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the authorized owner should load the explicit completion update");
+    };
+    let completed_customer_visit = &completed_customer_visits.visits[0];
+    assert_eq!(completed_customer_visit.status, "complete_proof_pending");
+    assert!(!completed_customer_visit.delivered_proof_available);
+    let completed_customer_json = serde_json::to_string(completed_customer_visit)
+        .expect("completed customer visit should serialize");
+    for private_value in [&service_release.release_id, &service_release.service_job_id] {
+        assert!(!completed_customer_json.contains(private_value));
+    }
     assert!(sqlx::query(
         "UPDATE customer_service_day_events
          SET next_update_message = 'changed' WHERE release_id = $1",

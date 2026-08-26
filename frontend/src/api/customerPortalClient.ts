@@ -2,6 +2,7 @@ import type {
   CustomerPortalPropertySummary,
   CustomerPortalVisitCollection,
   CustomerPortalVisitSummary,
+  CustomerVisitStatus,
 } from '../domain/customerPortalVisits';
 import { API_BASE_URL } from './baseUrl';
 import { apiRequestError } from './apiError';
@@ -24,8 +25,9 @@ interface ApiCustomerPortalVisitSummary {
   time_zone: string;
   service_title: string;
   service_scope: string[];
-  status: 'confirmed';
+  status: CustomerVisitStatus;
   preparation_message?: string;
+  customer_safe_reason?: string;
   next_update_message: string;
   delivered_proof_available: boolean;
 }
@@ -69,6 +71,7 @@ export function toCustomerPortalVisitSummary(
     status: visit.status,
     preparationMessage: visit.preparation_message
       ?? 'No preparation is requested for this visit.',
+    ...(visit.customer_safe_reason ? { statusReason: visit.customer_safe_reason } : {}),
     nextUpdateMessage: visit.next_update_message,
   };
 }

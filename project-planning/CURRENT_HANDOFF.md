@@ -68,7 +68,8 @@
   manager notes and delivery metadata.
 - Property Owner now enters a customer-density Yard Owner portal with Home,
   Visits, Proof, and Account. Home/Visits load authorized properties and exactly
-  confirmed visits from the minimized persisted customer API, load proof only
+  confirmed visits plus explicit customer service-day events from the minimized
+  persisted customer API, load proof only
   for those authorized properties, distinguish loading/empty/access/inconsistent/
   unavailable/retry states, and never substitute illustrative visit or portfolio
   data. Recommendations remain withheld pending their own customer contract.

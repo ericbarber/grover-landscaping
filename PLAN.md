@@ -122,6 +122,13 @@ Current state:
   invalid/missing/conflict/unavailable states. Provider responses omit customer
   account/property and organization identifiers, and job state never publishes
   customer status implicitly.
+- Phase 5A5 now extends the hybrid customer visit projection over the exact
+  immutable release and explicit customer events. Confirmed remains the default;
+  published status, bounded weather reason and next-update copy come only from
+  the latest event, while the latest explicit reschedule controls the effective
+  window. The request accepts no scope or operational identifiers, the response
+  adds no release/event/job identifiers, and proof remains unavailable even
+  after `complete_proof_pending`.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -227,19 +234,18 @@ Current state:
   provider account, while delegates retain explicit property scope. Its
   constrained migration, activation behavior, provenance-safe backfill, and
   fail-closed property resolver, minimized confirmed-visit read, and Yard Owner
-  Home/Visits adoption are delivered. The next bounded customer slice is the
-  service-day lifecycle extension. Its source audit found no exact relationship
+  Home/Visits adoption are delivered. The service-day lifecycle extension's
+  source audit found no exact relationship
   from the deliberately non-operational first-visit confirmation to a property-
   scoped service job. Decision D-059 now accepts an immutable, idempotent,
   provider-authorized mobilization/work-release relation as that source, and
-  its constrained persistence, provider API, and customer-status event
-  foundation are delivered.
+  its constrained persistence, provider API, customer-status events, and
+  minimized hybrid customer projection are delivered.
 
 Next authorized slice and remaining gates:
 
-- Extend the hybrid customer visit projection over the explicit release/events
-  without accepting organization,
-  account, property, job, release, or route identifiers from the customer.
+- Adopt the complete explicit service-day presentation and recovery in Yard
+  Owner Home and Visits without exposing provider-operational context.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
