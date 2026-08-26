@@ -93,7 +93,9 @@ failed read clears prior portal properties and visits; the interface never
 substitutes seeded or illustrative visit data. Proof and recommendations keep
 their separately authorized boundaries and are not inferred from this response.
 
-States beyond `confirmed` remain blocked on the explicit
-[mobilization/work-release source contract](customer-service-day-projection-design.md).
-The API must not infer a service job or customer publication state from account,
-address, date, route, crew, stop-progress, or completion-report proximity.
+States beyond `confirmed` now have an explicit persisted
+[mobilization/work-release source contract](customer-service-day-projection-design.md),
+but this endpoint intentionally remains at the confirmed projection until the
+provider write APIs and minimized customer join pass validation. It must not
+infer publication from account, address, date, route, crew, stop-progress, or
+completion-report proximity.

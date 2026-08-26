@@ -1,7 +1,7 @@
 # Customer Service-Day Projection Source
 
-Status: Recommended mobilization/work-release model accepted as decision D-059
-on 2026-08-26; persistence implementation is next.
+Status: Decision D-059 and its constrained persistence foundation delivered on
+2026-08-26; provider APIs and hybrid customer projection adoption are next.
 
 ## Outcome of the source audit
 
@@ -35,8 +35,8 @@ Service mobilization creates a dedicated immutable release record that links:
 - the provider actor, explicit release authority, idempotency key, and release
   timestamp.
 
-This dedicated release preserves the distinction
-between owner confirmation and provider work authority, gives later customer
+This dedicated release preserves the distinction between owner confirmation and
+provider work authority, gives later customer
 reads exact property provenance, and avoids turning mutable job or route fields
 into implicit authorization records.
 
@@ -46,21 +46,27 @@ version was consumed, whether a retry is the same release, or why the customer
 may see the lifecycle. Inferring a link from existing account, address, date, or
 route data is rejected.
 
-## Minimum work-release contract
+## Delivered work-release contract
 
-The implementation contract defines:
+The first persistence slice fixes these choices:
 
-1. which provider capability may mobilize and release initial service;
-2. whether release atomically creates a job or links one provider-created job;
-3. exact-version, active-relationship, accepted-scope, tenant, property, and
-   duplicate-release checks;
-4. replay, conflict, cancellation, relationship-revocation, and partial-failure
-   behavior;
-5. whether the confirmed arrival window is copied, referenced immutably, or
-   replaced through a new customer-visible reschedule version;
-6. who may publish each customer-safe transition and its next-update copy; and
-7. how later delivered proof links back without exposing internal job, route,
-   crew, report, actor, or release identifiers.
+1. an active organization-scoped `organization_owner` or `manager` membership
+   may release initial service or publish a customer status;
+2. release atomically creates one scheduled service job and its bounded default
+   checklist, but no day plan, route stop, crew assignment, payment, recurring
+   schedule, or proof publication;
+3. release rechecks the active relationship, organization, account/property
+   relation, accepted proposal, exact current confirmed visit and confirmation
+   decision, valid time zone, actor membership, and one-release constraint;
+4. the actor-scoped idempotency key exactly replays the same release/event and
+   conflicts when reused with changed content; a second release is invalid;
+5. the initial confirmed window remains immutably referenced. A reschedule is a
+   new immutable customer event that atomically updates only the job service date;
+6. customer events recheck the current relationship and property on every write,
+   allow only the recorded state graph, and require `in_progress`/`completed`
+   operational job state before the matching customer publication; and
+7. release and event rows retain internal provenance for later server-side joins,
+   while the customer API remains responsible for excluding those identifiers.
 
 ## Customer-safe lifecycle after release
 
@@ -83,11 +89,13 @@ provider notes, and unpublished evidence remain excluded.
 ## Delivery sequence after acceptance
 
 1. Persist the immutable mobilization/work-release relation and constrained
-   customer-status events.
+   customer-status events. **Delivered.**
 2. Prove exact replay, cross-property isolation, relationship revocation, and
-   no-release-on-failure with PostgreSQL coverage.
+   no-release-on-failure with PostgreSQL coverage. **Implemented; live execution
+   still requires a local PostgreSQL connection.**
 3. Extend the existing hybrid-resolver visit projection without accepting
    organization, account, property, job, route, or release IDs from the browser.
+   **Next, after provider write APIs.**
 4. Adopt service-day states and recovery in Yard Owner Home and Visits.
 
 Until these persistence and projection gates pass, the delivered confirmed-

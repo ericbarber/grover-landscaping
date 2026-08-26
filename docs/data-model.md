@@ -457,3 +457,30 @@ replay-safe and changed reuse conflicting.
 change-requested lifecycle facts. First-visit confirmation creates no service
 job, day plan, route stop, work order, recurring schedule, payment, crew, or
 assignment and does not activate the provider's operational property.
+
+## owner_provider_service_releases
+
+Decision D-059 introduces one immutable service release per activated
+relationship. An active organization-scoped provider owner or manager releases
+the exact current confirmed first-visit version. The transaction revalidates the
+accepted initial-service proposal, confirmation decision, active relationship,
+organization/account/property links, actor membership, and time zone, then
+creates one scheduled `service_jobs` row and bounded default checklist. It
+creates no day plan, route stop, crew assignment, payment, recurring schedule,
+or proof publication.
+
+The release retains the activation, exact first-visit proposal/version, accepted
+service proposal, organization, account, property, resulting job, actor,
+membership, idempotency key, and timestamp. The row is immutable; actor-scoped
+exact retries return the original release and changed reuse conflicts.
+
+## customer_service_day_events
+
+Customer service-day events are immutable, versioned provider publications for
+`en_route`, `care_in_progress`, `weather_delay`, `rescheduled`, and
+`complete_proof_pending`. Each row repeats release organization/account/property
+provenance, the authorized actor membership, bounded customer reason/next-update
+copy, and a reschedule window only when applicable. Every write revalidates the
+active relationship and current property. Care-in-progress and proof-pending
+publication additionally require the linked job to be in progress or completed;
+raw job, stop, route, GPS, crew, or report state never publishes itself.

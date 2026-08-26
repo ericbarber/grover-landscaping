@@ -7,10 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement accepted decision D-059's dedicated immutable,
-  idempotent, provider-authorized mobilization/work-release relation before the
-  persisted Home/Visits read advances beyond confirmed. Existing job/account/
-  date/route data must not be inferred.
+- Active slice: expose provider release/status publication APIs over delivered
+  decision D-059 persistence, then extend the hybrid customer visit projection.
+  Existing job/account/date/route data must not be inferred.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -148,10 +147,11 @@ public proof and proposal decisions; and the Yard Owner four-destination shell
 are delivered. The Team and organization phase now also has its prototype-
 aligned overview composition.
 
-1. Implement the accepted immutable mobilization/work-release relation documented in
-   [`../docs/customer-service-day-projection-design.md`](../docs/customer-service-day-projection-design.md).
-   Do not implement customer states beyond confirmed by inferring a job/property
-   link from account, address, date, route, crew, or completion-report data.
+1. Expose provider-authorized release/status publication APIs over the delivered
+   immutable persistence documented in
+   [`../docs/customer-service-day-projection-design.md`](../docs/customer-service-day-projection-design.md),
+   then extend the hybrid customer visit projection without accepting internal
+   identifiers from the customer.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -188,6 +188,12 @@ That prior matrix covers all seven fixed identities, fail-closed access retry,
 unscoped-role Home-only recovery, Team staffing recovery, partial-read isolation,
 self-impact, unavailable-versus-empty, keyboard activation, and focus transfer,
 plus the direct property-manager portfolio journey.
+The D-059 persistence slice passes all 197 backend library tests and compiles the
+expanded owner/provider PostgreSQL lifecycle fixture. That fixture contains the
+release/event replay, authority, revocation, job-state, immutability, rollback,
+and cross-property assertions, but those database-backed branches did not run in
+this environment because `DATABASE_URL` is unset and the local Docker daemon is
+unavailable.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

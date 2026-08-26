@@ -90,6 +90,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   the minimized persisted confirmed-visit read and fail-closed Yard Owner
   Home/Visits adoption are delivered with loading, valid-empty, missing-access,
   inconsistent-access, unavailable, and retry states and no illustrative fallback
+- Delivered immutable provider service-release and customer-status persistence
+  linking the exact confirmed first visit, accepted service scope, current
+  organization/account/property relationship, authorized provider membership,
+  and one atomically created scheduled job; exact replay, state sequencing,
+  operational progress gates, revocation, and cross-property isolation fail closed
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

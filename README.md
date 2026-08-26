@@ -32,8 +32,8 @@ implemented: account owners inherit account properties and delegates remain
 property-scoped. Its constrained authorization foundation, minimized visit API,
 and fail-closed Yard Owner Home/Visits adoption are delivered with explicit
 loading, empty, access, unavailable, and retry states. The next customer slice
-extends this boundary into authoritative customer-safe service-day states after
-the accepted immutable mobilization/work-release source is implemented.
+now has its immutable mobilization/work-release and customer-status persistence
+foundation; provider APIs and hybrid customer projection adoption are next.
 Landscaping-company signup now opens a dedicated provider entry route that
 separates owner-operators, company owners, invited workers, and known-owner
 recipients before authentication without implying public marketplace access.
@@ -470,7 +470,8 @@ Yard Crew operating profile. Customer-account owner scope with property-scoped
 delegates is delivered through a constrained migration and fail-closed property
 resolver; the minimized visit API and Yard Owner Home/Visits adoption are
 delivered without illustrative fallback. Customer-safe service-day lifecycle
-extension is next through the accepted work-release source decision. See the
+extension now has its accepted work-release persistence source. Provider APIs
+and customer projection adoption are next. See the
 accepted [service-day projection source contract](docs/customer-service-day-projection-design.md).
 Curated-opportunity
 availability/governance and governed

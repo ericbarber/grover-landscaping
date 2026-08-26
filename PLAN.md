@@ -104,6 +104,17 @@ Current state:
   service scope, preparation, and next-update fields. It distinguishes empty,
   unauthorized, inconsistent, and unavailable states and excludes operational,
   billing, actor, token, and internal lifecycle identifiers.
+- Phase 5A2 adopts that read in Yard Owner Home and Visits with authenticated
+  loading, valid-empty, missing-access, inconsistent-access, unavailable, and
+  retry states and no illustrative visit, portfolio, or recommendation fallback.
+- Phase 5A3 now implements decision D-059's persistence boundary. An active,
+  organization-scoped provider owner or manager can release exactly one current
+  confirmed first visit into one scheduled service job with immutable accepted-
+  scope/property/actor provenance and exact replay. Separate immutable customer-
+  status events enforce allowlisted transitions, current relationship and
+  property checks, operational in-progress/completed gates, bounded customer
+  copy, reschedule windows, and cross-property isolation without creating a
+  route, day plan, crew assignment, or proof publication.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -213,14 +224,14 @@ Current state:
   service-day lifecycle extension. Its source audit found no exact relationship
   from the deliberately non-operational first-visit confirmation to a property-
   scoped service job. Decision D-059 now accepts an immutable, idempotent,
-  provider-authorized mobilization/work-release relation as that source.
+  provider-authorized mobilization/work-release relation as that source, and
+  its constrained persistence plus customer-status event foundation is delivered.
 
 Next authorized slice and remaining gates:
 
-- Implement decision D-059's constrained mobilization/work-release persistence:
-  connect the exact confirmed first visit, customer property, accepted scope,
-  provider authority, and resulting job with replay, isolation, and rollback
-  proof before projecting customer states beyond confirmed.
+- Expose provider-authorized release and customer-status publication APIs, then
+  extend the hybrid customer visit projection without accepting organization,
+  account, property, job, release, or route identifiers from the customer.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

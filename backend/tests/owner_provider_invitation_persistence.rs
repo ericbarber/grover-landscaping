@@ -40,6 +40,10 @@ use grover_landscaping_api::owner_acquisition::{
     RetryOwnerProviderInvitationRequest, RevokeOwnerProviderDisclosureGrantRequest,
     SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest, TransitionOwnerProviderAssessmentRequest,
 };
+use grover_landscaping_api::service_mobilization::{
+    CustomerServiceDayEventWriteResult, PublishCustomerServiceDayEventRequest,
+    ReleaseInitialServiceRequest, ServiceMobilizationRepository, ServiceWorkReleaseWriteResult,
+};
 use grover_landscaping_api::PhotoUploadMetadata;
 use sha2::{Digest, Sha256};
 use sqlx::{postgres::PgPoolOptions, PgPool, Row};
@@ -57,6 +61,49 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .fetch_all(pool)
     .await
     .expect("test activation projection identifiers should load");
+    let released_job_ids = sqlx::query_scalar::<_, String>(
+        "SELECT release.service_job_id
+         FROM owner_provider_service_releases release
+         JOIN owner_provider_relationship_activations activation
+           ON activation.id = release.activation_id
+         WHERE activation.owner_user_id = ANY($1)",
+    )
+    .bind(owner_user_ids)
+    .fetch_all(pool)
+    .await
+    .expect("test service-release job identifiers should load");
+    sqlx::query(
+        "DELETE FROM customer_service_day_events
+         WHERE release_id IN (
+             SELECT release.id
+             FROM owner_provider_service_releases release
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = release.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer service-day events should reset");
+    sqlx::query(
+        "DELETE FROM owner_provider_service_releases
+         WHERE activation_id IN (
+             SELECT id FROM owner_provider_relationship_activations
+             WHERE owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test service releases should reset");
+    if !released_job_ids.is_empty() {
+        sqlx::query("DELETE FROM service_jobs WHERE id = ANY($1)")
+            .bind(&released_job_ids)
+            .execute(pool)
+            .await
+            .expect("test released service jobs should reset");
+    }
     sqlx::query(
         "DELETE FROM owner_provider_first_visit_events
          WHERE activation_id IN (
@@ -3817,6 +3864,325 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             "activation and first-visit confirmation must not create {column}"
         );
     }
+    let mobilization = ServiceMobilizationRepository::from_pool(pool.clone());
+    let release_request = ReleaseInitialServiceRequest {
+        expected_first_visit_version: 2,
+        idempotency_key: "initial-service-release-001".to_string(),
+    };
+    assert!(matches!(
+        mobilization
+            .release_initial_service(
+                "recipient-user-without-membership",
+                &activation.activation_id,
+                release_request.clone(),
+            )
+            .await,
+        ServiceWorkReleaseWriteResult::NotFound
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM service_jobs")
+            .fetch_one(&pool)
+            .await
+            .expect("job count after denied release should load"),
+        operational_side_effects_before.get::<i64, _>("service_jobs")
+    );
+    let (first_release, second_release) = tokio::join!(
+        mobilization.release_initial_service(
+            "recipient-user-1",
+            &activation.activation_id,
+            release_request.clone(),
+        ),
+        mobilization.release_initial_service(
+            "recipient-user-1",
+            &activation.activation_id,
+            release_request.clone(),
+        ),
+    );
+    let service_release = match (first_release, second_release) {
+        (
+            ServiceWorkReleaseWriteResult::Released(released),
+            ServiceWorkReleaseWriteResult::Replayed(replayed),
+        )
+        | (
+            ServiceWorkReleaseWriteResult::Replayed(replayed),
+            ServiceWorkReleaseWriteResult::Released(released),
+        ) => {
+            assert_eq!(released, replayed);
+            released
+        }
+        (first, second) => panic!(
+            "concurrent exact service release should save once and replay once, got {first:?} and {second:?}"
+        ),
+    };
+    assert_eq!(service_release.activation_id, activation.activation_id);
+    assert_eq!(
+        service_release.customer_property_id,
+        activation.customer_property_id
+    );
+    assert_eq!(service_release.first_visit_proposal_version, 2);
+    assert!(service_release.persisted);
+    assert!(matches!(
+        mobilization
+            .release_initial_service(
+                "recipient-user-1",
+                &activation.activation_id,
+                ReleaseInitialServiceRequest {
+                    expected_first_visit_version: 1,
+                    ..release_request.clone()
+                },
+            )
+            .await,
+        ServiceWorkReleaseWriteResult::Conflict
+    ));
+    assert!(matches!(
+        mobilization
+            .release_initial_service(
+                "recipient-user-1",
+                &activation.activation_id,
+                ReleaseInitialServiceRequest {
+                    idempotency_key: "initial-service-release-002".to_string(),
+                    ..release_request
+                },
+            )
+            .await,
+        ServiceWorkReleaseWriteResult::InvalidState
+    ));
+    let release_projection = sqlx::query(
+        "SELECT release.initial_service_proposal_id, release.first_visit_proposal_id,
+                release.customer_property_id, job.status, job.scheduled_date,
+                job.assigned_crew_id,
+                (SELECT COUNT(*) FROM job_checklist_items checklist
+                 WHERE checklist.job_id = job.id) AS checklist_count
+         FROM owner_provider_service_releases release
+         JOIN service_jobs job ON job.id = release.service_job_id
+         WHERE release.id = $1",
+    )
+    .bind(&service_release.release_id)
+    .fetch_one(&pool)
+    .await
+    .expect("immutable release projection should load");
+    assert_eq!(
+        release_projection.get::<String, _>("initial_service_proposal_id"),
+        proposal_v2.proposal_id
+    );
+    assert_eq!(
+        release_projection.get::<String, _>("first_visit_proposal_id"),
+        second_window
+            .proposal_id
+            .as_deref()
+            .expect("confirmed first-visit proposal should exist")
+    );
+    assert_eq!(release_projection.get::<String, _>("status"), "scheduled");
+    assert_eq!(release_projection.get::<i64, _>("checklist_count"), 4);
+    assert!(release_projection
+        .get::<Option<String>, _>("assigned_crew_id")
+        .is_none());
+    assert!(!release_projection
+        .get::<String, _>("scheduled_date")
+        .trim()
+        .is_empty());
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM service_jobs")
+            .fetch_one(&pool)
+            .await
+            .expect("job count after release should load"),
+        operational_side_effects_before.get::<i64, _>("service_jobs") + 1
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM day_plans")
+            .fetch_one(&pool)
+            .await
+            .expect("day-plan count after release should load"),
+        operational_side_effects_before.get::<i64, _>("day_plans")
+    );
+    assert!(sqlx::query(
+        "UPDATE owner_provider_service_releases
+         SET released_by_user_id = 'changed' WHERE id = $1",
+    )
+    .bind(&service_release.release_id)
+    .execute(&pool)
+    .await
+    .is_err());
+
+    let en_route_request = PublishCustomerServiceDayEventRequest {
+        expected_event_version: 0,
+        status: "en_route".to_string(),
+        customer_safe_reason: None,
+        next_update_message: "Your provider is on the way for the confirmed window.".to_string(),
+        window_start_epoch_seconds: None,
+        window_end_epoch_seconds: None,
+        time_zone: None,
+        idempotency_key: "service-day-en-route-001".to_string(),
+    };
+    sqlx::query(
+        "UPDATE owner_provider_active_relationships
+         SET status = 'ended', ended_at = NOW(), updated_at = NOW()
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture relationship should end");
+    assert!(matches!(
+        mobilization
+            .publish_customer_service_day_event(
+                "recipient-user-1",
+                &service_release.release_id,
+                en_route_request.clone(),
+            )
+            .await,
+        CustomerServiceDayEventWriteResult::NotFound
+    ));
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM customer_service_day_events WHERE release_id = $1",
+        )
+        .bind(&service_release.release_id)
+        .fetch_one(&pool)
+        .await
+        .expect("service-day event count after ended relationship should load"),
+        0
+    );
+    sqlx::query(
+        "UPDATE owner_provider_active_relationships
+         SET status = 'active', ended_at = NULL, updated_at = NOW()
+         WHERE activation_id = $1",
+    )
+    .bind(&activation.activation_id)
+    .execute(&pool)
+    .await
+    .expect("the fixture relationship should restore");
+    assert!(matches!(
+        mobilization
+            .publish_customer_service_day_event(
+                "recipient-user-without-membership",
+                &service_release.release_id,
+                en_route_request.clone(),
+            )
+            .await,
+        CustomerServiceDayEventWriteResult::NotFound
+    ));
+    let CustomerServiceDayEventWriteResult::Published(en_route) = mobilization
+        .publish_customer_service_day_event(
+            "recipient-user-1",
+            &service_release.release_id,
+            en_route_request.clone(),
+        )
+        .await
+    else {
+        panic!("an authorized provider should publish the en-route update");
+    };
+    assert_eq!(en_route.event_version, 1);
+    assert_eq!(en_route.status, "en_route");
+    assert!(matches!(
+        mobilization
+            .publish_customer_service_day_event(
+                "recipient-user-1",
+                &service_release.release_id,
+                en_route_request,
+            )
+            .await,
+        CustomerServiceDayEventWriteResult::Replayed(record) if record == en_route
+    ));
+    let care_request = PublishCustomerServiceDayEventRequest {
+        expected_event_version: 1,
+        status: "care_in_progress".to_string(),
+        customer_safe_reason: None,
+        next_update_message: "Care is underway. Proof will follow after review.".to_string(),
+        window_start_epoch_seconds: None,
+        window_end_epoch_seconds: None,
+        time_zone: None,
+        idempotency_key: "service-day-care-001".to_string(),
+    };
+    assert!(matches!(
+        mobilization
+            .publish_customer_service_day_event(
+                "recipient-user-1",
+                &service_release.release_id,
+                care_request.clone(),
+            )
+            .await,
+        CustomerServiceDayEventWriteResult::InvalidState
+    ));
+    sqlx::query("UPDATE service_jobs SET status = 'in_progress' WHERE id = $1")
+        .bind(&service_release.service_job_id)
+        .execute(&pool)
+        .await
+        .expect("the released job should enter provider execution");
+    let CustomerServiceDayEventWriteResult::Published(care) = mobilization
+        .publish_customer_service_day_event(
+            "recipient-user-1",
+            &service_release.release_id,
+            care_request,
+        )
+        .await
+    else {
+        panic!("in-progress operational work should permit the customer update");
+    };
+    assert_eq!(care.event_version, 2);
+    let completion_request = PublishCustomerServiceDayEventRequest {
+        expected_event_version: 2,
+        status: "complete_proof_pending".to_string(),
+        customer_safe_reason: None,
+        next_update_message: "Care is complete. Proof will appear after provider review."
+            .to_string(),
+        window_start_epoch_seconds: None,
+        window_end_epoch_seconds: None,
+        time_zone: None,
+        idempotency_key: "service-day-complete-001".to_string(),
+    };
+    assert!(matches!(
+        mobilization
+            .publish_customer_service_day_event(
+                "recipient-user-1",
+                &service_release.release_id,
+                completion_request.clone(),
+            )
+            .await,
+        CustomerServiceDayEventWriteResult::InvalidState
+    ));
+    sqlx::query("UPDATE service_jobs SET status = 'completed' WHERE id = $1")
+        .bind(&service_release.service_job_id)
+        .execute(&pool)
+        .await
+        .expect("the released job should complete provider execution");
+    let CustomerServiceDayEventWriteResult::Published(completed) = mobilization
+        .publish_customer_service_day_event(
+            "recipient-user-1",
+            &service_release.release_id,
+            completion_request,
+        )
+        .await
+    else {
+        panic!("completed operational work should permit proof-pending publication");
+    };
+    assert_eq!(completed.event_version, 3);
+    assert!(sqlx::query(
+        "UPDATE customer_service_day_events
+         SET next_update_message = 'changed' WHERE release_id = $1",
+    )
+    .bind(&service_release.release_id)
+    .execute(&pool)
+    .await
+    .is_err());
+    assert!(sqlx::query(
+        "INSERT INTO customer_service_day_events (
+             id, release_id, organization_id, customer_account_id,
+             customer_property_id, actor_user_id, actor_membership_id,
+             event_version, event_kind, next_update_message, idempotency_key
+         )
+         SELECT 'cross_property_service_day_event', release.id,
+                release.organization_id, release.customer_account_id, $2,
+                release.released_by_user_id, release.released_by_membership_id,
+                99, 'en_route', 'Invalid cross-property update.',
+                'cross-property-event-001'
+         FROM owner_provider_service_releases release WHERE release.id = $1",
+    )
+    .bind(&service_release.release_id)
+    .bind(sibling_property_id)
+    .execute(&pool)
+    .await
+    .is_err());
     assert!(sqlx::query(
         "UPDATE owner_provider_relationship_activations
          SET proposal_version = proposal_version + 1 WHERE id = $1",

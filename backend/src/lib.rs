@@ -20,6 +20,7 @@ pub mod property_crew_assignments;
 pub mod property_onboarding;
 pub mod property_portfolio_requests;
 pub mod property_portfolios;
+pub mod service_mobilization;
 pub mod stop_progress;
 
 use serde::{Deserialize, Serialize};
