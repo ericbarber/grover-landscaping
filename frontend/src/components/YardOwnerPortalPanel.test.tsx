@@ -9,10 +9,6 @@ const commonProps = {
   isLoadingVisits: false,
   visitReadError: null,
   onRetryVisits: vi.fn(),
-  completionReportsByProperty: {},
-  isLoadingReportHistory: false,
-  hasReportHistoryError: false,
-  isProtectedProofWithheld: false,
 };
 
 function renderVisit(overrides: Partial<Parameters<typeof YardOwnerPortalPanel>[0]['visits'][number]>) {
@@ -29,6 +25,7 @@ function renderVisit(overrides: Partial<Parameters<typeof YardOwnerPortalPanel>[
         scope: ['Mow and edge turf'], status: 'confirmed',
         preparationMessage: 'Unlock the side gate.',
         nextUpdateMessage: 'Your provider will share an update here.',
+        deliveredProofAvailable: false,
         ...overrides,
       }]}
     />,
@@ -99,6 +96,7 @@ describe('Yard Owner persisted visit states', () => {
           status: 'confirmed',
           preparationMessage: 'Unlock the side gate.',
           nextUpdateMessage: 'Your provider will share an update here.',
+          deliveredProofAvailable: false,
         }]}
       />,
     );
@@ -110,22 +108,17 @@ describe('Yard Owner persisted visit states', () => {
     expect(markup).not.toContain('Weekly yard care');
   });
 
-  it('keeps legacy property-report history out of the protected owner workspace', () => {
-    const markup = renderVisit({});
-    const withheldMarkup = renderToStaticMarkup(
-      <YardOwnerPortalPanel
-        {...commonProps}
-        isProtectedProofWithheld
-        properties={[{
-          id: 'property_1', customerId: 'account_1', organizationId: 'org_1', displayName: 'Home',
-        }]}
-        visits={[]}
-      />,
-    );
+  it('offers only the exact authenticated proof path after delivery', () => {
+    const pendingMarkup = renderVisit({ deliveredProofAvailable: false });
+    const deliveredMarkup = renderVisit({
+      customerVisitReference: 'customer_visit_0123456789abcdef0123456789abcdef',
+      deliveredProofAvailable: true,
+    });
 
-    expect(markup).not.toContain('Protected proof is not available');
-    expect(withheldMarkup).toContain('Protected proof is not available in this workspace yet.');
-    expect(withheldMarkup).toContain('Existing shared report links remain separate.');
+    expect(pendingMarkup).not.toContain('Open delivered proof');
+    expect(deliveredMarkup).toContain('Open delivered proof');
+    expect(deliveredMarkup).not.toContain('/report-view/');
+    expect(deliveredMarkup).not.toContain('share_token');
   });
 
   it('offers visit questions only after a customer-safe reference exists', () => {

@@ -1,4 +1,8 @@
+use crate::completion_reports::{
+    customer_completion_report_snapshot_response, CustomerCompletionReportResponse,
+};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::{PgPool, Postgres, Row, Transaction};
 use uuid::Uuid;
 
@@ -87,6 +91,17 @@ pub enum ProviderVisitThreadListResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CustomerVisitProofReadResult {
+    Delivered(CustomerCompletionReportResponse),
+    Pending,
+    NotAuthorized,
+    InvalidAuthorization,
+    NotFound,
+    InvalidSnapshot,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct CustomerVisitCommunicationRepository {
     pool: Option<PgPool>,
@@ -148,6 +163,32 @@ impl CustomerVisitCommunicationRepository {
                     "provider visit thread load failed"
                 );
                 CustomerVisitThreadReadResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn get_customer_proof(
+        &self,
+        actor_user_id: &str,
+        customer_visit_reference: &str,
+    ) -> CustomerVisitProofReadResult {
+        if actor_user_id.trim().is_empty() || customer_visit_reference.trim().is_empty() {
+            return CustomerVisitProofReadResult::NotFound;
+        }
+        let Some(pool) = &self.pool else {
+            return CustomerVisitProofReadResult::Unavailable;
+        };
+        match load_customer_proof(pool, actor_user_id.trim(), customer_visit_reference.trim()).await
+        {
+            Ok(result) => result,
+            Err(error) => {
+                tracing::error!(
+                    %error,
+                    actor_user_id,
+                    customer_visit_reference,
+                    "customer visit proof load failed"
+                );
+                CustomerVisitProofReadResult::Unavailable
             }
         }
     }
@@ -561,6 +602,69 @@ async fn load_customer_thread(
     let record = load_thread_record(&mut transaction, &authority).await?;
     transaction.commit().await?;
     Ok(CustomerVisitThreadReadResult::Loaded(record))
+}
+
+async fn load_customer_proof(
+    pool: &PgPool,
+    actor_user_id: &str,
+    customer_visit_reference: &str,
+) -> Result<CustomerVisitProofReadResult, sqlx::Error> {
+    let mut transaction = pool.begin().await?;
+    match customer_authorization(&mut transaction, actor_user_id).await? {
+        CustomerAuthorization::NotAuthorized => {
+            transaction.rollback().await?;
+            return Ok(CustomerVisitProofReadResult::NotAuthorized);
+        }
+        CustomerAuthorization::Invalid => {
+            transaction.rollback().await?;
+            return Ok(CustomerVisitProofReadResult::InvalidAuthorization);
+        }
+        CustomerAuthorization::Valid => {}
+    }
+    let Some(authority) =
+        lock_customer_thread(&mut transaction, actor_user_id, customer_visit_reference).await?
+    else {
+        transaction.rollback().await?;
+        return Ok(CustomerVisitProofReadResult::NotFound);
+    };
+    let row = sqlx::query(
+        "SELECT report.delivered_snapshot
+         FROM customer_service_visit_threads thread
+         JOIN owner_provider_service_releases release
+           ON release.id = thread.release_id
+          AND release.organization_id = thread.organization_id
+          AND release.customer_account_id = thread.customer_account_id
+          AND release.customer_property_id = thread.customer_property_id
+         JOIN job_completion_reports report
+           ON report.job_id = release.service_job_id
+          AND report.report_status = 'delivered'
+          AND report.delivered_at IS NOT NULL
+          AND report.share_token IS NOT NULL
+         WHERE thread.customer_visit_reference = $1
+           AND thread.organization_id = $2
+           AND thread.customer_account_id = $3
+           AND thread.customer_property_id = $4",
+    )
+    .bind(&authority.customer_visit_reference)
+    .bind(&authority.organization_id)
+    .bind(&authority.customer_account_id)
+    .bind(&authority.customer_property_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
+    let Some(row) = row else {
+        transaction.commit().await?;
+        return Ok(CustomerVisitProofReadResult::Pending);
+    };
+    let Some(snapshot) = row.get::<Option<Value>, _>("delivered_snapshot") else {
+        transaction.rollback().await?;
+        return Ok(CustomerVisitProofReadResult::InvalidSnapshot);
+    };
+    let Some(proof) = customer_completion_report_snapshot_response(&snapshot) else {
+        transaction.rollback().await?;
+        return Ok(CustomerVisitProofReadResult::InvalidSnapshot);
+    };
+    transaction.commit().await?;
+    Ok(CustomerVisitProofReadResult::Delivered(proof))
 }
 
 async fn load_provider_thread(

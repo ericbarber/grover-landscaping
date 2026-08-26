@@ -117,6 +117,10 @@ slices.
    persistence, provider APIs, minimized customer projection, and Yard Owner
    presentation. See the
    [D-059 contract](customer-service-day-projection-design.md).**
+7. Resolve delivered proof only through the exact visit reference, immutable
+   work release and job, delivered immutable snapshot, and the same hybrid
+   authorization checks. **Delivered under
+   [D-061](customer-delivered-proof-continuity-source-design.md).**
 
 ## Non-goals
 

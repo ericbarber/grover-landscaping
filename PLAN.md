@@ -179,7 +179,8 @@ Current state:
   signed-in read. The legacy property-report list is not a Yard Owner source: it
   uses organization membership, exposes internal IDs/share links, and can infer
   property provenance. Yard Owner now withholds that route explicitly. Report
-  delivery/snapshot atomicity and fail-closed immutable reads are next; active
+  Delivery/snapshot atomicity, fail-closed immutable reads, the exact
+  authenticated proof route, and Yard Owner adoption are now delivered; active
   recommendation collaboration, proof feedback, and concerns remain separate.
 - Phase 5C1 now makes completion-report publication atomic. A deliver attempt
   prepares a persisted, identity-matched, delivery-ready snapshot before the
@@ -189,6 +190,19 @@ Current state:
   reject later snapshot rewrites. Public share reads now fail closed when the
   snapshot is missing or invalid and never rebuild delivered proof from mutable
   job state.
+- Phase 5C2 now delivers the D-061 authenticated proof boundary. An exact
+  customer visit reference resolves through the hybrid grant, active
+  relationship, immutable release, exact service job, delivered report, and
+  structurally valid snapshot before returning the existing minimized customer
+  projection. The visit list derives `delivered_proof_available` through the
+  same projector. Pending, missing/ended, revoked, inconsistent, corrupt, and
+  unavailable states are distinct; report/job/release/property/organization
+  IDs and the public share token are omitted.
+- Phase 5C3 now adopts protected delivered proof in Yard Owner Home, Visits, and
+  Proof. The browser loads exact proof on demand, presents completed checklist
+  and photo evidence plus completed approved-work outcomes, retries safely after
+  read failures, and never falls back to live data or a bearer share link.
+  Completed outcomes are explicitly not new recommendations or approval asks.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -304,10 +318,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-061's source audit, immediate Yard Owner containment, and atomic
-  immutable snapshot publication are delivered. Add the minimized hybrid-
-  authorized exact-visit proof read and derive proof availability only through
-  that exact persisted chain.
+- Decision D-061's source audit, atomic immutable publication, minimized hybrid-
+  authorized exact-visit proof read, and Yard Owner adoption are delivered.
+  Audit the exact source and decision semantics for active recommendation
+  collaboration before exposing any new approval action.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

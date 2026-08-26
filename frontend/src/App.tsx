@@ -338,6 +338,7 @@ const customerPortalPreviewVisits: CustomerPortalVisitSummary[] = [
     status: 'confirmed',
     preparationMessage: 'Please unlock the side gate and keep pets inside during the arrival window.',
     nextUpdateMessage: 'We will update this visit when your care team is on the way.',
+    deliveredProofAvailable: false,
   },
   {
     id: 'visit_1002',
@@ -351,6 +352,7 @@ const customerPortalPreviewVisits: CustomerPortalVisitSummary[] = [
     status: 'confirmed',
     preparationMessage: 'Keep the backyard work area clear during the arrival window.',
     nextUpdateMessage: 'We will confirm when the care team begins traveling to this property.',
+    deliveredProofAvailable: false,
   },
 ];
 
@@ -3370,10 +3372,6 @@ export function App() {
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
                 onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
-                completionReportsByProperty={propertyCompletionReports}
-                isLoadingReportHistory={isLoadingPropertyCompletionReports}
-                hasReportHistoryError={hasPropertyCompletionReportHistoryError}
-                isProtectedProofWithheld
               />
             )}
           </div>

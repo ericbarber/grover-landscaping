@@ -583,6 +583,9 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::POST);
     }
+    if path.starts_with("/customer-portal/visits/") && path.ends_with("/proof") {
+        return principal.verified_email.is_some() && *method == Method::GET;
+    }
     if path == "/owner-workspace" {
         return principal.verified_email.is_some()
             && (*method == Method::GET || *method == Method::PUT);
@@ -1882,6 +1885,18 @@ mod tests {
                 customer_path
             ));
         }
+        let proof_path = "/customer-portal/visits/customer_visit_1/proof";
+        assert!(is_protected_api_path(proof_path));
+        assert!(is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::GET,
+            proof_path
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::PropertyOwner),
+            &Method::POST,
+            proof_path
+        ));
 
         for (method, path) in [
             (Method::GET, "/provider-customer-visit-threads"),

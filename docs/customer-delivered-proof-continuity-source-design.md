@@ -3,7 +3,8 @@
 Status: Source and authorization audit completed on 2026-08-26. Decision D-061
 adopts an exact visit-to-delivered-snapshot source with hybrid authorization.
 The legacy property-report list is not an authorized Yard Owner source. Atomic
-snapshot delivery is delivered; minimized authenticated reads remain next.
+snapshot delivery, the minimized authenticated exact-visit read, and responsive
+Yard Owner adoption are delivered.
 
 ## Source-audit outcome
 
@@ -27,8 +28,7 @@ revalidate a signed-in customer's current grant or relationship.
 
 ## Proof-integrity findings
 
-The intended delivered snapshot is not yet a fully authoritative immutable
-source:
+The audit found three proof-integrity gaps in the former delivery path:
 
 1. report delivery commits `delivered` status and the share token before the
    snapshot is built and stored in a second operation;
@@ -90,13 +90,19 @@ exact source, versioned offer, customer decision, expiration/revision behavior,
 and non-billing meaning. Project-bid messages, provider notes, incomplete
 add-ons, and manager review fields must not be repurposed as that contract.
 
-## Immediate containment
+## Delivered authenticated read
 
-Until D-061 reads are delivered, Yard Owner Home and Proof do not call the
-legacy property-report list and state that protected proof is not available in
-that workspace. Existing public share links continue under their separate
-bearer-link contract. Provider and property-manager workflows retain their
-existing routes and are not granted new customer authority by this decision.
+`GET /customer-portal/visits/{customer_visit_reference}/proof` revalidates the
+hybrid grant and current relationship, resolves the exact immutable release and
+service job, and returns only the safe projection of a structurally valid
+delivered snapshot. Pending proof, ended access, inconsistent provenance,
+invalid snapshots, and persistence outages remain distinct fail-closed states.
+
+Yard Owner Home, Visits, and Proof load that exact proof on demand. They do not
+call the legacy property-report list, expose the public share token, or rebuild
+proof from mutable job data. Existing public share links continue under their
+separate bearer-link contract. Provider and property-manager workflows retain
+their existing routes and receive no new customer authority from this decision.
 
 ## Deliberate non-effects
 

@@ -71,7 +71,7 @@ use grover_landscaping_api::{
         validate_customer_question_request, validate_provider_response_request,
         CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
         CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
-        CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
+        CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
     },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
@@ -790,6 +790,10 @@ fn app_with_runtime(
         .route(
             "/customer-portal/visits/{customer_visit_reference}/messages",
             get(get_customer_visit_thread).post(create_customer_visit_question),
+        )
+        .route(
+            "/customer-portal/visits/{customer_visit_reference}/proof",
+            get(get_customer_visit_proof),
         )
         .route(
             "/owner-workspace",
@@ -2233,6 +2237,56 @@ async fn get_customer_visit_thread(
             .await,
         true,
     )
+}
+
+async fn get_customer_visit_proof(
+    State(state): State<Arc<AppState>>,
+    Extension(principal): Extension<AuthPrincipal>,
+    Path(customer_visit_reference): Path<String>,
+) -> Response {
+    match state
+        .customer_visit_communication
+        .get_customer_proof(&principal.subject, &customer_visit_reference)
+        .await
+    {
+        CustomerVisitProofReadResult::Delivered(proof) => Json(proof).into_response(),
+        CustomerVisitProofReadResult::Pending => resource_not_found_response(
+            "customer_visit_proof_pending",
+            "Delivered proof is not available for this visit yet.",
+        ),
+        CustomerVisitProofReadResult::NotAuthorized => (
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "customer_portal_access_required",
+                message: "No active customer portal access is available for this visit."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitProofReadResult::InvalidAuthorization => (
+            StatusCode::CONFLICT,
+            Json(ErrorResponse {
+                error: "customer_portal_access_inconsistent",
+                message: "Customer portal access needs provider review before delivered proof can be shown."
+                    .to_string(),
+            }),
+        )
+            .into_response(),
+        CustomerVisitProofReadResult::NotFound => resource_not_found_response(
+            "customer_visit_proof_not_found",
+            "The visit was not found in this authenticated scope.",
+        ),
+        CustomerVisitProofReadResult::InvalidSnapshot => {
+            persisted_resource_unavailable_response(
+                "customer_visit_proof_invalid",
+                "The delivered proof could not be safely projected. No live work data was substituted.",
+            )
+        }
+        CustomerVisitProofReadResult::Unavailable => persisted_resource_unavailable_response(
+            "customer_visit_proof_unavailable",
+            "Delivered proof could not be loaded. No live work data was substituted.",
+        ),
+    }
 }
 
 async fn create_customer_visit_question(
@@ -10200,6 +10254,18 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .uri(customer_path)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/customer-portal/visits/customer_visit_1/proof")
                     .body(Body::empty())
                     .unwrap(),
             )

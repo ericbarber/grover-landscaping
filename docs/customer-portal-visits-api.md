@@ -1,7 +1,8 @@
 # Customer Portal Visits API
 
 Status: Hybrid authorization, confirmed-visit read, explicit service-day event
-projection, and Yard Owner Home/Visits consumption delivered on 2026-08-26.
+projection, exact delivered-proof availability/read, and Yard Owner consumption
+delivered on 2026-08-26.
 
 ## Read authorized properties and customer visits
 
@@ -94,9 +95,29 @@ owner and provider actor IDs, invitation tokens and recipient data, affirmation
 versions, live location, route position, crew assignment, provider notes,
 internal risk/recovery state, pricing, billing, and unpublished proof.
 
-`delivered_proof_available` remains `false` until a separately authoritative
-visit-to-delivered-report relation exists. The API does not infer publication
-from job completion or report presence.
+`delivered_proof_available` is `true` only when the exact immutable work release
+resolves to a delivered report whose stored snapshot passes the customer-safe
+projector. The API does not infer publication from job completion, report
+presence, or property proximity.
+
+## Read exact delivered proof
+
+```http
+GET /customer-portal/visits/{customer_visit_reference}/proof
+Authorization: Bearer <verified-user-token>
+```
+
+The visit reference is an identifier, not a bearer credential. The server
+repeats the full hybrid-grant and active-relationship checks, resolves the exact
+immutable release and service job, and returns the minimized completion-report
+projection only for a structurally valid delivered snapshot. The response omits
+report, job, release, organization, account, property, actor, and public-share
+identifiers.
+
+Proof pending and an ended or missing exact visit return distinct `404` errors;
+revoked access returns `403`; inconsistent authorization returns `409`; corrupt
+snapshot or unavailable persistence returns `503`. None of these states falls
+back to mutable evidence or a public share link.
 
 ## Yard Owner interface consumption
 
@@ -104,8 +125,10 @@ The authenticated Yard Owner surface calls this endpoint before rendering any
 property or visit. Loading, valid-empty, missing-access, inconsistent-access,
 and unavailable states remain distinct and offer retry where applicable. A
 failed read clears prior portal properties and visits; the interface never
-substitutes seeded or illustrative visit data. Proof and recommendations keep
-their separately authorized boundaries and are not inferred from this response.
+substitutes seeded or illustrative visit data. Proof is loaded on demand through
+the exact authenticated route. Active recommendations keep a separate
+authorization and decision boundary and are not inferred from either visit
+response.
 
 Home and Visits render all six statuses on one customer-facing progress rail.
 Weather delay shows only the bounded customer-safe reason and next update;

@@ -130,6 +130,12 @@ boundary; inclusion here alone does not mean a feature shipped.
   snapshot before one transaction writes delivery state, share token, snapshot,
   timestamps, history, and audit; database immutability guards and public reads
   reject missing, invalid, or rewritten proof instead of rebuilding live state
+- Hybrid-authorized exact-visit delivered-proof projection with safe availability
+  derivation, strict stored-snapshot validation, pending/revoked/ended/corrupt/
+  outage distinction, and no internal IDs or bearer share token
+- Yard Owner protected-proof experience in Home, Visits, and Proof with on-demand
+  exact reads, checklist/photo evidence, completed approved-work outcomes,
+  explicit retry, and no live-data or share-link fallback
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

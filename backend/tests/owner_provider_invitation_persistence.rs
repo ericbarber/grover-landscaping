@@ -5,7 +5,7 @@ use grover_landscaping_api::customer_portal_access::{
 use grover_landscaping_api::customer_visit_communication::{
     CreateCustomerVisitQuestionRequest, CreateProviderVisitResponseRequest,
     CustomerVisitCommunicationRepository, CustomerVisitMessageWriteResult,
-    CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
+    CustomerVisitProofReadResult, CustomerVisitThreadReadResult, ProviderVisitThreadListResult,
 };
 use grover_landscaping_api::owner_acquisition::{
     ActivateOwnerProviderRelationshipRequest, AppealOwnerProviderOrganizationClaimRequest,
@@ -4125,6 +4125,101 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     };
     assert_eq!(empty_customer_thread.current_version, 0);
     assert!(empty_customer_thread.messages.is_empty());
+    assert!(matches!(
+        visit_communication
+            .get_customer_proof(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitProofReadResult::Pending
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_customer_proof(owner_b, &customer_visit_reference)
+            .await,
+        CustomerVisitProofReadResult::NotFound
+    ));
+    let delivered_report_id = format!("report_{}", service_release.service_job_id);
+    let delivered_snapshot = serde_json::json!({
+        "report_id": delivered_report_id.clone(),
+        "job_id": service_release.service_job_id.clone(),
+        "report_status": "delivered",
+        "persisted": true,
+        "ready_for_customer": true,
+        "checklist_progress": 100,
+        "before_photos": 1,
+        "after_photos": 1,
+        "issue_photos": 0,
+        "job": {
+            "customer_name": "Yard Owner",
+            "property_address": "Protected property",
+            "scheduled_date": "2026-08-30",
+            "checklist": [{"label": "Completed approved service", "completed": true}]
+        },
+        "photo_evidence": [],
+        "completed_add_ons": [{
+            "service_name": "Approved hedge care",
+            "service_description": "Completed with this visit.",
+            "quantity": 1
+        }],
+        "snapshot_metadata": {
+            "snapshot_version": 1,
+            "report_id": delivered_report_id.clone(),
+            "job_id": service_release.service_job_id.clone(),
+            "captured_at_epoch_seconds": 1_800_000_000,
+            "evidence": {
+                "before_photos": 1,
+                "after_photos": 1,
+                "issue_photos": 0,
+                "total_photo_evidence": 0,
+                "completed_add_ons": 1
+            }
+        }
+    });
+    sqlx::query(
+        "INSERT INTO job_completion_reports (
+             id, job_id, report_status, ready_for_customer,
+             checklist_progress, before_photos, after_photos, issue_photos,
+             share_token, reviewed_by_user_id, reviewed_at,
+             delivered_by_user_id, delivered_at, sent_at,
+             delivered_snapshot, delivered_snapshot_at
+         ) VALUES (
+             $1, $2, 'delivered', TRUE, 100, 1, 1, 0,
+             $3, 'recipient-user-1', NOW(), 'recipient-user-1', NOW(), NOW(),
+             $4, NOW()
+         )",
+    )
+    .bind(&delivered_report_id)
+    .bind(&service_release.service_job_id)
+    .bind(format!("share_{}", service_release.service_job_id))
+    .bind(delivered_snapshot)
+    .execute(&pool)
+    .await
+    .expect("the exact released job should receive one atomic delivered snapshot");
+    let CustomerVisitProofReadResult::Delivered(customer_proof) = visit_communication
+        .get_customer_proof(owner_a, &customer_visit_reference)
+        .await
+    else {
+        panic!("the exact hybrid-authorized visit should load delivered proof");
+    };
+    assert_eq!(customer_proof.report_status, "delivered");
+    assert_eq!(customer_proof.completed_recommendations.len(), 1);
+    let proof_json = serde_json::to_string(&customer_proof)
+        .expect("the minimized delivered proof should serialize");
+    for private_value in [
+        delivered_report_id.as_str(),
+        service_release.service_job_id.as_str(),
+        service_release.release_id.as_str(),
+        activation.customer_account_id.as_str(),
+        activation.customer_property_id.as_str(),
+        "recipient-user-1",
+    ] {
+        assert!(!proof_json.contains(private_value));
+    }
+    let CustomerPortalVisitReadResult::Loaded(proof_available_visits) =
+        portal_access.list_confirmed_visits(owner_a).await
+    else {
+        panic!("the customer visit projection should reload after proof delivery");
+    };
+    assert!(proof_available_visits.visits[0].delivered_proof_available);
     let question_request = CreateCustomerVisitQuestionRequest {
         expected_thread_version: 0,
         topic: "access".to_string(),
@@ -4145,6 +4240,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
         CustomerVisitThreadReadResult::NotAuthorized
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_customer_proof(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitProofReadResult::NotAuthorized
     ));
     assert!(matches!(
         visit_communication
@@ -4171,6 +4272,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
         CustomerVisitThreadReadResult::InvalidAuthorization
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_customer_proof(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitProofReadResult::InvalidAuthorization
     ));
     assert!(matches!(
         visit_communication
@@ -4399,6 +4506,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
             .get_customer_thread(owner_a, &customer_visit_reference)
             .await,
         CustomerVisitThreadReadResult::NotFound
+    ));
+    assert!(matches!(
+        visit_communication
+            .get_customer_proof(owner_a, &customer_visit_reference)
+            .await,
+        CustomerVisitProofReadResult::NotFound
     ));
     assert!(matches!(
         visit_communication

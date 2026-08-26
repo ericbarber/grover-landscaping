@@ -10,16 +10,19 @@ const visits: CustomerPortalVisitSummary[] = [
     id: 'later', customerId: 'customer_1', organizationId: 'org_1', propertyId: 'property_1',
     scheduledDate: '2026-09-02', arrivalWindow: '8–10 AM', serviceTitle: 'Yard care', scope: ['Mow'],
     status: 'confirmed', preparationMessage: 'Unlock the gate.', nextUpdateMessage: 'We will update you.',
+    deliveredProofAvailable: false,
   },
   {
     id: 'other-property', customerId: 'customer_1', organizationId: 'org_1', propertyId: 'property_2',
     scheduledDate: '2026-08-24', arrivalWindow: '8–10 AM', serviceTitle: 'Tree care', scope: ['Trim'],
     status: 'confirmed', preparationMessage: 'No action needed.', nextUpdateMessage: 'We will update you.',
+    deliveredProofAvailable: false,
   },
   {
     id: 'next', customerId: 'customer_1', organizationId: 'org_1', propertyId: 'property_1',
     scheduledDate: '2026-08-27', arrivalWindow: '8–10 AM', serviceTitle: 'Yard care', scope: ['Mow'],
     status: 'en_route', preparationMessage: 'Unlock the gate.', nextUpdateMessage: 'Arrival is next.',
+    deliveredProofAvailable: false,
   },
 ];
 

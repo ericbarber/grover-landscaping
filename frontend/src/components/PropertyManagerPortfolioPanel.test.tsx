@@ -61,6 +61,7 @@ function renderPortfolio(overrides: Partial<Parameters<typeof PropertyManagerPor
         status: 'confirmed',
         preparationMessage: 'Gate access is on file.',
         nextUpdateMessage: 'We will update this visit when the provider is on the way.',
+        deliveredProofAvailable: false,
       }]}
       completionReportsByProperty={{}}
       isLoadingReportHistory={false}

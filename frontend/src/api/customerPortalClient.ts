@@ -7,6 +7,11 @@ import type {
 import { API_BASE_URL } from './baseUrl';
 import { apiRequestError } from './apiError';
 import { authenticatedFetch } from './authenticatedFetch';
+import {
+  toCustomerCompletionReport,
+  type ApiCustomerCompletionReport,
+  type CustomerCompletionReport,
+} from './client';
 
 interface ApiCustomerPortalPropertySummary {
   organization_id: string;
@@ -95,6 +100,7 @@ export function toCustomerPortalVisitSummary(
       ?? 'No preparation is requested for this visit.',
     ...(visit.customer_safe_reason ? { statusReason: visit.customer_safe_reason } : {}),
     nextUpdateMessage: visit.next_update_message,
+    deliveredProofAvailable: visit.delivered_proof_available,
   };
 }
 
@@ -111,4 +117,17 @@ export async function fetchCustomerPortalVisits(): Promise<CustomerPortalVisitCo
     properties: collection.properties.map(toCustomerPortalPropertySummary),
     visits: collection.visits.map(toCustomerPortalVisitSummary),
   };
+}
+
+export async function fetchCustomerVisitProof(
+  customerVisitReference: string,
+): Promise<CustomerCompletionReport> {
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/customer-portal/visits/${encodeURIComponent(customerVisitReference)}/proof`,
+    { headers: { accept: 'application/json' } },
+  );
+  if (!response.ok) {
+    throw await apiRequestError(response, 'Delivered proof could not be loaded.');
+  }
+  return toCustomerCompletionReport(await response.json() as ApiCustomerCompletionReport);
 }

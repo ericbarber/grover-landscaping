@@ -7,10 +7,9 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement D-061's minimized hybrid-authorized exact-visit proof
-  read and derive visit proof availability from that exact source. Atomic
-  delivery/snapshot publication, fail-closed public reads, the source audit, and
-  Yard Owner legacy-route containment are delivered.
+- Active slice: audit the exact persisted source, hybrid authorization,
+  versioning, expiration/revision behavior, and customer decision semantics for
+  active recommendation collaboration. D-061 proof is delivered end to end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -156,8 +155,9 @@ aligned overview composition.
    responsive owner/manager response experience are delivered. D-061's proof
    source audit rejects the legacy property-report route for Yard Owner and its
    immediate containment and atomic delivery/snapshot storage are delivered.
-   Add the minimized exact-visit authenticated proof read next while retaining
-   the separate recommendation-action and concern boundaries.
+   The minimized exact-visit authenticated proof read and responsive Yard Owner
+   adoption are delivered. Audit active recommendation collaboration next while
+   retaining the separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -229,6 +229,11 @@ tests. The live PostgreSQL target proves invalid snapshots leave the report in
 review, valid delivery stores the snapshot with lifecycle/audit state, later
 live job edits do not alter proof, and snapshot rewrites fail. Existing unrelated
 photo-storage dead-code warnings remain.
+The D-061 exact-proof slice passes all 202 backend library tests, its focused
+route test, and both live owner/provider PostgreSQL integration tests. The
+fixture proves pending, exact delivered, cross-owner, revoked, inconsistent,
+ended, minimized response, and proof-availability behavior. Its 19 focused
+frontend tests across four files, TypeScript check, and production build pass.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

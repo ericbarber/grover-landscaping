@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import type { PropertyCompletionReportSummary } from '../api/client';
+import type { CustomerCompletionReport } from '../api/client';
+import { fetchCustomerVisitProof } from '../api/customerPortalClient';
 import {
   createCustomerVisitQuestion,
   fetchCustomerVisitThread,
@@ -30,12 +31,6 @@ const destinations: Array<{ id: PortalDestination; label: string }> = [
 function serviceDateLabel(value: string): string {
   return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  });
-}
-
-function deliveredDateLabel(value: string): string {
-  return new Date(value).toLocaleDateString(undefined, {
-    month: 'short', day: 'numeric', year: 'numeric',
   });
 }
 
@@ -257,6 +252,99 @@ function CustomerVisitQuestions({ visit }: { visit: CustomerPortalVisitSummary }
   );
 }
 
+function CustomerDeliveredProof({ visit }: { visit: CustomerPortalVisitSummary }) {
+  const reference = visit.customerVisitReference;
+  const [open, setOpen] = useState(false);
+  const [proof, setProof] = useState<CustomerCompletionReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadProof() {
+    if (!reference) return;
+    setOpen(true);
+    setLoading(true);
+    setError(null);
+    try {
+      setProof(await fetchCustomerVisitProof(reference));
+    } catch (loadError) {
+      setProof(null);
+      setError(loadError instanceof Error
+        ? loadError.message
+        : 'Delivered proof could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!visit.deliveredProofAvailable || !reference) return null;
+
+  if (!open) {
+    return (
+      <button className="grover-button-secondary mt-4 w-full" onClick={() => void loadProof()} type="button">
+        Open delivered proof
+      </button>
+    );
+  }
+
+  return (
+    <section aria-label="Delivered proof detail" className="mt-4 rounded-2xl border border-emerald-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Delivered proof</p>
+          <h3 className="mt-1 font-display text-2xl font-black text-forest">{visit.serviceTitle}</h3>
+        </div>
+        <button className="min-h-10 rounded-lg px-3 text-sm font-bold text-emerald-900" onClick={() => setOpen(false)} type="button">Close</button>
+      </div>
+      {loading ? <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading protected proof…</p> : null}
+      {error ? (
+        <WorkspaceStatusNotice className="mt-4" detail={`${error} No live work data was substituted.`} title="Delivered proof needs attention." tone="warning">
+          <button className="grover-button-secondary mt-2" onClick={() => void loadProof()} type="button">Try proof again</button>
+        </WorkspaceStatusNotice>
+      ) : null}
+      {proof ? (
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.checklistProgress}%</strong><span className="text-xs text-slate-600">Checklist</span></div>
+            <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.beforePhotos}</strong><span className="text-xs text-slate-600">Before</span></div>
+            <div className="rounded-xl bg-emerald-50 p-3"><strong className="block text-xl text-forest">{proof.afterPhotos}</strong><span className="text-xs text-slate-600">After</span></div>
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-forest">Completed service</h4>
+            <ul className="mt-2 space-y-2">{proof.checklist.map((item) => (
+              <li className="flex gap-2 text-sm text-slate-700" key={item.label}>
+                <span aria-hidden="true" className="font-black text-emerald-700">✓</span>{item.label}
+              </li>
+            ))}</ul>
+          </div>
+          {proof.photoEvidence.length ? (
+            <div>
+              <h4 className="text-sm font-black text-forest">Photo evidence</h4>
+              <div className="mt-2 grid grid-cols-2 gap-2">{proof.photoEvidence.map((photo) => (
+                <figure className="overflow-hidden rounded-xl border border-slate-200" key={`${photo.photoType}:${photo.imageUrl}`}>
+                  <img alt={`${photo.photoType} service evidence`} className="aspect-[4/3] w-full object-cover" src={photo.imageUrl} />
+                  <figcaption className="p-2 text-xs font-bold capitalize text-slate-600">{photo.photoType}</figcaption>
+                </figure>
+              ))}</div>
+            </div>
+          ) : null}
+          {proof.completedRecommendations.length ? (
+            <div className="rounded-xl bg-violet-50 p-3">
+              <h4 className="text-sm font-black text-violet-950">Completed approved work</h4>
+              <ul className="mt-2 space-y-2">{proof.completedRecommendations.map((item) => (
+                <li className="text-sm text-violet-950" key={`${item.serviceName}:${item.quantity}`}>
+                  <strong>{item.serviceName}</strong>{item.quantity > 1 ? ` · ${item.quantity}` : ''}
+                  {item.serviceDescription ? <span className="mt-1 block text-xs leading-5">{item.serviceDescription}</span> : null}
+                </li>
+              ))}</ul>
+              <p className="mt-3 text-xs leading-5 text-violet-900">These are completed outcomes from this visit, not a new recommendation or approval request.</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export function YardOwnerPortalPanel({
   customerDisplayName,
   properties,
@@ -264,10 +352,6 @@ export function YardOwnerPortalPanel({
   isLoadingVisits,
   visitReadError,
   onRetryVisits,
-  completionReportsByProperty,
-  isLoadingReportHistory,
-  hasReportHistoryError,
-  isProtectedProofWithheld = false,
 }: {
   customerDisplayName: string;
   properties: CustomerPortalPropertySummary[];
@@ -275,10 +359,6 @@ export function YardOwnerPortalPanel({
   isLoadingVisits: boolean;
   visitReadError: 'access_required' | 'inconsistent' | 'unavailable' | null;
   onRetryVisits: () => void;
-  completionReportsByProperty: Record<string, PropertyCompletionReportSummary[]>;
-  isLoadingReportHistory: boolean;
-  hasReportHistoryError: boolean;
-  isProtectedProofWithheld?: boolean;
 }) {
   const visibleProperties = properties;
   const [destination, setDestination] = useState<PortalDestination>('home');
@@ -296,11 +376,11 @@ export function YardOwnerPortalPanel({
       : [],
     [selectedProperty, visits],
   );
-  const propertyReports = selectedProperty
-    ? completionReportsByProperty[selectedProperty.id] ?? []
-    : [];
+  const proofVisits = propertyVisits.filter(
+    (visit) => visit.deliveredProofAvailable && visit.customerVisitReference,
+  );
   const nextVisit = propertyVisits[0];
-  const latestProof = propertyReports[0];
+  const latestProofVisit = proofVisits[proofVisits.length - 1];
 
   if (isLoadingVisits) {
     return (
@@ -440,20 +520,11 @@ export function YardOwnerPortalPanel({
 
               <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">
                 <p className="grover-eyebrow">Latest delivered proof</p>
-                {isProtectedProofWithheld ? (
-                  <WorkspaceStatusNotice
-                    className="mt-4"
-                    detail="Proof will appear here after its protected visit-to-report connection is available. Existing shared report links remain separate."
-                    title="Protected proof is not available in this workspace yet."
-                    tone="info"
-                  />
-                ) : isLoadingReportHistory ? (
-                  <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading delivered care…</p>
-                ) : latestProof ? (
+                {latestProofVisit ? (
                   <>
                     <h2 className="mt-2 font-display text-3xl font-black text-forest">Care completed</h2>
-                    <p className="mt-2 text-sm text-slate-600">Delivered {deliveredDateLabel(latestProof.deliveredAt)}</p>
-                    <a className="grover-button-secondary mt-5 w-full" href={latestProof.shareUrl}>Open delivered proof</a>
+                    <p className="mt-2 text-sm text-slate-600">{serviceDateLabel(latestProofVisit.scheduledDate)} · {latestProofVisit.serviceTitle}</p>
+                    <CustomerDeliveredProof visit={latestProofVisit} />
                   </>
                 ) : (
                   <p className="mt-4 text-sm leading-6 text-slate-600">Your first proof will appear after your provider completes and delivers a service report.</p>
@@ -482,6 +553,7 @@ export function YardOwnerPortalPanel({
                   <ServiceStatusDetail visit={visit} />
                   <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
                   <CustomerVisitQuestions visit={visit} />
+                  <CustomerDeliveredProof visit={visit} />
                 </article>
               )) : (
                 <WorkspaceStatusNotice detail="A confirmed visit will appear here when your provider schedules it." title="No upcoming visits." tone="neutral" />
@@ -495,17 +567,16 @@ export function YardOwnerPortalPanel({
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Proof</h1>
             <p className="mt-2 text-sm text-slate-600">Delivered care records for this property.</p>
-            {isProtectedProofWithheld ? <WorkspaceStatusNotice className="mt-5" detail="Proof remains separate from visit access until the exact delivered report and your current property access can be verified together." title="Protected proof is not available in this workspace yet." tone="info" /> : null}
-            {!isProtectedProofWithheld && hasReportHistoryError ? <WorkspaceStatusNotice className="mt-5" detail="Your protected proof history could not be refreshed. Try again later." title="Delivered proof is temporarily unavailable." tone="warning" /> : null}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {!isProtectedProofWithheld ? propertyReports.map((report) => (
-                <a className="rounded-2xl border border-slate-200 bg-slate-50 p-5 hover:border-emerald-500" href={report.shareUrl} key={report.reportId}>
+              {proofVisits.map((visit) => (
+                <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5" key={visit.id}>
                   <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Delivered proof</p>
-                  <h2 className="mt-2 font-display text-2xl font-black text-forest">Care completed</h2>
-                  <p className="mt-2 text-sm text-slate-600">Delivered {deliveredDateLabel(report.deliveredAt)}</p>
-                </a>
-              )) : null}
-              {!isProtectedProofWithheld && !isLoadingReportHistory && propertyReports.length === 0 && !hasReportHistoryError ? (
+                  <h2 className="mt-2 font-display text-2xl font-black text-forest">{visit.serviceTitle}</h2>
+                  <p className="mt-2 text-sm text-slate-600">{serviceDateLabel(visit.scheduledDate)}</p>
+                  <CustomerDeliveredProof visit={visit} />
+                </article>
+              ))}
+              {proofVisits.length === 0 ? (
                 <WorkspaceStatusNotice detail="Proof appears only after your provider delivers a completed service report." title="No delivered proof yet." tone="neutral" />
               ) : null}
             </div>

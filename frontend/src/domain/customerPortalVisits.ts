@@ -22,6 +22,7 @@ export interface CustomerPortalVisitSummary {
   preparationMessage: string;
   statusReason?: string;
   nextUpdateMessage: string;
+  deliveredProofAvailable: boolean;
 }
 
 export interface CustomerPortalPropertySummary {

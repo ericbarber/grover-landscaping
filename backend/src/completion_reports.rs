@@ -221,6 +221,29 @@ pub fn customer_completion_report_response(
 pub fn customer_completion_report_snapshot_response(
     snapshot: &Value,
 ) -> Option<CustomerCompletionReportResponse> {
+    let report_id = snapshot.get("report_id")?.as_str()?;
+    let job_id = snapshot.get("job_id")?.as_str()?;
+    let report_status = snapshot.get("report_status")?.as_str()?;
+    let checklist_progress = u32::try_from(snapshot.get("checklist_progress")?.as_u64()?).ok()?;
+    let before_photos = u32::try_from(snapshot.get("before_photos")?.as_u64()?).ok()?;
+    let after_photos = u32::try_from(snapshot.get("after_photos")?.as_u64()?).ok()?;
+    let issue_photos = u32::try_from(snapshot.get("issue_photos")?.as_u64()?).ok()?;
+    let metadata = snapshot.get("snapshot_metadata")?;
+    if report_id.trim().is_empty()
+        || job_id.trim().is_empty()
+        || report_status != "delivered"
+        || !snapshot.get("persisted")?.as_bool()?
+        || !snapshot.get("ready_for_customer")?.as_bool()?
+        || checklist_progress != 100
+        || before_photos == 0
+        || after_photos == 0
+        || metadata.get("snapshot_version")?.as_u64()?
+            != u64::from(COMPLETION_REPORT_SNAPSHOT_VERSION)
+        || metadata.get("report_id")?.as_str()? != report_id
+        || metadata.get("job_id")?.as_str()? != job_id
+    {
+        return None;
+    }
     let job = snapshot.get("job")?.as_object()?;
     let checklist = job
         .get("checklist")?
@@ -264,13 +287,24 @@ pub fn customer_completion_report_snapshot_response(
             })
         })
         .collect::<Option<Vec<_>>>()?;
+    let evidence = metadata.get("evidence")?;
+    if u32::try_from(evidence.get("before_photos")?.as_u64()?).ok()? != before_photos
+        || u32::try_from(evidence.get("after_photos")?.as_u64()?).ok()? != after_photos
+        || u32::try_from(evidence.get("issue_photos")?.as_u64()?).ok()? != issue_photos
+        || usize::try_from(evidence.get("total_photo_evidence")?.as_u64()?).ok()?
+            != photo_evidence.len()
+        || usize::try_from(evidence.get("completed_add_ons")?.as_u64()?).ok()?
+            != completed_recommendations.len()
+    {
+        return None;
+    }
 
     Some(CustomerCompletionReportResponse {
-        report_status: snapshot.get("report_status")?.as_str()?.to_string(),
-        checklist_progress: u32::try_from(snapshot.get("checklist_progress")?.as_u64()?).ok()?,
-        before_photos: u32::try_from(snapshot.get("before_photos")?.as_u64()?).ok()?,
-        after_photos: u32::try_from(snapshot.get("after_photos")?.as_u64()?).ok()?,
-        issue_photos: u32::try_from(snapshot.get("issue_photos")?.as_u64()?).ok()?,
+        report_status: report_status.to_string(),
+        checklist_progress,
+        before_photos,
+        after_photos,
+        issue_photos,
         service: CustomerCompletionService {
             customer_name: job.get("customer_name")?.as_str()?.to_string(),
             property_address: job.get("property_address")?.as_str()?.to_string(),
@@ -279,9 +313,8 @@ pub fn customer_completion_report_snapshot_response(
         },
         photo_evidence,
         completed_recommendations,
-        captured_at_epoch_seconds: snapshot
-            .get("snapshot_metadata")
-            .and_then(|metadata| metadata.get("captured_at_epoch_seconds"))
+        captured_at_epoch_seconds: metadata
+            .get("captured_at_epoch_seconds")
             .and_then(Value::as_u64),
     })
 }
@@ -804,12 +837,17 @@ mod tests {
 
     #[test]
     fn persisted_customer_report_snapshot_uses_the_same_safe_projection() {
-        let report = attach_delivered_snapshot_metadata(&build_completion_report(
+        let mut report = build_completion_report(
             job(4, 1, 1),
             account(),
-            vec![photo("photo_internal", "before")],
+            vec![
+                photo("photo_before", "before"),
+                photo("photo_after", "after"),
+            ],
             vec![add_on("add_on_internal", "completed")],
-        ));
+        );
+        report.persisted = true;
+        let report = prepare_delivered_completion_report_snapshot(&report);
         let snapshot = serde_json::to_value(report).unwrap();
 
         let projected = customer_completion_report_snapshot_response(&snapshot)
@@ -817,8 +855,12 @@ mod tests {
 
         assert_eq!(projected.service.customer_name, "Sample Customer");
         assert_eq!(projected.completed_recommendations.len(), 1);
-        assert_eq!(projected.photo_evidence.len(), 1);
+        assert_eq!(projected.photo_evidence.len(), 2);
         assert!(projected.captured_at_epoch_seconds.is_some());
+
+        let mut invalid_snapshot = snapshot;
+        invalid_snapshot["report_status"] = serde_json::Value::String("in_review".to_string());
+        assert!(customer_completion_report_snapshot_response(&invalid_snapshot).is_none());
     }
 
     #[test]

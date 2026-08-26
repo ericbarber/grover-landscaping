@@ -1,4 +1,6 @@
+use crate::completion_reports::customer_completion_report_snapshot_response;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::{PgPool, Row};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -324,7 +326,8 @@ async fn list_confirmed_visits(
                 COALESCE(
                     latest.next_update_message,
                     'Your provider will share the next customer-visible service update here.'
-                ) AS next_update_message
+                ) AS next_update_message,
+                proof.delivered_snapshot
             FROM authorized_properties property
             JOIN owner_provider_relationship_activations activation
               ON activation.organization_id = property.organization_id
@@ -390,6 +393,15 @@ async fn list_confirmed_visits(
                 ORDER BY event.event_version DESC
                 LIMIT 1
             ) reschedule ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT report.delivered_snapshot
+                FROM job_completion_reports report
+                WHERE report.job_id = release.service_job_id
+                  AND report.report_status = 'delivered'
+                  AND report.delivered_at IS NOT NULL
+                  AND report.share_token IS NOT NULL
+                LIMIT 1
+            ) proof ON TRUE
         ),
         portal_rows AS (
             SELECT
@@ -412,7 +424,8 @@ async fn list_confirmed_visits(
                 NULL::TEXT AS visit_status,
                 NULL::TEXT AS preparation_message,
                 NULL::TEXT AS customer_safe_reason,
-                NULL::TEXT AS next_update_message
+                NULL::TEXT AS next_update_message,
+                NULL::JSONB AS delivered_snapshot
             FROM authorized_properties property
             UNION ALL
             SELECT
@@ -435,7 +448,8 @@ async fn list_confirmed_visits(
                 visit.status AS visit_status,
                 visit.preparation_message,
                 visit.customer_safe_reason,
-                visit.next_update_message
+                visit.next_update_message,
+                visit.delivered_snapshot
             FROM confirmed_visits visit
         )
         SELECT
@@ -460,7 +474,8 @@ async fn list_confirmed_visits(
             portal_row.visit_status,
             portal_row.preparation_message,
             portal_row.customer_safe_reason,
-            portal_row.next_update_message
+            portal_row.next_update_message,
+            portal_row.delivered_snapshot
         FROM validation
         LEFT JOIN portal_rows portal_row ON TRUE
         ORDER BY
@@ -491,27 +506,35 @@ async fn list_confirmed_visits(
                 property_id: row.get("property_id"),
                 property_display_name: row.get("property_display_name"),
             }),
-            Some("visit") => visits.push(CustomerPortalVisitSummary {
-                organization_id: row.get("organization_id"),
-                account_id: row.get("account_id"),
-                property_id: row.get("property_id"),
-                customer_visit_reference: row.get("customer_visit_reference"),
-                service_date: row.get("service_date"),
-                window_start_epoch_seconds: row.get("window_start_epoch_seconds"),
-                window_end_epoch_seconds: row.get("window_end_epoch_seconds"),
-                time_zone: row.get("time_zone"),
-                original_service_date: row.get("original_service_date"),
-                original_window_start_epoch_seconds: row.get("original_window_start_epoch_seconds"),
-                original_window_end_epoch_seconds: row.get("original_window_end_epoch_seconds"),
-                original_time_zone: row.get("original_time_zone"),
-                service_title: row.get("service_title"),
-                service_scope: row.get("service_scope"),
-                status: row.get("visit_status"),
-                preparation_message: row.get("preparation_message"),
-                customer_safe_reason: row.get("customer_safe_reason"),
-                next_update_message: row.get("next_update_message"),
-                delivered_proof_available: false,
-            }),
+            Some("visit") => {
+                let delivered_proof_available = row
+                    .get::<Option<Value>, _>("delivered_snapshot")
+                    .as_ref()
+                    .and_then(customer_completion_report_snapshot_response)
+                    .is_some();
+                visits.push(CustomerPortalVisitSummary {
+                    organization_id: row.get("organization_id"),
+                    account_id: row.get("account_id"),
+                    property_id: row.get("property_id"),
+                    customer_visit_reference: row.get("customer_visit_reference"),
+                    service_date: row.get("service_date"),
+                    window_start_epoch_seconds: row.get("window_start_epoch_seconds"),
+                    window_end_epoch_seconds: row.get("window_end_epoch_seconds"),
+                    time_zone: row.get("time_zone"),
+                    original_service_date: row.get("original_service_date"),
+                    original_window_start_epoch_seconds: row
+                        .get("original_window_start_epoch_seconds"),
+                    original_window_end_epoch_seconds: row.get("original_window_end_epoch_seconds"),
+                    original_time_zone: row.get("original_time_zone"),
+                    service_title: row.get("service_title"),
+                    service_scope: row.get("service_scope"),
+                    status: row.get("visit_status"),
+                    preparation_message: row.get("preparation_message"),
+                    customer_safe_reason: row.get("customer_safe_reason"),
+                    next_update_message: row.get("next_update_message"),
+                    delivered_proof_available,
+                });
+            }
             _ => {}
         }
     }

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { configureApiAuthentication } from './authenticatedFetch';
-import { fetchCustomerPortalVisits } from './customerPortalClient';
+import { fetchCustomerPortalVisits, fetchCustomerVisitProof } from './customerPortalClient';
 
 afterEach(() => {
   configureApiAuthentication(false, async () => null);
@@ -39,6 +39,7 @@ describe('customer portal visit client', () => {
         scope: ['Mow and edge turf'], status: 'confirmed',
         preparationMessage: 'Unlock the side gate.',
         nextUpdateMessage: 'Your provider will share an update here.',
+        deliveredProofAvailable: false,
       }],
     });
   });
@@ -95,5 +96,32 @@ describe('customer portal visit client', () => {
       scheduledDate: '2026-08-30',
       arrivalWindow: '8:00 AM–10:00 AM',
     });
+  });
+
+  it('loads minimized delivered proof through the exact authenticated visit reference', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      report_status: 'delivered', checklist_progress: 100,
+      before_photos: 1, after_photos: 1, issue_photos: 0,
+      service: {
+        customer_name: 'Yard Owner', property_address: 'Protected property',
+        scheduled_date: '2026-08-30',
+        checklist: [{ label: 'Completed approved service', completed: true }],
+      },
+      photo_evidence: [],
+      completed_recommendations: [{
+        service_name: 'Approved hedge care',
+        service_description: 'Completed with this visit.', quantity: 1,
+      }],
+      captured_at_epoch_seconds: 1_800_000_000,
+    }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchCustomerVisitProof('customer_visit_1')).resolves.toMatchObject({
+      reportStatus: 'delivered',
+      checklistProgress: 100,
+      completedRecommendations: [{ serviceName: 'Approved hedge care', quantity: 1 }],
+    });
+    expect(String(fetchMock.mock.calls[0]?.[0]))
+      .toContain('/customer-portal/visits/customer_visit_1/proof');
   });
 });

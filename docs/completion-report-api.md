@@ -26,6 +26,7 @@ atomic transitions, lifecycle metadata, and status-history persistence:
 - `POST /completion-reports/{report_id}/deliver`
 - `GET /reports/{share_token}`
 - `GET /report-view/{share_token}`
+- `GET /customer-portal/visits/{customer_visit_reference}/proof`
 
 The remaining endpoints below are planned unless noted otherwise.
 
@@ -172,6 +173,18 @@ Implemented.
 
 Serves the customer-facing browser view for a delivered completion report. The browser view calls `GET /reports/{share_token}` for customer-safe report data.
 
+### GET `/customer-portal/visits/{customer_visit_reference}/proof`
+
+Implemented.
+
+Returns the same customer-safe immutable snapshot projection through an
+authenticated exact-visit boundary. It revalidates the caller's hybrid customer
+grant and active relationship, then requires the exact visit thread, immutable
+work release, service job, delivered report, and structurally valid snapshot.
+The response omits internal identifiers and the public share token. Missing or
+ended access, inconsistent provenance, corrupt snapshots, and unavailable
+persistence fail closed without reconstructing proof from live state.
+
 ### GET `/properties/{property_id}/completion-reports`
 
 Implemented.
@@ -190,7 +203,8 @@ Expected behavior:
 
 - Crew submission does not grant manager review access.
 - Manager review does not change property ownership, portfolio grouping, or crew assignment.
-- Customer portal reads must be property scoped.
+- Signed-in customer proof reads must use the hybrid account-owner or exact
+  property-delegate scope and revalidate the exact visit relationship.
 - Share links should only expose delivered reports.
 - Public report safety is enforced by server-side response projection; clients
   must not receive internal snapshot fields and merely hide them visually.
