@@ -201,20 +201,20 @@ async fn list_authorized_properties(
                 property.display_name AS property_display_name,
                 property.status AS property_status,
                 CASE
-                    WHEN BOOL_OR(grant.scope_type = 'customer_account')
+                    WHEN BOOL_OR(portal_grant.scope_type = 'customer_account')
                         THEN 'customer_account'
                     ELSE 'property'
                 END AS effective_scope_type
-            FROM valid_grants grant
+            FROM valid_grants portal_grant
             JOIN customer_properties property
-              ON property.organization_id = grant.organization_id
-             AND property.account_id = grant.account_id
+              ON property.organization_id = portal_grant.organization_id
+             AND property.account_id = portal_grant.account_id
              AND property.status <> 'archived'
              AND (
-                 (grant.scope_type = 'customer_account'
-                  AND grant.scope_id = property.account_id)
-                 OR (grant.scope_type = 'property'
-                     AND grant.scope_id = property.id)
+                 (portal_grant.scope_type = 'customer_account'
+                  AND portal_grant.scope_id = property.account_id)
+                 OR (portal_grant.scope_type = 'property'
+                     AND portal_grant.scope_id = property.id)
              )
             GROUP BY
                 property.organization_id,
@@ -277,16 +277,16 @@ async fn list_confirmed_visits(
                 property.account_id,
                 property.id AS property_id,
                 property.display_name AS property_display_name
-            FROM valid_grants grant
+            FROM valid_grants portal_grant
             JOIN customer_properties property
-              ON property.organization_id = grant.organization_id
-             AND property.account_id = grant.account_id
+              ON property.organization_id = portal_grant.organization_id
+             AND property.account_id = portal_grant.account_id
              AND property.status <> 'archived'
              AND (
-                 (grant.scope_type = 'customer_account'
-                  AND grant.scope_id = property.account_id)
-                 OR (grant.scope_type = 'property'
-                     AND grant.scope_id = property.id)
+                 (portal_grant.scope_type = 'customer_account'
+                  AND portal_grant.scope_id = property.account_id)
+                 OR (portal_grant.scope_type = 'property'
+                     AND portal_grant.scope_id = property.id)
              )
         ),
         confirmed_visits AS (

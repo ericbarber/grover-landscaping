@@ -140,6 +140,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   versioned publication from the exact visit/release/job/stop/amendment/project-
   bid chain, hybrid customer reads and decisions, actor-scoped replay, revision
   supersession, bounded approval meaning, and legacy account-bid containment
+- D-062 constrained recommendation persistence with composite exact-chain
+  provenance, immutable hash-addressed sequential publications, supersession
+  and lifecycle events, version-bound decisions/messages, exact reply linkage,
+  and database-enforced transition and rewrite guards
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

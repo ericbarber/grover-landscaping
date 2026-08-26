@@ -507,3 +507,36 @@ stale writes, and one question accepts at most one provider response. The
 customer-safe projection omits actors and release, activation, job,
 organization, account, property, membership, notification, and operational
 identifiers.
+
+## customer_visit_recommendation_series and publications
+
+Decision D-062 adds one random non-bearer recommendation series for an exact
+customer visit, immutable service release/job, route stop, and `add_service`
+amendment. Composite foreign keys retain organization/account/property/job
+provenance through the visit and release while the publication insert also
+requires its source project bid to be sent by a crew in the exact provider
+organization.
+
+`customer_visit_recommendation_publications` stores immutable, hash-addressed
+customer snapshots with a sequential proposal version, exact supersession,
+provider actor/idempotency identity, and bounded expiration. A publication and
+`published` event must exist before the series can advance exactly one version
+to `pending`. Later versions are permitted only from pending or revision-
+requested state and require an immutable supersession event for the prior
+version. Approved, declined, expired, withdrawn, scheduled, and completed states
+advance only through allowlisted event-backed transitions; customer decision
+states additionally require the exact immutable decision row.
+
+`customer_visit_recommendation_decisions` binds one approve, decline, or
+revision request to the current unexpired publication. Approval requires a
+versioned affirmation, revision requests require customer-safe context, and
+actor-scoped idempotency keys preserve exact replay identity.
+
+`customer_visit_recommendation_messages` stores sequential immutable customer
+questions and exact provider replies for the current pending version. One
+question receives at most one response, and the reply must match the same
+series, publication, and proposal version. `customer_visit_recommendation_events`
+retains immutable publication, supersession, decision, withdrawal, expiration,
+scheduling, and completion history. None of these tables grants customer API
+authority by itself; D-058 hybrid authorization remains required on every
+signed-in operation.

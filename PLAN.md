@@ -211,6 +211,13 @@ Current state:
   scoped replay and affirmation are required; approval authorizes only the exact
   displayed one-time scope/total and does not schedule, complete, recur, invoice,
   or charge. Yard Owner and middleware now withhold the legacy account-bid route.
+- Phase 5D1 now delivers the D-062 persistence foundation. Composite foreign
+  keys preserve the exact visit/release/job/stop/amendment/bid provenance;
+  immutable hash-addressed publications advance sequential versions only with
+  publication and supersession events; version-bound questions accept one exact
+  response; and approval, decline, or revision requests require an unexpired
+  current publication, actor retry identity, event-backed lifecycle, and the
+  required affirmation or customer context. No customer API authority is added.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -326,10 +333,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-061 is delivered. D-062's active-recommendation source and decision
-  audit plus immediate legacy account-route containment are delivered. Add the
-  constrained immutable recommendation publication/version/decision foundation
-  before exposing any signed-in recommendation or approval action.
+- Decision D-061 is delivered. D-062's audit, immediate legacy account-route
+  containment, and constrained immutable publication/version/decision
+  persistence are delivered. Atomically bridge exact provider bid send/revision
+  into that publication boundary before adding signed-in customer APIs.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

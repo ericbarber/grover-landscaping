@@ -7,10 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: implement D-062's constrained immutable recommendation
-  publication/version/decision persistence. Its source, hybrid authorization,
-  expiration/revision, decision-semantics audit and immediate legacy account-bid
-  containment are delivered. D-061 proof is delivered end to end.
+- Active slice: atomically bridge exact provider bid send/revision into D-062's
+  immutable customer publication. Its source/hybrid/decision audit, legacy
+  account-bid containment, and constrained publication/version/decision/message
+  persistence are delivered. D-061 proof is delivered end to end.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -159,8 +159,9 @@ aligned overview composition.
    immediate containment and atomic delivery/snapshot storage are delivered.
    The minimized exact-visit authenticated proof read and responsive Yard Owner
    adoption are delivered. D-062's active-recommendation audit and legacy-route
-   containment are delivered; build its immutable publication/version/decision
-   persistence next while retaining the separate concern boundary.
+   containment and immutable publication/version/decision persistence are
+   delivered; build the exact provider publication bridge next while retaining
+   the separate concern boundary.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -237,6 +238,14 @@ route test, and both live owner/provider PostgreSQL integration tests. The
 fixture proves pending, exact delivered, cross-owner, revoked, inconsistent,
 ended, minimized response, and proof-availability behavior. Its 19 focused
 frontend tests across four files, TypeScript check, and production build pass.
+The D-062 persistence slice applies both new migrations to live PostgreSQL and
+passes the full owner/provider persistence branch. Its fixture proves exact
+visit/release/job/stop/amendment/bid provenance, immutable customer snapshots,
+event-backed publication and approval, sequential exact question/response,
+affirmed current-version decision, rewrite rejection, and rejection of a post-
+approval revision. The same run exposed and corrected a reserved-keyword alias
+in the existing hybrid property resolver; the cross-owner expectations now
+distinguish no portal grant from an authorized-but-wrong exact reference.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

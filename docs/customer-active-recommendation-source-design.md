@@ -2,8 +2,9 @@
 
 Status: Source, authorization, versioning, and decision audit completed on
 2026-08-26. Decision D-062 adopts an immutable exact-visit recommendation
-publication around the existing project-bid authoring source. Persistence and
-authenticated customer APIs remain next.
+publication around the existing project-bid authoring source. The constrained
+persistence foundation is delivered; the atomic provider publication bridge is
+next, followed by authenticated customer APIs.
 
 ## Audit outcome
 
@@ -113,11 +114,10 @@ API are delivered.
 ## Delivery order
 
 1. Add constrained publication-series, immutable-version, decision, message,
-   and lifecycle persistence plus database guards.
+   and lifecycle persistence plus database guards. **Delivered.**
 2. Publish only exact-provenance recommendation versions atomically from the
-   provider send/revision workflow.
+   provider send/revision workflow. **Next.**
 3. Add minimized hybrid-authorized exact-visit list/detail and actor-scoped
    decision APIs with replay/conflict tests.
 4. Adopt pending/history/decision/recovery states in Yard Owner without public
    tokens, provider-private data, or billing claims.
-

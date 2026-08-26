@@ -78,6 +78,64 @@ async fn reset_provider_invitation_test_owners(pool: &PgPool, owner_user_ids: &[
     .fetch_all(pool)
     .await
     .expect("test service-release job identifiers should load");
+    for table in [
+        "customer_visit_recommendation_events",
+        "customer_visit_recommendation_messages",
+        "customer_visit_recommendation_decisions",
+        "customer_visit_recommendation_publications",
+    ] {
+        let delete_query = format!(
+            "DELETE FROM {table}
+             WHERE customer_recommendation_reference IN (
+                 SELECT recommendation.customer_recommendation_reference
+                 FROM customer_visit_recommendation_series recommendation
+                 JOIN owner_provider_service_releases release
+                   ON release.id = recommendation.release_id
+                 JOIN owner_provider_relationship_activations activation
+                   ON activation.id = release.activation_id
+                 WHERE activation.owner_user_id = ANY($1)
+             )"
+        );
+        sqlx::query(&delete_query)
+            .bind(owner_user_ids)
+            .execute(pool)
+            .await
+            .expect("test customer recommendation records should reset");
+    }
+    sqlx::query(
+        "DELETE FROM customer_visit_recommendation_series
+         WHERE release_id IN (
+             SELECT release.id
+             FROM owner_provider_service_releases release
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = release.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test customer recommendation series should reset");
+    sqlx::query(
+        "DELETE FROM day_plans
+         WHERE id IN (
+             SELECT stop.day_plan_id
+             FROM day_plan_stops stop
+             JOIN owner_provider_service_releases release
+               ON release.service_job_id = stop.job_id
+             JOIN owner_provider_relationship_activations activation
+               ON activation.id = release.activation_id
+             WHERE activation.owner_user_id = ANY($1)
+         )",
+    )
+    .bind(owner_user_ids)
+    .execute(pool)
+    .await
+    .expect("test recommendation day plans should reset");
+    sqlx::query("DELETE FROM crews WHERE id = 'crew_customer_recommendation_fixture'")
+        .execute(pool)
+        .await
+        .expect("test recommendation crew should reset");
     sqlx::query(
         "DELETE FROM customer_service_visit_messages
          WHERE customer_visit_reference IN (
@@ -3518,10 +3576,12 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     .await
     .expect("a sibling customer property should insert");
     let portal_access = CustomerPortalAccessRepository::from_pool(pool.clone());
-    let CustomerPortalPropertyAccessResult::Loaded(account_properties) =
-        portal_access.list_authorized_properties(owner_a).await
+    let account_property_result = portal_access.list_authorized_properties(owner_a).await;
+    let CustomerPortalPropertyAccessResult::Loaded(account_properties) = account_property_result
     else {
-        panic!("the verified account owner should resolve authorized properties");
+        panic!(
+            "the verified account owner should resolve authorized properties: {account_property_result:?}"
+        );
     };
     assert!(account_properties
         .iter()
@@ -4083,12 +4143,16 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         Some(customer_visit_reference.as_str())
     );
     let visit_communication = CustomerVisitCommunicationRepository::from_pool(pool.clone());
-    assert!(matches!(
-        visit_communication
-            .get_customer_thread(owner_b, &customer_visit_reference)
-            .await,
-        CustomerVisitThreadReadResult::NotFound
-    ));
+    let cross_owner_thread = visit_communication
+        .get_customer_thread(owner_b, &customer_visit_reference)
+        .await;
+    assert!(
+        matches!(
+            cross_owner_thread,
+            CustomerVisitThreadReadResult::NotAuthorized
+        ),
+        "an owner without a portal grant should not resolve the exact visit: {cross_owner_thread:?}"
+    );
     assert!(matches!(
         visit_communication
             .list_provider_threads("recipient-user-without-membership")
@@ -4135,7 +4199,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         visit_communication
             .get_customer_proof(owner_b, &customer_visit_reference)
             .await,
-        CustomerVisitProofReadResult::NotFound
+        CustomerVisitProofReadResult::NotAuthorized
     ));
     let delivered_report_id = format!("report_{}", service_release.service_job_id);
     let delivered_snapshot = serde_json::json!({
@@ -4220,6 +4284,292 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         panic!("the customer visit projection should reload after proof delivery");
     };
     assert!(proof_available_visits.visits[0].delivered_proof_available);
+
+    let recommendation_reference = "customer_recommendation_11111111111111111111111111111111";
+    let recommendation_publication_id =
+        "customer_recommendation_publication_11111111111111111111111111111111";
+    let recommendation_day_plan_id = "day_plan_customer_recommendation_fixture";
+    let recommendation_stop_id = "stop_customer_recommendation_fixture";
+    let recommendation_amendment_id = "amendment_customer_recommendation_fixture";
+    let recommendation_bid_id = "bid_customer_recommendation_fixture";
+    sqlx::query(
+        "INSERT INTO crews (id, name, organization_id)
+         VALUES ('crew_customer_recommendation_fixture', 'Recommendation fixture', $1)
+         ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id",
+    )
+    .bind(&activation.organization_id)
+    .execute(&pool)
+    .await
+    .expect("the recommendation fixture crew should persist");
+    sqlx::query(
+        "INSERT INTO day_plans (
+             id, crew_id, service_date, status, route_status
+         ) VALUES ($1, 'crew_customer_recommendation_fixture', '2026-08-30',
+                   'published', 'manual')",
+    )
+    .bind(recommendation_day_plan_id)
+    .execute(&pool)
+    .await
+    .expect("the recommendation fixture day plan should persist");
+    sqlx::query(
+        "INSERT INTO day_plan_stops (
+             id, day_plan_id, job_id, stop_order, stop_status
+         ) VALUES ($1, $2, $3, 1, 'pending')",
+    )
+    .bind(recommendation_stop_id)
+    .bind(recommendation_day_plan_id)
+    .bind(&service_release.service_job_id)
+    .execute(&pool)
+    .await
+    .expect("the exact released job should receive a recommendation fixture stop");
+    sqlx::query(
+        "INSERT INTO day_plan_amendment_requests (
+             id, day_plan_id, requested_by_crew_id, amendment_type, status,
+             stop_id, service_id, service_name, service_description,
+             default_duration_minutes, default_price_cents,
+             requires_manager_approval, requires_bid, note
+         ) VALUES (
+             $1, $2, 'crew_customer_recommendation_fixture', 'add_service',
+             'bid_review', $3, 'service_fixture_hedge', 'Hedge shaping',
+             'Shape the front hedge and remove clippings.', 45, 12500,
+             TRUE, TRUE, 'Provider-private fixture note'
+         )",
+    )
+    .bind(recommendation_amendment_id)
+    .bind(recommendation_day_plan_id)
+    .bind(recommendation_stop_id)
+    .execute(&pool)
+    .await
+    .expect("the exact stop should receive an add-service amendment");
+    sqlx::query(
+        "INSERT INTO project_bids (
+             id, day_plan_id, customer_account_id, source_amendment_id,
+             status, customer_message, share_token, sent_at,
+             share_expires_at
+         ) VALUES (
+             $1, $2, $3, $4, 'sent',
+             'We recommend shaping the hedge found during this visit.',
+             'recommendation-fixture-share-token', NOW(), NOW() + INTERVAL '7 days'
+         )",
+    )
+    .bind(recommendation_bid_id)
+    .bind(recommendation_day_plan_id)
+    .bind(&activation.customer_account_id)
+    .bind(recommendation_amendment_id)
+    .execute(&pool)
+    .await
+    .expect("the exact amendment should receive a sent project bid");
+    sqlx::query(
+        "INSERT INTO project_bid_line_items (
+             id, project_bid_id, service_id, service_name,
+             service_description, quantity, unit_price_cents, note, sort_order
+         ) VALUES (
+             'bid_customer_recommendation_fixture_line_1', $1,
+             'service_fixture_hedge', 'Hedge shaping',
+             'Shape the front hedge and remove clippings.', 1, 12500,
+             'Provider-private fixture note', 1
+         )",
+    )
+    .bind(recommendation_bid_id)
+    .execute(&pool)
+    .await
+    .expect("the sent project bid should retain its provider-authored line item");
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_series (
+             customer_recommendation_reference, customer_visit_reference,
+             release_id, service_job_id, organization_id, customer_account_id,
+             customer_property_id, day_plan_id, day_plan_stop_id,
+             source_amendment_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+    )
+    .bind(recommendation_reference)
+    .bind(&customer_visit_reference)
+    .bind(&service_release.release_id)
+    .bind(&service_release.service_job_id)
+    .bind(&activation.organization_id)
+    .bind(&activation.customer_account_id)
+    .bind(&activation.customer_property_id)
+    .bind(recommendation_day_plan_id)
+    .bind(recommendation_stop_id)
+    .bind(recommendation_amendment_id)
+    .execute(&pool)
+    .await
+    .expect("the exact visit chain should create one draft recommendation series");
+    let recommendation_snapshot = serde_json::json!({
+        "snapshot_version": 1,
+        "proposal_version": 1,
+        "customer_safe_reason": "The front hedge is overgrown.",
+        "currency_code": "USD",
+        "line_items": [{
+            "service_name": "Hedge shaping",
+            "service_description": "Shape the front hedge and remove clippings.",
+            "quantity": 1,
+            "unit_price_cents": 12500
+        }],
+        "total_cents": 12500
+    });
+    let recommendation_snapshot_sha256 = format!(
+        "{:x}",
+        Sha256::digest(recommendation_snapshot.to_string().as_bytes())
+    );
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_publications (
+             id, customer_recommendation_reference, organization_id,
+             customer_account_id, customer_property_id, service_job_id,
+             day_plan_id, day_plan_stop_id, source_amendment_id,
+             source_project_bid_id, proposal_version, customer_snapshot,
+             snapshot_sha256, published_by_user_id, provider_idempotency_key,
+             expires_at
+         ) VALUES (
+             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1, $11, $12,
+             'recipient-user-1', 'recommendation-publish-fixture-001',
+             NOW() + INTERVAL '7 days'
+         )",
+    )
+    .bind(recommendation_publication_id)
+    .bind(recommendation_reference)
+    .bind(&activation.organization_id)
+    .bind(&activation.customer_account_id)
+    .bind(&activation.customer_property_id)
+    .bind(&service_release.service_job_id)
+    .bind(recommendation_day_plan_id)
+    .bind(recommendation_stop_id)
+    .bind(recommendation_amendment_id)
+    .bind(recommendation_bid_id)
+    .bind(&recommendation_snapshot)
+    .bind(&recommendation_snapshot_sha256)
+    .execute(&pool)
+    .await
+    .expect("the exact sent bid should create an immutable customer publication");
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_events (
+             id, customer_recommendation_reference, publication_id,
+             proposal_version, actor_user_id, event_kind, idempotency_key
+         ) VALUES (
+             'customer_recommendation_event_11111111111111111111111111111111',
+             $1, $2, 1, 'recipient-user-1', 'published',
+             'recommendation-published-event-001'
+         )",
+    )
+    .bind(recommendation_reference)
+    .bind(recommendation_publication_id)
+    .execute(&pool)
+    .await
+    .expect("recommendation publication should retain an immutable lifecycle event");
+    sqlx::query(
+        "UPDATE customer_visit_recommendation_series
+         SET current_version = 1, lifecycle_status = 'pending', updated_at = NOW()
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(recommendation_reference)
+    .execute(&pool)
+    .await
+    .expect("the event-backed publication should advance the series exactly once");
+    assert!(sqlx::query(
+        "UPDATE customer_visit_recommendation_publications
+         SET customer_snapshot = '{}'::JSONB WHERE id = $1",
+    )
+    .bind(recommendation_publication_id)
+    .execute(&pool)
+    .await
+    .is_err());
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_messages (
+             id, customer_recommendation_reference, publication_id,
+             proposal_version, message_version, message_kind, author_role,
+             author_user_id, customer_safe_body, idempotency_key
+         ) VALUES (
+             'customer_recommendation_message_11111111111111111111111111111111',
+             $1, $2, 1, 1, 'customer_question', 'customer', $3,
+             'Does this include clipping removal?',
+             'recommendation-question-fixture-001'
+         )",
+    )
+    .bind(recommendation_reference)
+    .bind(recommendation_publication_id)
+    .bind(owner_a)
+    .execute(&pool)
+    .await
+    .expect("the current recommendation version should accept a customer question");
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_messages (
+             id, customer_recommendation_reference, publication_id,
+             proposal_version, message_version, message_kind, author_role,
+             author_user_id, customer_safe_body, in_reply_to_message_id,
+             idempotency_key
+         ) VALUES (
+             'customer_recommendation_message_22222222222222222222222222222222',
+             $1, $2, 1, 2, 'provider_response', 'provider',
+             'recipient-user-1', 'Yes, clipping removal is included.',
+             'customer_recommendation_message_11111111111111111111111111111111',
+             'recommendation-response-fixture-001'
+         )",
+    )
+    .bind(recommendation_reference)
+    .bind(recommendation_publication_id)
+    .execute(&pool)
+    .await
+    .expect("the provider response should target the exact customer question");
+    assert!(sqlx::query(
+        "UPDATE customer_visit_recommendation_messages
+         SET customer_safe_body = 'changed' WHERE id =
+             'customer_recommendation_message_11111111111111111111111111111111'",
+    )
+    .execute(&pool)
+    .await
+    .is_err());
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_decisions (
+             id, customer_recommendation_reference, publication_id,
+             proposal_version, actor_user_id, action,
+             affirmation_text_version, idempotency_key
+         ) VALUES (
+             'customer_recommendation_decision_11111111111111111111111111111111',
+             $1, $2, 1, $3, 'approve',
+             'customer_recommendation_approval_v1',
+             'recommendation-decision-fixture-001'
+         )",
+    )
+    .bind(recommendation_reference)
+    .bind(recommendation_publication_id)
+    .bind(owner_a)
+    .execute(&pool)
+    .await
+    .expect("the exact current version should accept one affirmed decision");
+    sqlx::query(
+        "INSERT INTO customer_visit_recommendation_events (
+             id, customer_recommendation_reference, publication_id,
+             proposal_version, actor_user_id, event_kind, idempotency_key
+         ) VALUES (
+             'customer_recommendation_event_22222222222222222222222222222222',
+             $1, $2, 1, $3, 'approved', 'recommendation-approved-event-001'
+         )",
+    )
+    .bind(recommendation_reference)
+    .bind(recommendation_publication_id)
+    .bind(owner_a)
+    .execute(&pool)
+    .await
+    .expect("the customer decision should retain an immutable approval event");
+    sqlx::query(
+        "UPDATE customer_visit_recommendation_series
+         SET lifecycle_status = 'approved', updated_at = NOW()
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(recommendation_reference)
+    .execute(&pool)
+    .await
+    .expect("the decision and event should advance the exact series lifecycle");
+    assert!(sqlx::query(
+        "UPDATE customer_visit_recommendation_series
+         SET current_version = 2, lifecycle_status = 'pending', updated_at = NOW()
+         WHERE customer_recommendation_reference = $1",
+    )
+    .bind(recommendation_reference)
+    .execute(&pool)
+    .await
+    .is_err());
+
     let question_request = CreateCustomerVisitQuestionRequest {
         expected_thread_version: 0,
         topic: "access".to_string(),
@@ -4796,7 +5146,7 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
     };
     let completed_customer_visit = &completed_customer_visits.visits[0];
     assert_eq!(completed_customer_visit.status, "complete_proof_pending");
-    assert!(!completed_customer_visit.delivered_proof_available);
+    assert!(completed_customer_visit.delivered_proof_available);
     let completed_customer_json = serde_json::to_string(completed_customer_visit)
         .expect("completed customer visit should serialize");
     for private_value in [&service_release.release_id, &service_release.service_job_id] {

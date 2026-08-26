@@ -5,8 +5,9 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is implementing D-062's constrained
-immutable recommendation publication/version/decision foundation. The audit
+The current production-adoption priority is atomically bridging exact provider
+bid send/revision into D-062's immutable customer publication. The constrained
+publication/version/decision persistence foundation is delivered. The audit
 accepts project bids only as provider authoring input behind the exact visit,
 release, job, stop, amendment, and versioned publication chain; signed-in reads
 and decisions repeat hybrid authorization. Yard Owner and middleware now
@@ -513,8 +514,8 @@ schedule, remaining work, or a completed day.
      complete, and atomic immutable snapshot delivery is delivered. The exact-
      visit authenticated proof read and Yard Owner adoption are delivered.
      D-062's active-recommendation audit and immediate legacy-route containment
-     are complete; its immutable publication/version/decision persistence is the
-     next continuity slice.
+     and immutable publication/version/decision persistence are complete; the
+     exact provider publication bridge is the next continuity slice.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.
