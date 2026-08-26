@@ -139,7 +139,7 @@ Current state:
 - Phase 5B0 now audits contextual questions and concerns. Assessment/proposal
   messages, customer-status events, notification outbox, operational exceptions,
   report review notes, and project-bid messages cannot safely serve as customer
-  visit conversation. Proposed decision D-060 recommends a question-first,
+  visit conversation. Accepted decision D-060 establishes a question-first,
   immutable customer/provider thread with a random non-bearer visit reference,
   hybrid authorization, and an owner/manager provider queue; concern workflow,
   attachments, notifications, and response-time commitments remain separate.
@@ -258,8 +258,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Product/operations/security approval of D-060 is required before adding the
-  customer-safe visit reference, thread persistence, provider queue, APIs, or UI.
+- Decision D-060 is accepted. Persist the customer-safe visit reference and
+  immutable thread first, then expose the provider queue and customer/provider
+  APIs before adopting the question experience in Yard Owner.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

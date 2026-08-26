@@ -1,8 +1,7 @@
 # Customer Contextual Communication Source
 
-Status: Source audit complete and decision D-060 proposed on 2026-08-26.
-Persistence and customer/provider writes remain blocked pending product,
-operations, and security approval.
+Status: Decision D-060 accepted on 2026-08-26. The question-first persistence,
+provider queue, API, and customer experience may proceed in bounded slices.
 
 ## Source-audit outcome
 
@@ -27,7 +26,7 @@ Reusing any of these would mix lifecycle authority, make customer visibility
 depend on an internal tool, or imply receipt/response behavior the source does
 not actually provide.
 
-## Recommended decision D-060
+## Accepted decision D-060
 
 Deliver contextual visit questions first through a dedicated customer-service
 conversation. Keep delivered-service concerns as a later, separate evented
@@ -111,9 +110,9 @@ separate. Before implementation, product/operations/security must approve:
 - whether a concern may create a linked provider operational exception without
   exposing that internal record or treating it as the customer source.
 
-## Approval needed
+## Accepted delivery boundary
 
-Approve or revise these three choices before migration work begins:
+Product, operations, and security accepted these three choices on 2026-08-26:
 
 1. question-first delivery, with concern persistence deferred;
 2. a dedicated random non-bearer customer visit reference rather than exposing
