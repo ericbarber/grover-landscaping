@@ -122,6 +122,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   context queue, exact-thread review, one-response-per-question targeting,
   retry-key retention, authoritative recovery, and no authority exposed to
   support, billing, or property-manager personas
+- D-061 delivered-proof source and authorization boundary using the exact
+  visit/release/job/report chain, with Yard Owner legacy property-report reads
+  contained until atomic immutable snapshots and hybrid-authorized proof reads
+  are delivered
 - Navigable four-step Yard Owner acquisition flow with reopenable completed
   steps, editable profile and yard brief state, and separate Property, Yard
   brief, and Connect care screens

@@ -172,11 +172,12 @@ Serves the customer-facing browser view for a delivered completion report. The b
 
 Implemented.
 
-Returns delivered reports for a property when the requester has customer portal or manager access.
+Returns delivered reports for existing provider/property-manager workflows. It
+is not an authorized Yard Owner source under D-061.
 
 Expected behavior:
 
-- keep customer reads scoped to properties they own or manage,
+- do not use this organization-membership route for signed-in Yard Owner proof,
 - allow service-company managers to review reports for their organization,
 - return only delivered reports for customer portal views,
 - include stable share links only when delivery is complete.

@@ -7,9 +7,10 @@
   pin a commit that will become stale.
 - Canonical delivery status: [`../PLAN.md`](../PLAN.md)
 - Design-to-production queue: [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md)
-- Active slice: audit the exact persisted source, authorization, and minimized
-  projection for the next delivered-proof/recommendation continuity extension.
-  D-060 customer questions and provider owner/manager responses are delivered.
+- Active slice: implement D-061's atomic completion-report delivery plus
+  immutable snapshot boundary, then add the minimized hybrid-authorized exact-
+  visit proof read. The source audit and Yard Owner legacy-route containment are
+  delivered.
   Curated-opportunity
   availability/governance and governed provider credentials remain gated.
 - Preserve unrelated local changes in `.gitignore`,
@@ -152,9 +153,10 @@ aligned overview composition.
    customer projection, and all six Yard Owner service-day modes are delivered.
    Decision D-060's visit reference, immutable hybrid-authorized persistence,
    provider queue, customer/provider APIs, Yard Owner question experience, and
-   responsive owner/manager response experience are delivered. Audit delivered
-   proof/recommendation continuity sources next while retaining the separate
-   concern boundary.
+   responsive owner/manager response experience are delivered. D-061's proof
+   source audit rejects the legacy property-report route for Yard Owner and its
+   immediate containment is delivered. Make delivery/snapshot storage atomic
+   next while retaining the separate recommendation-action and concern boundaries.
 2. Yard Crew service categories and customer communication languages are now
    persisted and surfaced as provider-supplied preparation facts. Do not add
    provider availability/pause until the curated-opportunity projection and
@@ -215,6 +217,11 @@ and response client, owner/manager-only manager navigation, retry-stable
 authoritative recovery, and focused queue/targeting/access coverage. Its 11
 focused tests across three files and TypeScript check pass with the same pinned
 runtime, and the production build passes.
+The D-061 source-audit containment slice stops Yard Owner from calling the
+legacy property-report list, adds an explicit protected-proof state, and leaves
+provider/property-manager consumers unchanged. Its 35 focused frontend tests
+across the Yard Owner panel and shared API client, TypeScript check, and
+production build pass with the pinned runtime.
 The completion-proof continuity slice additionally passes 32 targeted backend
 tests, 24 API-client tests, the production build, and eight mobile/desktop
 Chromium shared-proof/proposal journeys. Re-run the checks

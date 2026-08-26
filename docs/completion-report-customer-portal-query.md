@@ -1,8 +1,9 @@
 # Completion Report Customer Portal Query
 
-This note describes the query shape implemented customer-portal report routes
-follow and the authorization decision still required for persisted Yard Owner
-visit reads.
+This legacy note describes the property-report query. Decision D-061 rejects it
+as a Yard Owner authorization source; it remains available to its existing
+provider/property-manager consumers while an exact hybrid-authorized visit-proof
+read is implemented.
 
 ## Query starting point
 
@@ -41,6 +42,6 @@ The customer query should not return draft, submitted, in-review, or change-requ
 
 The customer query should not expose manager review notes, quality-check failure details, internal status history, or manager queue fields.
 
-Persisted signed-in Yard Owner visit/history reads must not expand beyond the
-current authorization model until customer-account inheritance for owners versus
-per-property grants is explicitly decided.
+Persisted signed-in Yard Owner proof must use the D-058 hybrid resolver and the
+exact D-059 release/job relation. See
+[`customer-delivered-proof-continuity-source-design.md`](customer-delivered-proof-continuity-source-design.md).

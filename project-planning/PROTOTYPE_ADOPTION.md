@@ -53,8 +53,9 @@ user value, and dependency safety:
    bounded customer-safe service-day extension. Decision D-060's dedicated
    hybrid-authorized visit-question persistence, minimized APIs, provider queue,
    Yard Owner question experience, and provider owner/manager response
-   experience are delivered. Proof/recommendation source auditing is next while
-   concern recovery remains separately gated.
+   experience are delivered. D-061's proof/recommendation source audit and
+   immediate legacy-route containment are delivered; atomic immutable report
+   snapshot delivery is next while concern recovery remains separately gated.
 6. Yard Crew safe operating preparation is adopted through service categories
    and customer communication languages. Provider availability/pause,
    credential checking, curated discovery, and alerts await their explicit
@@ -69,8 +70,9 @@ through explicit mobilization/work-release persistence, provider APIs, minimized
 customer projection, and Yard Owner presentation. The contextual question/
 concern audit resulted in accepted decision D-060; dedicated visit-question
 persistence, APIs, Yard Owner adoption, and provider owner/manager response
-adoption are delivered. Delivered-proof/recommendation source auditing is next
-while concern recovery remains separately gated. Repository
+adoption are delivered. D-061's proof/recommendation source audit and immediate
+containment are delivered; atomic immutable snapshot delivery is next while
+concern recovery remains separately gated. Repository
 maintenance and regression remain ongoing.
 
 Phases may be split into smaller implementation commits. A phase is not complete

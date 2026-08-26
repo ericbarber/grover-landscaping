@@ -5,9 +5,11 @@ plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 ## Active UX Priority
 
-The current production-adoption priority is auditing the source, authorization,
-and minimized projection for the next delivered-proof/recommendation continuity
-extension. Accepted decision D-060 is now adopted end to end: Yard Owner Home
+The current production-adoption priority is implementing accepted decision
+D-061's atomic delivered-report snapshot boundary before adding its minimized
+hybrid-authorized exact-visit proof read. The source audit rejected the legacy
+organization-membership property-report list for Yard Owner and the browser now
+withholds it explicitly. Accepted decision D-060 is adopted end to end: Yard Owner Home
 and Visits use the random non-bearer reference to load and ask through the
 hybrid-authorized immutable-message thread, while company owners/managers use
 the unanswered-first queue to respond to the exact question. Concerns,
@@ -504,8 +506,8 @@ schedule, remaining work, or a completed day.
    - Yard Owner Home/Visits now use the explicit minimized persisted read,
      all bounded customer-safe service-day states, and the dedicated D-060
      visit-question thread. The provider owner/manager response queue is also
-     adopted; audit delivered proof/recommendation sources before the next
-     customer continuity slice.
+     adopted. D-061's delivered-proof source audit and immediate containment are
+     complete; atomic immutable snapshot delivery is the next continuity slice.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.

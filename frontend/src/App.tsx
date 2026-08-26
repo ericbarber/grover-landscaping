@@ -1747,12 +1747,19 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const visibleProperties = activePersona.id === 'yard-owner'
-      ? customerPortalProperties
-      : filterPropertiesForCustomerPortal(
-        customerPortalPreviewProperties,
-        customerPortalPreviewCustomer,
-      );
+    if (activePersona.id === 'yard-owner') {
+      setPropertyCompletionReports({});
+      setIsLoadingPropertyCompletionReports(false);
+      setHasPropertyCompletionReportHistoryError(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const visibleProperties = filterPropertiesForCustomerPortal(
+      customerPortalPreviewProperties,
+      customerPortalPreviewCustomer,
+    );
     setPropertyCompletionReports({});
     setIsLoadingPropertyCompletionReports(true);
 
@@ -3366,6 +3373,7 @@ export function App() {
                 completionReportsByProperty={propertyCompletionReports}
                 isLoadingReportHistory={isLoadingPropertyCompletionReports}
                 hasReportHistoryError={hasPropertyCompletionReportHistoryError}
+                isProtectedProofWithheld
               />
             )}
           </div>

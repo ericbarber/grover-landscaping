@@ -267,6 +267,7 @@ export function YardOwnerPortalPanel({
   completionReportsByProperty,
   isLoadingReportHistory,
   hasReportHistoryError,
+  isProtectedProofWithheld = false,
 }: {
   customerDisplayName: string;
   properties: CustomerPortalPropertySummary[];
@@ -277,6 +278,7 @@ export function YardOwnerPortalPanel({
   completionReportsByProperty: Record<string, PropertyCompletionReportSummary[]>;
   isLoadingReportHistory: boolean;
   hasReportHistoryError: boolean;
+  isProtectedProofWithheld?: boolean;
 }) {
   const visibleProperties = properties;
   const [destination, setDestination] = useState<PortalDestination>('home');
@@ -438,7 +440,14 @@ export function YardOwnerPortalPanel({
 
               <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">
                 <p className="grover-eyebrow">Latest delivered proof</p>
-                {isLoadingReportHistory ? (
+                {isProtectedProofWithheld ? (
+                  <WorkspaceStatusNotice
+                    className="mt-4"
+                    detail="Proof will appear here after its protected visit-to-report connection is available. Existing shared report links remain separate."
+                    title="Protected proof is not available in this workspace yet."
+                    tone="info"
+                  />
+                ) : isLoadingReportHistory ? (
                   <p className="mt-4 text-sm font-bold text-slate-600" role="status">Loading delivered care…</p>
                 ) : latestProof ? (
                   <>
@@ -486,16 +495,17 @@ export function YardOwnerPortalPanel({
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Proof</h1>
             <p className="mt-2 text-sm text-slate-600">Delivered care records for this property.</p>
-            {hasReportHistoryError ? <WorkspaceStatusNotice className="mt-5" detail="Your protected proof history could not be refreshed. Try again later." title="Delivered proof is temporarily unavailable." tone="warning" /> : null}
+            {isProtectedProofWithheld ? <WorkspaceStatusNotice className="mt-5" detail="Proof remains separate from visit access until the exact delivered report and your current property access can be verified together." title="Protected proof is not available in this workspace yet." tone="info" /> : null}
+            {!isProtectedProofWithheld && hasReportHistoryError ? <WorkspaceStatusNotice className="mt-5" detail="Your protected proof history could not be refreshed. Try again later." title="Delivered proof is temporarily unavailable." tone="warning" /> : null}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {propertyReports.map((report) => (
+              {!isProtectedProofWithheld ? propertyReports.map((report) => (
                 <a className="rounded-2xl border border-slate-200 bg-slate-50 p-5 hover:border-emerald-500" href={report.shareUrl} key={report.reportId}>
                   <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Delivered proof</p>
                   <h2 className="mt-2 font-display text-2xl font-black text-forest">Care completed</h2>
                   <p className="mt-2 text-sm text-slate-600">Delivered {deliveredDateLabel(report.deliveredAt)}</p>
                 </a>
-              ))}
-              {!isLoadingReportHistory && propertyReports.length === 0 && !hasReportHistoryError ? (
+              )) : null}
+              {!isProtectedProofWithheld && !isLoadingReportHistory && propertyReports.length === 0 && !hasReportHistoryError ? (
                 <WorkspaceStatusNotice detail="Proof appears only after your provider delivers a completed service report." title="No delivered proof yet." tone="neutral" />
               ) : null}
             </div>

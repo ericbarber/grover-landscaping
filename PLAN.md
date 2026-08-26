@@ -173,6 +173,14 @@ Current state:
   across unknown writes. Success, conflict, and uncertain writes reload the
   authoritative conversation and queue; support, billing, and property-manager
   personas receive no UI authority, and no alert or response-time claim is made.
+- Phase 5C0 now audits delivered-proof and completed-recommendation continuity.
+  Accepted decision D-061 requires the exact visit-reference → immutable release
+  → service job → delivered snapshot chain and hybrid authorization on every
+  signed-in read. The legacy property-report list is not a Yard Owner source: it
+  uses organization membership, exposes internal IDs/share links, and can infer
+  property provenance. Yard Owner now withholds that route explicitly. Report
+  delivery/snapshot atomicity and fail-closed immutable reads are next; active
+  recommendation collaboration, proof feedback, and concerns remain separate.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -288,10 +296,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Decision D-060 persistence, APIs, Yard Owner questions, and owner/manager
-  provider responses are delivered. Audit the source, authorization, and
-  minimization boundary for the next delivered-proof/recommendation continuity
-  extension before exposing new customer data or actions.
+- Decision D-061's delivered-proof source audit and immediate Yard Owner
+  containment are delivered. Make completion-report delivery plus its immutable
+  snapshot atomic and remove live-state fallback before adding the minimized
+  hybrid-authorized exact-visit proof read.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

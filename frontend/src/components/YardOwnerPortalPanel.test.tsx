@@ -12,6 +12,7 @@ const commonProps = {
   completionReportsByProperty: {},
   isLoadingReportHistory: false,
   hasReportHistoryError: false,
+  isProtectedProofWithheld: false,
 };
 
 function renderVisit(overrides: Partial<Parameters<typeof YardOwnerPortalPanel>[0]['visits'][number]>) {
@@ -107,6 +108,24 @@ describe('Yard Owner persisted visit states', () => {
     expect(markup).toContain('8:00 AM–10:00 AM');
     expect(markup).toContain('Unlock the side gate.');
     expect(markup).not.toContain('Weekly yard care');
+  });
+
+  it('keeps legacy property-report history out of the protected owner workspace', () => {
+    const markup = renderVisit({});
+    const withheldMarkup = renderToStaticMarkup(
+      <YardOwnerPortalPanel
+        {...commonProps}
+        isProtectedProofWithheld
+        properties={[{
+          id: 'property_1', customerId: 'account_1', organizationId: 'org_1', displayName: 'Home',
+        }]}
+        visits={[]}
+      />,
+    );
+
+    expect(markup).not.toContain('Protected proof is not available');
+    expect(withheldMarkup).toContain('Protected proof is not available in this workspace yet.');
+    expect(withheldMarkup).toContain('Existing shared report links remain separate.');
   });
 
   it('offers visit questions only after a customer-safe reference exists', () => {
