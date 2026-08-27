@@ -250,6 +250,11 @@ Current state:
   event before advancing series state. Exact actor-key replay returns the
   receipt; changed content, stale versions, closed state, and reused identity
   conflict. Signed-in Yard Owner UI adoption remains next.
+- Phase 5D6 now delivers the typed signed-in browser contract for D-062. The
+  client maps exact-visit recommendation collections, immutable publication
+  history, and exact-version decision receipts while preserving authorization
+  and conflict errors for page-level recovery. It posts only customer decision
+  fields and the actor retry key. Yard Owner presentation remains next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -369,8 +374,9 @@ Next authorized slice and remaining gates:
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are
   delivered. Minimized hybrid-authorized exact-visit customer reads and actor-
-  scoped exact-version decisions are also delivered. Add signed-in Yard Owner
-  recommendation and decision UI.
+  scoped exact-version decisions and the typed browser contract are also
+  delivered. Add signed-in Yard Owner recommendation presentation and decision
+  interactions.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.
