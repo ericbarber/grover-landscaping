@@ -86,6 +86,10 @@ PostgreSQL-backed tests require `DATABASE_URL`. See
 [`../docs/postgres-persistence.md`](../docs/postgres-persistence.md) and
 [`../docs/local-validation-sequence.md`](../docs/local-validation-sequence.md).
 
+The API binary consumes shared feature modules through the library crate. Keep
+new self-contained modules on that boundary rather than redeclaring them in
+`main.rs`; see [`../docs/backend-build-performance.md`](../docs/backend-build-performance.md).
+
 ## Authentication modes
 
 | Mode | Intended use | Production allowed |

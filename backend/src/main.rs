@@ -4,13 +4,8 @@ mod completion_reports;
 #[allow(dead_code)]
 mod day_plans;
 mod db;
-mod marketing_events;
-mod marketing_leads;
-mod notifications;
 mod photo_processing;
 mod photo_storage;
-mod project_bids;
-mod stop_progress;
 
 use accounts::{
     valid_customer_account_relationship, validate_create_customer_account_request,
@@ -77,6 +72,19 @@ use grover_landscaping_api::{
         validate_decision_request, CustomerRecommendationDecisionResult,
         CustomerRecommendationDetailResult, CustomerRecommendationListResult,
         CustomerVisitRecommendationRepository, DecideCustomerRecommendationRequest,
+    },
+    marketing_events::{
+        validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
+    },
+    marketing_leads::{
+        is_marketing_lead_spam, validate_marketing_lead_request, validate_marketing_lead_workflow,
+        CreateMarketingLeadRequest, MarketingLeadRepository, MarketingLeadResponse,
+        MarketingLeadWriteResult, UpdateMarketingLeadRequest,
+    },
+    notifications::{
+        start_notification_dispatcher, validate_notification_recipient,
+        NotificationDispatcherConfig, NotificationHistoryFilter, NotificationOutboxRepository,
+        NotificationResolveResult, NotificationRetryResult,
     },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
@@ -159,6 +167,14 @@ use grover_landscaping_api::{
         SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
         TransitionOwnerProviderAssessmentRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
+    project_bids::{
+        customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
+        validate_revise_project_bid_request, validate_send_project_bid_request,
+        CreateProjectBidRequest, ProjectBidDecisionRequest, ProjectBidDraftResult,
+        ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository,
+        ProjectBidRevisionResult, ProjectBidSendResult, ReviseProjectBidRequest,
+        SendProjectBidRequest, SharedProjectBidReadResult,
+    },
     property_crew_assignments::{
         is_valid_assign_property_crew_request, AssignPropertyCrewRequest,
         PropertyCrewAssignmentListResult, PropertyCrewAssignmentMutationResult,
@@ -184,36 +200,15 @@ use grover_landscaping_api::{
         ServiceMobilizationReadResult, ServiceMobilizationRepository,
         ServiceMobilizationStatusRecord, ServiceWorkReleaseRecord, ServiceWorkReleaseWriteResult,
     },
+    stop_progress::{
+        is_valid_stop_progress_status, local_stop_progress_response,
+        persisted_stop_progress_response, replayed_stop_progress_response, StopProgressRequest,
+    },
     PhotoUploadMetadata as OwnerPhotoUploadMetadata,
 };
-use marketing_events::{
-    validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
-};
-use marketing_leads::{
-    is_marketing_lead_spam, validate_marketing_lead_request, validate_marketing_lead_workflow,
-    CreateMarketingLeadRequest, MarketingLeadRepository, MarketingLeadResponse,
-    MarketingLeadWriteResult, UpdateMarketingLeadRequest,
-};
-use notifications::{
-    start_notification_dispatcher, validate_notification_recipient, NotificationDispatcherConfig,
-    NotificationHistoryFilter, NotificationOutboxRepository, NotificationResolveResult,
-    NotificationRetryResult,
-};
 use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig};
-use project_bids::{
-    customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
-    validate_revise_project_bid_request, validate_send_project_bid_request,
-    CreateProjectBidRequest, ProjectBidDecisionRequest, ProjectBidDraftResult,
-    ProjectBidListResult, ProjectBidMutationResult, ProjectBidRepository, ProjectBidRevisionResult,
-    ProjectBidSendResult, ReviseProjectBidRequest, SendProjectBidRequest,
-    SharedProjectBidReadResult,
-};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
-use stop_progress::{
-    is_valid_stop_progress_status, local_stop_progress_response, persisted_stop_progress_response,
-    replayed_stop_progress_response, StopProgressRequest,
-};
 use tower_http::{
     cors::CorsLayer,
     services::{ServeDir, ServeFile},

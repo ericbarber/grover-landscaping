@@ -106,3 +106,13 @@ exceptions document those shapes without weakening the repository-wide gate or
 hiding future diagnostics. Library-only photo-storage helpers are similarly
 marked on the duplicated binary module surface. The exact formatting, all-
 target/all-feature Clippy, and full backend test commands now pass.
+
+## Backend compilation convergence
+
+The full CI-equivalent test run also showed the binary was redeclaring feature
+modules already compiled and tested by the library. The first convergence slice
+routes marketing events, marketing leads, notifications, project bids, and stop
+progress through the library crate. Binary unit-test duplication falls from 233
+to 215 tests, removing 18 repeated executions. The remaining six coupled module
+declarations are tracked in `docs/backend-build-performance.md` for dependency-
+ordered convergence rather than a broad type rewrite in this slice.

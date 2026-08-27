@@ -298,6 +298,12 @@ Current state:
   narrow local lint exceptions, and the duplicated binary photo-storage surface
   explicitly marks library-only helpers. Formatting, strict all-target/all-
   feature Clippy, and all 502 backend tests now pass.
+- Phase 6A4 begins backend build/test convergence. The API binary now consumes
+  marketing events, marketing leads, notifications, project bids, and stop
+  progress through the library instead of recompiling those source modules.
+  This removes 18 duplicate binary unit-test executions (233 down to 215) while
+  the strict CI lint gate and all 484 remaining backend tests pass. Core data,
+  completion-report, day-plan, and photo module convergence remains next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
