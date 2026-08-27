@@ -34,7 +34,10 @@ Supported onboarding statuses are `incomplete`, `active`, `blocked`, and `archiv
 
 Expected behavior:
 
-- The caller must be an organization owner, manager, support admin, property owner, or property manager.
+- The caller must be an organization owner, manager, support admin, or property
+  manager. Property Owners use the hybrid-authorized owner and customer-portal
+  projections; this operational profile includes billing, access, and
+  notification details and is not a Yard Owner read contract.
 - Return the onboarding profile only inside the caller's active organization memberships.
 - Return `404` when no scoped onboarding profile exists.
 

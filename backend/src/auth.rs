@@ -1657,10 +1657,10 @@ mod tests {
     }
 
     #[test]
-    fn customer_portfolio_reads_allow_customer_and_manager_roles() {
+    fn legacy_customer_portfolio_reads_are_management_only() {
         let path = "/accounts/acct_1001/customer-property-portfolio";
 
-        assert!(is_authorized(
+        assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::GET,
             path
@@ -1714,10 +1714,10 @@ mod tests {
     }
 
     #[test]
-    fn property_completion_report_reads_allow_customer_and_manager_roles() {
+    fn legacy_property_completion_report_reads_are_management_only() {
         let path = "/properties/property_1001/completion-reports";
 
-        assert!(is_authorized(
+        assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::GET,
             path
@@ -1743,7 +1743,7 @@ mod tests {
     fn property_onboarding_reads_and_writes_are_role_scoped() {
         let path = "/properties/property_1001/onboarding";
 
-        assert!(is_authorized(
+        assert!(!is_authorized(
             &principal(AccessRole::PropertyOwner),
             &Method::GET,
             path
@@ -1768,6 +1768,59 @@ mod tests {
             &Method::GET,
             path
         ));
+    }
+
+    #[tokio::test]
+    async fn property_owner_middleware_rejects_legacy_account_and_property_reads() {
+        let app = Router::new()
+            .route(
+                "/accounts/{account_id}/customer-property-portfolio",
+                get(|| async { "ok" }),
+            )
+            .route(
+                "/properties/{property_id}/completion-reports",
+                get(|| async { "ok" }),
+            )
+            .route(
+                "/properties/{property_id}/onboarding",
+                get(|| async { "ok" }),
+            )
+            .layer(middleware::from_fn_with_state(
+                AuthService::local_review(),
+                require_api_auth,
+            ));
+
+        for path in [
+            "/accounts/acct_1001/customer-property-portfolio",
+            "/properties/property_1001/completion-reports",
+            "/properties/property_1001/onboarding",
+        ] {
+            let owner_response = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .uri(path)
+                        .header("x-grover-local-reviewer", "property-owner")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(owner_response.status(), StatusCode::FORBIDDEN, "{path}");
+
+            let manager_response = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .uri(path)
+                        .header("x-grover-local-reviewer", "manager")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(manager_response.status(), StatusCode::OK, "{path}");
+        }
     }
 
     #[test]

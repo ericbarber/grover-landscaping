@@ -70,7 +70,6 @@ pub fn can_view_customer_property_portfolios(role: &AccessRole) -> bool {
         role,
         AccessRole::OrganizationOwner
             | AccessRole::Manager
-            | AccessRole::PropertyOwner
             | AccessRole::PropertyManager
             | AccessRole::SupportAdmin
     )
@@ -244,9 +243,9 @@ mod tests {
     }
 
     #[test]
-    fn property_owner_can_view_customer_portal_only() {
+    fn property_owner_cannot_view_legacy_customer_property_records() {
         assert!(can_view_customer_portal(&AccessRole::PropertyOwner));
-        assert!(can_view_customer_property_portfolios(
+        assert!(!can_view_customer_property_portfolios(
             &AccessRole::PropertyOwner
         ));
         assert!(!can_view_crew_route(&AccessRole::PropertyOwner));
@@ -254,8 +253,8 @@ mod tests {
     }
 
     #[test]
-    fn customer_property_portfolio_reads_allow_customer_and_manager_roles() {
-        assert!(can_view_customer_property_portfolios(
+    fn legacy_customer_property_reads_are_management_only() {
+        assert!(!can_view_customer_property_portfolios(
             &AccessRole::PropertyOwner
         ));
         assert!(can_view_customer_property_portfolios(

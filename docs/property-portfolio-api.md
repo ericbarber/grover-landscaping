@@ -75,7 +75,9 @@ Expected behavior:
 
 Expected behavior:
 
-- The caller must be an organization owner, manager, support admin, property owner, or property manager.
+- The caller must be an organization owner, manager, support admin, or property
+  manager. Property Owners use the hybrid-authorized customer portal rather than
+  this account-ID-addressed operational grouping route.
 - Scope results to the signed-in principal's active organization memberships.
 - Return portfolio groups for the requested account.
 - Return properties inside each portfolio group.

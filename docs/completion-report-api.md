@@ -194,7 +194,8 @@ is not an authorized Yard Owner source under D-061.
 
 Expected behavior:
 
-- do not use this organization-membership route for signed-in Yard Owner proof,
+- reject Property Owner access to this organization-membership route; signed-in
+  Yard Owner proof uses only the exact-visit hybrid-authorized projection,
 - allow service-company managers to review reports for their organization,
 - return only delivered reports for customer portal views,
 - include stable share links only when delivery is complete.

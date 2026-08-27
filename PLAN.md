@@ -282,6 +282,12 @@ Current state:
   now distinguish applied, no-current-claim, and unavailable storage; warn on
   stale outcomes; stop the cycle after unavailable finalization; and isolate the
   PostgreSQL retry/dead-letter/receipt fixture from prior durable queue history.
+- Phase 6A1 now contains three superseded customer reads. The account-ID portfolio,
+  property-ID onboarding, and property-ID delivered-report history routes used
+  organization membership alone and could accept a Yard Owner-supplied sibling
+  account/property ID. They are now provider/property-management-only; signed-in
+  owners retain the owner-scoped acquisition APIs and hybrid-authorized exact-
+  visit portal for visits, proof, questions, and recommendations.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
