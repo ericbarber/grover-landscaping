@@ -261,6 +261,13 @@ Current state:
   expiration, and can open immutable publication history without exposing opaque
   references. Empty and failed sources remain explicit and never substitute a
   mutable bid or draft. Exact-version decision interactions remain next.
+- Phase 5D8 now delivers Yard Owner decisions against the exact displayed
+  publication. Approval requires a versioned affirmation naming the one-time
+  scope and total and explicitly does not schedule, recur, invoice, or charge;
+  revision requires customer-safe context; decline confirms the exact version.
+  Retry identity is retained across unknown outcomes, replay receipts are clear,
+  closed states withhold actions, and conflicts reload authoritative state before
+  another choice. Private-VPN validation hardening remains next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -382,8 +389,8 @@ Next authorized slice and remaining gates:
   delivered. Minimized hybrid-authorized exact-visit customer reads and actor-
   scoped exact-version decisions and the typed browser contract are also
   delivered. Signed-in Yard Owner current and historical recommendation
-  presentation is also delivered. Add exact-version decision interactions and
-  recovery.
+  presentation and exact-version decision interactions with replay/conflict
+  recovery are also delivered. Harden and exercise private-VPN validation.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

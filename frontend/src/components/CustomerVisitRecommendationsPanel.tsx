@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { isApiErrorCode } from '../api/apiError';
 import {
+  decideCustomerVisitRecommendation,
   fetchCustomerVisitRecommendation,
   fetchCustomerVisitRecommendations,
 } from '../api/customerVisitRecommendationsClient';
 import type {
   CustomerRecommendationCollection,
+  CustomerRecommendationDecisionAction,
+  CustomerRecommendationDecisionInput,
+  CustomerRecommendationDecisionReceipt,
   CustomerRecommendationDetail,
   CustomerRecommendationLifecycleStatus,
   CustomerRecommendationPublication,
@@ -94,6 +98,159 @@ function PublicationDetails({
   );
 }
 
+const approvalAffirmationTextVersion = 'customer_recommendation_approval_v1';
+
+function decisionKey(): string {
+  const identifier = globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `customer-recommendation-${identifier}`;
+}
+
+function actionLabel(action: CustomerRecommendationDecisionAction): string {
+  return {
+    approve: 'approved',
+    decline: 'declined',
+    request_revision: 'sent back for revision',
+  }[action];
+}
+
+export function CustomerRecommendationDecisionPanel({
+  onDecide,
+  recommendation,
+}: {
+  onDecide: (input: CustomerRecommendationDecisionInput) => Promise<CustomerRecommendationDecisionReceipt>;
+  recommendation: CustomerRecommendationSummary;
+}) {
+  const [mode, setMode] = useState<CustomerRecommendationDecisionAction | null>(null);
+  const [affirmed, setAffirmed] = useState(false);
+  const [revisionNote, setRevisionNote] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const retryIdentity = useRef<{ fingerprint: string; key: string } | null>(null);
+
+  useEffect(() => {
+    if (recommendation.lifecycleStatus !== 'pending') setMode(null);
+  }, [recommendation.lifecycleStatus]);
+
+  if (recommendation.lifecycleStatus !== 'pending') {
+    return (
+      <p className="mt-4 rounded-xl bg-white p-3 text-xs leading-5 text-slate-600">
+        This recommendation is {statusPresentation(recommendation.lifecycleStatus).label.toLowerCase()}. Its published scope remains available as a record.
+      </p>
+    );
+  }
+
+  function chooseMode(nextMode: CustomerRecommendationDecisionAction) {
+    setMode(nextMode);
+    setAffirmed(false);
+    setRevisionNote('');
+    setMessage(null);
+    setError(null);
+  }
+
+  async function submitDecision(event: FormEvent) {
+    event.preventDefault();
+    if (!mode || (mode === 'approve' && !affirmed) || (mode === 'request_revision' && !revisionNote.trim())) return;
+    const normalizedNote = revisionNote.trim();
+    const fingerprint = [
+      recommendation.customerRecommendationReference,
+      recommendation.currentVersion,
+      mode,
+      normalizedNote,
+      mode === 'approve' ? approvalAffirmationTextVersion : '',
+    ].join(':');
+    if (retryIdentity.current?.fingerprint !== fingerprint) {
+      retryIdentity.current = { fingerprint, key: decisionKey() };
+    }
+
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const receipt = await onDecide({
+        expectedProposalVersion: recommendation.currentVersion,
+        action: mode,
+        ...(mode === 'request_revision'
+          ? { reasonCode: 'customer_scope_change', customerSafeNote: normalizedNote }
+          : {}),
+        ...(mode === 'approve'
+          ? { affirmationTextVersion: approvalAffirmationTextVersion }
+          : {}),
+        idempotencyKey: retryIdentity.current.key,
+      });
+      retryIdentity.current = null;
+      setMode(null);
+      setAffirmed(false);
+      setRevisionNote('');
+      setMessage(
+        receipt.replayed
+          ? `Your earlier decision was found and confirmed: recommendation ${actionLabel(receipt.action)}.`
+          : `Recommendation ${actionLabel(receipt.action)}.`,
+      );
+    } catch (decisionError) {
+      if (isApiErrorCode(decisionError, 'customer_visit_recommendation_decision_conflict')) {
+        retryIdentity.current = null;
+        setMode(null);
+        setError('This recommendation changed or was already answered. The latest published state has been loaded; review it before deciding again.');
+      } else if (isApiErrorCode(decisionError, 'customer_portal_access_required')
+        || isApiErrorCode(decisionError, 'customer_portal_access_inconsistent')) {
+        setError('Your access to this recommendation needs provider review before a decision can be recorded.');
+      } else {
+        setError(decisionError instanceof Error
+          ? `${decisionError.message} Retry the same choice to safely confirm whether it was recorded.`
+          : 'The decision could not be confirmed. Retry the same choice safely.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const publication = recommendation.currentPublication;
+  return (
+    <section aria-label="Recommendation decision" className="mt-4 border-t border-violet-200 pt-4">
+      <h5 className="text-sm font-black text-forest">Choose what happens next</h5>
+      <p className="mt-1 text-xs leading-5 text-slate-600">No choice schedules work or charges you automatically.</p>
+      {message ? <WorkspaceStatusNotice className="mt-3" compact detail={message} tone="success" /> : null}
+      {error ? <WorkspaceStatusNotice className="mt-3" compact detail={error} title="Decision needs attention." tone="warning" /> : null}
+      {!mode ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <button className="grover-button-primary" onClick={() => chooseMode('approve')} type="button">Approve</button>
+          <button className="grover-button-secondary" onClick={() => chooseMode('request_revision')} type="button">Request revision</button>
+          <button className="min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-black text-slate-700" onClick={() => chooseMode('decline')} type="button">Decline</button>
+        </div>
+      ) : (
+        <form className="mt-3 rounded-xl border border-violet-200 bg-white p-4" onSubmit={submitDecision}>
+          {mode === 'approve' ? (
+            <label className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+              <input checked={affirmed} className="mt-1 size-5 shrink-0 accent-emerald-700" onChange={(event) => setAffirmed(event.target.checked)} type="checkbox" />
+              <span>
+                I approve version {publication.proposalVersion} for the displayed one-time scope and total of{' '}
+                <strong>{currencyLabel(publication.totalCents, publication.currencyCode)}</strong>. I understand this approval does not schedule recurring work, create an invoice, or charge a payment method.
+              </span>
+            </label>
+          ) : null}
+          {mode === 'request_revision' ? (
+            <label className="text-sm font-black text-forest">
+              What should your provider change?
+              <textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 p-3 font-normal" maxLength={2000} onChange={(event) => setRevisionNote(event.target.value)} placeholder="Describe the scope, quantity, or timing you want revised." required value={revisionNote} />
+            </label>
+          ) : null}
+          {mode === 'decline' ? (
+            <p className="text-sm leading-6 text-slate-700">Decline this exact version? The provider will see that you chose not to proceed with it.</p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="grover-button-primary disabled:opacity-60" disabled={saving || (mode === 'approve' && !affirmed) || (mode === 'request_revision' && !revisionNote.trim())} type="submit">
+              {saving ? 'Confirming…' : mode === 'approve' ? 'Confirm approval' : mode === 'request_revision' ? 'Send revision request' : 'Confirm decline'}
+            </button>
+            <button className="grover-button-secondary" disabled={saving} onClick={() => setMode(null)} type="button">Cancel</button>
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
 export function CustomerRecommendationSummaryCard({
   detail,
   historyError,
@@ -101,7 +258,9 @@ export function CustomerRecommendationSummaryCard({
   onToggleHistory,
   recommendation,
   showHistory = false,
+  decisionControls,
 }: {
+  decisionControls?: ReactNode;
   detail?: CustomerRecommendationDetail;
   historyError?: string;
   historyLoading?: boolean;
@@ -144,6 +303,7 @@ export function CustomerRecommendationSummaryCard({
           </div>
         </section>
       ) : null}
+      {decisionControls}
     </article>
   );
 }
@@ -211,6 +371,26 @@ export function CustomerVisitRecommendationsPanel({
     }
   }
 
+  async function decide(
+    recommendation: CustomerRecommendationSummary,
+    input: CustomerRecommendationDecisionInput,
+  ): Promise<CustomerRecommendationDecisionReceipt> {
+    try {
+      const receipt = await decideCustomerVisitRecommendation(
+        customerVisitReference,
+        recommendation.customerRecommendationReference,
+        input,
+      );
+      await loadRecommendations();
+      return receipt;
+    } catch (decisionError) {
+      if (isApiErrorCode(decisionError, 'customer_visit_recommendation_decision_conflict')) {
+        await loadRecommendations();
+      }
+      throw decisionError;
+    }
+  }
+
   return (
     <section aria-label="Visit recommendations" className="mt-5 border-t border-slate-200 pt-5">
       <div>
@@ -232,6 +412,12 @@ export function CustomerVisitRecommendationsPanel({
             const historyOpen = openHistoryReference === recommendation.customerRecommendationReference;
             return (
               <CustomerRecommendationSummaryCard
+                decisionControls={(
+                  <CustomerRecommendationDecisionPanel
+                    onDecide={(input) => decide(recommendation, input)}
+                    recommendation={recommendation}
+                  />
+                )}
                 detail={historyOpen && detail?.customerRecommendationReference === recommendation.customerRecommendationReference ? detail : undefined}
                 historyError={historyOpen ? historyError ?? undefined : undefined}
                 historyLoading={historyOpen && historyLoading}
