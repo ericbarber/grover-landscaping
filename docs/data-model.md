@@ -279,7 +279,9 @@ created_at
 updated_at
 ```
 
-Photo upload completion enqueues `thumbnail_generation` jobs when S3 inspection or thumbnail generation cannot finish synchronously. Worker-facing repository helpers can claim queued or retryable work with row locks, mark processing jobs completed, or schedule failed attempts with bounded retry delays before dead-lettering. Manager recovery APIs list organization-scoped processing history and can reset failed or dead-letter jobs to `queued`, or mark them `resolved` with a note after manual remediation.
+Photo upload completion enqueues `thumbnail_generation` jobs when S3 inspection or thumbnail generation cannot finish synchronously. Worker-facing repository helpers can claim queued or retryable work with row locks, mark processing jobs completed, or schedule failed attempts with bounded retry delays before dead-lettering. Each worker cycle distinguishes claims finalized by exactly one current `processing` row from stale/missing claims; unavailable finalization makes the cycle unavailable instead of reporting success. Manager recovery APIs list organization-scoped processing history and can reset failed or dead-letter jobs to `queued`, or mark them `resolved` with a note after manual remediation.
+
+`photo_erasure_deletion_jobs` durably retain object keys that could not be deleted during customer-photo erasure. The photo worker applies the same current-claim finalization contract, reclaims `processing` rows abandoned for ten minutes, and moves stale claims that have exhausted their bounded attempts to `dead_letter` for audited manager recovery.
 
 ## job_completion_reports
 

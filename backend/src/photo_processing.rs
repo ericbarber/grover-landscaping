@@ -21,6 +21,13 @@ pub struct PhotoProcessingWorkerSettings {
     max_attempts: i32,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct PhotoProcessingCycleResult {
+    pub claimed: usize,
+    pub finalized: usize,
+    pub stale: usize,
+}
+
 impl PhotoProcessingWorkerConfig {
     pub fn from_env() -> Result<Self, String> {
         let mode = std::env::var("PHOTO_PROCESSING_WORKER_MODE")
@@ -75,8 +82,13 @@ pub fn start_photo_processing_worker(
             )
             .await;
             match processed {
-                ResourceReadResult::Loaded(processed) if processed > 0 => {
-                    tracing::info!(processed, "photo processing worker cycle completed");
+                ResourceReadResult::Loaded(result) if result.claimed > 0 => {
+                    tracing::info!(
+                        claimed = result.claimed,
+                        finalized = result.finalized,
+                        stale = result.stale,
+                        "photo processing worker cycle completed"
+                    );
                 }
                 ResourceReadResult::Unavailable => {
                     tracing::error!("photo processing worker cycle could not claim persisted work");
@@ -95,7 +107,7 @@ pub async fn process_photo_processing_once(
     photo_storage: &PhotoStorageConfig,
     batch_size: i64,
     max_attempts: i32,
-) -> ResourceReadResult<usize> {
+) -> ResourceReadResult<PhotoProcessingCycleResult> {
     let ResourceReadResult::Loaded(claims) = repository
         .claim_photo_processing_batch(batch_size, max_attempts)
         .await
@@ -108,12 +120,15 @@ pub async fn process_photo_processing_once(
     else {
         return ResourceReadResult::Unavailable;
     };
-    let processed = claims.len() + deletion_claims.len();
+    let mut result = PhotoProcessingCycleResult {
+        claimed: claims.len() + deletion_claims.len(),
+        ..PhotoProcessingCycleResult::default()
+    };
     let mut mutation_unavailable = false;
 
     for claim in claims {
         if claim.task_type != "thumbnail_generation" {
-            mutation_unavailable |= matches!(
+            mutation_unavailable |= record_finalization(
                 repository
                     .mark_photo_processing_failed(
                         &claim.id,
@@ -122,7 +137,9 @@ pub async fn process_photo_processing_once(
                         "unsupported_photo_processing_task",
                     )
                     .await,
-                ResourceReadResult::Unavailable
+                &claim.id,
+                "photo_processing",
+                &mut result,
             );
             continue;
         }
@@ -135,12 +152,14 @@ pub async fn process_photo_processing_once(
             )
             .await;
         if generated {
-            mutation_unavailable |= matches!(
+            mutation_unavailable |= record_finalization(
                 repository.mark_photo_processing_completed(&claim.id).await,
-                ResourceReadResult::Unavailable
+                &claim.id,
+                "photo_processing",
+                &mut result,
             );
         } else {
-            mutation_unavailable |= matches!(
+            mutation_unavailable |= record_finalization(
                 repository
                     .mark_photo_processing_failed(
                         &claim.id,
@@ -149,7 +168,9 @@ pub async fn process_photo_processing_once(
                         "thumbnail_generation_failed",
                     )
                     .await,
-                ResourceReadResult::Unavailable
+                &claim.id,
+                "photo_processing",
+                &mut result,
             );
         }
     }
@@ -159,14 +180,16 @@ pub async fn process_photo_processing_once(
             .delete_objects(std::slice::from_ref(&claim.object_key))
             .await;
         if deletion.failed_object_keys.is_empty() {
-            mutation_unavailable |= matches!(
+            mutation_unavailable |= record_finalization(
                 repository
                     .mark_photo_erasure_deletion_completed(&claim.id)
                     .await,
-                ResourceReadResult::Unavailable
+                &claim.id,
+                "photo_erasure_deletion",
+                &mut result,
             );
         } else {
-            mutation_unavailable |= matches!(
+            mutation_unavailable |= record_finalization(
                 repository
                     .mark_photo_erasure_deletion_failed(
                         &claim.id,
@@ -175,7 +198,9 @@ pub async fn process_photo_processing_once(
                         "photo_object_deletion_failed",
                     )
                     .await,
-                ResourceReadResult::Unavailable
+                &claim.id,
+                "photo_erasure_deletion",
+                &mut result,
             );
         }
     }
@@ -183,7 +208,31 @@ pub async fn process_photo_processing_once(
     if mutation_unavailable {
         ResourceReadResult::Unavailable
     } else {
-        ResourceReadResult::Loaded(processed)
+        ResourceReadResult::Loaded(result)
+    }
+}
+
+fn record_finalization(
+    outcome: ResourceReadResult<bool>,
+    claim_id: &str,
+    queue: &'static str,
+    result: &mut PhotoProcessingCycleResult,
+) -> bool {
+    match outcome {
+        ResourceReadResult::Loaded(true) => {
+            result.finalized += 1;
+            false
+        }
+        ResourceReadResult::Loaded(false) | ResourceReadResult::NotFound => {
+            result.stale += 1;
+            tracing::warn!(
+                claim_id,
+                queue,
+                "photo worker finalization found no current claim"
+            );
+            false
+        }
+        ResourceReadResult::Unavailable => true,
     }
 }
 
@@ -199,5 +248,57 @@ fn parse_positive_env(name: &str, default: u64) -> Result<u64, String> {
             Ok(parsed)
         }
         Err(_) => Ok(default),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finalization_counts_applied_and_stale_claims_separately() {
+        let mut result = PhotoProcessingCycleResult {
+            claimed: 2,
+            ..PhotoProcessingCycleResult::default()
+        };
+
+        assert!(!record_finalization(
+            ResourceReadResult::Loaded(true),
+            "claim_applied",
+            "photo_processing",
+            &mut result,
+        ));
+        assert!(!record_finalization(
+            ResourceReadResult::Loaded(false),
+            "claim_stale",
+            "photo_erasure_deletion",
+            &mut result,
+        ));
+
+        assert_eq!(
+            result,
+            PhotoProcessingCycleResult {
+                claimed: 2,
+                finalized: 1,
+                stale: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn unavailable_finalization_stops_a_successful_cycle_result() {
+        let mut result = PhotoProcessingCycleResult {
+            claimed: 1,
+            ..PhotoProcessingCycleResult::default()
+        };
+
+        assert!(record_finalization(
+            ResourceReadResult::Unavailable,
+            "claim_unavailable",
+            "photo_processing",
+            &mut result,
+        ));
+        assert_eq!(result.finalized, 0);
+        assert_eq!(result.stale, 0);
     }
 }

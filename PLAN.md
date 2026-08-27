@@ -288,6 +288,11 @@ Current state:
   account/property ID. They are now provider/property-management-only; signed-in
   owners retain the owner-scoped acquisition APIs and hybrid-authorized exact-
   visit portal for visits, proof, questions, and recommendations.
+- Phase 6A2 now hardens photo-worker finalization and privacy cleanup recovery.
+  Worker cycles report claimed, finalized, and stale outcomes separately instead
+  of counting a zero-row completion as processed. Abandoned photo-erasure object
+  deletion claims are reclaimable after ten minutes and move to dead letter when
+  their bounded attempt allowance is exhausted.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -1761,6 +1766,7 @@ Current state:
 - Rejected photo uploads persist rejection reason/timestamp metadata and remain quarantined from photo evidence reads
 - Upload completion enqueues durable thumbnail-generation retry work when S3 inspection or thumbnail generation cannot finish synchronously
 - Optional background photo-processing worker claims queued thumbnail jobs, retries failures, and dead-letters exhausted work
+- Photo-worker cycles distinguish finalized work from stale/missing claims and stop reporting a successful cycle when finalization persistence is unavailable
 - Manager APIs list organization-scoped photo processing history and retry or resolve failed/dead-letter thumbnail jobs with audit events
 - Frontend manager dashboard surfaces photo processing recovery history and can retry or resolve failed/dead-letter thumbnail jobs
 - Production smoke script covers photo upload-ticket creation, upload completion metadata, evidence listing, and photo-processing recovery history
@@ -1769,6 +1775,7 @@ Current state:
 - Frontend manager dashboard surfaces customer privacy export and retained photo erasure controls with object-key deletion manifests
 - Photo erasure attempts object-store deletion immediately and returns only failed object keys for follow-up
 - Failed photo erasure object deletions are queued durably and retried by the photo-processing worker with exponential backoff and dead-lettering
+- Abandoned photo erasure deletion claims are recovered after ten minutes, with exhausted stale claims moved to dead letter
 - Manager APIs expose organization-scoped photo erasure deletion history with audited retry and manual resolution actions
 - Frontend manager dashboard surfaces failed and dead-lettered erasure deletions with retry and resolution controls
 

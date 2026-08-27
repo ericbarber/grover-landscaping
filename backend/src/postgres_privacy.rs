@@ -269,13 +269,33 @@ pub async fn claim_photo_erasure_deletion_jobs(
     limit: i64,
     max_attempts: i32,
 ) -> Result<Vec<super::PhotoErasureDeletionClaim>, sqlx::Error> {
+    sqlx::query(
+        r#"
+        UPDATE photo_erasure_deletion_jobs
+        SET status = 'dead_letter', updated_at = NOW()
+        WHERE status = 'processing'
+          AND updated_at < NOW() - INTERVAL '10 minutes'
+          AND attempt_count >= $1
+        "#,
+    )
+    .bind(max_attempts.max(1))
+    .execute(pool)
+    .await?;
+
     let rows = sqlx::query(
         r#"
         WITH claimable AS (
             SELECT id
             FROM photo_erasure_deletion_jobs
-            WHERE status IN ('queued', 'failed')
-              AND available_at <= NOW()
+            WHERE (
+                    (
+                        status IN ('queued', 'failed')
+                        AND available_at <= NOW()
+                    ) OR (
+                        status = 'processing'
+                        AND updated_at < NOW() - INTERVAL '10 minutes'
+                    )
+                  )
               AND attempt_count < $2
             ORDER BY available_at, created_at
             FOR UPDATE SKIP LOCKED

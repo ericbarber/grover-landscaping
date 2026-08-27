@@ -537,6 +537,7 @@ The exact artifact mapping and ordered implementation queue live in
    - Keep PostgreSQL integration fixtures isolated from durable recovery history created by earlier runs.
    - Notification delivery finalization now distinguishes an applied current claim from stale/missing claims and unavailable storage; continue the same affected-row audit across remaining repositories.
    - Superseded organization-membership-only account portfolio, property onboarding, and delivered-report reads now reject Yard Owners; customer access remains on hybrid/exact-visit projections.
+   - Photo-worker cycles now distinguish finalized and stale claims; abandoned privacy-deletion work is reclaimed after ten minutes or dead-lettered when exhausted.
    - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.

@@ -32,7 +32,7 @@ test work.
 
 ## Audit disposition
 
-Existing job lifecycle, checklist, completion-report, photo upload/worker,
+Existing job lifecycle, checklist, completion-report, photo upload,
 day-plan, amendment, bid, membership, principal-access, property onboarding,
 portfolio, and dispatch hierarchy paths already expose explicit unavailable or
 conflict outcomes at their current repository boundaries. Parsing helpers and
@@ -47,10 +47,13 @@ and human-device assurance remain external gates and are not simulated here.
 ## Validation
 
 - Rust formatting check passes.
-- All 207 backend library tests pass, including middleware coverage that rejects
+- All 209 backend library tests pass, including middleware coverage that rejects
   the three legacy reads for Property Owners and retains Manager access.
 - Ten notification-focused binary/handler tests pass.
 - The live PostgreSQL notification dispatcher fixture passes.
+- All ten live PostgreSQL photo-persistence tests pass, including stale privacy-
+  deletion reclaim, exhausted-claim dead lettering, and duplicate-finalization
+  checks.
 - Strict library Clippy remains blocked by 26 pre-existing warnings in unrelated
   authentication, day-plan, organization, acquisition, bid, onboarding, and
   mobilization code. This slice introduces no new Clippy diagnostic.
@@ -71,3 +74,19 @@ and exact customer visit references, while acquisition uses the owner-scoped
 property contract. The three legacy routes are therefore contained to provider
 owners/managers, property managers, and support administrators until a minimized
 customer projection with equivalent hybrid authorization is explicitly needed.
+
+## Photo-worker finalization and abandoned privacy cleanup
+
+The affected-row follow-up found that photo repositories already returned
+`Loaded(false)` when a completion or failure write no longer matched a current
+`processing` claim, but the worker treated every loaded Boolean as success and
+reported the original claim count as processed. Worker cycle results now expose
+claimed, finalized, and stale counts separately, warn for each stale/missing
+claim, and return unavailable when any finalization cannot reach persistence.
+
+The same audit found thumbnail processing could reclaim a claim abandoned for
+ten minutes, while `photo_erasure_deletion_jobs` could remain in `processing`
+forever after a worker or database interruption. Privacy-deletion claiming now
+reclaims those stale leases below the attempt limit and moves exhausted stale
+leases to `dead_letter`. The PostgreSQL fixture creates both cases, confirms the
+recovered claim is finalized exactly once, and removes its durable rows.

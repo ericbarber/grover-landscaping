@@ -5,7 +5,7 @@ use grover_landscaping_api::{
         PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter,
         PhotoProcessingResolveResult, PhotoProcessingRetryResult, ResourceReadResult,
     },
-    photo_processing::process_photo_processing_once,
+    photo_processing::{process_photo_processing_once, PhotoProcessingCycleResult},
     photo_storage::PhotoStorageConfig,
     PhotoUploadMetadata, PhotoUploadRequest,
 };
@@ -584,7 +584,14 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
 
     let processed =
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await;
-    assert_eq!(processed, ResourceReadResult::Loaded(1));
+    assert_eq!(
+        processed,
+        ResourceReadResult::Loaded(PhotoProcessingCycleResult {
+            claimed: 1,
+            finalized: 1,
+            stale: 0,
+        })
+    );
 
     let row = sqlx::query(
         r#"
@@ -606,7 +613,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
     );
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        ResourceReadResult::Loaded(0)
+        ResourceReadResult::Loaded(PhotoProcessingCycleResult::default())
     );
 }
 
@@ -661,7 +668,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 
     assert!(matches!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        ResourceReadResult::Loaded(processed) if processed >= 1
+        ResourceReadResult::Loaded(result) if result.finalized >= 1
     ));
 
     let dead_letters = repository
@@ -712,7 +719,11 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 
     assert_eq!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 1).await,
-        ResourceReadResult::Loaded(1)
+        ResourceReadResult::Loaded(PhotoProcessingCycleResult {
+            claimed: 1,
+            finalized: 1,
+            stale: 0,
+        })
     );
 
     let resolved = repository
@@ -750,7 +761,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 }
 
 #[tokio::test]
-async fn photo_processing_worker_completes_queued_erasure_deletions() {
+async fn photo_processing_worker_recovers_stale_erasure_deletions() {
     let Some(config) = common::database_config() else {
         return;
     };
@@ -765,14 +776,22 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
         "photo_erasure_worker_test_{}",
         uuid::Uuid::new_v4().simple()
     );
+    let exhausted_id = format!(
+        "photo_erasure_exhausted_test_{}",
+        uuid::Uuid::new_v4().simple()
+    );
     let object_key = format!("jobs/job_1001/photos/{}.jpg", uuid::Uuid::new_v4().simple());
 
     sqlx::query(
         r#"
         INSERT INTO photo_erasure_deletion_jobs (
-            id, account_id, organization_id, object_key, available_at
+            id, account_id, organization_id, object_key, status, attempt_count, available_at,
+            updated_at
         )
-        VALUES ($1, 'acct_1001', 'org_demo_landscaping', $2, '2000-01-01')
+        VALUES (
+            $1, 'acct_1001', 'org_demo_landscaping', $2, 'processing', 1,
+            '2000-01-01', NOW() - INTERVAL '11 minutes'
+        )
         "#,
     )
     .bind(&deletion_id)
@@ -781,9 +800,27 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
     .await
     .unwrap();
 
+    sqlx::query(
+        r#"
+        INSERT INTO photo_erasure_deletion_jobs (
+            id, account_id, organization_id, object_key, status, attempt_count, available_at,
+            updated_at
+        )
+        VALUES (
+            $1, 'acct_1001', 'org_demo_landscaping', $2, 'processing', 3,
+            '2000-01-01', NOW() - INTERVAL '11 minutes'
+        )
+        "#,
+    )
+    .bind(&exhausted_id)
+    .bind(format!("jobs/job_1001/photos/{exhausted_id}.jpg"))
+    .execute(&pool)
+    .await
+    .unwrap();
+
     assert!(matches!(
         process_photo_processing_once(&repository, &PhotoStorageConfig::Local, 10, 3).await,
-        ResourceReadResult::Loaded(count) if count >= 1
+        ResourceReadResult::Loaded(result) if result.finalized >= 1
     ));
 
     let row = sqlx::query(
@@ -799,9 +836,29 @@ async fn photo_processing_worker_completes_queued_erasure_deletions() {
     .unwrap();
 
     assert_eq!(row.get::<String, _>("status"), "completed");
-    assert_eq!(row.get::<i32, _>("attempt_count"), 1);
+    assert_eq!(row.get::<i32, _>("attempt_count"), 2);
     assert!(row.get::<Option<String>, _>("completed_at").is_some());
     assert_eq!(row.get::<Option<String>, _>("last_error"), None);
+    assert!(!loaded(
+        repository
+            .mark_photo_erasure_deletion_completed(&deletion_id)
+            .await,
+        "duplicate erasure completion should be checked",
+    ));
+
+    let exhausted_status: String =
+        sqlx::query_scalar("SELECT status FROM photo_erasure_deletion_jobs WHERE id = $1")
+            .bind(&exhausted_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(exhausted_status, "dead_letter");
+
+    sqlx::query("DELETE FROM photo_erasure_deletion_jobs WHERE id = ANY($1)")
+        .bind(vec![deletion_id, exhausted_id])
+        .execute(&pool)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
