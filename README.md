@@ -239,8 +239,13 @@ PostgreSQL, and an application login are not required for this review mode.
 For this workstation, the expected URL is:
 
 ```text
-http://100.88.21.105:5173/
+http://100.88.21.105:5173/app
 ```
+
+The launcher verifies that the existing API is actually running in
+`local_review` mode before reusing it. Its printed landing, application, design,
+and health URLs can all be opened only by devices that can reach the selected
+Tailscale or LAN address.
 
 Keep the command running while reviewing. Press `Ctrl+C` to stop both services.
 If Tailscale detection is unavailable, specify a reachable address explicitly:

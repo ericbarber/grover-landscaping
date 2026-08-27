@@ -268,6 +268,14 @@ Current state:
   Retry identity is retained across unknown outcomes, replay receipts are clear,
   closed states withhold actions, and conflicts reload authoritative state before
   another choice. Private-VPN validation hardening remains next.
+- Phase 5D9 now closes the local/private-VPN delivery loop. The mobile-review
+  launcher recognizes and safely reuses the `local_review` API it actually
+  starts, prints the direct `/app` route plus landing/design/health routes, and
+  documents the same boundary. The live Tailscale frontend and PostgreSQL-backed
+  health/readiness/auth endpoints respond successfully; a Pixel 7 Chromium
+  journey exercises current scope, immutable history, exact affirmed approval,
+  refreshed closed state, receipt visibility, decision payload minimization,
+  and horizontal fit against the same running Vite service.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -390,7 +398,9 @@ Next authorized slice and remaining gates:
   scoped exact-version decisions and the typed browser contract are also
   delivered. Signed-in Yard Owner current and historical recommendation
   presentation and exact-version decision interactions with replay/conflict
-  recovery are also delivered. Harden and exercise private-VPN validation.
+  recovery are also delivered. Private-VPN reachability and mobile decision
+  validation are complete; continue regression maintenance while the remaining
+  external and product gates below stay unresolved.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

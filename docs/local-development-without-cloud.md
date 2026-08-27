@@ -50,7 +50,9 @@ bash scripts/mobile-review.sh
 ```
 
 The script detects a reachable address, starts local authenticated services with
-safe fallbacks, and prints the phone URL. Override detection when necessary:
+safe fallbacks, and prints the `/app` phone URL plus landing, design, and API
+health URLs. It reuses an existing API only when `/auth/config` confirms
+`local_review` mode. Override detection when necessary:
 
 ```bash
 MOBILE_REVIEW_HOST=192.168.1.20 bash scripts/mobile-review.sh

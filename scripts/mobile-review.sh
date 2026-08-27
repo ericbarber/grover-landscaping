@@ -28,22 +28,23 @@ frontend_ready() {
   curl --fail --silent --show-error --max-time 3 "${frontend_url}/" >/dev/null 2>&1
 }
 
-disabled_api_ready() {
+local_review_api_ready() {
   local auth_config
   auth_config="$(curl --fail --silent --show-error --max-time 3 "${api_url}/auth/config" 2>/dev/null)" || return 1
-  [[ "$auth_config" == *'"mode":"disabled"'* ]]
+  [[ "$auth_config" == *'"mode":"local_review"'* ]]
 }
 
-if frontend_ready && disabled_api_ready; then
+if frontend_ready && local_review_api_ready; then
   echo "Grover Landscaping mobile review is already running."
-  echo "Phone URL: ${frontend_url}/"
+  echo "App URL:   ${frontend_url}/app"
+  echo "Landing:   ${frontend_url}/"
   echo "Design URL: ${frontend_url}/design/"
   echo "API URL:   ${api_url}/health"
-  echo "Authentication is disabled for this local review environment."
+  echo "Local review authentication is enabled."
   exit 0
 fi
 
-if frontend_ready || disabled_api_ready; then
+if frontend_ready || local_review_api_ready; then
   echo "Only part of the Grover Landscaping mobile review environment is available."
   echo "Stop the process using port 5173 or 8080, then run this command again."
   exit 1
@@ -74,7 +75,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Starting Grover Landscaping mobile review..."
-echo "Phone URL: ${frontend_url}/"
+echo "App URL:   ${frontend_url}/app"
+echo "Landing:   ${frontend_url}/"
 echo "Design URL: ${frontend_url}/design/"
 echo "API URL:   ${api_url}/health"
 echo "The phone must be connected to the same Tailscale network."

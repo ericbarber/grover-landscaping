@@ -519,7 +519,9 @@ schedule, remaining work, or a completed day.
      immutable publication/version/decision persistence, exact initial send,
      provider revision/supersession, and bearer-decision reconciliation are
      complete; minimized hybrid customer reads and actor-scoped exact-version
-     decisions are delivered, and signed-in Yard Owner adoption is next.
+     decisions are delivered. Signed-in Yard Owner Home/Visits now present
+     current and historical publications and support approval, decline, and
+     revision requests with exact-version replay/conflict recovery.
    - Public Yard Crew fit/entry routing, provider identity/readiness, known-owner
      connection core, and lifecycle orientation are adopted; close safe
      operating-preparation gaps before larger discovery work.

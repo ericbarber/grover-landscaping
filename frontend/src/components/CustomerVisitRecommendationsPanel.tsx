@@ -135,9 +135,13 @@ export function CustomerRecommendationDecisionPanel({
 
   if (recommendation.lifecycleStatus !== 'pending') {
     return (
-      <p className="mt-4 rounded-xl bg-white p-3 text-xs leading-5 text-slate-600">
-        This recommendation is {statusPresentation(recommendation.lifecycleStatus).label.toLowerCase()}. Its published scope remains available as a record.
-      </p>
+      <div className="mt-4">
+        {message ? <WorkspaceStatusNotice className="mb-3" compact detail={message} tone="success" /> : null}
+        {error ? <WorkspaceStatusNotice className="mb-3" compact detail={error} title="Decision needs attention." tone="warning" /> : null}
+        <p className="rounded-xl bg-white p-3 text-xs leading-5 text-slate-600">
+          This recommendation is {statusPresentation(recommendation.lifecycleStatus).label.toLowerCase()}. Its published scope remains available as a record.
+        </p>
+      </div>
     );
   }
 
