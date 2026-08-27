@@ -67,6 +67,7 @@ pub struct ServiceMobilizationStatusRecord {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum ServiceMobilizationReadResult {
     Loaded(ServiceMobilizationStatusRecord),
     NotFound,

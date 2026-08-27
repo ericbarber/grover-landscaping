@@ -9044,30 +9044,26 @@ async fn get_shared_completion_report(
         .await
     {
         ResourceReadResult::Loaded(snapshot) => {
-            return match customer_completion_report_snapshot_response(&snapshot) {
+            match customer_completion_report_snapshot_response(&snapshot) {
                 Some(report) => Json(report).into_response(),
                 None => persisted_resource_unavailable_response(
                     "shared_report_snapshot_invalid",
                     "The persisted shared report snapshot could not be safely projected.",
                 ),
-            };
+            }
         }
-        ResourceReadResult::Unavailable => {
-            return persisted_resource_unavailable_response(
-                "shared_report_unavailable",
-                "The persisted shared report could not be loaded.",
-            );
-        }
-        ResourceReadResult::NotFound => {
-            return (
-                StatusCode::NOT_FOUND,
-                Json(ErrorResponse {
-                    error: "shared_report_not_found",
-                    message: "Shared report link was not found.".to_string(),
-                }),
-            )
-                .into_response()
-        }
+        ResourceReadResult::Unavailable => persisted_resource_unavailable_response(
+            "shared_report_unavailable",
+            "The persisted shared report could not be loaded.",
+        ),
+        ResourceReadResult::NotFound => (
+            StatusCode::NOT_FOUND,
+            Json(ErrorResponse {
+                error: "shared_report_not_found",
+                message: "Shared report link was not found.".to_string(),
+            }),
+        )
+            .into_response(),
     }
 }
 

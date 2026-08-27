@@ -249,9 +249,9 @@ authoritative receipt while changed or stale reuse conflicts without partial
 writes. Protected disclosure reads use valid PostgreSQL aliases, the retained-
 evidence lifecycle fixture is repeatable, and the checked-recipient appeal actor
 survives a clean migration chain. Backend formatting, focused/full tests, and
-fresh migration replay pass; strict repository-wide Clippy remains pending on
-19 existing warnings outside the slice. Phase 3E3 cross-browser, responsive,
-and accessibility automation is next.
+fresh migration replay pass; the strict repository-wide Clippy debt observed at
+that delivery point is closed in Pilot Readiness Phase 6A3. Phase 3E3 cross-
+browser, responsive, and accessibility automation is next.
 Phase 3E3 now enforces the production owner/provider journeys in mobile and
 desktop Chromium, desktop Firefox, and mobile WebKit locally and in CI. Secure
 fragment refresh, review/revocation focus, post-revocation closure,
@@ -538,6 +538,7 @@ The exact artifact mapping and ordered implementation queue live in
    - Notification delivery finalization now distinguishes an applied current claim from stale/missing claims and unavailable storage; continue the same affected-row audit across remaining repositories.
    - Superseded organization-membership-only account portfolio, property onboarding, and delivered-report reads now reject Yard Owners; customer access remains on hybrid/exact-visit projections.
    - Photo-worker cycles now distinguish finalized and stale claims; abandoned privacy-deletion work is reclaimed after ten minutes or dead-lettered when exhausted.
+   - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.

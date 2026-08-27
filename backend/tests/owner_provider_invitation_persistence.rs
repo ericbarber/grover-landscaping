@@ -1981,8 +1981,8 @@ async fn repository_persists_limited_idempotent_owner_provider_invitations() {
         ["owner_contact", "access_considerations"]
     );
     assert_eq!(
-        disclosure_grant.selected_media_ids,
-        [disclosure_media_id.clone()]
+        disclosure_grant.selected_media_ids.as_slice(),
+        std::slice::from_ref(&disclosure_media_id)
     );
     assert!(matches!(
         repository

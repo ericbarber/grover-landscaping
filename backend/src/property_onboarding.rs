@@ -34,6 +34,7 @@ pub struct PropertyOnboardingResponse {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum PropertyOnboardingReadResult {
     Found(PropertyOnboardingResponse),
     NotFound,
@@ -41,6 +42,7 @@ pub enum PropertyOnboardingReadResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum PropertyOnboardingWriteResult {
     Saved(PropertyOnboardingResponse),
     Conflict,

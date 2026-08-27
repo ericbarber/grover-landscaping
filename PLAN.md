@@ -293,6 +293,11 @@ Current state:
   of counting a zero-row completion as processed. Abandoned photo-erasure object
   deletion claims are reclaimable after ten minutes and move to dead letter when
   their bounded attempt allowance is exhausted.
+- Phase 6A3 restores the exact backend CI quality gate. Mechanical diagnostics
+  were corrected, intentional by-value result-enum and SQL-boundary shapes use
+  narrow local lint exceptions, and the duplicated binary photo-storage surface
+  explicitly marks library-only helpers. Formatting, strict all-target/all-
+  feature Clippy, and all 502 backend tests now pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -924,9 +929,9 @@ Active slice:
   repeatable; and the claim-review constraint admits the checked-recipient
   appeal actor required by the existing contract. Rust formatting, the focused
   PostgreSQL lifecycle, all backend tests, and a clean full migration replay
-  pass. Strict repository-wide Clippy remains pending on 19 pre-existing
-  warnings outside this slice. Phase 3E3 cross-browser, responsive, and
-  accessibility automation is next.
+  pass. The strict repository-wide Clippy debt observed at that delivery point
+  is closed in Phase 6A3. Phase 3E3 cross-browser, responsive, and accessibility
+  automation is next.
 - Phase 3E3 is delivered. Playwright now runs the production Yard Owner and
   checked-provider journeys in mobile and desktop Chromium, desktop Firefox,
   and mobile WebKit, with CI provisioning and production-image gating. Coverage

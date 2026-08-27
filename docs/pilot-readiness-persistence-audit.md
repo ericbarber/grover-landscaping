@@ -54,9 +54,10 @@ and human-device assurance remain external gates and are not simulated here.
 - All ten live PostgreSQL photo-persistence tests pass, including stale privacy-
   deletion reclaim, exhausted-claim dead lettering, and duplicate-finalization
   checks.
-- Strict library Clippy remains blocked by 26 pre-existing warnings in unrelated
-  authentication, day-plan, organization, acquisition, bid, onboarding, and
-  mobilization code. This slice introduces no new Clippy diagnostic.
+- The exact CI lint command, `cargo clippy --all-targets --all-features -- -D
+  warnings`, passes.
+- The exact backend test command, `cargo test --all`, passes all 502 library,
+  binary, integration, and documentation tests.
 
 ## Authenticated customer-read containment
 
@@ -90,3 +91,18 @@ forever after a worker or database interruption. Privacy-deletion claiming now
 reclaims those stale leases below the attempt limit and moves exhausted stale
 leases to `dead_letter`. The PostgreSQL fixture creates both cases, confirms the
 recovered claim is finalized exactly once, and removes its durable rows.
+
+## Backend quality-gate restoration
+
+The Pilot Readiness audit initially carried 26 strict library diagnostics plus
+six binary-target and integration-test diagnostics. Mechanical findings were
+fixed directly: verified-email filtering is explicit, conditional projections
+use ordinary branches, redundant whitespace normalization and returns were
+removed, and the assertion no longer clones a media ID.
+
+Large by-value repository result enums and SQL boundary functions intentionally
+retain their established call contracts for this phase. Narrow item-level lint
+exceptions document those shapes without weakening the repository-wide gate or
+hiding future diagnostics. Library-only photo-storage helpers are similarly
+marked on the duplicated binary module surface. The exact formatting, all-
+target/all-feature Clippy, and full backend test commands now pass.

@@ -401,9 +401,8 @@ impl CognitoJwtVerifier {
 }
 
 fn normalized_verified_email(email: Option<&str>, verified: bool) -> Option<String> {
-    verified
-        .then(|| email)
-        .flatten()
+    email
+        .filter(|_| verified)
         .map(str::trim)
         .filter(|email| !email.is_empty() && email.contains('@'))
         .map(str::to_ascii_lowercase)

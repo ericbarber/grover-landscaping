@@ -65,6 +65,7 @@ pub enum ProjectBidListResult {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ProjectBidDraftResult {
     Saved(ProjectBidResponse),
     Conflict,
@@ -72,6 +73,7 @@ pub enum ProjectBidDraftResult {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ProjectBidMutationResult {
     Updated(ProjectBidResponse),
     Conflict,
@@ -79,6 +81,7 @@ pub enum ProjectBidMutationResult {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum SharedProjectBidReadResult {
     Loaded(ProjectBidResponse),
     NotFound,
@@ -93,6 +96,7 @@ pub struct SendProjectBidRequest {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ProjectBidSendResult {
     Sent(ProjectBidResponse),
     NotSendable,
@@ -112,6 +116,7 @@ pub struct ReviseProjectBidRequest {
 }
 
 #[derive(Clone, Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum ProjectBidRevisionResult {
     Revised(ProjectBidResponse),
     NotRevisable,

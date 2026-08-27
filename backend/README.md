@@ -69,6 +69,7 @@ Run backend checks inside Compose when Rust is not installed on the host:
 
 ```bash
 docker compose exec -T backend cargo fmt --all -- --check
+docker compose exec -T backend cargo clippy --all-targets --all-features -- -D warnings
 docker compose exec -T backend cargo test --all
 ```
 
@@ -77,6 +78,7 @@ For host development:
 ```bash
 cd backend
 cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all
 ```
 

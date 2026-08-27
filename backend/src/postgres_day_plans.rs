@@ -84,6 +84,7 @@ pub async fn list_organization_crews(
         .collect())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn update_crew(
     pool: &PgPool,
     organization_id: &str,

@@ -116,6 +116,7 @@ impl PhotoStorageConfig {
         )
     }
 
+    #[allow(dead_code)]
     pub fn owner_intake_upload_ticket(
         &self,
         owner_user_id: &str,
@@ -190,6 +191,7 @@ impl PhotoStorageConfig {
         self.display_url_for_seconds(upload_mode, object_key, u32::MAX)
     }
 
+    #[allow(dead_code)]
     pub fn display_authorization_seconds(&self, maximum_expires_seconds: u32) -> u32 {
         let configured = match self {
             Self::Local => 900,

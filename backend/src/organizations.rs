@@ -140,6 +140,7 @@ pub enum ActiveMembershipCheckResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum MembershipRoleUpdateResult {
     Updated(OrganizationMembership),
     LastActiveOwner,
@@ -148,6 +149,7 @@ pub enum MembershipRoleUpdateResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum MembershipStatusUpdateResult {
     Updated(OrganizationMembership),
     LastActiveOwner,
@@ -157,6 +159,7 @@ pub enum MembershipStatusUpdateResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum MembershipProfileUpdateResult {
     Updated(OrganizationMembership),
     NotFound,
@@ -380,6 +383,7 @@ impl OrganizationRepository {
         .await
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn list_team_administration_activity_page(
         &self,
         organization_id: &str,
@@ -1317,6 +1321,7 @@ async fn list_organization_memberships(
         .collect())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn list_team_administration_activity(
     pool: &PgPool,
     organization_id: &str,

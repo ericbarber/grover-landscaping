@@ -1124,6 +1124,7 @@ pub enum OwnerProviderOpportunityResponseResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum OwnerProviderProgressResult {
     Loaded(OwnerProviderProgressEntry),
     NotFound,
@@ -1132,6 +1133,7 @@ pub enum OwnerProviderProgressResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum OwnerProviderDisclosureReviewResult {
     Loaded(OwnerProviderDisclosureReview),
     NotFound,
@@ -1229,6 +1231,7 @@ pub enum OwnerProviderInitialServiceProposalWriteResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum OwnerProviderInitialServiceProposalDecisionResult {
     Decided(OwnerProviderInitialServiceProposalDecisionRecord),
     Replayed(OwnerProviderInitialServiceProposalDecisionRecord),
@@ -1239,6 +1242,7 @@ pub enum OwnerProviderInitialServiceProposalDecisionResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum OwnerProviderInitialServiceProposalMessageWriteResult {
     Created(OwnerProviderInitialServiceProposalMessageRecord),
     Replayed(OwnerProviderInitialServiceProposalMessageRecord),
@@ -1269,6 +1273,7 @@ pub enum OwnerProviderFirstVisitWriteResult {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum OwnerProviderFirstVisitReadResult {
     Loaded(OwnerProviderFirstVisitRecord),
     NotFound,
@@ -5152,9 +5157,11 @@ fn recipient_entry_from_invitation(
         provider_name: include_limited_request.then(|| invitation.provider_name.clone()),
         owner_name: include_limited_request.then(|| invitation.owner_name_snapshot.clone()),
         coarse_area: include_limited_request.then(|| invitation.coarse_area_snapshot.clone()),
-        care_goals: include_limited_request
-            .then(|| invitation.care_goals_snapshot.clone())
-            .unwrap_or_default(),
+        care_goals: if include_limited_request {
+            invitation.care_goals_snapshot.clone()
+        } else {
+            Vec::new()
+        },
         cadence: include_limited_request.then(|| invitation.cadence_snapshot.clone()),
         recipient_email_hint: include_limited_request
             .then(|| recipient_email_hint(&invitation.recipient_business_email)),
@@ -7477,9 +7484,11 @@ fn recipient_entry_from_preview_row(
         provider_name: include_limited_request.then(|| row.get("provider_name")),
         owner_name: include_limited_request.then(|| row.get("owner_name_snapshot")),
         coarse_area: include_limited_request.then(|| row.get("coarse_area_snapshot")),
-        care_goals: include_limited_request
-            .then(|| row.get("care_goals_snapshot"))
-            .unwrap_or_default(),
+        care_goals: if include_limited_request {
+            row.get("care_goals_snapshot")
+        } else {
+            Vec::new()
+        },
         cadence: include_limited_request.then(|| row.get("cadence_snapshot")),
         recipient_email_hint: include_limited_request
             .then(|| recipient_email_hint(&row.get::<String, _>("recipient_email"))),
@@ -7822,7 +7831,6 @@ async fn create_owner_provider_organization_claim(
                 .provider_display_name
                 .as_deref()
                 .unwrap_or_default()
-                .trim()
                 .split_whitespace()
                 .collect::<Vec<_>>()
                 .join(" ");
@@ -8819,6 +8827,7 @@ enum PersistedOpportunityResponseOutcome {
     Conflict,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum PersistedDisclosureReviewOutcome {
     Loaded(OwnerProviderDisclosureReview),
     NotFound,
@@ -8896,6 +8905,7 @@ enum PersistedInitialServiceProposalWriteOutcome {
     Conflict,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum PersistedInitialServiceProposalDecisionOutcome {
     Decided(OwnerProviderInitialServiceProposalDecisionRecord),
     Replayed(OwnerProviderInitialServiceProposalDecisionRecord),
@@ -8904,6 +8914,7 @@ enum PersistedInitialServiceProposalDecisionOutcome {
     Conflict,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum PersistedInitialServiceProposalMessageWriteOutcome {
     Created(OwnerProviderInitialServiceProposalMessageRecord),
     Replayed(OwnerProviderInitialServiceProposalMessageRecord),
