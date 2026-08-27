@@ -255,6 +255,12 @@ Current state:
   history, and exact-version decision receipts while preserving authorization
   and conflict errors for page-level recovery. It posts only customer decision
   fields and the actor retry key. Yard Owner presentation remains next.
+- Phase 5D7 now adopts current recommendation reads in signed-in Yard Owner Home
+  and Visits. Each exact visit loads independently, presents the provider reason,
+  customer-safe line items, one-time total, current lifecycle, version, and
+  expiration, and can open immutable publication history without exposing opaque
+  references. Empty and failed sources remain explicit and never substitute a
+  mutable bid or draft. Exact-version decision interactions remain next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -375,8 +381,9 @@ Next authorized slice and remaining gates:
   provider revision/supersession, and honest legacy bearer-decision closure are
   delivered. Minimized hybrid-authorized exact-visit customer reads and actor-
   scoped exact-version decisions and the typed browser contract are also
-  delivered. Add signed-in Yard Owner recommendation presentation and decision
-  interactions.
+  delivered. Signed-in Yard Owner current and historical recommendation
+  presentation is also delivered. Add exact-version decision interactions and
+  recovery.
 - Service categories and communication languages are delivered. Do not add a
   provider pause/availability control until the curated-opportunity projection,
   provenance, suppression, regional-density, and support contract is approved.

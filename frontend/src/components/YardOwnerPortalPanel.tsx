@@ -18,6 +18,7 @@ import {
 } from '../domain/customerPortalVisits';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusNotice } from './WorkspaceStatus';
+import { CustomerVisitRecommendationsPanel } from './CustomerVisitRecommendationsPanel';
 
 type PortalDestination = 'home' | 'visits' | 'proof' | 'account';
 
@@ -509,6 +510,9 @@ export function YardOwnerPortalPanel({
                   </div>
                   <p className="mt-3 text-sm font-bold text-emerald-950"><strong>Next update:</strong> {nextVisit.nextUpdateMessage}</p>
                   <CustomerVisitQuestions visit={nextVisit} />
+                  {nextVisit.customerVisitReference ? (
+                    <CustomerVisitRecommendationsPanel customerVisitReference={nextVisit.customerVisitReference} />
+                  ) : null}
                 </article>
               ) : (
                 <WorkspaceStatusNotice
@@ -553,6 +557,9 @@ export function YardOwnerPortalPanel({
                   <ServiceStatusDetail visit={visit} />
                   <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
                   <CustomerVisitQuestions visit={visit} />
+                  {visit.customerVisitReference ? (
+                    <CustomerVisitRecommendationsPanel customerVisitReference={visit.customerVisitReference} />
+                  ) : null}
                   <CustomerDeliveredProof visit={visit} />
                 </article>
               )) : (
