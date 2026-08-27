@@ -2,7 +2,9 @@ use grover_landscaping_api::{
     db::JobRepository,
     notifications::NotificationResolveResult,
     notifications::NotificationRetryResult,
-    notifications::{NotificationHistoryFilter, NotificationOutboxRepository},
+    notifications::{
+        NotificationDeliveryWriteResult, NotificationHistoryFilter, NotificationOutboxRepository,
+    },
 };
 use sqlx::Row;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -28,6 +30,10 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     let repository = NotificationOutboxRepository::from_pool(pool.clone());
     let organization_ids = vec!["org_demo_landscaping".to_string()];
     let manager_actor_user_id = "user_notification_recovery_audit";
+    sqlx::query("DELETE FROM notification_outbox WHERE entity_type = 'test'")
+        .execute(&pool)
+        .await
+        .expect("prior notification dispatcher fixtures should reset");
     sqlx::query("DELETE FROM access_audit_events WHERE actor_user_id = $1")
         .bind(manager_actor_user_id)
         .execute(&pool)
@@ -51,10 +57,12 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     let first_claim = repository.claim_batch(1, 2).await.unwrap();
     assert_eq!(first_claim[0].id, failed_id);
     assert_eq!(first_claim[0].attempt_count, 1);
-    repository
-        .mark_failed(&failed_id, 1, 2, "provider unavailable", Some(503))
-        .await
-        .unwrap();
+    assert_eq!(
+        repository
+            .mark_failed(&failed_id, 1, 2, "provider unavailable", Some(503))
+            .await,
+        NotificationDeliveryWriteResult::Applied
+    );
 
     sqlx::query("UPDATE notification_outbox SET available_at = '2000-01-01' WHERE id = $1")
         .bind(&failed_id)
@@ -64,10 +72,12 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     let second_claim = repository.claim_batch(1, 2).await.unwrap();
     assert_eq!(second_claim[0].id, failed_id);
     assert_eq!(second_claim[0].attempt_count, 2);
-    repository
-        .mark_failed(&failed_id, 2, 2, "provider still unavailable", Some(503))
-        .await
-        .unwrap();
+    assert_eq!(
+        repository
+            .mark_failed(&failed_id, 2, 2, "provider still unavailable", Some(503))
+            .await,
+        NotificationDeliveryWriteResult::Applied
+    );
 
     let failed = sqlx::query(
         "SELECT status, attempt_count, provider_response_code, last_error FROM notification_outbox WHERE id = $1",
@@ -99,10 +109,36 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
 
     let sent_claim = repository.claim_batch(1, 2).await.unwrap();
     assert_eq!(sent_claim[0].id, sent_id);
-    repository
-        .mark_sent(&sent_id, 202, Some("provider-message-1001"))
-        .await
-        .unwrap();
+    assert_eq!(
+        repository
+            .mark_sent(&sent_id, 202, Some("provider-message-1001"))
+            .await,
+        NotificationDeliveryWriteResult::Applied
+    );
+    assert_eq!(
+        repository
+            .mark_sent(&sent_id, 202, Some("duplicate-provider-message"))
+            .await,
+        NotificationDeliveryWriteResult::NotClaimed
+    );
+    assert_eq!(
+        repository
+            .mark_failed(&sent_id, 1, 2, "late provider failure", Some(500))
+            .await,
+        NotificationDeliveryWriteResult::NotClaimed
+    );
+    assert_eq!(
+        repository
+            .mark_sent("notification_missing", 202, None)
+            .await,
+        NotificationDeliveryWriteResult::NotClaimed
+    );
+    assert_eq!(
+        NotificationOutboxRepository::default()
+            .mark_sent(&sent_id, 202, None)
+            .await,
+        NotificationDeliveryWriteResult::Unavailable
+    );
 
     let sent = sqlx::query(
         "SELECT status, sent_at::text AS sent_at, provider_response_code, provider_message_id FROM notification_outbox WHERE id = $1",
@@ -309,4 +345,9 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
     assert!(audit_rows
         .iter()
         .all(|row| row.get::<String, _>("actor_user_id") == manager_actor_user_id));
+
+    sqlx::query("DELETE FROM notification_outbox WHERE entity_type = 'test'")
+        .execute(&pool)
+        .await
+        .expect("notification dispatcher fixtures should clean up");
 }

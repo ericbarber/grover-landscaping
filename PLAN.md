@@ -276,6 +276,12 @@ Current state:
   journey exercises current scope, immutable history, exact affirmed approval,
   refreshed closed state, receipt visibility, decision payload minimization,
   and horizontal fit against the same running Vite service.
+- Phase 6A0 now begins Pilot Readiness persistence hardening. The first audit
+  found notification provider-outcome finalization could ignore a zero-row
+  update and appear successful after a missing or stale claim. Delivery writes
+  now distinguish applied, no-current-claim, and unavailable storage; warn on
+  stale outcomes; stop the cycle after unavailable finalization; and isolate the
+  PostgreSQL retry/dead-letter/receipt fixture from prior durable queue history.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -1395,6 +1401,8 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Revocation atomically marks queued or failed delivery work as skipped
 - Manager delivery status, channel, recipient, and expiry display
 - Background notification dispatcher with PostgreSQL-safe concurrent row claiming
+- Explicit applied, stale-claim, and unavailable provider-outcome finalization
+- Dispatcher cycle stop after delivery-state persistence becomes unavailable
 - Generic HTTPS webhook adapter for email/SMS delivery gateways
 - Exponential retry backoff capped at one hour and five attempts by default
 - Recovery of abandoned in-progress claims

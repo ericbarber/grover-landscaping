@@ -535,6 +535,7 @@ The exact artifact mapping and ordered implementation queue live in
    - Keep Docker health checks and watchdog restart behavior validated for Tailscale phone access.
    - Keep backend and frontend unit readiness suites green as persistence contracts evolve.
    - Keep PostgreSQL integration fixtures isolated from durable recovery history created by earlier runs.
+   - Notification delivery finalization now distinguishes an applied current claim from stale/missing claims and unavailable storage; continue the same affected-row audit across remaining repositories.
    - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.

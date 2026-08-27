@@ -64,6 +64,13 @@ pub enum NotificationResolveResult {
     Unavailable,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NotificationDeliveryWriteResult {
+    Applied,
+    NotClaimed,
+    Unavailable,
+}
+
 pub fn validate_notification_recipient(channel: &str, recipient: &str) -> Result<(), String> {
     let recipient = recipient.trim();
     if recipient.is_empty() || recipient.chars().count() > 320 {
@@ -184,12 +191,12 @@ impl NotificationOutboxRepository {
         id: &str,
         response_code: u16,
         provider_message_id: Option<&str>,
-    ) -> Result<(), sqlx::Error> {
+    ) -> NotificationDeliveryWriteResult {
         let Some(pool) = &self.pool else {
-            return Ok(());
+            return NotificationDeliveryWriteResult::Unavailable;
         };
 
-        sqlx::query(
+        let result = sqlx::query(
             r#"
             UPDATE notification_outbox
             SET
@@ -206,9 +213,15 @@ impl NotificationOutboxRepository {
         .bind(i32::from(response_code))
         .bind(provider_message_id)
         .execute(pool)
-        .await?;
-
-        Ok(())
+        .await;
+        match result {
+            Ok(result) if result.rows_affected() == 1 => NotificationDeliveryWriteResult::Applied,
+            Ok(_) => NotificationDeliveryWriteResult::NotClaimed,
+            Err(error) => {
+                tracing::error!(%error, notification_id = id, "notification sent receipt persistence failed");
+                NotificationDeliveryWriteResult::Unavailable
+            }
+        }
     }
 
     pub async fn mark_failed(
@@ -218,9 +231,9 @@ impl NotificationOutboxRepository {
         max_attempts: i32,
         error: &str,
         response_code: Option<u16>,
-    ) -> Result<(), sqlx::Error> {
+    ) -> NotificationDeliveryWriteResult {
         let Some(pool) = &self.pool else {
-            return Ok(());
+            return NotificationDeliveryWriteResult::Unavailable;
         };
         let retry_seconds = retry_delay_seconds(attempt_count);
         let status = if attempt_count >= max_attempts {
@@ -229,7 +242,7 @@ impl NotificationOutboxRepository {
             "failed"
         };
 
-        sqlx::query(
+        let result = sqlx::query(
             r#"
             UPDATE notification_outbox
             SET
@@ -247,9 +260,15 @@ impl NotificationOutboxRepository {
         .bind(truncate_error(error))
         .bind(retry_seconds)
         .execute(pool)
-        .await?;
-
-        Ok(())
+        .await;
+        match result {
+            Ok(result) if result.rows_affected() == 1 => NotificationDeliveryWriteResult::Applied,
+            Ok(_) => NotificationDeliveryWriteResult::NotClaimed,
+            Err(database_error) => {
+                tracing::error!(%database_error, notification_id = id, "notification failure persistence failed");
+                NotificationDeliveryWriteResult::Unavailable
+            }
+        }
     }
 
     pub async fn list_history(
@@ -599,7 +618,7 @@ pub fn start_notification_dispatcher(
     tokio::spawn(async move {
         let client = Client::new();
         loop {
-            if let Err(error) = dispatch_once(
+            match dispatch_once(
                 &repository,
                 &client,
                 &config.webhook_url,
@@ -610,13 +629,31 @@ pub fn start_notification_dispatcher(
             )
             .await
             {
-                tracing::error!(%error, "notification dispatcher cycle failed");
+                NotificationDispatchCycleResult::Completed { finalized, stale } => {
+                    if finalized > 0 {
+                        tracing::info!(finalized, "notification dispatcher cycle completed");
+                    }
+                    if stale > 0 {
+                        tracing::warn!(stale, "notification provider outcomes could not finalize because their claims were no longer current");
+                    }
+                }
+                NotificationDispatchCycleResult::Unavailable => {
+                    tracing::error!(
+                        "notification dispatcher cycle could not persist delivery state"
+                    );
+                }
             }
             tokio::time::sleep(config.poll_interval).await;
         }
     });
 
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum NotificationDispatchCycleResult {
+    Completed { finalized: usize, stale: usize },
+    Unavailable,
 }
 
 async fn dispatch_once(
@@ -627,8 +664,16 @@ async fn dispatch_once(
     public_app_url: &Url,
     batch_size: i64,
     max_attempts: i32,
-) -> Result<(), sqlx::Error> {
-    let notifications = repository.claim_batch(batch_size, max_attempts).await?;
+) -> NotificationDispatchCycleResult {
+    let notifications = match repository.claim_batch(batch_size, max_attempts).await {
+        Ok(notifications) => notifications,
+        Err(error) => {
+            tracing::error!(%error, "notification claim persistence failed");
+            return NotificationDispatchCycleResult::Unavailable;
+        }
+    };
+    let mut finalized = 0;
+    let mut stale = 0;
     for notification in notifications {
         let payload = absolutize_share_url(notification.payload.clone(), public_app_url);
         let delivery = WebhookDeliveryRequest {
@@ -643,14 +688,14 @@ async fn dispatch_once(
             request = request.bearer_auth(token);
         }
 
-        match request.send().await {
+        let write_result = match request.send().await {
             Ok(response) if response.status().is_success() => {
                 let status = response.status().as_u16();
                 let receipt = response.json::<WebhookDeliveryResponse>().await.ok();
                 let message_id = receipt.and_then(|item| item.message_id);
                 repository
                     .mark_sent(&notification.id, status, message_id.as_deref())
-                    .await?;
+                    .await
             }
             Ok(response) => {
                 let status = response.status().as_u16();
@@ -662,7 +707,7 @@ async fn dispatch_once(
                         &format!("provider returned HTTP {status}"),
                         Some(status),
                     )
-                    .await?;
+                    .await
             }
             Err(error) => {
                 repository
@@ -673,12 +718,25 @@ async fn dispatch_once(
                         &error.to_string(),
                         None,
                     )
-                    .await?;
+                    .await
+            }
+        };
+        match write_result {
+            NotificationDeliveryWriteResult::Applied => finalized += 1,
+            NotificationDeliveryWriteResult::NotClaimed => {
+                stale += 1;
+                tracing::warn!(
+                    notification_id = notification.id,
+                    "notification provider outcome did not match a current sending claim"
+                );
+            }
+            NotificationDeliveryWriteResult::Unavailable => {
+                return NotificationDispatchCycleResult::Unavailable;
             }
         }
     }
 
-    Ok(())
+    NotificationDispatchCycleResult::Completed { finalized, stale }
 }
 
 fn absolutize_share_url(mut payload: Value, public_app_url: &Url) -> Value {
@@ -726,7 +784,10 @@ fn truncate_error(error: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{absolutize_share_url, retry_delay_seconds};
+    use super::{
+        absolutize_share_url, retry_delay_seconds, NotificationDeliveryWriteResult,
+        NotificationOutboxRepository,
+    };
     use reqwest::Url;
     use serde_json::json;
 
@@ -747,6 +808,22 @@ mod tests {
         assert_eq!(
             payload["share_url"],
             "https://app.example.com/bid-review/token-1"
+        );
+    }
+
+    #[tokio::test]
+    async fn delivery_finalization_requires_persistent_storage() {
+        let repository = NotificationOutboxRepository::default();
+
+        assert_eq!(
+            repository.mark_sent("notification_1", 202, None).await,
+            NotificationDeliveryWriteResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .mark_failed("notification_1", 1, 5, "provider unavailable", Some(503))
+                .await,
+            NotificationDeliveryWriteResult::Unavailable
         );
     }
 }
