@@ -122,3 +122,8 @@ self-contained slice. The binary target falls again from 215 to 210 tests, for
 23 cumulatively removed duplicate executions, while the strict lint gate and
 all 479 backend tests remain green. Five coupled core/report/photo declarations
 remain.
+
+Day-plan validation and persistence now also come from the library boundary.
+The binary target falls from 210 to 185 tests, making 48 cumulatively removed
+duplicate executions. Strict Clippy and all 454 backend tests pass; four coupled
+job/report/photo module declarations remain.

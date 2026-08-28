@@ -1,7 +1,5 @@
 #[allow(dead_code)]
 mod completion_reports;
-#[allow(dead_code)]
-mod day_plans;
 mod db;
 mod photo_processing;
 mod photo_storage;
@@ -23,16 +21,6 @@ use completion_reports::{
     is_valid_completion_report_lifecycle_status, prepare_delivered_completion_report_snapshot,
     CompletionReportActionResult, CompletionReportDeliveryCandidateResult,
     CompletionReportDeliveryNotificationResult, CompletionReportResponse,
-};
-use day_plans::{
-    validate_amendment_request, validate_amendment_review, validate_create_crew_name,
-    validate_create_organization_branch_request, validate_create_service_territory_request,
-    AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
-    CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
-    CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
-    PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
-    ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult, UpdateCrewRequest, UpdateCrewResult,
-    UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
 };
 use db::{
     ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
@@ -71,6 +59,16 @@ use grover_landscaping_api::{
         validate_decision_request, CustomerRecommendationDecisionResult,
         CustomerRecommendationDetailResult, CustomerRecommendationListResult,
         CustomerVisitRecommendationRepository, DecideCustomerRecommendationRequest,
+    },
+    day_plans::{
+        self, validate_amendment_request, validate_amendment_review, validate_create_crew_name,
+        validate_create_organization_branch_request, validate_create_service_territory_request,
+        AssignDayPlanStopRequest, CreateCrewRequest, CreateDayPlanAmendmentRequest,
+        CreateDayPlanRequest, CreateOrganizationBranchRequest, CreateOrganizationBranchResult,
+        CreateServiceTerritoryRequest, CreateServiceTerritoryResult, DayPlanRepository,
+        PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
+        ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult, UpdateCrewRequest,
+        UpdateCrewResult, UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
     },
     marketing_events::{
         validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,

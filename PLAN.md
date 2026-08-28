@@ -309,6 +309,11 @@ Current state:
   bringing the cumulative reduction to 23 duplicate executions. Strict all-
   target Clippy and all 479 backend tests pass; completion reports, day plans,
   the core job repository, and photo processing/storage remain coupled next.
+- Phase 6A6 moves day-plan validation, routing, amendment, crew, and hierarchy
+  logic onto the library boundary. The binary target drops from 210 to 185
+  tests, bringing the cumulative duplicate-test reduction to 48. Strict Clippy
+  and all 454 backend tests pass; completion reports, the core job repository,
+  and photo processing/storage are the four remaining binary redeclarations.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

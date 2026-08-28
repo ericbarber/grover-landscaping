@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-27: Moved day-plan validation, routing, amendment, crew, and hierarchy logic from binary redeclaration to the library crate. The binary test target drops from 210 to 185 tests, bringing the cumulative duplicate-test reduction to 48; strict Clippy and all 454 backend tests pass.
 - 2026-08-27: Continued backend build convergence by routing account validation and persistence through the library crate. The binary test target drops from 215 to 210 tests, bringing the cumulative duplicate-test reduction to 23; strict Clippy and all 479 backend tests pass.
 - 2026-08-27: Started backend build/test convergence by routing marketing events, marketing leads, notifications, project bids, and stop progress through the library crate instead of recompiling them in the API binary. The binary test target drops from 233 to 215 tests, eliminating 18 duplicate executions while strict Clippy and all 484 backend tests remain green.
 - 2026-08-27: Restored the backend CI quality gate during Pilot Readiness. Mechanical lint findings are fixed, intentional large by-value result enums and SQL boundary signatures retain narrow item-level exceptions, duplicated binary-only dead-code findings are explicit, and formatting plus strict all-target/all-feature Clippy and all 502 backend tests pass.

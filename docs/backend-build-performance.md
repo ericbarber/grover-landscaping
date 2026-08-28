@@ -41,12 +41,21 @@ being compiled and run again in the binary. The binary target drops from 215 to
 backend command runs 479 tests. Strict all-target/all-feature Clippy and the full
 test command remain green.
 
+## Phase 6A6 day-plan convergence
+
+Day-plan repositories are constructed from the shared PostgreSQL pool and do
+not require the binary-local job repository type, so the complete day-plan
+module now comes from the library. This removes 25 more repeated unit-test
+executions: the binary target drops from 210 to 185 tests, the cumulative
+reduction reaches 48, and the full backend command runs 454 tests. Strict
+all-target/all-feature Clippy and the full test command pass.
+
 ## Next convergence boundary
 
-`completion_reports`, `day_plans`, `db`, `photo_processing`, and `photo_storage`
-remain redeclared by the binary. They share root data types or repository types
-today, so the next slice should first move the binary onto the library-owned
-job/photo request and response contracts, then remove those five declarations
-in dependency order. Clean-build timing should be compared only
+`completion_reports`, `db`, `photo_processing`, and `photo_storage` remain
+redeclared by the binary. They share root data types or repository types today,
+so the next slice should first move the binary onto the library-owned job/photo
+request and response contracts, then remove those four declarations in
+dependency order. Clean-build timing should be compared only
 after that larger boundary is complete; incremental timings from different
 artifact states are not an equivalent benchmark.
