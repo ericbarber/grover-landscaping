@@ -304,6 +304,11 @@ Current state:
   This removes 18 duplicate binary unit-test executions (233 down to 215) while
   the strict CI lint gate and all 484 remaining backend tests pass. Core data,
   completion-report, day-plan, and photo module convergence remains next.
+- Phase 6A5 moves account validation and persistence onto the same shared
+  library boundary. The binary test target drops again from 215 to 210 tests,
+  bringing the cumulative reduction to 23 duplicate executions. Strict all-
+  target Clippy and all 479 backend tests pass; completion reports, day plans,
+  the core job repository, and photo processing/storage remain coupled next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

@@ -31,12 +31,22 @@ Validation after the boundary change:
 - `cargo test --bin grover-landscaping-api` passes all 215 binary tests; and
 - `cargo test --all` passes all 484 backend tests.
 
+## Phase 6A5 account convergence
+
+The account repository and its request validation are self-contained, so the
+binary now imports `accounts` from the library as the next dependency-ordered
+slice. Its five module unit tests remain covered by the library target without
+being compiled and run again in the binary. The binary target drops from 215 to
+210 tests, for a cumulative reduction of 23 duplicate executions, and the full
+backend command runs 479 tests. Strict all-target/all-feature Clippy and the full
+test command remain green.
+
 ## Next convergence boundary
 
-`accounts`, `completion_reports`, `day_plans`, `db`, `photo_processing`, and
-`photo_storage` remain redeclared by the binary. They share root data types or
-repository types today, so the next slice should first move the binary onto the
-library-owned job/photo request and response contracts, then remove those six
-declarations in dependency order. Clean-build timing should be compared only
+`completion_reports`, `day_plans`, `db`, `photo_processing`, and `photo_storage`
+remain redeclared by the binary. They share root data types or repository types
+today, so the next slice should first move the binary onto the library-owned
+job/photo request and response contracts, then remove those five declarations
+in dependency order. Clean-build timing should be compared only
 after that larger boundary is complete; incremental timings from different
 artifact states are not an equivalent benchmark.

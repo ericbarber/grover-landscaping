@@ -540,6 +540,7 @@ The exact artifact mapping and ordered implementation queue live in
    - Photo-worker cycles now distinguish finalized and stale claims; abandoned privacy-deletion work is reclaimed after ten minutes or dead-lettered when exhausted.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
+   - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.
    - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.

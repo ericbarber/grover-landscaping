@@ -1,4 +1,3 @@
-mod accounts;
 #[allow(dead_code)]
 mod completion_reports;
 #[allow(dead_code)]
@@ -7,16 +6,6 @@ mod db;
 mod photo_processing;
 mod photo_storage;
 
-use accounts::{
-    valid_customer_account_relationship, validate_create_customer_account_request,
-    validate_create_customer_property_request, validate_update_customer_account_request,
-    AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
-    CustomerAccountArchiveError, CustomerAccountListResult, CustomerAccountSummaryResult,
-    CustomerContextReadResult, CustomerPropertyListResult, CustomerPropertyMutationError,
-    CustomerPropertyStatusError, UpdateCustomerAccountRelationshipRequest,
-    UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
-    UpdateCustomerPropertyStatusRequest,
-};
 use axum::{
     extract::{Extension, Path, Query, State},
     http::{
@@ -59,6 +48,16 @@ use grover_landscaping_api::{
         can_manage_property_portfolios, can_manage_schedule, can_review_completion_report,
         can_submit_completion_report, can_view_crew_route, can_view_customer_property_portfolios,
         AccessRole,
+    },
+    accounts::{
+        self, valid_customer_account_relationship, validate_create_customer_account_request,
+        validate_create_customer_property_request, validate_update_customer_account_request,
+        AccountRepository, CreateCustomerAccountRequest, CreateCustomerPropertyRequest,
+        CustomerAccountArchiveError, CustomerAccountListResult, CustomerAccountSummaryResult,
+        CustomerContextReadResult, CustomerPropertyListResult, CustomerPropertyMutationError,
+        CustomerPropertyStatusError, UpdateCustomerAccountRelationshipRequest,
+        UpdateCustomerAccountRequest, UpdateCustomerPropertyIdentityRequest,
+        UpdateCustomerPropertyStatusRequest,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
     customer_portal_access::{CustomerPortalAccessRepository, CustomerPortalVisitReadResult},

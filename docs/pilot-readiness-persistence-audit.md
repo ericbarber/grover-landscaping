@@ -116,3 +116,9 @@ progress through the library crate. Binary unit-test duplication falls from 233
 to 215 tests, removing 18 repeated executions. The remaining six coupled module
 declarations are tracked in `docs/backend-build-performance.md` for dependency-
 ordered convergence rather than a broad type rewrite in this slice.
+
+Account validation and persistence now follow the same boundary as the next
+self-contained slice. The binary target falls again from 215 to 210 tests, for
+23 cumulatively removed duplicate executions, while the strict lint gate and
+all 479 backend tests remain green. Five coupled core/report/photo declarations
+remain.
