@@ -542,6 +542,7 @@ The exact artifact mapping and ordered implementation queue live in
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.
    - Day-plan convergence removes another 25 duplicate binary tests; 48 repeated executions are now gone and four coupled job/report/photo declarations remain.
+   - Final job/report/photo convergence removes all binary source-module redeclarations and all 88 repeated module tests; capture comparable cold/warm CI timing next.
    - Include photo-erasure retry and resolution outcomes in auditable manager operations.
 1. **Production identity and tenant security**
    - Provision Cognito and create the first organization-owner identity.

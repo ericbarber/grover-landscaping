@@ -1,9 +1,3 @@
-#[allow(dead_code)]
-mod completion_reports;
-mod db;
-mod photo_processing;
-mod photo_storage;
-
 use axum::{
     extract::{Extension, Path, Query, State},
     http::{
@@ -14,21 +8,6 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Json, Router,
-};
-use completion_reports::{
-    apply_completion_report_persistence, build_completion_report,
-    completion_report_is_active_manager_queue_status, customer_completion_report_snapshot_response,
-    is_valid_completion_report_lifecycle_status, prepare_delivered_completion_report_snapshot,
-    CompletionReportActionResult, CompletionReportDeliveryCandidateResult,
-    CompletionReportDeliveryNotificationResult, CompletionReportResponse,
-};
-use db::{
-    ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult, DatabaseConfig,
-    DispatchCustomerNotificationResult, JobAddOnStatusUpdate, JobDispatchAssignmentResult,
-    JobLifecycleWriteResult, JobRepository, PhotoErasureDeletionHistoryFilter,
-    PhotoErasureDeletionResolveResult, PhotoErasureDeletionRetryResult,
-    PhotoProcessingHistoryFilter, PhotoProcessingResolveResult, PhotoProcessingRetryResult,
-    ResourceOwnershipResult, ResourceReadResult, StopProgressWriteResult,
 };
 use grover_landscaping_api::{
     access_control::{
@@ -48,6 +27,14 @@ use grover_landscaping_api::{
         UpdateCustomerPropertyStatusRequest,
     },
     auth::{require_api_auth, AuthPrincipal, AuthService},
+    completion_reports::{
+        self, apply_completion_report_persistence, build_completion_report,
+        completion_report_is_active_manager_queue_status,
+        customer_completion_report_snapshot_response, is_valid_completion_report_lifecycle_status,
+        prepare_delivered_completion_report_snapshot, CompletionReportActionResult,
+        CompletionReportDeliveryCandidateResult, CompletionReportDeliveryNotificationResult,
+        CompletionReportResponse,
+    },
     customer_portal_access::{CustomerPortalAccessRepository, CustomerPortalVisitReadResult},
     customer_visit_communication::{
         validate_customer_question_request, validate_provider_response_request,
@@ -69,6 +56,15 @@ use grover_landscaping_api::{
         PersistedMutationResult, PersistedReadResult, ReorderDayPlanStopsRequest,
         ReviewDayPlanAmendmentRequest, UpdateBranchStatusResult, UpdateCrewRequest,
         UpdateCrewResult, UpdateHierarchyStatusRequest, UpdateTerritoryStatusResult,
+    },
+    db::{
+        ChecklistWriteResult, CustomerPhotoErasureResult, CustomerPrivacyExportResult,
+        DatabaseConfig, DispatchCustomerNotificationResult, JobAddOnStatusUpdate,
+        JobDispatchAssignmentResult, JobLifecycleWriteResult, JobRepository,
+        PhotoErasureDeletionHistoryFilter, PhotoErasureDeletionResolveResult,
+        PhotoErasureDeletionRetryResult, PhotoProcessingHistoryFilter,
+        PhotoProcessingResolveResult, PhotoProcessingRetryResult, ResourceOwnershipResult,
+        ResourceReadResult, StopProgressWriteResult,
     },
     marketing_events::{
         validate_marketing_event, CreateMarketingEventRequest, MarketingEventRepository,
@@ -164,6 +160,8 @@ use grover_landscaping_api::{
         SaveOwnerWorkspaceRequest, SaveOwnerYardBriefRequest,
         TransitionOwnerProviderAssessmentRequest, VerifyOwnerProviderInvitationRecipientRequest,
     },
+    photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig},
+    photo_storage,
     project_bids::{
         customer_project_bid_response, validate_project_bid_decision, validate_project_bid_request,
         validate_revise_project_bid_request, validate_send_project_bid_request,
@@ -201,9 +199,9 @@ use grover_landscaping_api::{
         is_valid_stop_progress_status, local_stop_progress_response,
         persisted_stop_progress_response, replayed_stop_progress_response, StopProgressRequest,
     },
-    PhotoUploadMetadata as OwnerPhotoUploadMetadata,
+    validate_photo_upload_request, JobAddOn, JobSummary, PhotoEvidence, PhotoUploadMetadata,
+    PhotoUploadRequest,
 };
-use photo_processing::{start_photo_processing_worker, PhotoProcessingWorkerConfig};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, io, net::SocketAddr, path::PathBuf, sync::Arc};
 use tower_http::{
@@ -252,56 +250,6 @@ struct HealthResponse {
     status: &'static str,
     service: &'static str,
     persistence: &'static str,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct JobSummary {
-    pub id: String,
-    pub organization_id: String,
-    pub assigned_crew_id: Option<String>,
-    pub customer_name: String,
-    pub property_address: String,
-    pub status: String,
-    pub scheduled_date: String,
-    pub before_photos: u32,
-    pub after_photos: u32,
-    pub checklist_items: u32,
-    pub completed_checklist_items: u32,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct JobDetail {
-    pub id: String,
-    pub organization_id: String,
-    pub assigned_crew_id: Option<String>,
-    pub customer_name: String,
-    pub property_address: String,
-    pub status: String,
-    pub scheduled_date: String,
-    pub before_photos: u32,
-    pub after_photos: u32,
-    pub checklist_items: u32,
-    pub completed_checklist_items: u32,
-    pub checklist: Vec<ChecklistItem>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct ChecklistItem {
-    pub id: String,
-    pub label: String,
-    pub completed: bool,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct JobAddOn {
-    pub id: String,
-    pub job_id: String,
-    pub service_name: String,
-    pub service_description: Option<String>,
-    pub quantity: u32,
-    pub unit_price_cents: u32,
-    pub note: Option<String>,
-    pub status: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -486,57 +434,6 @@ struct PhotoProcessingResolveRequest {
 #[derive(Debug, Deserialize)]
 struct CustomerPhotoErasureRequest {
     reason: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct PhotoUploadRequest {
-    pub file_name: String,
-    pub content_type: String,
-    pub photo_type: String,
-    pub client_mutation_id: Option<String>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct PhotoUploadResponse {
-    pub status: &'static str,
-    pub job_id: String,
-    pub photo_id: String,
-    pub photo_type: String,
-    pub file_name: String,
-    pub content_type: String,
-    pub upload_mode: &'static str,
-    pub upload_url: String,
-    pub object_key: String,
-    pub thumbnail_upload_url: Option<String>,
-    pub thumbnail_object_key: Option<String>,
-    pub thumbnail_content_type: Option<&'static str>,
-    pub thumbnail_max_dimension_px: Option<u32>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct PhotoEvidence {
-    pub id: String,
-    pub job_id: String,
-    pub photo_type: String,
-    pub file_name: String,
-    pub content_type: String,
-    pub object_key: String,
-    pub status: String,
-    pub upload_mode: &'static str,
-    pub display_url: String,
-    pub thumbnail_url: Option<String>,
-    pub file_size_bytes: Option<i64>,
-    pub image_width_px: Option<i32>,
-    pub image_height_px: Option<i32>,
-    pub metadata_source: Option<String>,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct PhotoUploadMetadata {
-    pub file_size_bytes: Option<i64>,
-    pub image_width_px: Option<i32>,
-    pub image_height_px: Option<i32>,
-    pub metadata_source: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1850,7 +1747,7 @@ async fn complete_owner_intake_media_upload(
     let has_metadata = request.file_size_bytes.is_some()
         || request.image_width_px.is_some()
         || request.image_height_px.is_some();
-    let metadata = OwnerPhotoUploadMetadata {
+    let metadata = PhotoUploadMetadata {
         file_size_bytes: request.file_size_bytes,
         image_width_px: request.image_width_px,
         image_height_px: request.image_height_px,
@@ -10178,7 +10075,7 @@ async fn create_local_photo_upload(
         return response;
     }
 
-    if let Err(message) = request.validate() {
+    if let Err(message) = validate_photo_upload_request(&request) {
         return (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
@@ -10300,48 +10197,6 @@ impl PhotoCompleteRequest {
             || self.image_width_px.is_some()
             || self.image_height_px.is_some()
     }
-}
-
-impl PhotoUploadRequest {
-    fn validate(&self) -> Result<(), String> {
-        if self.file_name.trim().is_empty() {
-            return Err("file_name is required".to_string());
-        }
-        if !supported_photo_type(&self.photo_type) {
-            return Err("photo_type must be before, after, issue, or extra".to_string());
-        }
-        if !supported_photo_content_type(&self.content_type) {
-            return Err(
-                "content_type must be image/jpeg, image/png, image/gif, or image/webp".to_string(),
-            );
-        }
-        if self
-            .client_mutation_id
-            .as_deref()
-            .is_some_and(|id| Uuid::parse_str(id).is_err())
-        {
-            return Err("client_mutation_id must be a UUID when provided".to_string());
-        }
-
-        Ok(())
-    }
-}
-
-fn supported_photo_type(photo_type: &str) -> bool {
-    matches!(photo_type, "before" | "after" | "issue" | "extra")
-}
-
-fn supported_photo_content_type(content_type: &str) -> bool {
-    let normalized = content_type
-        .split(';')
-        .next()
-        .unwrap_or("")
-        .trim()
-        .to_ascii_lowercase();
-    matches!(
-        normalized.as_str(),
-        "image/jpeg" | "image/png" | "image/gif" | "image/webp"
-    )
 }
 
 #[cfg(test)]

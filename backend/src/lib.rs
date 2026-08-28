@@ -127,3 +127,39 @@ pub struct PhotoUploadMetadata {
     pub image_height_px: Option<i32>,
     pub metadata_source: Option<String>,
 }
+
+pub fn validate_photo_upload_request(request: &PhotoUploadRequest) -> Result<(), String> {
+    if request.file_name.trim().is_empty() {
+        return Err("file_name is required".to_string());
+    }
+    if !matches!(
+        request.photo_type.as_str(),
+        "before" | "after" | "issue" | "extra"
+    ) {
+        return Err("photo_type must be before, after, issue, or extra".to_string());
+    }
+    let content_type = request
+        .content_type
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_lowercase();
+    if !matches!(
+        content_type.as_str(),
+        "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+    ) {
+        return Err(
+            "content_type must be image/jpeg, image/png, image/gif, or image/webp".to_string(),
+        );
+    }
+    if request
+        .client_mutation_id
+        .as_deref()
+        .is_some_and(|id| uuid::Uuid::parse_str(id).is_err())
+    {
+        return Err("client_mutation_id must be a UUID when provided".to_string());
+    }
+
+    Ok(())
+}

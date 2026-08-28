@@ -50,12 +50,23 @@ executions: the binary target drops from 210 to 185 tests, the cumulative
 reduction reaches 48, and the full backend command runs 454 tests. Strict
 all-target/all-feature Clippy and the full test command pass.
 
+## Phase 6A7 final core convergence
+
+The final coupled slice moves completion reports, the core job repository,
+photo processing, and photo storage onto the library boundary together. The
+binary's duplicate job and photo structs are removed, and photo-upload request
+validation now lives beside the library-owned request contract. `main.rs` no
+longer redeclares any source module.
+
+The binary target now contains only its 145 route and handler tests. Compared
+with the 233-test baseline, all 88 repeated module-test executions are removed;
+the full backend command runs 414 tests. Formatting, strict all-target/all-
+feature Clippy, the binary target, and the full backend suite pass.
+
 ## Next convergence boundary
 
-`completion_reports`, `db`, `photo_processing`, and `photo_storage` remain
-redeclared by the binary. They share root data types or repository types today,
-so the next slice should first move the binary onto the library-owned job/photo
-request and response contracts, then remove those four declarations in
-dependency order. Clean-build timing should be compared only
-after that larger boundary is complete; incremental timings from different
-artifact states are not an equivalent benchmark.
+All binary module redeclarations are removed. The next build-performance phase
+should capture comparable cold and warm CI timings, then use those measurements
+to prioritize linker settings, test-profile tuning, dependency caching, or test
+partitioning. Incremental timings from the convergence work used different
+artifact states and are not presented as an equivalent before/after benchmark.

@@ -127,3 +127,10 @@ Day-plan validation and persistence now also come from the library boundary.
 The binary target falls from 210 to 185 tests, making 48 cumulatively removed
 duplicate executions. Strict Clippy and all 454 backend tests pass; four coupled
 job/report/photo module declarations remain.
+
+The final coupled convergence moves completion reports, the core job
+repository, photo processing, photo storage, and their shared job/photo types to
+the library boundary together. The binary has no remaining source-module
+redeclarations and runs only 145 route/handler tests. All 88 duplicate module-
+test executions from the 233-test baseline are removed; strict Clippy and all
+414 backend tests pass.

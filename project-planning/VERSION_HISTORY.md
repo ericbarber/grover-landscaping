@@ -1,5 +1,6 @@
 # Version History
 
+- 2026-08-27: Completed backend module convergence by moving completion reports, the core job repository, photo processing, photo storage, shared job/photo types, and upload validation onto the library boundary. The binary now contains only 145 route tests, down from 233, eliminating all 88 duplicate module-test executions; strict Clippy and all 414 backend tests pass.
 - 2026-08-27: Moved day-plan validation, routing, amendment, crew, and hierarchy logic from binary redeclaration to the library crate. The binary test target drops from 210 to 185 tests, bringing the cumulative duplicate-test reduction to 48; strict Clippy and all 454 backend tests pass.
 - 2026-08-27: Continued backend build convergence by routing account validation and persistence through the library crate. The binary test target drops from 215 to 210 tests, bringing the cumulative duplicate-test reduction to 23; strict Clippy and all 479 backend tests pass.
 - 2026-08-27: Started backend build/test convergence by routing marketing events, marketing leads, notifications, project bids, and stop progress through the library crate instead of recompiling them in the API binary. The binary test target drops from 233 to 215 tests, eliminating 18 duplicate executions while strict Clippy and all 484 backend tests remain green.
