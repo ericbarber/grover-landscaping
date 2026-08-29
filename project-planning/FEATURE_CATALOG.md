@@ -73,7 +73,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 
 ## Persona Workspaces
 
-- Shared authenticated Home with signed-in identity, persona context, work/sync summary, and persona-specific quick actions
+- Shared authenticated Home with signed-in identity, persona context, source-
+  appropriate work/sync summary, persona-specific quick actions, and a direct
+  action from the current priority notice
 - Prototype-aligned authenticated Home shell with canonical desktop/mobile
   wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
   navigation, mobile header and bottom-navigation surfaces, and exact style
@@ -84,6 +86,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
+- Compact Yard Owner visit history with one expanded customer-safe progress,
+  update, questions, recommendations, and proof surface at a time, validated in
+  Chromium and iPhone/WebKit phone journeys
 - Delivered hybrid customer portal authorization foundation with provider-tenant
   customer-account inheritance for verified owners, explicit property grants
   for delegates, activation-proven backfill, and fail-closed property resolution;

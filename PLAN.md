@@ -370,6 +370,14 @@ Current state:
   malformed metadata or audit-process errors; eight deterministic policy tests
   prove clean, moderate-only, high, critical, malformed, and unavailable paths.
   No advisory suppression or automatic major-version upgrade is introduced.
+- Phase 6A15 closes the next authenticated mobile-navigation slice. Yard Owner
+  Home progress now derives from protected visit data instead of provider field
+  jobs, progress and remaining-work nouns follow the active persona, and every
+  Home priority notice opens its relevant destination. Yard Owner Visits renders
+  compact summaries with only one progress/questions/recommendations/proof
+  detail open at a time. A containerized Chromium and WebKit journey proves the
+  390 px iPhone layout, 48 px navigation targets, bottom-safe placement, no
+  horizontal overflow, Home-to-yard action, and exclusive visit disclosure.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -1260,6 +1268,9 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Daily progress, sync health, and a recommended next action establish a clear visual and task hierarchy
 - Secondary persona destinations use compact workspace cards while signed-in identity details remain available below the primary workflow
 - Home status messaging prioritizes pending sync, no assigned work, remaining work, or a completed day with distinct visual tones
+- Home status notices provide a direct persona-relevant action; pending field
+  sync opens queued jobs while customer and manager personas open their primary
+  customer or operations destination
 - Explicit Route, Jobs, Job, and Manager mobile workspace views replace long-page anchor jumps
 - Fixed bottom navigation preserves a stable thumb-reachable location and iPhone safe-area spacing
 - Sticky mobile context identifies the current workspace, selected customer, property, job status, workload, and pending sync count
@@ -1289,6 +1300,12 @@ the outcome, and return to its recovery workflow from persisted activity history
 - Customer bid history provides an explicit empty state and resets property drill-down when changing history areas
 - Selected properties preview the two newest completion reports on mobile and disclose the older-report count
 - Customers can expand or collapse older property reports without lengthening every property view
+- Yard Owner Visits presents compact service summaries and expands only one
+  visit's progress, update, questions, recommendations, and proof controls at a
+  time
+- Chromium and WebKit phone validation proves the persisted Yard Owner Home-to-
+  history interaction, iPhone user agent, 390 px viewport, bottom-safe
+  navigation, minimum 48 px targets, and no horizontal overflow
 - Desktop retains the existing route, jobs, manager, and sticky job-detail dashboard layout
 
 ### Crew dashboard foundation
@@ -2194,9 +2211,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A15: continue the mobile navigation phase with compact service-work
-  history, actionable persona Home alerts, and iPhone interaction validation.
-- Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
+- Phase 6A16: audit remaining persisted repositories for lossy missing,
+  conflict, or unavailable outcomes, beginning with the next customer- or
+  privacy-sensitive write boundary.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

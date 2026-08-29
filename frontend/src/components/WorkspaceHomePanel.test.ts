@@ -60,7 +60,10 @@ describe('workspace home actions', () => {
 
   it('describes progress in language that matches the active persona', () => {
     expect(personaProgressLanguage(workspacePersonasForRoles(['PropertyOwner'])[0]))
-      .toEqual({ eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled' });
+      .toEqual({
+        eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled',
+        itemSingular: 'visit', itemPlural: 'visits',
+      });
     expect(personaProgressLanguage(workspacePersonasForRoles(['CrewLead'])[0]).eyebrow)
       .toBe('Route progress');
     expect(personaProgressLanguage(workspacePersonasForRoles(['OrganizationOwner'])[0]).eyebrow)
@@ -94,5 +97,15 @@ describe('workspace home actions', () => {
       completedJobCount: 3,
       pendingChangeCount: 0,
     }).tone).toBe('complete');
+  });
+
+  it('uses persona language for remaining work', () => {
+    expect(homePriorityStatus({
+      assignedJobCount: 3,
+      completedJobCount: 1,
+      itemPlural: 'visits',
+      itemSingular: 'visit',
+      pendingChangeCount: 0,
+    }).title).toBe('2 visits remaining');
   });
 });

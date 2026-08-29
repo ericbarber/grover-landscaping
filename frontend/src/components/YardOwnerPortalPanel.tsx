@@ -364,6 +364,7 @@ export function YardOwnerPortalPanel({
   const visibleProperties = properties;
   const [destination, setDestination] = useState<PortalDestination>('home');
   const [selectedPropertyId, setSelectedPropertyId] = useState(visibleProperties[0]?.id ?? '');
+  const [expandedVisitId, setExpandedVisitId] = useState<string | null>(null);
   const selectedProperty = visibleProperties.find(({ id }) => id === selectedPropertyId)
     ?? visibleProperties[0];
   const propertyVisits = useMemo(
@@ -448,6 +449,7 @@ export function YardOwnerPortalPanel({
               onChange={(event) => {
                 setSelectedPropertyId(event.target.value);
                 setDestination('home');
+                setExpandedVisitId(null);
               }}
               value={selectedProperty.id}
             >
@@ -544,25 +546,43 @@ export function YardOwnerPortalPanel({
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Visits</h1>
             <p className="mt-2 text-sm text-slate-600">Scheduled care and explicit customer-visible service-day updates.</p>
             <div className="mt-6 space-y-3">
-              {propertyVisits.length > 0 ? propertyVisits.map((visit) => (
-                <article className="rounded-2xl border border-slate-200 p-5" key={visit.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="font-display text-2xl font-black text-forest">{serviceDateLabel(visit.scheduledDate)}</h2>
-                      <p className="mt-1 text-sm font-bold text-slate-700">{visit.arrivalWindow} · {visit.serviceTitle}</p>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-black ${serviceStatusClass(visit.status)}`}>{customerVisitStatusLabel(visit.status)}</span>
-                  </div>
-                  <ServiceProgress status={visit.status} />
-                  <ServiceStatusDetail visit={visit} />
-                  <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
-                  <CustomerVisitQuestions visit={visit} />
-                  {visit.customerVisitReference ? (
-                    <CustomerVisitRecommendationsPanel customerVisitReference={visit.customerVisitReference} />
-                  ) : null}
-                  <CustomerDeliveredProof visit={visit} />
-                </article>
-              )) : (
+              {propertyVisits.length > 0 ? propertyVisits.map((visit, index) => {
+                const isExpanded = expandedVisitId === visit.id;
+                const detailId = `customer-visit-detail-${index}`;
+                return (
+                  <article className={`overflow-hidden rounded-2xl border ${isExpanded ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200 bg-white'}`} key={visit.id}>
+                    <button
+                      aria-controls={detailId}
+                      aria-expanded={isExpanded}
+                      className="flex min-h-24 w-full items-start justify-between gap-4 p-4 text-left sm:p-5"
+                      onClick={() => setExpandedVisitId(isExpanded ? null : visit.id)}
+                      type="button"
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-display text-xl font-black text-forest sm:text-2xl">{serviceDateLabel(visit.scheduledDate)}</span>
+                        <span className="mt-1 block text-sm font-bold text-slate-700">{visit.arrivalWindow} · {visit.serviceTitle}</span>
+                        <span className="mt-2 block text-xs font-semibold text-emerald-800">{isExpanded ? 'Hide visit details' : 'Review visit details'}</span>
+                      </span>
+                      <span className="flex shrink-0 flex-col items-end gap-2">
+                        <span className={`rounded-full px-3 py-1 text-xs font-black ${serviceStatusClass(visit.status)}`}>{customerVisitStatusLabel(visit.status)}</span>
+                        <WorkspaceIcon className={`size-5 text-emerald-800 transition-transform ${isExpanded ? 'rotate-90' : ''}`} name="forward" />
+                      </span>
+                    </button>
+                    {isExpanded ? (
+                      <div className="border-t border-emerald-200 bg-paper p-4 sm:p-5" id={detailId}>
+                        <ServiceProgress status={visit.status} />
+                        <ServiceStatusDetail visit={visit} />
+                        <p className="mt-4 text-sm leading-6 text-slate-700"><strong className="text-forest">Next update:</strong> {visit.nextUpdateMessage}</p>
+                        <CustomerVisitQuestions visit={visit} />
+                        {visit.customerVisitReference ? (
+                          <CustomerVisitRecommendationsPanel customerVisitReference={visit.customerVisitReference} />
+                        ) : null}
+                        <CustomerDeliveredProof visit={visit} />
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              }) : (
                 <WorkspaceStatusNotice detail="A confirmed visit will appear here when your provider schedules it." title="No upcoming visits." tone="neutral" />
               )}
             </div>
@@ -606,6 +626,7 @@ export function YardOwnerPortalPanel({
                     onClick={() => {
                       setSelectedPropertyId(property.id);
                       setDestination('home');
+                      setExpandedVisitId(null);
                     }}
                     type="button"
                   >

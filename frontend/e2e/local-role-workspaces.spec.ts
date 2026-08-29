@@ -1177,55 +1177,102 @@ test('manager completion review opens the selected Job report workflow', async (
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('yard owner portal keeps property context across Home, Visits, Proof, and Account', async ({ page }) => {
+test('yard owner phone Home opens compact one-visit-at-a-time service history', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
   });
-  await page.route('http://localhost:8080/properties/property_1001/completion-reports', (route) => route.fulfill({
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => route.fulfill({
     contentType: 'application/json',
-    body: JSON.stringify([{
-      report_id: 'report_property_1001',
-      job_id: 'job_property_1001',
-      property_id: 'property_1001',
-      organization_id: 'org_demo_landscaping',
-      customer_name: 'Sample Customer',
-      property_address: '123 Oak Street',
-      delivered_at: '2026-08-22T17:00:00Z',
-      share_url: '/report-view/property-proof',
-    }]),
-  }));
-  await page.route('http://localhost:8080/properties/property_1002/completion-reports', (route) => route.fulfill({
-    contentType: 'application/json',
-    body: '[]',
-  }));
-  await page.route('http://localhost:8080/accounts/customer_1001/bids', (route) => route.fulfill({
-    contentType: 'application/json',
-    body: '[]',
+    body: JSON.stringify({
+      properties: [{
+        organization_id: 'org_demo_landscaping',
+        account_id: 'account_oak',
+        property_id: 'property_oak',
+        property_display_name: 'Oak Street Home',
+      }],
+      visits: [
+        {
+          organization_id: 'org_demo_landscaping',
+          account_id: 'account_oak',
+          property_id: 'property_oak',
+          service_date: '2026-08-30',
+          window_start_epoch_seconds: 1788102000,
+          window_end_epoch_seconds: 1788109200,
+          time_zone: 'America/Phoenix',
+          service_title: 'Weekly yard care',
+          service_scope: ['Mow and edge the lawn'],
+          status: 'confirmed',
+          preparation_message: 'Unlock the side gate.',
+          next_update_message: 'Your provider will share an arrival update.',
+          delivered_proof_available: false,
+        },
+        {
+          organization_id: 'org_demo_landscaping',
+          account_id: 'account_oak',
+          property_id: 'property_oak',
+          service_date: '2026-09-06',
+          window_start_epoch_seconds: 1788714000,
+          window_end_epoch_seconds: 1788721200,
+          time_zone: 'America/Phoenix',
+          service_title: 'Seasonal shrub care',
+          service_scope: ['Shape approved shrubs'],
+          status: 'weather_delay',
+          preparation_message: 'Keep pets inside.',
+          customer_safe_reason: 'Lightning is nearby.',
+          next_update_message: 'We will share another update in 30 minutes.',
+          delivered_proof_available: false,
+        },
+      ],
+    }),
   }));
 
   await page.goto('/app');
-  await page.getByRole('navigation', { name: 'Desktop workspace' })
-    .getByRole('button', { name: 'My yard', exact: true }).click();
+  await expect(page.getByText('2 visits remaining')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Open My yard' }).click();
 
   const portal = page.locator('#customer-workspace');
   await expect(portal.getByRole('navigation', { name: 'Yard Owner portal' })).toBeVisible();
-  await expect(portal.getByRole('heading', { name: 'Welcome back, Sample Customer' })).toBeVisible();
+  await expect(portal.getByRole('heading', { name: /Welcome back, Jamie/ })).toBeVisible();
   await expect(portal.getByText('Next confirmed visit')).toBeVisible();
   await expect(portal.getByText('Mow and edge the lawn')).toBeVisible();
 
   await portal.getByRole('button', { name: 'Visits', exact: true }).click();
   await expect(portal.getByRole('heading', { name: 'Visits' })).toBeVisible();
-  await expect(portal.getByText('8:00–10:00 AM · Weekly yard care')).toBeVisible();
+  const weeklyVisit = portal.getByRole('button', { name: /Weekly yard care/ });
+  const seasonalVisit = portal.getByRole('button', { name: /Seasonal shrub care/ });
+  await expect(weeklyVisit).toHaveAttribute('aria-expanded', 'false');
+  await expect(seasonalVisit).toHaveAttribute('aria-expanded', 'false');
+  await expect(portal.getByText('Your provider will share an arrival update.')).toHaveCount(0);
 
-  await portal.getByRole('button', { name: 'Proof', exact: true }).click();
-  await expect(portal.getByRole('heading', { name: 'Proof' })).toBeVisible();
-  await expect(portal.getByRole('link', { name: /Care completed/ })).toHaveAttribute('href', /\/report-view\/property-proof$/);
+  await weeklyVisit.click();
+  await expect(weeklyVisit).toHaveAttribute('aria-expanded', 'true');
+  await expect(portal.getByText('Your provider will share an arrival update.')).toBeVisible();
 
-  await portal.getByRole('button', { name: 'Account', exact: true }).click();
-  await expect(portal.getByRole('heading', { name: 'Account' })).toBeVisible();
-  await portal.getByRole('button', { name: /Backyard Renovation Area/ }).click();
-  await expect(portal.getByRole('heading', { name: 'Welcome back, Sample Customer' })).toBeVisible();
-  await expect(portal.getByText('Seasonal tree care')).toBeVisible();
-  await expect(portal.getByLabel('Choose portal property')).toHaveValue('property_1002');
+  await seasonalVisit.click();
+  await expect(weeklyVisit).toHaveAttribute('aria-expanded', 'false');
+  await expect(seasonalVisit).toHaveAttribute('aria-expanded', 'true');
+  await expect(portal.getByText('Your provider will share an arrival update.')).toHaveCount(0);
+  await expect(portal.getByText('Lightning is nearby.')).toBeVisible();
+  await expect(portal.locator('button[aria-expanded="true"]')).toHaveCount(1);
+
+  const navigation = page.getByRole('navigation', { name: 'Mobile workspace' });
+  const navigationBounds = await navigation.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return {
+      bottom: Math.round(window.innerHeight - box.bottom),
+      minTargetHeight: Math.min(...Array.from(element.querySelectorAll('button')).map(
+        (button) => button.getBoundingClientRect().height,
+      )),
+      width: Math.round(box.width),
+    };
+  });
+  expect(navigationBounds.bottom).toBe(0);
+  expect(navigationBounds.minTargetHeight).toBeGreaterThanOrEqual(48);
+  expect(navigationBounds.width).toBe(390);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  if (testInfo.project.name === 'webkit-mobile') {
+    expect(await page.evaluate(() => navigator.userAgent)).toContain('iPhone');
+  }
 });

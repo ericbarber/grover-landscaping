@@ -1332,6 +1332,17 @@ export function App() {
     (persona) => persona.id === activePersonaId,
   ) ?? initialPersona;
   const workspaceSurfaces = workspaceSurfacesForPersona(activePersona.id);
+  const homeCustomerVisits = activePersona.id === 'yard-owner'
+    ? customerPortalVisits
+    : activePersona.id === 'property-manager'
+      ? customerPortalPreviewVisits
+      : null;
+  const homeAssignedWorkCount = homeCustomerVisits?.length ?? jobs.length;
+  const homeCompletedWorkCount = homeCustomerVisits
+    ? homeCustomerVisits.filter((visit) => (
+      visit.status === 'complete_proof_pending' || visit.deliveredProofAvailable
+    )).length
+    : jobs.filter((job) => job.status === 'completed').length;
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
   const managerWorkspaceHeading = activePersona.id === 'support'
     ? 'Support and recovery tools'
@@ -3014,8 +3025,8 @@ export function App() {
         <div className="min-w-0">
           <div className={mobileView === 'home' ? 'block' : 'hidden'}>
             <WorkspaceHomePanel
-              assignedJobCount={jobs.length}
-              completedJobCount={jobs.filter((job) => job.status === 'completed').length}
+              assignedJobCount={homeAssignedWorkCount}
+              completedJobCount={homeCompletedWorkCount}
               hasSelectedJob={Boolean(selectedJobId)}
               hasWorkspaceRole={workspaceRoles.length > 0}
               onOpen={(view) => {

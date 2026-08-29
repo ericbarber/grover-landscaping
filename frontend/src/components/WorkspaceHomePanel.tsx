@@ -63,29 +63,50 @@ export function personaProgressLanguage(persona: WorkspacePersona): {
   eyebrow: string;
   completed: string;
   total: string;
+  itemSingular: string;
+  itemPlural: string;
 } {
   if (persona.id === 'yard-owner') {
-    return { eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled' };
+    return {
+      eyebrow: 'Service progress', completed: 'visits complete', total: 'scheduled',
+      itemSingular: 'visit', itemPlural: 'visits',
+    };
   }
   if (persona.id === 'property-manager') {
-    return { eyebrow: 'Portfolio progress', completed: 'services complete', total: 'scheduled' };
+    return {
+      eyebrow: 'Portfolio progress', completed: 'services complete', total: 'scheduled',
+      itemSingular: 'service', itemPlural: 'services',
+    };
   }
   if (persona.id === 'crew-lead' || persona.id === 'crew-member') {
-    return { eyebrow: 'Route progress', completed: 'stops finished', total: 'assigned' };
+    return {
+      eyebrow: 'Route progress', completed: 'stops finished', total: 'assigned',
+      itemSingular: 'stop', itemPlural: 'stops',
+    };
   }
   if (persona.id === 'billing-admin') {
-    return { eyebrow: 'Revenue readiness', completed: 'jobs complete', total: 'to review' };
+    return {
+      eyebrow: 'Revenue readiness', completed: 'jobs complete', total: 'to review',
+      itemSingular: 'job', itemPlural: 'jobs',
+    };
   }
-  return { eyebrow: 'Field delivery', completed: 'jobs complete', total: 'assigned' };
+  return {
+    eyebrow: 'Field delivery', completed: 'jobs complete', total: 'assigned',
+    itemSingular: 'job', itemPlural: 'jobs',
+  };
 }
 
 export function homePriorityStatus({
   assignedJobCount,
   completedJobCount,
+  itemPlural = 'jobs',
+  itemSingular = 'job',
   pendingChangeCount,
 }: {
   assignedJobCount: number;
   completedJobCount: number;
+  itemPlural?: string;
+  itemSingular?: string;
   pendingChangeCount: number;
 }): { tone: 'attention' | 'ready' | 'complete'; title: string; detail: string } {
   if (pendingChangeCount > 0) {
@@ -99,20 +120,20 @@ export function homePriorityStatus({
     return {
       tone: 'ready',
       title: 'You’re clear for now',
-      detail: 'No field work is currently assigned. Use your workspace shortcuts for the next task.',
+      detail: `No ${itemPlural} are currently scheduled or assigned. Use your workspace shortcuts for the next task.`,
     };
   }
   if (completedJobCount >= assignedJobCount) {
     return {
       tone: 'complete',
-      title: 'Today’s assigned work is complete',
+      title: `Today’s ${itemPlural} are complete`,
       detail: 'Everything is synced and ready for the next workflow.',
     };
   }
   const remaining = assignedJobCount - completedJobCount;
   return {
     tone: 'ready',
-    title: `${remaining} ${remaining === 1 ? 'job' : 'jobs'} remaining`,
+    title: `${remaining} ${remaining === 1 ? itemSingular : itemPlural} remaining`,
     detail: 'Everything is synced. Continue with the recommended next action.',
   };
 }
@@ -166,12 +187,17 @@ export function WorkspaceHomePanel({
     ? Math.min(100, Math.round((completedJobCount / assignedJobCount) * 100))
     : 0;
   const firstName = signedInName.split(/[\s@]/)[0] || signedInName;
+  const progressLanguage = personaProgressLanguage(persona);
   const priorityStatus = homePriorityStatus({
     assignedJobCount,
     completedJobCount,
+    itemPlural: progressLanguage.itemPlural,
+    itemSingular: progressLanguage.itemSingular,
     pendingChangeCount,
   });
-  const progressLanguage = personaProgressLanguage(persona);
+  const alertAction = pendingChangeCount > 0
+    ? actions.find((action) => action.view === 'jobs') ?? primaryAction
+    : primaryAction;
 
   return (
     <section className="space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
@@ -255,7 +281,17 @@ export function WorkspaceHomePanel({
           : priorityStatus.tone === 'complete'
             ? 'success'
             : 'info'}
-      />
+      >
+        {alertAction ? (
+          <button
+            className="min-h-11 rounded-lg border border-current/25 bg-white/70 px-3 py-2 text-xs font-black"
+            onClick={() => onOpen(alertAction.view)}
+            type="button"
+          >
+            {pendingChangeCount > 0 ? `Review ${alertAction.label}` : `Open ${alertAction.label}`}
+          </button>
+        ) : null}
+      </WorkspaceStatusNotice>
 
       {primaryAction ? (
         <button

@@ -417,14 +417,18 @@ distinguished in the lead inbox.
 
 The delivered mobile-first navigation redesign separates Route, Jobs, Job, and
 Manager into explicit mobile workspace views with stable bottom navigation and
-a contextual header. Follow-up slices can continue grouping manager capabilities into a
-manager home, make route and job summaries more compact, preserve per-view scroll
-position, and validate the complete interaction model on iPhone. Persona-aware
+a contextual header. Follow-up slices can continue making route and job
+summaries more compact and preserving per-view scroll position. Persona-aware
 navigation now separates yard owners, property managers, field crews, yard-care
 company operators, dispatch, billing, and support. Mobile managers now enter a
 compact task-category home and load only one category at a time; the next slices
 now use a second-level task picker so only one manager tool renders at a time.
-The next slices will shorten customer service-work history content.
+Yard Owner service history now renders compact visit summaries and discloses
+only one visit's progress and actions at a time. Persona Home status is directly
+actionable and uses customer visit counts for customer progress instead of
+provider field jobs. Chromium and WebKit prove the complete Home-to-history
+interaction at the iPhone viewport with bottom-safe, 48 px navigation targets
+and no horizontal overflow.
 Crew routes now focus on the current and next stop by default while retaining an
 explicit full-route view.
 Mobile job detail now keeps primary actions visible and opens checklist, photo,
@@ -436,7 +440,8 @@ instead of stacking both areas on one screen.
 Selected properties preview the two newest reports on mobile and expand older
 completion-report history only when requested.
 The authenticated application now opens on a persona-aware Home with signed-in
-identity, work and sync summaries, and role-relevant shortcuts.
+identity, work and sync summaries, role-relevant shortcuts, and a direct action
+from the current priority notice.
 Authentication configuration and active organization-access verification now
 have separate loading/recovery states. Protected navigation stays hidden until
 access succeeds; membership roles determine personas; Support and first-owner
