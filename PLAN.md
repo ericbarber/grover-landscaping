@@ -337,6 +337,12 @@ Current state:
   A clean local typecheck, all 481 unit tests, and production build pass; graph
   reuse reduced the measured build stage from 30.40 to 11.34 seconds. The
   existing 510.18 kB application-chunk warning remains the next bounded target.
+- Phase 6A10 restores the frontend bundle boundary without changing workspace
+  behavior. Vite now partitions the authenticated manager workspace graph from
+  the shared application graph while retaining the React and OIDC vendor
+  chunks. The former 510.18 kB application chunk becomes 248.49 kB plus a
+  300.09 kB manager chunk, the production warning is gone, and all 481 unit
+  tests pass. This is a cache/parallel-download boundary, not role-lazy loading.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

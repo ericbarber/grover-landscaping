@@ -89,9 +89,22 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          auth: ['oidc-client-ts'],
-          react: ['react', 'react-dom'],
+        manualChunks(moduleId) {
+          const normalizedId = moduleId.replaceAll('\\', '/');
+
+          if (normalizedId.includes('/node_modules/oidc-client-ts/')) return 'auth';
+          if (
+            normalizedId.includes('/node_modules/react/') ||
+            normalizedId.includes('/node_modules/react-dom/')
+          ) {
+            return 'react';
+          }
+          if (
+            normalizedId.includes('/src/components/Manager') ||
+            normalizedId.endsWith('/src/components/TeamOrganizationOverviewPanel.tsx')
+          ) {
+            return 'manager-workspaces';
+          }
         },
       },
     },

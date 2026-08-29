@@ -52,3 +52,29 @@ Playwright browser binaries are deliberately not cached. Playwright's CI
 guidance notes that restoring them costs about as much as downloading them and
 that Linux operating-system dependencies cannot be cached. The workflow times
 that installation so this choice can be revisited from hosted evidence.
+
+## Phase 6A10 authenticated bundle partition
+
+The Phase 6A9 validation surfaced an existing Vite warning: the authenticated
+application chunk was 510.18 kB after minification. `App.tsx` statically owns
+the broad manager tool suite as well as shared field/customer surfaces, so that
+graph had outgrown the established 500 kB warning boundary.
+
+Vite now assigns manager-prefixed workspaces and the organization overview to a
+stable `manager-workspaces` chunk while preserving the existing React and OIDC
+vendor partitions. This is a behavior-neutral cache and parallel-download
+boundary: the authenticated app still statically imports those workspaces, so
+it is not presented as role-conditional lazy loading.
+
+The production build now completes without a chunk-size warning:
+
+| Chunk | Before | After |
+| --- | ---: | ---: |
+| authenticated `App` | 510.18 kB | 248.49 kB |
+| manager workspaces | included in `App` | 300.09 kB |
+| largest resulting chunk | 510.18 kB | 300.09 kB |
+
+The post-split build completed in 10.50 seconds on the local measurement host,
+and all 481 Vitest tests pass. Role-conditional loading should be considered
+only as a separate measured product-runtime change because it requires explicit
+loading/recovery presentation rather than a build-only partition.

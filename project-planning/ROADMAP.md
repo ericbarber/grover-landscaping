@@ -641,6 +641,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Cache lockfile-keyed npm package data across frontend CI jobs, reuse the
   typecheck graph in the production build, and measure browser-install cost
   without caching Playwright binaries prematurely.
+- Keep authenticated production bundles below the warning boundary with stable
+  shared, manager-workspace, React, and OIDC cache partitions before considering
+  role-conditional runtime loading.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.
