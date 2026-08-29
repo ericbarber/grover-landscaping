@@ -414,6 +414,12 @@ Current state:
   protected account policy includes its delivered `DELETE` method. Focused
   repository, authorization, and route cases pass, along with strict Clippy and
   all 417 backend tests.
+- Phase 6A21 makes persisted organization collections fail closed. Team
+  administration activity, cross-workflow operational activity, and invitation
+  history no longer return loaded-empty when PostgreSQL is absent. Their
+  existing stable `503` responses now reach manager UIs that already distinguish
+  unavailable from empty. Focused repository and route cases, strict Clippy,
+  and all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2247,8 +2253,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A21: audit organization team activity, operational activity, and
-  invitation collections so unavailable persistence cannot appear as empty.
+- Phase 6A22: audit organization invitation revoke/reissue and authentication
+  claim-membership audit writes for false conflict or success outcomes.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

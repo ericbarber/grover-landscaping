@@ -398,7 +398,7 @@ impl OrganizationRepository {
         limit: i64,
     ) -> OrganizationCollectionResult<TeamAdministrationActivity> {
         let Some(pool) = &self.pool else {
-            return OrganizationCollectionResult::Loaded(Vec::new());
+            return OrganizationCollectionResult::Unavailable;
         };
         match list_team_administration_activity(
             pool,
@@ -439,7 +439,7 @@ impl OrganizationRepository {
         limit: i64,
     ) -> OrganizationCollectionResult<OperationalActivity> {
         let Some(pool) = &self.pool else {
-            return OrganizationCollectionResult::Loaded(Vec::new());
+            return OrganizationCollectionResult::Unavailable;
         };
         match list_operational_activity(pool, organization_ids, event_kind, before, limit).await {
             Ok(activity) => OrganizationCollectionResult::Loaded(activity),
@@ -644,7 +644,7 @@ impl OrganizationRepository {
         organization_id: &str,
     ) -> OrganizationCollectionResult<OrganizationInvitationSummary> {
         let Some(pool) = &self.pool else {
-            return OrganizationCollectionResult::Loaded(Vec::new());
+            return OrganizationCollectionResult::Unavailable;
         };
         match list_invitations(pool, organization_id).await {
             Ok(invitations) => OrganizationCollectionResult::Loaded(invitations),

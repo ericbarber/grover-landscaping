@@ -224,3 +224,18 @@ suppresses its valid-empty message.
 Focused repository and handler cases cover the no-pool outcomes, and the auth
 unit case covers permitted and denied archive access. Formatting, strict all-
 target/all-feature Clippy, and all 417 backend tests pass.
+
+## Organization-collection availability
+
+Three persisted organization collections still returned loaded-empty without a
+database pool: team administration activity, cross-workflow operational
+activity, and organization invitation history. Each repository read now returns
+`OrganizationCollectionResult::Unavailable` when the pool is absent, matching
+its existing failed-query behavior. A completed empty query remains `Loaded([])`.
+
+Their handlers expose the existing `team_activity_unavailable`,
+`operational_activity_unavailable`, and `organization_invitations_unavailable`
+`503` responses. The manager team-activity, activity-review, and invitation
+interfaces already recognize these failures and suppress valid-empty claims.
+Focused default-repository and route cases cover all three boundaries;
+formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.

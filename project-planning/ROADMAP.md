@@ -555,8 +555,11 @@ The exact artifact mapping and ordered implementation queue live in
      absent; the manager dispatch hierarchy already presents that state.
    - Archived customer-account reads and archive/reactivate/relationship
      mutations now fail closed without PostgreSQL; authorized portfolio
-     managers can reach the archive `DELETE` route. Audit remaining
-     organization activity and invitation collections next.
+     managers can reach the archive `DELETE` route.
+   - Team administration activity, operational activity, and organization
+     invitation history now return unavailable instead of empty collections
+     without PostgreSQL; their manager UIs already preserve that distinction.
+     Audit invitation mutations and claim-membership audit writes next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

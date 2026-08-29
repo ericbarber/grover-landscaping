@@ -12258,7 +12258,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_invitation_list_endpoint_returns_local_history() {
+    async fn organization_invitation_list_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12270,10 +12270,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json, serde_json::json!([]));
+        assert_eq!(json["error"], "organization_invitations_unavailable");
     }
 
     #[tokio::test]
@@ -12500,7 +12500,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_team_activity_endpoint_returns_local_history() {
+    async fn organization_team_activity_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12512,10 +12512,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json, serde_json::json!([]));
+        assert_eq!(json["error"], "team_activity_unavailable");
     }
 
     #[tokio::test]
@@ -12592,7 +12592,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn operational_activity_endpoint_returns_local_history() {
+    async fn operational_activity_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12606,9 +12606,14 @@ mod tests {
 
         let status = response.status();
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+        assert_eq!(
+            status,
+            StatusCode::SERVICE_UNAVAILABLE,
+            "{}",
+            String::from_utf8_lossy(&body)
+        );
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json, serde_json::json!([]));
+        assert_eq!(json["error"], "operational_activity_unavailable");
 
         let response = seed_app()
             .oneshot(

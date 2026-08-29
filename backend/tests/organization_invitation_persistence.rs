@@ -42,6 +42,24 @@ impl<T> MutationTestExt<T> for OrganizationMutationResult<T> {
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_organization_collections_from_empty_results() {
+    let repository = OrganizationRepository::default();
+    assert!(matches!(
+        repository.list_invitations("org_demo_landscaping").await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_team_administration_activity("org_demo_landscaping")
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_operational_activity(&["org_demo_landscaping".to_string()])
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")

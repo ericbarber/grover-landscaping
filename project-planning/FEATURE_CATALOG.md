@@ -364,6 +364,8 @@ here does not mean every capability has been delivered.
 - Bid, amendment, notification, and photo-processing recovery
 - Operational exception management
 - Persisted activity and audit history
+- Fail-closed team, operational, and invitation-history collections with
+  explicit manager-facing unavailable states
 
 ### Customer experience
 
