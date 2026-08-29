@@ -619,6 +619,11 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Show active, rejected, expired, and converted bids.
 - Add notification preferences, quiet hours, and recipient validation.
 - Add property/report/service-linked support and issue requests.
+- Backlog owner appreciation and external review destinations until the support
+  boundary and verified provider public profiles exist. Preserve private
+  visit-bound feedback independently from neutral Google review links and Yelp
+  business-profile links; prohibit review gating, incentives, automatic cross-
+  posting, scraping, or unapproved third-party review display.
 - Cover loading, empty, error, expired, revoked, and no-portfolio states.
 
 ## Phase 5 — Revenue Operations and Service Administration

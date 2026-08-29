@@ -2178,12 +2178,65 @@ Current state:
 
 Next implementation work:
 
+- Phase 6A13: triage the two high-severity npm audit findings reported by the
+  Node 22 production-image install. Resolve exact dependency paths, exploit
+  applicability, and compatible remediations before changing the lockfile; do
+  not apply blind major-version upgrades or suppress the audit output.
+- After explicit publication authorization, run the committed CI workflow and
+  capture hosted cold/cache-hit backend, frontend, Playwright-install, and
+  production-image timings before making another performance configuration
+  change.
 - Continue the mobile navigation phase with compact service-work history, actionable persona Home alerts, and iPhone interaction validation
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime
 - Harden and validate the next highest-impact persisted workflow
+
+## Backlog
+
+### Yard Owner appreciation, service feedback, and external review destinations
+
+Status: explicitly deferred; this is not an active implementation phase.
+
+Goal: let a property owner recognize the yard-care company or service team that
+worked on an exact completed visit, share actionable private feedback, and find
+policy-compliant external business-review destinations without exposing
+provider-private crew identities or manipulating public reviews.
+
+Planned boundaries:
+
+- Anchor appreciation and feedback to an authorized completed visit and its
+  immutable delivered proof. The owner may thank the provider company or a
+  customer-safe service-team label; individual worker identity is not made
+  public or rateable by default.
+- Keep a private appreciation/comment path distinct from service concerns,
+  safety reports, billing disputes, and support requests. Providers receive
+  bounded response/moderation tools, and owners receive explicit visibility,
+  retention, correction, deletion, and abuse-reporting behavior.
+- Make any eligible external destination available independently of the tone or
+  score of private feedback. Do not show review links only after positive input,
+  offer incentives, prefill praise, or suppress negative experiences.
+- Support a provider-verified Google Business Profile review link as a neutral
+  optional destination. Follow Google's requirement for genuine, unincentivized
+  experience and its prohibition on selective positive-review solicitation.
+- Treat Yelp differently: provide only a neutral provider business-profile link,
+  such as “View this company on Yelp,” and do not ask for a Yelp review because
+  Yelp's business guidance prohibits review solicitation.
+- Start with outbound links. Do not automatically cross-post owner text, scrape
+  reviews, import ratings, claim that a review was published, or display third-
+  party review content inside Grover without a separately approved API,
+  attribution, consent, moderation, deletion, and platform-policy contract.
+- Require verified provider ownership of each destination, an allowlisted host
+  and safe redirect contract, link-health recovery, accessibility, minimized
+  analytics, and multi-location/service-area rules before release.
+
+Sequencing gate: revisit only after authenticated service feedback/concern
+handling, provider public-profile verification, privacy/retention rules, and
+external-integration ownership are delivered. Revalidate the current
+[Google review guidance](https://support.google.com/business/answer/3474122)
+and [Yelp review-solicitation guidance](https://business.yelp.com/resources/articles/how-to-get-yelp-reviews-without-asking/)
+before implementation.
 
 ## Planned
 

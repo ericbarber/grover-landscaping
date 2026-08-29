@@ -166,6 +166,13 @@ boundary; inclusion here alone does not mean a feature shipped.
   questions, delivered proof comparison and feedback, concern recovery,
   collaborative recommendation decisions, portal-wide property selection,
   notification/access preferences, responsive references, and production handoff
+- Backlog Yard Owner appreciation and service feedback tied to an exact completed
+  visit, supporting private provider-company or customer-safe service-team
+  recognition without exposing or publicly rating individual workers
+- Backlog provider-verified external review destinations with a neutral Google
+  review link and Yelp business-profile link, no sentiment gating or incentives,
+  and no automatic cross-post/import/display without a separate platform-policy,
+  consent, attribution, moderation, and retention contract
 - Validated property-manager portfolio V1 working design with responsive
   Overview, Properties, Proof, and Approvals destinations; prioritized readiness
   and exceptions; property search; customer-safe provider accountability; and
@@ -387,6 +394,8 @@ here does not mean every capability has been delivered.
 - Bid review and bid history
 - Notification preferences and communication history
 - Support and service-issue requests
+- Deferred visit-bound appreciation, private service feedback, and compliant
+  external provider-review destinations
 
 ### Revenue and administration
 
