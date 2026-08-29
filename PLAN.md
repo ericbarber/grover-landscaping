@@ -343,6 +343,14 @@ Current state:
   chunks. The former 510.18 kB application chunk becomes 248.49 kB plus a
   300.09 kB manager chunk, the production warning is gone, and all 481 unit
   tests pass. This is a cache/parallel-download boundary, not role-lazy loading.
+- Phase 6A11 restores and accelerates the production-image gate. Development-
+  only design-path resolution now occurs only when the Vite server starts, so
+  the minimal Docker context builds without copying review artifacts. npm,
+  Cargo registry, and release targets use BuildKit cache mounts; CI imports and
+  exports a scoped max-mode GitHub cache through Buildx. A first corrected local
+  image took 783.12 seconds and its identical cache-hit rebuild took 28.66
+  seconds (96.3% lower). The unprivileged image passes PostgreSQL-backed health,
+  readiness, and compiled-frontend smoke checks.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

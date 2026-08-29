@@ -644,6 +644,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Keep authenticated production bundles below the warning boundary with stable
   shared, manager-workspace, React, and OIDC cache partitions before considering
   role-conditional runtime loading.
+- Persist npm, Cargo registry, release-target, and production-image layers
+  across ephemeral CI runs with a scoped Buildx cache while retaining a minimal,
+  unprivileged runtime image and explicit smoke contract.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

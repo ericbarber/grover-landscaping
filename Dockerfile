@@ -3,7 +3,7 @@
 FROM node:22-bookworm-slim AS frontend-builder
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci
 COPY frontend/ ./
 RUN npm run build
 
@@ -12,7 +12,10 @@ WORKDIR /build/backend
 COPY backend/Cargo.toml backend/Cargo.lock ./
 COPY backend/src ./src
 COPY backend/migrations ./migrations
-RUN cargo build --locked --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,target=/build/backend/target,sharing=locked \
+    cargo build --locked --release \
+    && cp target/release/grover-landscaping-api /build/grover-landscaping-api
 
 FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
@@ -21,7 +24,7 @@ RUN apt-get update \
     && useradd --system --uid 10001 --create-home grover
 
 WORKDIR /app
-COPY --from=backend-builder /build/backend/target/release/grover-landscaping-api /usr/local/bin/grover-landscaping-api
+COPY --from=backend-builder /build/grover-landscaping-api /usr/local/bin/grover-landscaping-api
 COPY --from=frontend-builder /build/frontend/dist /app/frontend
 
 ENV APP_ENV=production \

@@ -6,8 +6,6 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 
 const designReviewRoot = fileURLToPath(new URL('../design/', import.meta.url));
-const resolvedDesignReviewRoot = realpathSync(designReviewRoot);
-const designReviewRootPrefix = `${resolvedDesignReviewRoot}${sep}`;
 
 const designContentTypes: Record<string, string> = {
   '.css': 'text/css; charset=utf-8',
@@ -25,6 +23,9 @@ function designReviewPlugin(): Plugin {
     name: 'grover-design-review',
     apply: 'serve',
     configureServer(server) {
+      const resolvedDesignReviewRoot = realpathSync(designReviewRoot);
+      const designReviewRootPrefix = `${resolvedDesignReviewRoot}${sep}`;
+
       server.middlewares.use((request, response, next) => {
         const requestPath = request.url?.split('?', 1)[0];
         if (requestPath !== '/design' && !requestPath?.startsWith('/design/')) {
