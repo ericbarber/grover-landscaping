@@ -13313,6 +13313,63 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn archived_account_lifecycle_fails_closed_without_persistence() {
+        let app = seed_app();
+        let requests = [
+            (
+                "archived list",
+                Request::builder()
+                    .uri("/customer-accounts/archived")
+                    .body(Body::empty())
+                    .unwrap(),
+                "archived_customer_accounts_unavailable",
+            ),
+            (
+                "archive",
+                Request::builder()
+                    .method(Method::DELETE)
+                    .uri("/customer-accounts/acct_1001")
+                    .body(Body::empty())
+                    .unwrap(),
+                "customer_account_not_archived",
+            ),
+            (
+                "reactivate",
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/customer-accounts/acct_1001/reactivate")
+                    .body(Body::empty())
+                    .unwrap(),
+                "customer_account_not_reactivated",
+            ),
+            (
+                "relationship update",
+                Request::builder()
+                    .method(Method::PUT)
+                    .uri("/customer-accounts/acct_1001/relationship")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(r#"{"relationship_type":"owner"}"#))
+                    .unwrap(),
+                "customer_account_relationship_not_updated",
+            ),
+        ];
+
+        for (case, request, error_code) in requests {
+            let response = app.clone().oneshot(request).await.unwrap();
+            let status = response.status();
+            let body = response.into_body().collect().await.unwrap().to_bytes();
+            assert_eq!(
+                status,
+                StatusCode::SERVICE_UNAVAILABLE,
+                "{case}: {}",
+                String::from_utf8_lossy(&body)
+            );
+            let json: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(json["error"], error_code);
+        }
+    }
+
+    #[tokio::test]
     async fn dispatch_assignment_endpoint_rejects_invalid_calendar_date() {
         let response = seed_app()
             .oneshot(

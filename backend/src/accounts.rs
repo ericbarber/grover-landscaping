@@ -221,7 +221,7 @@ impl AccountRepository {
 
     pub async fn list_archived(&self, organization_ids: &[String]) -> CustomerAccountListResult {
         let Some(pool) = &self.pool else {
-            return CustomerAccountListResult::Loaded(Vec::new());
+            return CustomerAccountListResult::Unavailable;
         };
         match list_accounts_by_relationship_status(pool, organization_ids, "archived").await {
             Ok(accounts) => CustomerAccountListResult::Loaded(accounts),
@@ -279,14 +279,7 @@ impl AccountRepository {
         actor_user_id: &str,
     ) -> Result<(), CustomerAccountArchiveError> {
         let Some(pool) = &self.pool else {
-            let exists = seed_accounts(organization_ids)
-                .iter()
-                .any(|account| account.account_id == account_id);
-            return if exists {
-                Err(CustomerAccountArchiveError::HasCurrentProperties)
-            } else {
-                Err(CustomerAccountArchiveError::NotFound)
-            };
+            return Err(CustomerAccountArchiveError::Persistence);
         };
         archive_account(pool, account_id, organization_ids, actor_user_id).await
     }
@@ -298,7 +291,7 @@ impl AccountRepository {
         actor_user_id: &str,
     ) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
         let Some(pool) = &self.pool else {
-            return Err(CustomerAccountArchiveError::NotFound);
+            return Err(CustomerAccountArchiveError::Persistence);
         };
         reactivate_account(pool, account_id, organization_ids, actor_user_id).await
     }
@@ -311,7 +304,7 @@ impl AccountRepository {
         actor_user_id: &str,
     ) -> Result<CustomerAccountRecord, CustomerAccountArchiveError> {
         let Some(pool) = &self.pool else {
-            return Err(CustomerAccountArchiveError::NotFound);
+            return Err(CustomerAccountArchiveError::Persistence);
         };
         update_account_relationship(
             pool,

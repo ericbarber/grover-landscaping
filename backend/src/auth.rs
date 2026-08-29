@@ -897,8 +897,10 @@ fn is_authorized(principal: &AuthPrincipal, method: &Method, path: &str) -> bool
     }
 
     if path.starts_with("/customer-accounts/") {
-        return matches!(*method, Method::GET | Method::POST | Method::PUT)
-            && can_manage_portfolios;
+        return matches!(
+            *method,
+            Method::GET | Method::POST | Method::PUT | Method::DELETE
+        ) && can_manage_portfolios;
     }
 
     if path.starts_with("/accounts/") && path.ends_with("/customer-property-portfolio") {
@@ -1879,6 +1881,16 @@ mod tests {
                 path
             ));
         }
+        assert!(is_authorized(
+            &principal(AccessRole::Manager),
+            &Method::DELETE,
+            "/customer-accounts/acct_1001"
+        ));
+        assert!(!is_authorized(
+            &principal(AccessRole::CrewMember),
+            &Method::DELETE,
+            "/customer-accounts/acct_1001"
+        ));
     }
 
     #[test]

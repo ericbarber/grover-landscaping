@@ -406,6 +406,14 @@ Current state:
   codes, which the manager hierarchy panel already recognizes and presents as
   unavailable. Focused repository and route cases cover both resources, and
   strict Clippy plus all 416 backend tests pass.
+- Phase 6A20 makes archived customer-account and account-lifecycle operations
+  fail closed. Archived lists no longer return loaded-empty without PostgreSQL;
+  archive, reactivate, and relationship changes return their existing
+  unavailable responses instead of false conflicts or not-found results. The
+  archive route is now reachable by authorized portfolio managers because the
+  protected account policy includes its delivered `DELETE` method. Focused
+  repository, authorization, and route cases pass, along with strict Clippy and
+  all 417 backend tests.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2239,8 +2247,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A20: audit archived customer-account reads and account lifecycle
-  mutations so unavailable persistence remains distinct from empty or missing.
+- Phase 6A21: audit organization team activity, operational activity, and
+  invitation collections so unavailable persistence cannot appear as empty.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

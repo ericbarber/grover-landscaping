@@ -204,3 +204,23 @@ responses. The manager hierarchy loader already recognizes both codes, clears
 the incomplete combined hierarchy, and presents its explicit unavailable
 notice. Focused no-pool repository and route cases now cover both resources;
 formatting, strict all-target/all-feature Clippy, and all 416 backend tests pass.
+
+## Archived-account lifecycle availability
+
+Archived customer-account reads formerly returned `Loaded([])` without a
+database pool. Account archive substituted a demo conflict or not-found result,
+while reactivation and relationship changes substituted not found. These paths
+now all preserve persistence failure explicitly: archived reads return
+`CustomerAccountListResult::Unavailable`, and the three lifecycle mutations
+return `CustomerAccountArchiveError::Persistence`. Existing handlers map those
+outcomes to their stable `503` errors.
+
+The archive handler had also been unreachable through normal authorization
+because the customer-account policy omitted `DELETE`. Portfolio managers can
+now invoke the delivered archive route, while crew members remain denied. The
+manager onboarding panel already marks an unavailable archived collection and
+suppresses its valid-empty message.
+
+Focused repository and handler cases cover the no-pool outcomes, and the auth
+unit case covers permitted and denied archive access. Formatting, strict all-
+target/all-feature Clippy, and all 417 backend tests pass.

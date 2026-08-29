@@ -357,6 +357,9 @@ here does not mean every capability has been delivered.
 - Dispatch calendar and cross-crew reassignment
 - Fail-closed organization branch and service-territory hierarchy reads with
   manager-visible unavailable state
+- Fail-closed archived customer-account reads and archive, reactivate, and
+  relationship lifecycle mutations, including manager-authorized archive
+  access
 - Completion-report and quality-review queues
 - Bid, amendment, notification, and photo-processing recovery
 - Operational exception management
