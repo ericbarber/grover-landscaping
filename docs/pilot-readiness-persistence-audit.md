@@ -189,3 +189,18 @@ Focused handler cases prove list and update outages return their stable `503`
 codes, and a component unit case proves unavailable and empty presentation stay
 distinct. Formatting, strict all-target/all-feature Clippy, all 416 backend
 tests, all 484 frontend tests, and the production frontend build pass.
+
+## Dispatch-hierarchy availability
+
+Organization branch and service-territory repository reads already returned
+`PersistedReadResult::Unavailable` for a failed PostgreSQL query, but returned
+`Loaded([])` when no pool existed. Both reads now reserve `Loaded([])` for a
+valid empty organization scope or completed empty query and return `Unavailable`
+when persistence is absent.
+
+The list handlers map those outcomes to the existing
+`organization_branches_unavailable` and `service_territories_unavailable` `503`
+responses. The manager hierarchy loader already recognizes both codes, clears
+the incomplete combined hierarchy, and presents its explicit unavailable
+notice. Focused no-pool repository and route cases now cover both resources;
+formatting, strict all-target/all-feature Clippy, and all 416 backend tests pass.

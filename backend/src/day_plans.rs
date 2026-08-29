@@ -402,7 +402,7 @@ impl DayPlanRepository {
             return PersistedReadResult::Loaded(Vec::new());
         }
         let Some(pool) = &self.pool else {
-            return PersistedReadResult::Loaded(Vec::new());
+            return PersistedReadResult::Unavailable;
         };
         match sqlx::query(
             r#"
@@ -789,7 +789,7 @@ impl DayPlanRepository {
             return PersistedReadResult::Loaded(Vec::new());
         }
         let Some(pool) = &self.pool else {
-            return PersistedReadResult::Loaded(Vec::new());
+            return PersistedReadResult::Unavailable;
         };
         match sqlx::query(
             r#"

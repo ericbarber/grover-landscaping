@@ -19,6 +19,17 @@ fn applied<T: std::fmt::Debug>(result: PersistedMutationResult<T>, context: &str
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_dispatch_setup_collections() {
+    let repository = DayPlanRepository::default();
+    let organizations = vec!["org_demo_landscaping".to_string()];
+    assert!(matches!(
+        repository.list_organization_branches(&organizations).await,
+        PersistedReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository.list_service_territories(&organizations).await,
+        PersistedReadResult::Unavailable
+    ));
+
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")

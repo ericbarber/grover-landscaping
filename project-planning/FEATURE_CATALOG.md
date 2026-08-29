@@ -355,6 +355,8 @@ here does not mean every capability has been delivered.
 
 - Draft route creation, editing, capacity review, and publishing
 - Dispatch calendar and cross-crew reassignment
+- Fail-closed organization branch and service-territory hierarchy reads with
+  manager-visible unavailable state
 - Completion-report and quality-review queues
 - Bid, amendment, notification, and photo-processing recovery
 - Operational exception management

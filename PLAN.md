@@ -400,6 +400,12 @@ Current state:
   zero totals and empty-state copy during an outage. Focused outage cases,
   strict Clippy, all 416 backend tests, all 484 frontend tests, and the
   production frontend build pass.
+- Phase 6A19 closes the dispatch hierarchy no-pool boundary. Organization
+  branch and service-territory reads now return unavailable rather than loaded
+  empty when PostgreSQL is absent; their APIs expose the existing stable `503`
+  codes, which the manager hierarchy panel already recognizes and presents as
+  unavailable. Focused repository and route cases cover both resources, and
+  strict Clippy plus all 416 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2233,8 +2239,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A19: audit organization branch and territory hierarchy reads so a
-  persistence outage cannot appear as a valid empty dispatch hierarchy.
+- Phase 6A20: audit archived customer-account reads and account lifecycle
+  mutations so unavailable persistence remains distinct from empty or missing.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

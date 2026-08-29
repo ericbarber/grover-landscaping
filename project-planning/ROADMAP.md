@@ -549,8 +549,11 @@ The exact artifact mapping and ordered implementation queue live in
      preserves that distinction.
    - The SupportAdmin marketing-lead inbox and workflow update now distinguish
      unavailable persistence from a valid empty inbox or missing lead; the UI
-     withholds empty-state totals and copy during outages. Audit branch and
-     territory hierarchy reads next.
+     withholds empty-state totals and copy during outages.
+   - Organization branch and service-territory reads now return their stable
+     unavailable responses instead of false-empty lists when PostgreSQL is
+     absent; the manager dispatch hierarchy already presents that state.
+     Audit archived account and lifecycle boundaries next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

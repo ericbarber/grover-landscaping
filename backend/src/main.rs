@@ -13287,17 +13287,28 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn branch_and_territory_endpoints_are_tenant_scoped_lists() {
-        for uri in ["/organization-branches", "/service-territories"] {
+    async fn branch_and_territory_endpoints_fail_closed_without_persistence() {
+        for (uri, error_code) in [
+            (
+                "/organization-branches",
+                "organization_branches_unavailable",
+            ),
+            ("/service-territories", "service_territories_unavailable"),
+        ] {
             let response = seed_app()
                 .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
                 .await
                 .unwrap();
             let status = response.status();
             let body = response.into_body().collect().await.unwrap().to_bytes();
-            assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
-            let records: Value = serde_json::from_slice(&body).unwrap();
-            assert!(records.is_array());
+            assert_eq!(
+                status,
+                StatusCode::SERVICE_UNAVAILABLE,
+                "{}",
+                String::from_utf8_lossy(&body)
+            );
+            let json: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(json["error"], error_code);
         }
     }
 
