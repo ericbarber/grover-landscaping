@@ -156,6 +156,16 @@ fixture continues to cover loaded processing/deletion history, retry,
 resolution, tenant isolation, and cleanup. Formatting, strict all-target/all-
 feature Clippy, and all 414 backend tests pass.
 
-Notification recovery history retains the same false-empty no-pool pattern and
-is the next bounded audit slice; its provider-outcome finalization remains
-fail-closed from the earlier phase.
+The matching notification audit is now complete. `list_history` returns an
+explicit `NotificationHistoryListResult`: `Loaded(items)` represents a valid
+tenant-scoped result (including an empty access scope or query result), while a
+missing pool or failed query produces `Unavailable`. The HTTP route maps
+unavailable history to `503 notification_history_unavailable`. Retry and
+manual-resolution flows also keep a failed authoritative post-commit reload as
+unavailable rather than converting it to not found.
+
+The manager workspace now carries that availability state through the API
+boundary and displays an explicit persisted-history warning instead of its
+empty-history message. Focused repository, handler, and component cases cover
+the no-persistence behavior; strict Clippy, all 414 backend tests, all 483
+frontend tests, and the production frontend build pass.

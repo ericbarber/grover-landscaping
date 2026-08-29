@@ -76,8 +76,8 @@ use grover_landscaping_api::{
     },
     notifications::{
         start_notification_dispatcher, validate_notification_recipient,
-        NotificationDispatcherConfig, NotificationHistoryFilter, NotificationOutboxRepository,
-        NotificationResolveResult, NotificationRetryResult,
+        NotificationDispatcherConfig, NotificationHistoryFilter, NotificationHistoryListResult,
+        NotificationOutboxRepository, NotificationResolveResult, NotificationRetryResult,
     },
     operational_exceptions::{
         validate_create_operational_exception, validate_operational_exception_filter,
@@ -7656,8 +7656,8 @@ async fn list_notification_history(
                 principal_active_organization_ids(&state, &principal).await
             );
             match state.notifications.list_history(filter).await {
-                Ok(items) => Json(items).into_response(),
-                Err(_) => (
+                NotificationHistoryListResult::Loaded(items) => Json(items).into_response(),
+                NotificationHistoryListResult::Unavailable => (
                     StatusCode::SERVICE_UNAVAILABLE,
                     Json(ErrorResponse {
                         error: "notification_history_unavailable",
@@ -13685,7 +13685,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn notification_history_endpoint_returns_empty_local_history() {
+    async fn notification_history_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13698,11 +13698,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert!(json.as_array().unwrap().is_empty());
+        assert_eq!(json["error"], "notification_history_unavailable");
     }
 
     #[tokio::test]

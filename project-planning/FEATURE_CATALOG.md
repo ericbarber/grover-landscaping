@@ -414,8 +414,9 @@ here does not mean every capability has been delivered.
 ### Platform operations
 
 - Hosted development, staging, and production environments
-- Fail-closed photo-processing and privacy-erasure recovery history with
-  explicit persisted-empty versus unavailable outcomes
+- Fail-closed photo-processing, privacy-erasure, and notification recovery
+  history with explicit persisted-empty versus unavailable outcomes and
+  manager-visible notification outage state
 - Compatible frontend build-tool security remediation with a zero-finding npm
   audit baseline and fail-closed, policy-tested high/critical CI enforcement
 - Database migrations, smoke tests, and rollback procedures

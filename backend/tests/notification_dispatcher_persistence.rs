@@ -3,12 +3,32 @@ use grover_landscaping_api::{
     notifications::NotificationResolveResult,
     notifications::NotificationRetryResult,
     notifications::{
-        NotificationDeliveryWriteResult, NotificationHistoryFilter, NotificationOutboxRepository,
+        NotificationDeliveryWriteResult, NotificationHistoryFilter, NotificationHistoryListResult,
+        NotificationOutboxRepository,
     },
 };
 use sqlx::Row;
 use std::time::{SystemTime, UNIX_EPOCH};
 mod common;
+
+trait NotificationHistoryTestExt {
+    fn expect_loaded(
+        self,
+        context: &str,
+    ) -> Vec<grover_landscaping_api::notifications::NotificationHistoryItem>;
+}
+
+impl NotificationHistoryTestExt for NotificationHistoryListResult {
+    fn expect_loaded(
+        self,
+        context: &str,
+    ) -> Vec<grover_landscaping_api::notifications::NotificationHistoryItem> {
+        match self {
+            NotificationHistoryListResult::Loaded(items) => items,
+            NotificationHistoryListResult::Unavailable => panic!("{context}: history unavailable"),
+        }
+    }
+}
 
 fn unique_id(prefix: &str) -> String {
     let nonce = SystemTime::now()
@@ -16,6 +36,22 @@ fn unique_id(prefix: &str) -> String {
         .map(|duration| duration.as_nanos())
         .unwrap_or(0);
     format!("{prefix}_{nonce}")
+}
+
+#[tokio::test]
+async fn notification_history_fails_closed_without_persistence() {
+    let repository = NotificationOutboxRepository::default();
+    assert_eq!(
+        repository
+            .list_history(NotificationHistoryFilter {
+                organization_ids: vec!["org_demo_landscaping".to_string()],
+                entity_type: None,
+                status: None,
+                limit: 25,
+            })
+            .await,
+        NotificationHistoryListResult::Unavailable,
+    );
 }
 
 #[tokio::test]
@@ -167,7 +203,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             limit: 10,
         })
         .await
-        .unwrap();
+        .expect_loaded("sent notification history should load");
     assert!(sent_history.iter().any(|item| {
         item.id == sent_id
             && item.status == "sent"
@@ -183,7 +219,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             limit: 10,
         })
         .await
-        .unwrap();
+        .expect_loaded("dead-letter notification history should load");
     assert!(dead_letter_history.iter().any(|item| {
         item.id == failed_id
             && item.status == "dead_letter"
@@ -245,7 +281,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             limit: 100,
         })
         .await
-        .unwrap();
+        .expect_loaded("tenant-scoped notification history should load");
     assert!(!other_org_history.iter().any(|item| item.id == other_org_id));
     assert!(matches!(
         repository
@@ -294,7 +330,7 @@ async fn dispatcher_claims_retries_dead_letters_and_records_receipts() {
             limit: 10,
         })
         .await
-        .unwrap();
+        .expect_loaded("resolved notification history should load");
     assert!(resolved_history.iter().any(|item| {
         item.id == resolve_id
             && item.status == "resolved"

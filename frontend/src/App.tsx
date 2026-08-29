@@ -1235,6 +1235,7 @@ export function App() {
   const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
+  const [notificationHistoryUnavailable, setNotificationHistoryUnavailable] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
   const [isLoadingPhotoProcessingHistory, setIsLoadingPhotoProcessingHistory] = useState(false);
   const [photoErasureDeletionHistory, setPhotoErasureDeletionHistory] = useState<PhotoErasureDeletionHistoryItem[]>([]);
@@ -2105,11 +2106,15 @@ export function App() {
 
     fetchNotificationHistory({ limit: 25 })
       .then((items) => {
-        if (isMounted) setNotificationHistory(items);
+        if (isMounted) {
+          setNotificationHistory(items);
+          setNotificationHistoryUnavailable(false);
+        }
       })
       .catch(() => {
         if (!isMounted) return;
         setNotificationHistory([]);
+        setNotificationHistoryUnavailable(true);
         recordManagerActivity({
           title: 'Notification history unavailable',
           message: 'Delivery notification history could not be loaded from the API.',
@@ -2457,8 +2462,10 @@ export function App() {
         limit: 25,
       });
       setNotificationHistory(items);
+      setNotificationHistoryUnavailable(false);
       setStatusMessage('Notification delivery history refreshed.');
     } catch {
+      setNotificationHistoryUnavailable(true);
       setStatusMessage('Could not refresh notification delivery history. Check the API connection and try again.');
       recordManagerActivity({
         title: 'Notification history refresh failed',
@@ -2483,6 +2490,7 @@ export function App() {
         status: filters.status === 'all' ? undefined : filters.status,
         limit: 25,
       }));
+      setNotificationHistoryUnavailable(false);
       setStatusMessage(`${retried.id} queued for retry.`);
       recordManagerActivity({
         title: 'Notification retry queued',
@@ -2515,6 +2523,7 @@ export function App() {
         status: filters.status === 'all' ? undefined : filters.status,
         limit: 25,
       }));
+      setNotificationHistoryUnavailable(false);
       setStatusMessage(`${resolved.id} marked resolved.`);
       recordManagerActivity({
         title: 'Notification resolved',
@@ -2796,7 +2805,9 @@ export function App() {
       const notification = await queueCompletionReportDeliveryNotification(reportId, channel, recipient);
       try {
         setNotificationHistory(await fetchNotificationHistory({ limit: 25 }));
+        setNotificationHistoryUnavailable(false);
       } catch {
+        setNotificationHistoryUnavailable(true);
         recordManagerActivity({
           title: 'Notification history refresh failed',
           message: 'The customer notification was queued, but the history panel did not refresh.',
@@ -3734,6 +3745,7 @@ export function App() {
           <div className={`${managerWorkspaceTool === 'notifications' ? 'block' : 'hidden'} mt-6`}>
             <ManagerNotificationHistoryPanel
               notifications={notificationHistory}
+              isUnavailable={notificationHistoryUnavailable}
               isLoading={isLoadingNotificationHistory}
               onRefresh={(filters) => void refreshNotificationHistory(filters)}
               onRetry={(notificationId, filters) => void handleRetryNotificationDelivery(notificationId, filters)}

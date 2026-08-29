@@ -383,7 +383,15 @@ Current state:
   failed PostgreSQL pool into `200 []`; repository contracts distinguish
   loaded-empty from unavailable and the HTTP routes return stable `503` errors.
   Focused handler and repository-outage tests, strict Clippy, and all 414
-  backend tests pass. Notification history is the next matching audit target.
+  backend tests pass.
+- Phase 6A17 closes the matching notification recovery-history boundary. The
+  repository now distinguishes loaded history from unavailable persistence;
+  its list API returns the stable `notification_history_unavailable` `503`,
+  and retry/resolve post-commit reload failures remain unavailable rather than
+  becoming false not-found outcomes. The manager panel now labels unavailable
+  persisted history and never renders that state as an empty queue. Focused
+  backend and frontend cases, strict Clippy, all 414 backend tests, all 483
+  frontend tests, and the production frontend build pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2217,9 +2225,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A17: make notification recovery history distinguish a valid persisted
-  empty queue from unavailable storage, retaining the delivered finalization,
-  retry, resolve, and tenant-isolation behavior.
+- Phase 6A18: audit the manager marketing-lead inbox and lead-history reads so
+  unavailable persistence cannot appear as a valid empty acquisition queue.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

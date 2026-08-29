@@ -49,6 +49,12 @@ pub struct NotificationHistoryFilter {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NotificationHistoryListResult {
+    Loaded(Vec<NotificationHistoryItem>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NotificationRetryResult {
     Retried(Box<NotificationHistoryItem>),
     InvalidStatus,
@@ -274,12 +280,12 @@ impl NotificationOutboxRepository {
     pub async fn list_history(
         &self,
         filter: NotificationHistoryFilter,
-    ) -> Result<Vec<NotificationHistoryItem>, sqlx::Error> {
+    ) -> NotificationHistoryListResult {
         let Some(pool) = &self.pool else {
-            return Ok(Vec::new());
+            return NotificationHistoryListResult::Unavailable;
         };
         if filter.organization_ids.is_empty() {
-            return Ok(Vec::new());
+            return NotificationHistoryListResult::Loaded(Vec::new());
         }
         let limit = filter.limit.clamp(1, 100);
 
@@ -316,30 +322,39 @@ impl NotificationOutboxRepository {
         .bind(filter.organization_ids)
         .bind(limit)
         .fetch_all(pool)
-        .await?;
+        .await;
 
-        Ok(rows
-            .into_iter()
-            .map(|row| NotificationHistoryItem {
-                id: row.get("id"),
-                organization_id: row.get("organization_id"),
-                entity_type: row.get("entity_type"),
-                entity_id: row.get("entity_id"),
-                channel: row.get("channel"),
-                recipient: row.get("recipient"),
-                template_key: row.get("template_key"),
-                status: row.get("status"),
-                attempt_count: row.get("attempt_count"),
-                available_at: row.get("available_at"),
-                last_attempt_at: row.get("last_attempt_at"),
-                sent_at: row.get("sent_at"),
-                last_error: row.get("last_error"),
-                provider_response_code: row.get("provider_response_code"),
-                provider_message_id: row.get("provider_message_id"),
-                created_at: row.get("created_at"),
-                updated_at: row.get("updated_at"),
-            })
-            .collect())
+        let rows = match rows {
+            Ok(rows) => rows,
+            Err(error) => {
+                tracing::error!(%error, "notification history read failed");
+                return NotificationHistoryListResult::Unavailable;
+            }
+        };
+
+        NotificationHistoryListResult::Loaded(
+            rows.into_iter()
+                .map(|row| NotificationHistoryItem {
+                    id: row.get("id"),
+                    organization_id: row.get("organization_id"),
+                    entity_type: row.get("entity_type"),
+                    entity_id: row.get("entity_id"),
+                    channel: row.get("channel"),
+                    recipient: row.get("recipient"),
+                    template_key: row.get("template_key"),
+                    status: row.get("status"),
+                    attempt_count: row.get("attempt_count"),
+                    available_at: row.get("available_at"),
+                    last_attempt_at: row.get("last_attempt_at"),
+                    sent_at: row.get("sent_at"),
+                    last_error: row.get("last_error"),
+                    provider_response_code: row.get("provider_response_code"),
+                    provider_message_id: row.get("provider_message_id"),
+                    created_at: row.get("created_at"),
+                    updated_at: row.get("updated_at"),
+                })
+                .collect(),
+        )
     }
 
     pub async fn retry_failed(
@@ -406,15 +421,18 @@ impl NotificationOutboxRepository {
 
         transaction.commit().await?;
 
-        let mut history = self
+        let history = self
             .list_history(NotificationHistoryFilter {
                 organization_ids: organization_ids.to_vec(),
                 entity_type: None,
                 status: None,
                 limit: 100,
             })
-            .await?;
-        let Some(item) = history.drain(..).find(|item| item.id == id) else {
+            .await;
+        let NotificationHistoryListResult::Loaded(history) = history else {
+            return Ok(NotificationRetryResult::Unavailable);
+        };
+        let Some(item) = history.into_iter().find(|item| item.id == id) else {
             return Ok(NotificationRetryResult::NotFound);
         };
 
@@ -487,15 +505,18 @@ impl NotificationOutboxRepository {
 
         transaction.commit().await?;
 
-        let mut history = self
+        let history = self
             .list_history(NotificationHistoryFilter {
                 organization_ids: organization_ids.to_vec(),
                 entity_type: None,
                 status: None,
                 limit: 100,
             })
-            .await?;
-        let Some(item) = history.drain(..).find(|item| item.id == id) else {
+            .await;
+        let NotificationHistoryListResult::Loaded(history) = history else {
+            return Ok(NotificationResolveResult::Unavailable);
+        };
+        let Some(item) = history.into_iter().find(|item| item.id == id) else {
             return Ok(NotificationResolveResult::NotFound);
         };
 

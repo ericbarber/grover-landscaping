@@ -4,9 +4,11 @@ import type {
   NotificationHistoryItem,
   NotificationHistoryStatus,
 } from '../api/client';
+import { WorkspaceStatusNotice } from './WorkspaceStatus';
 
 type ManagerNotificationHistoryPanelProps = {
   notifications: NotificationHistoryItem[];
+  isUnavailable: boolean;
   isLoading: boolean;
   onRefresh: (filters: NotificationHistoryFilters) => void;
   onRetry: (notificationId: string, filters: NotificationHistoryFilters) => void;
@@ -76,6 +78,7 @@ function formatDate(value: string | null): string {
 
 export function ManagerNotificationHistoryPanel({
   notifications,
+  isUnavailable,
   isLoading,
   onRefresh,
   onRetry,
@@ -106,7 +109,11 @@ export function ManagerNotificationHistoryPanel({
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Notifications</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Delivery history</h2>
           <p className="mt-1 text-xs text-slate-500">
-            {failedCount > 0 ? `${failedCount} delivery item${failedCount === 1 ? '' : 's'} need attention.` : 'No failed deliveries in the current view.'}
+            {isUnavailable
+              ? 'The latest persisted delivery state could not be loaded.'
+              : failedCount > 0
+                ? `${failedCount} delivery item${failedCount === 1 ? '' : 's'} need attention.`
+                : 'No failed deliveries in the current view.'}
           </p>
         </div>
         <button
@@ -155,7 +162,14 @@ export function ManagerNotificationHistoryPanel({
         ))}
       </div>
 
-      {notifications.length === 0 ? (
+      {isUnavailable ? (
+        <WorkspaceStatusNotice
+          className="mt-4"
+          detail="Persisted notification history is temporarily unavailable. Retry after API and database readiness recover; no empty history is being assumed."
+          title="Delivery history could not be loaded."
+          tone="warning"
+        />
+      ) : notifications.length === 0 ? (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
           No delivery history matches the selected filters.
         </p>
