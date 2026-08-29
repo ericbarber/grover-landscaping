@@ -655,6 +655,8 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Keep the production Docker context independent of local generated state and
   validation-only frontend files; rely on prerequisite quality/browser jobs for
   those gates before building only shipped inputs.
+- Keep frontend build tooling on compatible patched dependency lines and enforce
+  a high/critical npm advisory gate before production-image construction.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

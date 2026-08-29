@@ -409,6 +409,8 @@ here does not mean every capability has been delivered.
 ### Platform operations
 
 - Hosted development, staging, and production environments
+- Compatible frontend build-tool security remediation with a zero-finding npm
+  audit baseline; explicit high/critical CI enforcement remains next
 - Database migrations, smoke tests, and rollback procedures
 - Notification and image-processing workers
 - Logs, metrics, traces, alerts, backups, and restore drills

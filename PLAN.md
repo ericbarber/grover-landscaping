@@ -358,6 +358,12 @@ Current state:
   context frontend rebuild took 71.34 seconds, produced the same asset hashes,
   and retained the same runtime image manifest/config digest while all backend,
   dependency, and runtime layers remained cached.
+- Phase 6A13 closes the two high-severity frontend build-tool findings. PostCSS
+  moves from 8.5.15 to 8.5.26 and its nanoid dependency from 3.3.12 to 3.3.18,
+  staying within existing major versions. Clean install and audit report zero
+  vulnerabilities; TypeScript, all 481 unit tests, the production build, and
+  the Node 22 image build pass with identical frontend assets and runtime image
+  digest. A dedicated CI audit regression gate remains next.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2178,10 +2184,10 @@ Current state:
 
 Next implementation work:
 
-- Phase 6A13: triage the two high-severity npm audit findings reported by the
-  Node 22 production-image install. Resolve exact dependency paths, exploit
-  applicability, and compatible remediations before changing the lockfile; do
-  not apply blind major-version upgrades or suppress the audit output.
+- Phase 6A14: add an explicit high/critical npm audit gate to frontend CI, prove
+  its failure behavior deterministically, and document the update/exception
+  policy without suppressing advisories or coupling routine builds to major
+  dependency upgrades.
 - After explicit publication authorization, run the committed CI workflow and
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
