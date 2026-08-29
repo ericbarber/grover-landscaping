@@ -638,6 +638,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 - Cache backend dependency/build artifacts in CI, use a lean test-only debug
   profile, and emit comparable timing/resource measurements for each Rust gate.
+- Cache lockfile-keyed npm package data across frontend CI jobs, reuse the
+  typecheck graph in the production build, and measure browser-install cost
+  without caching Playwright binaries prematurely.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

@@ -328,6 +328,15 @@ Current state:
   remains a publication-time measurement rather than a claimed local result.
   Formatting, strict Clippy, and all 414 tests pass under the tuned profile; a
   repeat warm sample measured Clippy at 0.50 seconds and tests at 15.65 seconds.
+- Phase 6A9 removes repeat frontend CI work. Both Node jobs restore npm's
+  lockfile-keyed package cache, all install/check/build/browser stages emit
+  comparable timing and peak-RSS markers, and the typecheck gate now produces
+  reusable TypeScript build metadata so the immediately following production
+  build does not repeat the complete type graph. Browser binaries remain
+  uncached in line with Playwright guidance; hosted logs will measure that stage.
+  A clean local typecheck, all 481 unit tests, and production build pass; graph
+  reuse reduced the measured build stage from 30.40 to 11.34 seconds. The
+  existing 510.18 kB application-chunk warning remains the next bounded target.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

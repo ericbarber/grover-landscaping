@@ -108,21 +108,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: >-
+          /usr/bin/time -f
+          'frontend_install elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm ci
         working-directory: frontend
 
       - name: Type-check frontend
-        run: npm run typecheck
+        run: >-
+          /usr/bin/time -f
+          'frontend_typecheck elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run typecheck
         working-directory: frontend
 
       - name: Run frontend tests
-        run: npm test
+        run: >-
+          /usr/bin/time -f
+          'frontend_test elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm test
         working-directory: frontend
 
       - name: Build frontend
-        run: npm run build
+        run: >-
+          /usr/bin/time -f
+          'frontend_build elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run build
         working-directory: frontend
 
   browser-journeys:
@@ -138,17 +152,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: >-
+          /usr/bin/time -f
+          'browser_dependency_install elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm ci
         working-directory: frontend
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: >-
+          /usr/bin/time -f
+          'browser_engine_install elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npx playwright install --with-deps chromium firefox webkit
         working-directory: frontend
 
       - name: Run responsive browser journeys
-        run: npm run test:e2e:cross-browser
+        run: >-
+          /usr/bin/time -f
+          'browser_journeys elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run test:e2e:cross-browser
         working-directory: frontend
 
   pilot-assurance:
