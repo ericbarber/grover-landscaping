@@ -1275,12 +1275,18 @@ impl JobRepository {
     pub async fn list_photo_processing_history(
         &self,
         filter: PhotoProcessingHistoryFilter,
-    ) -> Result<Vec<PhotoProcessingHistoryItem>, sqlx::Error> {
+    ) -> ResourceReadResult<Vec<PhotoProcessingHistoryItem>> {
         let Some(pool) = &self.pool else {
-            return Ok(Vec::new());
+            return ResourceReadResult::Unavailable;
         };
 
-        postgres_write::list_photo_processing_history(pool, filter).await
+        match postgres_write::list_photo_processing_history(pool, filter).await {
+            Ok(items) => ResourceReadResult::Loaded(items),
+            Err(error) => {
+                tracing::error!(%error, "photo-processing history read failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     #[allow(dead_code)]
@@ -1444,11 +1450,17 @@ impl JobRepository {
     pub async fn list_photo_erasure_deletion_history(
         &self,
         filter: PhotoErasureDeletionHistoryFilter,
-    ) -> Result<Vec<PhotoErasureDeletionHistoryItem>, sqlx::Error> {
+    ) -> ResourceReadResult<Vec<PhotoErasureDeletionHistoryItem>> {
         let Some(pool) = &self.pool else {
-            return Ok(Vec::new());
+            return ResourceReadResult::Unavailable;
         };
-        postgres_privacy::list_photo_erasure_deletion_history(pool, filter).await
+        match postgres_privacy::list_photo_erasure_deletion_history(pool, filter).await {
+            Ok(items) => ResourceReadResult::Loaded(items),
+            Err(error) => {
+                tracing::error!(%error, "photo-erasure deletion history read failed");
+                ResourceReadResult::Unavailable
+            }
+        }
     }
 
     pub async fn retry_photo_erasure_deletion_job(

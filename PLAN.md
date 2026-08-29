@@ -378,6 +378,12 @@ Current state:
   detail open at a time. A containerized Chromium and WebKit journey proves the
   390 px iPhone layout, 48 px navigation targets, bottom-safe placement, no
   horizontal overflow, Home-to-yard action, and exclusive visit disclosure.
+- Phase 6A16 makes both photo recovery-history reads fail closed. Photo-
+  processing and privacy-erasure deletion lists no longer turn a missing or
+  failed PostgreSQL pool into `200 []`; repository contracts distinguish
+  loaded-empty from unavailable and the HTTP routes return stable `503` errors.
+  Focused handler and repository-outage tests, strict Clippy, and all 414
+  backend tests pass. Notification history is the next matching audit target.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2211,9 +2217,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A16: audit remaining persisted repositories for lossy missing,
-  conflict, or unavailable outcomes, beginning with the next customer- or
-  privacy-sensitive write boundary.
+- Phase 6A17: make notification recovery history distinguish a valid persisted
+  empty queue from unavailable storage, retaining the delivered finalization,
+  retry, resolve, and tenant-isolation behavior.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

@@ -105,6 +105,27 @@ async fn repository_distinguishes_unavailable_photo_writes() {
     ));
     assert!(matches!(
         repository
+            .list_photo_processing_history(PhotoProcessingHistoryFilter {
+                organization_ids: vec!["org_demo_landscaping".to_string()],
+                task_type: None,
+                status: None,
+                limit: 25,
+            })
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_photo_erasure_deletion_history(PhotoErasureDeletionHistoryFilter {
+                organization_ids: vec!["org_demo_landscaping".to_string()],
+                status: None,
+                limit: 25,
+            })
+            .await,
+        ResourceReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .mark_photo_processing_completed("processing_outage")
             .await,
         ResourceReadResult::Unavailable
@@ -679,7 +700,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
             limit: 10,
         })
         .await
-        .unwrap();
+        .expect_loaded("dead-letter photo processing history should load");
     let recovered_job = dead_letters
         .iter()
         .find(|job| job.id == queued.id)
@@ -898,7 +919,7 @@ async fn repository_lists_retries_and_resolves_erasure_deletion_jobs() {
             limit: 25,
         })
         .await
-        .unwrap();
+        .expect_loaded("photo erasure deletion history should load");
     assert!(history.iter().any(|item| item.id == deletion_id));
 
     let retried = repository

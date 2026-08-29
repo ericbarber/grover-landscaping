@@ -543,6 +543,10 @@ The exact artifact mapping and ordered implementation queue live in
    - Notification delivery finalization now distinguishes an applied current claim from stale/missing claims and unavailable storage; continue the same affected-row audit across remaining repositories.
    - Superseded organization-membership-only account portfolio, property onboarding, and delivered-report reads now reject Yard Owners; customer access remains on hybrid/exact-visit projections.
    - Photo-worker cycles now distinguish finalized and stale claims; abandoned privacy-deletion work is reclaimed after ten minutes or dead-lettered when exhausted.
+   - Photo-processing and privacy-erasure recovery history now distinguish a
+     valid persisted empty queue from unavailable storage and return `503`
+     instead of false-empty success; apply the same contract to notification
+     recovery history next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

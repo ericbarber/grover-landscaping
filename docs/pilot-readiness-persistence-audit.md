@@ -134,3 +134,28 @@ the library boundary together. The binary has no remaining source-module
 redeclarations and runs only 145 route/handler tests. All 88 duplicate module-
 test executions from the 233-test baseline are removed; strict Clippy and all
 414 backend tests pass.
+
+## Recovery-history availability
+
+The next outcome audit found that the photo-processing recovery list and the
+privacy-erasure object-deletion list returned `Ok([])` when the repository had
+no PostgreSQL pool. Their retry, resolution, claiming, and finalization paths
+already reported unavailable persistence explicitly, but a manager could still
+mistake an unavailable recovery queue for a valid empty queue.
+
+Both repository reads now return `ResourceReadResult`:
+
+- `Loaded([])` means PostgreSQL was reached and no tenant-scoped rows matched;
+- `Loaded(items)` means the tenant-scoped recovery history was read; and
+- `Unavailable` means no pool exists or the query failed.
+
+The two HTTP list routes map unavailable history to `503` with their existing
+stable error codes. Focused handler tests prove the no-persistence boundary, the
+repository outage test covers both list methods, and the existing PostgreSQL
+fixture continues to cover loaded processing/deletion history, retry,
+resolution, tenant isolation, and cleanup. Formatting, strict all-target/all-
+feature Clippy, and all 414 backend tests pass.
+
+Notification recovery history retains the same false-empty no-pool pattern and
+is the next bounded audit slice; its provider-outcome finalization remains
+fail-closed from the earlier phase.

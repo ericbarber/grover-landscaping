@@ -7867,8 +7867,8 @@ async fn list_photo_processing_history(
                 principal_active_organization_ids(&state, &principal).await
             );
             match state.jobs.list_photo_processing_history(filter).await {
-                Ok(items) => Json(items).into_response(),
-                Err(_) => (
+                ResourceReadResult::Loaded(items) => Json(items).into_response(),
+                ResourceReadResult::NotFound | ResourceReadResult::Unavailable => (
                     StatusCode::SERVICE_UNAVAILABLE,
                     Json(ErrorResponse {
                         error: "photo_processing_history_unavailable",
@@ -8066,8 +8066,8 @@ async fn list_photo_erasure_deletion_history(
         limit,
     };
     match state.jobs.list_photo_erasure_deletion_history(filter).await {
-        Ok(items) => Json(items).into_response(),
-        Err(_) => (
+        ResourceReadResult::Loaded(items) => Json(items).into_response(),
+        ResourceReadResult::NotFound | ResourceReadResult::Unavailable => (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(ErrorResponse {
                 error: "photo_erasure_deletion_history_unavailable",
@@ -13837,7 +13837,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn photo_processing_history_endpoint_returns_empty_local_history() {
+    async fn photo_processing_history_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13848,11 +13848,11 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert!(json.as_array().unwrap().is_empty());
+        assert_eq!(json["error"], "photo_processing_history_unavailable");
     }
 
     #[tokio::test]
@@ -13875,7 +13875,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn photo_erasure_deletion_history_endpoint_returns_empty_local_history() {
+    async fn photo_erasure_deletion_history_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13886,10 +13886,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert!(json.as_array().unwrap().is_empty());
+        assert_eq!(json["error"], "photo_erasure_deletion_history_unavailable");
     }
 
     #[tokio::test]
