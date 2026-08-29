@@ -320,6 +320,14 @@ Current state:
   validation moved with its request type. The binary now runs only 145 route
   tests, down from 233, eliminating all 88 duplicate module-test executions.
   Strict Clippy and all 414 backend tests pass.
+- Phase 6A8 targets the measured backend cache-miss bottleneck. Backend CI now
+  restores Cargo dependency/build artifacts, emits elapsed/user/system/peak-RSS
+  metrics for every Rust gate, and omits full debuginfo only from test builds to
+  reduce link work and artifact size. A local empty-target strict-Clippy baseline
+  took 324.06 seconds and peaked near 1 GiB; hosted cold/cache-hit comparison
+  remains a publication-time measurement rather than a claimed local result.
+  Formatting, strict Clippy, and all 414 tests pass under the tuned profile; a
+  repeat warm sample measured Clippy at 0.50 seconds and tests at 15.65 seconds.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

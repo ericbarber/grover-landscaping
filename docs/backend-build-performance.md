@@ -63,10 +63,44 @@ with the 233-test baseline, all 88 repeated module-test executions are removed;
 the full backend command runs 414 tests. Formatting, strict all-target/all-
 feature Clippy, the binary target, and the full backend suite pass.
 
-## Next convergence boundary
+## Phase 6A8 cache and test-profile tuning
 
-All binary module redeclarations are removed. The next build-performance phase
-should capture comparable cold and warm CI timings, then use those measurements
-to prioritize linker settings, test-profile tuning, dependency caching, or test
-partitioning. Incremental timings from the convergence work used different
-artifact states and are not presented as an equivalent before/after benchmark.
+The backend CI job now restores Cargo registry and dependency build artifacts
+through `Swatinem/rust-cache@v2`, keyed from the Rust toolchain, lockfile,
+manifests, and job context. The cache step runs after toolchain installation and
+targets `backend/target`. Workspace crate artifacts remain freshly built by the
+action's default policy, so source changes are still exercised.
+
+The test profile disables compiler debuginfo. Backend tests validate behavior
+and do not use a debugger in CI; omitting the default full debuginfo reduces
+test-link work and artifact size while leaving the development and release
+profiles unchanged. Panic output remains available, although optimized debugger
+source information is intentionally not part of this CI-oriented profile.
+
+Each backend quality-gate command now reports GNU `time` elapsed, user, system,
+and peak-RSS metrics in the hosted job log. A local warm baseline captured before
+the profile change on 2026-08-29 was:
+
+| Stage | Elapsed | Peak RSS |
+| --- | ---: | ---: |
+| `cargo fmt --all -- --check` | 1.33 s | 67,276 KiB |
+| strict all-target/all-feature Clippy | 1.31 s | 87,472 KiB |
+| all 414 backend tests | 16.55 s | 385,256 KiB |
+
+An isolated empty-target run measured cold strict Clippy at 324.06 seconds and
+1,013,472 KiB peak RSS. Its following test-profile build exhausted the bounded
+2 GiB temporary filesystem after 126.64 seconds with 1.5 GiB of disposable
+artifacts. That failure was environmental rather than a code/test failure and
+motivated the debuginfo reduction; the temporary target was removed afterward.
+
+After the change, the exact strict gate passed and all 414 tests executed. The
+one-time fresh test-profile build plus execution took 440.02 seconds and peaked
+at 1,126,460 KiB RSS on the normal workspace filesystem. A repeat warm sample
+then measured strict Clippy at 0.50 seconds and all tests at 15.65 seconds. Those
+single-machine samples confirm no warm regression, but they are diagnostic
+observations rather than a statistically controlled benchmark.
+
+Hosted cold and cache-hit numbers cannot be asserted locally. The next pushed
+CI runs must supply those comparable measurements from the new log markers.
+Cache keys should only be tuned further if those runs show low restore rates or
+insufficient savings; linker or test-partition changes remain measurement-led.

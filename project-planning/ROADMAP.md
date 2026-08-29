@@ -636,6 +636,8 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 
 ## Phase 6 — Scale, Integrations, and Operational Hardening
 
+- Cache backend dependency/build artifacts in CI, use a lean test-only debug
+  profile, and emit comparable timing/resource measurements for each Rust gate.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

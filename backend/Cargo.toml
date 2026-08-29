@@ -22,3 +22,6 @@ image = { version = "0.25.10", default-features = false, features = ["jpeg", "pn
 
 [dev-dependencies]
 http-body-util = "0.1"
+
+[profile.test]
+debug = 0

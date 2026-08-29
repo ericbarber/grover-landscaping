@@ -58,6 +58,11 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies and build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend -> target
+
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
@@ -71,15 +76,24 @@ jobs:
           done
 
       - name: Check Rust formatting
-        run: cargo fmt --all -- --check
+        run: >-
+          /usr/bin/time -f
+          'backend_fmt elapsed=%e user=%U system=%S max_rss_kb=%M'
+          cargo fmt --all -- --check
         working-directory: backend
 
       - name: Run Rust lint checks
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: >-
+          /usr/bin/time -f
+          'backend_clippy elapsed=%e user=%U system=%S max_rss_kb=%M'
+          cargo clippy --all-targets --all-features -- -D warnings
         working-directory: backend
 
       - name: Run Rust tests
-        run: cargo test --all
+        run: >-
+          /usr/bin/time -f
+          'backend_test elapsed=%e user=%U system=%S max_rss_kb=%M'
+          cargo test --all
         working-directory: backend
 
   frontend:
