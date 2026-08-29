@@ -118,6 +118,20 @@ jobs:
           npm ci
         working-directory: frontend
 
+      - name: Test frontend dependency audit policy
+        run: >-
+          /usr/bin/time -f
+          'frontend_audit_policy_test elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run test:audit-security
+        working-directory: frontend
+
+      - name: Audit frontend dependencies
+        run: >-
+          /usr/bin/time -f
+          'frontend_security_audit elapsed=%e user=%U system=%S max_rss_kb=%M'
+          npm run audit:security
+        working-directory: frontend
+
       - name: Type-check frontend
         run: >-
           /usr/bin/time -f

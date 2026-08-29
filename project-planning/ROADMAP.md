@@ -656,7 +656,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
   validation-only frontend files; rely on prerequisite quality/browser jobs for
   those gates before building only shipped inputs.
 - Keep frontend build tooling on compatible patched dependency lines and enforce
-  a high/critical npm advisory gate before production-image construction.
+  a fail-closed, deterministically tested high/critical npm advisory gate before
+  production-image construction without advisory suppression or automatic major
+  upgrades.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

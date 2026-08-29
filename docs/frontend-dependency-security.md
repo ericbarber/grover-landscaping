@@ -33,5 +33,36 @@ Validation on 2026-08-29:
   builds in 76.41 seconds with cached backend/runtime layers, and retains the
   same runtime image manifest and config digest.
 
-An explicit CI audit gate is the next phase so later lockfile changes cannot
-silently reintroduce high or critical npm findings.
+## Phase 6A14 regression gate
+
+The frontend CI job now runs two dependency-security steps immediately after a
+clean install and before type checking, tests, or the production build:
+
+1. `npm run test:audit-security` proves the policy against clean,
+   moderate-only, high, critical, malformed-report, and audit-process-failure
+   cases.
+2. `npm run audit:security` runs `npm audit --audit-level=high --json` against
+   the complete frontend dependency graph, including build dependencies.
+
+High or critical findings block the job. Missing or malformed vulnerability
+metadata and a nonzero audit-process result without a reported finding also
+fail closed. Informational, low, and moderate findings remain visible in the
+summary but do not block this gate.
+
+## Update and exception policy
+
+- Prefer the smallest compatible patched release and retain the current major
+  version when that closes the advisory.
+- Validate clean install, the live audit, type checking, tests, and the
+  production build in proportion to the changed dependency.
+- Do not add advisory suppression, an allowlist, or an automatic major upgrade
+  to keep routine CI green.
+- If a compatible fix is unavailable, record applicability, exposure,
+  compensating controls, an owner, and an expiry date for an explicitly
+  approved exception before changing the gate. No exception mechanism is
+  currently implemented.
+- Treat registry or audit-service failure as an unavailable security check,
+  not as a clean report; retry the CI job after service recovery.
+
+Validation on 2026-08-29 proves all eight policy cases and the live zero-finding
+Node 22/npm 10 audit.

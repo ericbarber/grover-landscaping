@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "npm run typecheck && vite build",
+    "audit:security": "node ../scripts/audit-frontend-dependencies.mjs",
+    "test:audit-security": "node --test ../scripts/audit-frontend-dependencies.test.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:e2e:mobile": "playwright test --config playwright.config.ts --project chromium-mobile",

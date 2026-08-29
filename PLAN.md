@@ -363,7 +363,13 @@ Current state:
   staying within existing major versions. Clean install and audit report zero
   vulnerabilities; TypeScript, all 481 unit tests, the production build, and
   the Node 22 image build pass with identical frontend assets and runtime image
-  digest. A dedicated CI audit regression gate remains next.
+  digest.
+- Phase 6A14 prevents high or critical npm advisory regressions before frontend
+  type checking, tests, builds, browser journeys, or production-image work. A
+  reusable command audits the complete dependency graph and fails closed on
+  malformed metadata or audit-process errors; eight deterministic policy tests
+  prove clean, moderate-only, high, critical, malformed, and unavailable paths.
+  No advisory suppression or automatic major-version upgrade is introduced.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2184,15 +2190,12 @@ Current state:
 
 Next implementation work:
 
-- Phase 6A14: add an explicit high/critical npm audit gate to frontend CI, prove
-  its failure behavior deterministically, and document the update/exception
-  policy without suppressing advisories or coupling routine builds to major
-  dependency upgrades.
 - After explicit publication authorization, run the committed CI workflow and
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Continue the mobile navigation phase with compact service-work history, actionable persona Home alerts, and iPhone interaction validation
+- Phase 6A15: continue the mobile navigation phase with compact service-work
+  history, actionable persona Home alerts, and iPhone interaction validation.
 - Audit remaining persisted repositories for lossy missing, conflict, or unavailable outcomes
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
