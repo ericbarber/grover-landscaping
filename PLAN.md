@@ -351,6 +351,13 @@ Current state:
   image took 783.12 seconds and its identical cache-hit rebuild took 28.66
   seconds (96.3% lower). The unprivileged image passes PostgreSQL-backed health,
   readiness, and compiled-frontend smoke checks.
+- Phase 6A12 makes the production frontend context deterministic. Docker now
+  excludes host TypeScript build metadata, Playwright inputs, source test/spec
+  modules, reports, and frontend documentation from the production copy. The
+  prerequisite frontend/browser jobs retain complete validation. A clean-
+  context frontend rebuild took 71.34 seconds, produced the same asset hashes,
+  and retained the same runtime image manifest/config digest while all backend,
+  dependency, and runtime layers remained cached.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

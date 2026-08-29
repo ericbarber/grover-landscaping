@@ -647,6 +647,9 @@ photo, report, bid, and customer-safe-link workflows using persisted state.
 - Persist npm, Cargo registry, release-target, and production-image layers
   across ephemeral CI runs with a scoped Buildx cache while retaining a minimal,
   unprivileged runtime image and explicit smoke contract.
+- Keep the production Docker context independent of local generated state and
+  validation-only frontend files; rely on prerequisite quality/browser jobs for
+  those gates before building only shipped inputs.
 - Establish development, staging, and production release gates.
 - Require migration checks, smoke tests, rollback notes, and environment-specific
   configuration.

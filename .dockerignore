@@ -6,7 +6,17 @@
 .env.*
 backend/target
 frontend/dist
+frontend/e2e
 frontend/node_modules
+frontend/playwright-report
+frontend/playwright.config.ts
+frontend/README.md
+frontend/src/**/*.spec.ts
+frontend/src/**/*.spec.tsx
+frontend/src/**/*.test.ts
+frontend/src/**/*.test.tsx
+frontend/test-results
+frontend/tsconfig.tsbuildinfo
 **/*.log
 docs
 infra

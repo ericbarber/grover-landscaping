@@ -49,3 +49,25 @@ user. A local PostgreSQL-backed smoke run passed `/health` and `/health/ready`
 and served the compiled frontend from `/`. The smoke used the explicit local
 review runtime mode because no external Cognito tenant was in scope; an
 invented production issuer correctly failed closed while fetching JWKS.
+
+## Phase 6A12 deterministic frontend context
+
+The repository ignores `frontend/tsconfig.tsbuildinfo` for Git, but the Docker
+context previously admitted that local incremental state into `COPY frontend/`.
+A developer's host typecheck could therefore influence whether the container's
+own typecheck performed a clean analysis. The same broad context also included
+Playwright journeys/configuration, source unit/spec files, local test reports,
+and the frontend README, causing production-layer invalidation for validation-
+only edits.
+
+The Docker ignore contract now excludes those generated and non-production
+inputs. CI safety is unchanged: the production-image job depends on the separate
+frontend and browser jobs, which still typecheck and execute the complete source
+test and journey sets before the image gate runs. A direct image build remains
+responsible for production source/config/assets, not repository test execution.
+
+A clean-context proof forced the frontend stage to rebuild without host
+TypeScript metadata while reusing npm, Cargo, and runtime layers. It completed
+in 71.34 seconds, emitted the same production asset hashes, and retained the
+same runtime image manifest/config digest. This confirms the filter changes
+cache invalidation inputs rather than shipped behavior.
