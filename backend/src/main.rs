@@ -71,8 +71,9 @@ use grover_landscaping_api::{
     },
     marketing_leads::{
         is_marketing_lead_spam, validate_marketing_lead_request, validate_marketing_lead_workflow,
-        CreateMarketingLeadRequest, MarketingLeadRepository, MarketingLeadResponse,
-        MarketingLeadWriteResult, UpdateMarketingLeadRequest,
+        CreateMarketingLeadRequest, MarketingLeadListResult, MarketingLeadRepository,
+        MarketingLeadResponse, MarketingLeadWorkflowResult, MarketingLeadWriteResult,
+        UpdateMarketingLeadRequest,
     },
     notifications::{
         start_notification_dispatcher, validate_notification_recipient,
@@ -1299,14 +1300,11 @@ async fn create_marketing_lead(
 
 async fn list_marketing_leads(State(state): State<Arc<AppState>>) -> Response {
     match state.marketing_leads.list().await {
-        Ok(leads) => (StatusCode::OK, Json(leads)).into_response(),
-        Err(error) => {
-            tracing::error!(%error, "marketing lead inbox query failed");
-            persisted_resource_unavailable_response(
-                "marketing_leads_unavailable",
-                "The marketing lead inbox is temporarily unavailable.",
-            )
-        }
+        MarketingLeadListResult::Loaded(leads) => (StatusCode::OK, Json(leads)).into_response(),
+        MarketingLeadListResult::Unavailable => persisted_resource_unavailable_response(
+            "marketing_leads_unavailable",
+            "The marketing lead inbox is temporarily unavailable.",
+        ),
     }
 }
 
@@ -1331,8 +1329,10 @@ async fn update_marketing_lead(
         .update_workflow(&lead_id, &principal.subject, request)
         .await
     {
-        Ok(Some(detail)) => (StatusCode::OK, Json(detail)).into_response(),
-        Ok(None) => (
+        Ok(MarketingLeadWorkflowResult::Updated(detail)) => {
+            (StatusCode::OK, Json(detail)).into_response()
+        }
+        Ok(MarketingLeadWorkflowResult::NotFound) => (
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
                 error: "marketing_lead_not_found",
@@ -1340,6 +1340,10 @@ async fn update_marketing_lead(
             }),
         )
             .into_response(),
+        Ok(MarketingLeadWorkflowResult::Unavailable) => persisted_resource_unavailable_response(
+            "marketing_lead_update_unavailable",
+            "The marketing lead could not be updated.",
+        ),
         Err(error) => {
             tracing::error!(%error, %lead_id, "marketing lead workflow update failed");
             persisted_resource_unavailable_response(
@@ -11853,6 +11857,51 @@ mod tests {
             .unwrap();
 
         assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn marketing_lead_inbox_fails_closed_without_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .uri("/marketing-leads")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "marketing_leads_unavailable");
+    }
+
+    #[tokio::test]
+    async fn marketing_lead_update_fails_closed_without_persistence() {
+        let response = seed_app()
+            .oneshot(
+                Request::builder()
+                    .method(Method::PUT)
+                    .uri("/marketing-leads/lead_missing")
+                    .header(CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::json!({
+                            "status": "contacted",
+                            "assigned_to": "support@example.com",
+                            "note": "Called the prospect."
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "marketing_lead_update_unavailable");
     }
 
     #[tokio::test]

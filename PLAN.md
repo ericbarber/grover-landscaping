@@ -392,6 +392,14 @@ Current state:
   persisted history and never renders that state as an empty queue. Focused
   backend and frontend cases, strict Clippy, all 414 backend tests, all 483
   frontend tests, and the production frontend build pass.
+- Phase 6A18 makes the SupportAdmin marketing-lead workflow fail closed. A
+  missing or failed PostgreSQL pool now produces the stable lead-inbox `503`
+  instead of `200 []`, and a workflow update without persistence produces its
+  existing unavailable response instead of a false `404`. The post-update
+  history reload requires the established pool, while the inbox UI suppresses
+  zero totals and empty-state copy during an outage. Focused outage cases,
+  strict Clippy, all 416 backend tests, all 484 frontend tests, and the
+  production frontend build pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2225,8 +2233,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A18: audit the manager marketing-lead inbox and lead-history reads so
-  unavailable persistence cannot appear as a valid empty acquisition queue.
+- Phase 6A19: audit organization branch and territory hierarchy reads so a
+  persistence outage cannot appear as a valid empty dispatch hierarchy.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

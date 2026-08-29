@@ -78,6 +78,19 @@ pub enum MarketingLeadWriteResult {
     Unavailable,
 }
 
+#[derive(Clone, Debug)]
+pub enum MarketingLeadListResult {
+    Loaded(Vec<MarketingLeadRecord>),
+    Unavailable,
+}
+
+#[derive(Clone, Debug)]
+pub enum MarketingLeadWorkflowResult {
+    Updated(Box<MarketingLeadDetailResponse>),
+    NotFound,
+    Unavailable,
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct MarketingLeadRepository {
     pool: Option<PgPool>,
@@ -149,14 +162,23 @@ impl MarketingLeadRepository {
         })
     }
 
-    pub async fn list(&self) -> Result<Vec<MarketingLeadRecord>, sqlx::Error> {
+    pub async fn list(&self) -> MarketingLeadListResult {
         let Some(pool) = &self.pool else {
-            return Ok(Vec::new());
+            return MarketingLeadListResult::Unavailable;
         };
-        sqlx::query_as::<_, MarketingLeadRow>(
+        let result = sqlx::query_as::<_, MarketingLeadRow>(
             "SELECT id, full_name, email, company_name, persona, team_size, intent, message, source, medium, campaign, landing_path, status, assigned_to, next_action_at::text, created_at::text FROM marketing_leads ORDER BY created_at DESC LIMIT 250",
         )
-        .fetch_all(pool).await.map(|rows| rows.into_iter().map(Into::into).collect())
+        .fetch_all(pool)
+        .await;
+
+        match result {
+            Ok(rows) => MarketingLeadListResult::Loaded(rows.into_iter().map(Into::into).collect()),
+            Err(error) => {
+                tracing::error!(%error, "marketing lead inbox query failed");
+                MarketingLeadListResult::Unavailable
+            }
+        }
     }
 
     pub async fn update_workflow(
@@ -164,9 +186,9 @@ impl MarketingLeadRepository {
         lead_id: &str,
         actor_user_id: &str,
         request: UpdateMarketingLeadRequest,
-    ) -> Result<Option<MarketingLeadDetailResponse>, sqlx::Error> {
+    ) -> Result<MarketingLeadWorkflowResult, sqlx::Error> {
         let Some(pool) = &self.pool else {
-            return Ok(None);
+            return Ok(MarketingLeadWorkflowResult::Unavailable);
         };
         let mut transaction = pool.begin().await?;
         let previous_status = sqlx::query_scalar::<_, String>(
@@ -176,7 +198,7 @@ impl MarketingLeadRepository {
         .fetch_optional(&mut *transaction)
         .await?;
         let Some(previous_status) = previous_status else {
-            return Ok(None);
+            return Ok(MarketingLeadWorkflowResult::NotFound);
         };
         let row = sqlx::query_as::<_, MarketingLeadRow>(
             "UPDATE marketing_leads SET status=$2, assigned_to=$3, next_action_at=$4::timestamptz, updated_at=NOW() WHERE id=$1 RETURNING id, full_name, email, company_name, persona, team_size, intent, message, source, medium, campaign, landing_path, status, assigned_to, next_action_at::text, created_at::text",
@@ -191,20 +213,19 @@ impl MarketingLeadRepository {
             .bind(optional_trimmed(request.next_action_at)).bind(optional_trimmed(request.note))
             .execute(&mut *transaction).await?;
         transaction.commit().await?;
-        let history = self.history(lead_id).await?;
-        Ok(Some(MarketingLeadDetailResponse {
-            lead: row.into(),
-            history,
-        }))
+        let history = Self::history(pool, lead_id).await?;
+        Ok(MarketingLeadWorkflowResult::Updated(Box::new(
+            MarketingLeadDetailResponse {
+                lead: row.into(),
+                history,
+            },
+        )))
     }
 
-    pub async fn history(
-        &self,
+    async fn history(
+        pool: &PgPool,
         lead_id: &str,
     ) -> Result<Vec<MarketingLeadHistoryRecord>, sqlx::Error> {
-        let Some(pool) = &self.pool else {
-            return Ok(Vec::new());
-        };
         sqlx::query_as::<_, MarketingLeadHistoryRow>("SELECT id, actor_user_id, previous_status, new_status, assigned_to, next_action_at::text, note, occurred_at::text FROM marketing_lead_history WHERE lead_id=$1 ORDER BY occurred_at DESC")
             .bind(lead_id).fetch_all(pool).await
             .map(|rows| rows.into_iter().map(Into::into).collect())

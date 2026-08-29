@@ -169,3 +169,23 @@ boundary and displays an explicit persisted-history warning instead of its
 empty-history message. Focused repository, handler, and component cases cover
 the no-persistence behavior; strict Clippy, all 414 backend tests, all 483
 frontend tests, and the production frontend build pass.
+
+## Marketing-operations availability
+
+The SupportAdmin marketing-lead inbox had the same false-empty no-pool
+fallback, while its workflow update translated unavailable persistence into a
+missing lead. The repository now returns explicit list outcomes: `Loaded`
+represents a completed inbox query and `Unavailable` represents a missing pool
+or failed query. The existing `marketing_leads_unavailable` `503` is therefore
+used for both absent and failed persistence rather than returning `200 []`.
+
+Workflow updates likewise distinguish `Updated`, `NotFound`, and `Unavailable`.
+The history query is private and accepts the pool already used for the committed
+workflow update, removing its independent no-pool empty fallback. In the
+SupportAdmin UI, an inbox load error suppresses both zero lead totals and the
+“No leads match” state.
+
+Focused handler cases prove list and update outages return their stable `503`
+codes, and a component unit case proves unavailable and empty presentation stay
+distinct. Formatting, strict all-target/all-feature Clippy, all 416 backend
+tests, all 484 frontend tests, and the production frontend build pass.

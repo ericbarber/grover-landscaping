@@ -35,8 +35,12 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Evidence standard and trust cards grounded in delivered offline, audit, access, evidence, reporting, and bid workflows
 - First-party conversion events for visits, personas, tour steps, CTAs, form starts, submissions, and failures
 - Anonymous per-tab measurement with UTM attribution, an explicit event allowlist, and no third-party tracking
-- Support-admin platform lead inbox with contact, intent, attribution, status filtering, ownership, and follow-up scheduling
-- Durable lead workflow history recording operator, status transition, assignment, next action, note, and timestamp
+- Support-admin platform lead inbox with contact, intent, attribution, status
+  filtering, ownership, follow-up scheduling, and explicit unavailable versus
+  empty persistence states
+- Durable lead workflow history recording operator, status transition,
+  assignment, next action, note, and timestamp, with unavailable workflow
+  updates kept distinct from missing leads
 - SupportAdmin 30-day conversion dashboard with unique-session stages, persona and campaign segments, failure counts, and low-volume interpretation
 - Overdue lead counts, priority sorting, and visual attention states
 - Validated working homepage design with responsive audience continuity,

@@ -546,8 +546,11 @@ The exact artifact mapping and ordered implementation queue live in
    - Photo-processing, privacy-erasure, and notification recovery history now
      distinguish a valid persisted empty queue from unavailable storage and
      return `503` instead of false-empty success; the manager notification UI
-     preserves that distinction. Audit the marketing-lead inbox and history
-     reads next.
+     preserves that distinction.
+   - The SupportAdmin marketing-lead inbox and workflow update now distinguish
+     unavailable persistence from a valid empty inbox or missing lead; the UI
+     withholds empty-state totals and copy during outages. Audit branch and
+     territory hierarchy reads next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.
