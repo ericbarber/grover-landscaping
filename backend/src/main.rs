@@ -12019,7 +12019,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn my_access_returns_local_development_membership() {
+    async fn my_access_fails_closed_when_login_audit_cannot_be_persisted() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12030,20 +12030,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["user_id"], "local-development-user");
-        assert_eq!(
-            json["memberships"][0]["organization_id"],
-            "org_demo_landscaping"
-        );
-        assert_eq!(
-            json["memberships"][0]["organization_type"],
-            "yard_care_company"
-        );
+        assert_eq!(json["error"], "principal_access_unavailable");
     }
 
     #[tokio::test]
@@ -12277,7 +12269,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_invitation_revoke_endpoint_requires_pending_persistence() {
+    async fn organization_invitation_revoke_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12289,7 +12281,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "organization_invitation_revoke_unavailable");
     }
 
     #[tokio::test]
@@ -12307,7 +12302,7 @@ mod tests {
             .unwrap();
         assert_eq!(invalid.status(), StatusCode::BAD_REQUEST);
 
-        let missing = seed_app()
+        let unavailable = seed_app()
             .oneshot(
                 Request::builder()
                     .method("POST")
@@ -12320,7 +12315,10 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(missing.status(), StatusCode::NOT_FOUND);
+        assert_eq!(unavailable.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = unavailable.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "organization_invitation_reissue_unavailable");
     }
 
     #[tokio::test]

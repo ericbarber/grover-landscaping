@@ -420,6 +420,15 @@ Current state:
   existing stable `503` responses now reach manager UIs that already distinguish
   unavailable from empty. Focused repository and route cases, strict Clippy,
   and all 417 backend tests pass.
+- Phase 6A22 closes invitation recovery and login-audit no-pool outcomes.
+  Invitation revoke and reissue now return their existing unavailable `503`
+  errors instead of false conflict/not-found responses. A principal access
+  summary with active memberships now requires its login audit writes; absent
+  persistence returns `principal_access_unavailable` instead of unaudited
+  success, while an access summary with no memberships requires no audit rows.
+  Explicit `persisted: false` local invitation creation remains a separate
+  review-mode contract. Focused repository and route cases, strict Clippy, and
+  all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2253,8 +2262,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A22: audit organization invitation revoke/reissue and authentication
-  claim-membership audit writes for false conflict or success outcomes.
+- Phase 6A23: audit membership role, profile, and status mutations so absent
+  persistence cannot appear as an applied change or business conflict.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

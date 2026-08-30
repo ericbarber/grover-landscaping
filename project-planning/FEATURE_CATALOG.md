@@ -366,6 +366,8 @@ here does not mean every capability has been delivered.
 - Persisted activity and audit history
 - Fail-closed team, operational, and invitation-history collections with
   explicit manager-facing unavailable states
+- Fail-closed invitation revoke/reissue recovery and membership-backed
+  principal access summaries that require persisted login audits
 
 ### Customer experience
 

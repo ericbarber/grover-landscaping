@@ -239,3 +239,24 @@ Their handlers expose the existing `team_activity_unavailable`,
 interfaces already recognize these failures and suppress valid-empty claims.
 Focused default-repository and route cases cover all three boundaries;
 formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.
+
+## Invitation recovery and login-audit availability
+
+Organization invitation revoke and reissue operations previously returned
+`Conflict` when no database pool existed, which their handlers translated into
+not-found recovery responses. Both mutations now return
+`OrganizationMutationResult::Unavailable` and reach their existing stable `503`
+errors. A completed persisted mutation can still return conflict when the target
+is genuinely missing or no longer eligible.
+
+Principal access summaries write one login audit row for each active
+membership. The no-pool path formerly returned a successful zero-row write,
+allowing membership-backed access to appear fully loaded without its required
+audit. It now reports unavailable when memberships require audit rows; a valid
+zero-membership summary still requires no audit and may complete. Explicit
+local invitation creation continues to disclose `persisted: false` and is not
+treated as silent persisted success.
+
+Focused repository and handler cases cover revoke, reissue, and membership-
+backed access-summary outages. Formatting, strict all-target/all-feature Clippy,
+and all 417 backend tests pass.

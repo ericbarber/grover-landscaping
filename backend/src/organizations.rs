@@ -455,12 +455,12 @@ impl OrganizationRepository {
         user_id: &str,
         memberships: &[OrganizationMembership],
     ) -> Result<usize, sqlx::Error> {
-        let Some(pool) = &self.pool else {
-            return Ok(0);
-        };
         if memberships.is_empty() {
             return Ok(0);
         }
+        let Some(pool) = &self.pool else {
+            return Err(sqlx::Error::PoolClosed);
+        };
 
         let mut transaction = pool.begin().await?;
         let mut inserted = 0;
@@ -662,7 +662,7 @@ impl OrganizationRepository {
         actor_user_id: &str,
     ) -> OrganizationMutationResult<OrganizationInvitationSummary> {
         let Some(pool) = self.pool.as_ref() else {
-            return OrganizationMutationResult::Conflict;
+            return OrganizationMutationResult::Unavailable;
         };
         match revoke_invitation(pool, organization_id, invitation_id, actor_user_id).await {
             Ok(Some(invitation)) => OrganizationMutationResult::Applied(invitation),
@@ -686,7 +686,7 @@ impl OrganizationRepository {
             return OrganizationMutationResult::Invalid;
         }
         let Some(pool) = self.pool.as_ref() else {
-            return OrganizationMutationResult::Conflict;
+            return OrganizationMutationResult::Unavailable;
         };
         match reissue_invitation(
             pool,

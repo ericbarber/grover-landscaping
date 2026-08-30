@@ -59,6 +59,40 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .await,
         OrganizationCollectionResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .revoke_invitation(
+                "org_demo_landscaping",
+                "invitation_missing",
+                "local-development-user",
+            )
+            .await,
+        OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .reissue_invitation(
+                "org_demo_landscaping",
+                "invitation_missing",
+                "local-development-user",
+                ReissueOrganizationInvitationRequest {
+                    expires_at: "2099-08-01T12:00:00.000Z".to_string(),
+                },
+            )
+            .await,
+        OrganizationMutationResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .principal_access_summary(
+                "local-development-user",
+                "Local Developer",
+                Some("invited@example.com".to_string()),
+                Vec::new(),
+            )
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
 
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
