@@ -93,6 +93,45 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
             .await,
         OrganizationResourceResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .update_membership_role(
+                "org_demo_landscaping",
+                "membership_local_owner_demo",
+                "local-development-user",
+                UpdateOrganizationMembershipRoleRequest {
+                    role: "manager".to_string(),
+                },
+            )
+            .await,
+        MembershipRoleUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_membership_profile(
+                "org_demo_landscaping",
+                "membership_local_owner_demo",
+                "local-development-user",
+                UpdateOrganizationMembershipProfileRequest {
+                    display_name: "Jordan Grover".to_string(),
+                },
+            )
+            .await,
+        grover_landscaping_api::organizations::MembershipProfileUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_membership_status(
+                "org_demo_landscaping",
+                "membership_local_owner_demo",
+                "local-development-user",
+                UpdateOrganizationMembershipStatusRequest {
+                    status: "suspended".to_string(),
+                },
+            )
+            .await,
+        MembershipStatusUpdateResult::Unavailable
+    ));
 
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))

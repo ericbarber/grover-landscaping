@@ -368,6 +368,7 @@ here does not mean every capability has been delivered.
   explicit manager-facing unavailable states
 - Fail-closed invitation revoke/reissue recovery and membership-backed
   principal access summaries that require persisted login audits
+- Fail-closed membership role, profile, and status administration mutations
 
 ### Customer experience
 

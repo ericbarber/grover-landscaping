@@ -562,7 +562,9 @@ The exact artifact mapping and ordered implementation queue live in
    - Invitation revoke/reissue operations now return unavailable rather than a
      false missing/conflict result without PostgreSQL, and membership-backed
      principal access summaries cannot succeed without required login audits.
-     Audit membership administration mutations next.
+   - Membership role, profile, and status updates now return unavailable
+     without PostgreSQL instead of a false last-owner conflict or unsaved local
+     success. Audit organization profile and first-owner setup state next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

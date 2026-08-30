@@ -429,6 +429,12 @@ Current state:
   Explicit `persisted: false` local invitation creation remains a separate
   review-mode contract. Focused repository and route cases, strict Clippy, and
   all 417 backend tests pass.
+- Phase 6A23 makes membership administration mutations fail closed. Role,
+  profile, and status updates now return their existing unavailable `503`
+  errors when PostgreSQL is absent instead of reporting a last-owner conflict
+  or returning an in-memory membership that was never saved. Input validation
+  and persisted last-owner protections remain unchanged. Focused repository and
+  route cases, strict Clippy, and all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2262,8 +2268,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A23: audit membership role, profile, and status mutations so absent
-  persistence cannot appear as an applied change or business conflict.
+- Phase 6A24: audit organization profile and first-owner setup reads and profile
+  updates so absent persistence cannot appear as loaded or saved state.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

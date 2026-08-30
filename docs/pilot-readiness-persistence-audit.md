@@ -260,3 +260,21 @@ treated as silent persisted success.
 Focused repository and handler cases cover revoke, reissue, and membership-
 backed access-summary outages. Formatting, strict all-target/all-feature Clippy,
 and all 417 backend tests pass.
+
+## Membership-administration mutation availability
+
+Membership role, profile, and status mutations previously substituted local
+seed data when no database pool existed. A role or status change for the seeded
+owner could therefore report a last-owner conflict without consulting durable
+state, while a profile update could return an updated membership even though
+nothing was saved.
+
+All three repository mutations now return their existing `Unavailable` variants
+when PostgreSQL is absent. Their handlers expose the stable
+`membership_role_update_unavailable`, `membership_profile_update_unavailable`,
+and `membership_status_update_unavailable` `503` responses. Request validation
+still runs before storage access, and persisted mutations retain their genuine
+not-found, lifecycle, and last-active-owner outcomes.
+
+Focused default-repository and route cases cover all three boundaries.
+Formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.

@@ -754,38 +754,23 @@ impl OrganizationRepository {
             return MembershipRoleUpdateResult::NotFound;
         };
 
-        if let Some(pool) = &self.pool {
-            return match update_membership_role(
-                pool,
-                organization_id,
-                membership_id,
-                actor_user_id,
-                access_role_to_storage(&access_role),
-            )
-            .await
-            {
-                Ok(updated) => updated,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, membership_id, "persisted membership role update failed");
-                    MembershipRoleUpdateResult::Unavailable
-                }
-            };
-        }
-
-        let Some(membership) = local_membership_role_update(
+        let Some(pool) = &self.pool else {
+            return MembershipRoleUpdateResult::Unavailable;
+        };
+        match update_membership_role(
+            pool,
             organization_id,
             membership_id,
-            accepting_or_actor(actor_user_id),
-            access_role,
-        ) else {
-            return MembershipRoleUpdateResult::NotFound;
-        };
-        if membership.id == "membership_local_owner_demo"
-            && membership.role != AccessRole::OrganizationOwner
+            actor_user_id,
+            access_role_to_storage(&access_role),
+        )
+        .await
         {
-            MembershipRoleUpdateResult::LastActiveOwner
-        } else {
-            MembershipRoleUpdateResult::Updated(membership)
+            Ok(updated) => updated,
+            Err(error) => {
+                tracing::error!(%error, organization_id, membership_id, "persisted membership role update failed");
+                MembershipRoleUpdateResult::Unavailable
+            }
         }
     }
 
@@ -800,34 +785,24 @@ impl OrganizationRepository {
         if !(2..=120).contains(&display_name.chars().count()) {
             return MembershipProfileUpdateResult::NotFound;
         }
-        if let Some(pool) = &self.pool {
-            return match update_membership_profile(
-                pool,
-                organization_id,
-                membership_id,
-                actor_user_id,
-                display_name,
-            )
-            .await
-            {
-                Ok(updated) => updated,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, membership_id, "persisted membership profile update failed");
-                    MembershipProfileUpdateResult::Unavailable
-                }
-            };
-        }
-        let Some(mut membership) =
-            seed_memberships("local-development-user")
-                .into_iter()
-                .find(|membership| {
-                    membership.organization_id == organization_id && membership.id == membership_id
-                })
-        else {
-            return MembershipProfileUpdateResult::NotFound;
+        let Some(pool) = &self.pool else {
+            return MembershipProfileUpdateResult::Unavailable;
         };
-        membership.display_name = display_name.to_string();
-        MembershipProfileUpdateResult::Updated(membership)
+        match update_membership_profile(
+            pool,
+            organization_id,
+            membership_id,
+            actor_user_id,
+            display_name,
+        )
+        .await
+        {
+            Ok(updated) => updated,
+            Err(error) => {
+                tracing::error!(%error, organization_id, membership_id, "persisted membership profile update failed");
+                MembershipProfileUpdateResult::Unavailable
+            }
+        }
     }
 
     pub async fn update_membership_status(
@@ -841,39 +816,18 @@ impl OrganizationRepository {
         if !matches!(status, "active" | "suspended") {
             return MembershipStatusUpdateResult::NotManageable;
         }
-        if let Some(pool) = &self.pool {
-            return match update_membership_status(
-                pool,
-                organization_id,
-                membership_id,
-                actor_user_id,
-                status,
-            )
-            .await
-            {
-                Ok(updated) => updated,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, membership_id, "persisted membership status update failed");
-                    MembershipStatusUpdateResult::Unavailable
-                }
-            };
-        }
-        let Some(membership) =
-            seed_memberships("local-development-user")
-                .into_iter()
-                .find(|membership| {
-                    membership.organization_id == organization_id && membership.id == membership_id
-                })
-        else {
-            return MembershipStatusUpdateResult::NotFound;
+        let Some(pool) = &self.pool else {
+            return MembershipStatusUpdateResult::Unavailable;
         };
-        if membership.role == AccessRole::OrganizationOwner && status == "suspended" {
-            return MembershipStatusUpdateResult::LastActiveOwner;
+        match update_membership_status(pool, organization_id, membership_id, actor_user_id, status)
+            .await
+        {
+            Ok(updated) => updated,
+            Err(error) => {
+                tracing::error!(%error, organization_id, membership_id, "persisted membership status update failed");
+                MembershipStatusUpdateResult::Unavailable
+            }
         }
-        MembershipStatusUpdateResult::Updated(OrganizationMembership {
-            status: status.to_string(),
-            ..membership
-        })
     }
 }
 
@@ -2768,34 +2722,6 @@ fn local_invitation_acceptance(
     })
 }
 
-fn local_membership_role_update(
-    organization_id: &str,
-    membership_id: &str,
-    actor_user_id: &str,
-    role: AccessRole,
-) -> Option<OrganizationMembership> {
-    if organization_id != "org_demo_landscaping" {
-        return None;
-    }
-
-    Some(OrganizationMembership {
-        id: membership_id.to_string(),
-        organization_id: organization_id.to_string(),
-        organization_name: "Grover Demo Landscaping".to_string(),
-        organization_type: "yard_care_company".to_string(),
-        user_id: actor_user_id.to_string(),
-        display_name: actor_user_id.to_string(),
-        role,
-        status: "active".to_string(),
-        scope_type: "organization".to_string(),
-        scope_id: Some(organization_id.to_string()),
-    })
-}
-
-fn accepting_or_actor(actor_user_id: &str) -> &str {
-    actor_user_id
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
@@ -3103,7 +3029,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn repository_guards_local_last_owner_role() {
+    async fn repository_fails_membership_role_updates_closed_without_persistence() {
         let repository = OrganizationRepository::default();
 
         let result = repository
@@ -3117,11 +3043,11 @@ mod tests {
             )
             .await;
 
-        assert_eq!(result, MembershipRoleUpdateResult::LastActiveOwner);
+        assert_eq!(result, MembershipRoleUpdateResult::Unavailable);
     }
 
     #[tokio::test]
-    async fn repository_guards_local_last_owner_suspension() {
+    async fn repository_fails_membership_status_updates_closed_without_persistence() {
         let repository = OrganizationRepository::default();
         assert_eq!(
             repository
@@ -3134,7 +3060,7 @@ mod tests {
                     },
                 )
                 .await,
-            MembershipStatusUpdateResult::LastActiveOwner
+            MembershipStatusUpdateResult::Unavailable
         );
     }
 }

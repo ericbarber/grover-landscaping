@@ -12411,7 +12411,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_membership_role_endpoint_guards_last_owner() {
+    async fn organization_membership_role_endpoint_fails_closed_without_persistence() {
         let request_body = serde_json::json!({
             "role": "manager"
         });
@@ -12428,12 +12428,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["error"], "last_organization_owner");
+        assert_eq!(json["error"], "membership_role_update_unavailable");
     }
 
     #[tokio::test]
@@ -12457,7 +12457,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_membership_profile_endpoint_updates_display_name() {
+    async fn organization_membership_profile_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12470,15 +12470,14 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["id"], "membership_local_owner_demo");
-        assert_eq!(json["display_name"], "Jordan Grover");
+        assert_eq!(json["error"], "membership_profile_update_unavailable");
     }
 
     #[tokio::test]
-    async fn organization_membership_status_endpoint_guards_last_owner() {
+    async fn organization_membership_status_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12491,10 +12490,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["error"], "last_organization_owner");
+        assert_eq!(json["error"], "membership_status_update_unavailable");
     }
 
     #[tokio::test]
