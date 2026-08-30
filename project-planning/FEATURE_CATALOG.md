@@ -369,6 +369,8 @@ here does not mean every capability has been delivered.
 - Fail-closed invitation revoke/reissue recovery and membership-backed
   principal access summaries that require persisted login audits
 - Fail-closed membership role, profile, and status administration mutations
+- Fail-closed organization profile reads and updates and first-owner setup
+  progress
 
 ### Customer experience
 

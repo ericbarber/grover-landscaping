@@ -95,6 +95,39 @@ async fn repository_distinguishes_unavailable_organization_collections_from_empt
     ));
     assert!(matches!(
         repository
+            .organization_profile("org_demo_landscaping")
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .first_owner_setup_progress("org_demo_landscaping")
+            .await,
+        OrganizationResourceResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .update_organization_profile(
+                "org_demo_landscaping",
+                "local-development-user",
+                UpdateOrganizationProfileRequest {
+                    display_name: "Grover Property Services".to_string(),
+                    organization_type: "property_management_company".to_string(),
+                    contact_email: None,
+                    contact_phone: None,
+                    website_url: None,
+                    time_zone: "America/Phoenix".to_string(),
+                    service_area_label: Some("Phoenix metro".to_string()),
+                    default_daily_stop_capacity: 12,
+                    supported_service_categories: Vec::new(),
+                    supported_languages: Vec::new(),
+                },
+            )
+            .await,
+        OrganizationProfileUpdateResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .update_membership_role(
                 "org_demo_landscaping",
                 "membership_local_owner_demo",

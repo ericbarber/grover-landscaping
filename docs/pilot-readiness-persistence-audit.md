@@ -278,3 +278,22 @@ not-found, lifecycle, and last-active-owner outcomes.
 
 Focused default-repository and route cases cover all three boundaries.
 Formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.
+
+## Organization profile and onboarding-state availability
+
+Without a database pool, organization profile reads previously returned a
+seeded profile, first-owner setup progress reported all four onboarding steps
+complete, and profile updates returned an altered profile with `persisted:
+false`. Although the payload disclosed local state, the successful API outcomes
+could still be consumed as loaded or saved onboarding data.
+
+Profile reads, setup-progress reads, and profile updates now return their
+existing `Unavailable` result variants whenever PostgreSQL is absent. Their
+handlers expose `organization_profile_unavailable`,
+`organization_setup_progress_unavailable`, and
+`organization_profile_update_unavailable` `503` responses, which the first-
+owner interface already presents without assuming missing, complete, or saved
+state. Persisted not-found and invalid-request results remain unchanged.
+
+Focused default-repository and route cases cover all three boundaries.
+Formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.

@@ -12061,7 +12061,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_profile_endpoints_return_and_update_local_profile() {
+    async fn organization_profile_endpoints_fail_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12071,7 +12071,10 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["error"], "organization_profile_unavailable");
 
         let response = seed_app()
             .oneshot(
@@ -12086,16 +12089,14 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["display_name"], "Grover Property Services");
-        assert_eq!(json["organization_type"], "property_management_company");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "organization_profile_update_unavailable");
     }
 
     #[tokio::test]
-    async fn first_owner_setup_progress_endpoint_returns_local_milestones() {
+    async fn first_owner_setup_progress_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12106,17 +12107,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["organization_id"], "org_demo_landscaping");
-        assert_eq!(json["organization_profile_complete"], true);
-        assert_eq!(json["team_invitation_created"], true);
-        assert_eq!(json["crew_configured"], true);
-        assert_eq!(json["first_route_published"], true);
-        assert_eq!(json["completed_steps"], 4);
-        assert_eq!(json["total_steps"], 4);
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "organization_setup_progress_unavailable");
     }
 
     #[tokio::test]

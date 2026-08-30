@@ -435,6 +435,12 @@ Current state:
   or returning an in-memory membership that was never saved. Input validation
   and persisted last-owner protections remain unchanged. Focused repository and
   route cases, strict Clippy, and all 417 backend tests pass.
+- Phase 6A24 makes organization profile and onboarding state fail closed.
+  Profile reads, first-owner setup progress, and profile updates now return
+  their existing unavailable `503` errors without PostgreSQL instead of a local
+  profile, a fabricated complete checklist, or an unsaved update. Persisted
+  missing and invalid outcomes remain distinct. Focused repository and route
+  cases, strict Clippy, and all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2268,8 +2274,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A24: audit organization profile and first-owner setup reads and profile
-  updates so absent persistence cannot appear as loaded or saved state.
+- Phase 6A25: audit active and organization membership reads, separating
+  explicit local-review virtual identities from unavailable persisted tenant
+  data.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

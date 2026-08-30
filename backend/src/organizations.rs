@@ -525,48 +525,34 @@ impl OrganizationRepository {
         &self,
         organization_id: &str,
     ) -> OrganizationResourceResult<OrganizationProfile> {
-        if let Some(pool) = &self.pool {
-            return match organization_profile(pool, organization_id).await {
-                Ok(Some(profile)) => OrganizationResourceResult::Found(profile),
-                Ok(None) => OrganizationResourceResult::NotFound,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, "persisted organization profile read failed");
-                    OrganizationResourceResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return OrganizationResourceResult::Unavailable;
+        };
+        match organization_profile(pool, organization_id).await {
+            Ok(Some(profile)) => OrganizationResourceResult::Found(profile),
+            Ok(None) => OrganizationResourceResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted organization profile read failed");
+                OrganizationResourceResult::Unavailable
+            }
         }
-        local_organization_profile(organization_id)
-            .map(OrganizationResourceResult::Found)
-            .unwrap_or(OrganizationResourceResult::NotFound)
     }
 
     pub async fn first_owner_setup_progress(
         &self,
         organization_id: &str,
     ) -> OrganizationResourceResult<FirstOwnerSetupProgress> {
-        if let Some(pool) = &self.pool {
-            return match first_owner_setup_progress(pool, organization_id).await {
-                Ok(Some(progress)) => OrganizationResourceResult::Found(progress),
-                Ok(None) => OrganizationResourceResult::NotFound,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, "persisted first-owner setup progress read failed");
-                    OrganizationResourceResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return OrganizationResourceResult::Unavailable;
+        };
+        match first_owner_setup_progress(pool, organization_id).await {
+            Ok(Some(progress)) => OrganizationResourceResult::Found(progress),
+            Ok(None) => OrganizationResourceResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted first-owner setup progress read failed");
+                OrganizationResourceResult::Unavailable
+            }
         }
-        local_organization_profile(organization_id)
-            .map(|_| FirstOwnerSetupProgress {
-                organization_id: organization_id.to_string(),
-                organization_profile_complete: true,
-                team_invitation_created: true,
-                crew_configured: true,
-                first_route_published: true,
-                completed_steps: 4,
-                total_steps: 4,
-                persisted: false,
-            })
-            .map(OrganizationResourceResult::Found)
-            .unwrap_or(OrganizationResourceResult::NotFound)
     }
 
     pub async fn update_organization_profile(
@@ -579,35 +565,17 @@ impl OrganizationRepository {
         if validate_update_organization_profile_request(&request).is_err() {
             return OrganizationProfileUpdateResult::Invalid;
         }
-        if let Some(pool) = &self.pool {
-            return match update_organization_profile(pool, organization_id, actor_user_id, &request)
-                .await
-            {
-                Ok(Some(profile)) => OrganizationProfileUpdateResult::Updated(Box::new(profile)),
-                Ok(None) => OrganizationProfileUpdateResult::NotFound,
-                Err(error) => {
-                    tracing::error!(%error, organization_id, "persisted organization profile update failed");
-                    OrganizationProfileUpdateResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return OrganizationProfileUpdateResult::Unavailable;
+        };
+        match update_organization_profile(pool, organization_id, actor_user_id, &request).await {
+            Ok(Some(profile)) => OrganizationProfileUpdateResult::Updated(Box::new(profile)),
+            Ok(None) => OrganizationProfileUpdateResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted organization profile update failed");
+                OrganizationProfileUpdateResult::Unavailable
+            }
         }
-        local_organization_profile(organization_id)
-            .map(|profile| OrganizationProfile {
-                display_name: request.display_name,
-                organization_type: request.organization_type,
-                contact_email: request.contact_email,
-                contact_phone: request.contact_phone,
-                website_url: request.website_url,
-                time_zone: request.time_zone,
-                service_area_label: request.service_area_label,
-                default_daily_stop_capacity: request.default_daily_stop_capacity,
-                supported_service_categories: request.supported_service_categories,
-                supported_languages: request.supported_languages,
-                ..profile
-            })
-            .map(Box::new)
-            .map(OrganizationProfileUpdateResult::Updated)
-            .unwrap_or(OrganizationProfileUpdateResult::NotFound)
     }
 
     pub async fn create_invitation(
@@ -2604,27 +2572,6 @@ fn organization_profile_from_row(row: sqlx::postgres::PgRow) -> OrganizationProf
         status: row.get("status"),
         persisted: true,
     }
-}
-
-fn local_organization_profile(organization_id: &str) -> Option<OrganizationProfile> {
-    (organization_id == "org_demo_landscaping").then(|| OrganizationProfile {
-        id: organization_id.to_string(),
-        display_name: "Grover Demo Landscaping".to_string(),
-        organization_type: "yard_care_company".to_string(),
-        contact_email: Some("office@grover.example".to_string()),
-        contact_phone: Some("(602) 555-0142".to_string()),
-        website_url: Some("https://grover.example".to_string()),
-        time_zone: "America/Phoenix".to_string(),
-        service_area_label: Some("Phoenix metro".to_string()),
-        default_daily_stop_capacity: 12,
-        supported_service_categories: vec![
-            "routine_maintenance".to_string(),
-            "seasonal_cleanup".to_string(),
-        ],
-        supported_languages: vec!["en".to_string(), "es".to_string()],
-        status: "active".to_string(),
-        persisted: false,
-    })
 }
 
 fn organization_invitation_summary_from_row(
