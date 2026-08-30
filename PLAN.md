@@ -462,6 +462,11 @@ Current state:
   instead of seeded or unsaved state. Empty authorization scopes and the
   explicit demo job-account summary remain separate contracts. Focused
   repository and route cases, strict Clippy, and all 416 backend tests pass.
+- Phase 6A28 makes property operational-onboarding profiles fail closed. Profile
+  reads and saves now return their existing unavailable `503` errors without
+  PostgreSQL instead of a seeded profile or an unsaved success response. Empty
+  authorization scopes remain a valid not-found result. Focused repository and
+  route cases, strict Clippy, and all 416 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2295,8 +2300,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A28: audit property operational-onboarding profile reads and saves so
-  absent persistence cannot appear as a loaded or saved profile.
+- Phase 6A29: classify the remaining demo job, scheduling, bid, photo, and
+  acquisition fallbacks and gate any retained virtual data behind an explicit
+  non-production review boundary.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

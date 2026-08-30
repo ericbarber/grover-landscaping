@@ -24,6 +24,20 @@ fn request(status: &str, address: &str) -> UpsertPropertyOnboardingRequest {
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_property_onboarding_storage() {
+    let repository = PropertyOnboardingRepository::default();
+    assert_eq!(
+        repository
+            .get("property_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyOnboardingReadResult::Unavailable
+    );
+    assert_eq!(
+        repository
+            .upsert("property_1001", request("active", "123 Unavailable Lane"))
+            .await,
+        PropertyOnboardingWriteResult::Unavailable
+    );
+
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")

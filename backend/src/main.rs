@@ -13035,7 +13035,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn property_onboarding_endpoint_returns_seed_profile() {
+    async fn property_onboarding_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13046,20 +13046,16 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["account_id"], "acct_1001");
-        assert_eq!(json["service_address"], "123 Oak Street");
-        assert_eq!(json["onboarding_status"], "active");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "property_onboarding_unavailable");
     }
 
     #[tokio::test]
-    async fn property_onboarding_endpoint_returns_local_saved_profile() {
+    async fn property_onboarding_save_endpoint_fails_closed_without_persistence() {
         let request_body = serde_json::json!({
             "account_id": "acct_1001",
             "organization_id": "org_demo_landscaping",
@@ -13085,15 +13081,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["billing_contact_email"], "billing@example.com");
-        assert_eq!(json["notification_phone"], "+16025550123");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "property_onboarding_save_unavailable");
     }
 
     #[tokio::test]

@@ -377,6 +377,7 @@ here does not mean every capability has been delivered.
   and mutations
 - Fail-closed active customer-account/property manager reads, mutations,
   readiness, and onboarding progress
+- Fail-closed property operational-onboarding profile reads and saves
 
 ### Customer experience
 

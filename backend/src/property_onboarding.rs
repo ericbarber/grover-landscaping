@@ -68,20 +68,16 @@ impl PropertyOnboardingRepository {
             return PropertyOnboardingReadResult::NotFound;
         }
 
-        if let Some(pool) = &self.pool {
-            return match get_property_onboarding(pool, property_id, organization_ids).await {
-                Ok(Some(profile)) => PropertyOnboardingReadResult::Found(profile),
-                Ok(None) => PropertyOnboardingReadResult::NotFound,
-                Err(error) => {
-                    tracing::error!(%error, property_id, "persisted property onboarding read failed");
-                    PropertyOnboardingReadResult::Unavailable
-                }
-            };
-        }
-
-        match seed_property_onboarding(property_id, organization_ids) {
-            Some(profile) => PropertyOnboardingReadResult::Found(profile),
-            None => PropertyOnboardingReadResult::NotFound,
+        let Some(pool) = &self.pool else {
+            return PropertyOnboardingReadResult::Unavailable;
+        };
+        match get_property_onboarding(pool, property_id, organization_ids).await {
+            Ok(Some(profile)) => PropertyOnboardingReadResult::Found(profile),
+            Ok(None) => PropertyOnboardingReadResult::NotFound,
+            Err(error) => {
+                tracing::error!(%error, property_id, "persisted property onboarding read failed");
+                PropertyOnboardingReadResult::Unavailable
+            }
         }
     }
 
@@ -92,21 +88,17 @@ impl PropertyOnboardingRepository {
     ) -> PropertyOnboardingWriteResult {
         let request = normalize_upsert_property_onboarding_request(request);
 
-        if let Some(pool) = &self.pool {
-            return match upsert_property_onboarding(pool, property_id, &request).await {
-                Ok(Some(profile)) => PropertyOnboardingWriteResult::Saved(profile),
-                Ok(None) => PropertyOnboardingWriteResult::Conflict,
-                Err(error) => {
-                    tracing::error!(%error, property_id, "persisted property onboarding write failed");
-                    PropertyOnboardingWriteResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return PropertyOnboardingWriteResult::Unavailable;
+        };
+        match upsert_property_onboarding(pool, property_id, &request).await {
+            Ok(Some(profile)) => PropertyOnboardingWriteResult::Saved(profile),
+            Ok(None) => PropertyOnboardingWriteResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, property_id, "persisted property onboarding write failed");
+                PropertyOnboardingWriteResult::Unavailable
+            }
         }
-
-        PropertyOnboardingWriteResult::Saved(local_property_onboarding_response(
-            property_id,
-            request,
-        ))
     }
 }
 
@@ -323,54 +315,6 @@ fn property_onboarding_response_from_row(row: sqlx::postgres::PgRow) -> Property
     }
 }
 
-fn local_property_onboarding_response(
-    property_id: &str,
-    request: UpsertPropertyOnboardingRequest,
-) -> PropertyOnboardingResponse {
-    PropertyOnboardingResponse {
-        property_id: property_id.trim().to_string(),
-        account_id: request.account_id,
-        organization_id: request.organization_id,
-        service_address: request.service_address,
-        access_notes: request.access_notes,
-        billing_contact_name: request.billing_contact_name,
-        billing_contact_email: request.billing_contact_email,
-        notification_contact_name: request.notification_contact_name,
-        notification_email: request.notification_email,
-        notification_phone: request.notification_phone,
-        onboarding_status: request.onboarding_status,
-        persisted: false,
-    }
-}
-
-fn seed_property_onboarding(
-    property_id: &str,
-    organization_ids: &[String],
-) -> Option<PropertyOnboardingResponse> {
-    if property_id != "property_1001"
-        || !organization_ids
-            .iter()
-            .any(|organization_id| organization_id == "org_demo_landscaping")
-    {
-        return None;
-    }
-
-    Some(PropertyOnboardingResponse {
-        property_id: "property_1001".to_string(),
-        account_id: "acct_1001".to_string(),
-        organization_id: "org_demo_landscaping".to_string(),
-        service_address: "123 Oak Street".to_string(),
-        access_notes: Some("Gate code required before backyard service.".to_string()),
-        billing_contact_name: "Sample Customer".to_string(),
-        billing_contact_email: "sample.customer@example.com".to_string(),
-        notification_contact_name: "Sample Customer".to_string(),
-        notification_email: Some("sample.customer@example.com".to_string()),
-        notification_phone: None,
-        onboarding_status: "active".to_string(),
-        persisted: false,
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
@@ -438,33 +382,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn repository_returns_local_upsert_when_database_is_unavailable() {
+    async fn repository_fails_upsert_closed_when_database_is_unavailable() {
         let repository = PropertyOnboardingRepository::default();
 
-        let PropertyOnboardingWriteResult::Saved(response) =
-            repository.upsert(" property_1001 ", valid_request()).await
-        else {
-            panic!("local response should be returned");
-        };
-
-        assert_eq!(response.property_id, "property_1001");
-        assert_eq!(response.service_address, "123 Oak Street");
-        assert!(!response.persisted);
+        assert_eq!(
+            repository.upsert(" property_1001 ", valid_request()).await,
+            PropertyOnboardingWriteResult::Unavailable
+        );
     }
 
     #[tokio::test]
-    async fn repository_returns_seed_profile_when_database_is_unavailable() {
+    async fn repository_fails_reads_closed_when_database_is_unavailable() {
         let repository = PropertyOnboardingRepository::default();
 
-        let PropertyOnboardingReadResult::Found(response) = repository
-            .get("property_1001", &["org_demo_landscaping".to_string()])
-            .await
-        else {
-            panic!("seed profile should be returned");
-        };
-
-        assert_eq!(response.account_id, "acct_1001");
-        assert_eq!(response.onboarding_status, "active");
-        assert!(!response.persisted);
+        assert_eq!(
+            repository
+                .get("property_1001", &["org_demo_landscaping".to_string()])
+                .await,
+            PropertyOnboardingReadResult::Unavailable
+        );
     }
 }

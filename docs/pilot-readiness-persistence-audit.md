@@ -344,6 +344,19 @@ Focused default/unreachable-pool repository and route cases cover the affected
 boundaries. Formatting, strict all-target/all-feature Clippy, and all 416
 backend tests pass.
 
+## Property operational-onboarding availability
+
+The dedicated property operational-onboarding repository still returned a
+seeded profile for reads and a normalized `persisted: false` profile for saves
+when PostgreSQL was absent. Both paths now return their existing unavailable
+variants and reach the stable `property_onboarding_unavailable` and
+`property_onboarding_save_unavailable` `503` responses. An empty authorization
+scope still resolves to not found without consulting storage.
+
+Focused default/unreachable-pool repository and route cases cover both
+boundaries. Formatting, strict all-target/all-feature Clippy, and all 416
+backend tests pass.
+
 ## Organization profile and onboarding-state availability
 
 Without a database pool, organization profile reads previously returned a
