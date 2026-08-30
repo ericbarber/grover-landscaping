@@ -371,6 +371,8 @@ here does not mean every capability has been delivered.
 - Fail-closed membership role, profile, and status administration mutations
 - Fail-closed organization profile reads and updates and first-owner setup
   progress
+- Fail-closed persisted membership reads with an explicit isolated local-review
+  identity exception
 
 ### Customer experience
 

@@ -44,6 +44,18 @@ impl<T> MutationTestExt<T> for OrganizationMutationResult<T> {
 async fn repository_distinguishes_unavailable_organization_collections_from_empty_results() {
     let repository = OrganizationRepository::default();
     assert!(matches!(
+        repository
+            .list_active_memberships("local-development-user")
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .list_organization_memberships("org_demo_landscaping")
+            .await,
+        OrganizationCollectionResult::Unavailable
+    ));
+    assert!(matches!(
         repository.list_invitations("org_demo_landscaping").await,
         OrganizationCollectionResult::Unavailable
     ));

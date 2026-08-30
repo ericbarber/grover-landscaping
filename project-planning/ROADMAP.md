@@ -567,8 +567,10 @@ The exact artifact mapping and ordered implementation queue live in
      success.
    - Organization profile reads and updates plus first-owner setup progress now
      return unavailable without PostgreSQL instead of local loaded/saved state.
-     Audit persisted membership reads versus explicit local-review identities
-     next.
+   - Active-user and organization-team membership reads now fail closed without
+     PostgreSQL unless the repository was deliberately configured with the
+     local-review/test identities. Audit property portfolio and crew-
+     assignment fallbacks next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

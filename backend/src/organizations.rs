@@ -315,6 +315,9 @@ impl OrganizationRepository {
                     &profile,
                 )]);
             }
+            if self.pool.is_none() {
+                return OrganizationCollectionResult::Loaded(seed_memberships(user_id));
+            }
         }
         if let Some(pool) = &self.pool {
             return match list_active_memberships(pool, user_id).await {
@@ -326,7 +329,7 @@ impl OrganizationRepository {
             };
         }
 
-        OrganizationCollectionResult::Loaded(seed_memberships(user_id))
+        OrganizationCollectionResult::Unavailable
     }
 
     pub async fn list_organization_memberships(
@@ -352,16 +355,10 @@ impl OrganizationRepository {
                 }
             };
         }
-        let memberships =
-            if self.local_review_enabled && organization_id == LOCAL_REVIEW_ORGANIZATION_ID {
-                local_review_memberships()
-            } else {
-                seed_memberships("local-development-user")
-                    .into_iter()
-                    .filter(|membership| membership.organization_id == organization_id)
-                    .collect()
-            };
-        OrganizationCollectionResult::Loaded(memberships)
+        if self.local_review_enabled && organization_id == LOCAL_REVIEW_ORGANIZATION_ID {
+            return OrganizationCollectionResult::Loaded(local_review_memberships());
+        }
+        OrganizationCollectionResult::Unavailable
     }
 
     pub async fn list_team_administration_activity(
@@ -2832,19 +2829,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_development_user_has_seed_membership_without_database() {
+    async fn persisted_membership_reads_fail_closed_without_database() {
         let repository = OrganizationRepository::default();
 
-        let OrganizationCollectionResult::Loaded(memberships) = repository
-            .list_active_memberships("local-development-user")
-            .await
-        else {
-            panic!("local memberships should load");
-        };
-
-        assert_eq!(memberships.len(), 1);
-        assert_eq!(memberships[0].organization_id, "org_demo_landscaping");
-        assert_eq!(memberships[0].role, AccessRole::OrganizationOwner);
+        assert_eq!(
+            repository
+                .list_active_memberships("local-development-user")
+                .await,
+            OrganizationCollectionResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .list_organization_memberships("org_demo_landscaping")
+                .await,
+            OrganizationCollectionResult::Unavailable
+        );
     }
 
     #[tokio::test]
@@ -2869,6 +2868,16 @@ mod tests {
         };
         assert_eq!(legacy_memberships.len(), 1);
         assert_eq!(legacy_memberships[0].role, AccessRole::OrganizationOwner);
+        assert_eq!(
+            repository
+                .user_has_active_membership(
+                    "local-review-organization-owner",
+                    "org_demo_landscaping",
+                    can_manage_schedule,
+                )
+                .await,
+            ActiveMembershipCheckResult::Allowed
+        );
     }
 
     #[tokio::test]
@@ -2892,17 +2901,17 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn unknown_user_has_no_seed_memberships_without_database() {
+    async fn unknown_user_memberships_are_unavailable_without_database() {
         let repository = OrganizationRepository::default();
 
         assert_eq!(
             repository.list_active_memberships("other-user").await,
-            OrganizationCollectionResult::Loaded(Vec::new())
+            OrganizationCollectionResult::Unavailable
         );
     }
 
     #[tokio::test]
-    async fn membership_role_check_uses_active_seed_memberships() {
+    async fn persisted_membership_role_checks_fail_closed_without_database() {
         let repository = OrganizationRepository::default();
 
         assert_eq!(
@@ -2913,7 +2922,7 @@ mod tests {
                     can_manage_schedule,
                 )
                 .await,
-            ActiveMembershipCheckResult::Allowed
+            ActiveMembershipCheckResult::Unavailable
         );
         assert_eq!(
             repository
@@ -2923,7 +2932,7 @@ mod tests {
                     can_manage_schedule,
                 )
                 .await,
-            ActiveMembershipCheckResult::Denied
+            ActiveMembershipCheckResult::Unavailable
         );
     }
 

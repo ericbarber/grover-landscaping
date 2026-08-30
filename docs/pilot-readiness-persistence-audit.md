@@ -279,6 +279,25 @@ not-found, lifecycle, and last-active-owner outcomes.
 Focused default-repository and route cases cover all three boundaries.
 Formatting, strict all-target/all-feature Clippy, and all 417 backend tests pass.
 
+## Persisted membership and local-review separation
+
+Active-user and organization-team membership reads previously returned seeded
+tenant data whenever a database pool was absent. That behavior was not limited
+to the intentional local-review authentication mode, so an ordinary no-pool
+runtime could treat virtual membership as persisted authorization state.
+
+An ordinary `OrganizationRepository` now returns
+`OrganizationCollectionResult::Unavailable` for both membership reads without
+PostgreSQL, and role verification preserves that unavailable outcome. Only a
+repository explicitly configured with `with_local_reviewers()` may return the
+fixed virtual reviewer membership and team data, plus the legacy local test
+subject used by route tests. The API test harness opts into that deliberate
+review boundary; production authentication cannot enable it.
+
+Focused repository, authorization, and route cases cover unavailable persisted
+membership and the isolated virtual team. Formatting, strict all-target/all-
+feature Clippy, and all 417 backend tests pass.
+
 ## Organization profile and onboarding-state availability
 
 Without a database pool, organization profile reads previously returned a

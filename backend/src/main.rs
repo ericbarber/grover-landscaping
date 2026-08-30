@@ -10227,7 +10227,7 @@ mod tests {
             accounts: AccountRepository::new(),
             day_plans: DayPlanRepository::default(),
             project_bids: ProjectBidRepository::default(),
-            organizations: OrganizationRepository::default(),
+            organizations: OrganizationRepository::default().with_local_reviewers(),
             notifications: NotificationOutboxRepository::default(),
             operational_exceptions: OperationalExceptionRepository::default(),
             property_portfolios: PropertyPortfolioRepository::default(),
@@ -12431,7 +12431,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn organization_membership_list_endpoint_returns_local_owner() {
+    async fn organization_membership_list_endpoint_returns_explicit_local_review_team() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12446,8 +12446,11 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json[0]["id"], "membership_local_owner_demo");
-        assert_eq!(json[0]["role"], "OrganizationOwner");
+        assert_eq!(json.as_array().unwrap().len(), 7);
+        assert!(json.as_array().unwrap().iter().any(|membership| {
+            membership["id"] == "membership_local_review_organization_owner"
+                && membership["role"] == "OrganizationOwner"
+        }));
     }
 
     #[tokio::test]

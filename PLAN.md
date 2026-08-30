@@ -441,6 +441,13 @@ Current state:
   profile, a fabricated complete checklist, or an unsaved update. Persisted
   missing and invalid outcomes remain distinct. Focused repository and route
   cases, strict Clippy, and all 417 backend tests pass.
+- Phase 6A25 separates persisted membership availability from local review.
+  Active-user and organization-team membership reads now return unavailable
+  without PostgreSQL unless the repository is explicitly configured with the
+  local-review/test identities. Membership authorization therefore fails
+  closed for ordinary no-pool runtimes while the deliberate review harness
+  retains its virtual team. Focused repository, authorization, and route cases,
+  strict Clippy, and all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2274,9 +2281,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A25: audit active and organization membership reads, separating
-  explicit local-review virtual identities from unavailable persisted tenant
-  data.
+- Phase 6A26: audit property portfolio and property-crew assignment local
+  fallbacks so persisted workflows cannot appear loaded or saved during an
+  outage.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime
