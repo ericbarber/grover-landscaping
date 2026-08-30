@@ -12623,7 +12623,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn property_portfolio_list_endpoint_returns_seeded_local_portfolios() {
+    async fn property_portfolio_list_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12634,20 +12634,16 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json.as_array().unwrap().len(), 1);
-        assert_eq!(json[0]["account_id"], "acct_1001");
-        assert_eq!(json[0]["organization_id"], "org_demo_landscaping");
-        assert_eq!(json[0]["property_count"], 1);
-        assert_eq!(json[0]["persisted"], false);
+        assert_eq!(json["error"], "property_portfolios_unavailable");
     }
 
     #[tokio::test]
-    async fn customer_property_portfolio_endpoint_returns_grouped_seed_properties() {
+    async fn customer_property_portfolio_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12658,24 +12654,16 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["account_id"], "acct_1001");
-        assert_eq!(json["portfolios"].as_array().unwrap().len(), 1);
-        assert_eq!(json["portfolios"][0]["property_count"], 1);
-        assert_eq!(
-            json["portfolios"][0]["properties"][0]["id"],
-            "property_1001"
-        );
-        assert!(json["ungrouped_properties"].as_array().unwrap().is_empty());
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "customer_property_portfolio_unavailable");
     }
 
     #[tokio::test]
-    async fn customer_property_portfolio_endpoint_returns_ungrouped_seed_properties() {
+    async fn customer_property_portfolio_endpoint_does_not_claim_empty_during_an_outage() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12686,19 +12674,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["account_id"], "acct_1002");
-        assert!(json["portfolios"].as_array().unwrap().is_empty());
-        assert_eq!(json["ungrouped_properties"].as_array().unwrap().len(), 1);
-        assert_eq!(json["ungrouped_properties"][0]["id"], "property_1002");
-        assert_eq!(
-            json["ungrouped_properties"][0]["address"],
-            "456 Maple Avenue"
-        );
+        assert_eq!(json["error"], "customer_property_portfolio_unavailable");
     }
 
     #[tokio::test]
@@ -12856,7 +12837,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_property_portfolio_endpoint_returns_local_response() {
+    async fn create_property_portfolio_endpoint_fails_closed_without_persistence() {
         let request_body = serde_json::json!({
             "account_id": "acct_1001",
             "organization_id": "org_demo_landscaping",
@@ -12876,17 +12857,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(
-            json["id"],
-            "portfolio_acct_1001_org_demo_landscaping_sample_owner_homes"
-        );
-        assert_eq!(json["property_count"], 0);
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "property_portfolio_creation_unavailable");
     }
 
     #[tokio::test]
@@ -12938,7 +12914,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn add_property_to_portfolio_endpoint_returns_local_response() {
+    async fn add_property_to_portfolio_endpoint_fails_closed_without_persistence() {
         let request_body = serde_json::json!({
             "property_id": "property_1001",
             "organization_id": "org_demo_landscaping"
@@ -12956,19 +12932,16 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["portfolio_id"], "portfolio_1001");
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["organization_id"], "org_demo_landscaping");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "portfolio_property_link_unavailable");
     }
 
     #[tokio::test]
-    async fn assign_property_crew_endpoint_returns_local_response() {
+    async fn assign_property_crew_endpoint_fails_closed_without_persistence() {
         let request_body = serde_json::json!({
             "crew_id": "crew_1001",
             "organization_id": "org_demo_landscaping",
@@ -12987,16 +12960,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["crew_id"], "crew_1001");
-        assert_eq!(json["organization_id"], "org_demo_landscaping");
-        assert_eq!(json["active"], true);
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "property_crew_assignment_unavailable");
     }
 
     #[tokio::test]
@@ -13044,7 +13013,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn property_crew_assignment_history_endpoint_returns_seeded_local_assignments() {
+    async fn property_crew_assignment_history_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13055,19 +13024,16 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json.as_array().unwrap().len(), 1);
-        assert_eq!(json[0]["property_id"], "property_1001");
-        assert_eq!(json[0]["crew_id"], "crew_1001");
-        assert_eq!(json[0]["persisted"], false);
+        assert_eq!(json["error"], "property_crew_assignments_unavailable");
     }
 
     #[tokio::test]
-    async fn active_crew_property_assignments_endpoint_returns_seeded_local_assignments() {
+    async fn active_crew_property_assignments_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -13078,14 +13044,12 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
 
-        assert_eq!(json.as_array().unwrap().len(), 1);
-        assert_eq!(json[0]["property_id"], "property_1001");
-        assert_eq!(json[0]["active"], true);
+        assert_eq!(json["error"], "crew_property_assignments_unavailable");
     }
 
     #[tokio::test]

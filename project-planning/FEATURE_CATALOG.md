@@ -373,6 +373,8 @@ here does not mean every capability has been delivered.
   progress
 - Fail-closed persisted membership reads with an explicit isolated local-review
   identity exception
+- Fail-closed property portfolio/grouping and property-crew assignment reads
+  and mutations
 
 ### Customer experience
 

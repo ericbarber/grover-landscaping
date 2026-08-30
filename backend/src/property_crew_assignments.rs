@@ -52,42 +52,32 @@ impl PropertyCrewAssignmentRepository {
         actor_user_id: &str,
     ) -> PropertyCrewAssignmentMutationResult {
         let request = normalize_assign_property_crew_request(request);
+        let Some(pool) = &self.pool else {
+            return PropertyCrewAssignmentMutationResult::Unavailable;
+        };
         let assigned_at = request
             .assigned_at
             .clone()
             .unwrap_or_else(|| "now".to_string());
         let id = assignment_id(property_id, &request.crew_id);
 
-        if let Some(pool) = &self.pool {
-            return match insert_property_crew_assignment(
-                pool,
-                &id,
-                property_id,
-                &assigned_at,
-                &request,
-                actor_user_id,
-            )
-            .await
-            {
-                Ok(Some(assignment)) => PropertyCrewAssignmentMutationResult::Assigned(assignment),
-                Ok(None) => PropertyCrewAssignmentMutationResult::Conflict,
-                Err(error) => {
-                    tracing::error!(%error, property_id, "persisted property crew assignment failed");
-                    PropertyCrewAssignmentMutationResult::Unavailable
-                }
-            };
+        match insert_property_crew_assignment(
+            pool,
+            &id,
+            property_id,
+            &assigned_at,
+            &request,
+            actor_user_id,
+        )
+        .await
+        {
+            Ok(Some(assignment)) => PropertyCrewAssignmentMutationResult::Assigned(assignment),
+            Ok(None) => PropertyCrewAssignmentMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, property_id, "persisted property crew assignment failed");
+                PropertyCrewAssignmentMutationResult::Unavailable
+            }
         }
-
-        PropertyCrewAssignmentMutationResult::Assigned(PropertyCrewAssignmentResponse {
-            id,
-            property_id: property_id.trim().to_string(),
-            crew_id: request.crew_id,
-            organization_id: request.organization_id,
-            active: true,
-            assigned_at,
-            ended_at: None,
-            persisted: false,
-        })
     }
 
     pub async fn list_for_property(
@@ -99,21 +89,16 @@ impl PropertyCrewAssignmentRepository {
             return PropertyCrewAssignmentListResult::Loaded(Vec::new());
         }
 
-        if let Some(pool) = &self.pool {
-            return match list_property_crew_assignments(pool, property_id, organization_ids).await {
-                Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
-                Err(error) => {
-                    tracing::error!(%error, property_id, "persisted property assignment list failed");
-                    PropertyCrewAssignmentListResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return PropertyCrewAssignmentListResult::Unavailable;
+        };
+        match list_property_crew_assignments(pool, property_id, organization_ids).await {
+            Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
+            Err(error) => {
+                tracing::error!(%error, property_id, "persisted property assignment list failed");
+                PropertyCrewAssignmentListResult::Unavailable
+            }
         }
-
-        PropertyCrewAssignmentListResult::Loaded(seed_property_assignments(
-            property_id,
-            organization_ids,
-            false,
-        ))
     }
 
     pub async fn list_active_for_crew(
@@ -125,22 +110,16 @@ impl PropertyCrewAssignmentRepository {
             return PropertyCrewAssignmentListResult::Loaded(Vec::new());
         }
 
-        if let Some(pool) = &self.pool {
-            return match list_active_property_crew_assignments(pool, crew_id, organization_ids)
-                .await
-            {
-                Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
-                Err(error) => {
-                    tracing::error!(%error, crew_id, "persisted crew property assignment list failed");
-                    PropertyCrewAssignmentListResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return PropertyCrewAssignmentListResult::Unavailable;
+        };
+        match list_active_property_crew_assignments(pool, crew_id, organization_ids).await {
+            Ok(assignments) => PropertyCrewAssignmentListResult::Loaded(assignments),
+            Err(error) => {
+                tracing::error!(%error, crew_id, "persisted crew property assignment list failed");
+                PropertyCrewAssignmentListResult::Unavailable
+            }
         }
-
-        PropertyCrewAssignmentListResult::Loaded(seed_property_assignments_for_crew(
-            crew_id,
-            organization_ids,
-        ))
     }
 }
 
@@ -401,46 +380,11 @@ fn assignment_response_from_row(row: sqlx::postgres::PgRow) -> PropertyCrewAssig
     }
 }
 
-fn seed_property_assignments(
-    property_id: &str,
-    organization_ids: &[String],
-    persisted: bool,
-) -> Vec<PropertyCrewAssignmentResponse> {
-    if property_id != "property_1001"
-        || !organization_ids
-            .iter()
-            .any(|organization_id| organization_id == "org_demo_landscaping")
-    {
-        return Vec::new();
-    }
-
-    vec![PropertyCrewAssignmentResponse {
-        id: "property_crew_assignment_property_1001_crew_1001_seed".to_string(),
-        property_id: "property_1001".to_string(),
-        crew_id: "crew_1001".to_string(),
-        organization_id: "org_demo_landscaping".to_string(),
-        active: true,
-        assigned_at: "2026-06-15 00:00:00+00".to_string(),
-        ended_at: None,
-        persisted,
-    }]
-}
-
-fn seed_property_assignments_for_crew(
-    crew_id: &str,
-    organization_ids: &[String],
-) -> Vec<PropertyCrewAssignmentResponse> {
-    seed_property_assignments("property_1001", organization_ids, false)
-        .into_iter()
-        .filter(|assignment| assignment.crew_id == crew_id && assignment.active)
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
-        is_valid_assign_property_crew_request, seed_property_assignments_for_crew, storage_key,
-        AssignPropertyCrewRequest, PropertyCrewAssignmentMutationResult,
+        is_valid_assign_property_crew_request, storage_key, AssignPropertyCrewRequest,
+        PropertyCrewAssignmentListResult, PropertyCrewAssignmentMutationResult,
         PropertyCrewAssignmentRepository,
     };
 
@@ -475,39 +419,41 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn repository_returns_local_assignment_when_database_is_unavailable() {
+    async fn repository_fails_assignment_mutation_closed_without_database() {
         let repository = PropertyCrewAssignmentRepository::default();
 
-        let PropertyCrewAssignmentMutationResult::Assigned(response) = repository
-            .assign_crew(
-                " property_1001 ",
-                AssignPropertyCrewRequest {
-                    crew_id: " crew_1001 ".to_string(),
-                    organization_id: " org_demo_landscaping ".to_string(),
-                    assigned_at: Some("2026-06-15T08:00:00Z".to_string()),
-                },
-                "actor_1001",
-            )
-            .await
-        else {
-            panic!("local assignment response should be returned");
-        };
-
-        assert_eq!(response.property_id, "property_1001");
-        assert_eq!(response.crew_id, "crew_1001");
-        assert!(response.active);
-        assert!(!response.persisted);
+        assert_eq!(
+            repository
+                .assign_crew(
+                    " property_1001 ",
+                    AssignPropertyCrewRequest {
+                        crew_id: " crew_1001 ".to_string(),
+                        organization_id: " org_demo_landscaping ".to_string(),
+                        assigned_at: Some("2026-06-15T08:00:00Z".to_string()),
+                    },
+                    "actor_1001",
+                )
+                .await,
+            PropertyCrewAssignmentMutationResult::Unavailable
+        );
     }
 
-    #[test]
-    fn seeded_active_assignments_are_scoped_to_crew_and_organization() {
+    #[tokio::test]
+    async fn repository_fails_assignment_reads_closed_without_database() {
+        let repository = PropertyCrewAssignmentRepository::default();
+        let organization_ids = ["org_demo_landscaping".to_string()];
+
         assert_eq!(
-            seed_property_assignments_for_crew("crew_1001", &["org_demo_landscaping".to_string()])
-                .len(),
-            1
+            repository
+                .list_for_property("property_1001", &organization_ids)
+                .await,
+            PropertyCrewAssignmentListResult::Unavailable
         );
-        assert!(
-            seed_property_assignments_for_crew("crew_1001", &["org_other".to_string()]).is_empty()
+        assert_eq!(
+            repository
+                .list_active_for_crew("crew_1001", &organization_ids)
+                .await,
+            PropertyCrewAssignmentListResult::Unavailable
         );
     }
 }

@@ -448,6 +448,13 @@ Current state:
   closed for ordinary no-pool runtimes while the deliberate review harness
   retains its virtual team. Focused repository, authorization, and route cases,
   strict Clippy, and all 417 backend tests pass.
+- Phase 6A26 makes property portfolio and crew-assignment workflows fail
+  closed. Scoped portfolio/grouping and assignment-history reads now return
+  their existing unavailable `503` errors without PostgreSQL, and portfolio
+  creation, property linking, and crew assignment no longer return unsaved
+  success objects. Empty authorization scopes remain valid empty results.
+  Focused repository and route cases, strict Clippy, and all 415 backend tests
+  pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2281,9 +2288,9 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A26: audit property portfolio and property-crew assignment local
-  fallbacks so persisted workflows cannot appear loaded or saved during an
-  outage.
+- Phase 6A27: audit active customer-account, property lifecycle, and onboarding
+  local fallbacks so manager workflows cannot consume seeded persisted state
+  during an outage.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

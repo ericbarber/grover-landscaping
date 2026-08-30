@@ -20,6 +20,20 @@ fn saved<T>(result: PropertyPortfolioMutationResult<T>, context: &str) -> T {
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_portfolio_reads_from_empty_results() {
+    let repository = PropertyPortfolioRepository::default();
+    assert!(matches!(
+        repository
+            .list_for_account("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyPortfolioListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        CustomerPropertyPortfolioReadResult::Unavailable
+    ));
+
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")

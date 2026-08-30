@@ -110,32 +110,22 @@ impl PropertyPortfolioRepository {
         actor_user_id: &str,
     ) -> PropertyPortfolioMutationResult<PropertyPortfolioResponse> {
         let request = normalize_create_portfolio_request(request);
+        let Some(pool) = &self.pool else {
+            return PropertyPortfolioMutationResult::Unavailable;
+        };
         let id = portfolio_id(
             &request.account_id,
             &request.organization_id,
             &request.display_name,
         );
-
-        if let Some(pool) = &self.pool {
-            return match insert_property_portfolio(pool, &id, &request, actor_user_id).await {
-                Ok(Some(portfolio)) => PropertyPortfolioMutationResult::Saved(portfolio),
-                Ok(None) => PropertyPortfolioMutationResult::Conflict,
-                Err(error) => {
-                    tracing::error!(%error, "persisted property portfolio creation failed");
-                    PropertyPortfolioMutationResult::Unavailable
-                }
-            };
+        match insert_property_portfolio(pool, &id, &request, actor_user_id).await {
+            Ok(Some(portfolio)) => PropertyPortfolioMutationResult::Saved(portfolio),
+            Ok(None) => PropertyPortfolioMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, "persisted property portfolio creation failed");
+                PropertyPortfolioMutationResult::Unavailable
+            }
         }
-
-        PropertyPortfolioMutationResult::Saved(PropertyPortfolioResponse {
-            id,
-            account_id: request.account_id,
-            organization_id: request.organization_id,
-            display_name: request.display_name,
-            portfolio_type: request.portfolio_type,
-            property_count: 0,
-            persisted: false,
-        })
     }
 
     pub async fn add_property(
@@ -145,34 +135,19 @@ impl PropertyPortfolioRepository {
         actor_user_id: &str,
     ) -> PropertyPortfolioMutationResult<PortfolioPropertyLinkResponse> {
         let request = normalize_add_property_request(request);
+        let Some(pool) = &self.pool else {
+            return PropertyPortfolioMutationResult::Unavailable;
+        };
         let id = portfolio_property_link_id(portfolio_id, &request.property_id);
-
-        if let Some(pool) = &self.pool {
-            return match insert_portfolio_property_link(
-                pool,
-                &id,
-                portfolio_id,
-                &request,
-                actor_user_id,
-            )
-            .await
-            {
-                Ok(Some(link)) => PropertyPortfolioMutationResult::Saved(link),
-                Ok(None) => PropertyPortfolioMutationResult::Conflict,
-                Err(error) => {
-                    tracing::error!(%error, portfolio_id, "persisted portfolio property link failed");
-                    PropertyPortfolioMutationResult::Unavailable
-                }
-            };
+        match insert_portfolio_property_link(pool, &id, portfolio_id, &request, actor_user_id).await
+        {
+            Ok(Some(link)) => PropertyPortfolioMutationResult::Saved(link),
+            Ok(None) => PropertyPortfolioMutationResult::Conflict,
+            Err(error) => {
+                tracing::error!(%error, portfolio_id, "persisted portfolio property link failed");
+                PropertyPortfolioMutationResult::Unavailable
+            }
         }
-
-        PropertyPortfolioMutationResult::Saved(PortfolioPropertyLinkResponse {
-            id,
-            portfolio_id: portfolio_id.to_string(),
-            property_id: request.property_id,
-            organization_id: request.organization_id,
-            persisted: false,
-        })
     }
 
     pub async fn list_for_account(
@@ -184,22 +159,16 @@ impl PropertyPortfolioRepository {
             return PropertyPortfolioListResult::Loaded(Vec::new());
         }
 
-        if let Some(pool) = &self.pool {
-            return match list_property_portfolios_for_account(pool, account_id, organization_ids)
-                .await
-            {
-                Ok(portfolios) => PropertyPortfolioListResult::Loaded(portfolios),
-                Err(error) => {
-                    tracing::error!(%error, account_id, "persisted property-portfolio list failed");
-                    PropertyPortfolioListResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return PropertyPortfolioListResult::Unavailable;
+        };
+        match list_property_portfolios_for_account(pool, account_id, organization_ids).await {
+            Ok(portfolios) => PropertyPortfolioListResult::Loaded(portfolios),
+            Err(error) => {
+                tracing::error!(%error, account_id, "persisted property-portfolio list failed");
+                PropertyPortfolioListResult::Unavailable
+            }
         }
-
-        PropertyPortfolioListResult::Loaded(seed_portfolios_for_account(
-            account_id,
-            organization_ids,
-        ))
     }
 
     pub async fn customer_portfolio_read(
@@ -219,22 +188,16 @@ impl PropertyPortfolioRepository {
             );
         }
 
-        if let Some(pool) = &self.pool {
-            return match customer_portfolio_read_for_account(pool, account_id, organization_ids)
-                .await
-            {
-                Ok(read) => CustomerPropertyPortfolioReadResult::Loaded(read),
-                Err(error) => {
-                    tracing::error!(%error, account_id, "persisted customer portfolio read failed");
-                    CustomerPropertyPortfolioReadResult::Unavailable
-                }
-            };
+        let Some(pool) = &self.pool else {
+            return CustomerPropertyPortfolioReadResult::Unavailable;
+        };
+        match customer_portfolio_read_for_account(pool, account_id, organization_ids).await {
+            Ok(read) => CustomerPropertyPortfolioReadResult::Loaded(read),
+            Err(error) => {
+                tracing::error!(%error, account_id, "persisted customer portfolio read failed");
+                CustomerPropertyPortfolioReadResult::Unavailable
+            }
         }
-
-        CustomerPropertyPortfolioReadResult::Loaded(seed_customer_portfolio_read(
-            account_id,
-            organization_ids,
-        ))
     }
 }
 
@@ -660,111 +623,12 @@ async fn customer_portfolio_read_for_account(
     })
 }
 
-fn seed_portfolios_for_account(
-    account_id: &str,
-    organization_ids: &[String],
-) -> Vec<PropertyPortfolioResponse> {
-    if account_id != "acct_1001"
-        || !organization_ids
-            .iter()
-            .any(|organization_id| organization_id == "org_demo_landscaping")
-    {
-        return Vec::new();
-    }
-
-    vec![PropertyPortfolioResponse {
-        id: "portfolio_acct_1001_demo".to_string(),
-        account_id: account_id.to_string(),
-        organization_id: "org_demo_landscaping".to_string(),
-        display_name: "Sample owner homes".to_string(),
-        portfolio_type: "individual_owner".to_string(),
-        property_count: 1,
-        persisted: false,
-    }]
-}
-
-fn seed_customer_portfolio_read(
-    account_id: &str,
-    organization_ids: &[String],
-) -> CustomerPropertyPortfolioReadResponse {
-    let organization_ids = organization_ids.to_vec();
-
-    if !organization_ids
-        .iter()
-        .any(|organization_id| organization_id == "org_demo_landscaping")
-    {
-        return CustomerPropertyPortfolioReadResponse {
-            account_id: account_id.to_string(),
-            organization_ids,
-            portfolios: Vec::new(),
-            ungrouped_properties: Vec::new(),
-            persisted: false,
-        };
-    }
-
-    if account_id == "acct_1001" {
-        let property = CustomerPropertyProfileResponse {
-            id: "property_1001".to_string(),
-            account_id: account_id.to_string(),
-            organization_id: "org_demo_landscaping".to_string(),
-            display_name: "123 Oak Street".to_string(),
-            address: "123 Oak Street".to_string(),
-            last_service_date: Some("2026-06-15".to_string()),
-            persisted: false,
-        };
-
-        return CustomerPropertyPortfolioReadResponse {
-            account_id: account_id.to_string(),
-            organization_ids,
-            portfolios: vec![CustomerPropertyPortfolioDetailResponse {
-                id: "portfolio_acct_1001_demo".to_string(),
-                account_id: account_id.to_string(),
-                organization_id: "org_demo_landscaping".to_string(),
-                display_name: "Sample owner homes".to_string(),
-                portfolio_type: "individual_owner".to_string(),
-                property_count: 1,
-                properties: vec![property],
-                persisted: false,
-            }],
-            ungrouped_properties: Vec::new(),
-            persisted: false,
-        };
-    }
-
-    if account_id == "acct_1002" {
-        return CustomerPropertyPortfolioReadResponse {
-            account_id: account_id.to_string(),
-            organization_ids,
-            portfolios: Vec::new(),
-            ungrouped_properties: vec![CustomerPropertyProfileResponse {
-                id: "property_1002".to_string(),
-                account_id: account_id.to_string(),
-                organization_id: "org_demo_landscaping".to_string(),
-                display_name: "456 Maple Avenue".to_string(),
-                address: "456 Maple Avenue".to_string(),
-                last_service_date: Some("2026-06-15".to_string()),
-                persisted: false,
-            }],
-            persisted: false,
-        };
-    }
-
-    CustomerPropertyPortfolioReadResponse {
-        account_id: account_id.to_string(),
-        organization_ids,
-        portfolios: Vec::new(),
-        ungrouped_properties: Vec::new(),
-        persisted: false,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
-        is_valid_portfolio_type, portfolio_id, portfolio_property_link_id,
-        seed_customer_portfolio_read, seed_portfolios_for_account, storage_key,
-        CustomerPropertyPortfolioReadResult, PropertyPortfolioMutationResult,
-        PropertyPortfolioRepository,
+        is_valid_portfolio_type, portfolio_id, portfolio_property_link_id, storage_key,
+        CustomerPropertyPortfolioReadResult, PropertyPortfolioListResult,
+        PropertyPortfolioMutationResult, PropertyPortfolioRepository,
     };
 
     use crate::property_portfolio_requests::{
@@ -799,91 +663,60 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn repository_returns_local_portfolio_when_database_is_unavailable() {
+    async fn repository_fails_portfolio_creation_closed_without_database() {
         let repository = PropertyPortfolioRepository::default();
 
-        let PropertyPortfolioMutationResult::Saved(response) = repository
-            .create_portfolio(
-                CreatePropertyPortfolioRequest {
-                    account_id: " acct_1001 ".to_string(),
-                    organization_id: " org_demo_landscaping ".to_string(),
-                    display_name: " Sample Owner Homes ".to_string(),
-                    portfolio_type: "individual_owner".to_string(),
-                },
-                "actor_1001",
-            )
-            .await
-        else {
-            panic!("local portfolio response should be returned");
-        };
-
         assert_eq!(
-            response.id,
-            "portfolio_acct_1001_org_demo_landscaping_sample_owner_homes"
+            repository
+                .create_portfolio(
+                    CreatePropertyPortfolioRequest {
+                        account_id: " acct_1001 ".to_string(),
+                        organization_id: " org_demo_landscaping ".to_string(),
+                        display_name: " Sample Owner Homes ".to_string(),
+                        portfolio_type: "individual_owner".to_string(),
+                    },
+                    "actor_1001",
+                )
+                .await,
+            PropertyPortfolioMutationResult::Unavailable
         );
-        assert_eq!(response.account_id, "acct_1001");
-        assert!(!response.persisted);
     }
 
     #[tokio::test]
-    async fn repository_returns_local_property_link_when_database_is_unavailable() {
+    async fn repository_fails_property_link_closed_without_database() {
         let repository = PropertyPortfolioRepository::default();
 
-        let PropertyPortfolioMutationResult::Saved(response) = repository
-            .add_property(
-                "portfolio_1001",
-                AddPropertyToPortfolioRequest {
-                    property_id: " property_1001 ".to_string(),
-                    organization_id: " org_demo_landscaping ".to_string(),
-                },
-                "actor_1001",
-            )
-            .await
-        else {
-            panic!("local link response should be returned");
-        };
-
-        assert_eq!(response.portfolio_id, "portfolio_1001");
-        assert_eq!(response.property_id, "property_1001");
-        assert!(!response.persisted);
-    }
-
-    #[test]
-    fn seed_portfolios_are_scoped_to_account_and_organization() {
         assert_eq!(
-            seed_portfolios_for_account("acct_1001", &["org_demo_landscaping".to_string()]).len(),
-            1
+            repository
+                .add_property(
+                    "portfolio_1001",
+                    AddPropertyToPortfolioRequest {
+                        property_id: " property_1001 ".to_string(),
+                        organization_id: " org_demo_landscaping ".to_string(),
+                    },
+                    "actor_1001",
+                )
+                .await,
+            PropertyPortfolioMutationResult::Unavailable
         );
-        assert!(seed_portfolios_for_account("acct_1001", &["org_other".to_string()]).is_empty());
-    }
-
-    #[test]
-    fn seed_customer_read_includes_grouped_and_ungrouped_properties() {
-        let grouped =
-            seed_customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()]);
-        assert_eq!(grouped.portfolios.len(), 1);
-        assert_eq!(grouped.portfolios[0].properties[0].id, "property_1001");
-        assert!(grouped.ungrouped_properties.is_empty());
-
-        let ungrouped =
-            seed_customer_portfolio_read("acct_1002", &["org_demo_landscaping".to_string()]);
-        assert!(ungrouped.portfolios.is_empty());
-        assert_eq!(ungrouped.ungrouped_properties[0].id, "property_1002");
     }
 
     #[tokio::test]
-    async fn repository_returns_local_customer_read_when_database_is_unavailable() {
+    async fn repository_fails_scoped_reads_closed_without_database() {
         let repository = PropertyPortfolioRepository::default();
+        let organization_ids = ["org_demo_landscaping".to_string()];
 
-        let CustomerPropertyPortfolioReadResult::Loaded(response) = repository
-            .customer_portfolio_read("acct_1001", &["org_demo_landscaping".to_string()])
-            .await
-        else {
-            panic!("local customer portfolio response should be returned");
-        };
-
-        assert_eq!(response.account_id, "acct_1001");
-        assert_eq!(response.portfolios[0].property_count, 1);
-        assert!(!response.persisted);
+        assert_eq!(
+            repository
+                .list_for_account("acct_1001", &organization_ids)
+                .await,
+            PropertyPortfolioListResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .customer_portfolio_read("acct_1001", &organization_ids)
+                .await,
+            CustomerPropertyPortfolioReadResult::Unavailable
+        );
     }
 }

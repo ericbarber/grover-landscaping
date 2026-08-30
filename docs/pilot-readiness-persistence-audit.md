@@ -298,6 +298,29 @@ Focused repository, authorization, and route cases cover unavailable persisted
 membership and the isolated virtual team. Formatting, strict all-target/all-
 feature Clippy, and all 417 backend tests pass.
 
+## Property portfolio and crew-assignment availability
+
+Property portfolio lists, customer grouping reads, and property/crew assignment
+history previously returned seeded tenant records when PostgreSQL was absent.
+Portfolio creation, property linking, and crew assignment also returned success
+objects marked `persisted: false`, allowing manager workflows to continue after
+an unsaved write.
+
+Non-empty scoped reads now return their existing `Unavailable` variants without
+a database pool; empty authorization scopes still return valid empty results
+without requiring storage. The three mutations likewise return unavailable.
+Handlers expose the stable `property_portfolios_unavailable`,
+`customer_property_portfolio_unavailable`,
+`property_crew_assignments_unavailable`,
+`crew_property_assignments_unavailable`,
+`property_portfolio_creation_unavailable`,
+`portfolio_property_link_unavailable`, and
+`property_crew_assignment_unavailable` `503` responses.
+
+Focused default/unreachable-pool repository and route cases cover all affected
+boundaries. Formatting, strict all-target/all-feature Clippy, and all 415
+backend tests pass.
+
 ## Organization profile and onboarding-state availability
 
 Without a database pool, organization profile reads previously returned a

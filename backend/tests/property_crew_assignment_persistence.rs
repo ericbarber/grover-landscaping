@@ -9,6 +9,28 @@ mod common;
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_assignment_lists_from_empty_results() {
+    let repository = PropertyCrewAssignmentRepository::default();
+    assert!(matches!(
+        repository
+            .list_for_property("property_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        PropertyCrewAssignmentListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .assign_crew(
+                "property_1001",
+                AssignPropertyCrewRequest {
+                    crew_id: "crew_1001".to_string(),
+                    organization_id: "org_demo_landscaping".to_string(),
+                    assigned_at: None,
+                },
+                "manager_test",
+            )
+            .await,
+        PropertyCrewAssignmentMutationResult::Unavailable
+    ));
+
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
