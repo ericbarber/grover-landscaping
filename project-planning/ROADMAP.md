@@ -576,8 +576,12 @@ The exact artifact mapping and ordered implementation queue live in
    - Active customer-account/property reads, creates/updates, lifecycle,
      readiness, and onboarding progress now fail closed without PostgreSQL.
    - Property operational-onboarding profile reads and saves now fail closed
-     without PostgreSQL instead of returning seeded or unsaved state. Classify
-     and explicitly gate the remaining demo compatibility fallbacks next.
+     without PostgreSQL instead of returning seeded or unsaved state.
+   - Remaining demo job, scheduling, bid, placeholder-photo, invitation-review,
+     owner-acquisition, and public-ingestion substitutes are classified as
+     explicit non-production compatibility behavior. Production requires
+     PostgreSQL and Cognito and rejects disabled/local-review authentication.
+     The Phase 6A development delivery is complete; hosted validation is next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

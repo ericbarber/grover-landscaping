@@ -54,6 +54,20 @@ must label local-only, queued, unavailable, conflict, and persisted outcomes
 distinctly. Production configuration rejects authentication modes intended only
 for local review and must not turn a persistence outage into an apparent success.
 
+The retained compatibility boundaries are:
+
+| Boundary | Retained local behavior | Production guard |
+| --- | --- | --- |
+| Jobs, schedules, bids, and field photos | Seeded review data, local mutations, and placeholder upload tickets | Production startup requires PostgreSQL; placeholder tickets are not production evidence |
+| Organization invitation review | Explicit `persisted: false` create/accept fixtures | Cognito plus persisted membership and invitation workflows are authoritative |
+| Private owner acquisition | Self-scoped in-memory review repository with explicit persistence flags | Hosted owner records use the configured PostgreSQL repository |
+| Public lead/event ingestion | Explicit local acceptance metadata for review | The production service cannot start without its database binding |
+
+Ordinary persisted manager repositories do not opt into these substitutes.
+Organization virtual membership is available only through the explicit local-
+review/test repository configuration, and production rejects `local_review` and
+`disabled` authentication modes.
+
 ## Photo flow
 
 Local review can use placeholder upload tickets. S3 mode uses direct, expiring

@@ -378,6 +378,8 @@ here does not mean every capability has been delivered.
 - Fail-closed active customer-account/property manager reads, mutations,
   readiness, and onboarding progress
 - Fail-closed property operational-onboarding profile reads and saves
+- Explicit non-production classification for retained demo compatibility data,
+  protected by production PostgreSQL and Cognito startup requirements
 
 ### Customer experience
 

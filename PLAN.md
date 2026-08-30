@@ -467,6 +467,14 @@ Current state:
   PostgreSQL instead of a seeded profile or an unsaved success response. Empty
   authorization scopes remain a valid not-found result. Focused repository and
   route cases, strict Clippy, and all 416 backend tests pass.
+- Phase 6A29 classifies and closes the remaining fallback boundary. Retained
+  job, scheduling, bid, placeholder-photo, invitation-review, acquisition, and
+  public-ingestion substitutes are explicitly non-production compatibility
+  behavior, not silent persistence recovery. Production startup requires
+  PostgreSQL, rejects disabled/local-review authentication, and the Render
+  blueprint binds Cognito plus private PostgreSQL. The production auth guard
+  regression passes. The Phase 6A persistence-hardening development delivery is
+  complete; further changes should be driven by hosted failure evidence.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2300,9 +2308,10 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A29: classify the remaining demo job, scheduling, bid, photo, and
-  acquisition fallbacks and gate any retained virtual data behind an explicit
-  non-production review boundary.
+- Phase 6A persistence-hardening development is complete. After explicit
+  publication authorization, validate the committed production configuration
+  in hosted CI and the protected Render/Cognito/PostgreSQL runtime; open another
+  hardening slice only from observed failure evidence.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime

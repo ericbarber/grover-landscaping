@@ -357,6 +357,25 @@ Focused default/unreachable-pool repository and route cases cover both
 boundaries. Formatting, strict all-target/all-feature Clippy, and all 416
 backend tests pass.
 
+## Retained compatibility boundary and Phase 6A completion
+
+The remaining no-pool behavior belongs to deliberate non-production surfaces:
+seeded jobs and schedules, local bid/field mutations, placeholder photo tickets,
+explicit invitation review fixtures, the self-scoped owner-acquisition review
+repository, and public lead/event review acknowledgements. These paths expose
+local, queued, placeholder, or `persisted: false` outcomes and are not used as
+silent recovery for the persisted manager repositories hardened in Phase 6A.
+
+Production has three independent guards: `APP_ENV=production` requires
+`DATABASE_URL`, `local_review` and `disabled` authentication are rejected, and
+the Render blueprint selects Cognito while binding the web service to private
+PostgreSQL. The production auth-mode regression passes, and configuration
+inspection confirms the database/auth bindings.
+
+Phase 6A persistence-hardening development is complete. The next stage is
+hosted CI and protected-runtime validation; another code hardening slice should
+start only from observed hosted failure evidence.
+
 ## Organization profile and onboarding-state availability
 
 Without a database pool, organization profile reads previously returned a
