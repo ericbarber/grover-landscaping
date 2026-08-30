@@ -12683,7 +12683,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn customer_property_status_endpoint_archives_local_property() {
+    async fn customer_property_status_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12696,12 +12696,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["status"], "archived");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "customer_property_persistence_unavailable");
     }
 
     #[tokio::test]
@@ -12722,7 +12720,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn customer_property_activation_readiness_endpoint_returns_seed_checks() {
+    async fn customer_property_activation_readiness_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12735,18 +12733,14 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["property_id"], "property_1001");
-        assert_eq!(json["profile_ready"], true);
-        assert_eq!(json["crew_ready"], true);
-        assert_eq!(json["ready"], true);
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "customer_property_readiness_unavailable");
     }
 
     #[tokio::test]
-    async fn customer_account_onboarding_progress_endpoint_returns_seed_progress() {
+    async fn customer_account_onboarding_progress_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12757,24 +12751,14 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["account_id"], "acct_1001");
-        assert_eq!(json["customer_details_ready"], true);
-        assert_eq!(json["property_count"], 1);
-        assert_eq!(json["service_ready_property_count"], 1);
-        assert_eq!(json["active_property_count"], 1);
-        assert!(json["properties_needing_attention"]
-            .as_array()
-            .unwrap()
-            .is_empty());
-        assert_eq!(json["complete"], true);
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "customer_account_onboarding_unavailable");
     }
 
     #[tokio::test]
-    async fn customer_property_identity_endpoint_updates_local_property() {
+    async fn customer_property_identity_endpoint_fails_closed_without_persistence() {
         let response = seed_app()
             .oneshot(
                 Request::builder()
@@ -12789,12 +12773,10 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json["display_name"], "Front Yard");
-        assert_eq!(json["service_address"], "123 Oak Street");
-        assert_eq!(json["persisted"], false);
+        assert_eq!(json["error"], "customer_property_persistence_unavailable");
     }
 
     #[tokio::test]
@@ -13270,6 +13252,30 @@ mod tests {
                 "{}",
                 String::from_utf8_lossy(&body)
             );
+            let json: Value = serde_json::from_slice(&body).unwrap();
+            assert_eq!(json["error"], error_code);
+        }
+    }
+
+    #[tokio::test]
+    async fn active_account_collections_fail_closed_without_persistence() {
+        let app = seed_app();
+        let requests = [
+            ("/customer-accounts", "customer_accounts_unavailable"),
+            (
+                "/customer-accounts/acct_1001/properties",
+                "customer_properties_unavailable",
+            ),
+        ];
+
+        for (uri, error_code) in requests {
+            let response = app
+                .clone()
+                .oneshot(Request::builder().uri(uri).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+            let body = response.into_body().collect().await.unwrap().to_bytes();
             let json: Value = serde_json::from_slice(&body).unwrap();
             assert_eq!(json["error"], error_code);
         }

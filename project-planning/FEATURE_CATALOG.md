@@ -375,6 +375,8 @@ here does not mean every capability has been delivered.
   identity exception
 - Fail-closed property portfolio/grouping and property-crew assignment reads
   and mutations
+- Fail-closed active customer-account/property manager reads, mutations,
+  readiness, and onboarding progress
 
 ### Customer experience
 

@@ -207,8 +207,11 @@ impl AccountRepository {
     }
 
     pub async fn list(&self, organization_ids: &[String]) -> CustomerAccountListResult {
+        if organization_ids.is_empty() {
+            return CustomerAccountListResult::Loaded(Vec::new());
+        }
         let Some(pool) = &self.pool else {
-            return CustomerAccountListResult::Loaded(seed_accounts(organization_ids));
+            return CustomerAccountListResult::Unavailable;
         };
         match list_accounts(pool, organization_ids).await {
             Ok(accounts) => CustomerAccountListResult::Loaded(accounts),
@@ -238,7 +241,7 @@ impl AccountRepository {
     ) -> CustomerContextReadResult<CustomerAccountRecord> {
         let request = normalize_request(request);
         let Some(pool) = &self.pool else {
-            return CustomerContextReadResult::Loaded(local_record(request));
+            return CustomerContextReadResult::Unavailable;
         };
         match create_account(pool, &request).await {
             Ok(account) => CustomerContextReadResult::Loaded(account),
@@ -257,10 +260,7 @@ impl AccountRepository {
     ) -> CustomerContextReadResult<CustomerAccountRecord> {
         let request = normalize_update_request(request);
         let Some(pool) = &self.pool else {
-            return match local_update_record(account_id, organization_ids, &request) {
-                Some(account) => CustomerContextReadResult::Loaded(account),
-                None => CustomerContextReadResult::NotFound,
-            };
+            return CustomerContextReadResult::Unavailable;
         };
         match update_account(pool, account_id, organization_ids, &request).await {
             Ok(Some(account)) => CustomerContextReadResult::Loaded(account),
@@ -321,11 +321,11 @@ impl AccountRepository {
         account_id: &str,
         organization_ids: &[String],
     ) -> CustomerPropertyListResult {
+        if organization_ids.is_empty() {
+            return CustomerPropertyListResult::Loaded(Vec::new());
+        }
         let Some(pool) = &self.pool else {
-            return CustomerPropertyListResult::Loaded(seed_properties(
-                account_id,
-                organization_ids,
-            ));
+            return CustomerPropertyListResult::Unavailable;
         };
         match list_properties(pool, account_id, organization_ids).await {
             Ok(properties) => CustomerPropertyListResult::Loaded(properties),
@@ -343,8 +343,7 @@ impl AccountRepository {
     ) -> Result<CustomerPropertyRecord, CustomerPropertyMutationError> {
         let request = normalize_create_property_request(request);
         let Some(pool) = &self.pool else {
-            return local_property_record(account_id, &request)
-                .ok_or(CustomerPropertyMutationError::NotFound);
+            return Err(CustomerPropertyMutationError::Persistence);
         };
         create_property(pool, account_id, &request)
             .await
@@ -362,13 +361,7 @@ impl AccountRepository {
     ) -> Result<CustomerPropertyRecord, CustomerPropertyMutationError> {
         let request = normalize_update_property_identity_request(request);
         let Some(pool) = &self.pool else {
-            return local_property_identity_record(
-                account_id,
-                property_id,
-                organization_ids,
-                &request,
-            )
-            .ok_or(CustomerPropertyMutationError::NotFound);
+            return Err(CustomerPropertyMutationError::Persistence);
         };
         update_property_identity(
             pool,
@@ -393,8 +386,7 @@ impl AccountRepository {
     ) -> Result<CustomerPropertyRecord, CustomerPropertyStatusError> {
         let status = request.status.trim();
         let Some(pool) = &self.pool else {
-            return local_property_status_record(account_id, property_id, organization_ids, status)
-                .ok_or(CustomerPropertyStatusError::NotFound);
+            return Err(CustomerPropertyStatusError::Persistence);
         };
         update_property_status(
             pool,
@@ -414,14 +406,7 @@ impl AccountRepository {
         organization_ids: &[String],
     ) -> CustomerContextReadResult<CustomerPropertyActivationReadiness> {
         let Some(pool) = &self.pool else {
-            return match local_property_activation_readiness(
-                account_id,
-                property_id,
-                organization_ids,
-            ) {
-                Some(readiness) => CustomerContextReadResult::Loaded(readiness),
-                None => CustomerContextReadResult::NotFound,
-            };
+            return CustomerContextReadResult::Unavailable;
         };
         match property_activation_readiness(pool, account_id, property_id, organization_ids).await {
             Ok(Some(readiness)) => CustomerContextReadResult::Loaded(readiness),
@@ -439,10 +424,7 @@ impl AccountRepository {
         organization_ids: &[String],
     ) -> CustomerContextReadResult<CustomerAccountOnboardingProgress> {
         let Some(pool) = &self.pool else {
-            return match local_account_onboarding_progress(account_id, organization_ids) {
-                Some(progress) => CustomerContextReadResult::Loaded(progress),
-                None => CustomerContextReadResult::NotFound,
-            };
+            return CustomerContextReadResult::Unavailable;
         };
         match account_onboarding_progress(pool, account_id, organization_ids).await {
             Ok(Some(progress)) => CustomerContextReadResult::Loaded(progress),
@@ -1602,201 +1584,6 @@ fn record_from_request(
     }
 }
 
-fn local_record(request: CreateCustomerAccountRequest) -> CustomerAccountRecord {
-    record_from_request("acct_local_new".to_string(), &request, false)
-}
-
-fn local_update_record(
-    account_id: &str,
-    organization_ids: &[String],
-    request: &UpdateCustomerAccountRequest,
-) -> Option<CustomerAccountRecord> {
-    if account_id != "acct_1001"
-        || !organization_ids
-            .iter()
-            .any(|id| id == "org_demo_landscaping")
-    {
-        return None;
-    }
-    Some(CustomerAccountRecord {
-        account_id: account_id.to_string(),
-        organization_id: "org_demo_landscaping".to_string(),
-        relationship_type: "service_provider".to_string(),
-        customer_name: request.customer_name.clone(),
-        billing_model: request.billing_model.clone(),
-        payment_status: request.payment_status.clone(),
-        service_approval_status: request.service_approval_status.clone(),
-        contracted_services_per_period: request.contracted_services_per_period,
-        completed_services_this_period: 0,
-        billing_notes: request.billing_notes.clone().unwrap_or_default(),
-        primary_contact_name: request.primary_contact_name.clone().unwrap_or_default(),
-        contact_email: request.contact_email.clone().unwrap_or_default(),
-        contact_phone: request.contact_phone.clone().unwrap_or_default(),
-        email_notifications_enabled: request.email_notifications_enabled,
-        sms_notifications_enabled: request.sms_notifications_enabled,
-        quiet_hours_start: request.quiet_hours_start.clone().unwrap_or_default(),
-        quiet_hours_end: request.quiet_hours_end.clone().unwrap_or_default(),
-        persisted: false,
-    })
-}
-
-fn local_property_status_record(
-    account_id: &str,
-    property_id: &str,
-    organization_ids: &[String],
-    status: &str,
-) -> Option<CustomerPropertyRecord> {
-    let mut property = seed_properties(account_id, organization_ids)
-        .into_iter()
-        .find(|property| property.property_id == property_id)?;
-    property.status = status.to_string();
-    Some(property)
-}
-
-fn local_property_identity_record(
-    account_id: &str,
-    property_id: &str,
-    organization_ids: &[String],
-    request: &UpdateCustomerPropertyIdentityRequest,
-) -> Option<CustomerPropertyRecord> {
-    let mut property = seed_properties(account_id, organization_ids)
-        .into_iter()
-        .find(|property| property.property_id == property_id)?;
-    property.display_name = request.display_name.clone();
-    property.service_address = request.service_address.clone();
-    Some(property)
-}
-
-fn local_property_activation_readiness(
-    account_id: &str,
-    property_id: &str,
-    organization_ids: &[String],
-) -> Option<CustomerPropertyActivationReadiness> {
-    seed_properties(account_id, organization_ids)
-        .into_iter()
-        .find(|property| property.property_id == property_id)
-        .map(|property| CustomerPropertyActivationReadiness {
-            property_id: property.property_id,
-            profile_ready: true,
-            crew_ready: true,
-            ready: true,
-            persisted: false,
-        })
-}
-
-fn local_account_onboarding_progress(
-    account_id: &str,
-    organization_ids: &[String],
-) -> Option<CustomerAccountOnboardingProgress> {
-    let account = seed_accounts(organization_ids)
-        .into_iter()
-        .find(|account| account.account_id == account_id)?;
-    let properties = seed_properties(account_id, organization_ids);
-    let property_count = properties
-        .iter()
-        .filter(|property| property.status != "archived")
-        .count() as u32;
-    let active_property_count = properties
-        .iter()
-        .filter(|property| property.status == "active")
-        .count() as u32;
-    let customer_details_ready = account.service_approval_status == "approved"
-        && account.contracted_services_per_period > 0
-        && !account.primary_contact_name.is_empty()
-        && (!account.contact_email.is_empty() || !account.contact_phone.is_empty());
-    Some(CustomerAccountOnboardingProgress {
-        account_id: account.account_id,
-        customer_details_ready,
-        property_count,
-        service_ready_property_count: active_property_count,
-        active_property_count,
-        properties_needing_attention: properties
-            .iter()
-            .filter(|property| property.status != "archived" && property.status != "active")
-            .map(|property| CustomerPropertyOnboardingAttention {
-                property_id: property.property_id.clone(),
-                display_name: property.display_name.clone(),
-                status: property.status.clone(),
-                reasons: vec![
-                    "operational_profile_incomplete".to_string(),
-                    "crew_unassigned".to_string(),
-                ],
-            })
-            .collect(),
-        complete: customer_details_ready
-            && property_count > 0
-            && active_property_count == property_count,
-        persisted: false,
-    })
-}
-
-fn local_property_record(
-    account_id: &str,
-    request: &CreateCustomerPropertyRequest,
-) -> Option<CustomerPropertyRecord> {
-    if account_id.trim().is_empty() {
-        return None;
-    }
-    Some(CustomerPropertyRecord {
-        property_id: format!("property_local_{}", Uuid::new_v4().simple()),
-        account_id: account_id.to_string(),
-        organization_id: request.organization_id.clone(),
-        display_name: request.display_name.clone(),
-        service_address: request.service_address.clone(),
-        status: "onboarding".to_string(),
-        persisted: false,
-    })
-}
-
-fn seed_properties(account_id: &str, organization_ids: &[String]) -> Vec<CustomerPropertyRecord> {
-    if account_id != "acct_1001"
-        || !organization_ids
-            .iter()
-            .any(|id| id == "org_demo_landscaping")
-    {
-        return Vec::new();
-    }
-    vec![CustomerPropertyRecord {
-        property_id: "property_1001".to_string(),
-        account_id: account_id.to_string(),
-        organization_id: "org_demo_landscaping".to_string(),
-        display_name: "Sample Customer Home".to_string(),
-        service_address: "123 Oak Street".to_string(),
-        status: "active".to_string(),
-        persisted: false,
-    }]
-}
-
-fn seed_accounts(organization_ids: &[String]) -> Vec<CustomerAccountRecord> {
-    if !organization_ids
-        .iter()
-        .any(|id| id == "org_demo_landscaping")
-    {
-        return Vec::new();
-    }
-    vec![record_from_request(
-        "acct_1001".to_string(),
-        &CreateCustomerAccountRequest {
-            organization_id: "org_demo_landscaping".to_string(),
-            relationship_type: "owner".to_string(),
-            customer_name: "Sample Customer".to_string(),
-            billing_model: "per_job".to_string(),
-            payment_status: "pending".to_string(),
-            service_approval_status: "approved".to_string(),
-            contracted_services_per_period: 1,
-            billing_notes: Some("Payment can be marked complete after service.".to_string()),
-            primary_contact_name: Some("Sample Customer".to_string()),
-            contact_email: Some("customer@example.com".to_string()),
-            contact_phone: None,
-            email_notifications_enabled: true,
-            sms_notifications_enabled: false,
-            quiet_hours_start: None,
-            quiet_hours_end: None,
-        },
-        false,
-    )]
-}
-
 fn seed_summary(job_id: &str) -> CustomerAccountSummary {
     let account = if job_id == "job_1002" {
         (
@@ -1945,23 +1732,96 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn local_updates_stay_tenant_scoped() {
+    async fn account_updates_fail_closed_without_persistence() {
         let repository = AccountRepository::new();
-        assert!(matches!(
-            repository
-                .update(
-                    "acct_1001",
-                    &["org_demo_landscaping".to_string()],
-                    update_request(),
-                )
-                .await,
-            CustomerContextReadResult::Loaded(_)
-        ));
+        let organization_ids = ["org_demo_landscaping".to_string()];
         assert_eq!(
             repository
-                .update("acct_1001", &["org_other".to_string()], update_request())
+                .create(CreateCustomerAccountRequest {
+                    organization_id: "org_demo_landscaping".to_string(),
+                    relationship_type: "owner".to_string(),
+                    customer_name: "Sample Customer".to_string(),
+                    billing_model: "per_job".to_string(),
+                    payment_status: "pending".to_string(),
+                    service_approval_status: "approved".to_string(),
+                    contracted_services_per_period: 1,
+                    billing_notes: None,
+                    primary_contact_name: Some("Sample Customer".to_string()),
+                    contact_email: Some("customer@example.com".to_string()),
+                    contact_phone: None,
+                    email_notifications_enabled: true,
+                    sms_notifications_enabled: false,
+                    quiet_hours_start: None,
+                    quiet_hours_end: None,
+                })
                 .await,
-            CustomerContextReadResult::NotFound
+            CustomerContextReadResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .update("acct_1001", &organization_ids, update_request())
+                .await,
+            CustomerContextReadResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .list_properties("acct_1001", &organization_ids)
+                .await,
+            CustomerPropertyListResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .create_property(
+                    "acct_1001",
+                    CreateCustomerPropertyRequest {
+                        organization_id: "org_demo_landscaping".to_string(),
+                        display_name: "Front Yard".to_string(),
+                        service_address: "123 Oak Street".to_string(),
+                    },
+                )
+                .await,
+            Err(CustomerPropertyMutationError::Persistence)
+        );
+        assert_eq!(
+            repository
+                .update_property_identity(
+                    "acct_1001",
+                    "property_1001",
+                    &organization_ids,
+                    UpdateCustomerPropertyIdentityRequest {
+                        display_name: "Front Yard".to_string(),
+                        service_address: "123 Oak Street".to_string(),
+                    },
+                    "actor_1001",
+                )
+                .await,
+            Err(CustomerPropertyMutationError::Persistence)
+        );
+        assert_eq!(
+            repository
+                .update_property_status(
+                    "acct_1001",
+                    "property_1001",
+                    &organization_ids,
+                    UpdateCustomerPropertyStatusRequest {
+                        status: "archived".to_string(),
+                    },
+                    "actor_1001",
+                )
+                .await,
+            Err(CustomerPropertyStatusError::Persistence)
+        );
+        assert_eq!(
+            repository
+                .property_activation_readiness("acct_1001", "property_1001", &organization_ids,)
+                .await,
+            CustomerContextReadResult::Unavailable
+        );
+        assert_eq!(
+            repository
+                .account_onboarding_progress("acct_1001", &organization_ids)
+                .await,
+            CustomerContextReadResult::Unavailable
         );
     }
 }

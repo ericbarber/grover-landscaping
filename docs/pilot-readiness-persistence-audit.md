@@ -321,6 +321,29 @@ Focused default/unreachable-pool repository and route cases cover all affected
 boundaries. Formatting, strict all-target/all-feature Clippy, and all 415
 backend tests pass.
 
+## Active customer-account and property availability
+
+The active manager account surface still used no-pool seed data after archived
+account lifecycle paths were hardened. Active account and property lists,
+account creation and updates, property creation and identity/lifecycle changes, activation
+readiness, and account onboarding progress could therefore return successful
+seeded or `persisted: false` state during an outage.
+
+Those non-empty scoped reads now return their existing unavailable variants,
+and the affected mutations return `Unavailable` or their persistence error.
+Empty organization scopes remain valid empty lists because they require no
+storage lookup. The explicit demo job-account summary is not changed by this
+slice. Existing handlers expose stable `customer_accounts_unavailable`,
+`customer_properties_unavailable`, `customer_account_update_unavailable`,
+`customer_account_creation_unavailable`,
+`customer_property_persistence_unavailable`,
+`customer_property_readiness_unavailable`, and
+`customer_account_onboarding_unavailable` responses.
+
+Focused default/unreachable-pool repository and route cases cover the affected
+boundaries. Formatting, strict all-target/all-feature Clippy, and all 416
+backend tests pass.
+
 ## Organization profile and onboarding-state availability
 
 Without a database pool, organization profile reads previously returned a

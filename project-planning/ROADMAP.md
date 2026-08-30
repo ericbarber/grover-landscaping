@@ -572,7 +572,10 @@ The exact artifact mapping and ordered implementation queue live in
      local-review/test identities.
    - Property portfolio and crew-assignment scoped reads and mutations now fail
      closed without PostgreSQL instead of returning seeded collections or
-     unsaved success. Audit active customer-account and property fallbacks next.
+     unsaved success.
+   - Active customer-account/property reads, creates/updates, lifecycle, readiness, and
+     onboarding progress now fail closed without PostgreSQL. Audit property
+     operational-onboarding profiles next.
    - The exact backend CI formatting, all-target/all-feature strict Clippy, and full test commands pass; retain narrow lint exceptions only for intentional stable boundary shapes.
    - The first backend compilation-convergence slice removes five duplicate binary module declarations and 18 repeated unit-test executions; converge the six coupled core modules in dependency order next.
    - Account module convergence removes five more duplicate binary tests; 23 repeated executions are now gone and five coupled core/report/photo declarations remain.

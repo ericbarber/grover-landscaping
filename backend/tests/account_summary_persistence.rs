@@ -58,14 +58,44 @@ async fn repository_distinguishes_unavailable_and_demo_job_account_summaries() {
 }
 
 #[tokio::test]
-async fn repository_distinguishes_unavailable_and_demo_customer_account_lists() {
-    let demo_repository = AccountRepository::default();
+async fn repository_distinguishes_unavailable_customer_account_state_from_empty_scopes() {
+    let repository = AccountRepository::default();
     assert!(matches!(
-        demo_repository
+        repository.list(&["org_demo_landscaping".to_string()]).await,
+        CustomerAccountListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
             .list_archived(&["org_demo_landscaping".to_string()])
             .await,
         CustomerAccountListResult::Unavailable
     ));
+    assert!(matches!(
+        repository
+            .list_properties("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        CustomerPropertyListResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .account_onboarding_progress("acct_1001", &["org_demo_landscaping".to_string()])
+            .await,
+        CustomerContextReadResult::Unavailable
+    ));
+    assert!(matches!(
+        repository
+            .property_activation_readiness(
+                "acct_1001",
+                "property_1001",
+                &["org_demo_landscaping".to_string()],
+            )
+            .await,
+        CustomerContextReadResult::Unavailable
+    ));
+    assert_eq!(
+        repository.list(&[]).await,
+        CustomerAccountListResult::Loaded(Vec::new())
+    );
 
     let unavailable_pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
@@ -106,13 +136,4 @@ async fn repository_distinguishes_unavailable_and_demo_customer_account_lists() 
             .await,
         CustomerContextReadResult::Unavailable
     ));
-
-    let demo_repository = AccountRepository::default();
-    let CustomerAccountListResult::Loaded(accounts) = demo_repository
-        .list(&["org_demo_landscaping".to_string()])
-        .await
-    else {
-        panic!("no-database demo account list should remain available");
-    };
-    assert!(!accounts.is_empty());
 }

@@ -455,6 +455,13 @@ Current state:
   success objects. Empty authorization scopes remain valid empty results.
   Focused repository and route cases, strict Clippy, and all 415 backend tests
   pass.
+- Phase 6A27 makes active customer-account and property manager workflows fail
+  closed. Active account/property lists, account creation and updates, property create,
+  identity and lifecycle changes, activation readiness, and account onboarding
+  progress now return their existing unavailable outcomes without PostgreSQL
+  instead of seeded or unsaved state. Empty authorization scopes and the
+  explicit demo job-account summary remain separate contracts. Focused
+  repository and route cases, strict Clippy, and all 416 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -2288,9 +2295,8 @@ Next implementation work:
   capture hosted cold/cache-hit backend, frontend, Playwright-install, and
   production-image timings before making another performance configuration
   change.
-- Phase 6A27: audit active customer-account, property lifecycle, and onboarding
-  local fallbacks so manager workflows cannot consume seeded persisted state
-  during an outage.
+- Phase 6A28: audit property operational-onboarding profile reads and saves so
+  absent persistence cannot appear as a loaded or saved profile.
 - Continue application-readiness hardening from observed runtime failure modes
 - Audit privacy recovery history and cleanup behavior for pilot-scale retention
 - Complete the remaining serialized backend integration suites, then run broad mobile browser coverage against the Tailscale runtime
