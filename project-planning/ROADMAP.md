@@ -7,10 +7,11 @@ The active delivery stage is Phase 6B post-development validation. Phases 6B1
 through 6B3 align the local Compose helper and hosted CI with the embedded SQLx
 migrator, make migration files explicit Cargo build inputs, and close the clean
 PostgreSQL-backed backend gate, including exact privacy redaction of delivered
-photo proof without relaxing unrelated snapshot immutability. The remaining
-local gates are frontend, browser, assurance, infrastructure, and production
-image checks. Protected hosted smoke validation remains an external deployment
-gate and must not be inferred from local review success.
+photo proof without relaxing unrelated snapshot immutability. Phase 6B4 also
+completes the Node 22 frontend and pilot-assurance gates. The remaining local
+gates are browser, infrastructure, and production-image checks. Protected hosted
+smoke validation remains an external deployment gate and must not be inferred
+from local review success.
 
 ## Active UX Priority
 

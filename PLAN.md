@@ -495,6 +495,12 @@ Current state:
   unrelated snapshot field remain immutable. The shared photo worker/erasure
   integration fixture is serialized at its queue boundary. Clean migration,
   formatting, strict all-target Clippy, and all 417 backend tests pass.
+- Phase 6B4 completes the frontend and pilot-assurance CI-equivalent gates on
+  Node 22. A clean install reports zero vulnerabilities; all eight fail-closed
+  audit-policy tests, TypeScript, all 484 frontend tests, and the production
+  frontend build pass. The minimized assurance contract validates 11 metrics,
+  14 alerts, and all seven synthetic rehearsal scenarios; all seven assurance
+  failure-policy tests pass while retaining live integration and staffing gates.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -610,9 +616,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Continue Phase 6B post-development validation through the committed frontend,
-  browser, assurance, infrastructure, and production-image gates. The clean
-  PostgreSQL-backed backend gate is complete.
+- Continue Phase 6B post-development validation through the committed browser,
+  infrastructure, and production-image gates. The clean PostgreSQL-backed
+  backend, frontend, and pilot-assurance gates are complete.
   Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
   deployed protected environment and test identity; local success must not be
   recorded as hosted launch evidence.

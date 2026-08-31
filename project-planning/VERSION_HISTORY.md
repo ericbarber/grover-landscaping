@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-08-31: Completed the Phase 6B frontend and pilot-assurance gates on Node
+  22. Clean install and live dependency audit report zero vulnerabilities; all
+  eight audit-policy tests, TypeScript, all 484 frontend tests, and the
+  production build pass. The assurance rehearsal validates 11 minimized
+  metrics, 14 alerts, and seven scenarios, with all seven failure-policy tests
+  passing and external live/staffing evidence still explicitly pending.
 - 2026-08-31: Closed the clean backend validation gate. Cargo now rebuilds the
   embedded migrator when migration files change; migration 122 permits only the
   exact delivered-proof photo/count redaction required by customer-photo erasure
