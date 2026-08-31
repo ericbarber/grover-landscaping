@@ -10,9 +10,10 @@ PostgreSQL-backed backend gate, including exact privacy redaction of delivered
 photo proof without relaxing unrelated snapshot immutability. Phase 6B4 also
 completes the Node 22 frontend and pilot-assurance gates, and Phase 6B5 closes
 all 68 four-project browser journeys against a fresh CI-style server. The
-remaining local gates are infrastructure and production-image checks. Protected
-hosted smoke validation remains an external deployment gate and must not be
-inferred from local review success.
+Phase 6B6 Terraform formatting and development/production validation gates also
+pass. The remaining local gate is the production-image check. Protected hosted
+smoke validation remains an external deployment gate and must not be inferred
+from local review success.
 
 ## Active UX Priority
 

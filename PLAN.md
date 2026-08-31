@@ -509,6 +509,11 @@ Current state:
   invitation, and Yard Owner acquisition journeys pass in Chromium mobile,
   Chromium desktop, Firefox desktop, and WebKit mobile against a fresh CI-style
   Vite server.
+- Phase 6B6 completes the infrastructure CI-equivalent gate with Terraform
+  1.13.5 and the lockfile-pinned AWS provider 6.52.0. Recursive formatting is
+  clean; backend-disabled initialization and validation pass independently for
+  development Cognito and production Cognito plus photo-storage modules. No
+  remote state, plan, or cloud resource was created or changed.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -624,10 +629,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Continue Phase 6B post-development validation through the committed
-  infrastructure and production-image gates. The clean PostgreSQL-backed
-  backend, frontend, pilot-assurance, and four-project browser gates are
-  complete.
+- Continue Phase 6B post-development validation through the production-image
+  gate. The clean PostgreSQL-backed backend, frontend, pilot-assurance,
+  four-project browser, and infrastructure gates are complete.
   Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
   deployed protected environment and test identity; local success must not be
   recorded as hosted launch evidence.

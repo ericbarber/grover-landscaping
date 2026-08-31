@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-08-31: Completed the Phase 6B infrastructure gate with Terraform 1.13.5
+  and lockfile-pinned AWS provider 6.52.0. Recursive formatting is clean, and
+  backend-disabled initialization plus validation pass for development Cognito
+  and production Cognito/photo-storage modules without remote state, plans, or
+  cloud mutations.
 - 2026-08-31: Closed the Phase 6B cross-browser gate by aligning stale provider
   entry expectations, scoping duplicate lifecycle labels, waiting for hydrated
   Yard Owner steps, and normalizing equivalent engine font-stack serialization.
