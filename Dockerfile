@@ -10,6 +10,7 @@ RUN npm run build
 FROM rust:1.88-bookworm AS backend-builder
 WORKDIR /build/backend
 COPY backend/Cargo.toml backend/Cargo.lock ./
+COPY backend/build.rs ./build.rs
 COPY backend/src ./src
 COPY backend/migrations ./migrations
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \

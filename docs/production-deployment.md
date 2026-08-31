@@ -50,6 +50,14 @@ The database has `ipAllowList: []`, so it is reachable only through Render's pri
 
 ## Verification
 
+The repository-owned artifact gate builds the root `Dockerfile`, starts the
+result as its unprivileged `grover` user against PostgreSQL, and verifies the
+packaged frontend plus database-backed readiness. It also verifies that
+production rejects local-review authentication and incomplete Cognito
+configuration. This local check does not replace the protected hosted smoke test
+because a real Cognito issuer, test identity, access token, and deployed private
+database are external inputs.
+
 Validate Cognito outputs before wiring Render:
 
 ```bash

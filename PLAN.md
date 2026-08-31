@@ -514,6 +514,14 @@ Current state:
   clean; backend-disabled initialization and validation pass independently for
   development Cognito and production Cognito plus photo-storage modules. No
   remote state, plan, or cloud resource was created or changed.
+- Phase 6B7 closes the local production-artifact gate. The multi-stage image now
+  copies the complete backend crate, including its migration-aware build script;
+  the final 39.8 MB image builds successfully and runs as the unprivileged
+  `grover` user (UID 10001). Runtime validation serves the packaged frontend,
+  reports PostgreSQL readiness, and confirms the 122-version migration ledger.
+  Production mode exits nonzero for local-review auth and incomplete Cognito
+  configuration. This completes every repository-owned Phase 6B gate without
+  claiming protected hosted smoke evidence.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -627,14 +635,14 @@ Current state:
   its constrained persistence, provider API, customer-status events, and
   minimized hybrid customer projection are delivered.
 
-Next authorized slice and remaining gates:
+Next external delivery gates:
 
-- Continue Phase 6B post-development validation through the production-image
-  gate. The clean PostgreSQL-backed backend, frontend, pilot-assurance,
-  four-project browser, and infrastructure gates are complete.
-  Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
-  deployed protected environment and test identity; local success must not be
-  recorded as hosted launch evidence.
+- Phase 6B repository-owned validation is complete. Protected hosted
+  Cognito/PostgreSQL smoke validation remains separate because it needs
+  publication of these commits, a deployed environment, provisioned identities,
+  and a current access token. Local success must not be recorded as hosted launch
+  evidence, and this repository work does not authorize a push, deployment, or
+  cloud-resource mutation.
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are

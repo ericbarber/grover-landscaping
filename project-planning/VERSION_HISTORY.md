@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-08-31: Closed all repository-owned Phase 6B delivery gates. The complete
+  backend crate now enters the production build; the final 39.8 MB image builds,
+  serves the packaged frontend with PostgreSQL readiness, confirms all 122
+  migrations, and runs as unprivileged UID 10001. Production rejects local-
+  review auth and missing Cognito configuration. Protected hosted Cognito smoke
+  remains an external deployment gate and was not inferred from local evidence.
 - 2026-08-31: Completed the Phase 6B infrastructure gate with Terraform 1.13.5
   and lockfile-pinned AWS provider 6.52.0. Recursive formatting is clean, and
   backend-disabled initialization plus validation pass for development Cognito
