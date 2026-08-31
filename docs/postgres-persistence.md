@@ -29,7 +29,9 @@ It also seeds the two sample jobs currently used by the API and frontend.
 - PostgreSQL connection and migration seam added in `JobRepository`.
 - Read-query helpers added for job lists and job detail.
 - Write-query helpers added for job status changes and local photo upload tickets.
-- Local migration runner added for Docker Compose PostgreSQL.
+- Local migration runner added for Docker Compose PostgreSQL. It uses SQLx's
+  migration ledger and checksum validation, so repeat runs apply only pending
+  migrations and fail when migration execution fails.
 
 ## Current Runtime Behavior
 

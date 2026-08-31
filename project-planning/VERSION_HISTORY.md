@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-08-31: Hardened local migration validation for Phase 6B1. The Compose
+  helper now runs the application's embedded SQLx migrator, sharing production's
+  applied-version ledger and checksum validation instead of replaying every SQL
+  file through a non-failing `psql` loop. Two consecutive runs retain all 121
+  successful migrations, malformed database configuration exits nonzero, and
+  formatting plus strict Clippy for the runner pass.
 - 2026-08-30: Completed the Phase 6A persistence-hardening development delivery by classifying retained job, scheduling, bid, placeholder-photo, invitation-review, owner-acquisition, and public-ingestion substitutes as explicit non-production compatibility behavior. Production startup requires PostgreSQL, rejects disabled/local-review authentication, and the Render blueprint binds Cognito plus private PostgreSQL. The production auth guard regression passes; hosted validation is the next delivery stage.
 - 2026-08-30: Made property operational-onboarding profiles fail closed. Profile reads and saves now return stable unavailable `503` errors without PostgreSQL instead of a seeded profile or an unsaved success response; empty authorization scopes remain a valid not-found result. Focused repository and route cases, strict Clippy, and all 416 backend tests pass.
 - 2026-08-30: Made active customer-account and property manager workflows fail closed. Active account/property lists, account creation and updates, property create/identity/lifecycle changes, activation readiness, and account onboarding progress now return stable unavailable outcomes without PostgreSQL instead of seeded or unsaved state. Empty authorization scopes and the explicit demo job-account summary remain separate contracts. Focused repository and route cases, strict Clippy, and all 416 backend tests pass.

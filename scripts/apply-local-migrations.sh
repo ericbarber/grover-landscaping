@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COMPOSE_PROJECT=${COMPOSE_PROJECT:-grover-landscaping}
-DB_SERVICE=${DB_SERVICE:-postgres}
-DB_NAME=${POSTGRES_DB:-grover_landscaping}
-DB_USER=${POSTGRES_USER:-grover}
-MIGRATIONS_DIR=${MIGRATIONS_DIR:-backend/migrations}
+BACKEND_SERVICE=${BACKEND_SERVICE:-backend}
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required to run local migrations" >&2
   exit 1
 fi
 
-for migration in "${MIGRATIONS_DIR}"/*.sql; do
-  echo "Applying ${migration}"
-  docker compose exec -T "${DB_SERVICE}" psql -U "${DB_USER}" -d "${DB_NAME}" < "${migration}"
-done
+if [[ -z "$(docker compose ps --status running -q "${BACKEND_SERVICE}")" ]]; then
+  echo "the ${BACKEND_SERVICE} Compose service must be running" >&2
+  exit 1
+fi
 
-echo "Local migrations applied."
+docker compose exec -T "${BACKEND_SERVICE}" cargo run --quiet --bin migrate

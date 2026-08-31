@@ -3,6 +3,14 @@
 This is the consolidated review version of the Grover Landscaping development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
+The active delivery stage is Phase 6B post-development validation. Phase 6B1
+has aligned the local Compose migration helper with the embedded SQLx migrator
+used by application startup, including applied-version and checksum tracking.
+The remaining local gates are the committed backend, frontend, browser,
+assurance, infrastructure, and production-image checks. Protected hosted smoke
+validation remains an external deployment gate and must not be inferred from
+local review success.
+
 ## Active UX Priority
 
 The current production-adoption priority is signed-in Yard Owner adoption of

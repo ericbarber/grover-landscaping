@@ -475,6 +475,13 @@ Current state:
   blueprint binds Cognito plus private PostgreSQL. The production auth guard
   regression passes. The Phase 6A persistence-hardening development delivery is
   complete; further changes should be driven by hosted failure evidence.
+- Phase 6B1 hardens the local migration validation gate discovered during the
+  post-development CI-equivalent pass. The Compose helper now invokes the
+  application's embedded SQLx migrator instead of replaying every SQL file
+  through `psql`, so applied versions and checksums come from the same ledger as
+  production startup. Two consecutive runs preserve all 121 successful
+  versions, and malformed database configuration exits nonzero instead of
+  printing SQL failures and reporting success.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -590,6 +597,11 @@ Current state:
 
 Next authorized slice and remaining gates:
 
+- Continue Phase 6B post-development validation through the committed backend,
+  frontend, browser, assurance, infrastructure, and production-image gates.
+  Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
+  deployed protected environment and test identity; local success must not be
+  recorded as hosted launch evidence.
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are

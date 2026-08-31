@@ -202,6 +202,10 @@ Apply database migrations after PostgreSQL is healthy:
 bash scripts/apply-local-migrations.sh
 ```
 
+The helper runs the backend's embedded SQLx migrator, applying only pending
+versions and validating the recorded migration checksums. The backend Compose
+service must be running.
+
 Local services:
 
 ```text
