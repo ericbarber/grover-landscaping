@@ -4,12 +4,13 @@ This is the consolidated review version of the Grover Landscaping development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
 The active delivery stage is Phase 6B post-development validation. Phases 6B1
-and 6B2 align both the local Compose helper and hosted CI with the embedded SQLx
-migrator used by application startup, including applied-version and checksum
-tracking. The remaining local gates are the committed backend, frontend,
-browser, assurance, infrastructure, and production-image checks. Protected
-hosted smoke validation remains an external deployment gate and must not be
-inferred from local review success.
+through 6B3 align the local Compose helper and hosted CI with the embedded SQLx
+migrator, make migration files explicit Cargo build inputs, and close the clean
+PostgreSQL-backed backend gate, including exact privacy redaction of delivered
+photo proof without relaxing unrelated snapshot immutability. The remaining
+local gates are frontend, browser, assurance, infrastructure, and production
+image checks. Protected hosted smoke validation remains an external deployment
+gate and must not be inferred from local review success.
 
 ## Active UX Priority
 

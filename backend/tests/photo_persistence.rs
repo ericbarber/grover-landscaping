@@ -14,6 +14,8 @@ use sqlx::Row;
 use std::time::Duration;
 mod common;
 
+static PHOTO_PERSISTENCE_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 fn loaded<T: std::fmt::Debug>(result: ResourceReadResult<T>, context: &str) -> T {
     match result {
         ResourceReadResult::Loaded(value) => value,
@@ -33,6 +35,7 @@ impl<T: std::fmt::Debug> ResourceReadTestExt<T> for ResourceReadResult<T> {
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_photo_recovery_writes() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
@@ -60,6 +63,7 @@ async fn repository_distinguishes_unavailable_photo_recovery_writes() {
 
 #[tokio::test]
 async fn repository_distinguishes_unavailable_photo_writes() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let pool = PgPoolOptions::new()
         .acquire_timeout(Duration::from_millis(100))
         .connect_lazy("postgres://grover:grover@127.0.0.1:1/grover_landscaping")
@@ -152,6 +156,7 @@ async fn repository_distinguishes_unavailable_photo_writes() {
 
 #[tokio::test]
 async fn repository_reuses_photo_ticket_for_offline_mutation() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -200,6 +205,7 @@ async fn repository_reuses_photo_ticket_for_offline_mutation() {
 
 #[tokio::test]
 async fn repository_persists_and_lists_photo_evidence() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -396,6 +402,7 @@ async fn repository_persists_and_lists_photo_evidence() {
 
 #[tokio::test]
 async fn repository_queues_and_retries_photo_processing_jobs() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -556,6 +563,7 @@ async fn repository_queues_and_retries_photo_processing_jobs() {
 
 #[tokio::test]
 async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -640,6 +648,7 @@ async fn photo_processing_worker_marks_failed_thumbnail_jobs() {
 
 #[tokio::test]
 async fn repository_recovers_failed_photo_processing_jobs() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -783,6 +792,7 @@ async fn repository_recovers_failed_photo_processing_jobs() {
 
 #[tokio::test]
 async fn photo_processing_worker_recovers_stale_erasure_deletions() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -884,6 +894,7 @@ async fn photo_processing_worker_recovers_stale_erasure_deletions() {
 
 #[tokio::test]
 async fn repository_lists_retries_and_resolves_erasure_deletion_jobs() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -978,6 +989,7 @@ async fn repository_lists_retries_and_resolves_erasure_deletion_jobs() {
 
 #[tokio::test]
 async fn repository_exports_and_erases_customer_photo_evidence() {
+    let _test_guard = PHOTO_PERSISTENCE_TEST_LOCK.lock().await;
     let Some(config) = common::database_config() else {
         return;
     };
@@ -1036,6 +1048,62 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     assert_eq!(exported_photo.file_size_bytes, Some(33_333));
     assert_eq!(exported_photo.erased_at, None);
 
+    let delivered_snapshot = serde_json::json!({
+        "photo_evidence": [{ "photo_id": ticket.photo_id }],
+        "before_photos": 1,
+        "after_photos": 0,
+        "issue_photos": 0,
+        "snapshot_metadata": {
+            "evidence": {
+                "total_photo_evidence": 1,
+                "before_photos": 1,
+                "after_photos": 0,
+                "issue_photos": 0
+            }
+        }
+    });
+    sqlx::query("DELETE FROM job_completion_reports WHERE job_id = 'job_1001'")
+        .execute(&pool)
+        .await
+        .expect("privacy test should reset the proof fixture");
+    sqlx::query(
+        r#"
+        INSERT INTO job_completion_reports (
+            id,
+            job_id,
+            report_status,
+            ready_for_customer,
+            checklist_progress,
+            before_photos,
+            after_photos,
+            issue_photos,
+            delivered_at,
+            delivered_snapshot,
+            delivered_snapshot_at,
+            share_token
+        )
+        VALUES (
+            'privacy_report_job_1001',
+            'job_1001',
+            'delivered',
+            TRUE,
+            100,
+            1,
+            0,
+            0,
+            NOW(),
+            $1,
+            NOW(),
+            $2
+        )
+        "#,
+    )
+    .bind(delivered_snapshot)
+    .bind(format!("privacy-test-{}", uuid::Uuid::new_v4().simple()))
+    .execute(&pool)
+    .await
+    .expect("privacy test should publish a proof snapshot containing the photo");
+
     let erasure = repository
         .erase_customer_photo_evidence(
             "acct_1001",
@@ -1055,6 +1123,36 @@ async fn repository_exports_and_erases_customer_photo_evidence() {
     );
     assert_eq!(erasure.failed_object_key_count, 0);
     assert!(erasure.object_keys_pending_deletion.is_empty());
+    let redacted_snapshot: serde_json::Value = sqlx::query_scalar(
+        "SELECT delivered_snapshot FROM job_completion_reports WHERE job_id = 'job_1001'",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("delivered proof should remain after privacy redaction");
+    assert_eq!(redacted_snapshot["photo_evidence"], serde_json::json!([]));
+    assert_eq!(redacted_snapshot["before_photos"], 0);
+    assert_eq!(
+        redacted_snapshot["snapshot_metadata"]["evidence"]["total_photo_evidence"],
+        0
+    );
+
+    let unrelated_snapshot_rewrite = sqlx::query(
+        r#"
+        UPDATE job_completion_reports
+        SET delivered_snapshot = jsonb_set(
+            delivered_snapshot,
+            '{before_photos}',
+            '2'::jsonb
+        )
+        WHERE job_id = 'job_1001'
+        "#,
+    )
+    .execute(&pool)
+    .await;
+    assert!(
+        unrelated_snapshot_rewrite.is_err(),
+        "privacy redaction must not permit unrelated snapshot rewrites"
+    );
     let deletion_recovery_status: String = sqlx::query_scalar(
         r#"
         SELECT status

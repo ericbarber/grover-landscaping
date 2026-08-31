@@ -28,7 +28,10 @@ Delivered reports can use a share token to produce stable customer-facing report
 The stored delivered snapshot remains the immutable internal source of truth.
 Delivery status, token, actor/time, snapshot/time, status history, and audit are
 written in one transaction. Database guards reject inserts/transitions without
-a complete snapshot and reject subsequent snapshot rewrites.
+a complete snapshot and reject subsequent snapshot rewrites. Audited customer-
+photo erasure has one narrow database exception: it may clear the photo array
+and zero its evidence counts without changing the delivery timestamp or any
+unrelated snapshot content.
 The public token route applies a strict customer projection and does not serialize
 internal IDs, notes, object keys, pricing, billing, route, crew, or organization
 context. Completed bid-derived add-ons become completed approved-recommendation

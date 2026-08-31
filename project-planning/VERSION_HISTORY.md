@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-08-31: Closed the clean backend validation gate. Cargo now rebuilds the
+  embedded migrator when migration files change; migration 122 permits only the
+  exact delivered-proof photo/count redaction required by customer-photo erasure
+  while rejecting unrelated snapshot rewrites; and photo queue integration
+  tests no longer race each other's claims. Clean migrations, formatting, strict
+  all-target Clippy, and all 417 backend tests pass.
 - 2026-08-31: Replaced hosted CI's permissive raw SQL migration loop with the
   tracked backend migrator. The backend gate now fails on migration or checksum
   errors, records migration timing, and avoids installing a separate PostgreSQL

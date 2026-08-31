@@ -487,6 +487,14 @@ Current state:
   files through a permissive loop; it runs and times the tracked application
   migrator before formatting, lint, and tests. A clean temporary PostgreSQL
   database applies all 121 versions, and a repeat run remains current.
+- Phase 6B3 closes two backend-gate failures found only on a clean integrated
+  run. Migration files are now explicit Cargo build inputs, so a cached embedded
+  migrator cannot miss a newly added version. Migration 122 preserves delivered
+  proof immutability while allowing only the exact photo-array and evidence-count
+  redaction required by audited customer-photo erasure; delivery time and every
+  unrelated snapshot field remain immutable. The shared photo worker/erasure
+  integration fixture is serialized at its queue boundary. Clean migration,
+  formatting, strict all-target Clippy, and all 417 backend tests pass.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -602,8 +610,9 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Continue Phase 6B post-development validation through the committed backend,
-  frontend, browser, assurance, infrastructure, and production-image gates.
+- Continue Phase 6B post-development validation through the committed frontend,
+  browser, assurance, infrastructure, and production-image gates. The clean
+  PostgreSQL-backed backend gate is complete.
   Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
   deployed protected environment and test identity; local success must not be
   recorded as hosted launch evidence.
