@@ -501,6 +501,14 @@ Current state:
   frontend build pass. The minimized assurance contract validates 11 metrics,
   14 alerts, and all seven synthetic rehearsal scenarios; all seven assurance
   failure-policy tests pass while retaining live integration and staffing gates.
+- Phase 6B5 closes the cross-browser gate. Browser contracts now target the
+  delivered provider-start path, scope repeated lifecycle labels to their
+  owning regions, wait for asynchronous Yard Owner step hydration before
+  navigation, and normalize the equivalent computed font-family serialization
+  used by different engines. All 68 responsive accessibility, provider-
+  invitation, and Yard Owner acquisition journeys pass in Chromium mobile,
+  Chromium desktop, Firefox desktop, and WebKit mobile against a fresh CI-style
+  Vite server.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -616,9 +624,10 @@ Current state:
 
 Next authorized slice and remaining gates:
 
-- Continue Phase 6B post-development validation through the committed browser,
-  infrastructure, and production-image gates. The clean PostgreSQL-backed
-  backend, frontend, and pilot-assurance gates are complete.
+- Continue Phase 6B post-development validation through the committed
+  infrastructure and production-image gates. The clean PostgreSQL-backed
+  backend, frontend, pilot-assurance, and four-project browser gates are
+  complete.
   Hosted Cognito/PostgreSQL smoke validation remains separate because it needs a
   deployed protected environment and test identity; local success must not be
   recorded as hosted launch evidence.

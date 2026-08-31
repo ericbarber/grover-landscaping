@@ -149,12 +149,12 @@ test('a checked recipient loads status without retaining the bearer fragment', a
     if (!main || !heading || !brandMark) throw new Error('Provider shell theme was not rendered.');
     return {
       canvas: getComputedStyle(main).backgroundColor,
-      displayFamily: getComputedStyle(heading).fontFamily,
+      displayFamily: getComputedStyle(heading).fontFamily.replaceAll('"', ''),
       brandMark: getComputedStyle(brandMark).stroke,
     };
   })).toEqual({
     canvas: 'rgb(246, 242, 232)',
-    displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
+    displayFamily: 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif',
     brandMark: 'rgb(222, 199, 157)',
   });
 
@@ -228,7 +228,9 @@ test('an activated provider sees setup status without implied first-visit author
 
   await page.goto('/app/provider-invitation#invitation=activated_relationship_secret');
   await expect(page.getByRole('heading', { name: 'Provider relationship activated' })).toBeVisible();
-  await expect(page.getByText('Relationship active', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('#provider-invitation-status').getByText('Relationship active', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByText('Provider setup', { exact: true })).toBeVisible();
   await expect(page.locator('article p').filter({
     hasText: 'Safe next step: Continue customer and property onboarding',
@@ -415,7 +417,9 @@ test('a provider sees only owner-approved assessment details and loses future ac
   await expect(page.locator('body')).not.toContainText('selective_access_secret');
 
   await page.getByRole('button', { name: 'Start remote review' }).click();
-  await expect(page.getByText('remote review', { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel('Review context without').getByText('remote review', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Begin assessment' }).click();
   await page.getByLabel('Customer-safe message').fill('The visible irrigation check is included in this review.');
   await page.getByRole('button', { name: 'Share with owner' }).click();
@@ -473,6 +477,8 @@ test('a provider proposes a replacement after the owner requests another on-site
   await page.getByLabel('Replacement ends').fill('2027-01-15T11:00');
   await page.getByRole('button', { name: 'Send replacement window' }).click();
   await expect(page.getByText('Replacement assessment window sent for owner confirmation.')).toBeVisible();
-  await expect(page.getByText('window proposed', { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel('Review context without').getByText('window proposed', { exact: true }),
+  ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

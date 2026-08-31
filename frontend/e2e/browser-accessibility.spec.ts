@@ -15,6 +15,7 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
 
+  await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();
   await page.keyboard.press('Tab');
   const focused = page.locator(':focus-visible');
   await expect(focused).toBeVisible();
@@ -38,12 +39,14 @@ test('the hero offers direct yard and company signup paths', async ({ page }) =>
   await page.goto('/');
 
   const yardSignup = page.getByRole('link', { name: 'Sign up your yard' });
-  const companySignup = page.getByRole('link', { name: 'Sign up your company' });
+  const companySignup = page
+    .getByLabel('Primary next steps')
+    .getByRole('link', { name: 'Sign up your company' });
 
   await expect(yardSignup).toBeVisible();
   await expect(yardSignup).toHaveAttribute('href', '/app/yard-owner');
   await expect(companySignup).toBeVisible();
-  await expect(companySignup).toHaveAttribute('href', '/app');
+  await expect(companySignup).toHaveAttribute('href', '/providers/start');
 });
 
 test('the production homepage retains the validated prototype foundation', async ({ page }) => {
@@ -64,7 +67,7 @@ test('the production homepage retains the validated prototype foundation', async
     return {
       canvas: getComputedStyle(main).backgroundColor,
       ink: getComputedStyle(heading).color,
-      displayFamily: getComputedStyle(heading).fontFamily,
+      displayFamily: getComputedStyle(heading).fontFamily.replaceAll('"', ''),
       primaryAction: getComputedStyle(primaryAction).backgroundColor,
       brandMark: getComputedStyle(brandMark).stroke,
       focusToken: getComputedStyle(document.documentElement)
@@ -76,7 +79,7 @@ test('the production homepage retains the validated prototype foundation', async
   expect(theme).toEqual({
     canvas: 'rgb(246, 242, 232)',
     ink: 'rgb(23, 52, 45)',
-    displayFamily: '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif',
+    displayFamily: 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif',
     primaryAction: 'rgb(23, 63, 53)',
     brandMark: 'rgb(23, 63, 53)',
     focusToken: '#1685a4',

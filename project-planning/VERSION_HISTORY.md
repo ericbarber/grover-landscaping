@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-08-31: Closed the Phase 6B cross-browser gate by aligning stale provider
+  entry expectations, scoping duplicate lifecycle labels, waiting for hydrated
+  Yard Owner steps, and normalizing equivalent engine font-stack serialization.
+  All 68 responsive accessibility, provider-invitation, and Yard Owner
+  acquisition journeys pass across Chromium mobile/desktop, Firefox desktop,
+  and WebKit mobile against a fresh CI-style server.
 - 2026-08-31: Completed the Phase 6B frontend and pilot-assurance gates on Node
   22. Clean install and live dependency audit report zero vulnerabilities; all
   eight audit-policy tests, TypeScript, all 484 frontend tests, and the

@@ -404,6 +404,7 @@ test('an owner safely retries approval and reconciles a stale revocation after l
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
   await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByText('Nothing new is shared yet.')).toBeVisible();
   await page.getByRole('button', { name: 'Review access for Desert Green Care' }).click();
@@ -528,6 +529,7 @@ test('an owner confirms an assessment window and uses only the shared conversati
 
   await page.goto('/app/yard-owner');
   await page.getByRole('button', { name: 'Build or review yard brief' }).click();
+  await expect(page.getByRole('heading', { name: 'Describe the yard and the care you want' })).toBeVisible();
   await page.getByRole('button', { name: 'Connect care', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Review the yard before agreeing on care' })).toBeVisible();
   await expect(page.getByText('Assessment time needs your review')).toBeVisible();
