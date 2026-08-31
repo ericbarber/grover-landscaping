@@ -482,6 +482,11 @@ Current state:
   production startup. Two consecutive runs preserve all 121 successful
   versions, and malformed database configuration exits nonzero instead of
   printing SQL failures and reporting success.
+- Phase 6B2 applies the same fail-closed migration boundary to hosted CI. The
+  backend job no longer installs a separate PostgreSQL client or replays SQL
+  files through a permissive loop; it runs and times the tracked application
+  migrator before formatting, lint, and tests. A clean temporary PostgreSQL
+  database applies all 121 versions, and a repeat run remains current.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail

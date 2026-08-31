@@ -63,17 +63,12 @@ jobs:
         with:
           workspaces: backend -> target
 
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
       - name: Apply database migrations
-        run: |
-          for migration in backend/migrations/*.sql; do
-            echo "Applying ${migration}"
-            psql "$DATABASE_URL" -f "$migration"
-          done
+        run: >-
+          /usr/bin/time -f
+          'backend_migrate elapsed=%e user=%U system=%S max_rss_kb=%M'
+          cargo run --bin migrate
+        working-directory: backend
 
       - name: Check Rust formatting
         run: >-

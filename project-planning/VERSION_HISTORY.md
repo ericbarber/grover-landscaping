@@ -1,5 +1,9 @@
 # Version History
 
+- 2026-08-31: Replaced hosted CI's permissive raw SQL migration loop with the
+  tracked backend migrator. The backend gate now fails on migration or checksum
+  errors, records migration timing, and avoids installing a separate PostgreSQL
+  client; clean-database and repeat-run validation apply all 121 versions.
 - 2026-08-31: Hardened local migration validation for Phase 6B1. The Compose
   helper now runs the application's embedded SQLx migrator, sharing production's
   applied-version ledger and checksum validation instead of replaying every SQL
