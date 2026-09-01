@@ -12,7 +12,15 @@ test('the Yard Owner entry preserves reflow, reduced motion, and keyboard focus'
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect
+      .poll(
+        () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        {
+          message: `page reflows without horizontal overflow at ${viewport.width}px`,
+          timeout: 5_000,
+        },
+      )
+      .toBe(true);
   }
 
   await expect(page.getByRole('link', { name: 'Sign up your yard' })).toBeVisible();

@@ -3,12 +3,14 @@
 - 2026-09-01: Published the completed Phase 6B development line to `main` and
   closed its current hosted-CI gate. A boxed API-error boundary passes strict
   Clippy on Rust 1.98, CI actions use supported runtimes, and patched
-  Browserslist dependencies pass the live zero-vulnerability audit. Repository,
-  assurance, frontend, Terraform, all 417 backend tests, all 68 cross-browser
-  journeys, and the production image pass in GitHub Actions. Private-VPN review
-  is live with PostgreSQL in explicit local-review mode; protected Render,
-  Cognito, and authenticated smoke remain external pending owning-account
-  credentials, deployed state, and a current hosted identity/token.
+  Browserslist dependencies pass the live zero-vulnerability audit. WebKit
+  reflow validation waits for its post-resize layout cycle while retaining the
+  exact no-horizontal-overflow requirement. Repository, assurance, frontend,
+  Terraform, all 417 backend tests, all 68 cross-browser journeys, and the
+  production image pass in GitHub Actions. Private-VPN review is live with
+  PostgreSQL in explicit local-review mode; protected Render, Cognito, and
+  authenticated smoke remain external pending owning-account credentials,
+  deployed state, and a current hosted identity/token.
 - 2026-08-31: Closed all repository-owned Phase 6B delivery gates. The complete
   backend crate now enters the production build; the final 39.8 MB image builds,
   serves the packaged frontend with PostgreSQL readiness, confirms all 122

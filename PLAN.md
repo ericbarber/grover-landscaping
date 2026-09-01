@@ -527,8 +527,10 @@ Current state:
   response boundary that passes strict Clippy on Rust 1.98 without weakening
   response behavior; CI actions run on supported Node runtimes; and the
   frontend pins a patched Browserslist release with a zero-vulnerability live
-  audit. The hosted gate passes repository, assurance, frontend, Terraform,
-  backend, all 68 Chromium/Firefox/WebKit journeys, and production-image jobs.
+  audit. Cross-browser reflow validation now waits through WebKit's post-resize
+  layout cycle while retaining the exact no-horizontal-overflow requirement.
+  The hosted gate passes repository, assurance, frontend, Terraform, backend,
+  all 68 Chromium/Firefox/WebKit journeys, and production-image jobs.
   The private-VPN review service remains reachable with PostgreSQL readiness in
   explicit local-review authentication mode. This is publication and review
   evidence, not protected Cognito deployment evidence.
