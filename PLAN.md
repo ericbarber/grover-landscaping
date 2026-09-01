@@ -522,6 +522,16 @@ Current state:
   Production mode exits nonzero for local-review auth and incomplete Cognito
   configuration. This completes every repository-owned Phase 6B gate without
   claiming protected hosted smoke evidence.
+- Phase 6B8 publishes the completed development line to `main` and closes the
+  current hosted-CI compatibility gate. Backend API helper errors use a boxed
+  response boundary that passes strict Clippy on Rust 1.98 without weakening
+  response behavior; CI actions run on supported Node runtimes; and the
+  frontend pins a patched Browserslist release with a zero-vulnerability live
+  audit. The hosted gate passes repository, assurance, frontend, Terraform,
+  backend, all 68 Chromium/Firefox/WebKit journeys, and production-image jobs.
+  The private-VPN review service remains reachable with PostgreSQL readiness in
+  explicit local-review authentication mode. This is publication and review
+  evidence, not protected Cognito deployment evidence.
 - The first shared authenticated-shell convergence slice now replaces
   Unicode/emoji-like workspace navigation and status symbols with a reusable
   outlined SVG icon family. Phone bottom navigation becomes a fixed left rail
@@ -637,12 +647,16 @@ Current state:
 
 Next external delivery gates:
 
-- Phase 6B repository-owned validation is complete. Protected hosted
-  Cognito/PostgreSQL smoke validation remains separate because it needs
-  publication of these commits, a deployed environment, provisioned identities,
-  and a current access token. Local success must not be recorded as hosted launch
-  evidence, and this repository work does not authorize a push, deployment, or
-  cloud-resource mutation.
+- Phase 6B repository-owned validation, publication to `main`, and hosted CI are
+  complete. Private-VPN review is live at `http://100.88.21.105:5173/`, backed
+  by PostgreSQL and explicit local-review identities. Protected hosted
+  Cognito/PostgreSQL smoke validation remains separate: the current public
+  Render health route returns `404`, and this environment has no Render account
+  credential, AWS credential/profile or remote infrastructure state, hosted
+  deployment hook, or provisioned test identity/access token. Provision the
+  protected environment through its owning accounts, then validate readiness,
+  login, role authorization, persistence, and logout with current credentials.
+  Do not record private-VPN or CI success as hosted launch evidence.
 - Decision D-061 is delivered. D-062's audit, immediate legacy account-route
   containment, constrained immutable persistence, exact initial provider-send,
   provider revision/supersession, and honest legacy bearer-decision closure are

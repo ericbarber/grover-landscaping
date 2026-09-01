@@ -3,7 +3,8 @@
 This is the consolidated review version of the Grover Landscaping development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
-The active delivery stage is Phase 6B post-development validation. Phases 6B1
+The active delivery stage is the external protected-hosting boundary after
+Phase 6B post-development validation. Phases 6B1
 through 6B3 align the local Compose helper and hosted CI with the embedded SQLx
 migrator, make migration files explicit Cargo build inputs, and close the clean
 PostgreSQL-backed backend gate, including exact privacy redaction of delivered
@@ -13,9 +14,15 @@ all 68 four-project browser journeys against a fresh CI-style server. The
 Phase 6B6 Terraform formatting and development/production validation gates also
 pass. Phase 6B7 closes the final local gate with the complete multi-stage image,
 unprivileged runtime, packaged frontend, PostgreSQL readiness, 122-version
-migration ledger, and production auth guards. Protected hosted smoke validation
-is now the remaining external deployment gate and must not be inferred from
-local review success.
+migration ledger, and production auth guards. Phase 6B8 publishes the completed
+line to `main` and closes hosted CI on current Rust, supported action runtimes,
+a zero-vulnerability frontend dependency audit, all 68 browser journeys, and a
+clean production-image build. Private-VPN review is live with PostgreSQL in
+explicit local-review mode. Protected Cognito/PostgreSQL deployment and
+authenticated smoke validation remain external because the available
+environment has no Render or AWS account credentials/state, deployment hook,
+or hosted test identity/token; they must not be inferred from CI or private-
+VPN review success.
 
 ## Active UX Priority
 
