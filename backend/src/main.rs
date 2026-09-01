@@ -216,6 +216,30 @@ use uuid::Uuid;
 
 type DynError = Box<dyn std::error::Error + Send + Sync>;
 
+#[derive(Debug)]
+struct ApiError(Box<Response>);
+
+impl From<Response> for ApiError {
+    fn from(response: Response) -> Self {
+        Self(Box::new(response))
+    }
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        *self.0
+    }
+}
+
+impl ApiError {
+    #[cfg(test)]
+    fn status(&self) -> StatusCode {
+        self.0.status()
+    }
+}
+
+type ApiResult<T> = Result<T, ApiError>;
+
 #[derive(Clone)]
 struct AppState {
     jobs: JobRepository,
@@ -241,7 +265,7 @@ macro_rules! organization_ids_or_return {
     ($result:expr) => {
         match $result {
             Ok(organization_ids) => organization_ids,
-            Err(response) => return response,
+            Err(response) => return response.into_response(),
         }
     };
 }
@@ -4767,7 +4791,7 @@ async fn list_jobs(
 ) -> Response {
     let organization_ids = match principal_active_organization_ids(&state, &principal).await {
         Ok(organization_ids) => organization_ids,
-        Err(response) => return response,
+        Err(response) => return response.into_response(),
     };
     let visible_organization_ids: HashSet<&str> =
         organization_ids.iter().map(String::as_str).collect();
@@ -4806,7 +4830,7 @@ async fn get_job(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
     match state.jobs.get_job(id).await {
         ResourceReadResult::Loaded(job) => Json(job).into_response(),
@@ -4862,7 +4886,7 @@ async fn update_job_dispatch_assignment(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_manage_schedule).await
     {
-        return response;
+        return response.into_response();
     }
     if request.crew_id.trim().is_empty() || request.crew_id.chars().count() > 120 {
         return (
@@ -4949,7 +4973,7 @@ async fn complete_dispatch_customer_notification(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_manage_schedule).await
     {
-        return response;
+        return response.into_response();
     }
     if !matches!(request.channel.as_str(), "email" | "sms" | "phone") {
         return (
@@ -5018,7 +5042,7 @@ async fn get_account_for_job(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     let account = match state.accounts.get_account_for_job(&id).await {
@@ -5131,7 +5155,7 @@ async fn get_organization_profile(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -5163,7 +5187,7 @@ async fn get_first_owner_setup_progress(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -5206,7 +5230,7 @@ async fn update_organization_profile(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -5298,7 +5322,7 @@ async fn create_customer_account(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state.accounts.create(request).await {
         CustomerContextReadResult::Loaded(account) => {
@@ -5573,7 +5597,7 @@ async fn create_customer_property(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state.accounts.create_property(&account_id, request).await {
         Ok(property) => (StatusCode::CREATED, Json(property)).into_response(),
@@ -5784,7 +5808,7 @@ async fn create_organization_invitation(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -5831,7 +5855,7 @@ async fn list_organization_invitations(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.organizations.list_invitations(&organization_id).await {
@@ -5856,7 +5880,7 @@ async fn revoke_organization_invitation(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -5903,7 +5927,7 @@ async fn reissue_organization_invitation(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -5981,7 +6005,7 @@ async fn update_organization_membership_role(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -6040,7 +6064,7 @@ async fn update_organization_membership_profile(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -6077,7 +6101,7 @@ async fn list_organization_memberships(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -6116,7 +6140,7 @@ async fn update_organization_membership_status(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .organizations
@@ -6191,7 +6215,7 @@ async fn list_team_administration_activity(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     let event_kind = query.event_kind.as_deref().map(str::trim);
     if event_kind.is_some_and(|value| !EVENT_KINDS.contains(&value)) {
@@ -6618,7 +6642,7 @@ async fn create_property_portfolio(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -6669,7 +6693,7 @@ async fn add_property_to_portfolio(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -6720,7 +6744,7 @@ async fn assign_property_crew(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -6817,7 +6841,7 @@ async fn create_organization_branch(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     if let Err(error) = validate_create_organization_branch_request(&request) {
         return (
@@ -6871,7 +6895,7 @@ async fn create_service_territory(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     if let Err(error) = validate_create_service_territory_request(&request) {
         return (
@@ -6943,7 +6967,7 @@ async fn update_organization_branch_status(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .day_plans
@@ -7006,7 +7030,7 @@ async fn update_service_territory_status(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .day_plans
@@ -7066,7 +7090,7 @@ async fn create_organization_crew(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state.day_plans.create_crew(&organization_id, request).await {
         PersistedMutationResult::Applied(crew) => (StatusCode::CREATED, Json(crew)).into_response(),
@@ -7099,7 +7123,7 @@ async fn list_organization_crews(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .day_plans
@@ -7171,7 +7195,7 @@ async fn update_organization_crew(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
     match state
         .day_plans
@@ -7337,7 +7361,7 @@ async fn upsert_property_onboarding(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -7371,12 +7395,12 @@ async fn get_completion_report(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     match build_and_persist_completion_report(&state, &id).await {
         Ok(report) => Json(report).into_response(),
-        Err(response) => response,
+        Err(response) => response.into_response(),
     }
 }
 
@@ -7425,7 +7449,7 @@ async fn list_completion_reports(
         }
         let report = match build_and_persist_completion_report(&state, &job.id).await {
             Ok(report) => report,
-            Err(response) => return response,
+            Err(response) => return response.into_response(),
         };
         if completion_report_matches_list_query(&report, &query) {
             reports.push(report);
@@ -8287,7 +8311,7 @@ async fn resolve_notification_delivery(
 async fn principal_active_organization_ids(
     state: &AppState,
     principal: &AuthPrincipal,
-) -> Result<Vec<String>, Response> {
+) -> ApiResult<Vec<String>> {
     principal_active_organization_ids_for_role(state, principal, |_| true).await
 }
 
@@ -8295,7 +8319,7 @@ async fn principal_active_organization_ids_for_role(
     state: &AppState,
     principal: &AuthPrincipal,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<Vec<String>, Response> {
+) -> ApiResult<Vec<String>> {
     let mut seen = HashSet::new();
     match state
         .organizations
@@ -8316,7 +8340,8 @@ async fn principal_active_organization_ids_for_role(
         OrganizationCollectionResult::Unavailable => Err(persisted_resource_unavailable_response(
             "organization_memberships_unavailable",
             "Active organization memberships could not be loaded.",
-        )),
+        )
+        .into()),
     }
 }
 
@@ -8325,19 +8350,18 @@ async fn require_crew_organization_access(
     principal: &AuthPrincipal,
     crew_id: &str,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<(), Response> {
+) -> ApiResult<()> {
     let organization_id = match state.day_plans.organization_id_for_crew(crew_id).await {
         day_plans::PersistedReadResult::Loaded(Some(organization_id)) => organization_id,
         day_plans::PersistedReadResult::Loaded(None) => {
-            return Err(resource_not_found_response(
-                "crew_not_found",
-                "Crew was not found.",
-            ));
+            return Err(
+                resource_not_found_response("crew_not_found", "Crew was not found.").into(),
+            );
         }
         day_plans::PersistedReadResult::Unavailable => {
-            return Err(persisted_ownership_unavailable_response(
-                "crew_ownership_unavailable",
-            ));
+            return Err(
+                persisted_ownership_unavailable_response("crew_ownership_unavailable").into(),
+            );
         }
     };
 
@@ -8349,7 +8373,7 @@ async fn require_day_plan_organization_access(
     principal: &AuthPrincipal,
     day_plan_id: &str,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<(), Response> {
+) -> ApiResult<()> {
     let organization_id = match state
         .day_plans
         .organization_id_for_day_plan(day_plan_id)
@@ -8360,12 +8384,13 @@ async fn require_day_plan_organization_access(
             return Err(resource_not_found_response(
                 "day_plan_not_found",
                 "Day plan was not found.",
-            ));
+            )
+            .into());
         }
         day_plans::PersistedReadResult::Unavailable => {
-            return Err(persisted_ownership_unavailable_response(
-                "day_plan_ownership_unavailable",
-            ));
+            return Err(
+                persisted_ownership_unavailable_response("day_plan_ownership_unavailable").into(),
+            );
         }
     };
 
@@ -8399,19 +8424,16 @@ async fn require_job_organization_access(
     principal: &AuthPrincipal,
     job_id: &str,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<(), Response> {
+) -> ApiResult<()> {
     let organization_id = match state.jobs.organization_id_for_job(job_id).await {
         ResourceOwnershipResult::Loaded(Some(organization_id)) => organization_id,
         ResourceOwnershipResult::Loaded(None) => {
-            return Err(resource_not_found_response(
-                "job_not_found",
-                "Job was not found.",
-            ));
+            return Err(resource_not_found_response("job_not_found", "Job was not found.").into());
         }
         ResourceOwnershipResult::Unavailable => {
-            return Err(persisted_ownership_unavailable_response(
-                "job_ownership_unavailable",
-            ));
+            return Err(
+                persisted_ownership_unavailable_response("job_ownership_unavailable").into(),
+            );
         }
     };
 
@@ -8423,7 +8445,7 @@ async fn require_completion_report_organization_access(
     principal: &AuthPrincipal,
     report_id: &str,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<(), Response> {
+) -> ApiResult<()> {
     let organization_id = match state
         .jobs
         .organization_id_for_completion_report(report_id)
@@ -8434,12 +8456,14 @@ async fn require_completion_report_organization_access(
             return Err(resource_not_found_response(
                 "completion_report_not_found",
                 "The requested completion report was not found.",
-            ));
+            )
+            .into());
         }
         ResourceOwnershipResult::Unavailable => {
             return Err(persisted_ownership_unavailable_response(
                 "completion_report_ownership_unavailable",
-            ));
+            )
+            .into());
         }
     };
 
@@ -8451,7 +8475,7 @@ async fn require_organization_membership(
     principal: &AuthPrincipal,
     organization_id: &str,
     required_role: fn(&AccessRole) -> bool,
-) -> Result<(), Response> {
+) -> ApiResult<()> {
     match state
         .organizations
         .user_has_active_membership(&principal.subject, organization_id, required_role)
@@ -8466,11 +8490,13 @@ async fn require_organization_membership(
                     .to_string(),
             }),
         )
-            .into_response()),
+            .into_response()
+            .into()),
         ActiveMembershipCheckResult::Unavailable => Err(persisted_resource_unavailable_response(
             "organization_membership_verification_unavailable",
             "Active organization membership could not be verified.",
-        )),
+        )
+        .into()),
     }
 }
 
@@ -8520,7 +8546,7 @@ async fn start_completion_report_review(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -8584,7 +8610,7 @@ async fn request_completion_report_changes(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -8634,7 +8660,7 @@ async fn deliver_completion_report(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     let delivery_job_id = match state
@@ -8669,7 +8695,7 @@ async fn deliver_completion_report(
     };
     let snapshot = match build_and_persist_completion_report(&state, &delivery_job_id).await {
         Ok(report) => prepare_delivered_completion_report_snapshot(&report),
-        Err(response) => return response,
+        Err(response) => return response.into_response(),
     };
 
     match state
@@ -8731,7 +8757,7 @@ async fn queue_completion_report_delivery_notification(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -8797,7 +8823,7 @@ async fn resubmit_completion_report(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -8860,7 +8886,7 @@ async fn list_job_add_ons(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.jobs.list_job_add_ons(&id).await {
@@ -8882,7 +8908,7 @@ async fn update_job_add_on_status(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &job_id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -8963,20 +8989,18 @@ async fn get_shared_completion_report(
 async fn build_and_persist_completion_report(
     state: &AppState,
     id: &str,
-) -> Result<completion_reports::CompletionReportResponse, Response> {
+) -> ApiResult<completion_reports::CompletionReportResponse> {
     let job = match state.jobs.get_job(id.to_string()).await {
         ResourceReadResult::Loaded(job) => job,
         ResourceReadResult::NotFound => {
-            return Err(resource_not_found_response(
-                "job_not_found",
-                "Job was not found.",
-            ));
+            return Err(resource_not_found_response("job_not_found", "Job was not found.").into());
         }
         ResourceReadResult::Unavailable => {
             return Err(persisted_resource_unavailable_response(
                 "job_unavailable",
                 "The persisted job detail could not be loaded.",
-            ));
+            )
+            .into());
         }
     };
     let account = match state.accounts.get_account_for_job(id).await {
@@ -8985,13 +9009,15 @@ async fn build_and_persist_completion_report(
             return Err(resource_not_found_response(
                 "job_account_not_found",
                 "Customer account context was not found for this job.",
-            ));
+            )
+            .into());
         }
         CustomerAccountSummaryResult::Unavailable => {
             return Err(persisted_resource_unavailable_response(
                 "job_account_unavailable",
                 "The persisted customer account context could not be loaded.",
-            ));
+            )
+            .into());
         }
     };
     let photo_evidence = match state.jobs.list_photo_evidence(id).await {
@@ -9001,7 +9027,8 @@ async fn build_and_persist_completion_report(
             return Err(persisted_resource_unavailable_response(
                 "photo_evidence_unavailable",
                 "The persisted photo evidence could not be loaded.",
-            ));
+            )
+            .into());
         }
     };
     let add_ons = match state.jobs.list_job_add_ons(id).await {
@@ -9011,7 +9038,8 @@ async fn build_and_persist_completion_report(
             return Err(persisted_resource_unavailable_response(
                 "job_add_ons_unavailable",
                 "The persisted job add-ons could not be loaded.",
-            ));
+            )
+            .into());
         }
     };
     let mut report = build_completion_report(job, account, photo_evidence, add_ons);
@@ -9037,7 +9065,8 @@ async fn build_and_persist_completion_report(
                 return Err(persisted_resource_unavailable_response(
                     "completion_report_route_unavailable",
                     "The persisted route context required for this completion report could not be loaded.",
-                ));
+                )
+                .into());
             }
         }
     }
@@ -9047,7 +9076,8 @@ async fn build_and_persist_completion_report(
             return Err(persisted_resource_unavailable_response(
                 "completion_report_persistence_unavailable",
                 "The completion report could not be saved to persisted storage.",
-            ));
+            )
+            .into());
         }
         ResourceReadResult::NotFound => {
             unreachable!("completion report persistence is never a read miss")
@@ -9066,7 +9096,7 @@ async fn get_today_day_plan(
     if let Err(response) =
         require_crew_organization_access(&state, &principal, &crew_id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.day_plans.today_for_crew(&crew_id).await {
@@ -9099,7 +9129,7 @@ async fn create_draft_day_plan(
     )
     .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9142,7 +9172,7 @@ async fn publish_day_plan(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9195,7 +9225,7 @@ async fn create_day_plan_amendment(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9238,7 +9268,7 @@ async fn list_day_plan_amendments(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.day_plans.list_amendments(&day_plan_id).await {
@@ -9275,7 +9305,7 @@ async fn review_day_plan_amendment(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9328,7 +9358,7 @@ async fn save_project_bid_draft(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9363,7 +9393,7 @@ async fn list_project_bids(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.project_bids.list_for_day_plan(&day_plan_id).await {
@@ -9396,7 +9426,7 @@ async fn send_project_bid(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9460,7 +9490,7 @@ async fn revise_project_bid(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9510,7 +9540,7 @@ async fn revoke_project_bid(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.project_bids.revoke(&day_plan_id, &bid_id).await {
@@ -9539,7 +9569,7 @@ async fn convert_project_bid(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9657,7 +9687,7 @@ async fn assign_day_plan_stop(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9700,7 +9730,7 @@ async fn remove_day_plan_stop(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9742,7 +9772,7 @@ async fn reorder_day_plan_stops(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_manage_schedule)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     match state
@@ -9809,7 +9839,7 @@ async fn update_stop_progress(
         require_day_plan_organization_access(&state, &principal, &day_plan_id, can_view_crew_route)
             .await
     {
-        return response;
+        return response.into_response();
     }
 
     let persisted = state
@@ -9875,7 +9905,7 @@ async fn start_job(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     let client_mutation_id = headers
@@ -9940,7 +9970,7 @@ async fn complete_job(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     let client_mutation_id = headers
@@ -10006,7 +10036,7 @@ async fn update_checklist_item(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
     let client_mutation_id = headers
         .get("x-client-mutation-id")
@@ -10076,7 +10106,7 @@ async fn create_local_photo_upload(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     if let Err(message) = validate_photo_upload_request(&request) {
@@ -10110,7 +10140,7 @@ async fn list_job_photos(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     match state.jobs.list_photo_evidence(&id).await {
@@ -10132,7 +10162,7 @@ async fn complete_photo_upload(
     if let Err(response) =
         require_job_organization_access(&state, &principal, &id, can_view_crew_route).await
     {
-        return response;
+        return response.into_response();
     }
 
     let metadata = match request.metadata() {
