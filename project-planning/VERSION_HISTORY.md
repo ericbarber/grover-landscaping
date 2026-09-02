@@ -6,6 +6,12 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-02: Added a read-only protected-release preflight with distinct ready,
+  external-prerequisite, and failed outcomes. It validates required release
+  artifacts, Render production shape, fail-closed auth/persistence guards,
+  hosted-smoke inputs, and Terraform formatting/configuration while redacting
+  all operator values; its contract tests cover classification and
+  non-disclosure.
 - 2026-09-02: Added branch-scoped CI concurrency and a single change-aware
   local validation command for documentation, repository, frontend, backend,
   database, infrastructure, browser, and full scopes. Representative mapping

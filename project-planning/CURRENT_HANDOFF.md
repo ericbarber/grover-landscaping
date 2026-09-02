@@ -28,12 +28,19 @@ smallest complete local package gates; use `--dry-run` to inspect the choice.
 The complete `main` gate remains unchanged, and its existing timing markers
 remain the basis for future bottleneck work.
 
-### Active: R1 release preflight
+### Delivered: R1 release preflight
 
-Create a non-secret preflight that reports repository readiness separately from
-external prerequisites. It must validate the Render blueprint, Terraform,
-production auth guards, required environment names, and hosted-smoke inputs
-without printing credential values.
+Run `bash scripts/release-preflight.sh --repository-only` for the repository
+contract or the complete command from an operator shell. The repository checks
+pass; the current environment reports seven external prerequisites and prints
+only their names. The script distinguishes ready, external-only, and failed
+outcomes with exit statuses 0, 2, and 1.
+
+### Active: P1 operational exception activity integration
+
+Add exception creation and lifecycle audits to manager activity with readable
+actor/state/assignment/resolution context and a link back to the exact Recovery
+item. Preserve tenant scoping, unknown-event fallback, and mobile handoff.
 
 ### Parallel external lane: R2 and R3
 

@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Active | F2 change-aware validation and superseded-run cancellation are complete | R1 non-secret release preflight contract |
+| Repository | Active | R1 non-secret release preflight is complete | P1 operational exception activity integration while protected hosting waits |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Queued | Core crew, manager, Yard Owner, property-manager, proof, and provider-acquisition paths are delivered | Resume only the highest-value ready slice after release tooling |
@@ -72,7 +72,7 @@ Delivery evidence:
 
 ### R1 — Release preflight contract
 
-State: active repository-owned phase.
+State: delivered.
 
 Deliver:
 
@@ -86,6 +86,16 @@ Exit evidence:
 
 - The preflight passes all repository-owned checks and names only the missing
   external values needed by the hosted operator.
+
+Delivery evidence:
+
+- `scripts/release-preflight.sh --repository-only` validates required artifacts,
+  Render shape, production fail-closed guards, hosted-smoke inputs, Terraform
+  formatting, and both Terraform environments without contacting cloud APIs.
+- The full preflight reports `READY`, `EXTERNAL PREREQUISITE`, or `FAILED` with
+  distinct exit statuses and redacts operator values.
+- Contract tests cover repository readiness, external classification, invalid
+  supplied input, and secret/PII non-disclosure.
 
 ### R2 — Protected environment provisioning
 
@@ -146,7 +156,7 @@ Exit evidence:
 
 ### P1 — Operational exception activity integration
 
-State: ready product slice; start after R1 or while R2 awaits its owner.
+State: active repository-owned product slice while R2 awaits its owner.
 
 Deliver:
 

@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | F2 change-aware local validation and superseded CI-run cancellation are delivered | R1 non-secret release preflight |
+| Repository | R1 non-secret release preflight is delivered; protected inputs remain external | P1 operational exception activity integration |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows are delivered; expansion is deliberately bounded | P1 operational exception activity after release tooling |
