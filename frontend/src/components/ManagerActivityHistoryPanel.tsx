@@ -29,7 +29,7 @@ function activityToneClass(tone: ManagerActivityItem['tone']) {
   return 'border-slate-200 bg-slate-50 text-slate-700';
 }
 
-const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'sync'];
+const activitySources: ManagerActivitySource[] = ['route', 'job', 'photo', 'recovery', 'sync'];
 const activityTones: ManagerActivityTone[] = ['warning', 'success', 'info'];
 const activitySourceFilterStorageKey = 'grover.managerActivity.sourceFilter';
 const activityToneFilterStorageKey = 'grover.managerActivity.toneFilter';
@@ -49,6 +49,7 @@ type ManagerActivityHistoryPanelProps = {
     jobId: string,
     channel: 'email' | 'sms' | 'phone',
   ) => Promise<void>;
+  onOpenOperationalException?: (exceptionId: string) => void;
 };
 
 function readStorageValue(key: string): string | null {
@@ -105,6 +106,7 @@ export function ManagerActivityHistoryPanel({
   onLoadOlder,
   onResetHistory,
   onCompleteDispatchNotification,
+  onOpenOperationalException,
 }: ManagerActivityHistoryPanelProps) {
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>(() => readSavedSourceFilter());
   const [toneFilter, setToneFilter] = useState<ActivityToneFilter>(() => readSavedToneFilter());
@@ -128,6 +130,7 @@ export function ManagerActivityHistoryPanel({
   const totalRouteReviewCount = countManagerActivityBySource(items, 'route');
   const totalSyncFallbackCount = countManagerActivityBySource(items, 'sync');
   const totalPhotoEvidenceCount = countManagerActivityBySource(items, 'photo');
+  const totalRecoveryCount = countManagerActivityBySource(items, 'recovery');
   const reviewCount = countManagerActivityNeedingReview(filteredItems);
   const activeFilterSummary = managerActivityFilterSummary(sourceFilter, toneFilter);
   const hasActiveFilters = sourceFilter !== 'all' || toneFilter !== 'all';
@@ -135,6 +138,7 @@ export function ManagerActivityHistoryPanel({
   const isShowingRouteReview = sourceFilter === 'route' && toneFilter === 'all';
   const isShowingSyncFallback = sourceFilter === 'sync' && toneFilter === 'all';
   const isShowingPhotoEvidence = sourceFilter === 'photo' && toneFilter === 'all';
+  const isShowingRecovery = sourceFilter === 'recovery' && toneFilter === 'all';
   const latestActivityAt = getLatestManagerActivityTimestamp(items);
 
   useEffect(() => {
@@ -174,6 +178,12 @@ export function ManagerActivityHistoryPanel({
 
   function showPhotoEvidenceActivity() {
     setSourceFilter('photo');
+    setToneFilter('all');
+    setIsConfirmingHistoryReset(false);
+  }
+
+  function showRecoveryActivity() {
+    setSourceFilter('recovery');
     setToneFilter('all');
     setIsConfirmingHistoryReset(false);
   }
@@ -241,6 +251,18 @@ export function ManagerActivityHistoryPanel({
       activeClassName: 'text-emerald-700 hover:text-emerald-900',
       onClick: showPhotoEvidenceActivity,
     },
+    {
+      id: 'recovery',
+      count: totalRecoveryCount,
+      isVisible: totalRecoveryCount > 0,
+      isActive: isShowingRecovery,
+      ariaLabel: `Show ${totalRecoveryCount} manager activity items from Recovery`,
+      activeLabel: 'Showing Recovery',
+      inactiveLabel: 'Show Recovery',
+      title: 'Show operational exception creation and lifecycle activity.',
+      activeClassName: 'text-rose-700 hover:text-rose-900',
+      onClick: showRecoveryActivity,
+    },
   ];
   const visibleQuickFilters = quickFilters.filter((quickFilter) => quickFilter.isVisible);
   const hasResetActions = hasActiveFilters || Boolean(onResetHistory) || isConfirmingHistoryReset;
@@ -298,7 +320,7 @@ export function ManagerActivityHistoryPanel({
         </p>
       ) : null}
 
-      <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div aria-label="Filter manager activity by source" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
         {activitySources.map((source) => {
           const sourceActivityCount = countManagerActivityBySource(items, source);
           const sourceReviewCount = countManagerActivityNeedingReviewBySource(items, source);
@@ -512,6 +534,17 @@ export function ManagerActivityHistoryPanel({
                         {activeDispatchActionId === item.id ? 'Recording' : 'Mark customer notified'}
                       </button>
                     </div>
+                  ) : null}
+                  {item.actionKind === 'open_operational_exception'
+                    && item.actionTargetId
+                    && onOpenOperationalException ? (
+                    <button
+                      className="mt-2 min-h-11 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white"
+                      onClick={() => onOpenOperationalException(item.actionTargetId!)}
+                      type="button"
+                    >
+                      Open Recovery item
+                    </button>
                   ) : null}
                 </div>
                 <p className="shrink-0 text-xs font-medium opacity-70">{item.occurredAt}</p>

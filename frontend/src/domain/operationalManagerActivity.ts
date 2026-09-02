@@ -114,6 +114,33 @@ const activityPresentation: Partial<Record<
     tone: 'success',
     source: 'photo',
   },
+  operational_exception_created: {
+    title: 'Operational exception created',
+    tone: 'warning',
+    source: 'recovery',
+    recommendedAction: 'Open the Recovery item, confirm ownership, and choose the next action.',
+  },
+  operational_exception_assign: {
+    title: 'Operational exception assigned',
+    tone: 'info',
+    source: 'recovery',
+  },
+  operational_exception_start: {
+    title: 'Operational exception started',
+    tone: 'info',
+    source: 'recovery',
+  },
+  operational_exception_resolve: {
+    title: 'Operational exception resolved',
+    tone: 'success',
+    source: 'recovery',
+  },
+  operational_exception_reopen: {
+    title: 'Operational exception reopened',
+    tone: 'warning',
+    source: 'recovery',
+    recommendedAction: 'Open the Recovery item and confirm its owner and next response.',
+  },
 };
 
 const unknownActivityPresentation: Pick<
@@ -141,6 +168,22 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
     : undefined;
   const customerNotificationRequired = metadata.customer_notification_required === true;
   const notificationChannel = typeof metadata.channel === 'string' ? metadata.channel : undefined;
+  const exceptionTitle = typeof metadata.title === 'string' ? metadata.title : undefined;
+  const exceptionCategory = typeof metadata.category === 'string' ? metadata.category : undefined;
+  const exceptionPriority = typeof metadata.priority === 'string' ? metadata.priority : undefined;
+  const previousStatus = typeof metadata.previous_status === 'string' ? metadata.previous_status : undefined;
+  const exceptionStatus = typeof metadata.status === 'string' ? metadata.status : undefined;
+  const previousAssignee = typeof metadata.previous_assigned_user_id === 'string'
+    ? metadata.previous_assigned_user_id
+    : 'unassigned';
+  const assignedUser = typeof metadata.assigned_user_id === 'string'
+    ? metadata.assigned_user_id
+    : 'unassigned';
+  const resolutionNote = typeof metadata.resolution_note === 'string' ? metadata.resolution_note : undefined;
+  const isOperationalException = activity.eventKind.startsWith('operational_exception_');
+  const targetLabel = isOperationalException && exceptionTitle
+    ? `${exceptionTitle} (${activity.targetId})`
+    : activity.targetId;
   const details = activity.eventKind === 'route_stop_assigned' && stopId && jobId
     ? ` Assigned ${jobId} as ${stopId}.`
     : activity.eventKind === 'route_stop_removed' && stopId
@@ -153,24 +196,42 @@ export function operationalToManagerActivity(activity: OperationalActivity): Man
             : ''}.`
           : activity.eventKind === 'dispatch_customer_notified' && notificationChannel
             ? ` Customer contacted by ${notificationChannel}.`
-        : '';
+            : activity.eventKind === 'operational_exception_created'
+              ? ` ${exceptionCategory ? `${exceptionLabel(exceptionCategory)} · ` : ''}${exceptionPriority ? `${exceptionLabel(exceptionPriority)} priority · ` : ''}${exceptionLabel(exceptionStatus ?? 'open')}${assignedUser === 'unassigned' ? ' · unassigned' : ` · assigned to ${assignedUser}`}.`
+              : activity.eventKind === 'operational_exception_assign'
+                ? ` Assignment ${previousAssignee} → ${assignedUser}.`
+                : activity.eventKind === 'operational_exception_start'
+                  ? ` Status ${exceptionLabel(previousStatus ?? 'open')} → ${exceptionLabel(exceptionStatus ?? 'in_progress')}.`
+                  : activity.eventKind === 'operational_exception_resolve'
+                    ? ` Status ${exceptionLabel(previousStatus ?? 'in_progress')} → ${exceptionLabel(exceptionStatus ?? 'resolved')}.${resolutionNote ? ` Resolution: ${resolutionNote}` : ''}`
+                    : activity.eventKind === 'operational_exception_reopen'
+                      ? ` Status ${exceptionLabel(previousStatus ?? 'resolved')} → ${exceptionLabel(exceptionStatus ?? 'open')}.`
+                      : '';
   return {
     id: `operational_${activity.id}`,
     title: presentation.title,
-    message: `${activity.targetId} · recorded by ${activity.actorLabel ?? activity.actorUserId}.${details}`,
+    message: `${targetLabel} · recorded by ${activity.actorLabel ?? activity.actorUserId}.${details}`,
     tone: presentation.tone,
     source: presentation.source,
     occurredAt: activity.occurredAt,
     recommendedAction: activity.eventKind === 'job_reassigned' && customerNotificationRequired
       ? 'Notify the customer about the changed service schedule and record delivery follow-up.'
       : presentation.recommendedAction,
-    actionKind: activity.eventKind === 'job_reassigned' && customerNotificationRequired
-      ? 'complete_dispatch_notification'
-      : undefined,
     actionTargetId: activity.eventKind === 'job_reassigned' && customerNotificationRequired
       ? activity.targetId
-      : undefined,
+      : isOperationalException
+        ? activity.targetId
+        : undefined,
+    actionKind: isOperationalException
+      ? 'open_operational_exception'
+      : activity.eventKind === 'job_reassigned' && customerNotificationRequired
+        ? 'complete_dispatch_notification'
+        : undefined,
   };
+}
+
+function exceptionLabel(value: string): string {
+  return value.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
 }
 
 export function operationsToManagerActivity(

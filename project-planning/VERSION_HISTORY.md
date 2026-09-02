@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-02: Integrated operational exception creation and lifecycle audits
+  into tenant-scoped manager activity. A dedicated Recovery source shows
+  readable actor, state, assignment, and resolution context; successful
+  mutations refresh the feed, and each event opens the exact exception with a
+  tested mobile focus/overflow handoff while unknown future events remain safe.
 - 2026-09-02: Added a read-only protected-release preflight with distinct ready,
   external-prerequisite, and failed outcomes. It validates required release
   artifacts, Render production shape, fail-closed auth/persistence guards,

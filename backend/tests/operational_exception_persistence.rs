@@ -110,6 +110,14 @@ async fn creates_filters_and_tenant_scopes_operational_exceptions_with_audit() {
         audit.get::<serde_json::Value, _>("metadata")["category"],
         "equipment"
     );
+    assert_eq!(
+        audit.get::<serde_json::Value, _>("metadata")["title"],
+        "Mower hydraulic failure"
+    );
+    assert_eq!(
+        audit.get::<serde_json::Value, _>("metadata")["status"],
+        "open"
+    );
 
     let hidden_update = repository
         .update(
@@ -243,6 +251,22 @@ async fn creates_filters_and_tenant_scopes_operational_exceptions_with_audit() {
     assert!(lifecycle_audits.contains(&"operational_exception_assign".to_string()));
     assert!(lifecycle_audits.contains(&"operational_exception_resolve".to_string()));
     assert!(lifecycle_audits.contains(&"operational_exception_reopen".to_string()));
+
+    let resolution_audit = sqlx::query(
+        "SELECT metadata FROM access_audit_events WHERE target_id = $1 AND event_kind = 'operational_exception_resolve'",
+    )
+    .bind(&created.id)
+    .fetch_one(&pool)
+    .await
+    .unwrap()
+    .get::<serde_json::Value, _>("metadata");
+    assert_eq!(resolution_audit["title"], "Mower hydraulic failure");
+    assert_eq!(resolution_audit["previous_status"], "in_progress");
+    assert_eq!(resolution_audit["status"], "resolved");
+    assert_eq!(
+        resolution_audit["resolution_note"],
+        "Replacement mower arrived."
+    );
 
     sqlx::query("DELETE FROM access_audit_events WHERE target_id = $1")
         .bind(&created.id)

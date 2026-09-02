@@ -37,11 +37,17 @@ function priorityTone(priority: OperationalExceptionPriority): 'neutral' | 'warn
 }
 
 export function ManagerOperationalExceptionsPanel({
+  onActivityChanged,
   onOpenAffectedResource,
   organizationId,
+  requestedExceptionId,
+  requestedExceptionSignal = 0,
 }: {
+  onActivityChanged?: () => void;
   onOpenAffectedResource?: (resourceType: string, resourceId: string) => void;
   organizationId: string;
+  requestedExceptionId?: string;
+  requestedExceptionSignal?: number;
 }) {
   const [items, setItems] = useState<OperationalException[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -88,6 +94,24 @@ export function ManagerOperationalExceptionsPanel({
   }, [load]);
 
   const selectedItem = items.find((item) => item.id === selectedId) ?? items[0] ?? null;
+
+  useEffect(() => {
+    if (!requestedExceptionId) return;
+    setStatus('all');
+    setCategory('all');
+    setPriority('all');
+    setSelectedId(requestedExceptionId);
+  }, [requestedExceptionId, requestedExceptionSignal]);
+
+  useEffect(() => {
+    if (!requestedExceptionId || selectedItem?.id !== requestedExceptionId) return;
+    const frame = window.requestAnimationFrame(() => {
+      const detail = document.getElementById('operational-exception-detail');
+      detail?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      detail?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [requestedExceptionId, requestedExceptionSignal, selectedItem?.id]);
   const summary = useMemo(
     () => summarizeOperationalExceptions(items, new Date().toISOString().slice(0, 10)),
     [items],
@@ -109,6 +133,7 @@ export function ManagerOperationalExceptionsPanel({
       setStatus('all');
       await load();
       setSelectedId(created.id);
+      onActivityChanged?.();
     } catch {
       setNotice({ message: 'The exception was not saved. Your current queue is unchanged.', tone: 'danger' });
       setLoading(false);
@@ -140,6 +165,7 @@ export function ManagerOperationalExceptionsPanel({
         message: `Exception ${action === 'assign' ? 'assigned' : action === 'start' ? 'started' : action === 'resolve' ? 'resolved' : 'reopened'}.`,
         tone: 'success',
       });
+      onActivityChanged?.();
     } catch {
       setNotice({
         message: 'The exception changed or could not be updated. The last synced queue is preserved; refresh before retrying.',
@@ -223,7 +249,7 @@ export function ManagerOperationalExceptionsPanel({
           <button className="mt-4 min-h-11 rounded-lg border border-slate-300 px-3 text-sm font-bold" disabled={loading} onClick={() => void load()} type="button">Refresh queue</button>
         </section>
 
-        <aside aria-labelledby="exception-detail-heading" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <aside aria-labelledby="exception-detail-heading" className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" id="operational-exception-detail" tabIndex={-1}>
           <p className="text-xs font-black uppercase tracking-wide text-emerald-800">Exception detail</p>
           <h3 className="mt-1 text-xl font-black text-slate-950" id="exception-detail-heading">
             {selectedItem?.title ?? 'Select recovery work'}

@@ -1490,7 +1490,12 @@ async fn list_operational_activity(
                 'photo_processing_resolved',
                 'photo_erasure_deletion_retried',
                 'photo_erasure_deletion_resolved',
-                'customer_photo_evidence_erased'
+                'customer_photo_evidence_erased',
+                'operational_exception_created',
+                'operational_exception_assign',
+                'operational_exception_start',
+                'operational_exception_resolve',
+                'operational_exception_reopen'
           )
           AND ($2::text IS NULL OR audit.event_kind = $2)
           AND ($3::timestamptz IS NULL OR audit.occurred_at < $3::timestamptz)
