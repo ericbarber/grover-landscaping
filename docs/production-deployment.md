@@ -58,6 +58,31 @@ configuration. This local check does not replace the protected hosted smoke test
 because a real Cognito issuer, test identity, access token, and deployed private
 database are external inputs.
 
+Run the repository-owned preflight before requesting production access:
+
+```bash
+bash scripts/release-preflight.sh --repository-only
+```
+
+Run the complete preflight from the operator shell to classify both repository
+readiness and external inputs:
+
+```bash
+TF_VAR_application_url=https://grover-landscaping.onrender.com \
+BASE_URL=https://grover-landscaping.onrender.com \
+OWNER_EMAIL='approved-owner@example.com' \
+ACCESS_TOKEN='current-cognito-access-token' \
+RENDER_ACCESS_CONFIRMED=1 \
+TERRAFORM_STATE_CONFIRMED=1 \
+bash scripts/release-preflight.sh
+```
+
+Exit `0` means ready, exit `2` means only named external prerequisites remain,
+and exit `1` means a repository or supplied-input check failed. Secret and
+personal values are never echoed. The command uses Terraform on `PATH`, or the
+already-cached `hashicorp/terraform:1.13.5` image as a local fallback; it does
+not pull tools or mutate cloud resources.
+
 Validate Cognito outputs before wiring Render:
 
 ```bash

@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-02: Added a read-only protected-release preflight with distinct ready,
+  external-prerequisite, and failed outcomes. It validates required release
+  artifacts, Render production shape, fail-closed auth/persistence guards,
+  hosted-smoke inputs, and Terraform formatting/configuration while redacting
+  all operator values; its contract tests cover classification and
+  non-disclosure.
 - 2026-09-02: Added branch-scoped CI concurrency and a single change-aware
   local validation command for documentation, repository, frontend, backend,
   database, infrastructure, browser, and full scopes. Representative mapping
