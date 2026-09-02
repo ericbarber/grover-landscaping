@@ -1,22 +1,52 @@
 # Local Validation Sequence
 
-Use this sequence after pulling the repository into a local development environment.
+Use a hybrid sequence: obtain fast evidence while implementing, widen to the
+affected package before committing, and reserve the complete matrix for
+publication and release. Current execution rules live in
+[`../project-planning/DELIVERY_BOARD.md`](../project-planning/DELIVERY_BOARD.md).
 
-## Order of operations
+## 1. Classify the change
 
-1. Pull the latest `main` branch.
-2. Install frontend dependencies.
-3. Run frontend static checks.
-4. Run backend formatting and compile checks.
-5. Run frontend and backend unit tests.
-6. Apply PostgreSQL migrations locally.
-7. Start the app and walk through manual product flows.
-8. Capture follow-up work as small repository changes.
+Choose every affected area: frontend, browser behavior, backend, persistence or
+migrations, infrastructure/deployment, or documentation. Authorization,
+privacy, queues, and cross-workflow behavior always include their integration
+boundary.
 
-## Why this order matters
+## 2. Run the inner loop
 
-- Static frontend checks catch type and build issues before manual UI review.
-- Backend formatting and compile checks catch Rust module and migration-adjacent issues early.
-- Unit tests validate domain helpers before full manual product review.
-- Migrations should be reviewed before local product flows that depend on persisted records.
-- Manual checks should focus on customer, property, portfolio, route, and crew-service boundaries.
+- Frontend: TypeScript plus focused Vitest files.
+- Browser behavior: the focused Playwright project and specification.
+- Backend: formatting/check plus the focused test target.
+- Persistence: the focused repository test against PostgreSQL.
+- Terraform: formatting and the changed module's backend-disabled validation.
+- Documentation: diff, links, status language, and formatting checks.
+
+Fix the first useful failure before widening the scope.
+
+## 3. Close the feature slice
+
+Before committing, run the full affected-package suite and production build.
+Migration changes require fresh and repeat application plus their live
+PostgreSQL fixture. Authentication, authorization, privacy, recovery, and queue
+changes require explicit unavailable, conflict, and isolation cases.
+
+Review the complete diff, include related tests and delivery records, and keep
+unrelated working-tree changes out of the commit.
+
+## 4. Publish through the main gate
+
+`main` remains the full integration boundary. GitHub Actions must run repository
+checks, frontend security/type/tests/build, Rust migrations/format/strict
+Clippy/tests, Terraform validation, all browser projects, pilot assurance, and
+the production image.
+
+A failed hosted check may be rerun once unchanged to classify runner variance.
+If the same condition repeats, fix or explicitly quarantine the cause instead
+of weakening the product invariant.
+
+## 5. Validate a protected release
+
+Before and after deployment, run the release preflight, database readiness,
+Cognito configuration, authenticated smoke, tenant-isolation checks, and
+rollback verification. CI or private-VPN local-review success does not satisfy
+this gate.

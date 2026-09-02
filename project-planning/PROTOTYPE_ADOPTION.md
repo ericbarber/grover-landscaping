@@ -26,7 +26,7 @@ remains the canonical delivery-status record for all product and platform work.
 | Manager daily operations | [Schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png), [manager hub](../design/wireframes/manager/00-manager-hub.svg), and [Recovery](../design/wireframes/manager/05-recovery.svg) | Adopted core | Schedule adopts Today’s operation, compact target controls, route board + inspector, and responsive stacking. Recovery adopts overview metrics, filtered queue + detail, lifecycle actions, and return-to-affected-work routing. Existing capacity, publish, persistence, and conflict contracts remain authoritative. |
 | Completion proof and communication | [Reports wireframe](../design/wireframes/manager/04-reports.svg) and [shared proof wireframe](../design/wireframes/public/04-shared-customer-proof.svg) | Adopted core | Manager Reports opens the exact Job Report workflow. Shared proof uses a narrowed customer-safe API projection for immutable evidence and completed approved-recommendation outcomes. Shared proposals retain customer-safe scope/pricing, explicit decisions, recorded outcomes, and closed-link recovery. Regress as proof, delivery, and recommendation contracts evolve. |
 | Yard Owner acquisition | [Working acquisition](../design/prototypes/yard-owner-acquisition/README.md) and [handoff](../design/review/yard-owner-acquisition-handoff.md) | Partial | Private intake, invitations, disclosure, assessments, proposals, collaboration, activation, and separate first-visit confirmation are delivered. Next: relationship continuity; curated discovery remains later and governed. |
-| Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · service-day core adopted | Home, Visits, Proof, and Account plus property context, delivered proof, and all six explicit service-day modes are adopted. Home/Visits use the minimized authorized persisted read with explicit recovery and no illustrative fallback. Remaining: concern recovery, recommendation collaboration, notification/access preferences, and provider contact. Billing remains product-gated. |
+| Yard Owner portal | [Working portal](../design/prototypes/yard-owner-portal/README.md) and [V2 handoff](../design/review/yard-owner-portal-v2-handoff.md) | Partial · service-day and recommendation core adopted | Home, Visits, Proof, and Account plus property context, delivered proof, all six explicit service-day modes, and current/historical recommendation decisions are adopted. Home/Visits use minimized authorized persisted reads with explicit recovery and no illustrative fallback. Remaining: concern recovery, notification/access preferences, and provider contact. Billing remains product-gated. |
 | Yard Crew acquisition | [Working provider journey](../design/prototypes/yard-crew-acquisition/README.md), [handoff](../design/review/yard-crew-acquisition-handoff.md), [entry/readiness contract](../docs/provider-entry-routing.md), and [operating-profile contract](../docs/provider-operating-profile.md) | Known-owner and safe preparation core adopted | Public routing, precise readiness, service/language operating facts, and first-time recipient confirmation through first-visit preparation are connected under a stable six-stage lifecycle. Provider availability/pause, credential checking, curated opportunities, and alerts remain gated. |
 | Property-manager portfolios | [Connected working design](../design/prototypes/property-manager-portfolio/README.md) and [production handoff](../design/review/property-manager-portfolio-handoff.md) | Adopted core | PropertyManager receives Overview, Properties, Proof, and Approvals with scoped grouping/search, local-review readiness, protected proof and bids, partial-source isolation, and customer-safe provider accountability. Replace illustrative readiness only after authorized persisted customer visit reads exist. |
 | Team, organization, and access | [Team wireframe](../design/wireframes/manager/03-team.svg) and [production handoff](../docs/team-organization-production-handoff.md) | Adopted core | The Organization Owner enters a live Team and access command center with partial-read isolation; direct member, invitation, crew, hierarchy-recovery, and audit paths; self-impact and last-owner safety; unavailable-versus-empty distinction; keyboard focus transfer; responsive regression; and a production map. Continue regression as authorization and hierarchy contracts evolve. |
@@ -34,10 +34,11 @@ remains the canonical delivery-status record for all product and platform work.
 | Homeowner assistant | [Future concept](../design/wireframes/future/01-homeowner-assistant.svg) | Future concept | No current adoption commitment. |
 | Multi-vendor property management | [Future concept](../design/wireframes/future/02-multi-vendor-portfolio.svg) | Future concept | No current adoption commitment; the current property-manager view must not imply full marketplace governance. |
 
-## Ordered repository delivery queue
+## Production-adoption sequence record
 
-The next repository-owned phases are ordered by an existing approved contract,
-user value, and dependency safety:
+This sequence records the completed adoption path and its retained regression
+boundaries. Current execution order lives in
+[`DELIVERY_BOARD.md`](DELIVERY_BOARD.md).
 
 1. Shared authenticated-shell core is delivered; migrate legacy feedback only
    inside the owning workflow phases.
@@ -46,7 +47,7 @@ user value, and dependency safety:
 3. Manager Schedule, Recovery, and completion-review core convergence is adopted.
 4. Shared completion proof, proposal decisions, and completed recommendation/
    add-on continuity are adopted at the core production boundary.
-5. **Active:** property-manager command-center core is adopted. The hybrid Yard
+5. Property-manager command-center core is adopted. The hybrid Yard
    Owner authorization foundation now delivers account scope for verified
    owners and explicit property scope for delegates. The minimized visit API and
    its fail-closed Yard Owner Home/Visits adoption are delivered, including the
@@ -87,7 +88,7 @@ actor-scoped decisions and signed-in Yard Owner adoption are delivered while
 concern recovery remains separately gated. Repository
 maintenance and regression remain ongoing.
 
-Phases may be split into smaller implementation commits. A phase is not complete
+Future adoption phases may be split into smaller implementation commits. A phase is not complete
 until its workflow, responsive, state, accessibility, validation, and handoff
 gates in the [application delivery plan](../design/review/application-working-design-delivery-plan.md)
 are satisfied.
