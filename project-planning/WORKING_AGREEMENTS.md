@@ -33,7 +33,22 @@ whose alternatives would materially change the result.
 
 ## Validation Expectations
 
-Use the checks relevant to the affected area:
+Use the hybrid validation model so feedback is fast without weakening release
+confidence:
+
+- Inner loop: run formatting or type analysis and focused tests for changed
+  behavior.
+- Slice gate: before committing, run the full affected-package suite, production
+  build, and any relevant PostgreSQL or migration checks.
+- Integration gate: auth, persistence, queue, privacy, and cross-workflow work
+  requires live PostgreSQL coverage plus explicit unavailable, conflict, and
+  authorization cases.
+- Main gate: publication to `main` runs the complete hosted CI matrix, all
+  browser projects, Terraform validation, and the production image.
+- Release gate: protected deployment additionally requires preflight,
+  readiness, authenticated smoke, and rollback evidence.
+
+Area-specific expectations remain:
 
 - Backend: Rust formatting, compilation, focused tests, and database-backed tests
   for persistence or migration behavior.
@@ -47,6 +62,10 @@ Use the checks relevant to the affected area:
 If a required tool or environment is unavailable, record the limitation and keep
 the feature uncommitted when that missing validation creates meaningful breakage
 risk.
+
+A failed hosted check may be rerun once unchanged to distinguish runner variance
+from a reproducible failure. If it repeats, correct or explicitly quarantine the
+cause instead of weakening the asserted product behavior.
 
 ## Updating Requirements
 

@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-02: Consolidated active delivery into one execution board with
+  repository and protected-release lanes, explicit phase exit evidence, a
+  hybrid fast-feedback/full-release validation model, bounded work in progress,
+  and unambiguous external prerequisites. The detailed plan, strategic roadmap,
+  prototype tracker, and handoff now have separate responsibilities so delivered
+  history no longer competes with the current queue.
 - 2026-09-01: Published the completed Phase 6B development line to `main` and
   closed its current hosted-CI gate. A boxed API-error boundary passes strict
   Clippy on Rust 1.98, CI actions use supported runtimes, and patched

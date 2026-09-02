@@ -3,6 +3,11 @@
 This is the consolidated review version of the Grover Landscaping development
 plan. Detailed delivery status remains in [`../PLAN.md`](../PLAN.md).
 
+Current execution order and phase exit evidence live in
+[`DELIVERY_BOARD.md`](DELIVERY_BOARD.md). The remaining sections of this file
+are strategic scope and delivered context; section order is not an active work
+queue.
+
 The active delivery stage is the external protected-hosting boundary after
 Phase 6B post-development validation. Phases 6B1
 through 6B3 align the local Compose helper and hosted CI with the embedded SQLx
@@ -24,10 +29,10 @@ environment has no Render or AWS account credentials/state, deployment hook,
 or hosted test identity/token; they must not be inferred from CI or private-
 VPN review success.
 
-## Active UX Priority
+## Delivered UX Context
 
-The current production-adoption priority is signed-in Yard Owner adoption of
-D-062 recommendations and exact-version decisions. The constrained persistence,
+The most recently completed production-adoption priority was signed-in Yard
+Owner adoption of D-062 recommendations and exact-version decisions. The constrained persistence,
 initial provider-send, immutable revision/supersession, and explicit legacy
 bearer-decision closure plus minimized hybrid-authorized exact-visit list/detail
 reads and actor-scoped decisions are delivered. The audit
@@ -490,7 +495,10 @@ outcome-led value proposition, trust cues, and workspace call to action.
 Home also explains the highest-priority current state: unsynced changes, a clear
 schedule, remaining work, or a completed day.
 
-## Immediate Continuation Work
+## Historical Continuation Record
+
+The statuses below explain how the current product boundary was reached. Use
+`DELIVERY_BOARD.md` for current and next work.
 
 **Delivered — Yard Owner acquisition proposal interfaces**
 
@@ -554,7 +562,7 @@ schedule, remaining work, or a completed day.
    - Defer curated opportunity discovery, billing, customer proof, and production
      captures until their recorded evidence and product gates are satisfied.
 
-The exact artifact mapping and ordered implementation queue live in
+The exact artifact mapping and production-adoption history live in
 [`PROTOTYPE_ADOPTION.md`](PROTOTYPE_ADOPTION.md).
 
 0. **Local mobile runtime readiness**
