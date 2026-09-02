@@ -351,15 +351,29 @@ export function PublicLandingPage({
       <section className="grid bg-bone lg:min-h-[42rem] lg:grid-cols-[1.02fr_0.98fr]">
         <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-24">
           <div className="w-full max-w-[40rem]">
-            <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
-              {activePersona.eyebrow}
-            </p>
-            <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98]">
-              {activePersona.headline}
-            </h1>
-            <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
-              {activePersona.description}
-            </p>
+            <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
+              {marketingPersonas.map((persona) => {
+                const isActive = persona.id === activePersona.id;
+
+                return (
+                  <div
+                    aria-hidden={!isActive}
+                    className={`col-start-1 row-start-1 ${isActive ? 'visible' : 'invisible'}`}
+                    key={persona.id}
+                  >
+                    <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
+                      {persona.eyebrow}
+                    </p>
+                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98]">
+                      {persona.headline}
+                    </h1>
+                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
+                      {persona.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
             <div className="mt-8">
               <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
               <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
