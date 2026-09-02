@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Active | F1 planning and handoff reset is complete | F2 fast-feedback orchestration without weakening the main/release gate |
+| Repository | Active | F2 change-aware validation and superseded-run cancellation are complete | R1 non-secret release preflight contract |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Queued | Core crew, manager, Yard Owner, property-manager, proof, and provider-acquisition paths are delivered | Resume only the highest-value ready slice after release tooling |
@@ -41,7 +41,7 @@ Exit evidence:
 
 ### F2 — Fast feedback orchestration
 
-State: active repository-owned phase.
+State: delivered.
 
 Deliver:
 
@@ -60,9 +60,19 @@ Exit evidence:
   suites, superseded hosted work is canceled, and `main` still passes the full
   gate.
 
+Delivery evidence:
+
+- `scripts/validate-changes.sh` classifies working-tree, branch-diff, explicit
+  path, and explicit scope inputs while preserving full affected-package gates.
+- `scripts/validate-changes.test.sh` verifies representative scope mappings.
+- Branch-scoped GitHub Actions concurrency cancels superseded runs without
+  changing the surviving run's job matrix.
+- Existing CI timing markers remain the comparison source for measured
+  bottleneck work.
+
 ### R1 — Release preflight contract
 
-State: ready after F2; repository-owned.
+State: active repository-owned phase.
 
 Deliver:
 
@@ -169,7 +179,7 @@ until this boundary and verified provider destinations exist.
 - Yard Owner appreciation and external review destinations.
 
 These remain in `PLAN.md`, `ROADMAP.md`, and `features/`; they do not compete
-with F2, R1, or the protected-release gates for current capacity.
+with R1 or the protected-release gates for current capacity.
 
 ## Hybrid validation model
 

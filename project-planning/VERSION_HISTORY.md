@@ -6,6 +6,11 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-02: Added branch-scoped CI concurrency and a single change-aware
+  local validation command for documentation, repository, frontend, backend,
+  database, infrastructure, browser, and full scopes. Representative mapping
+  tests protect the command's selection behavior, while the surviving `main`
+  run retains the complete release matrix and its comparable timing markers.
 - 2026-09-02: Consolidated active delivery into one execution board with
   repository and protected-release lanes, explicit phase exit evidence, a
   hybrid fast-feedback/full-release validation model, bounded work in progress,
