@@ -20,15 +20,15 @@ This is the short restart document. Execution order lives in
 
 ## Active and next work
 
-### Active: F2 fast feedback orchestration
+### Delivered: F2 fast feedback orchestration
 
-1. Add branch-scoped CI concurrency so a newer commit cancels superseded work.
-2. Add one change-aware local validation command for frontend, backend,
-   database, infrastructure, documentation, and full-release scopes.
-3. Keep the complete `main` gate unchanged in coverage.
-4. Use the existing timing markers to optimize only a measured bottleneck.
+Branch-scoped CI concurrency now cancels superseded work. Run
+`bash scripts/validate-changes.sh` to classify current changes and execute the
+smallest complete local package gates; use `--dry-run` to inspect the choice.
+The complete `main` gate remains unchanged, and its existing timing markers
+remain the basis for future bottleneck work.
 
-### Next: R1 release preflight
+### Active: R1 release preflight
 
 Create a non-secret preflight that reports repository readiness separately from
 external prerequisites. It must validate the Render blueprint, Terraform,

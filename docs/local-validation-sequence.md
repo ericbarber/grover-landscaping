@@ -12,6 +12,17 @@ migrations, infrastructure/deployment, or documentation. Authorization,
 privacy, queues, and cross-workflow behavior always include their integration
 boundary.
 
+The repository command classifies current working-tree changes automatically:
+
+```bash
+bash scripts/validate-changes.sh --dry-run
+bash scripts/validate-changes.sh
+```
+
+Use `--base origin/main` for a committed branch diff, repeat `--scope` for an
+explicit gate, or pass paths after `--` to inspect classification. Run
+`bash scripts/validate-changes.sh --help` for the complete interface.
+
 ## 2. Run the inner loop
 
 - Frontend: TypeScript plus focused Vitest files.
@@ -38,7 +49,10 @@ unrelated working-tree changes out of the commit.
 `main` remains the full integration boundary. GitHub Actions must run repository
 checks, frontend security/type/tests/build, Rust migrations/format/strict
 Clippy/tests, Terraform validation, all browser projects, pilot assurance, and
-the production image.
+the production image. Branch-scoped concurrency cancels an older run when a
+newer commit supersedes it; it does not remove or skip any gate in the surviving
+run. Existing `/usr/bin/time` markers remain the comparable evidence used to
+identify a real bottleneck before changing CI structure.
 
 A failed hosted check may be rerun once unchanged to classify runner variance.
 If the same condition repeats, fix or explicitly quarantine the cause instead
