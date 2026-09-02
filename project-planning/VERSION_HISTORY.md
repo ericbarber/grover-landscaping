@@ -6,6 +6,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-02: Stabilized the public hero while switching audiences. All persona
+  copy now shares a responsive intrinsic-height region sized by its longest
+  composition, keeping the title and selector stationary without hardcoded
+  breakpoint heights; only the active story remains visible to assistive
+  technology. The focused behavior passes Chromium, Firefox, and WebKit at
+  phone and desktop widths, alongside TypeScript, all 485 frontend tests, and
+  the production build.
 - 2026-09-02: Integrated operational exception creation and lifecycle audits
   into tenant-scoped manager activity. A dedicated Recovery source shows
   readable actor, state, assignment, and resolution context; successful

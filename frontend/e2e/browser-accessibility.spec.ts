@@ -181,6 +181,42 @@ test('the audience control switches the complete landing-page story and URL', as
   await expect(page.getByText('Portfolio readiness', { exact: true })).not.toBeVisible();
 });
 
+test('persona switching keeps the hero title section stable', async ({ page }) => {
+  const personas = [
+    { tab: 'Yard owner', headline: 'See the care behind your yard.' },
+    { tab: 'Property manager', headline: 'Keep every property ready.' },
+    { tab: 'Landscaping company', headline: 'Plan every visit. Care with confidence. Prove the work.' },
+    { tab: 'Crew lead', headline: 'Know the next stop—and what done looks like.' },
+  ];
+
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/for-landscaping-companies');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    const heroCopy = page.getByTestId('hero-persona-copy');
+    const audienceControl = page.getByRole('tablist', { name: 'Choose your perspective' });
+    const baseline = await Promise.all([
+      heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+      audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+    ]);
+
+    for (const persona of personas) {
+      await page.getByRole('tab', { name: persona.tab }).click();
+      await expect(page.getByRole('heading', { level: 1, name: persona.headline })).toBeVisible();
+
+      const current = await Promise.all([
+        heroCopy.evaluate((element) => element.getBoundingClientRect().height),
+        audienceControl.evaluate((element) => element.getBoundingClientRect().top),
+      ]);
+      expect(current).toEqual(baseline);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    }
+  }
+});
+
 test('the landscaping-company hero demonstrates route workload balancing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/for-landscaping-companies');
