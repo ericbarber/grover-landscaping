@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL ?? 'http://127.0.0.1:5173';
+const webServerPort = new URL(baseURL).port || (baseURL.startsWith('https:') ? '443' : '80');
 const chromiumLaunchOptions = process.env.PLAYWRIGHT_EXECUTABLE_PATH
   ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
   : undefined;
@@ -40,7 +41,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1',
+    command: `npm run dev -- --host 127.0.0.1 --port ${webServerPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

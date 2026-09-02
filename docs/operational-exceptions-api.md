@@ -32,11 +32,21 @@ Updates and actor-attributed audit events commit in one transaction.
 
 Creation writes the exception and an actor-attributed
 `operational_exception_created` audit event in one transaction. The audit
-metadata records category, priority, and affected-resource context. Missing
-persistence returns explicit unavailable responses; the API never substitutes
-seeded exceptions.
+metadata records title, category, priority, initial status, assignment, and
+affected-resource context. Lifecycle audit metadata retains the readable title,
+category, priority, previous/current status, previous/current assignment, and
+resolution note when applicable. Missing persistence returns explicit
+unavailable responses; the API never substitutes seeded exceptions.
+
+`GET /operational-activity` includes creation, assignment, start, resolution,
+and reopen events within the caller's active schedule-managing organization
+scope. Manager activity presents them as a dedicated Recovery source with actor
+and lifecycle context. Every projected event retains the exception ID and can
+open that exact item in the Recovery queue; unknown future event kinds continue
+to use the generic operational-activity fallback.
 
 The Manager Recovery workspace consumes this contract through a focused mobile
 queue with status, category, and priority filters; exception creation; assignment;
 and start, resolution, reopen, and refresh actions. Failed mutations retain the
-last synced queue and direct the manager to refresh before retrying.
+last synced queue and direct the manager to refresh before retrying. Successful
+mutations refresh persisted manager activity.

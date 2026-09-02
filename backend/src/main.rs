@@ -6372,6 +6372,11 @@ async fn list_operational_activity(
         "photo_erasure_deletion_retried",
         "photo_erasure_deletion_resolved",
         "customer_photo_evidence_erased",
+        "operational_exception_created",
+        "operational_exception_assign",
+        "operational_exception_start",
+        "operational_exception_resolve",
+        "operational_exception_reopen",
     ];
     let event_kind = query.event_kind.as_deref().map(str::trim);
     if event_kind.is_some_and(|value| !EVENT_KINDS.contains(&value)) {

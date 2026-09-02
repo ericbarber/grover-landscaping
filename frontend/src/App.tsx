@@ -1234,6 +1234,8 @@ export function App() {
   const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
   const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
+  const [requestedOperationalExceptionId, setRequestedOperationalExceptionId] = useState<string>();
+  const [requestedOperationalExceptionSignal, setRequestedOperationalExceptionSignal] = useState(0);
   const [isLoadingNotificationHistory, setIsLoadingNotificationHistory] = useState(false);
   const [notificationHistoryUnavailable, setNotificationHistoryUnavailable] = useState(false);
   const [photoProcessingHistory, setPhotoProcessingHistory] = useState<PhotoProcessingHistoryItem[]>([]);
@@ -3730,6 +3732,12 @@ export function App() {
               onLoadOlder={() => void loadOlderOperationalActivity()}
               onResetHistory={resetManagerActivityHistory}
               onCompleteDispatchNotification={handleCompleteDispatchCustomerNotification}
+              onOpenOperationalException={(exceptionId) => {
+                setRequestedOperationalExceptionId(exceptionId);
+                setRequestedOperationalExceptionSignal((current) => current + 1);
+                setManagerWorkspaceSection('recovery');
+                setManagerWorkspaceTool('operational-exceptions');
+              }}
             />
           </div>
           {canReviewMarketingLeads ? (
@@ -3764,6 +3772,9 @@ export function App() {
           <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6`}>
             <ManagerOperationalExceptionsPanel
               organizationId={activeManagerOrganizationId}
+              onActivityChanged={() => void refreshOperationalActivity()}
+              requestedExceptionId={requestedOperationalExceptionId}
+              requestedExceptionSignal={requestedOperationalExceptionSignal}
               onOpenAffectedResource={(resourceType, resourceId) => {
                 if (resourceType === 'job') {
                   setSelectedJobId(resourceId);
