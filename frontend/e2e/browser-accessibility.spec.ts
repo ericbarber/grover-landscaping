@@ -189,7 +189,7 @@ test('persona switching keeps the hero title section stable', async ({ page }) =
     { tab: 'Crew lead', headline: 'Know the next stop—and what done looks like.' },
   ];
 
-  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 900 }]) {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 720 }]) {
     await page.setViewportSize(viewport);
     await page.goto('/for-landscaping-companies');
     await page.evaluate(async () => {
@@ -213,6 +213,64 @@ test('persona switching keeps the hero title section stable', async ({ page }) =
       ]);
       expect(current).toEqual(baseline);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    }
+  }
+});
+
+test('the complete desktop hero stays within the first viewport', async ({ page }) => {
+  const personas = [
+    { tab: 'Yard owner', graphic: 'Your latest service is ready' },
+    { tab: 'Property manager', graphic: '14 of 16 properties on track' },
+    { tab: 'Landscaping company', graphic: 'Today’s operation' },
+    { tab: 'Crew lead', graphic: 'Oak Street residence' },
+  ];
+
+  for (const viewport of [{ width: 1024, height: 720 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/for-landscaping-companies');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
+    for (const persona of personas) {
+      await page.getByRole('tab', { name: persona.tab }).click();
+      await expect(page.getByText(persona.graphic, { exact: true }).first()).toBeVisible();
+
+      const bounds = await page.evaluate((activeTab) => {
+        const header = document.querySelector('header')?.getBoundingClientRect();
+        const hero = document.querySelector('main > section')?.getBoundingClientRect();
+        const graphic = document.querySelector('main > section > div:last-child')?.getBoundingClientRect();
+        const visual = activeTab === 'Landscaping company'
+          ? document.querySelector('[aria-labelledby="marketing-operations-planner-title"]')?.getBoundingClientRect()
+          : document.querySelector('main > section > div:last-child article')?.getBoundingClientRect();
+        const controls = document.querySelector('[role="tablist"][aria-label="Choose your perspective"]')?.getBoundingClientRect();
+        const actions = document.querySelector('[aria-label="Primary next steps"]')?.getBoundingClientRect();
+        const directSignup = document.querySelector('[aria-label="Direct signup options"]')?.getBoundingClientRect();
+
+        return {
+          headerBottom: header?.bottom,
+          heroTop: hero?.top,
+          heroBottom: hero?.bottom,
+          graphicTop: graphic?.top,
+          graphicBottom: graphic?.bottom,
+          visualTop: visual?.top,
+          visualBottom: visual?.bottom,
+          controlsBottom: controls?.bottom,
+          actionsBottom: actions?.bottom,
+          directSignupBottom: directSignup?.bottom,
+          viewportBottom: window.innerHeight,
+        };
+      }, persona.tab);
+
+      expect(bounds.heroTop).toBe(bounds.headerBottom);
+      expect(bounds.heroBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.graphicTop).toBeGreaterThanOrEqual(bounds.heroTop! - 1);
+      expect(bounds.graphicBottom).toBeLessThanOrEqual(bounds.viewportBottom + 1);
+      expect(bounds.visualTop).toBeGreaterThanOrEqual(bounds.graphicTop! - 1);
+      expect(bounds.visualBottom).toBeLessThanOrEqual(bounds.graphicBottom! + 1);
+      expect(bounds.controlsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.actionsBottom).toBeLessThanOrEqual(bounds.viewportBottom);
+      expect(bounds.directSignupBottom).toBeLessThanOrEqual(bounds.viewportBottom);
     }
   }
 });
