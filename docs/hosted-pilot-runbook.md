@@ -131,6 +131,14 @@ bounds every request, withholds response bodies from failures, and confirms the
 completed photo can be read back from the exact persisted job. Validate this
 runner without a live endpoint using `bash scripts/smoke-production.test.sh`.
 
+Once smoke passes, complete the restricted copy of
+[`protected-release-evidence.template.json`](protected-release-evidence.template.json)
+and run `node scripts/validate-protected-release-evidence.mjs
+/restricted/path/release-evidence.json`. Record only release, deploy, commit,
+migration, check, and rollback references; the validator rejects common
+credential material and the evidence must not contain tenant record IDs or
+personal operator details.
+
 Before enabling provider-backed delivery, validate the webhook gateway configuration:
 
 ```bash

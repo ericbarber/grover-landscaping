@@ -137,6 +137,24 @@ external service:
 bash scripts/smoke-production.test.sh
 ```
 
+After the hosted checks pass, copy
+[`protected-release-evidence.template.json`](protected-release-evidence.template.json)
+to the restricted release-evidence location, replace every placeholder with
+the deployed commit, Render deploy, migration result, check result, and prior
+rollback target, then validate it:
+
+```bash
+node scripts/validate-protected-release-evidence.mjs /restricted/path/release-evidence.json
+```
+
+The template is intentionally invalid until completed. The validator requires
+successful PostgreSQL readiness, Cognito mode, production smoke, exact
+cross-tenant `403` evidence, and a distinct prior Render deploy. It rejects
+credential-bearing fields and common bearer, JWT, AWS, signed-URL, and database
+credential patterns without echoing the rejected value. Keep tokens, customer
+identifiers, signed URLs, object keys, database URLs, and personal operator
+details out of the evidence record and out of the repository.
+
 Validate the notification webhook gateway before setting `NOTIFICATION_DISPATCH_MODE=webhook` in Render:
 
 ```bash
