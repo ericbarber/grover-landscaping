@@ -2,12 +2,19 @@
 
 Use this runbook for the first protected hosted pilot after the Render service URL is final.
 
+If the AWS organization, production member account, temporary operator access,
+cost controls, audit trail, and state bucket do not exist yet, complete
+[`aws-account-setup.md`](aws-account-setup.md) first.
+
 ## Prerequisites
 
 - GitHub checks pass on the branch being deployed.
 - The Render Blueprint has created the web service and PostgreSQL database from `render.yaml`.
 - `terraform`, `aws`, `psql`, and `curl` are available in the operator shell.
-- AWS credentials point at the account that owns the Cognito Terraform state.
+- The current temporary AWS session points at the production member account
+  that owns Cognito and the Terraform state bucket.
+- The production account and remote-state bucket pass the AWS account-setup
+  acceptance checklist.
 
 Confirm the repository boundary before provisioning:
 

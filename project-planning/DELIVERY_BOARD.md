@@ -106,6 +106,10 @@ External prerequisites:
 - Render account access to create or reconcile the Blueprint and private
   PostgreSQL database.
 - AWS account credentials and the production Terraform backend/state decision.
+- Completion of the
+  [`AWS account setup`](../docs/aws-account-setup.md) acceptance checklist,
+  including temporary operator access, cost/audit controls, and the state
+  bucket's non-secret handoff values.
 - Final HTTPS application URL and approved first-owner email.
 - A controlled second pilot identity and tenant with a persisted job for the
   isolation smoke fixture.

@@ -59,6 +59,7 @@ Start with these records when reviewing or continuing development:
 - [Prototype adoption tracker](project-planning/PROTOTYPE_ADOPTION.md) — approved design-to-production map and ordered queue
 - [Version history](project-planning/VERSION_HISTORY.md) — delivery chronology
 - [Production plan](docs/yard-owner-acquisition-production-plan.md) — production dependencies and rollout gates
+- [AWS account setup](docs/aws-account-setup.md) — secure account, temporary operator access, cost controls, audit, and Terraform-state preparation
 - [Owner–provider activation contract](docs/owner-provider-activation-design.md) — accepted-proposal projection, portal access, and first-visit boundaries
 - [First-visit contract](docs/owner-provider-first-visit-design.md) and [API](docs/owner-provider-first-visit-api.md) — post-activation provider windows, owner decisions, recovery, and operational separation
 - [Owner–provider activation API](docs/owner-provider-activation-api.md) — owner-only activation and status operations
@@ -532,7 +533,10 @@ The first production target is a protected Render pilot:
 - The Rust API verifies access-token signatures and enforces Cognito role groups
 - Deploys begin only after GitHub checks pass
 
-The infrastructure is declared in `render.yaml`. Provisioning, smoke testing, operating notes, current limitations, and the AWS growth path are documented in [docs/production-deployment.md](docs/production-deployment.md).
+The infrastructure is declared in `render.yaml`. Start with
+[AWS account setup](docs/aws-account-setup.md), then use
+[production deployment](docs/production-deployment.md) for provisioning, smoke
+testing, operating notes, current limitations, and the AWS growth path.
 
 ## Development Notes
 

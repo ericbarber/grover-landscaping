@@ -31,6 +31,9 @@ VPN review success. Repository preparation now includes deterministic protected
 smoke and tenant-isolation contracts plus a machine-validated, credential-safe
 deploy/migration/rollback evidence template; completing that record remains an
 external hosted-run gate.
+The owner-facing AWS setup runbook now defines the secure organization,
+production-account, temporary-access, cost/audit, and S3-state prerequisites
+needed to cross that boundary without sharing credentials.
 
 ## Delivered UX Context
 

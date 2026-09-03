@@ -6,6 +6,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-03: Added the owner-operated AWS account setup runbook for protected
+  provisioning. It scopes AWS to Cognito, optional photo storage, and Terraform
+  state; defines the recommended management/production account separation;
+  requires root and workforce MFA, temporary Identity Center access, cost and
+  anomaly alerts, and multi-Region audit history; and supplies a repeatable
+  private, encrypted, versioned S3 state-bucket procedure. The handoff exposes
+  only non-secret backend facts and explicitly stops before Terraform apply.
 - 2026-09-03: Added the protected-release evidence contract. An intentionally
   incomplete JSON template captures the exact source/deploy, migration,
   PostgreSQL/Cognito/smoke, tenant-isolation, and distinct rollback references;
