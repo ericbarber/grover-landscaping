@@ -100,6 +100,7 @@ test('each audience route presents a complete persona-specific landing view', as
       path: '/for-yard-owners',
       title: 'Clearer yard care for homeowners | Grover',
       headline: 'See the care behind your yard.',
+      perspective: 'The service story—without the operations clutter.',
       trust: 'Confidence before and after care',
       proof: 'Yard care should never feel like a mystery.',
       product: 'From finding care to understanding every visit.',
@@ -111,6 +112,7 @@ test('each audience route presents a complete persona-specific landing view', as
       path: '/for-property-managers',
       title: 'Landscaping oversight for property managers | Grover',
       headline: 'Keep every property ready.',
+      perspective: 'Move from portfolio health to the property that needs you.',
       trust: 'Portfolio clarity without the chase',
       proof: 'Every address gets a clear next step.',
       product: 'One operating view for every property you represent.',
@@ -122,6 +124,7 @@ test('each audience route presents a complete persona-specific landing view', as
       path: '/for-landscaping-companies',
       title: 'Landscaping operations software | Grover',
       headline: 'Plan every visit. Care with confidence. Prove the work.',
+      perspective: 'Keep office, field, customer, and revenue work aligned.',
       trust: 'One shared view of the work',
       proof: 'Run the day without losing the service story.',
       product: 'A calmer system from morning plan to completed revenue.',
@@ -133,6 +136,7 @@ test('each audience route presents a complete persona-specific landing view', as
       path: '/for-crew-leads',
       title: 'Field workflow for landscaping crews | Grover',
       headline: 'Know the next stop—and what done looks like.',
+      perspective: 'Give crews the context to finish each stop well.',
       trust: 'Everything the field needs to move',
       proof: 'The next stop should already make sense.',
       product: 'Less office back-and-forth. More time caring for properties.',
@@ -147,6 +151,7 @@ test('each audience route presents a complete persona-specific landing view', as
     await page.goto(persona.path);
     await expect(page).toHaveTitle(persona.title);
     await expect(page.getByRole('heading', { level: 1, name: persona.headline })).toBeVisible();
+    await expect(page.getByRole('heading', { name: persona.perspective })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.trust })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.proof })).toBeVisible();
     await expect(page.getByRole('heading', { name: persona.product })).toBeVisible();
@@ -302,13 +307,14 @@ test('the landscaping-company hero demonstrates route workload balancing', async
 
   await page.getByRole('tab', { name: 'Yard owner' }).click();
   await expect(page.locator('section[aria-labelledby="marketing-operations-planner-title"]')).not.toBeVisible();
-  await expect(page.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]')).toBeVisible();
+  await expect(page.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]')).not.toBeVisible();
   await expect(page.getByText('Your latest service is ready', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('product-tour-owner-plan-preview')).toContainText('Tuesday · 8:00–10:00 AM');
 });
 
 test('the product tour Plan step presents the landscaping operations dashboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/for-yard-owners#tour');
+  await page.goto('/for-landscaping-companies#tour');
 
   const tour = page.locator('#tour');
   const dashboard = tour.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]');
@@ -326,4 +332,72 @@ test('the product tour Plan step presents the landscaping operations dashboard',
   await tour.getByRole('tab', { name: /02 · Care/ }).click();
   await expect(dashboard).not.toBeVisible();
   await expect(tour.getByText('Desert Willow Commons', { exact: true })).toBeVisible();
+});
+
+test('every product-tour step stays within the selected persona', async ({ page }) => {
+  const personas = [
+    {
+      id: 'owner',
+      path: '/for-yard-owners',
+      title: 'Follow your yard from upcoming care to completed proof.',
+      steps: [
+        { tab: /01 · Upcoming/, preview: 'Tuesday · 8:00–10:00 AM' },
+        { tab: /02 · In progress/, preview: 'Care is underway' },
+        { tab: /03 · Review/, preview: 'Your care summary is ready' },
+      ],
+    },
+    {
+      id: 'property-manager',
+      path: '/for-property-managers',
+      title: 'Move from portfolio readiness to owner-ready reporting.',
+      steps: [
+        { tab: /01 · Prioritize/, preview: '14 of 16 properties ready' },
+        { tab: /02 · Monitor/, preview: '12 properties complete' },
+        { tab: /03 · Report/, preview: 'Owner-ready summary prepared' },
+      ],
+    },
+    {
+      id: 'company',
+      path: '/for-landscaping-companies',
+      title: 'Follow one workday from plan to completed revenue.',
+      steps: [
+        { tab: /01 · Plan/, preview: 'Today’s operation' },
+        { tab: /02 · Care/, preview: 'Desert Willow Commons' },
+        { tab: /03 · Prove/, preview: 'Service story ready' },
+      ],
+    },
+    {
+      id: 'crew',
+      path: '/for-crew-leads',
+      title: 'Move from the first route stop to one clean handoff.',
+      steps: [
+        { tab: /01 · Route/, preview: '8 ordered stops' },
+        { tab: /02 · Work/, preview: '4 of 6 tasks' },
+        { tab: /03 · Handoff/, preview: '8 stops ready to hand off' },
+      ],
+    },
+  ];
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const persona of personas) {
+    await page.goto(`${persona.path}#tour`);
+    const tour = page.locator('#tour');
+    await expect(tour.getByRole('heading', { name: persona.title })).toBeVisible();
+
+    for (const [index, step] of persona.steps.entries()) {
+      await tour.getByRole('tab', { name: step.tab }).click();
+      const preview = page.getByTestId(`product-tour-${persona.id}-${['plan', 'care', 'prove'][index]}-preview`);
+      await expect(preview).toContainText(step.preview);
+    }
+
+    const companyPlanner = tour.locator('section[aria-labelledby="marketing-tour-operations-planner-title"]');
+    if (persona.id === 'company') {
+      await tour.getByRole('tab', { name: /01 · Plan/ }).click();
+      await expect(companyPlanner).toBeVisible();
+    } else {
+      await expect(companyPlanner).toHaveCount(0);
+      await expect(tour.getByText('Desert Willow Commons', { exact: true })).toHaveCount(0);
+      await expect(tour.getByText('Service story ready', { exact: true })).toHaveCount(0);
+    }
+  }
 });

@@ -1,5 +1,16 @@
 # Version History
 
+- 2026-09-02: Completed persona continuity through the public product tour.
+  Yard Owners now see upcoming care, visit progress, and owner-controlled
+  review; property managers see portfolio readiness, exceptions, and reporting;
+  crews see route preparation, stop execution, and handoff; and companies retain
+  their dispatch, field, proof, and revenue workflow. All tour headings, steps,
+  explanations, outcomes, and preview data now change with the selected persona,
+  the generic perspective introduction now speaks to the selected audience, and
+  browser boundaries prevent company operations from leaking into the other
+  three experiences. The complete route and tour checks pass across Chromium,
+  Firefox, and WebKit alongside TypeScript, all 488 frontend tests, and the
+  production build.
 - 2026-09-02: Brought the complete two-column public hero above the desktop
   fold. Its height now tracks the viewport below the sticky header, responsive
   typography and spacing preserve the action hierarchy, and the operations

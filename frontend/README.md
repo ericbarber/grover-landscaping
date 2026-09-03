@@ -25,8 +25,9 @@ not currently depend on React Router.
 
 ## Delivered interface areas
 
-- Prototype-aligned public theme, persona journeys, direct yard/company signup,
-  first-party lead flow, and interactive “Today’s operation” product tour
+- Prototype-aligned public theme, complete persona-specific journeys and product
+  tours, direct yard/company signup, first-party lead flow, and an interactive
+  company “Today’s operation” preview
 - Cognito, disabled, and production-rejected local-review authentication modes
 - Fail-closed active-access verification with in-place retry before protected
   navigation is rendered

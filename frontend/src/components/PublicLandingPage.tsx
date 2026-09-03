@@ -21,6 +21,11 @@ const marketingPersonas: Array<{
   eyebrow: string;
   headline: string;
   description: string;
+  perspective: {
+    eyebrow: string;
+    title: string;
+    description: string;
+  };
   outcomes: Array<{ title: string; description: string }>;
   preview: {
     status: string;
@@ -60,6 +65,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Confidence after every visit',
     headline: 'See the care behind your yard.',
     description: 'Know what was planned, what was completed, and what your property may need next—without chasing an update.',
+    perspective: {
+      eyebrow: 'A homeowner-first view',
+      title: 'The service story—without the operations clutter.',
+      description: 'See upcoming care, progress, proof, and recommendations in homeowner language while provider coordination stays with the provider.',
+    },
     outcomes: [
       { title: 'Know what’s next', description: 'Upcoming service and property expectations stay easy to find.' },
       { title: 'See the care', description: 'Before-and-after evidence makes each visit feel tangible.' },
@@ -113,6 +123,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Clarity across every address',
     headline: 'Keep every property ready.',
     description: 'Track service quality, open needs, and completion evidence across your portfolio from one focused view.',
+    perspective: {
+      eyebrow: 'Built for portfolio oversight',
+      title: 'Move from portfolio health to the property that needs you.',
+      description: 'Keep cross-property readiness visible, then open the exact address, exception, evidence, or decision that requires attention.',
+    },
     outcomes: [
       { title: 'See the whole portfolio', description: 'Service progress and open needs stay visible across addresses.' },
       { title: 'Replace status chasing', description: 'Shared progress reduces calls between properties and vendors.' },
@@ -166,6 +181,11 @@ const marketingPersonas: Array<{
     eyebrow: 'Operations customers can trust',
     headline: 'Plan every visit. Care with confidence. Prove the work.',
     description: 'Connect scheduling, crews, proof, customer communication, and revenue in one calm operating view.',
+    perspective: {
+      eyebrow: 'One connected operation',
+      title: 'Keep office, field, customer, and revenue work aligned.',
+      description: 'Give each role the right operational view while schedules, service progress, evidence, customer follow-through, and billing stay connected.',
+    },
     outcomes: [
       { title: 'Run a clearer day', description: 'Routes, crews, property context, and exceptions stay connected.' },
       { title: 'Move approvals faster', description: 'Evidence and recommendations give customers a complete story.' },
@@ -219,6 +239,11 @@ const marketingPersonas: Array<{
     eyebrow: 'A better day in the field',
     headline: 'Know the next stop—and what done looks like.',
     description: 'Give crews the route, service details, and evidence requirements they need without the office back-and-forth.',
+    perspective: {
+      eyebrow: 'Built for the field',
+      title: 'Give crews the context to finish each stop well.',
+      description: 'Keep the route, access notes, service expectations, progress, required proof, and exception path close to the work.',
+    },
     outcomes: [
       { title: 'Start field-ready', description: 'Every stop includes the service and property details crews need.' },
       { title: 'Keep working offline', description: 'Progress and evidence wait safely when coverage disappears.' },
@@ -461,9 +486,9 @@ export function PublicLandingPage({
       <section className="px-4 py-20 sm:px-6 lg:px-8" id="who-its-for">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">One platform, every perspective</p>
-            <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">Relevant from the first tap.</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">Choose a perspective to see how Grover turns the same field work into the clarity each person needs.</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">{activePersona.perspective.eyebrow}</p>
+            <h2 className="grover-display mt-4 text-4xl leading-tight sm:text-5xl">{activePersona.perspective.title}</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">{activePersona.perspective.description}</p>
           </div>
           <article className="mt-5 grid overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]" role="tabpanel">
             <div className="p-7 sm:p-10">
