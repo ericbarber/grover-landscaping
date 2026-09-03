@@ -50,6 +50,15 @@ case "${url}" in
       printf '401'
     fi
     ;;
+  https://pilot.example.test/jobs/job_other_tenant)
+    if [[ "${authenticated}" != true ]]; then
+      printf '401'
+    elif [[ "${SMOKE_FAKE_SCENARIO:-}" == "cross-tenant-allowed" ]]; then
+      printf '200'
+    else
+      printf '403'
+    fi
+    ;;
   https://pilot.example.test/day-plans/day_plan_smoke)
     printf '{"id":"day_plan_smoke"}'
     ;;

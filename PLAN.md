@@ -1361,9 +1361,13 @@ or crew assignment.
   URLs, object keys, tokens, and customer data.
 - Photo completion now requires the exact photo to be readable from the
   persisted job, providing a concrete read-after-write check.
+- Hosted tenant isolation now requires a known persisted job owned by a
+  controlled second tenant and proves the primary identity receives exactly
+  `403`; equal IDs and missing isolation fixtures are rejected before smoke.
 - A no-network fake-transport suite covers success, timeout propagation, unsafe
-  origin and identifier rejection, response redaction, and failed persistence;
-  repository CI and change-aware repository validation run all shell contracts.
+  origin and identifier rejection, cross-tenant fail-open behavior, response
+  redaction, and failed persistence; repository CI and change-aware repository
+  validation run all shell contracts.
 
 ### Operational exception activity integration
 

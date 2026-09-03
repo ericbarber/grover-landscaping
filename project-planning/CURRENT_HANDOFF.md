@@ -62,7 +62,8 @@ environment:
 - a final HTTPS application URL;
 - an approved first-owner email and a current hosted access token;
 - authorized persisted job, day-plan, account, and property IDs for the hosted
-  smoke runner.
+  smoke runner, plus a known persisted job in a controlled second tenant where
+  the primary smoke identity has no active membership.
 
 Once supplied through the owning systems, provision Cognito and Render, then run
 readiness and authenticated smoke. Do not substitute CI or private-review

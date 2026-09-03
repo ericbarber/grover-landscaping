@@ -107,12 +107,16 @@ External prerequisites:
   PostgreSQL database.
 - AWS account credentials and the production Terraform backend/state decision.
 - Final HTTPS application URL and approved first-owner email.
+- A controlled second pilot identity and tenant with a persisted job for the
+  isolation smoke fixture.
 
 Deliver:
 
 - Apply production Cognito infrastructure.
 - Configure Render with Cognito outputs and PostgreSQL.
 - Create the first organization-owner identity and retain rollback information.
+- Create the controlled second-tenant fixture without granting the primary
+  smoke identity membership.
 
 Exit evidence:
 
@@ -130,8 +134,11 @@ Repository preparation delivered:
 - Failure messages identify the violated contract without printing response
   bodies, tokens, signed URLs, object keys, or customer data.
 - Photo completion must pass an exact read-after-write persistence check.
+- A known persisted job in another tenant must return exactly `403` to the
+  primary identity; a missing job or reused primary-tenant ID is not accepted.
 - A deterministic fake-transport suite covers success, transport configuration,
-  unsafe inputs, redaction, and missing persistence and runs in repository CI.
+  unsafe inputs, tenant fail-open behavior, redaction, and missing persistence
+  and runs in repository CI.
 
 Deliver:
 

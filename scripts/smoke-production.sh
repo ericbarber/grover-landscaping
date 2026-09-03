@@ -4,12 +4,14 @@ set -euo pipefail
 : "${BASE_URL:?Set BASE_URL to the deployed application URL}"
 : "${ACCESS_TOKEN:?Set ACCESS_TOKEN to a current Cognito access token}"
 : "${SMOKE_JOB_ID:?Set SMOKE_JOB_ID to an authorized persisted pilot job}"
+: "${SMOKE_OTHER_TENANT_JOB_ID:?Set SMOKE_OTHER_TENANT_JOB_ID to a persisted job owned by another pilot tenant}"
 : "${SMOKE_DAY_PLAN_ID:?Set SMOKE_DAY_PLAN_ID to an authorized persisted pilot day plan}"
 : "${SMOKE_ACCOUNT_ID:?Set SMOKE_ACCOUNT_ID to an authorized persisted pilot account}"
 : "${SMOKE_PROPERTY_ID:?Set SMOKE_PROPERTY_ID to an authorized persisted pilot property}"
 
 base_url=${BASE_URL%/}
 job_id=${SMOKE_JOB_ID}
+other_tenant_job_id=${SMOKE_OTHER_TENANT_JOB_ID}
 day_plan_id=${SMOKE_DAY_PLAN_ID}
 account_id=${SMOKE_ACCOUNT_ID}
 property_id=${SMOKE_PROPERTY_ID}
@@ -26,12 +28,16 @@ if [[ ! "${base_url}" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?$ ]]; then
   fail "BASE_URL must be an HTTPS origin without a path, query, or fragment"
 fi
 
-for name in SMOKE_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
+for name in SMOKE_JOB_ID SMOKE_OTHER_TENANT_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
   value=${!name}
   if [[ ! "${value}" =~ ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$ ]]; then
     fail "${name} must be a safe non-empty path identifier"
   fi
 done
+
+if [[ "${other_tenant_job_id}" == "${job_id}" ]]; then
+  fail "SMOKE_OTHER_TENANT_JOB_ID must identify a different tenant job"
+fi
 
 for timeout in "${connect_timeout}" "${request_timeout}"; do
   if [[ ! "${timeout}" =~ ^[1-9][0-9]{0,2}$ ]] || ((timeout > 300)); then
@@ -53,6 +59,16 @@ authenticated_get() {
   "${curl_bin}" \
     "${curl_checked[@]}" \
     "${auth_header[@]}" \
+    "${base_url}${path}"
+}
+
+authenticated_status() {
+  local path=$1
+  "${curl_bin}" \
+    "${curl_transport[@]}" \
+    "${auth_header[@]}" \
+    --output /dev/null \
+    --write-out '%{http_code}' \
     "${base_url}${path}"
 }
 
@@ -96,6 +112,11 @@ case "${jobs}" in
   *'"id"'*) ;;
   *) fail "authenticated /jobs did not return a persisted job" ;;
 esac
+
+cross_tenant_status=$(authenticated_status "/jobs/${other_tenant_job_id}")
+if [[ "${cross_tenant_status}" != "403" ]]; then
+  fail "cross-tenant job access did not fail closed with 403"
+fi
 
 authenticated_get "/day-plans/${day_plan_id}" >/dev/null
 authenticated_get "/jobs/${job_id}/report" >/dev/null

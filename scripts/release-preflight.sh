@@ -135,14 +135,15 @@ validate_smoke_contract() {
   rg -q -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
   rg -q -- '--max-time' "${smoke}" || errors=$((errors + 1))
   rg -q 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
-  for name in SMOKE_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
+  rg -q 'cross-tenant job access did not fail closed with 403' "${smoke}" || errors=$((errors + 1))
+  for name in SMOKE_JOB_ID SMOKE_OTHER_TENANT_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
     rg -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
 
   if ((errors)); then
     failed "production smoke input/behavior contract is incomplete (${errors} missing assertion(s))"
   else
-    ready "production smoke requires an app URL and token, supplies explicit pilot IDs, and checks fail-closed hosting"
+    ready "production smoke requires an app URL and token, supplies explicit pilot IDs, and checks fail-closed hosting and tenant isolation"
   fi
 }
 
@@ -242,6 +243,7 @@ validate_external_inputs() {
 
   require_external_value ACCESS_TOKEN "provide a current Cognito access token only in the operator shell"
   require_external_value SMOKE_JOB_ID "provide an authorized persisted pilot job identifier"
+  require_external_value SMOKE_OTHER_TENANT_JOB_ID "provide a known persisted job identifier owned by another pilot tenant"
   require_external_value SMOKE_DAY_PLAN_ID "provide an authorized persisted pilot day-plan identifier"
   require_external_value SMOKE_ACCOUNT_ID "provide an authorized persisted pilot account identifier"
   require_external_value SMOKE_PROPERTY_ID "provide an authorized persisted pilot property identifier"
