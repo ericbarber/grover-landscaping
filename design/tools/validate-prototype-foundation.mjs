@@ -13,6 +13,7 @@ const prototypes = [
   { name: 'Yard Crew acquisition', path: 'prototypes/yard-crew-acquisition/index.html', hash: '#proposal', nav: '.stage-nav' },
   { name: 'Yard Owner acquisition', path: 'prototypes/yard-owner-acquisition/index.html', hash: '#account', nav: '.journey-rail' },
   { name: 'Yard Owner portal', path: 'prototypes/yard-owner-portal/index.html', hash: '#home', nav: '.desktop-rail' },
+  { name: 'Current frontend review', path: 'prototypes/current-frontend-review/index.html', hash: '#company-home', nav: '.workspace-rail' },
 ];
 
 const expectedTokens = {

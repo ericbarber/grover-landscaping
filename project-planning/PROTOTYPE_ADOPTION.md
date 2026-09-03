@@ -18,6 +18,7 @@ remains the canonical delivery-status record for all product and platform work.
 
 | Experience | Approved design source | Production status | Remaining production adoption |
 | --- | --- | --- | --- |
+| Current frontend parity | [Dated responsive mirror](../design/prototypes/current-frontend-review/README.md) and [September 3 audit](../design/review/current-frontend-design-audit-2026-09-03.md) | Review baseline captured | Eight representative public and authenticated surfaces now distinguish rendered current state from design direction. Next design work should address truthful route date/state language, Yard Owner recovery continuity, manager-home urgency, and mobile shell compression before changing production composition. |
 | Public homepage and persona journeys | [Working homepage](../design/prototypes/public-homepage/README.md) and [V2 handoff](../design/review/v2-working-homepage-handoff.md) | Adopted | Replace illustrative workspace previews only when approved production captures exist; add customer proof only with verified provenance and approval. |
 | Landscaping-company “Today’s operation” preview | [Manager schedule V1](../design/high-fidelity/manager/schedule-desktop-v1.png) | Adopted for marketing | The company hero and company Plan tour use the responsive, interactive, explicitly non-persistent dashboard. Other audience tours use their own persona-specific previews. Production manager scheduling remains tracked separately below. |
 | Shared visual foundation | [Consistency review](../design/review/cross-prototype-visual-consistency-review.md) | Adopted core / incremental migration | The production authenticated shell uses one outlined SVG icon family, phone bottom bar, tablet rail, persistent desktop rail, single-destination desktop composition, and shared semantic notices/status pills. Migrate legacy panel feedback only during its owning workflow phase. |
@@ -39,6 +40,12 @@ remains the canonical delivery-status record for all product and platform work.
 This sequence records the completed adoption path and its retained regression
 boundaries. Current execution order lives in
 [`DELIVERY_BOARD.md`](DELIVERY_BOARD.md).
+
+The September 3 parity review separates behavioral adoption from visual parity:
+an artifact marked Adopted can still be an older design direction. The dated
+current-frontend mirror is the review source for present composition; workflow
+prototypes remain authoritative only for the behavior and handoff contracts
+named in their adoption rows.
 
 1. Shared authenticated-shell core is delivered; migrate legacy feedback only
    inside the owning workflow phases.

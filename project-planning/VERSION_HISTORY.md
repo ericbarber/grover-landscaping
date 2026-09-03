@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-03: Completed a detailed current-frontend design parity review. A
+  responsive, dependency-free mirror now covers eight representative public,
+  company, crew, Yard Owner, and property-manager surfaces with deterministic
+  desktop/mobile captures and browser validation. The audit separates observed
+  production composition from older design direction, ranks continuity flaws
+  in Yard Owner recovery, manager hierarchy, repeated context, date/state
+  language, density, mobile clearance, and typography, and defines phased
+  follow-up without changing production behavior or crossing product gates.
 - 2026-09-03: Added the owner-operated AWS account setup runbook for protected
   provisioning. It scopes AWS to Cognito, optional photo storage, and Terraform
   state; defines the recommended management/production account separation;

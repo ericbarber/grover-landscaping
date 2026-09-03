@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Responsive current-state mirror of representative Grover frontend surfaces for design review.">
+  <title>Grover current frontend review</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../shared/grover-foundation.css">
+</head>
+<body data-prototype="current-frontend-review" data-surface="company-home">
+  <aside class="review-bar prototype-note" aria-label="Prototype controls">
+    <div>
+      <strong>Current production mirror</strong>
+      <span>Representative UI at the September 3, 2026 review baseline. No data is saved.</span>
+    </div>
+    <label for="surface-picker">Review surface
+      <select id="surface-picker">
+        <option value="public">Public landing</option>
+        <option value="company-home" selected>Company owner · Home</option>
+        <option value="company-manage">Company owner · Manage</option>
+        <option value="crew-home">Crew lead · Home</option>
+        <option value="crew-route">Crew lead · Route</option>
+        <option value="owner-home">Yard owner · Home</option>
+        <option value="owner-yard">Yard owner · My yard unavailable</option>
+        <option value="portfolio">Property manager · Portfolio</option>
+      </select>
+    </label>
+    <a class="prototype-review-link" href="../../review/current-frontend-design-audit-2026-09-03.md">Read audit</a>
+  </aside>
+
+  <div id="prototype-announcer" class="sr-only" aria-live="polite"></div>
+
+  <section class="public-mirror" aria-label="Public landing page mirror">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#public" aria-label="Grover home">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg>
+          <span>Grover</span>
+        </a>
+        <nav aria-label="Public navigation"><a href="#how">How it works</a><a href="#for-you">Who it helps</a><a href="#proof">Why Grover</a></nav>
+        <a class="button button-primary" href="#public-start">Open Grover</a>
+      </div>
+    </header>
+    <main>
+      <section class="public-hero">
+        <div class="public-copy">
+          <p class="eyebrow" id="public-eyebrow">Operations customers can trust</p>
+          <h1 id="public-headline">Plan every visit. Care with confidence. Prove the work.</h1>
+          <p class="lede" id="public-description">Connect scheduling, crews, proof, customer communication, and revenue in one calm operating view.</p>
+          <span class="switch-label">Show me Grover as a</span>
+          <div class="persona-switch" aria-label="Choose your view">
+            <button type="button" data-public-persona="owner" aria-pressed="false">Yard owner</button><button type="button" data-public-persona="property-manager" aria-pressed="false">Property manager</button><button type="button" class="active" data-public-persona="company" aria-pressed="true">Landscaping company</button><button type="button" data-public-persona="crew" aria-pressed="false">Crew lead</button>
+          </div>
+          <div class="hero-actions" id="public-start"><a class="button button-primary" href="#how">Sign up your company →</a><a class="button button-secondary" href="#for-you">Explore your workflow</a></div>
+        </div>
+        <div class="operations-preview" aria-label="Illustrative company operations preview">
+          <div class="preview-head"><div><span id="preview-kicker">Today’s operation</span><strong id="preview-title">Thursday, September 3</strong></div><span class="status-pill" id="preview-status">Synced</span></div>
+          <div class="preview-metrics"><div><strong id="preview-value-one">8/9</strong><span id="preview-label-one">crews active</span></div><div><strong id="preview-value-two">46%</strong><span id="preview-label-two">route progress</span></div><div><strong id="preview-value-three">7</strong><span id="preview-label-three">unassigned</span></div></div>
+          <div class="preview-row"><span class="route-dot">1</span><div><strong id="preview-row-one-title">North crew</strong><span id="preview-row-one-copy">4 stops · 340 planned minutes</span></div><span id="preview-row-one-meta">80 min open</span></div>
+          <div class="preview-row muted-row"><span class="route-dot">2</span><div><strong id="preview-row-two-title">West crew</strong><span id="preview-row-two-copy">3 stops · 225 planned minutes</span></div><span id="preview-row-two-meta">135 min open</span></div>
+        </div>
+      </section>
+      <section class="public-proof" id="how"><p class="eyebrow">One connected rhythm</p><div><article><span>01</span><h2>Plan</h2><p>Set the day, customer, property, and work context.</p></article><article><span>02</span><h2>Care</h2><p>Guide the crew through one clear current stop.</p></article><article><span>03</span><h2>Proof</h2><p>Share only reviewed, customer-safe results.</p></article></div></section>
+    </main>
+  </section>
+
+  <section class="workspace-mirror" aria-label="Authenticated application mirror">
+    <header class="auth-strip"><strong id="auth-name">Olivia — Organization Owner</strong><span id="auth-role">OrganizationOwner</span><button type="button">Sign out</button></header>
+    <div class="mobile-context">
+      <div><span class="eyebrow" id="mobile-kicker">Your workspace</span><strong id="mobile-title">Home</strong><small id="mobile-summary">Today’s work and next actions</small></div>
+      <span class="context-person" id="mobile-person">Olivia — Company owner</span>
+    </div>
+    <aside class="workspace-rail">
+      <a class="brand" href="#company-home" aria-label="Grover Home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg>
+        <span>Grover</span>
+      </a>
+      <p class="rail-persona" id="rail-persona">Yard-care company owner</p>
+      <nav id="desktop-nav" aria-label="Workspace navigation"></nav>
+      <div class="rail-identity"><strong id="rail-name">Olivia — Organization Owner</strong><span id="rail-role">Yard-care company owner</span></div>
+    </aside>
+
+    <main class="workspace-main" id="workspace-content" tabindex="-1">
+      <section class="view-panel home-panel" data-panel="company-home">
+        <div class="workspace-hero company-hero">
+          <div class="hero-date">Thursday, September 3</div>
+          <div class="workspace-hero-copy"><p>Good evening, Olivia</p><h1>Run today with confidence.</h1><p>Turn great field work into a business customers trust.</p><span class="persona-chip">Yard-care company owner · &nbsp; Plan &nbsp;·&nbsp; Care &nbsp;·&nbsp; Proof</span></div>
+          <div class="hero-status"><span>Field delivery</span><strong>…</strong><b>jobs complete</b><hr><b>Organization administration</b><small>Manage routes, customers, properties, and team access.</small></div>
+        </div>
+        <div class="dashboard-grid">
+          <article class="metric-card"><span class="eyebrow">Field delivery</span><strong>0 of 2</strong><small>jobs complete</small><b>0%</b><div class="progress"><i style="width:0%"></i></div><footer><span>2 assigned</span><span class="status-pill">Everything synced</span></footer></article>
+          <article class="notice-card"><span class="notice-icon">ⓘ</span><div><strong>2 jobs remaining</strong><p>Everything is synced. Continue with the recommended next action.</p><button class="button button-secondary" type="button">Open Manage</button></div></article>
+          <article class="next-card"><span class="eyebrow">Recommended next</span><strong>Manage</strong><p>Open operations and administration tools</p><span class="next-arrow">→</span></article>
+          <article class="workspace-links"><span class="eyebrow">Your workspace</span><div><button type="button"><b>⌁</b><strong>Route</strong><small>Continue today’s route and stop progress</small></button><button type="button"><b>▤</b><strong>Jobs</strong><small>Review assigned customers and field work</small></button><button type="button"><b>✓</b><strong>Job</strong><small>Continue the selected job workflow</small></button></div></article>
+          <article class="identity-card"><strong>Signed in as Olivia — Organization Owner</strong><p>Company operations, customers, teams, routes, and recovery</p></article>
+        </div>
+      </section>
+
+      <section class="view-panel manage-panel" data-panel="company-manage" hidden>
+        <div class="section-banner"><strong>Manager and office tools</strong><span>Scheduling, customers, and recovery</span></div>
+        <article class="manager-home"><span class="eyebrow">Manager home</span><h1>Choose what you need to do</h1><div class="manager-grid"><button type="button"><b>⌂</b><strong>Overview</strong><span>Setup and company readiness</span></button><button type="button"><b>⌁</b><strong>Schedule</strong><span>Routes, dispatch, and workload</span></button><button type="button"><b>⌑</b><strong>Customers</strong><span>Accounts, properties, and portfolios</span></button><button type="button"><b>▤</b><strong>Team</strong><span>Members, invitations, and access</span></button><button type="button"><b>✓</b><strong>Reports</strong><span>Quality, activity, and communication</span></button><button type="button"><b>△</b><strong>Recovery</strong><span>Photos, privacy, and failed work</span></button></div></article>
+      </section>
+
+      <section class="view-panel home-panel" data-panel="crew-home" hidden>
+        <div class="workspace-hero crew-hero"><div class="hero-date">Thursday, September 3</div><div class="workspace-hero-copy"><p>Good evening, Leah</p><h1>Know what is next.</h1><p>Move through today’s work with a clear handoff at every stop.</p><span class="persona-chip">Crew lead · &nbsp; Plan &nbsp;·&nbsp; Care &nbsp;·&nbsp; Proof</span></div><div class="hero-status"><span>Field delivery</span><strong>0 of 1</strong><b>stops complete</b><hr><b>North Route Crew</b><small>One stop is ready to begin.</small></div></div>
+        <div class="dashboard-grid crew-dashboard"><article class="metric-card"><span class="eyebrow">Today’s route</span><strong>0 of 1</strong><small>stops complete</small><b>0%</b><div class="progress"><i style="width:0%"></i></div><footer><span>55 min remaining</span><span class="status-pill">Everything synced</span></footer></article><article class="notice-card"><span class="notice-icon">ⓘ</span><div><strong>Start with the current stop</strong><p>Review the property and service scope before work begins.</p><button class="button button-secondary" type="button">Open Route</button></div></article><article class="next-card"><span class="eyebrow">Recommended next</span><strong>Route</strong><p>Continue today’s route and stop progress</p><span class="next-arrow">→</span></article><article class="identity-card wide"><strong>Signed in as Leah — Crew Lead</strong><p>Assigned routes, jobs, field evidence, and completion</p></article></div>
+      </section>
+
+      <section class="view-panel route-panel" data-panel="crew-route" hidden>
+        <article class="route-card"><span class="eyebrow">Crew day plan</span><h1>North Route Crew</h1><p class="route-date">2026-06-18</p><small>Source: local API</small><div class="route-progress"><span class="eyebrow">Today’s route</span><span class="status-pill">saved locally</span><strong>0 <small>of 1</small></strong><b>stops complete</b><div class="progress"><i style="width:0%"></i></div><footer><b>55 min remaining</b><b>55 min planned · manual</b></footer></div><h2>Current stop</h2><div class="stop-card"><span class="stop-number">1</span><div><strong>Sample Customer</strong><span>123 Oak Street</span><small>Drive 10 min / service 45 min</small></div><span class="status-pill">Pending</span><button class="button button-primary" type="button">Start stop</button><button class="stop-options" type="button"><strong>Stop options</strong><span>Skip or add service</span></button></div><div class="route-change"><strong>Route changes</strong><button type="button">Add a stop</button></div><div class="submitted"><strong>Submitted requests</strong><span>5</span></div></article>
+      </section>
+
+      <section class="view-panel home-panel" data-panel="owner-home" hidden>
+        <div class="workspace-hero owner-hero"><div class="hero-date">Thu, Sep 3</div><div class="workspace-hero-copy"><p>Good evening, Jamie</p><h1>Your yard, all in one place.</h1><p>See the care behind every visit—and the difference it makes.</p><span class="persona-chip">Yard owner · &nbsp; Plan &nbsp;·&nbsp; Care &nbsp;·&nbsp; Proof</span></div></div>
+        <div class="dashboard-grid owner-dashboard"><article class="metric-card"><span class="eyebrow">Service progress</span><strong>0 of 0</strong><small>visits complete</small><b>0%</b><div class="progress"><i style="width:0%"></i></div><footer><span>0 scheduled</span><span class="status-pill">Everything synced</span></footer></article><article class="notice-card"><span class="notice-icon">ⓘ</span><div><strong>You’re clear for now</strong><p>No visits are currently scheduled or assigned. Use My yard to review property details.</p><button class="button button-secondary" type="button">View My yard</button></div></article><article class="next-card"><span class="eyebrow">Recommended next</span><strong>My yard</strong><p>Review properties, service, reports, and bids</p><span class="next-arrow">→</span></article><article class="identity-card"><strong>Signed in as Jamie — Property Owner</strong><p>Properties, upcoming service, reports, photos, and bids</p></article></div>
+      </section>
+
+      <section class="view-panel unavailable-panel" data-panel="owner-yard" hidden>
+        <div class="section-heading"><span class="eyebrow">My yard</span><h1>My yard</h1></div><div class="unavailable-state" role="status"><span>!</span><div><strong>Your visit details are temporarily unavailable.</strong><p>Customer information remains protected. Try loading the portal again.</p><button class="button button-secondary" type="button">Try again</button></div></div>
+      </section>
+
+      <section class="view-panel portfolio-panel" data-panel="portfolio" hidden>
+        <div class="portfolio-hero"><div><span class="eyebrow">Property portfolio</span><h1>Service confidence across every location.</h1><p>Customer-safe readiness, delivered proof, and decisions for Sample Customer.</p></div><label>Portfolio<select><option>All account properties · 2</option></select></label></div>
+        <nav class="portfolio-tabs" aria-label="Portfolio sections"><button class="active" type="button">Overview</button><button type="button">Properties</button><button type="button">Proof</button><button type="button">Approvals</button></nav>
+        <div class="portfolio-content"><div class="portfolio-note"><strong>ⓘ &nbsp; Local review data boundary</strong><span>Next-service summaries below use the explicit local-review fixture. Delivered proof and recommendations use protected API history when available.</span></div><span class="eyebrow">Portfolio overview</span><h2>Start with what needs attention.</h2><p>Readiness, exceptions, proof, and decisions stay connected to their properties.</p><div class="summary-grid"><article><span class="eyebrow">Properties</span><strong>2</strong><small>Connected locations</small></article><article class="ready"><span class="eyebrow">Service ready</span><strong>2 of 2</strong><small>Local-review schedule</small></article><article class="caution"><span class="eyebrow">Open exceptions</span><strong>0</strong><small>Weather or reschedule</small></article><article class="waiting"><span class="eyebrow">Waiting on you</span><strong>0</strong><small>Recommendation decisions</small></article></div><div class="portfolio-grid"><article><span class="eyebrow">Priority queue</span><h3>What needs attention</h3><div class="all-clear"><b>✓</b><div><strong>No portfolio actions need attention.</strong><span>No service exception or customer decision is waiting in the available records.</span></div></div></article><article><span class="eyebrow">Coverage</span><h3>Next service window</h3><div class="progress"><i style="width:100%"></i></div><p>2 with an illustrative next visit · 0 awaiting schedule data</p><button class="button button-secondary" type="button">Review property coverage</button></article></div></div>
+      </section>
+    </main>
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile workspace navigation"></nav>
+  </section>
+  <script src="app.js"></script>
+</body>
+</html>
