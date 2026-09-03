@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grover truth and recovery design</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../shared/grover-foundation.css">
+</head>
+<body data-prototype="frontend-truth-recovery" data-audience="owner" data-state="unavailable">
+  <aside class="review-bar prototype-note" aria-label="Design review controls">
+    <div><strong>Proposed design · truth and recovery</strong><span>Compare explicit customer recovery and route-state language. No data is saved.</span></div>
+    <label>Surface<select id="audience"><option value="owner">Yard Owner · My yard</option><option value="crew">Crew lead · Route</option></select></label>
+    <label>State<select id="state"></select></label>
+    <a class="prototype-review-link" href="../../review/frontend-truth-recovery-design.md">Read contract</a>
+  </aside>
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+  <div class="app-shell">
+    <header class="account-bar"><strong id="account-name">Jamie — Property Owner</strong><button type="button">Account</button></header>
+    <aside class="app-rail">
+      <a class="brand" href="#owner/unavailable" aria-label="Grover home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span></a>
+      <p id="rail-persona">Yard owner</p>
+      <nav id="rail-nav" aria-label="Workspace navigation"></nav>
+      <div class="rail-account"><strong id="rail-name">Jamie</strong><span id="rail-role">Yard owner</span></div>
+    </aside>
+    <header class="mobile-context"><div><span id="page-kicker">Yard owner</span><strong id="page-title">My yard</strong><small id="page-summary">Property and service details</small></div><span id="mobile-persona">Jamie · Yard owner</span></header>
+    <main id="main-content" tabindex="-1">
+      <section id="owner-view" class="owner-view">
+        <header class="page-heading"><span class="eyebrow">My yard</span><h1>Property and service</h1><p>Protected details stay private when the service cannot confirm current access.</p></header>
+        <div id="owner-state"></div>
+        <aside class="state-principles"><span class="eyebrow">Recovery contract</span><ul><li>Name what is known without inventing cached facts.</li><li>Explain whether access, data consistency, or service availability caused the state.</li><li>Always offer a safe destination in addition to retry.</li></ul></aside>
+      </section>
+      <section id="crew-view" class="crew-view" hidden>
+        <header class="route-heading"><div><span class="eyebrow" id="route-context">Today’s route</span><h1>North Route Crew</h1><p id="route-date">Thursday, September 3, 2026</p></div><span id="route-state-pill" class="truth-pill">Synced</span></header>
+        <article class="route-summary"><div><span class="eyebrow">Route progress</span><strong>0 <small>of 4 stops</small></strong></div><div class="progress"><i style="width:0%"></i></div><div class="route-meta"><span>First stop · 8:00 AM</span><span>3 hr 40 min planned</span></div></article>
+        <div id="route-message"></div>
+        <section class="current-stop"><span class="eyebrow" id="stop-label">Current stop</span><article><span class="stop-number">1</span><div><strong>Oak Street residence</strong><span>Review access and service scope before starting.</span></div><button class="button button-primary" id="route-action" type="button">Start stop</button></article></section>
+        <aside class="vocabulary"><span class="eyebrow">One confidence vocabulary</span><div><span><b>Syncing</b> Sending or receiving now</span><span><b>Saved on device</b> Safe locally; upload pending</span><span><b>Synced</b> Server confirmed current changes</span><span><b>Needs attention</b> Conflict or failed save requires action</span></div></aside>
+      </section>
+    </main>
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile workspace navigation"></nav>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
