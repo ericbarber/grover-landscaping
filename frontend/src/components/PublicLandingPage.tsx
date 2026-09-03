@@ -348,8 +348,8 @@ export function PublicLandingPage({
         </nav>
       </header>
 
-      <section className="grid bg-bone lg:min-h-[42rem] lg:grid-cols-[1.02fr_0.98fr]">
-        <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-24">
+      <section className="grid bg-bone lg:h-[calc(100svh-5.0625rem)] lg:min-h-[39rem] lg:grid-cols-[1.02fr_0.98fr]">
+        <div className="flex items-center px-4 py-14 sm:px-8 sm:py-20 lg:h-full lg:px-[max(2rem,calc((100vw-86rem)/2+2rem))] lg:py-2 xl:py-[clamp(1rem,3vh,3rem)]">
           <div className="w-full max-w-[40rem]">
             <div aria-atomic="true" aria-live="polite" className="grid" data-testid="hero-persona-copy">
               {marketingPersonas.map((persona) => {
@@ -364,17 +364,17 @@ export function PublicLandingPage({
                     <p className="grover-eyebrow flex items-center gap-3 before:h-px before:w-7 before:bg-emerald-700">
                       {persona.eyebrow}
                     </p>
-                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98]">
+                    <h1 className="grover-display mt-6 max-w-[12ch] text-[clamp(3.25rem,6vw,5.8rem)] leading-[0.98] lg:mt-4 lg:max-w-[14ch] lg:text-[clamp(3.5rem,5vw,4.5rem)]">
                       {persona.headline}
                     </h1>
-                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl">
+                    <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600 sm:text-xl lg:mt-4">
                       {persona.description}
                     </p>
                   </div>
                 );
               })}
             </div>
-            <div className="mt-8">
+            <div className="mt-8 lg:mt-5">
               <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-600">Show me Grover as a</p>
               <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Choose your perspective">
                 {marketingPersonas.map((persona) => (
@@ -391,7 +391,7 @@ export function PublicLandingPage({
                 ))}
               </div>
             </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Primary next steps">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-4" aria-label="Primary next steps">
               {activePersona.id === 'owner' ? (
                 <a className="grover-button-primary" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
                   Sign up your yard <span className="ml-2" aria-hidden="true">→</span>
@@ -407,7 +407,7 @@ export function PublicLandingPage({
               )}
               <a className="grover-button-secondary" href="#tour">Explore your workflow</a>
             </div>
-            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600">
+            <div aria-label="Direct signup options" className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-extrabold text-slate-600 lg:mt-3">
               <span className="text-xs uppercase tracking-[0.1em] text-slate-500">Ready to start?</span>
               {activePersona.id !== 'owner' ? (
                 <a className="min-h-11 content-center underline decoration-slate-300 underline-offset-4 hover:text-emerald-800" href={OWNER_ACQUISITION_PATH} onClick={() => trackMarketingEvent('cta_clicked', 'yard_owner', 'hero_yard_signup')}>
@@ -427,7 +427,7 @@ export function PublicLandingPage({
             </div>
           </div>
         </div>
-        <div className={`relative overflow-hidden bg-forest lg:min-h-[42rem] lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[62rem]' : 'min-h-[31rem]'}`}>
+        <div className={`relative overflow-hidden bg-forest lg:h-full lg:min-h-0 lg:rounded-bl-[5rem] ${activePersona.id === 'company' ? 'min-h-[62rem]' : 'min-h-[31rem]'}`}>
           <img alt="Landscape care team working in a Southwestern garden at sunrise" className="absolute inset-0 h-full w-full object-cover object-center" src="/brand/grover-landscape-home-hero.webp" />
           <span className="absolute inset-0 bg-gradient-to-t from-forest/35 via-transparent to-transparent" />
           {activePersona.id === 'company' ? <MarketingOperationsPlanner /> : <article aria-live="polite" className="absolute bottom-5 left-4 right-4 rounded-[1.35rem] border border-white/60 bg-paper/95 p-5 text-ink shadow-grover-lg backdrop-blur sm:bottom-8 sm:left-auto sm:right-8 sm:w-[min(31rem,calc(100%-4rem))] sm:p-7 lg:bottom-14 lg:right-12">

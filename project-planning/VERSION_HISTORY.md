@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-02: Brought the complete two-column public hero above the desktop
+  fold. Its height now tracks the viewport below the sticky header, responsive
+  typography and spacing preserve the action hierarchy, and the operations
+  graphic uses a denser intermediate-width composition without changing its
+  mobile or product-tour presentation. Browser assertions keep every persona's
+  controls, actions, and complete visual inside 1024×720 and 1280×720 viewports
+  across Chromium, Firefox, and WebKit; TypeScript, all 485 frontend tests, and
+  the production build also pass.
 - 2026-09-02: Stabilized the public hero while switching audiences. All persona
   copy now shares a responsive intrinsic-height region sized by its longest
   composition, keeping the title and selector stationary without hardcoded

@@ -37,8 +37,8 @@ export function MarketingOperationsPlanner({
       className={`${
         isTourPreview
           ? 'relative w-full border-slate-200 bg-paper'
-          : 'absolute bottom-4 left-3 right-3 border-white/60 bg-paper/95 backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] lg:bottom-8 lg:right-8'
-      } rounded-[1.35rem] border p-4 text-ink shadow-grover-lg sm:p-5`}
+          : 'absolute bottom-4 left-3 right-3 border-white/60 bg-paper/95 backdrop-blur sm:bottom-7 sm:left-auto sm:right-7 sm:w-[min(40rem,calc(100%-3.5rem))] lg:bottom-4 lg:right-4 xl:bottom-8 xl:right-8'
+      } rounded-[1.35rem] border p-4 text-ink shadow-grover-lg sm:p-5 ${isTourPreview ? '' : 'lg:p-3 xl:p-5'}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -50,26 +50,26 @@ export function MarketingOperationsPlanner({
           )}
           <p className="mt-1 max-w-md text-xs leading-4 text-slate-600">Balance route progress, available capacity, and the work that still needs an owner.</p>
         </div>
-        <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-wide text-emerald-900">Live · 8:42 AM</span>
+        <span className={`rounded-full bg-emerald-100 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-wide text-emerald-900 ${isTourPreview ? '' : 'lg:hidden xl:inline-flex'}`}>Live · 8:42 AM</span>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Today's operations summary">
+      <dl className={`mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 ${isTourPreview ? '' : 'lg:mt-2 xl:mt-4'}`} aria-label="Today's operations summary">
         <OperationMetric detail="One unavailable" label="Crews active" value="8 / 9" />
         <OperationMetric detail="39 of 84 stops" label="Route progress" value="46%" />
         <OperationMetric detail="Need owners" label="Unassigned" tone="amber" value={String(unassignedCount)} />
         <OperationMetric detail="Review today" label="At risk" tone="rose" value={String(riskCount)} />
       </dl>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className={`mt-4 flex items-center justify-between gap-3 ${isTourPreview ? '' : 'lg:mt-2 xl:mt-4'}`}>
         <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">Crew schedule</p>
         <span className="text-xs font-bold text-slate-500">Phoenix branch · Day view</span>
       </div>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className={`mt-4 grid gap-2 sm:grid-cols-2 ${isTourPreview ? '' : 'lg:mt-2 xl:mt-4'}`}>
         <CrewWorkloadCard assignment={assignment} crew="north" minutes={northMinutes} />
         <CrewWorkloadCard assignment={assignment} crew="west" minutes={westMinutes} />
       </div>
 
-      <fieldset className="mt-4 rounded-xl border border-slate-200 bg-white/75 p-3">
+      <fieldset className={`mt-4 rounded-xl border border-slate-200 bg-white/75 p-3 ${isTourPreview ? '' : 'lg:mt-2 xl:mt-4'}`}>
         <legend className="px-1 text-xs font-black uppercase tracking-[0.11em] text-slate-500">Dispatch focus · Copper Ridge HOA · 90 min</legend>
         <div className="mt-1 grid grid-cols-3 gap-1.5">
           {([
@@ -101,7 +101,7 @@ export function MarketingOperationsPlanner({
 
       <div
         aria-live="polite"
-        className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 ${
+        className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 ${isTourPreview ? '' : 'lg:mt-2 xl:mt-3'} ${
           summary.tone === 'rose'
             ? 'border-rose-200 bg-rose-50 text-rose-950'
             : summary.tone === 'emerald'
