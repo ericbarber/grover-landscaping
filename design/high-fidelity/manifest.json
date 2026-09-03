@@ -14,6 +14,20 @@
     "preview": "current/current-frontend-mobile-v1.png"
   },
   {
+    "id": "frontend-truth-recovery-desktop-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/frontend-truth-recovery/index.html#owner/unavailable",
+    "preview": "current/frontend-truth-recovery-desktop-v1.png"
+  },
+  {
+    "id": "frontend-truth-recovery-mobile-v1",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/frontend-truth-recovery/index.html#crew/offline",
+    "preview": "current/frontend-truth-recovery-mobile-v1.png"
+  },
+  {
     "id": "visual-system-v1",
     "area": "foundation",
     "status": "review",
