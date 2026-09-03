@@ -59,7 +59,9 @@ require_files() {
     infra/terraform/environments/prod/main.tf \
     infra/terraform/environments/prod/variables.tf \
     infra/terraform/environments/prod/outputs.tf \
-    scripts/smoke-production.sh; do
+    scripts/smoke-production.sh \
+    scripts/smoke-production.test.sh \
+    scripts/test-fixtures/fake-smoke-curl.sh; do
     [[ -f "${path}" ]] || missing+=("${path}")
   done
 
@@ -129,8 +131,12 @@ validate_smoke_contract() {
   rg -q '/health/ready' "${smoke}" || errors=$((errors + 1))
   rg -q '/auth/config' "${smoke}" || errors=$((errors + 1))
   rg -q 'unauthorized_status.*401|return 401' "${smoke}" || errors=$((errors + 1))
+  rg -q 'BASE_URL must be an HTTPS origin' "${smoke}" || errors=$((errors + 1))
+  rg -q -- '--connect-timeout' "${smoke}" || errors=$((errors + 1))
+  rg -q -- '--max-time' "${smoke}" || errors=$((errors + 1))
+  rg -q 'completed photo was not readable from the persisted job' "${smoke}" || errors=$((errors + 1))
   for name in SMOKE_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
-    rg -q "${name}:-" "${smoke}" || errors=$((errors + 1))
+    rg -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
 
   if ((errors)); then
@@ -208,7 +214,7 @@ validate_https_input() {
 
   if [[ -z "${value}" ]]; then
     external "${name}: ${description}"
-  elif [[ ! "${value}" =~ ^https://[^/[:space:]]+/?$ ]]; then
+  elif [[ ! "${value}" =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?$ ]]; then
     failed "${name} must be an HTTPS origin without a path, query, or fragment"
   else
     ready "${name} is present and uses HTTPS"
@@ -235,6 +241,10 @@ validate_external_inputs() {
   fi
 
   require_external_value ACCESS_TOKEN "provide a current Cognito access token only in the operator shell"
+  require_external_value SMOKE_JOB_ID "provide an authorized persisted pilot job identifier"
+  require_external_value SMOKE_DAY_PLAN_ID "provide an authorized persisted pilot day-plan identifier"
+  require_external_value SMOKE_ACCOUNT_ID "provide an authorized persisted pilot account identifier"
+  require_external_value SMOKE_PROPERTY_ID "provide an authorized persisted pilot property identifier"
   if [[ -z "${OWNER_EMAIL:-}" ]]; then
     external "OWNER_EMAIL: provide the approved first-owner email only in the operator shell"
   elif [[ "${OWNER_EMAIL}" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then

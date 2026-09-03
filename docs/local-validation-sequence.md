@@ -58,6 +58,10 @@ A failed hosted check may be rerun once unchanged to classify runner variance.
 If the same condition repeats, fix or explicitly quarantine the cause instead
 of weakening the product invariant.
 
+Repository-scope validation includes the change-selection, release-preflight,
+and production-smoke shell contract suites. The smoke suite uses a fake
+transport; it never contacts a hosted application or passes a real token.
+
 ## 5. Validate a protected release
 
 Before and after deployment, run the release preflight, database readiness,
