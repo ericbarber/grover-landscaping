@@ -6,6 +6,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-03: Added an executable tenant-isolation requirement to the protected
+  production smoke. Operators must supply a real persisted job from a
+  controlled second tenant, distinct from the authorized smoke job, and the
+  primary Cognito identity must receive exactly `403`. Fake-transport coverage
+  catches fail-open responses and protects identifiers and tokens from failure
+  output; preflight and hosted-pilot documentation now require the controlled
+  second-tenant fixture rather than treating a nonexistent ID as evidence.
 - 2026-09-03: Hardened the authenticated production smoke boundary ahead of
   protected provisioning. The runner now requires an exact HTTPS origin and
   explicit safe persisted pilot IDs, bounds every request, withholds response

@@ -109,13 +109,22 @@ Sign in as the first owner, complete the required temporary-password and MFA set
 BASE_URL=https://grover-landscaping.onrender.com \
 ACCESS_TOKEN='<current Cognito access token>' \
 SMOKE_JOB_ID=job_1001 \
+SMOKE_OTHER_TENANT_JOB_ID=job_other_tenant_1001 \
 SMOKE_DAY_PLAN_ID=day_plan_2026_06_15_crew_1001 \
 SMOKE_ACCOUNT_ID=acct_1001 \
 SMOKE_PROPERTY_ID=property_1001 \
 bash scripts/smoke-production.sh
 ```
 
-The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/photo-processing/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
+The first owner passes validation only when `/me/access` returns an active
+`org_demo_landscaping` membership with `organization_owner` access, `/jobs`
+returns authenticated data, a known persisted job from a controlled second
+tenant returns exactly `403`, route/report/photo/photo-processing/customer
+portal smoke reads succeed for the configured primary-tenant `SMOKE_*` IDs, and
+the access summary writes a `login` audit event. Provision the second-tenant job
+with a separate controlled identity and confirm the first owner has no active
+membership there; do not use a fabricated ID because `404` is not tenant-
+isolation evidence.
 
 The smoke runner accepts only an HTTPS origin and explicit safe pilot IDs,
 bounds every request, withholds response bodies from failures, and confirms the
