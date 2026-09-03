@@ -59,6 +59,8 @@ require_files() {
     infra/terraform/environments/prod/main.tf \
     infra/terraform/environments/prod/variables.tf \
     infra/terraform/environments/prod/outputs.tf \
+    docs/aws-account-setup.md \
+    docs/aws-terraform-state-bucket-policy.template.json \
     docs/protected-release-evidence.template.json \
     scripts/smoke-production.sh \
     scripts/smoke-production.test.sh \

@@ -39,6 +39,9 @@ employee data or opening access broadly:
 
 ## Provisioning
 
+Complete the [AWS Account Setup for the Protected Pilot](aws-account-setup.md)
+before provisioning Cognito or optional S3 photo storage.
+
 1. Push the reviewed production changes to the repository's default branch.
 2. In the Render dashboard, create a new Blueprint and connect this repository.
 3. Provision the production Cognito Terraform environment using the final Render application URL and the hosted pilot runbook. Enable the optional S3 photo bucket in Terraform only when the pilot is ready for S3-backed photo evidence.
