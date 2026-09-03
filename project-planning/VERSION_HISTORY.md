@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-03: Hardened the authenticated production smoke boundary ahead of
+  protected provisioning. The runner now requires an exact HTTPS origin and
+  explicit safe persisted pilot IDs, bounds every request, withholds response
+  bodies and sensitive upload data from failures, and proves photo completion
+  with an exact read-after-write check. A deterministic fake transport covers
+  success, unsafe inputs, timeout propagation, redaction, and missing
+  persistence; repository validation and CI now run the smoke, preflight, and
+  change-selection shell contract suites.
 - 2026-09-02: Completed persona continuity through the public product tour.
   Yard Owners now see upcoming care, visit progress, and owner-controlled
   review; property managers see portfolio readiness, exceptions, and reporting;

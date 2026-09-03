@@ -117,6 +117,11 @@ bash scripts/smoke-production.sh
 
 The first owner passes validation only when `/me/access` returns an active `org_demo_landscaping` membership with `organization_owner` access, `/jobs` returns authenticated data, route/report/photo/photo-processing/customer portal smoke reads succeed for the configured `SMOKE_*` IDs, and the access summary writes a `login` audit event.
 
+The smoke runner accepts only an HTTPS origin and explicit safe pilot IDs,
+bounds every request, withholds response bodies from failures, and confirms the
+completed photo can be read back from the exact persisted job. Validate this
+runner without a live endpoint using `bash scripts/smoke-production.test.sh`.
+
 Before enabling provider-backed delivery, validate the webhook gateway configuration:
 
 ```bash

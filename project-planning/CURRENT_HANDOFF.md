@@ -60,7 +60,9 @@ environment:
   PostgreSQL database;
 - AWS credentials and the production Terraform state/backend decision;
 - a final HTTPS application URL;
-- an approved first-owner email and a current hosted access token.
+- an approved first-owner email and a current hosted access token;
+- authorized persisted job, day-plan, account, and property IDs for the hosted
+  smoke runner.
 
 Once supplied through the owning systems, provision Cognito and Render, then run
 readiness and authenticated smoke. Do not substitute CI or private-review

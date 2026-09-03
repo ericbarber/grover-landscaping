@@ -32,6 +32,13 @@ jobs:
           test -f Dockerfile
           test -f render.yaml
 
+      - name: Validate shell and release contracts
+        run: |
+          bash -n scripts/*.sh scripts/test-fixtures/*.sh
+          bash scripts/validate-changes.test.sh
+          bash scripts/release-preflight.test.sh
+          bash scripts/smoke-production.test.sh
+
   backend:
     name: Backend checks
     runs-on: ubuntu-latest

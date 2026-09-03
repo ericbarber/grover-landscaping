@@ -11,7 +11,7 @@ infer execution order from section position.
 
 | Lane | Current state | Next phase |
 | --- | --- | --- |
-| Repository | P1 operational exception activity integration is delivered | Await R2 external access or the P2 product-boundary decision |
+| Repository | R3 production-smoke safety and persistence contract is delivered | Await R2 external access or the P2 product-boundary decision |
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
@@ -1351,6 +1351,19 @@ no provider customer, service property, job, contract, route, schedule, payment,
 or crew assignment.
 
 ## Delivered
+
+### Protected production smoke safety
+
+- The hosted runner rejects non-HTTPS origins, missing or unsafe pilot IDs, and
+  invalid unbounded timeout configuration before sending an access token.
+- Every request has bounded connection and total timeouts, while assertion
+  failures name only the failed contract and withhold response bodies, signed
+  URLs, object keys, tokens, and customer data.
+- Photo completion now requires the exact photo to be readable from the
+  persisted job, providing a concrete read-after-write check.
+- A no-network fake-transport suite covers success, timeout propagation, unsafe
+  origin and identifier rejection, response redaction, and failed persistence;
+  repository CI and change-aware repository validation run all shell contracts.
 
 ### Operational exception activity integration
 
