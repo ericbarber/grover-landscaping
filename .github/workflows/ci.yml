@@ -22,6 +22,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
       - name: Validate expected project layout
         run: |
           test -f README.md
@@ -38,6 +43,7 @@ jobs:
           bash scripts/validate-changes.test.sh
           bash scripts/release-preflight.test.sh
           bash scripts/smoke-production.test.sh
+          node --test scripts/validate-protected-release-evidence.test.mjs
 
   backend:
     name: Backend checks

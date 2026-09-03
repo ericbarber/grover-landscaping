@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "environment": "protected-pilot",
+  "release_id": "replace-with-safe-release-id",
+  "application_origin": "https://replace-with-protected-origin.example",
+  "source_commit": "replace-with-full-lowercase-commit-sha",
+  "operator_ref": "replace-with-non-personal-operator-reference",
+  "recorded_at": "replace-with-rfc3339-utc-timestamp",
+  "deploy": {
+    "provider": "render",
+    "deploy_id": "replace-with-render-deploy-id",
+    "status": "succeeded",
+    "started_at": "replace-with-rfc3339-utc-timestamp",
+    "completed_at": "replace-with-rfc3339-utc-timestamp"
+  },
+  "migrations": {
+    "status": "succeeded",
+    "applied_count": 0,
+    "completed_at": "replace-with-rfc3339-utc-timestamp"
+  },
+  "checks": {
+    "readiness": "postgres",
+    "auth_mode": "cognito",
+    "tenant_isolation_http_status": 403,
+    "production_smoke": "passed",
+    "completed_at": "replace-with-rfc3339-utc-timestamp"
+  },
+  "rollback": {
+    "target_deploy_id": "replace-with-prior-render-deploy-id",
+    "target_source_commit": "replace-with-prior-full-lowercase-commit-sha",
+    "procedure_ref": "docs/production-deployment.md#operations",
+    "status": "ready"
+  }
+}

@@ -1369,6 +1369,21 @@ or crew assignment.
   redaction, and failed persistence; repository CI and change-aware repository
   validation run all shell contracts.
 
+### Protected release evidence contract
+
+- A source-controlled JSON template captures the protected origin, source
+  commit, Render deploy, migration result, PostgreSQL/Cognito/smoke outcomes,
+  exact tenant-isolation `403`, and distinct prior rollback target.
+- A dependency-free validator rejects incomplete or fail-open evidence,
+  malformed origins and timestamps, reused deploy targets, credential-bearing
+  fields, and common bearer/JWT/AWS/signed-URL/database credential content
+  without echoing rejected values.
+- Four no-network contract tests cover a complete record, fail-open isolation,
+  unsafe rollback evidence, malformed metadata, and secret redaction; the
+  repository gate and hosted CI execute them.
+- The completed hosted evidence remains external and restricted until R2 is
+  provisioned; the intentionally incomplete template is not release evidence.
+
 ### Operational exception activity integration
 
 - Persisted operational activity now includes exception creation, assignment,

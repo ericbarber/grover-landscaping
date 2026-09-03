@@ -139,6 +139,10 @@ Repository preparation delivered:
 - A deterministic fake-transport suite covers success, transport configuration,
   unsafe inputs, tenant fail-open behavior, redaction, and missing persistence
   and runs in repository CI.
+- A machine-validated, intentionally incomplete evidence template requires
+  deploy, migration, protected-check, exact isolation, and distinct rollback
+  references while rejecting credential material; completed evidence remains a
+  restricted hosted-run artifact.
 
 Deliver:
 

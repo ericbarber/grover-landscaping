@@ -59,9 +59,12 @@ require_files() {
     infra/terraform/environments/prod/main.tf \
     infra/terraform/environments/prod/variables.tf \
     infra/terraform/environments/prod/outputs.tf \
+    docs/protected-release-evidence.template.json \
     scripts/smoke-production.sh \
     scripts/smoke-production.test.sh \
-    scripts/test-fixtures/fake-smoke-curl.sh; do
+    scripts/test-fixtures/fake-smoke-curl.sh \
+    scripts/validate-protected-release-evidence.mjs \
+    scripts/validate-protected-release-evidence.test.mjs; do
     [[ -f "${path}" ]] || missing+=("${path}")
   done
 
