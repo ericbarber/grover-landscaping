@@ -47,6 +47,7 @@ design/
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
+│   ├── yard-owner-minimal-rollout/     # Functional-unit customer enablement
 │   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
@@ -55,6 +56,7 @@ design/
 │   ├── decision-log.md                # Accepted decisions and open questions
 │   ├── application-working-design-delivery-plan.md # Remaining application phases
 │   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
+│   ├── yard-owner-minimal-rollout-plan.md # Account-scoped rollout units and gates
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
@@ -204,6 +206,13 @@ refresh their review captures with:
 node design/tools/validate-frontend-truth-recovery.mjs --capture
 ```
 
+Validate the Yard Owner functional-unit rollout and refresh its desktop/mobile
+captures with:
+
+```bash
+node design/tools/validate-yard-owner-minimal-rollout.mjs --capture
+```
+
 Generated SVG files are committed intentionally: reviewers should not need the
 renderer or a design-tool account to see a proposed screen.
 
@@ -212,41 +221,44 @@ renderer or a design-tool account to see a proposed screen.
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see
    what is adopted, partial, design ready, product-gated, or only a future concept.
-2. Compare the [current frontend mirror](prototypes/current-frontend-review/index.html)
+2. Start customer rollout review with the
+   [Yard Owner minimal rollout](prototypes/yard-owner-minimal-rollout/index.html)
+   and its [unit gates](review/yard-owner-minimal-rollout-plan.md).
+3. Compare the [current frontend mirror](prototypes/current-frontend-review/index.html)
    with its [detailed audit](review/current-frontend-design-audit-2026-09-03.md).
    This dated artifact records production parity; the other prototypes remain
    design directions and workflow contracts.
-3. Compare the current flaws with the proposed
+4. Compare the current flaws with the proposed
    [truth and recovery prototype](prototypes/frontend-truth-recovery/index.html)
    and its [design contract](review/frontend-truth-recovery-design.md).
-4. Review the [working Yard Owner acquisition](prototypes/yard-owner-acquisition/index.html)
+5. Review the [working Yard Owner acquisition](prototypes/yard-owner-acquisition/index.html)
    at assessment completion, proposal comparison/decision, accepted-but-
    unactivated setup, and relationship control. Those are the active production
    handoff boundaries.
-5. Read its [production handoff](review/yard-owner-acquisition-handoff.md) and
+6. Read its [production handoff](review/yard-owner-acquisition-handoff.md) and
    [proposal contract](../docs/owner-provider-initial-service-proposal-design.md)
    before changing production proposal behavior.
-6. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg),
+7. Compare the authenticated [crew route](high-fidelity/field/crew-route-mobile-v1.svg),
    [manager schedule](high-fidelity/manager/schedule-desktop-v1.svg), and
    [Team and access](wireframes/manager/03-team.svg) directions with `/app`;
    Route, Schedule, and Team core production composition are adopted.
-7. Review the [application working-design delivery plan](review/application-working-design-delivery-plan.md)
+8. Review the [application working-design delivery plan](review/application-working-design-delivery-plan.md)
    for the seven completion gates and cross-application sequence.
    The [Team and organization production handoff](../docs/team-organization-production-handoff.md)
    maps that wireframe to the current React, API, state, authorization, and test boundaries.
-8. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
+9. Review the [working Yard Owner portal](prototypes/yard-owner-portal/index.html)
    against the adopted four-destination shell before settling its customer-
    scoped persisted visit read model.
-9. Review the [connected property-manager portfolio](prototypes/property-manager-portfolio/index.html)
+10. Review the [connected property-manager portfolio](prototypes/property-manager-portfolio/index.html)
    and its [production handoff](review/property-manager-portfolio-handoff.md).
    The working design establishes the responsive command-center hierarchy while
    keeping its illustrative visit/readiness data and privacy boundary explicit.
-10. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
+11. Review the [working Yard Crew acquisition](prototypes/yard-crew-acquisition/index.html)
    before provider public routing/readiness adoption; keep curated discovery and
    alerts behind their product and operational gates.
-11. Use the [working public homepage](prototypes/public-homepage/index.html) as a
+12. Use the [working public homepage](prototypes/public-homepage/index.html) as a
    historical regression and behavior reference. Its core behavior is adopted,
    but its composition no longer represents pixel parity with production.
-12. Confirm that homeowner self-service, full multi-vendor management, curated
+13. Confirm that homeowner self-service, full multi-vendor management, curated
    marketplace behavior, and billing remain distinct gated concepts rather than
    being mixed into delivered core workflows.

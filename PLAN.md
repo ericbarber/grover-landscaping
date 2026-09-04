@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Current-state audit plus proposed truth/recovery states are delivered | Prototype manager continuity, then shell compression |
+| Design | Yard Owner functional-unit rollout, current-state audit, and truth/recovery states are delivered | Implement account-scoped rollout control, then prototype manager continuity |
 
 ## Status Legend
 
@@ -50,15 +50,24 @@ Current state:
   date/persistence modes. Historical routes are explicitly read only; phone
   validation proves primary-action clearance above the fixed navigation at
   390px and 320px widths.
+- The [Yard Owner minimal rollout](design/prototypes/yard-owner-minimal-rollout/README.md)
+  now separates customer enablement into U1 care visibility, U2 visit tracking,
+  U3 delivered proof, and U4 contextual questions/decisions. U1 is the minimum
+  launch boundary; disabled units are absent rather than exposed as unfinished
+  destinations. Server-derived account capabilities, audited cohorts, protected
+  unit smoke, and reversible enablement are designed but not implemented.
 
 Next design slices:
 
-1. Manager continuity: add authorized status and urgency to the six-category
+1. Yard Owner rollout control: add server-derived account capabilities,
+   auditable cohort membership, capability-shaped navigation, and protected
+   per-unit smoke/rollback without weakening route authorization.
+2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
-2. Shell compression: remove redundant hosted identity/persona presentation and
+3. Shell compression: remove redundant hosted identity/persona presentation and
    prove final-action clearance above the phone bottom bar at narrow widths and
    zoom.
-3. Prototype reconciliation: reclassify older artifacts explicitly as current
+4. Prototype reconciliation: reclassify older artifacts explicitly as current
    mirror, adopted behavior, design direction, or historical input.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,

@@ -1,5 +1,19 @@
 [
   {
+    "id": "yard-owner-minimal-rollout-desktop-v1",
+    "area": "current",
+    "status": "validated-rollout-design",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#u1",
+    "preview": "current/yard-owner-minimal-rollout-desktop-v1.png"
+  },
+  {
+    "id": "yard-owner-minimal-rollout-mobile-v1",
+    "area": "current",
+    "status": "validated-rollout-design",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#u4",
+    "preview": "current/yard-owner-minimal-rollout-mobile-v1.png"
+  },
+  {
     "id": "current-frontend-desktop-v1",
     "area": "current",
     "status": "validated-production-mirror",
