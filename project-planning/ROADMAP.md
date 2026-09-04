@@ -34,6 +34,12 @@ external hosted-run gate.
 The owner-facing AWS setup runbook now defines the secure organization,
 production-account, temporary-access, cost/audit, and S3-state prerequisites
 needed to cross that boundary without sharing credentials.
+The Yard Owner rollout design now separates the portal into cumulative
+functional units: read-only care visibility, visit tracking, delivered proof,
+and contextual questions/decisions. Live enablement still requires protected
+hosting plus server-derived account capabilities, audited cohorts, operational
+owners, per-unit smoke, and rollback; the design does not bypass the separate
+concern/preference product gate.
 
 ## Delivered UX Context
 

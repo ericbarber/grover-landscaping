@@ -90,6 +90,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Role-bounded desktop composition for customer care, field execution, company operations, portfolio management, and platform support
 - Persona-filtered management categories with a single selected tool rendered on both desktop and mobile
 - Yard owner: properties, upcoming service, reports, photos, bids, and service history
+- Design-ready Yard Owner minimal rollout with U1 read-only care visibility,
+  U2 visit tracking, U3 delivered proof, and U4 contextual questions and
+  recommendation decisions; server-derived account capabilities, audited
+  cohorts, protected unit smoke, and rollback remain implementation work
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys
