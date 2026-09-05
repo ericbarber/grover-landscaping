@@ -20,8 +20,11 @@ the Company Owner, Company Manager, Property Manager, Dispatcher, Billing, and
 Support unit maps. Field contextual controls now preserve read-only C1/CM1,
 add assigned-work execution at C2/CM2, evidence at C3/CM3, and Crew Lead-only
 route amendments at C4 while company and dispatcher field views remain
-read-only oversight. Portfolio contextual controls, protected unit smoke,
-operational enablement, and hosted cohorts remain.
+read-only oversight. Property Manager composition now progresses from P1
+readiness/coverage through P2 search/history/proof, P3 questions/decisions, and
+the already-bounded P4 administration tools; managed P1 does not request later
+history. Protected unit smoke, operational enablement, and hosted cohorts
+remain.
 
 ## Production persona source
 

@@ -125,6 +125,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   assigned-job execution at C2/CM2, checklist/photo/report evidence at C3/CM3,
   Crew Lead-only route amendments at C4, and read-only company/dispatcher job
   oversight without discarding queued offline work
+- Cumulative Property Manager portfolio composition with P1 readiness and
+  coverage, P2 property search/service history/delivered proof, P3 exact-visit
+  questions and versioned decisions, P4-only administration, fail-closed
+  unknown units, and no P2/P3 history fetches during a managed P1 rollout
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

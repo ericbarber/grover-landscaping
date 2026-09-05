@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-05: Bounded the Property Manager portfolio by rollout unit. P1 shows
+  readiness, coverage, next service, and customer-safe exceptions; P2 adds
+  property search, service history, and delivered proof; P3 adds exact-visit
+  questions and versioned recommendations; and P4 retains its scoped Manage
+  tools. Unknown managed units withhold portfolio data, and P1 does not request
+  later proof or decision history.
 - 2026-09-05: Bounded field controls by rollout unit. C1/CM1 routes are
   read-only, C2/CM2 add assigned-job progress, C3/CM3 add checklist, photo, and
   report evidence, and only Crew Lead C4 can request route changes. Company and

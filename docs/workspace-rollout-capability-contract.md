@@ -11,8 +11,9 @@ destinations and Yard Owner U2–U4 portal controls are now capability-shaped;
 company, property-management, dispatch, billing, and support management menus
 are also unit-bounded. Field route, stop, job, evidence, report, and amendment
 controls now follow the Crew Lead, Crew Member, company-oversight, and
-dispatcher unit boundaries. Property Manager portfolio details are the
-remaining React composition slice.
+dispatcher unit boundaries. Property Manager readiness, property search,
+service history, delivered proof, questions/decisions, and administration are
+also composed cumulatively from P1 through P4; P1 does not fetch P2/P3 history.
 
 ## Response
 
@@ -136,8 +137,6 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Shape remaining Property Manager portfolio contextual controls from
-   capabilities while retaining deep-link and API denial.
-2. Add protected success and cross-resource denial smoke per enabled unit.
-3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
+1. Add protected success and cross-resource denial smoke per enabled unit.
+2. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.

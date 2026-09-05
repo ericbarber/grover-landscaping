@@ -120,7 +120,10 @@ import {
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './components/WorkspaceStatus';
 import { CompletionReport } from './components/CompletionReport';
 import { CustomerPortfolioSummaryPanel } from './components/CustomerPortfolioSummaryPanel';
-import { PropertyManagerPortfolioPanel } from './components/PropertyManagerPortfolioPanel';
+import {
+  PropertyManagerPortfolioPanel,
+  propertyManagerPortfolioCapabilities,
+} from './components/PropertyManagerPortfolioPanel';
 import { YardOwnerPortalPanel } from './components/YardOwnerPortalPanel';
 import { providerEntryModeFromSearch } from './domain/providerEntryRoute';
 import { DayPlanPanel } from './components/DayPlanPanel';
@@ -1380,6 +1383,9 @@ export function App() {
     activePersona.id,
     managedPersonaUnit,
   );
+  const propertyManagerPortfolioControls = propertyManagerPortfolioCapabilities(
+    activePersona.id === 'property-manager' ? managedPersonaUnit : undefined,
+  );
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     ? customerPortalVisits
     : activePersona.id === 'property-manager'
@@ -1817,7 +1823,9 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    if (activePersona.id === 'yard-owner') {
+    if (activePersona.id === 'yard-owner'
+      || (activePersona.id === 'property-manager'
+        && !propertyManagerPortfolioControls.deliveredProof)) {
       setPropertyCompletionReports({});
       setIsLoadingPropertyCompletionReports(false);
       setHasPropertyCompletionReportHistoryError(false);
@@ -1869,7 +1877,11 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, [activePersona.id, customerPortalProperties]);
+  }, [
+    activePersona.id,
+    customerPortalProperties,
+    propertyManagerPortfolioControls.deliveredProof,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1901,7 +1913,9 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    if (activePersona.id === 'yard-owner') {
+    if (activePersona.id === 'yard-owner'
+      || (activePersona.id === 'property-manager'
+        && !propertyManagerPortfolioControls.questionsAndDecisions)) {
       setCustomerProjectBids([]);
       setIsLoadingCustomerProjectBids(false);
       setHasCustomerProjectBidHistoryError(false);
@@ -1936,7 +1950,7 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, [activePersona.id]);
+  }, [activePersona.id, propertyManagerPortfolioControls.questionsAndDecisions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -3443,6 +3457,7 @@ export function App() {
             {activePersona.id === 'property-manager' ? (
               <PropertyManagerPortfolioPanel
                 customer={customerPortalPreviewCustomer}
+                rolloutUnit={managedPersonaUnit}
                 portfolios={customerPortalPreviewPortfolios}
                 properties={customerPortalPreviewProperties}
                 links={customerPortalPreviewPortfolioLinks}
