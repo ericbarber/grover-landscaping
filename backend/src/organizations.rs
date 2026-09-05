@@ -4,8 +4,10 @@ use crate::local_review::{
 };
 use crate::workspace_rollout::{
     apply_workspace_rollout_enrollments, default_workspace_rollout_projection,
-    load_active_workspace_rollout_enrollments, WorkspaceRolloutAssignment,
-    WorkspaceRolloutProjection,
+    list_organization_workspace_rollout_enrollments, load_active_workspace_rollout_enrollments,
+    mutate_membership_workspace_rollout, UpdateWorkspaceRolloutEnrollmentRequest,
+    WorkspaceRolloutAssignment, WorkspaceRolloutEnrollmentRecord, WorkspaceRolloutMutationResult,
+    WorkspaceRolloutProjection, WorkspaceRolloutStoreMutationResult,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -388,6 +390,63 @@ impl OrganizationRepository {
             return OrganizationCollectionResult::Loaded(local_review_memberships());
         }
         OrganizationCollectionResult::Unavailable
+    }
+
+    pub async fn list_workspace_rollout_enrollments(
+        &self,
+        organization_id: &str,
+    ) -> OrganizationCollectionResult<WorkspaceRolloutEnrollmentRecord> {
+        let Some(pool) = &self.pool else {
+            return OrganizationCollectionResult::Unavailable;
+        };
+        match list_organization_workspace_rollout_enrollments(pool, organization_id).await {
+            Ok(enrollments) => OrganizationCollectionResult::Loaded(enrollments),
+            Err(error) => {
+                tracing::error!(%error, organization_id, "persisted workspace rollout enrollment list failed");
+                OrganizationCollectionResult::Unavailable
+            }
+        }
+    }
+
+    pub async fn update_workspace_rollout_enrollment(
+        &self,
+        organization_id: &str,
+        membership_id: &str,
+        actor_user_id: &str,
+        request: UpdateWorkspaceRolloutEnrollmentRequest,
+    ) -> WorkspaceRolloutMutationResult {
+        let Some(pool) = &self.pool else {
+            return WorkspaceRolloutMutationResult::Unavailable;
+        };
+        match mutate_membership_workspace_rollout(
+            pool,
+            organization_id,
+            membership_id,
+            actor_user_id,
+            &request,
+        )
+        .await
+        {
+            Ok(WorkspaceRolloutStoreMutationResult::Applied(enrollment)) => {
+                WorkspaceRolloutMutationResult::Applied(enrollment)
+            }
+            Ok(WorkspaceRolloutStoreMutationResult::Replayed(enrollment)) => {
+                WorkspaceRolloutMutationResult::Replayed(enrollment)
+            }
+            Ok(WorkspaceRolloutStoreMutationResult::Conflict) => {
+                WorkspaceRolloutMutationResult::Conflict
+            }
+            Ok(WorkspaceRolloutStoreMutationResult::Invalid) => {
+                WorkspaceRolloutMutationResult::Invalid
+            }
+            Ok(WorkspaceRolloutStoreMutationResult::NotFound) => {
+                WorkspaceRolloutMutationResult::NotFound
+            }
+            Err(error) => {
+                tracing::error!(%error, organization_id, membership_id, "persisted workspace rollout enrollment mutation failed");
+                WorkspaceRolloutMutationResult::Unavailable
+            }
+        }
     }
 
     pub async fn list_team_administration_activity(

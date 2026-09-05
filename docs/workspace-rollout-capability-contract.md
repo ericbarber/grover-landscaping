@@ -2,12 +2,12 @@
 
 ## Status
 
-The read contract and cohort persistence foundation are delivered through
-`GET /me/access` and migration 123. Accounts remain default off unless an exact
-active enrollment exists. No public/operator mutation endpoint exists yet, so
-this does not constitute a live production cohort, change navigation, or grant
-API authority. Guarded enrollment operations and capability-shaped React
-composition are later slices.
+The read contract, cohort persistence, and guarded organization-operator API
+are delivered through `GET /me/access`, migrations 123–124, and the endpoints
+below. Accounts remain default off unless an exact active enrollment exists.
+No production cohort is enabled by these migrations, navigation is not yet
+shaped, and rollout state never grants API authority. Capability-shaped React
+composition is the next slice.
 
 ## Response
 
@@ -59,7 +59,9 @@ an invitation, contact an administrator, or sign out safely.
 - A projection shapes future interface composition only. Every protected API
   repeats its existing role and exact-resource authorization.
 - A false or missing capability must fail closed in future client composition.
-- No enablement write endpoint exists in this slice.
+- Enrollment reads and writes require an active OrganizationOwner or
+  organization-scoped SupportAdmin membership in the exact target
+  organization; a claim without that membership is insufficient.
 - `rollout_mode: "cohort"` reports an exact persisted match; it does not weaken
   resource authorization or prove that protected hosted validation passed.
 
@@ -76,6 +78,37 @@ enrollment deletion is restricted by its history. Suspension removes the row
 from effective reads, returning that projection to default off without deleting
 accepted application records.
 
+## Guarded operator API
+
+`GET /organizations/{organization_id}/workspace-rollout-enrollments` lists the
+organization's retained enrollments, including stale records whose originating
+membership has since changed. `membership_id` is null for such a stale record,
+so it remains auditable but cannot be mutated through a different identity or
+scope.
+
+`PUT /organizations/{organization_id}/memberships/{membership_id}/workspace-rollout`
+accepts one lifecycle action:
+
+```json
+{
+  "action": "advance",
+  "enabled_unit": "cm2",
+  "expected_version": 1,
+  "mutation_id": "operator-generated-stable-retry-key",
+  "reason": "Field pilot passed CM1 exit checks"
+}
+```
+
+The client never supplies subject user, persona, organization, or resource
+scope. The server locks and re-reads the exact membership and derives those
+values. `enable` requires a valid first or later unit and no expected version;
+`advance` requires a strictly higher unit and the current version; `suspend`
+and `resume` omit `enabled_unit` and require the current version. A unit cannot
+be downgraded. The same actor may retry an identical `mutation_id` and receive
+`idempotent_replay: true`; changed payload reuse, stale versions, and invalid
+lifecycle transitions return conflict without changing state. Mutation IDs are
+serialized per actor and recorded on the immutable event.
+
 ## Current role-model gap
 
 The React workspace catalog includes `dispatcher` and `billing-admin` persona
@@ -88,10 +121,8 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Add owner/support operator reads and guarded mutations for exact cohort
-   subjects; do not accept client-selected authority scope.
-2. Shape React destinations and contextual controls from the projection while
+1. Shape React destinations and contextual controls from the projection while
    retaining deep-link and API denial.
-3. Add protected success and cross-resource denial smoke per enabled unit.
-4. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
+2. Add protected success and cross-resource denial smoke per enabled unit.
+3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.

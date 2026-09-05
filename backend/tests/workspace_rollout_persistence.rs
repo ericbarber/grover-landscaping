@@ -5,6 +5,7 @@ use grover_landscaping_api::{
         BootstrapOrganizationRequest, BootstrapOrganizationResult, OrganizationRepository,
         OrganizationResourceResult,
     },
+    workspace_rollout::{UpdateWorkspaceRolloutEnrollmentRequest, WorkspaceRolloutMutationResult},
 };
 use sqlx::Row;
 mod common;
@@ -188,5 +189,169 @@ async fn exact_scope_rollout_is_cumulative_audited_and_suspensible() {
     assert!(
         event_update.is_err(),
         "rollout event history must be immutable"
+    );
+}
+
+fn rollout_request(
+    action: &str,
+    enabled_unit: Option<&str>,
+    expected_version: Option<i64>,
+    mutation_id: &str,
+) -> UpdateWorkspaceRolloutEnrollmentRequest {
+    UpdateWorkspaceRolloutEnrollmentRequest {
+        action: action.to_string(),
+        enabled_unit: enabled_unit.map(str::to_string),
+        expected_version,
+        mutation_id: mutation_id.to_string(),
+        reason: format!("Integration test {action}"),
+    }
+}
+
+#[tokio::test]
+async fn membership_derived_rollout_mutations_are_retry_safe_and_versioned() {
+    let Some(config) = common::database_config() else {
+        return;
+    };
+    let jobs = JobRepository::connect(&config)
+        .await
+        .expect("repository should connect and run migrations");
+    let pool = jobs
+        .pool()
+        .expect("connected repository should expose its PostgreSQL pool");
+    let organizations = OrganizationRepository::from_pool(pool);
+    let suffix = uuid::Uuid::new_v4().simple().to_string();
+    let user_id = format!("rollout-operator-{suffix}");
+
+    let created = organizations
+        .bootstrap_organization(
+            &user_id,
+            BootstrapOrganizationRequest {
+                display_name: "Rollout Operator Landscaping".to_string(),
+                organization_type: "yard_care_company".to_string(),
+            },
+        )
+        .await
+        .expect("organization bootstrap should complete");
+    let BootstrapOrganizationResult::Created(created) = created else {
+        panic!("unique rollout operator should create an organization");
+    };
+    let organization_id = &created.organization_id;
+    let membership_id = &created.membership.id;
+
+    let enable = rollout_request("enable", Some("o1"), None, &format!("enable-{suffix}"));
+    let enabled = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            enable.clone(),
+        )
+        .await;
+    let WorkspaceRolloutMutationResult::Applied(enabled) = enabled else {
+        panic!("first exact-scope enable should apply, got {enabled:?}");
+    };
+    assert_eq!(enabled.persona_id, "company-owner");
+    assert_eq!(enabled.enabled_unit, "o1");
+    assert_eq!(enabled.version, 1);
+
+    let replay = organizations
+        .update_workspace_rollout_enrollment(organization_id, membership_id, &user_id, enable)
+        .await;
+    assert!(matches!(
+        replay,
+        WorkspaceRolloutMutationResult::Replayed(ref record)
+            if record.enrollment_id == enabled.enrollment_id && record.version == 1
+    ));
+    let reused_key = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            UpdateWorkspaceRolloutEnrollmentRequest {
+                reason: "Changed payload must not replay".to_string(),
+                ..rollout_request("enable", Some("o1"), None, &format!("enable-{suffix}"))
+            },
+        )
+        .await;
+    assert_eq!(reused_key, WorkspaceRolloutMutationResult::Conflict);
+
+    let stale_advance = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            rollout_request("advance", Some("o2"), Some(9), &format!("stale-{suffix}")),
+        )
+        .await;
+    assert_eq!(stale_advance, WorkspaceRolloutMutationResult::Conflict);
+
+    let advanced = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            rollout_request("advance", Some("o2"), Some(1), &format!("advance-{suffix}")),
+        )
+        .await;
+    assert!(matches!(
+        advanced,
+        WorkspaceRolloutMutationResult::Applied(ref record)
+            if record.enabled_unit == "o2" && record.version == 2
+    ));
+
+    let suspended = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            rollout_request("suspend", None, Some(2), &format!("suspend-{suffix}")),
+        )
+        .await;
+    assert!(matches!(
+        suspended,
+        WorkspaceRolloutMutationResult::Applied(ref record)
+            if record.status == "suspended" && record.version == 3
+    ));
+
+    let resumed = organizations
+        .update_workspace_rollout_enrollment(
+            organization_id,
+            membership_id,
+            &user_id,
+            rollout_request("resume", None, Some(3), &format!("resume-{suffix}")),
+        )
+        .await;
+    assert!(matches!(
+        resumed,
+        WorkspaceRolloutMutationResult::Applied(ref record)
+            if record.status == "active" && record.version == 4
+    ));
+
+    let enrollments = organizations
+        .list_workspace_rollout_enrollments(organization_id)
+        .await;
+    let grover_landscaping_api::organizations::OrganizationCollectionResult::Loaded(enrollments) =
+        enrollments
+    else {
+        panic!("rollout enrollment list should load");
+    };
+    assert!(enrollments.iter().any(|record| {
+        record.enrollment_id == enabled.enrollment_id
+            && record.membership_id.as_deref() == Some(membership_id)
+            && record.version == 4
+            && record.status == "active"
+    }));
+
+    let mismatched_membership = organizations
+        .update_workspace_rollout_enrollment(
+            "org-not-the-target",
+            membership_id,
+            &user_id,
+            rollout_request("suspend", None, Some(4), &format!("wrong-org-{suffix}")),
+        )
+        .await;
+    assert_eq!(
+        mismatched_membership,
+        WorkspaceRolloutMutationResult::NotFound
     );
 }
