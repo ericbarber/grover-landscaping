@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ApiRequestError, isApiErrorCode } from './api/apiError';
 import {
   completeJob,
@@ -97,6 +97,8 @@ import {
 import {
   ManagerWorkspaceMenu,
   ManagerWorkspaceToolMenu,
+  managerWorkspaceActiveToolForPersona,
+  managerWorkspaceSectionSignalsForPersona,
   managerWorkspaceSectionsForPersona,
   managerWorkspaceToolsForPersona,
   type ManagerWorkspaceSection,
@@ -379,6 +381,23 @@ function StatusBadge({ status }: { status: YardCareJob['status'] }) {
       {label}
     </WorkspaceStatusBadge>
   );
+}
+
+function ManagerToolSurface({
+  activeTool,
+  children,
+  className = '',
+  id,
+  tool,
+}: {
+  activeTool: ManagerWorkspaceTool | null;
+  children: ReactNode;
+  className?: string;
+  id?: string;
+  tool: ManagerWorkspaceTool;
+}) {
+  if (activeTool !== tool) return null;
+  return <div className={className} id={id}>{children}</div>;
 }
 
 function JobCard({
@@ -1268,6 +1287,7 @@ export function App() {
   const [isLoadingReportQueue, setIsLoadingReportQueue] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState<NotificationHistoryItem[]>([]);
   const [operationalActivity, setOperationalActivity] = useState<OperationalActivity[]>([]);
+  const operationalActivityRequestId = useRef(0);
   const [operationalActivityUnavailable, setOperationalActivityUnavailable] = useState(false);
   const [isLoadingOlderOperationalActivity, setIsLoadingOlderOperationalActivity] = useState(false);
   const [canLoadOlderOperationalActivity, setCanLoadOlderOperationalActivity] = useState(true);
@@ -1399,6 +1419,72 @@ export function App() {
     )).length
     : jobs.filter((job) => job.status === 'completed').length;
   const canUseManagerTools = workspaceGuidance.managerTools && workspaceSurfaces.management;
+  const enabledManagerTools = useMemo(() => new Set(
+    managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit).flatMap(
+      (section) => managerWorkspaceToolsForPersona(
+        activePersona.id,
+        section.id,
+        managedPersonaUnit,
+      ).map(({ id }) => id),
+    ),
+  ), [activePersona.id, managedPersonaUnit]);
+  const activeAuthorizedManagerTool = managerWorkspaceActiveToolForPersona(
+    activePersona.id,
+    managedPersonaUnit,
+    managerWorkspaceTool,
+  );
+  const canLoadCustomerPortalPreview = enabledManagerTools.has('customer-portal');
+  const canLoadCompletionReportQueue = enabledManagerTools.has('completion-reports');
+  const canLoadNotificationHistory = enabledManagerTools.has('notifications');
+  const canLoadOperationalActivity = enabledManagerTools.has('operations-activity');
+  const canLoadPhotoProcessingHistory = enabledManagerTools.has('photo-processing');
+  const canUsePhotoErasureRecovery = enabledManagerTools.has('photo-erasure');
+  const managerWorkspaceSignals = useMemo(
+    () => managerWorkspaceSectionSignalsForPersona(
+      activePersona.id,
+      managedPersonaUnit,
+      {
+        isLoadingJobs,
+        jobsUnavailable,
+        openJobCount: jobs.filter((job) => job.status !== 'completed').length,
+        isLoadingReports: isLoadingReportQueue,
+        reportCount: Object.keys(completionReportSnapshots).length,
+        isLoadingNotifications: isLoadingNotificationHistory,
+        notificationsUnavailable: notificationHistoryUnavailable,
+        failedNotificationCount: notificationHistory.filter(
+          ({ status }) => status === 'failed' || status === 'dead_letter',
+        ).length,
+        operationalActivityUnavailable,
+        isLoadingRecovery: (canLoadPhotoProcessingHistory && isLoadingPhotoProcessingHistory)
+          || (canUsePhotoErasureRecovery && isLoadingPhotoErasureDeletionHistory),
+        recoveryItemCount: [
+          ...(canLoadPhotoProcessingHistory ? photoProcessingHistory : []),
+          ...(canUsePhotoErasureRecovery ? photoErasureDeletionHistory : []),
+        ].filter(
+          ({ status }) => status === 'failed' || status === 'dead_letter',
+        ).length,
+      },
+    ),
+    [
+      activePersona.id,
+      completionReportSnapshots,
+      canLoadPhotoProcessingHistory,
+      canUsePhotoErasureRecovery,
+      isLoadingJobs,
+      isLoadingNotificationHistory,
+      isLoadingPhotoErasureDeletionHistory,
+      isLoadingPhotoProcessingHistory,
+      isLoadingReportQueue,
+      jobs,
+      jobsUnavailable,
+      managedPersonaUnit,
+      notificationHistory,
+      notificationHistoryUnavailable,
+      operationalActivityUnavailable,
+      photoErasureDeletionHistory,
+      photoProcessingHistory,
+    ],
+  );
   const managerWorkspaceHeading = activePersona.id === 'support'
     ? 'Support and recovery tools'
     : activePersona.id === 'property-manager'
@@ -1839,9 +1925,10 @@ export function App() {
   useEffect(() => {
     let isMounted = true;
 
-    if (activePersona.id === 'yard-owner'
-      || (activePersona.id === 'property-manager'
-        && !propertyManagerPortfolioControls.deliveredProof)) {
+    const canLoadHistory = activePersona.id === 'property-manager'
+      ? propertyManagerPortfolioControls.deliveredProof
+      : canLoadCustomerPortalPreview;
+    if (activePersona.id === 'yard-owner' || !canLoadHistory) {
       setPropertyCompletionReports({});
       setIsLoadingPropertyCompletionReports(false);
       setHasPropertyCompletionReportHistoryError(false);
@@ -1895,11 +1982,18 @@ export function App() {
     };
   }, [
     activePersona.id,
+    canLoadCustomerPortalPreview,
     customerPortalProperties,
     propertyManagerPortfolioControls.deliveredProof,
   ]);
 
   useEffect(() => {
+    if (!canLoadPhotoProcessingHistory) {
+      setPhotoProcessingHistory([]);
+      setIsLoadingPhotoProcessingHistory(false);
+      return;
+    }
+
     let isMounted = true;
     setIsLoadingPhotoProcessingHistory(true);
 
@@ -1924,14 +2018,15 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [canLoadPhotoProcessingHistory]);
 
   useEffect(() => {
     let isMounted = true;
 
-    if (activePersona.id === 'yard-owner'
-      || (activePersona.id === 'property-manager'
-        && !propertyManagerPortfolioControls.questionsAndDecisions)) {
+    const canLoadBids = activePersona.id === 'property-manager'
+      ? propertyManagerPortfolioControls.questionsAndDecisions
+      : canLoadCustomerPortalPreview;
+    if (activePersona.id === 'yard-owner' || !canLoadBids) {
       setCustomerProjectBids([]);
       setIsLoadingCustomerProjectBids(false);
       setHasCustomerProjectBidHistoryError(false);
@@ -1966,7 +2061,11 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, [activePersona.id, propertyManagerPortfolioControls.questionsAndDecisions]);
+  }, [
+    activePersona.id,
+    canLoadCustomerPortalPreview,
+    propertyManagerPortfolioControls.questionsAndDecisions,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -2136,8 +2235,9 @@ export function App() {
   }, [selectedJobId]);
 
   useEffect(() => {
-    if (jobs.length === 0) {
+    if (!canLoadCompletionReportQueue || jobs.length === 0) {
       setCompletionReportSnapshots({});
+      setIsLoadingReportQueue(false);
       return;
     }
 
@@ -2184,9 +2284,16 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, [jobs]);
+  }, [canLoadCompletionReportQueue, jobs]);
 
   useEffect(() => {
+    if (!canLoadNotificationHistory) {
+      setNotificationHistory([]);
+      setNotificationHistoryUnavailable(false);
+      setIsLoadingNotificationHistory(false);
+      return;
+    }
+
     let isMounted = true;
     setIsLoadingNotificationHistory(true);
 
@@ -2215,19 +2322,30 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [canLoadNotificationHistory]);
 
   useEffect(() => {
     void refreshOperationalActivity();
-  }, [dayPlanRefreshSignal]);
+  }, [activePersona.id, canLoadOperationalActivity, dayPlanRefreshSignal, managedPersonaUnit]);
 
   async function refreshOperationalActivity() {
+    const requestId = operationalActivityRequestId.current + 1;
+    operationalActivityRequestId.current = requestId;
+    if (!canLoadOperationalActivity) {
+      setOperationalActivity([]);
+      setCanLoadOlderOperationalActivity(false);
+      setIsLoadingOlderOperationalActivity(false);
+      setOperationalActivityUnavailable(false);
+      return;
+    }
     setOperationalActivityUnavailable(false);
     try {
       const items = await fetchOperationalActivity({ limit: 25 });
+      if (requestId !== operationalActivityRequestId.current) return;
       setOperationalActivity(items);
       setCanLoadOlderOperationalActivity(items.length === 25);
     } catch {
+      if (requestId !== operationalActivityRequestId.current) return;
       setOperationalActivity([]);
       setCanLoadOlderOperationalActivity(false);
       setOperationalActivityUnavailable(true);
@@ -2236,19 +2354,24 @@ export function App() {
 
   async function loadOlderOperationalActivity() {
     const before = operationalActivity[operationalActivity.length - 1]?.occurredAt;
-    if (!before || isLoadingOlderOperationalActivity) return;
+    if (!canLoadOperationalActivity || !before || isLoadingOlderOperationalActivity) return;
+    const requestId = operationalActivityRequestId.current;
     setIsLoadingOlderOperationalActivity(true);
     try {
       const items = await fetchOperationalActivity({ before, limit: 25 });
+      if (requestId !== operationalActivityRequestId.current) return;
       setOperationalActivity((current) => {
         const existingIds = new Set(current.map((item) => item.id));
         return [...current, ...items.filter((item) => !existingIds.has(item.id))];
       });
       setCanLoadOlderOperationalActivity(items.length === 25);
     } catch {
+      if (requestId !== operationalActivityRequestId.current) return;
       setCanLoadOlderOperationalActivity(false);
     } finally {
-      setIsLoadingOlderOperationalActivity(false);
+      if (requestId === operationalActivityRequestId.current) {
+        setIsLoadingOlderOperationalActivity(false);
+      }
     }
   }
 
@@ -3554,6 +3677,7 @@ export function App() {
               }}
               personaId={activePersona.id}
               rolloutUnit={managedPersonaUnit}
+              signals={managerWorkspaceSignals}
             />
           ) : null}
           {managerWorkspaceSection ? (
@@ -3573,7 +3697,7 @@ export function App() {
               section={managerWorkspaceSection}
             />
           ) : null}
-          <div className={managerWorkspaceTool === 'owner-setup' ? 'block' : 'hidden'}>
+          <ManagerToolSurface activeTool={activeAuthorizedManagerTool} tool="owner-setup">
           <FirstOwnerOnboardingPanel
             providerEntryMode={providerEntryMode}
             crewBranchRequest={crewAdministrationBranch}
@@ -3609,9 +3733,11 @@ export function App() {
             onReturnToDispatchHierarchy={() => {
               setManagerWorkspaceSection('schedule');
               setManagerWorkspaceTool('dispatch-hierarchy');
-              const target = document.getElementById('dispatch-hierarchy-administration');
-              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              target?.focus({ preventScroll: true });
+              window.setTimeout(() => {
+                const target = document.getElementById('dispatch-hierarchy-administration');
+                target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target?.focus({ preventScroll: true });
+              }, 0);
             }}
             onReturnFromCrewInspection={() => {
               setManagerWorkspaceSection('team');
@@ -3625,11 +3751,13 @@ export function App() {
               setCrewAdministrationInspectedDestinationTerritoryId(undefined);
               setTeamActivityReturnedAuditId(inspectedAuditId);
               setTeamActivityReturnedAuditSignal((current) => current + 1);
-              const target = inspectedAuditId
-                ? document.getElementById(`team-activity-${inspectedAuditId}`)
-                : document.getElementById('team-activity-review');
-              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              target?.focus({ preventScroll: true });
+              window.setTimeout(() => {
+                const target = inspectedAuditId
+                  ? document.getElementById(`team-activity-${inspectedAuditId}`)
+                  : document.getElementById('team-activity-review');
+                target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target?.focus({ preventScroll: true });
+              }, 0);
             }}
             onFindLatestCrewHierarchyMove={(crew) => {
               setManagerWorkspaceSection('team');
@@ -3644,9 +3772,11 @@ export function App() {
               setTeamActivityRequestedCrewBranchId(crew.branchId ?? undefined);
               setTeamActivityRequestedCrewTerritoryId(crew.territoryId ?? undefined);
               setTeamActivityRequestedCrewSignal((current) => current + 1);
-              const target = document.getElementById('team-activity-review');
-              target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              target?.focus({ preventScroll: true });
+              window.setTimeout(() => {
+                const target = document.getElementById('team-activity-review');
+                target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target?.focus({ preventScroll: true });
+              }, 0);
             }}
             onOrganizationReady={(organizationName, organizationId) => {
               setActiveManagerOrganizationId(organizationId);
@@ -3660,8 +3790,13 @@ export function App() {
               });
             }}
           />
-          </div>
-          <div className={`${managerWorkspaceTool === 'day-plan' ? 'block' : 'hidden'} scroll-mt-20`} id="first-owner-day-plan">
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="scroll-mt-20"
+            id="first-owner-day-plan"
+            tool="day-plan"
+          >
             <ManagerDayPlanPanel
               crewRefreshSignal={crewRefreshSignal}
               jobs={jobs}
@@ -3676,14 +3811,23 @@ export function App() {
                 });
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'company-readiness' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="company-readiness"
+          >
             <ManagementCompanyPreviewPanel
               company={managementCompanyPreview}
               crews={managementCompanyPreviewCrews}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'property-profile' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="property-operational-profile">
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6 scroll-mt-20"
+            id="property-operational-profile"
+            tool="property-profile"
+          >
             <ManagerPropertyOnboardingPanel
               properties={managerPropertyOnboardingOptions}
               requestedPropertyId={requestedOperationalProfilePropertyId}
@@ -3699,8 +3843,13 @@ export function App() {
                 });
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'property-service' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="property-service-setup">
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6 scroll-mt-20"
+            id="property-service-setup"
+            tool="property-service"
+          >
             <ManagerPropertySetupPanel
               properties={managerCustomerProperties}
               onboardingRefreshSignal={propertyOnboardingRefreshSignal}
@@ -3708,8 +3857,12 @@ export function App() {
               onSetupChanged={() => setCustomerAccountRefreshSignal((current) => current + 1)}
               onPropertyUpdated={(property) => registerManagerProperties([property])}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'customer-accounts' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="customer-accounts"
+          >
             <ManagerCustomerAccountOnboardingPanel
               organizationId={activeManagerOrganizationId}
               onOpenPropertyWorkspace={openPropertyWorkspace}
@@ -3720,8 +3873,12 @@ export function App() {
                 setStatusMessage(`${property.displayName} is ready for operational onboarding.`);
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'team-members' ? 'block' : 'hidden'} mt-6 scroll-mt-20`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6 scroll-mt-20"
+            tool="team-members"
+          >
             <ManagerTeamMembershipsPanel
               actorUserId={auth.userId}
               onTeamChanged={() => {
@@ -3730,8 +3887,12 @@ export function App() {
               }}
               organizationId={activeManagerOrganizationId}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'team-overview' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="team-overview"
+          >
             <TeamOrganizationOverviewPanel
               organizationId={activeManagerOrganizationId}
               refreshSignal={
@@ -3769,8 +3930,13 @@ export function App() {
                 }, 0);
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'team-invitations' ? 'block' : 'hidden'} mt-6 scroll-mt-20`} id="first-owner-team-invitations">
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6 scroll-mt-20"
+            id="first-owner-team-invitations"
+            tool="team-invitations"
+          >
             <ManagerTeamInvitationsPanel
               onTeamChanged={() => {
                 setTeamActivityRefreshSignal((current) => current + 1);
@@ -3778,8 +3944,12 @@ export function App() {
               }}
               organizationId={activeManagerOrganizationId}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'team-activity' ? 'block' : 'hidden'} mt-6 scroll-mt-20`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6 scroll-mt-20"
+            tool="team-activity"
+          >
             <ManagerTeamActivityPanel
               onOpenCrew={(activity) => {
                 setManagerWorkspaceSection('overview');
@@ -3825,8 +3995,12 @@ export function App() {
               returnedAuditSignal={teamActivityReturnedAuditSignal}
               refreshSignal={teamActivityRefreshSignal}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'customer-portal' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="customer-portal"
+          >
             <CustomerPortalPreviewPanel
               customer={customerPortalPreviewCustomer}
               properties={customerPortalPreviewProperties}
@@ -3838,16 +4012,24 @@ export function App() {
               isLoadingProjectBids={isLoadingCustomerProjectBids}
               hasProjectBidHistoryError={hasCustomerProjectBidHistoryError}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'customer-portfolios' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="customer-portfolios"
+          >
             <CustomerPortfolioSummaryPanel
               customer={customerPortalPreviewCustomer}
               portfolios={customerPortalPreviewPortfolios}
               properties={customerPortalPreviewProperties}
               links={customerPortalPreviewPortfolioLinks}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'operations-activity' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="operations-activity"
+          >
             <ManagerActivityHistoryPanel
               items={visibleManagerActivity}
               isHistoryPersisted={isManagerActivityPersisted}
@@ -3864,18 +4046,30 @@ export function App() {
                 setManagerWorkspaceTool('operational-exceptions');
               }}
             />
-          </div>
+          </ManagerToolSurface>
           {canReviewMarketingLeads ? (
-            <div className={`${managerWorkspaceTool === 'conversion-dashboard' ? 'block' : 'hidden'} mt-6`}>
+            <ManagerToolSurface
+              activeTool={activeAuthorizedManagerTool}
+              className="mt-6"
+              tool="conversion-dashboard"
+            >
               <ManagerMarketingConversionDashboard />
-            </div>
+            </ManagerToolSurface>
           ) : null}
           {canReviewMarketingLeads ? (
-            <div className={`${managerWorkspaceTool === 'marketing-leads' ? 'block' : 'hidden'} mt-6`}>
+            <ManagerToolSurface
+              activeTool={activeAuthorizedManagerTool}
+              className="mt-6"
+              tool="marketing-leads"
+            >
               <ManagerMarketingLeadInboxPanel />
-            </div>
+            </ManagerToolSurface>
           ) : null}
-          <div className={`${managerWorkspaceTool === 'notifications' ? 'block' : 'hidden'} mt-6`}>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="notifications"
+          >
             <ManagerNotificationHistoryPanel
               notifications={notificationHistory}
               isUnavailable={notificationHistoryUnavailable}
@@ -3884,8 +4078,12 @@ export function App() {
               onRetry={(notificationId, filters) => void handleRetryNotificationDelivery(notificationId, filters)}
               onResolve={(notificationId, filters) => void handleResolveNotificationDelivery(notificationId, filters)}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'photo-processing' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="photo-processing"
+          >
             <ManagerPhotoProcessingRecoveryPanel
               items={photoProcessingHistory}
               isLoading={isLoadingPhotoProcessingHistory}
@@ -3893,8 +4091,12 @@ export function App() {
               onRetry={(processingJobId, filters) => void handleRetryPhotoProcessing(processingJobId, filters)}
               onResolve={(processingJobId, filters) => void handleResolvePhotoProcessing(processingJobId, filters)}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'operational-exceptions' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="operational-exceptions"
+          >
             <ManagerOperationalExceptionsPanel
               organizationId={activeManagerOrganizationId}
               onActivityChanged={() => void refreshOperationalActivity()}
@@ -3920,8 +4122,12 @@ export function App() {
                 }, 0);
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'customer-privacy' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="customer-privacy"
+          >
             <ManagerCustomerPrivacyPanel
               accountIds={privacyAccountIds}
               exportResult={customerPrivacyExport}
@@ -3930,8 +4136,12 @@ export function App() {
               onExport={(accountId) => void handleCustomerPrivacyExport(accountId)}
               onErasePhotos={(accountId, reason) => void handleCustomerPhotoErasure(accountId, reason)}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'photo-erasure' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="photo-erasure"
+          >
             <ManagerPhotoErasureRecoveryPanel
               items={photoErasureDeletionHistory}
               isLoading={isLoadingPhotoErasureDeletionHistory}
@@ -3939,8 +4149,12 @@ export function App() {
               onRetry={(id) => void handleRetryPhotoErasureDeletion(id)}
               onResolve={(id) => void handleResolvePhotoErasureDeletion(id)}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'dispatch-hierarchy' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="dispatch-hierarchy"
+          >
             {canManageDispatchHierarchy ? (
               <ManagerDispatchHierarchyPanel
                 organizationId={activeManagerOrganizationId}
@@ -3968,16 +4182,24 @@ export function App() {
                 }}
               />
             ) : null}
-          </div>
-          <div className={`${managerWorkspaceTool === 'dispatch-workload' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="dispatch-workload"
+          >
             <ManagerDispatchWorkloadPanel
               hierarchyRefreshSignal={dispatchHierarchyRefreshSignal}
               jobs={jobs}
               onReassign={handleJobDispatchAssignment}
               onSelectJob={selectJobForReview}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'completion-reports' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="completion-reports"
+          >
             <ManagerCompletionReportQueuePanel
               reports={managerReportQueueReports}
               isLoading={isLoadingReportQueue}
@@ -3988,10 +4210,14 @@ export function App() {
                 changeMobileView('job', true);
               }}
             />
-          </div>
-          <div className={`${managerWorkspaceTool === 'visit-questions' ? 'block' : 'hidden'} mt-6`}>
+          </ManagerToolSurface>
+          <ManagerToolSurface
+            activeTool={activeAuthorizedManagerTool}
+            className="mt-6"
+            tool="visit-questions"
+          >
             <ProviderCustomerVisitQuestionsPanel />
-          </div>
+          </ManagerToolSurface>
             </div>
           </details>
           ) : null}

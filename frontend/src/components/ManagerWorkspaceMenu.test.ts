@@ -1,11 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import {
+  managerWorkspaceActiveToolForPersona,
   managerWorkspaceSectionLabel,
+  managerWorkspaceSectionSignalsForPersona,
   managerWorkspaceSections,
   managerWorkspaceSectionsForPersona,
   managerWorkspaceTools,
   managerWorkspaceToolsForPersona,
 } from './ManagerWorkspaceMenu';
+
+const signalInput = {
+  isLoadingJobs: false,
+  jobsUnavailable: false,
+  openJobCount: 3,
+  isLoadingReports: false,
+  reportCount: 2,
+  isLoadingNotifications: false,
+  notificationsUnavailable: false,
+  failedNotificationCount: 0,
+  operationalActivityUnavailable: false,
+  isLoadingRecovery: false,
+  recoveryItemCount: 0,
+};
 
 describe('manager workspace menu', () => {
   it('keeps the manager home focused on six task groups', () => {
@@ -114,5 +130,50 @@ describe('manager workspace menu', () => {
     expect(managerWorkspaceSectionsForPersona('company-owner', null)).toEqual([]);
     expect(managerWorkspaceSectionsForPersona('company-owner', 'unknown')).toEqual([]);
     expect(managerWorkspaceToolsForPersona('company-owner', 'overview', null)).toEqual([]);
+  });
+
+  it('prevents hidden or suspended tools from becoming active surfaces', () => {
+    expect(managerWorkspaceActiveToolForPersona('company-owner', 'o1', 'day-plan')).toBeNull();
+    expect(managerWorkspaceActiveToolForPersona('company-owner', 'o2', 'day-plan'))
+      .toBe('day-plan');
+    expect(managerWorkspaceActiveToolForPersona('support', null, 'operations-activity')).toBeNull();
+  });
+
+  it('summarizes only categories authorized for the active rollout unit', () => {
+    expect(managerWorkspaceSectionSignalsForPersona('company-owner', 'o2', signalInput))
+      .toEqual({
+        overview: { label: '2 setup steps', tone: 'neutral' },
+        schedule: { label: '3 stops open', tone: 'info' },
+      });
+    expect(managerWorkspaceSectionSignalsForPersona('company-owner', null, signalInput))
+      .toEqual({});
+  });
+
+  it('prioritizes delivery failures and recovery work over routine counts', () => {
+    const signals = managerWorkspaceSectionSignalsForPersona('company-owner', 'o4', {
+      ...signalInput,
+      failedNotificationCount: 1,
+      recoveryItemCount: 2,
+    });
+
+    expect(signals.reports).toEqual({ label: '1 delivery issue', tone: 'warning' });
+    expect(signals.recovery).toEqual({ label: '2 items need attention', tone: 'warning' });
+  });
+
+  it('uses the sources available to an earlier support unit', () => {
+    expect(managerWorkspaceSectionSignalsForPersona('support', 's1', {
+      ...signalInput,
+      operationalActivityUnavailable: true,
+    })).toEqual({
+      reports: { label: 'Activity unavailable', tone: 'warning' },
+    });
+  });
+
+  it('uses readable category names when no authoritative summary exists', () => {
+    expect(managerWorkspaceSectionSignalsForPersona('company-owner', 'o3', signalInput))
+      .toMatchObject({
+        customers: { label: '5 customer tools', tone: 'neutral' },
+        team: { label: '4 team tools', tone: 'neutral' },
+      });
   });
 });

@@ -480,6 +480,22 @@ describe('core API client mapping', () => {
     });
   });
 
+  it('keeps pre-rollout access responses in legacy composition', () => {
+    expect(toPrincipalAccessSummary({
+      user_id: 'existing-user',
+      username: 'existing@example.com',
+      claim_roles: ['Manager'],
+      memberships: [],
+    })).toMatchObject({
+      workspaceRollout: {
+        contractVersion: 1,
+        enforcementMode: 'legacy',
+        rolloutMode: 'default_off',
+        personas: [],
+      },
+    });
+  });
+
   it('maps completion report responses with attached photo evidence', () => {
     const apiReport: ApiCompletionReport = {
       report_id: 'report_job_1001',

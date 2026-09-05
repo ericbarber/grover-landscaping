@@ -183,9 +183,10 @@ visual tuning.
    current-state mirror, gallery entry, responsive captures, and browser checks.
 2. **Truth and recovery.** Design and implement shared date/state vocabulary,
    stale-route treatment, and complete Yard Owner recovery destinations.
-3. **Manager continuity.** Prototype a status-bearing Manage overview using
-   authorized current sources, then validate direct handoffs into Schedule,
-   Customers, Team, Reports, and Recovery.
+3. **Manager continuity — delivered September 19, 2026.** The status-bearing
+   Manage overview uses only authorized current sources or exact enabled-tool
+   counts, and selected destinations mount on demand across Schedule, Customers,
+   Team, Reports, and Recovery.
 4. **Shell compression.** Remove redundant hosted identity/persona treatments,
    isolate local-review chrome, and validate bottom-navigation clearance and
    zoom across phone widths.
@@ -193,7 +194,8 @@ visual tuning.
    design direction or historical input, and refresh only the prototypes needed
    by the next production slice.
 
-Phases 2–5 are recommendations, not delivered behavior. Product-gated concern,
+Phases 2, 4, and 5 remain recommendations rather than delivered behavior.
+Product-gated concern,
 provider-contact, notification/preference, external-review, marketplace, and
 billing work remains governed by the existing delivery plan.
 

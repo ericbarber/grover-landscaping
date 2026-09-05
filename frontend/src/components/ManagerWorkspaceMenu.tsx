@@ -1,6 +1,7 @@
 import type { WorkspacePersonaId } from '../domain/workspacePersona';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import type { WorkspaceIconName } from './WorkspaceIcon';
+import { WorkspaceStatusBadge, type WorkspaceStatusTone } from './WorkspaceStatus';
 
 export type ManagerWorkspaceSection =
   | 'overview'
@@ -35,6 +36,25 @@ export type ManagerWorkspaceTool =
   | 'operational-exceptions'
   | 'customer-privacy'
   | 'photo-erasure';
+
+export interface ManagerWorkspaceSignal {
+  label: string;
+  tone: WorkspaceStatusTone;
+}
+
+export interface ManagerWorkspaceSignalInput {
+  isLoadingJobs: boolean;
+  jobsUnavailable: boolean;
+  openJobCount: number;
+  isLoadingReports: boolean;
+  reportCount: number;
+  isLoadingNotifications: boolean;
+  notificationsUnavailable: boolean;
+  failedNotificationCount: number;
+  operationalActivityUnavailable: boolean;
+  isLoadingRecovery: boolean;
+  recoveryItemCount: number;
+}
 
 export const managerWorkspaceSections: Array<{
   id: ManagerWorkspaceSection;
@@ -226,16 +246,116 @@ export function managerWorkspaceToolsForPersona(
   ));
 }
 
+export function managerWorkspaceActiveToolForPersona(
+  personaId: WorkspacePersonaId,
+  rolloutUnit: string | null | undefined,
+  requestedTool: ManagerWorkspaceTool | null,
+): ManagerWorkspaceTool | null {
+  if (!requestedTool) return null;
+  return managerWorkspaceSectionsForPersona(personaId, rolloutUnit).some((section) => (
+    managerWorkspaceToolsForPersona(personaId, section.id, rolloutUnit)
+      .some(({ id }) => id === requestedTool)
+  ))
+    ? requestedTool
+    : null;
+}
+
+function toolCountSignal(
+  section: ManagerWorkspaceSection,
+  toolCount: number,
+): ManagerWorkspaceSignal {
+  const noun: Record<ManagerWorkspaceSection, string> = {
+    overview: 'setup step',
+    schedule: 'schedule tool',
+    customers: 'customer tool',
+    team: 'team tool',
+    reports: 'report tool',
+    recovery: 'recovery tool',
+  };
+  return {
+    label: `${toolCount} ${noun[section]}${toolCount === 1 ? '' : 's'}`,
+    tone: 'neutral',
+  };
+}
+
+export function managerWorkspaceSectionSignalsForPersona(
+  personaId: WorkspacePersonaId,
+  rolloutUnit: string | null | undefined,
+  input: ManagerWorkspaceSignalInput,
+): Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>> {
+  return managerWorkspaceSectionsForPersona(personaId, rolloutUnit).reduce<
+  Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>>
+  >((signals, section) => {
+    const tools = managerWorkspaceToolsForPersona(personaId, section.id, rolloutUnit);
+    const toolIds = new Set(tools.map(({ id }) => id));
+    let signal = toolCountSignal(section.id, tools.length);
+
+    if (section.id === 'schedule') {
+      signal = input.jobsUnavailable
+        ? { label: 'Schedule unavailable', tone: 'warning' }
+        : input.isLoadingJobs
+          ? { label: 'Loading schedule', tone: 'info' }
+          : input.openJobCount > 0
+            ? {
+                label: `${input.openJobCount} stop${input.openJobCount === 1 ? '' : 's'} open`,
+                tone: 'info',
+              }
+            : { label: 'Route clear', tone: 'success' };
+    }
+
+    if (section.id === 'reports') {
+      if (toolIds.has('notifications') && input.notificationsUnavailable) {
+        signal = { label: 'Delivery status unavailable', tone: 'warning' };
+      } else if (toolIds.has('operations-activity') && input.operationalActivityUnavailable) {
+        signal = { label: 'Activity unavailable', tone: 'warning' };
+      } else if (toolIds.has('notifications') && input.failedNotificationCount > 0) {
+        signal = {
+          label: `${input.failedNotificationCount} delivery issue${input.failedNotificationCount === 1 ? '' : 's'}`,
+          tone: 'warning',
+        };
+      } else if (
+        (toolIds.has('completion-reports') && input.isLoadingReports)
+        || (toolIds.has('notifications') && input.isLoadingNotifications)
+      ) {
+        signal = { label: 'Loading status', tone: 'info' };
+      } else if (toolIds.has('completion-reports') && input.reportCount > 0) {
+        signal = {
+          label: `${input.reportCount} report${input.reportCount === 1 ? '' : 's'} ready`,
+          tone: 'success',
+        };
+      }
+    }
+
+    if (section.id === 'recovery') {
+      if (toolIds.has('operational-exceptions') && input.operationalActivityUnavailable) {
+        signal = { label: 'Recovery status unavailable', tone: 'warning' };
+      } else if (input.recoveryItemCount > 0) {
+        signal = {
+          label: `${input.recoveryItemCount} item${input.recoveryItemCount === 1 ? '' : 's'} need attention`,
+          tone: 'warning',
+        };
+      } else if (input.isLoadingRecovery) {
+        signal = { label: 'Checking recovery', tone: 'info' };
+      }
+    }
+
+    signals[section.id] = signal;
+    return signals;
+  }, {});
+}
+
 export function ManagerWorkspaceMenu({
   activeSection,
   onChange,
   personaId,
   rolloutUnit,
+  signals,
 }: {
   activeSection: ManagerWorkspaceSection | null;
   onChange: (section: ManagerWorkspaceSection) => void;
   personaId: WorkspacePersonaId;
   rolloutUnit?: string | null;
+  signals?: Partial<Record<ManagerWorkspaceSection, ManagerWorkspaceSignal>>;
 }) {
   const sections = managerWorkspaceSectionsForPersona(personaId, rolloutUnit);
 
@@ -267,6 +387,14 @@ export function ManagerWorkspaceMenu({
             }`}>
               {section.description}
             </span>
+            {signals?.[section.id] ? (
+              <WorkspaceStatusBadge
+                className={`mt-2 ${activeSection === section.id ? 'border-white/15 bg-white/10 text-white' : ''}`}
+                tone={signals[section.id]?.tone}
+              >
+                {signals[section.id]?.label}
+              </WorkspaceStatusBadge>
+            ) : null}
           </button>
         ))}
       </div>

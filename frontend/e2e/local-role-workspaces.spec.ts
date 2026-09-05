@@ -160,6 +160,74 @@ test('an unscoped role claim receives Home only until membership is assigned', a
   await expect(navigation.getByRole('button', { name: /Manage|Support/ })).toHaveCount(0);
 });
 
+test('a managed first unit withholds later manager feeds', async ({ page }) => {
+  const laterFeedRequests: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if ([
+      '/customer-portal/visits',
+      '/completion-reports',
+      '/notifications',
+      '/operational-activity',
+      '/photo-processing-jobs',
+    ].some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+      laterFeedRequests.push(path);
+    }
+  });
+  await page.route('http://localhost:8080/me/access', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      user_id: 'local-review-organization-owner',
+      username: 'Olivia — Organization Owner',
+      verified_email: 'organization-owner@example.test',
+      claim_roles: ['OrganizationOwner'],
+      workspace_rollout: {
+        contract_version: 2,
+        enforcement_mode: 'managed',
+        rollout_mode: 'cohort',
+        personas: [{
+          persona_id: 'company-owner',
+          scope: {
+            scope_type: 'organization',
+            scope_id: 'org_demo_landscaping',
+            organization_id: 'org_demo_landscaping',
+          },
+          enabled_unit: 'o1',
+          capabilities: {
+            company_readiness: true,
+            daily_operations: false,
+            customers_and_team: false,
+            reports_and_recovery: false,
+          },
+        }],
+      },
+      memberships: [{
+        id: 'membership-organization-owner',
+        organization_id: 'org_demo_landscaping',
+        organization_name: 'Grover Demo Landscaping',
+        organization_type: 'yard_care_company',
+        user_id: 'local-review-organization-owner',
+        display_name: 'Olivia — Organization Owner',
+        role: 'OrganizationOwner',
+        status: 'active',
+        scope_type: 'organization',
+        scope_id: 'org_demo_landscaping',
+      }],
+    }),
+  }));
+
+  await page.goto('/app');
+  const navigation = page.getByRole('navigation', { name: 'Desktop workspace' });
+  await navigation.getByRole('button', { name: 'Manage', exact: true }).click();
+  const managerHome = page.getByRole('heading', { name: 'Choose what you need to do' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(managerHome.getByRole('button', { name: /Overview/ })).toBeVisible();
+  await expect(managerHome.getByRole('button', { name: /Schedule|Customers|Team|Reports|Recovery/ }))
+    .toHaveCount(0);
+  await page.waitForLoadState('networkidle');
+  expect(laterFeedRequests).toEqual([]);
+});
+
 test('desktop local review changes the rendered workspace, not only its title', async ({ page }) => {
   await page.goto('/app');
   await expect(page.getByLabel('Local reviewer account')).toBeVisible();
