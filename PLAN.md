@@ -110,8 +110,10 @@ Next design slices:
    chrome remains explicitly diagnostic, the duplicate Home identity card is
    removed, and measured navigation height protects final actions at 320, 390,
    and 430 px plus 200% zoom.
-4. Prototype reconciliation: reclassify older artifacts explicitly as current
-   mirror, adopted behavior, design direction, or historical input.
+4. Prototype reconciliation: delivered. The gallery now links one artifact-
+   family inventory that distinguishes dated current mirrors, adopted behavior,
+   design direction, historical input, and product-gated boundaries. The
+   adoption tracker and dated mirror documentation use the same interpretation.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.

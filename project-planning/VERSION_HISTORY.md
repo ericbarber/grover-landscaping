@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-19: Reconciled the design workspace around one artifact-family status
+  inventory. The gallery, design README, adoption tracker, rollout/high-fidelity
+  guidance, and dated mirror now distinguish current mirrors, adopted behavior,
+  design direction, historical input, and product-gated boundaries without
+  treating illustrative prototype state as production or hosted evidence.
 - 2026-09-19: Compressed the authenticated application shell. Hosted account
   identity and sign-out now live in the desktop rail or a compact mobile menu,
   local-review identity chrome remains explicitly diagnostic, and the duplicate

@@ -6,6 +6,12 @@ September 3, 2026. It exists to compare the current product with the older
 conceptual prototypes without implying that either one is automatically the
 approved next design.
 
+This is a dated mirror, not a continuously updated copy. Rollout-aware manager
+status and the compressed authenticated shell were delivered on September 19 and
+are intentionally absent. See the
+[`artifact-status inventory`](../../ARTIFACT_STATUS.md) for the current
+classification of every prototype family.
+
 ## Included surfaces
 
 - Public landing
