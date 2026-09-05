@@ -187,14 +187,15 @@ visual tuning.
    Manage overview uses only authorized current sources or exact enabled-tool
    counts, and selected destinations mount on demand across Schedule, Customers,
    Team, Reports, and Recovery.
-4. **Shell compression.** Remove redundant hosted identity/persona treatments,
-   isolate local-review chrome, and validate bottom-navigation clearance and
-   zoom across phone widths.
+4. **Shell compression — delivered September 19, 2026.** Hosted account controls
+   are consolidated into the desktop rail and compact mobile account menu,
+   local-review chrome is isolated, and measured navigation clearance is
+   validated at 320, 390, and 430px plus 200% zoom.
 5. **Prototype reconciliation.** Reclassify older public/customer artifacts as
    design direction or historical input, and refresh only the prototypes needed
    by the next production slice.
 
-Phases 2, 4, and 5 remain recommendations rather than delivered behavior.
+Phases 2 and 5 remain recommendations rather than delivered behavior.
 Product-gated concern,
 provider-contact, notification/preference, external-review, marketplace, and
 billing work remains governed by the existing delivery plan.

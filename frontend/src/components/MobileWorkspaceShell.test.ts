@@ -1,5 +1,9 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { workspacePersonasForRoles } from '../domain/workspacePersona';
 import {
+  MobileWorkspaceHeader,
   mobileWorkspaceContext,
   mobileWorkspaceScrollTop,
 } from './MobileWorkspaceShell';
@@ -74,5 +78,23 @@ describe('mobileWorkspaceContext', () => {
     expect(mobileWorkspaceScrollTop(positions, 'jobs')).toBe(640);
     expect(mobileWorkspaceScrollTop(positions, 'job', true)).toBe(0);
     expect(mobileWorkspaceScrollTop({ jobs: -20 }, 'jobs')).toBe(0);
+  });
+
+  it('consolidates hosted mobile identity and sign-out into an account menu', () => {
+    const persona = workspacePersonasForRoles(['Manager'])[0];
+    const markup = renderToStaticMarkup(createElement(MobileWorkspaceHeader, {
+      ...baseInput,
+      activePersonaId: persona.id,
+      availablePersonas: [persona],
+      onBackToJobs: () => undefined,
+      onPersonaChange: () => undefined,
+      onSignOut: () => undefined,
+      signedInName: 'Marcus Manager',
+      view: 'home',
+    }));
+
+    expect(markup).toContain('aria-label="Account menu"');
+    expect(markup).toContain('Marcus Manager');
+    expect(markup).toContain('Sign out');
   });
 });
