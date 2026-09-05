@@ -1056,7 +1056,7 @@ export function DayPlanPanel({
 
           return (
             <div key={stop.id}>
-              <h3 className="mb-2 mt-5 font-display text-xl font-bold text-forest">
+              <h3 className="grover-type-operational mb-2 mt-5 text-xl font-black text-forest">
                 {index === 0
                   ? completedStops >= dayPlan.stops.length ? 'Latest stop' : 'Current stop'
                   : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}

@@ -408,7 +408,7 @@ export function YardOwnerPortalPanel({
     return (
       <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md" aria-busy="true">
         <p className="grover-eyebrow">My yard</p>
-        <h1 className="mt-2 font-display text-4xl font-black text-forest">Loading your yard</h1>
+        <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Loading your yard</h1>
         <p className="mt-4 text-sm font-semibold text-slate-600" role="status">Checking your protected properties and confirmed visits…</p>
       </section>
     );
@@ -438,7 +438,7 @@ export function YardOwnerPortalPanel({
     return (
       <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
         <p className="grover-eyebrow">My yard</p>
-        <h1 className="mt-2 font-display text-4xl font-black text-forest">{copy.heading}</h1>
+        <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">{copy.heading}</h1>
         <WorkspaceStatusNotice
           className="mt-5"
           detail={copy.detail}
@@ -589,7 +589,7 @@ export function YardOwnerPortalPanel({
         {destination === 'visits' ? (
           <div>
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-forest">Visits</h1>
+            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Visits</h1>
             <p className="mt-2 text-sm text-slate-600">Scheduled care and explicit customer-visible service-day updates.</p>
             <div className="mt-6 space-y-3">
               {propertyVisits.length > 0 ? propertyVisits.map((visit, index) => {
@@ -638,7 +638,7 @@ export function YardOwnerPortalPanel({
         {destination === 'proof' ? (
           <div>
             <p className="grover-eyebrow">{selectedProperty.displayName}</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-forest">Proof</h1>
+            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Proof</h1>
             <p className="mt-2 text-sm text-slate-600">Delivered care records for this property.</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {proofVisits.map((visit) => (
@@ -659,7 +659,7 @@ export function YardOwnerPortalPanel({
         {destination === 'account' ? (
           <div>
             <p className="grover-eyebrow">Customer account</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-forest">Account</h1>
+            <h1 className="grover-type-operational mt-2 text-4xl font-black text-forest">Account</h1>
             <p className="mt-2 text-sm text-slate-600">Choose a connected property.</p>
             <section className="mt-6" aria-labelledby="account-properties-heading">
               <h2 className="text-lg font-black text-forest" id="account-properties-heading">Properties</h2>

@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-05: Codified and applied the authenticated typography-role boundary.
+  Editorial type remains on audience, place, service, date, and delivered-care
+  moments; Yard Owner and Property Manager destinations, field and manager task
+  headings, recovery/loading states, decisions, queues, recommendation totals,
+  and proposal values now explicitly use interface type. Focused semantic
+  assertions, the frontend suite, and the production build validate the change.
 - 2026-09-05: Completed Yard Owner protected-read recovery. Loading, valid
   empty, ended access, inconsistent authorization, and unavailable reads keep
   property/service facts withheld as required; error states now expose one page

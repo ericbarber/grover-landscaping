@@ -140,6 +140,8 @@ describe('PropertyManagerPortfolioPanel', () => {
     const markup = renderPortfolio();
 
     expect(markup).toContain('Service confidence across every location.');
+    expect(markup).toMatch(/font-display[^\"]*\">Service confidence across every location\./);
+    expect(markup).toMatch(/grover-type-operational[^\"]*\">Start with what needs attention\./);
     expect(markup).toContain('Local review data boundary');
     expect(markup).toContain('No portfolio actions need attention.');
     expect(markup).toContain('Provider routes, crew notes, cost basis, margins');
