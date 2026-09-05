@@ -9,8 +9,10 @@ an exact active enrollment exists. No production cohort is enabled by these
 changes, and rollout state never grants API authority. Desktop/mobile workspace
 destinations and Yard Owner U2–U4 portal controls are now capability-shaped;
 company, property-management, dispatch, billing, and support management menus
-are also unit-bounded. Field stop actions and Property Manager portfolio
-details are later slices.
+are also unit-bounded. Field route, stop, job, evidence, report, and amendment
+controls now follow the Crew Lead, Crew Member, company-oversight, and
+dispatcher unit boundaries. Property Manager portfolio details are the
+remaining React composition slice.
 
 ## Response
 
@@ -134,8 +136,8 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Shape remaining field-write and portfolio contextual
-   controls from capabilities while retaining deep-link and API denial.
+1. Shape remaining Property Manager portfolio contextual controls from
+   capabilities while retaining deep-link and API denial.
 2. Add protected success and cross-resource denial smoke per enabled unit.
 3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.

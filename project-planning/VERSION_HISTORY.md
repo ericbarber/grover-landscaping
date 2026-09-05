@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-05: Bounded field controls by rollout unit. C1/CM1 routes are
+  read-only, C2/CM2 add assigned-job progress, C3/CM3 add checklist, photo, and
+  report evidence, and only Crew Lead C4 can request route changes. Company and
+  dispatcher field surfaces expose job oversight without execution controls;
+  suspended and unknown managed units fail closed while legacy behavior and
+  queued offline work are preserved.
 - 2026-09-05: Shaped manager-style workspace internals by rollout unit. Company
   Owner and Manager categories progress from readiness through schedule,
   customers/team, and reports/recovery; Property Manager stays bounded to its

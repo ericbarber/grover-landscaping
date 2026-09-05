@@ -82,6 +82,7 @@ import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/wor
 import {
   workspacePersonasForRoles,
   workspaceEnabledUnitForPersona,
+  workspaceFieldControlsForPersona,
   workspacePersonaForRollout,
   workspaceSurfacesForPersona,
   type WorkspacePersonaId,
@@ -795,6 +796,8 @@ function CustomerPortalPreviewPanel({
 
 function JobDetailPanel({
   job,
+  executionEnabled,
+  fieldEvidenceEnabled,
   isLoading,
   uploadTickets,
   reportSnapshot,
@@ -810,9 +813,12 @@ function JobDetailPanel({
   onDeliverReport,
   onQueueReportDeliveryNotification,
   reportActionStatus,
+  reportEnabled,
   requestedWorkflow,
 }: {
   job: JobDetail | null;
+  executionEnabled: boolean;
+  fieldEvidenceEnabled: boolean;
   isLoading: boolean;
   uploadTickets: PhotoUploadTicket[];
   reportSnapshot: CompletionReportSnapshot | null;
@@ -832,14 +838,23 @@ function JobDetailPanel({
     recipient: string,
   ) => Promise<void>;
   reportActionStatus: string | null;
+  reportEnabled: boolean;
   requestedWorkflow: JobWorkflowSection;
 }) {
   const [photoType, setPhotoType] = useState<PhotoType>('before');
   const [activeWorkflow, setActiveWorkflow] = useState<JobWorkflowSection>(requestedWorkflow);
+  const allowedWorkflowSections: JobWorkflowSection[] = [
+    'overview',
+    ...(fieldEvidenceEnabled ? ['checklist', 'photos'] as JobWorkflowSection[] : []),
+    ...(executionEnabled ? ['addons'] as JobWorkflowSection[] : []),
+    ...(reportEnabled ? ['report'] as JobWorkflowSection[] : []),
+  ];
 
   useEffect(() => {
-    setActiveWorkflow(requestedWorkflow);
-  }, [job?.id, requestedWorkflow]);
+    setActiveWorkflow(
+      allowedWorkflowSections.includes(requestedWorkflow) ? requestedWorkflow : 'overview',
+    );
+  }, [executionEnabled, fieldEvidenceEnabled, job?.id, reportEnabled, requestedWorkflow]);
 
   if (isLoading) {
     return (
@@ -876,15 +891,19 @@ function JobDetailPanel({
   const pendingAddOns = addOns.filter((addOn) => (
     addOn.status === 'scheduled' || addOn.status === 'in_progress'
   )).length;
-  const nextAction = job.status === 'scheduled'
-    ? 'Start this job when the crew is ready to begin.'
-    : missingRequiredEvidence.length > 0
-      ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
-      : pendingAddOns > 0
-        ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
-        : checklistProgress < 100
-          ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
-          : 'Required field evidence is ready. Complete the job when service is finished.';
+  const nextAction = !executionEnabled
+    ? 'This rollout unit provides read-only job status. Field actions remain with the assigned crew.'
+    : job.status === 'scheduled'
+      ? 'Start this job when the crew is ready to begin.'
+      : !fieldEvidenceEnabled
+        ? 'Continue stop progress from Today’s route; proof actions are outside this rollout unit.'
+        : missingRequiredEvidence.length > 0
+          ? `Capture ${missingRequiredEvidence.join(' and ')} photo evidence before completing this job.`
+          : pendingAddOns > 0
+            ? `Finish ${pendingAddOns} approved add-on${pendingAddOns === 1 ? '' : 's'} before the customer report is ready.`
+            : checklistProgress < 100
+              ? `Finish ${job.checklist.length - completedChecklistItems} checklist item${job.checklist.length - completedChecklistItems === 1 ? '' : 's'} before customer handoff.`
+              : 'Required field evidence is ready. Complete the job when service is finished.';
 
   return (
     <div className="space-y-4">
@@ -899,35 +918,47 @@ function JobDetailPanel({
           <StatusBadge status={job.status} />
         </div>
 
-        <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
+        {executionEnabled ? <div className="mt-5 rounded-2xl border border-slate-200 bg-paper p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-slate-500">Primary action</p>
               <p className="mt-1 text-sm font-bold text-slate-900">Move this visit forward without losing context.</p>
             </div>
-            <WorkspaceStatusBadge tone={missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
-              {missingRequiredEvidence.length === 0 ? 'Evidence ready' : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
+            <WorkspaceStatusBadge tone={!fieldEvidenceEnabled || missingRequiredEvidence.length === 0 ? 'success' : 'warning'}>
+              {!fieldEvidenceEnabled
+                ? 'Execution enabled'
+                : missingRequiredEvidence.length === 0
+                  ? 'Evidence ready'
+                  : `${missingRequiredEvidence.length} evidence gap${missingRequiredEvidence.length === 1 ? '' : 's'}`}
             </WorkspaceStatusBadge>
           </div>
           <div className="mt-3 grid gap-3 min-[380px]:grid-cols-2">
-          <button
-            className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
-            disabled={job.status !== 'scheduled'}
-            onClick={() => void onStart()}
-            type="button"
-          >
-            {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
-          </button>
-          <button
-            className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
-            disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
-            onClick={() => void onComplete()}
-            type="button"
-          >
-            {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
-          </button>
+            <button
+              className="min-h-12 rounded-xl border border-emerald-700 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+              disabled={job.status !== 'scheduled'}
+              onClick={() => void onStart()}
+              type="button"
+            >
+              {job.status === 'scheduled' ? 'Start Job' : 'Job Started'}
+            </button>
+            {fieldEvidenceEnabled ? <button
+              className="min-h-12 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-300"
+              disabled={job.status === 'completed' || missingRequiredEvidence.length > 0}
+              onClick={() => void onComplete()}
+              type="button"
+            >
+              {job.status === 'completed' ? 'Job Completed' : 'Complete Job'}
+            </button> : null}
           </div>
-        </div>
+        </div> : (
+          <WorkspaceStatusNotice
+            className="mt-5"
+            compact
+            detail="Progress, checklist, photo, add-on, and completion actions remain hidden."
+            title="Job oversight is read only."
+            tone="info"
+          />
+        )}
 
         <JobWorkflowMenu
           activeSection={activeWorkflow}
@@ -937,6 +968,7 @@ function JobDetailPanel({
           onChange={setActiveWorkflow}
           photoCount={uploadTickets.length}
           reportReady={Boolean(reportSnapshot?.readyForCustomer)}
+          allowedSections={allowedWorkflowSections}
         />
 
         <div
@@ -967,11 +999,11 @@ function JobDetailPanel({
             className="mt-3"
             detail={nextAction}
             title="Next best action"
-            tone={missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
+            tone={fieldEvidenceEnabled && missingRequiredEvidence.length > 0 ? 'warning' : 'info'}
           />
         </div>
 
-        <section
+        {fieldEvidenceEnabled ? <section
           aria-labelledby="job-workflow-tab-checklist"
           className={`${activeWorkflow === 'checklist' ? 'block' : 'hidden'} mt-5 rounded-xl border border-slate-200 bg-paper px-3`}
           id="job-workflow-panel-checklist"
@@ -1000,9 +1032,9 @@ function JobDetailPanel({
             ))}
           </div>
           <div className="h-3" />
-        </section>
+        </section> : null}
 
-        {addOns.length > 0 ? (
+        {executionEnabled ? (addOns.length > 0 ? (
           <div
             aria-labelledby="job-workflow-tab-addons"
             className={`${activeWorkflow === 'addons' ? 'block' : 'hidden'} mt-5`}
@@ -1051,9 +1083,9 @@ function JobDetailPanel({
           >
             No approved add-on work is attached to this job.
           </div>
-        )}
+        )) : null}
 
-        <div
+        {fieldEvidenceEnabled ? <div
           aria-labelledby="job-workflow-tab-photos"
           className={`${activeWorkflow === 'photos' ? 'block' : 'hidden'} mt-5 rounded-2xl bg-paper p-4`}
           id="job-workflow-panel-photos"
@@ -1112,10 +1144,10 @@ function JobDetailPanel({
               ))}
             </div>
           )}
-        </div>
+        </div> : null}
       </section>
 
-      <div
+      {reportEnabled ? <div
         aria-labelledby="job-workflow-tab-report"
         className={activeWorkflow === 'report' ? 'block' : 'hidden'}
         id="job-workflow-panel-report"
@@ -1132,7 +1164,7 @@ function JobDetailPanel({
         onQueueDeliveryNotification={onQueueReportDeliveryNotification}
         actionStatus={reportActionStatus}
       />
-      </div>
+      </div> : null}
     </div>
   );
 }
@@ -1344,6 +1376,10 @@ export function App() {
   const managedPersonaUnit = auth.workspaceRollout?.enforcementMode === 'managed'
     ? workspaceEnabledUnitForPersona(activePersona.id, auth.workspaceRollout)
     : undefined;
+  const fieldControls = workspaceFieldControlsForPersona(
+    activePersona.id,
+    managedPersonaUnit,
+  );
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     ? customerPortalVisits
     : activePersona.id === 'property-manager'
@@ -3079,8 +3115,11 @@ export function App() {
           <div className={`${workspaceSurfaces.fieldOperations && mobileView === 'route' ? 'block' : 'hidden'} scroll-mt-16`} id="today-route">
             <DayPlanPanel
               actorId={auth.userId}
+              jobDetailsEnabled={fieldControls.jobDetails}
               onSelectJob={selectJobForReview}
               refreshSignal={dayPlanRefreshSignal}
+              routeChangesEnabled={fieldControls.routeChanges}
+              stopProgressEnabled={fieldControls.stopProgress}
             />
           </div>
           <section className={workspaceSurfaces.fieldOperations && mobileView === 'jobs' ? 'block' : 'hidden'}>
@@ -3923,6 +3962,8 @@ export function App() {
           ) : null}
           <JobDetailPanel
             job={selectedJob}
+            executionEnabled={fieldControls.stopProgress}
+            fieldEvidenceEnabled={fieldControls.fieldEvidence}
             isLoading={isLoadingDetail}
             addOns={selectedJobAddOns}
             uploadTickets={selectedJobTickets}
@@ -3938,6 +3979,7 @@ export function App() {
             onDeliverReport={handleDeliverReport}
             onQueueReportDeliveryNotification={handleQueueReportDeliveryNotification}
             reportActionStatus={completionReportActionStatus}
+            reportEnabled={fieldControls.report}
             requestedWorkflow={requestedJobWorkflow}
           />
         </div>

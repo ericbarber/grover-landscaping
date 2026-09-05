@@ -65,8 +65,11 @@ default off, shapes desktop/mobile destinations, and gates Yard Owner visit,
 proof, question, and recommendation controls cumulatively. Remaining persona
 management categories and tools now follow cumulative unit boundaries as well,
 including progressive Support recovery/privacy exposure and fail-closed unknown
-units. Field/portfolio controls and protected per-unit smoke remain; Dispatcher and Billing
-Administrator also require authoritative backend roles.
+units. Field route/job controls now follow cumulative Crew Lead/Crew Member
+execution and evidence units, reserve route amendments for C4, and keep
+company/dispatcher job access read-only. Property Manager portfolio controls
+and protected per-unit smoke remain; Dispatcher and Billing Administrator also
+require authoritative backend roles.
 
 ## Delivered UX Context
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  workspaceFieldControlsForPersona,
   workspacePersonasForRoles,
   workspacePersonaForRollout,
   workspaceSurfacesForPersona,
@@ -172,5 +173,36 @@ describe('persona workspaces', () => {
       workspacePersonaForRollout(companyManager, rollout('company-manager', 'm2'))
         .navigation.map(({ view }) => view),
     ).toEqual(['home', 'manager', 'route', 'jobs', 'job']);
+  });
+
+  it('keeps field minimums read only and adds controls cumulatively', () => {
+    expect(workspaceFieldControlsForPersona('crew-lead', 'c1')).toEqual({
+      jobDetails: false,
+      stopProgress: false,
+      routeChanges: false,
+      fieldEvidence: false,
+      report: false,
+    });
+    expect(workspaceFieldControlsForPersona('crew-lead', 'c2')).toEqual({
+      jobDetails: true,
+      stopProgress: true,
+      routeChanges: false,
+      fieldEvidence: false,
+      report: false,
+    });
+    expect(workspaceFieldControlsForPersona('crew-lead', 'c4')).toEqual({
+      jobDetails: true,
+      stopProgress: true,
+      routeChanges: true,
+      fieldEvidence: true,
+      report: true,
+    });
+    expect(workspaceFieldControlsForPersona('crew-member', 'cm4').routeChanges).toBe(false);
+    expect(workspaceFieldControlsForPersona('company-manager', 'm2')).toMatchObject({
+      jobDetails: true,
+      stopProgress: false,
+      routeChanges: false,
+    });
+    expect(workspaceFieldControlsForPersona('crew-lead', null).jobDetails).toBe(false);
   });
 });

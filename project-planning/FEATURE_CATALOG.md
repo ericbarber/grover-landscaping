@@ -121,6 +121,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Cumulative manager-workspace composition for company, property-management,
   dispatch, billing, and support personas, with unit-bounded categories/tools
   and suspended or unknown managed units exposing no management tools
+- Cumulative field-workspace composition with read-only C1/CM1 routes,
+  assigned-job execution at C2/CM2, checklist/photo/report evidence at C3/CM3,
+  Crew Lead-only route amendments at C4, and read-only company/dispatcher job
+  oversight without discarding queued offline work
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys
