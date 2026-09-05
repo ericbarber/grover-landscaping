@@ -103,6 +103,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   ten production workspace personas, including exact manager-tool boundaries,
   Crew Member versus Crew Lead authority, Billing Admin non-revenue scope,
   guarded Support recovery, and a no-role access-resolution fallback
+- Versioned `/me/access` workspace-rollout projection derived from active
+  membership/claim scope, with deterministic role-to-persona capability keys,
+  duplicate-scope collapse, every product unit default off, and only non-data
+  G1 access resolution enabled for the no-role fallback
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

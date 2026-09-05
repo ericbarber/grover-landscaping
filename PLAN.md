@@ -59,14 +59,20 @@ Current state:
   manager-tool omissions, field/offline boundaries, unsupported revenue scope,
   privacy controls, dependencies, and non-destructive rollback are explicit.
   Server-derived capabilities, audited cohorts, protected unit smoke, and live
-  enablement remain implementation and operational work.
+  enablement remain implementation and operational work. The first control-
+  plane slice now adds a versioned, server-derived `workspace_rollout` read to
+  `/me/access`: active role/scope projections are deduplicated, every product
+  capability is default off, and the no-role fallback enables only non-data G1
+  access resolution. It does not yet shape navigation or enable a cohort.
 
 Next design slices:
 
-1. Functional rollout control: implement one server-derived, resource-scoped
-   capability projection for all workspace personas, auditable cohort
-   membership, capability-shaped navigation, and protected per-unit smoke/
-   rollback without weakening API authorization or discarding queued work.
+1. Functional rollout control: persist auditable account/membership/scope cohort
+   enablement behind the delivered default-off projection, then add guarded
+   enable/suspend operations, capability-shaped navigation, and protected per-
+   unit smoke/rollback without weakening API authorization or discarding queued
+   work. Dispatcher and Billing Administrator require an explicit backend role
+   contract before either projection can be enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

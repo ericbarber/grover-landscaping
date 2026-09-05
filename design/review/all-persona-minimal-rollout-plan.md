@@ -27,8 +27,8 @@ bounded by `frontend/src/components/ManagerWorkspaceMenu.tsx`.
 | Crew Member | `CrewMember` | CM1 Assigned work | CM1–CM4 |
 | Yard-care Company Owner | `OrganizationOwner` | O1 Company readiness | O1–O4 |
 | Yard-care Company Manager | `Manager` | M1 Operating readiness | M1–M4 |
-| Dispatcher | `Dispatcher` | D1 Schedule visibility | D1–D4 |
-| Billing Administrator | `BillingAdmin` | B1 Account records | B1–B3 |
+| Dispatcher | `Dispatcher` (UI-defined; backend role not yet delivered) | D1 Schedule visibility | D1–D4 |
+| Billing Administrator | `BillingAdmin` (UI-defined; backend role not yet delivered) | B1 Account records | B1–B3 |
 | Support Administrator | `SupportAdmin` | S1 Support triage | S1–S4 |
 | Team Member fallback | no active mapped role | G1 Access resolution | G1 only |
 
@@ -36,6 +36,12 @@ The [Yard Owner plan](yard-owner-minimal-rollout-plan.md) and
 [Crew Lead plan](crew-lead-minimal-rollout-plan.md) remain the detailed
 contracts for their already-reviewed units. This document completes the other
 personas and defines shared sequencing.
+
+The current authoritative Rust/API role union and membership editor do not yet
+contain Dispatcher or BillingAdmin even though the React persona catalog maps
+those keys. Their designs are included so the product boundary is complete,
+but no server projection or live cohort may synthesize those roles from
+Manager. That gap requires an explicit least-privilege role decision.
 
 ## Rules shared by every persona
 

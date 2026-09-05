@@ -2,6 +2,9 @@ use crate::access_control::AccessRole;
 use crate::local_review::{
     local_reviewer_by_user_id, local_reviewer_profiles, LOCAL_REVIEW_ORGANIZATION_ID,
 };
+use crate::workspace_rollout::{
+    default_workspace_rollout_projection, WorkspaceRolloutAssignment, WorkspaceRolloutProjection,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::{PgPool, Row};
@@ -63,6 +66,7 @@ pub struct PrincipalAccessSummary {
     pub verified_email: Option<String>,
     pub claim_roles: Vec<AccessRole>,
     pub memberships: Vec<OrganizationMembership>,
+    pub workspace_rollout: WorkspaceRolloutProjection,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -296,12 +300,25 @@ impl OrganizationRepository {
             return OrganizationResourceResult::Unavailable;
         }
 
+        let rollout_assignments = memberships
+            .iter()
+            .map(|membership| WorkspaceRolloutAssignment {
+                role: membership.role.clone(),
+                organization_id: membership.organization_id.clone(),
+                scope_type: membership.scope_type.clone(),
+                scope_id: membership.scope_id.clone(),
+            })
+            .collect::<Vec<_>>();
+        let workspace_rollout =
+            default_workspace_rollout_projection(&claim_roles, &rollout_assignments);
+
         OrganizationResourceResult::Found(PrincipalAccessSummary {
             user_id: user_id.to_string(),
             username: username.to_string(),
             verified_email,
             claim_roles,
             memberships,
+            workspace_rollout,
         })
     }
 

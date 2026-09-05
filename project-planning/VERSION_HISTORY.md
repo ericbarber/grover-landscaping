@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-04: Added the default-off workspace rollout projection foundation to
+  `/me/access`. The server now derives versioned persona/scope entries from
+  active memberships and bounded claims, collapses duplicate role scopes, and
+  returns deterministic capability maps with no product unit enabled. The
+  frontend client maps the contract, while G1 access resolution remains the
+  only enabled non-data fallback. Cohort writes and navigation shaping remain.
 - 2026-09-04: Completed the minimalist functional-unit rollout design for all
   ten signed-in workspace personas. The shared prototype now covers 36
   cumulative units across customer, field, company, dispatch, billing, support,
