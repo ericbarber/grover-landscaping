@@ -70,8 +70,10 @@ execution and evidence units, reserve route amendments for C4, and keep
 company/dispatcher job access read-only. Property Manager portfolio content now
 advances from P1 readiness to P2 search/history/proof, P3 questions/decisions,
 and P4 administration without fetching later history at P1. Protected per-unit
-smoke remains; Dispatcher and Billing Administrator also require authoritative
-backend roles.
+smoke now has a credential-safe executable contract for exact projection,
+cumulative/forbidden capabilities, authorized reads, and cross-resource denial.
+Its hosted evidence remains external; Dispatcher and Billing Administrator also
+require authoritative backend roles.
 
 ## Delivered UX Context
 

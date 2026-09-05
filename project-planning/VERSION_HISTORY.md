@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-05: Added the protected workspace-rollout smoke contract. Operators
+  can validate one exact hosted persona/unit/scope, its required cumulative and
+  forbidden later capabilities, an authorized resource read, and a controlled
+  cross-resource denial. Input validation, bounded requests, redacted failures,
+  six failure-policy tests, release preflight, and CI integration are delivered;
+  no hosted cohort pass is claimed.
 - 2026-09-05: Bounded the Property Manager portfolio by rollout unit. P1 shows
   readiness, coverage, next service, and customer-safe exceptions; P2 adds
   property search, service history, and delivered proof; P3 adds exact-visit

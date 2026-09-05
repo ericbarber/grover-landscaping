@@ -43,6 +43,7 @@ jobs:
           bash scripts/validate-changes.test.sh
           bash scripts/release-preflight.test.sh
           bash scripts/smoke-production.test.sh
+          node --test scripts/smoke-workspace-rollout.test.mjs
           node --test scripts/validate-protected-release-evidence.test.mjs
 
   backend:

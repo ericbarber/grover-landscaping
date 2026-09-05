@@ -14,6 +14,10 @@ controls now follow the Crew Lead, Crew Member, company-oversight, and
 dispatcher unit boundaries. Property Manager readiness, property search,
 service history, delivered proof, questions/decisions, and administration are
 also composed cumulatively from P1 through P4; P1 does not fetch P2/P3 history.
+The repository now includes a credential-safe protected runner that verifies
+an exact managed unit, required and forbidden capabilities, an authorized
+resource read, and a cross-resource denial. It has not run against a hosted
+cohort.
 
 ## Response
 
@@ -137,6 +141,7 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Add protected success and cross-resource denial smoke per enabled unit.
+1. Execute the protected rollout smoke for every enabled hosted cohort unit and
+   retain each write workflow’s additional retry/conflict evidence.
 2. Resolve Dispatcher and BillingAdmin as explicit roles or remove the
    unsupported persona keys before either can enter a cohort.
