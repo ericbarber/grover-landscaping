@@ -354,6 +354,7 @@ export function YardOwnerPortalPanel({
   isLoadingVisits,
   visitReadError,
   onRetryVisits,
+  onReturnHome,
 }: {
   customerDisplayName: string;
   rolloutUnit?: string | null;
@@ -362,6 +363,7 @@ export function YardOwnerPortalPanel({
   isLoadingVisits: boolean;
   visitReadError: 'access_required' | 'inconsistent' | 'unavailable' | null;
   onRetryVisits: () => void;
+  onReturnHome: () => void;
 }) {
   const rolloutManaged = rolloutUnit !== undefined;
   const allowsVisits = !rolloutManaged || ['u2', 'u3', 'u4'].includes(rolloutUnit ?? '');
@@ -415,23 +417,39 @@ export function YardOwnerPortalPanel({
   if (visitReadError) {
     const copy = visitReadError === 'access_required'
       ? {
-        title: 'No active customer portal access is available.',
-        detail: 'Ask your landscaping provider to confirm the account or property access connected to this sign-in.',
+        heading: 'My yard is protected',
+        title: 'Customer portal access is not active.',
+        detail: 'Property and service details remain hidden. Review the current access connected to this sign-in.',
+        retryLabel: 'Review account access',
       }
       : visitReadError === 'inconsistent'
         ? {
+          heading: 'My yard needs attention',
           title: 'Your customer portal access needs provider review.',
           detail: 'Visit details remain protected until the provider repairs the account or property relationship.',
+          retryLabel: 'Try again',
         }
         : {
+          heading: 'My yard is unavailable',
           title: 'Your visit details are temporarily unavailable.',
           detail: 'Customer information remains protected. Try loading the portal again.',
+          retryLabel: 'Try again',
         };
     return (
       <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md">
         <p className="grover-eyebrow">My yard</p>
-        <WorkspaceStatusNotice className="mt-4" detail={copy.detail} title={copy.title} tone="warning" />
-        <button className="grover-button-secondary mt-5" onClick={onRetryVisits} type="button">Try again</button>
+        <h1 className="mt-2 font-display text-4xl font-black text-forest">{copy.heading}</h1>
+        <WorkspaceStatusNotice
+          className="mt-5"
+          detail={copy.detail}
+          title={copy.title}
+          titleAs="h2"
+          tone="warning"
+        />
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button className="grover-button-primary" onClick={onRetryVisits} type="button">{copy.retryLabel}</button>
+          <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+        </div>
       </section>
     );
   }
@@ -443,10 +461,13 @@ export function YardOwnerPortalPanel({
         <h1 className="mt-2 font-display text-4xl font-black text-forest">Welcome, {customerDisplayName}</h1>
         <WorkspaceStatusNotice
           className="mt-6"
-          detail="Ask your landscaping provider to connect an active property to this account."
-          title="No active property is connected yet."
+          detail="There are no confirmed visits or active property details to show yet. New confirmed care will appear here when it is available."
+          title="No confirmed visits yet."
+          titleAs="h2"
           tone="neutral"
-        />
+        >
+          <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+        </WorkspaceStatusNotice>
       </section>
     );
   }
@@ -542,8 +563,11 @@ export function YardOwnerPortalPanel({
                 <WorkspaceStatusNotice
                   detail="Your provider will update this space when a new visit is confirmed."
                   title="Nothing is currently scheduled for this property."
+                  titleAs="h2"
                   tone="neutral"
-                />
+                >
+                  <button className="grover-button-secondary" onClick={onReturnHome} type="button">Return Home</button>
+                </WorkspaceStatusNotice>
               )}
 
               {allowsProof ? <article className="rounded-2xl border border-slate-200 p-5 sm:p-6">

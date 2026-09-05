@@ -1355,3 +1355,44 @@ test('yard owner phone Home opens compact one-visit-at-a-time service history', 
     expect(await page.evaluate(() => navigator.userAgent)).toContain('iPhone');
   }
 });
+
+test('yard owner protected visit recovery withholds facts and returns Home', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'property-owner');
+  });
+  let visitReadUnavailable = true;
+  await page.route('http://localhost:8080/customer-portal/visits', (route) => {
+    if (visitReadUnavailable) {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'customer_portal_visits_unavailable',
+          message: 'Visit details could not be loaded.',
+        }),
+      });
+    }
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ properties: [], visits: [] }),
+    });
+  });
+
+  await page.goto('/app');
+  await page.getByRole('button', { name: 'Open My yard' }).click();
+  const portal = page.locator('#customer-workspace');
+  await expect(portal.getByRole('heading', { name: 'My yard is unavailable' })).toBeVisible();
+  await expect(portal.getByText('Customer information remains protected.')).toBeVisible();
+  await expect(portal.getByText('Weekly yard care')).toHaveCount(0);
+  await expect(portal.locator('h1')).toHaveCount(1);
+  await expect(portal.locator('h2')).toHaveCount(1);
+
+  visitReadUnavailable = false;
+  await portal.getByRole('button', { name: 'Try again' }).click();
+  await expect(portal.getByRole('heading', { name: /Welcome, Jamie/ })).toBeVisible();
+  await expect(portal.getByRole('heading', { name: 'No confirmed visits yet' })).toBeVisible();
+  await portal.getByRole('button', { name: 'Return Home' }).click();
+  await expect(page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Home', exact: true })).toHaveAttribute('aria-current', 'page');
+});

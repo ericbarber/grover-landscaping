@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Active | Crew route date/confidence truth is adopted | Yard Owner protected-read recovery |
+| Repository | Ready for next safe slice | Frontend truth/recovery adoption is complete | Shared typography-role boundary from DFR-08 |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -264,7 +264,7 @@ Exit evidence:
 
 ### UX4 — Frontend truth and recovery
 
-State: in progress.
+State: delivered.
 
 Delivered:
 
@@ -274,11 +274,9 @@ Delivered:
 - Replace transport/source descriptions with the bounded Syncing, Saved on
   device, Synced, Needs attention, and Read only confidence vocabulary.
 
-Next deliver:
-
 - Reconcile Yard Owner loading, valid-empty, ended-access, inconsistent, and
-  unavailable reads with explicit retry and Home recovery while preserving the
-  existing fail-closed authorization contract.
+  unavailable reads with explicit retry/access review and Home recovery while
+  preserving the existing fail-closed authorization contract.
 
 Exit evidence:
 

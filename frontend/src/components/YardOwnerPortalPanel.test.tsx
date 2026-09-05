@@ -9,6 +9,7 @@ const commonProps = {
   isLoadingVisits: false,
   visitReadError: null,
   onRetryVisits: vi.fn(),
+  onReturnHome: vi.fn(),
 };
 
 function renderVisit(
@@ -43,6 +44,7 @@ describe('Yard Owner persisted visit states', () => {
     );
 
     expect(markup).toContain('Loading your yard');
+    expect(markup).toContain('<h1');
     expect(markup).not.toContain('Weekly yard care');
     expect(markup).not.toContain('August 27');
   });
@@ -54,6 +56,9 @@ describe('Yard Owner persisted visit states', () => {
 
     expect(markup).toContain('needs provider review');
     expect(markup).toContain('Try again');
+    expect(markup).toContain('Return Home');
+    expect(markup).toContain('<h1');
+    expect(markup).toContain('<h2');
     expect(markup).not.toContain('Weekly yard care');
   });
 
@@ -65,16 +70,20 @@ describe('Yard Owner persisted visit states', () => {
       <YardOwnerPortalPanel {...commonProps} visitReadError="unavailable" />,
     );
 
-    expect(accessMarkup).toContain('No active customer portal access');
+    expect(accessMarkup).toContain('Customer portal access is not active');
+    expect(accessMarkup).toContain('Review account access');
+    expect(accessMarkup).toContain('Return Home');
     expect(accessMarkup).not.toContain('temporarily unavailable');
     expect(unavailableMarkup).toContain('temporarily unavailable');
-    expect(unavailableMarkup).not.toContain('No active customer portal access');
+    expect(unavailableMarkup).not.toContain('Customer portal access is not active');
   });
 
   it('distinguishes a valid empty property collection from an outage', () => {
     const markup = renderToStaticMarkup(<YardOwnerPortalPanel {...commonProps} />);
 
-    expect(markup).toContain('No active property is connected yet');
+    expect(markup).toContain('No confirmed visits yet');
+    expect(markup).toContain('Return Home');
+    expect(markup).toContain('<h2');
     expect(markup).not.toContain('temporarily unavailable');
   });
 

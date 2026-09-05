@@ -24,7 +24,7 @@ counts, people, dates, providers, or customer claims are production facts.
 | --- | --- | --- |
 | `prototypes/current-frontend-review/` | Current mirror | September 3, 2026 baseline only. Manager continuity and shell compression delivered afterward are intentionally absent. |
 | `prototypes/yard-owner-minimal-rollout/` | Adopted behavior | The version-2 projection, cohort persistence/administration, cumulative navigation, persona composition, manager continuity, and protected runner are implemented for authoritative roles. Hosted cohort execution and explicit Dispatcher/Billing backend roles remain external or gated. |
-| `prototypes/frontend-truth-recovery/` | Design direction | Shared Yard Owner protected-read recovery and Crew Route date/persistence vocabulary are proposed; no complete production adoption is claimed. |
+| `prototypes/frontend-truth-recovery/` | Adopted behavior | Yard Owner protected-read exits and Crew Route date/persistence vocabulary are adopted. Illustrative prototype records remain non-production examples. |
 | `prototypes/public-homepage/` | Historical input | Persona continuity, Plan–Care–Proof behavior, conversion recovery, and core visual language are adopted. Its taller composition is no longer the production parity source. |
 | `prototypes/property-manager-portfolio/` | Adopted behavior | Overview, Properties, Proof, Approvals, scoped composition, and partial-source recovery are adopted. Illustrative readiness values are not production evidence. |
 | `prototypes/yard-owner-portal/` | Adopted behavior | Home, Visits, Proof, Account, service-day state, questions, and recommendation decisions are adopted. Concerns, preferences, provider contact, and billing remain separately gated. |
@@ -38,7 +38,7 @@ counts, people, dates, providers, or customer claims are production facts.
 | --- | --- | --- |
 | `high-fidelity/current/current-frontend-*` | Current mirror | September 3 capture pair associated with the dated mirror. |
 | `high-fidelity/current/*minimal-rollout*` | Adopted behavior | Functional-unit contracts are adopted in the repository; images do not prove live cohort enablement. |
-| `high-fidelity/current/frontend-truth-recovery-*` | Design direction | Proposed state vocabulary only. |
+| `high-fidelity/current/frontend-truth-recovery-*` | Adopted behavior | State hierarchy and vocabulary are adopted; the static example data is illustrative. |
 | `high-fidelity/public/homepage-*` | Historical input | Retained visual and interaction rationale; current React is the composition source. |
 | `high-fidelity/field/crew-route-*` | Adopted behavior | Current-stop hierarchy, progress, sync confidence, and stable field navigation are adopted; dated example content is illustrative. |
 | `high-fidelity/manager/schedule-*` | Adopted behavior | Today’s-operation hierarchy, route board, inspector, and manager handoffs are adopted; the image is not live operational data. |

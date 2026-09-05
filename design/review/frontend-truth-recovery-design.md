@@ -2,9 +2,10 @@
 
 ## Status
 
-Proposed design direction following findings DFR-02 and DFR-05 in the
+Adopted in production React on September 5, 2026, following findings DFR-02
+and DFR-05 in the
 [September 3 current-frontend audit](current-frontend-design-audit-2026-09-03.md).
-This contract does not claim production adoption.
+The API authorization and offline mutation contracts remain authoritative.
 
 ## Decisions
 

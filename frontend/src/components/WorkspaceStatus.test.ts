@@ -33,4 +33,16 @@ describe('workspace status primitives', () => {
     expect(badge).toContain('rounded-full');
     expect(badge).toContain('Everything synced');
   });
+
+  it('can expose a notice title as the page state heading', () => {
+    const notice = renderToStaticMarkup(createElement(WorkspaceStatusNotice, {
+      detail: 'Protected facts remain hidden.',
+      title: 'Customer portal access is not active.',
+      titleAs: 'h2',
+      tone: 'warning',
+    }));
+
+    expect(notice).toContain('<h2');
+    expect(notice).toContain('Customer portal access is not active.</h2>');
+  });
 });

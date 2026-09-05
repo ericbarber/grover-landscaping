@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-05: Completed Yard Owner protected-read recovery. Loading, valid
+  empty, ended access, inconsistent authorization, and unavailable reads keep
+  property/service facts withheld as required; error states now expose one page
+  heading, an `h2` state message, retry or account-access review, and Return
+  Home. A phone journey proves outage-to-authoritative-empty recovery and the
+  Home exit without adding provider-contact or support promises.
 - 2026-09-05: Adopted truthful Crew Route date and persistence context. Routes
   now compare their service date with the active local day, render a complete
   human-readable date, label past/today/upcoming explicitly, and block both stop

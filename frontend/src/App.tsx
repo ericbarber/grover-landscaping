@@ -3597,6 +3597,7 @@ export function App() {
                 isLoadingVisits={isLoadingCustomerPortalVisits}
                 visitReadError={customerPortalVisitError}
                 onRetryVisits={() => setCustomerPortalVisitRefreshSignal((current) => current + 1)}
+                onReturnHome={() => changeMobileView('home', true)}
               />
             )}
           </div>
