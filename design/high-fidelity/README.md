@@ -12,6 +12,15 @@ that distinction in the
 | --- | --- | --- |
 | [`../prototypes/public-homepage/index.html`](../prototypes/public-homepage/index.html) | [Desktop](public/homepage-desktop-v2.png) · [Mobile](public/homepage-mobile-v2.png) | Responsive, persona-aware public journey with workflow and conversion states |
 
+## All-persona rollout design
+
+| Artifact | Review image | Purpose |
+| --- | --- | --- |
+| [`../prototypes/yard-owner-minimal-rollout/index.html#overview/map`](../prototypes/yard-owner-minimal-rollout/index.html#overview/map) | [Desktop](current/all-persona-minimal-rollout-desktop-v1.png) · [Mobile](current/all-persona-minimal-rollout-mobile-v1.png) | Ten signed-in persona contracts and 36 cumulative units with minimum launch, authority, dependency, and rollback boundaries |
+
+The rollout artifact is validated design direction, not a hosted cohort or a
+claim that its proposed server capability control is implemented.
+
 The V2 public artifact is interactive and browser-validated. Its theme, split
 hero, persona continuity, Plan–Care–Proof tour, direct signup paths, and
 conversion-state contracts are adopted in the production React page; the static

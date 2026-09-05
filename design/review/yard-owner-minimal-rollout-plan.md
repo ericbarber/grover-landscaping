@@ -11,9 +11,10 @@ happens when there is no visit or the protected read fails.
 The [rollout prototype](../prototypes/yard-owner-minimal-rollout/index.html)
 shows the customer experience after each unit is enabled. It is a rollout
 design, not a claim that production capability flags or a hosted cohort exist.
-The same prototype now includes a separately scoped
-[Crew Lead rollout](crew-lead-minimal-rollout-plan.md); its field capabilities
-do not inherit customer-account authorization or enablement.
+The same prototype now includes the complete
+[all-persona rollout map](all-persona-minimal-rollout-plan.md). Its field,
+manager, billing, and support capabilities do not inherit customer-account
+authorization or enablement.
 
 ## Guiding rules
 

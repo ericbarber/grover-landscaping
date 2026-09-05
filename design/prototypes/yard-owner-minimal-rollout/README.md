@@ -1,27 +1,31 @@
-# Yard Owner and Crew Lead Minimal Rollout Prototype
+# All-Persona Minimal Rollout Prototype
 
-This dependency-free prototype shows the Yard Owner portal and Crew Lead field
-workspace as separate sets of cumulative, independently enableable units.
+This dependency-free prototype defines cumulative functional-unit rollouts for
+all ten signed-in workspace personas in the production role mapping:
 
-For Yard Owners, U1 Care visibility is the minimum
-launch: Home only, with a protected property, next confirmed visit, preparation,
-next-update ownership, and complete empty/recovery behavior.
+- Yard Owner and Property Manager;
+- Crew Lead and Crew Member;
+- Yard-care Company Owner, Company Manager, and Dispatcher;
+- Billing Administrator and Support Administrator;
+- the Team Member fallback when no active role exists.
 
-U2 adds Visits, U3 adds Proof, and U4 adds contextual questions and
-recommendation decisions without adding another primary destination. Disabled
-units are absent rather than presented as unfinished navigation.
+Open the [rollout map](index.html#overview/map), select a persona, and move
+through its units. Every selection shows only destinations and contextual
+capabilities that are complete at that unit. It does not render disabled or
+“coming soon” navigation.
 
-This is a rollout design. It does not implement capability flags, enable a
-cohort, call an API, or persist any interaction. Review the authoritative
-[Yard Owner plan](../../review/yard-owner-minimal-rollout-plan.md).
+The legacy directory and Yard Owner/Crew Lead hashes remain stable. The
+[all-persona plan](../../review/all-persona-minimal-rollout-plan.md) is the
+cross-persona delivery contract, while the
+[Yard Owner plan](../../review/yard-owner-minimal-rollout-plan.md) and
+[Crew Lead plan](../../review/crew-lead-minimal-rollout-plan.md) retain their
+detailed boundaries.
 
-For Crew Leads, C1 Day plan visibility is the minimum launch: Home and Route
-provide a read-only assigned route, ordered stops, service/access context, and
-sync confidence. C2 adds resilient stop execution, C3 field proof, and C4 route
-changes and recovery. Review the authoritative
-[Crew Lead plan](../../review/crew-lead-minimal-rollout-plan.md).
+This is a rollout design. It does not implement server-derived capability
+projection, enable a cohort, call an API, or persist interactions.
 
-Validate and refresh gallery captures with:
+Validate all 36 persona/unit combinations at desktop, mobile, and narrow-phone
+viewports and refresh gallery captures with:
 
 ```bash
 node design/tools/validate-yard-owner-minimal-rollout.mjs --capture

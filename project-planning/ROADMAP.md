@@ -45,6 +45,13 @@ day-plan visibility precedes stop writes, evidence, and route-change recovery.
 Field enablement requires exact membership/crew scope, supported-device and
 offline-data handling, protected per-unit smoke, manager response ownership,
 and rollback that preserves queued work.
+The functional-unit model now covers all ten signed-in workspace personas and
+the full 36-unit map. Property Manager, Crew Member, Company Owner, Company
+Manager, Dispatcher, Billing Administrator, Support Administrator, and the
+no-role fallback have explicit minimum promises, cumulative authority,
+dependencies, omissions, evidence gates, and rollback alongside the existing
+Yard Owner and Crew Lead contracts. The next repository slice is a shared
+server-derived rollout control plane; the design is not live enablement.
 
 ## Delivered UX Context
 

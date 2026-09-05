@@ -7,12 +7,24 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="../shared/grover-foundation.css">
 </head>
-<body data-prototype="yard-owner-minimal-rollout" data-persona="owner" data-unit="u1">
+<body data-prototype="all-persona-minimal-rollout" data-persona="overview" data-unit="map">
   <aside class="prototype-note review-bar" aria-label="Rollout design controls">
-    <div><strong>Functional-unit rollout</strong><span>Each selection shows only complete enabled capabilities. No data is saved.</span></div>
-    <label>Persona<select id="persona-picker"><option value="owner">Yard Owner</option><option value="crew">Crew Lead</option></select></label>
+    <div><strong>All-persona functional rollout</strong><span>Each selection shows only complete enabled capabilities. No data is saved.</span></div>
+    <label>Persona<select id="persona-picker">
+      <option value="overview">All personas · rollout map</option>
+      <option value="owner">Yard Owner</option>
+      <option value="property-manager">Property Manager</option>
+      <option value="crew">Crew Lead</option>
+      <option value="crew-member">Crew Member</option>
+      <option value="company-owner">Yard-care Company Owner</option>
+      <option value="company-manager">Yard-care Company Manager</option>
+      <option value="dispatcher">Dispatcher</option>
+      <option value="billing-admin">Billing Administrator</option>
+      <option value="support">Support Administrator</option>
+      <option value="general">Team Member · no active role</option>
+    </select></label>
     <label>Functional unit<select id="unit-picker"></select></label>
-    <a class="prototype-review-link" id="rollout-plan-link" href="../../review/yard-owner-minimal-rollout-plan.md">Read rollout plan</a>
+    <a class="prototype-review-link" id="rollout-plan-link" href="../../review/all-persona-minimal-rollout-plan.md">Read rollout plan</a>
   </aside>
   <div class="sr-only" id="announcer" aria-live="polite"></div>
   <div class="portal-shell">
@@ -23,6 +35,10 @@
       <div class="rail-identity"><strong id="rail-name">Jamie</strong><span id="rail-role">Yard owner</span></div>
     </aside>
     <main id="main-content" tabindex="-1">
+      <section class="rollout-map" id="overview-experience">
+        <header class="rollout-map-header"><div><span>Functional-unit delivery</span><h1>Ten small starts. One connected operation.</h1><p>Review the minimum useful release and cumulative path for every signed-in workspace persona.</p></div><span class="map-count">10 persona contracts</span></header>
+        <div class="content"><div class="map-principles"><strong>Default off</strong><span>Exact account, membership, crew, or support scope</span><strong>No placeholder destinations</strong><span>Only complete enabled units appear</span><strong>Reversible</strong><span>Accepted records and queued work survive rollback</span></div><div class="persona-map" id="persona-map"></div></div>
+      </section>
       <section class="portal-card" id="owner-experience">
         <header class="portal-header"><div><span>My yard</span><p>Care, proof, and the next thing you need to know.</p></div><label>Property<select><option>Sonoran House</option></select></label></header>
         <nav class="portal-tabs" id="portal-tabs" aria-label="Portal destinations"></nav>
@@ -53,6 +69,16 @@
             <article class="side-card c4-only"><span class="eyebrow">Changes and recovery</span><h2>Keep the office in the loop</h2><p>Request a skip or added service, review conflicts, and recover queued work without silently changing the published route.</p><button class="button button-secondary" type="button">Review route requests</button></article>
           </div>
           <section class="enabled-summary"><span class="eyebrow">Enabled for this crew</span><div data-capabilities></div></section>
+        </div>
+      </section>
+      <section class="generic-card" id="generic-experience" hidden>
+        <header class="generic-header"><div><span id="generic-kicker">Workspace</span><h1 id="generic-title">Persona workspace</h1><p id="generic-promise">One useful operating promise.</p></div><span class="generic-confidence" id="generic-confidence">Current</span></header>
+        <nav class="portal-tabs" id="generic-tabs" aria-label="Persona workspace"></nav>
+        <div class="content">
+          <header class="welcome"><span class="eyebrow" id="generic-context">Today</span><h2 id="generic-heading">Start with the work that matters.</h2><p data-unit-intro></p></header>
+          <div class="unit-banner"><span class="eyebrow" data-unit-label></span><strong data-unit-title></strong><p data-unit-copy></p></div>
+          <div class="generic-grid"><article class="generic-primary" id="generic-primary"></article><article class="side-card generic-boundary" id="generic-boundary"></article><div class="generic-cumulative" id="generic-cumulative"></div></div>
+          <section class="enabled-summary"><span class="eyebrow" id="generic-enabled-label">Enabled for this workspace</span><div data-capabilities></div></section>
         </div>
       </section>
     </main>

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-04: Completed the minimalist functional-unit rollout design for all
+  ten signed-in workspace personas. The shared prototype now covers 36
+  cumulative units across customer, field, company, dispatch, billing, support,
+  and no-role fallback experiences; only enabled destinations appear. The plan
+  records exact role/tool boundaries, cross-persona dependencies, unsupported
+  revenue scope, protected exit evidence, and non-destructive rollback. Live
+  capability projection and cohorts remain unimplemented.
 - 2026-09-04: Extended the functional-unit rollout design to Crew Leads. C1
   exposes a useful read-only Home/Route day plan; C2 adds offline-resilient stop
   execution and Jobs/Job, C3 field proof, and C4 route changes/recovery. The
