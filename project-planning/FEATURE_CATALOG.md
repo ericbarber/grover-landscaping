@@ -109,8 +109,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   G1 access resolution enabled for the no-role fallback
 - Exact user/persona/organization/scope rollout enrollments with validated
   cumulative units, next-version-only advancement, suspension rollback,
-  fail-closed reads, and immutable enable/advance/suspend/resume history; no
-  operator mutation endpoint or live cohort is claimed
+  fail-closed reads, and immutable enable/advance/suspend/resume history
+- Guarded organization-owner and organization-scoped support rollout operations
+  that derive persona and resource scope from the target membership, enforce
+  exact versions and forward-only units, and replay actor mutation keys without
+  duplicate audit; no live cohort is claimed
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

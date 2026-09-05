@@ -57,8 +57,10 @@ persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access
 resolution is the only enabled non-data fallback. Migration 123 adds exact-
 scope cohort enrollments, cumulative units, versioned advancement, suspension
-rollback, and immutable lifecycle audit. Guarded operator APIs, React
-composition, and protected per-unit smoke remain; Dispatcher and Billing
+rollback, and immutable lifecycle audit. Migration 124 and guarded organization
+APIs add membership-derived list/enable/advance/suspend/resume operations with
+exact versions and actor-scoped idempotent replay. React composition and
+protected per-unit smoke remain; Dispatcher and Billing
 Administrator also require authoritative backend roles.
 
 ## Delivered UX Context

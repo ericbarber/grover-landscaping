@@ -1,5 +1,13 @@
 # Version History
 
+- 2026-09-05: Added guarded organization rollout administration. Active
+  OrganizationOwner or organization-scoped SupportAdmin memberships can list
+  retained cohort state and enable, advance, suspend, or resume an exact target
+  membership; persona and scope are server-derived. Migration 124 records
+  actor-scoped mutation keys on immutable events, serializes retries, returns
+  exact replays without duplicate writes, and rejects stale versions, unit
+  downgrade, payload-key reuse, and cross-organization membership targets.
+  Navigation shaping and live cohort enablement remain next.
 - 2026-09-04: Added migration 123 and the fail-closed rollout cohort read path.
   Exact user/persona/organization/scope enrollments enable cumulative units in
   `/me/access`; suspension returns the projection to default off, unit downgrade

@@ -65,15 +65,18 @@ Current state:
   capability is default off, and the no-role fallback enables only non-data G1
   access resolution. Migration 123 also adds exact user/persona/scope
   enrollments, cumulative-unit application, suspension rollback, exact-version
-  advancement, and immutable enable/advance/suspend/resume events. There is no
-  enrollment mutation API and the projection does not yet shape navigation.
+  advancement, and immutable enable/advance/suspend/resume events. Guarded
+  organization-owner and organization-scoped support operations now list and
+  mutate exact membership-derived enrollments without accepting client role or
+  scope. Actor retry keys, exact versions, lifecycle validation, and immutable
+  receipts make enable/advance/suspend/resume safe to retry. The projection
+  does not yet shape navigation and no live cohort has been enabled.
 
 Next design slices:
 
-1. Functional rollout control: add guarded owner/support enrollment reads and
-   enable/advance/suspend/resume operations over the delivered exact-scope
-   persistence, then capability-shaped navigation and protected per-unit smoke
-   without weakening API authorization or discarding queued work. Dispatcher
+1. Functional rollout control: shape navigation and contextual controls from
+   the delivered projection, then add protected per-unit success and denial
+   smoke without weakening API authorization or discarding queued work. Dispatcher
    and Billing Administrator require an explicit backend role contract before
    either projection can be enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
