@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Waiting on input | R3 production-smoke safety and persistence contract is complete | R2 external access or P2 concern/preference product boundary |
+| Repository | Ready for next slice | All-persona manager continuity is complete | Authenticated shell compression |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -212,6 +212,22 @@ Decide support ownership, response expectations, retention, privacy, escalation,
 and the boundary between service concerns, safety events, billing disputes, and
 general communication. Appreciation and external review links remain backlog
 until this boundary and verified provider destinations exist.
+
+### UX1 — All-persona manager continuity
+
+State: delivered.
+
+Deliver:
+
+- Add concise status and urgency to each authorized Manage category.
+- Withhold later-unit customer, report, delivery, activity, and recovery reads.
+- Mount only the exact selected authorized destination panel.
+- Keep older access responses in legacy composition during rolling deployment.
+
+Exit evidence:
+
+- Suspended, unknown, and earlier managed units cannot activate or preload later
+  tools; manager schedule, Recovery, and completion-report handoffs remain intact.
 
 ## Later, not active
 

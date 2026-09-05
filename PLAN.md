@@ -82,7 +82,11 @@ Current state:
   composition now keeps P1 to readiness and coverage, adds property search,
   service history, and delivered proof at P2, questions and decisions at P3,
   and the already-bounded Manage tools at P4. Managed P1 also avoids P2/P3
-  history reads. No live cohort has been enabled.
+  history reads. The Manage overview now shows status or urgency only for its
+  authorized categories, and managed units no longer preload later customer,
+  report, activity, notification, or photo-recovery feeds. Only the exact
+  selected authorized tool panel mounts, preventing hidden tools from running
+  their own reads. No live cohort has been enabled.
 
 Next design slices:
 
@@ -93,8 +97,10 @@ Next design slices:
    specific replay/conflict evidence. Dispatcher and Billing Administrator
    require an explicit backend role contract before either projection can be
    enabled.
-2. Manager continuity: add authorized status and urgency to the six-category
-   Manage overview without duplicating its destination tools.
+2. Manager continuity: delivered. The category overview uses authorized job,
+   report, delivery, activity, and recovery state for concise urgency, falls
+   back to exact enabled-tool counts when no authoritative summary exists, and
+   mounts only the selected authorized destination.
 3. Shell compression: remove redundant hosted identity/persona presentation and
    prove final-action clearance above the phone bottom bar at narrow widths and
    zoom.
