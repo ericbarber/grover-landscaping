@@ -15,6 +15,11 @@ describe('first owner onboarding steps', () => {
       verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
       memberships: [],
+      workspaceRollout: {
+        contractVersion: 1,
+        rolloutMode: 'default_off',
+        personas: [],
+      },
     })).toEqual(['Create your organization']);
   });
 
@@ -24,6 +29,11 @@ describe('first owner onboarding steps', () => {
       username: 'owner@example.com',
       verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
+      workspaceRollout: {
+        contractVersion: 1,
+        rolloutMode: 'default_off',
+        personas: [],
+      },
       memberships: [{
         id: 'membership_1',
         organizationId: 'org_1',

@@ -428,6 +428,20 @@ describe('core API client mapping', () => {
       username: 'owner@example.com',
       verified_email: 'owner@example.com',
       claim_roles: ['OrganizationOwner'],
+      workspace_rollout: {
+        contract_version: 1,
+        rollout_mode: 'default_off',
+        personas: [{
+          persona_id: 'company-owner',
+          scope: {
+            scope_type: 'organization',
+            scope_id: 'org_1',
+            organization_id: 'org_1',
+          },
+          enabled_unit: null,
+          capabilities: { company_readiness: false },
+        }],
+      },
       memberships: [{
         id: 'membership_1',
         organization_id: 'org_1',
@@ -443,6 +457,20 @@ describe('core API client mapping', () => {
       userId: 'cognito-sub-1',
       verifiedEmail: 'owner@example.com',
       claimRoles: ['OrganizationOwner'],
+      workspaceRollout: {
+        contractVersion: 1,
+        rolloutMode: 'default_off',
+        personas: [{
+          personaId: 'company-owner',
+          enabledUnit: null,
+          capabilities: { company_readiness: false },
+          scope: {
+            scopeType: 'organization',
+            scopeId: 'org_1',
+            organizationId: 'org_1',
+          },
+        }],
+      },
       memberships: [{
         organizationId: 'org_1',
         organizationName: 'Grover Landscaping',
