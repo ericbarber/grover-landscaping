@@ -8,7 +8,9 @@ migrations 123–124, and the endpoints below. Accounts remain default off unles
 an exact active enrollment exists. No production cohort is enabled by these
 changes, and rollout state never grants API authority. Desktop/mobile workspace
 destinations and Yard Owner U2–U4 portal controls are now capability-shaped;
-the remaining persona-specific contextual controls are later slices.
+company, property-management, dispatch, billing, and support management menus
+are also unit-bounded. Field stop actions and Property Manager portfolio
+details are later slices.
 
 ## Response
 
@@ -132,7 +134,7 @@ foundation does not synthesize either role from Manager.
 
 ## Next implementation slices
 
-1. Shape remaining manager, field-write, portfolio, and support contextual
+1. Shape remaining field-write and portfolio contextual
    controls from capabilities while retaining deep-link and API denial.
 2. Add protected success and cross-resource denial smoke per enabled unit.
 3. Resolve Dispatcher and BillingAdmin as explicit roles or remove the

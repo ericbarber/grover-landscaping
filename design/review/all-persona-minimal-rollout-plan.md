@@ -15,7 +15,9 @@ but it may never grant one.
 
 The shared projection, audited cohort administration, managed-versus-legacy
 state, cumulative desktop/mobile destinations, and Yard Owner U2–U4 contextual
-composition are now delivered. Other persona-specific contextual controls,
+composition are now delivered. Manager-style categories and tools also follow
+the Company Owner, Company Manager, Property Manager, Dispatcher, Billing, and
+Support unit maps. Field and portfolio contextual controls,
 protected unit smoke, operational enablement, and hosted cohorts remain.
 
 ## Production persona source
