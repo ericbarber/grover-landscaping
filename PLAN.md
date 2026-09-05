@@ -60,19 +60,22 @@ Current state:
   privacy controls, dependencies, and non-destructive rollback are explicit.
   Server-derived capabilities, audited cohorts, protected unit smoke, and live
   enablement remain implementation and operational work. The first control-
-  plane slice now adds a versioned, server-derived `workspace_rollout` read to
+  plane slices now add a versioned, server-derived `workspace_rollout` read to
   `/me/access`: active role/scope projections are deduplicated, every product
   capability is default off, and the no-role fallback enables only non-data G1
-  access resolution. It does not yet shape navigation or enable a cohort.
+  access resolution. Migration 123 also adds exact user/persona/scope
+  enrollments, cumulative-unit application, suspension rollback, exact-version
+  advancement, and immutable enable/advance/suspend/resume events. There is no
+  enrollment mutation API and the projection does not yet shape navigation.
 
 Next design slices:
 
-1. Functional rollout control: persist auditable account/membership/scope cohort
-   enablement behind the delivered default-off projection, then add guarded
-   enable/suspend operations, capability-shaped navigation, and protected per-
-   unit smoke/rollback without weakening API authorization or discarding queued
-   work. Dispatcher and Billing Administrator require an explicit backend role
-   contract before either projection can be enabled.
+1. Functional rollout control: add guarded owner/support enrollment reads and
+   enable/advance/suspend/resume operations over the delivered exact-scope
+   persistence, then capability-shaped navigation and protected per-unit smoke
+   without weakening API authorization or discarding queued work. Dispatcher
+   and Billing Administrator require an explicit backend role contract before
+   either projection can be enabled.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

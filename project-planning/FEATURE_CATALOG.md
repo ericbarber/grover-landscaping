@@ -107,6 +107,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   membership/claim scope, with deterministic role-to-persona capability keys,
   duplicate-scope collapse, every product unit default off, and only non-data
   G1 access resolution enabled for the no-role fallback
+- Exact user/persona/organization/scope rollout enrollments with validated
+  cumulative units, next-version-only advancement, suspension rollback,
+  fail-closed reads, and immutable enable/advance/suspend/resume history; no
+  operator mutation endpoint or live cohort is claimed
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

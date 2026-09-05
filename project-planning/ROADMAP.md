@@ -52,12 +52,14 @@ no-role fallback have explicit minimum promises, cumulative authority,
 dependencies, omissions, evidence gates, and rollback alongside the existing
 Yard Owner and Crew Lead contracts. The next repository slice is a shared
 server-derived rollout control plane; the design is not live enablement.
-The first control-plane slice is now delivered in `GET /me/access`: versioned
+The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access
-resolution is the only enabled non-data fallback. Cohort persistence,
-enable/suspend audit, React composition, and protected per-unit smoke remain;
-Dispatcher and Billing Administrator also require authoritative backend roles.
+resolution is the only enabled non-data fallback. Migration 123 adds exact-
+scope cohort enrollments, cumulative units, versioned advancement, suspension
+rollback, and immutable lifecycle audit. Guarded operator APIs, React
+composition, and protected per-unit smoke remain; Dispatcher and Billing
+Administrator also require authoritative backend roles.
 
 ## Delivered UX Context
 

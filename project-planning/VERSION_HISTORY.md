@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-04: Added migration 123 and the fail-closed rollout cohort read path.
+  Exact user/persona/organization/scope enrollments enable cumulative units in
+  `/me/access`; suspension returns the projection to default off, unit downgrade
+  is rejected, and enable/advance/suspend/resume events are immutable. Focused
+  PostgreSQL validation proves O2 enables only O1–O2 and preserves audit. No
+  enrollment API or live cohort is exposed.
 - 2026-09-04: Added the default-off workspace rollout projection foundation to
   `/me/access`. The server now derives versioned persona/scope entries from
   active memberships and bounded claims, collapses duplicate role scopes, and
