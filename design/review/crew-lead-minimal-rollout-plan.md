@@ -11,7 +11,8 @@ and one unambiguous connectivity/confidence state.
 The Crew Lead experience is part of the shared
 [functional-unit rollout prototype](../prototypes/yard-owner-minimal-rollout/index.html#crew/c1).
 It complements the [Yard Owner rollout](yard-owner-minimal-rollout-plan.md) and
-does not claim that production capability control or a hosted cohort exists.
+the [all-persona rollout map](all-persona-minimal-rollout-plan.md), and does not
+claim that production capability control or a hosted cohort exists.
 
 ## Rollout rules
 

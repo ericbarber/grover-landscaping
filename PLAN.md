@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Yard Owner and Crew Lead functional-unit rollout plus current-state/recovery reviews are delivered | Implement server-derived account/crew rollout control, then prototype manager continuity |
+| Design | All ten signed-in personas now have validated minimalist functional-unit rollout contracts | Implement the shared server-derived rollout control plane, then manager continuity |
 
 ## Status Legend
 
@@ -52,26 +52,23 @@ Current state:
   date/persistence modes. Historical routes are explicitly read only; phone
   validation proves primary-action clearance above the fixed navigation at
   390px and 320px widths.
-- The [Yard Owner minimal rollout](design/prototypes/yard-owner-minimal-rollout/README.md)
-  now separates customer enablement into U1 care visibility, U2 visit tracking,
-  U3 delivered proof, and U4 contextual questions/decisions. U1 is the minimum
-  launch boundary; disabled units are absent rather than exposed as unfinished
-  destinations. Server-derived account capabilities, audited cohorts, protected
-  unit smoke, and reversible enablement are designed but not implemented.
-- The same rollout prototype now adds Crew Lead C1 day-plan visibility, C2 stop
-  execution, C3 field proof, and C4 changes/recovery. C1 exposes only Home and
-  Route; execution controls and Jobs/Job destinations appear with C2, while
-  evidence and amendment/recovery work remain cumulative contextual units.
-  Offline replay, device/privacy handling, manager response ownership, protected
-  field smoke, and non-destructive queued-work rollback remain implementation
-  and operational gates.
+- The [all-persona minimal rollout](design/prototypes/yard-owner-minimal-rollout/README.md)
+  now covers all ten production workspace personas and 36 cumulative units.
+  Yard Owner, Property Manager, Crew Lead, Crew Member, Company Owner, Company
+  Manager, Dispatcher, Billing Administrator, Support Administrator, and the
+  no-role Team Member fallback each begin with one complete useful promise.
+  Navigation and contextual actions appear only with their unit; role-specific
+  manager-tool omissions, field/offline boundaries, unsupported revenue scope,
+  privacy controls, dependencies, and non-destructive rollback are explicit.
+  Server-derived capabilities, audited cohorts, protected unit smoke, and live
+  enablement remain implementation and operational work.
 
 Next design slices:
 
-1. Functional rollout control: add server-derived Yard Owner account and Crew
-   Lead membership/crew capabilities, auditable cohort membership, capability-
-   shaped navigation, and protected per-unit smoke/rollback without weakening
-   API authorization or discarding queued field work.
+1. Functional rollout control: implement one server-derived, resource-scoped
+   capability projection for all workspace personas, auditable cohort
+   membership, capability-shaped navigation, and protected per-unit smoke/
+   rollback without weakening API authorization or discarding queued work.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

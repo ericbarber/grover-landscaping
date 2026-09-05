@@ -47,7 +47,7 @@ design/
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
-│   ├── yard-owner-minimal-rollout/     # Yard Owner and Crew Lead functional rollout
+│   ├── yard-owner-minimal-rollout/     # All-persona functional-unit rollout (legacy stable path)
 │   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
@@ -58,6 +58,7 @@ design/
 │   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
 │   ├── yard-owner-minimal-rollout-plan.md # Account-scoped rollout units and gates
 │   ├── crew-lead-minimal-rollout-plan.md # Crew-scoped field rollout units and gates
+│   ├── all-persona-minimal-rollout-plan.md # Ten persona contracts and shared sequence
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
@@ -207,8 +208,8 @@ refresh their review captures with:
 node design/tools/validate-frontend-truth-recovery.mjs --capture
 ```
 
-Validate the Yard Owner and Crew Lead functional-unit rollout and refresh all
-four desktop/mobile captures with:
+Validate all 36 functional-unit combinations across ten workspace personas and
+refresh the all-persona, Yard Owner, and Crew Lead desktop/mobile captures with:
 
 ```bash
 node design/tools/validate-yard-owner-minimal-rollout.mjs --capture
