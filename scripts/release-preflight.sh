@@ -64,6 +64,8 @@ require_files() {
     docs/protected-release-evidence.template.json \
     scripts/smoke-production.sh \
     scripts/smoke-production.test.sh \
+    scripts/smoke-workspace-rollout.mjs \
+    scripts/smoke-workspace-rollout.test.mjs \
     scripts/test-fixtures/fake-smoke-curl.sh \
     scripts/validate-protected-release-evidence.mjs \
     scripts/validate-protected-release-evidence.test.mjs; do
@@ -129,6 +131,7 @@ validate_production_guards() {
 validate_smoke_contract() {
   local errors=0
   local smoke=scripts/smoke-production.sh
+  local rollout_smoke=scripts/smoke-workspace-rollout.mjs
 
   [[ -x "${smoke}" ]] || errors=$((errors + 1))
   grep -Eq 'BASE_URL:\?Set BASE_URL' "${smoke}" || errors=$((errors + 1))
@@ -144,11 +147,18 @@ validate_smoke_contract() {
   for name in SMOKE_JOB_ID SMOKE_OTHER_TENANT_JOB_ID SMOKE_DAY_PLAN_ID SMOKE_ACCOUNT_ID SMOKE_PROPERTY_ID; do
     grep -Fq "${name}:?Set" "${smoke}" || errors=$((errors + 1))
   done
+  [[ -x "${rollout_smoke}" ]] || errors=$((errors + 1))
+  for name in SMOKE_ROLLOUT_PERSONA SMOKE_ROLLOUT_UNIT SMOKE_ROLLOUT_SCOPE_TYPE SMOKE_ROLLOUT_SCOPE_ID SMOKE_ROLLOUT_ORGANIZATION_ID SMOKE_ROLLOUT_REQUIRED_CAPABILITIES SMOKE_ROLLOUT_FORBIDDEN_CAPABILITIES SMOKE_ROLLOUT_SUCCESS_PATHS_JSON SMOKE_ROLLOUT_DENIAL_PATHS_JSON; do
+    rg -Fq "'${name}'" "${rollout_smoke}" || errors=$((errors + 1))
+  done
+  rg -q 'enforcement_mode.*managed' "${rollout_smoke}" || errors=$((errors + 1))
+  rg -q 'rollout_mode.*cohort' "${rollout_smoke}" || errors=$((errors + 1))
+  rg -q 'cross-resource.*fail closed' "${rollout_smoke}" || errors=$((errors + 1))
 
   if ((errors)); then
     failed "production smoke input/behavior contract is incomplete (${errors} missing assertion(s))"
   else
-    ready "production smoke requires an app URL and token, supplies explicit pilot IDs, and checks fail-closed hosting and tenant isolation"
+    ready "production smoke requires explicit pilot scope, verifies managed rollout units, and checks fail-closed hosting and resource isolation"
   fi
 }
 
