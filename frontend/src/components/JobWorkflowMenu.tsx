@@ -6,14 +6,16 @@ export function jobWorkflowItems({
   photoCount,
   addOnCount,
   reportReady,
+  allowedSections,
 }: {
   checklistComplete: number;
   checklistTotal: number;
   photoCount: number;
   addOnCount: number;
   reportReady: boolean;
+  allowedSections?: JobWorkflowSection[];
 }): Array<{ id: JobWorkflowSection; label: string; context: string }> {
-  return [
+  const items: Array<{ id: JobWorkflowSection; label: string; context: string }> = [
     { id: 'overview', label: 'Overview', context: 'At a glance' },
     {
       id: 'checklist',
@@ -24,6 +26,8 @@ export function jobWorkflowItems({
     { id: 'addons', label: 'Add-ons', context: `${addOnCount}` },
     { id: 'report', label: 'Report', context: reportReady ? 'Ready' : 'Draft' },
   ];
+  const allowed = allowedSections ? new Set(allowedSections) : null;
+  return allowed ? items.filter(({ id }) => allowed.has(id)) : items;
 }
 
 export function JobWorkflowMenu({
@@ -34,6 +38,7 @@ export function JobWorkflowMenu({
   onChange,
   photoCount,
   reportReady,
+  allowedSections,
 }: {
   activeSection: JobWorkflowSection;
   addOnCount: number;
@@ -42,6 +47,7 @@ export function JobWorkflowMenu({
   onChange: (section: JobWorkflowSection) => void;
   photoCount: number;
   reportReady: boolean;
+  allowedSections?: JobWorkflowSection[];
 }) {
   const items = jobWorkflowItems({
     checklistComplete,
@@ -49,10 +55,16 @@ export function JobWorkflowMenu({
     photoCount,
     addOnCount,
     reportReady,
+    allowedSections,
   });
 
   return (
-    <nav aria-label="Job workflow" className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5" role="tablist">
+    <nav
+      aria-label="Job workflow"
+      className="mt-5 grid gap-2"
+      role="tablist"
+      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+    >
       {items.map((item, index) => (
         <button
           aria-controls={`job-workflow-panel-${item.id}`}

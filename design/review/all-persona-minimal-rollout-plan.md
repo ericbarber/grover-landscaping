@@ -17,8 +17,11 @@ The shared projection, audited cohort administration, managed-versus-legacy
 state, cumulative desktop/mobile destinations, and Yard Owner U2–U4 contextual
 composition are now delivered. Manager-style categories and tools also follow
 the Company Owner, Company Manager, Property Manager, Dispatcher, Billing, and
-Support unit maps. Field and portfolio contextual controls,
-protected unit smoke, operational enablement, and hosted cohorts remain.
+Support unit maps. Field contextual controls now preserve read-only C1/CM1,
+add assigned-work execution at C2/CM2, evidence at C3/CM3, and Crew Lead-only
+route amendments at C4 while company and dispatcher field views remain
+read-only oversight. Portfolio contextual controls, protected unit smoke,
+operational enablement, and hosted cohorts remain.
 
 ## Production persona source
 

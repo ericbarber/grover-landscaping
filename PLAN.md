@@ -78,14 +78,17 @@ Current state:
   Owner U2–U4 also gate Visits, delivered Proof, and
   question/recommendation controls. Company Owner/Manager, Property
   Manager, Dispatcher, Billing, and Support management categories/tools are
-  also cumulative and fail closed for suspended or unknown units. Field stop
-  actions and Property Manager portfolio details still require contextual
-  shaping, and no live cohort has been enabled.
+  also cumulative and fail closed for suspended or unknown units. Field
+  composition now keeps C1/CM1 read only, adds assigned-job execution at
+  C2/CM2, evidence and reports at C3/CM3, Crew Lead-only route amendments at
+  C4, and read-only company/dispatcher job oversight. Property Manager
+  portfolio details still require contextual shaping, and no live cohort has
+  been enabled.
 
 Next design slices:
 
-1. Functional rollout control: shape remaining field and portfolio controls from the
-   delivered projection, then add protected per-unit success and denial
+1. Functional rollout control: shape the remaining Property Manager portfolio
+   controls from the delivered projection, then add protected per-unit success and denial
    smoke without weakening API authorization or discarding queued work. Dispatcher
    and Billing Administrator require an explicit backend role contract before
    either projection can be enabled.

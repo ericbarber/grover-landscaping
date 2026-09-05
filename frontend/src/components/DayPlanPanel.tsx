@@ -44,8 +44,11 @@ import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
 
 type DayPlanPanelProps = {
   actorId?: string | null;
+  jobDetailsEnabled?: boolean;
   onSelectJob?: (jobId: string) => void;
   refreshSignal?: number;
+  routeChangesEnabled?: boolean;
+  stopProgressEnabled?: boolean;
 };
 
 const crewExtraServiceCatalog: ServiceCatalogItem[] = [
@@ -114,8 +117,11 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
 
 export function DayPlanPanel({
   actorId,
+  jobDetailsEnabled = true,
   onSelectJob,
   refreshSignal = 0,
+  routeChangesEnabled = true,
+  stopProgressEnabled = true,
 }: DayPlanPanelProps) {
   const [dayPlan, setDayPlan] = useState<DayPlan>(seedDayPlan);
   const [source, setSource] = useState<'api' | 'local' | 'missing' | 'unavailable'>('local');
@@ -780,7 +786,17 @@ export function DayPlanPanel({
         </div>
       </section>
 
-      <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
+      {!jobDetailsEnabled && !stopProgressEnabled && !routeChangesEnabled ? (
+        <WorkspaceStatusNotice
+          className="order-3 mt-4"
+          compact
+          detail="Job execution, evidence, and route-change actions are not enabled for this rollout unit."
+          title="Today’s route is read only."
+          tone="info"
+        />
+      ) : null}
+
+      {routeChangesEnabled ? <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-emerald-950 [&::-webkit-details-marker]:hidden">
           Route changes
           <span className="text-xs font-medium text-emerald-700">Add a stop</span>
@@ -809,7 +825,7 @@ export function DayPlanPanel({
             Reset route progress
           </button>
         </div>
-      </details>
+      </details> : null}
 
       {amendmentRequests.length > 0 ? (
         <details className="order-5 mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -975,6 +991,30 @@ export function DayPlanPanel({
           const actionLabel = stopActionLabel(localState);
           const selectedExtraServiceId = selectedExtraServices[stop.id] ?? crewExtraServiceCatalog[0]?.id ?? '';
           const selectedExtraService = crewExtraServiceCatalog.find((service) => service.id === selectedExtraServiceId);
+          const stopSummary = (
+            <div className="flex flex-col items-start gap-3 min-[380px]:flex-row">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+                {stop.stopOrder}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-slate-950">{stop.customerName}</p>
+                <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
+                </p>
+              </div>
+              <WorkspaceStatusBadge
+                className="uppercase tracking-wide"
+                tone={localState === 'finished'
+                  ? 'success'
+                  : localState === 'in_progress'
+                    ? 'warning'
+                    : 'neutral'}
+              >
+                {localState.replace('_', ' ')}
+              </WorkspaceStatusBadge>
+            </div>
+          );
 
           return (
             <div key={stop.id}>
@@ -984,44 +1024,27 @@ export function DayPlanPanel({
                   : index === 1 ? 'Up next' : `Stop ${stop.stopOrder}`}
               </h3>
               <article className={`rounded-2xl border p-4 ${index === 0 ? 'border-emerald-300 bg-paper shadow-grover-sm' : 'border-slate-200 bg-slate-50'}`}>
-              <button
-                aria-label={`Open job details for ${stop.customerName}`}
-                className="w-full text-left"
-                onClick={() => handleStopClick(stop.jobId, stop.customerName)}
-              >
-                <div className="flex flex-col items-start gap-3 min-[380px]:flex-row">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
-                    {stop.stopOrder}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-slate-950">{stop.customerName}</p>
-                    <p className="text-sm text-slate-600">{stop.propertyAddress}</p>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Drive {stop.estimatedDriveMinutes} min / service {stop.estimatedServiceMinutes} min
-                    </p>
-                  </div>
-                  <WorkspaceStatusBadge
-                    className="uppercase tracking-wide"
-                    tone={localState === 'finished'
-                      ? 'success'
-                      : localState === 'in_progress'
-                        ? 'warning'
-                        : 'neutral'}
-                  >
-                    {localState.replace('_', ' ')}
-                  </WorkspaceStatusBadge>
-                </div>
-              </button>
+              {jobDetailsEnabled ? (
+                <button
+                  aria-label={`Open job details for ${stop.customerName}`}
+                  className="w-full text-left"
+                  onClick={() => handleStopClick(stop.jobId, stop.customerName)}
+                  type="button"
+                >
+                  {stopSummary}
+                </button>
+              ) : <div>{stopSummary}</div>}
 
-              <button
+              {stopProgressEnabled ? <button
                 className={`mt-3 min-h-11 w-full rounded-xl border px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${index === 0 ? 'border-forest bg-forest text-white hover:bg-emerald-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
                 disabled={localState === 'finished'}
                 onClick={() => advanceStop(stop.id)}
+                type="button"
               >
                 {actionLabel}
-              </button>
+              </button> : null}
 
-              <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
+              {routeChangesEnabled ? <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-600 [&::-webkit-details-marker]:hidden">
                   Stop options
                   <span className="font-normal text-slate-500">Skip or add service</span>
@@ -1074,7 +1097,7 @@ export function DayPlanPanel({
                   </button>
                   </div>
                 </div>
-              </details>
+              </details> : null}
               </article>
             </div>
           );

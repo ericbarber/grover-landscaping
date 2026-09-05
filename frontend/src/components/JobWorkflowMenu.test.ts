@@ -17,4 +17,19 @@ describe('job workflow menu', () => {
       { id: 'report', label: 'Report', context: 'Draft' },
     ]);
   });
+
+  it('omits workflows that are outside the enabled rollout unit', () => {
+    expect(jobWorkflowItems({
+      checklistComplete: 2,
+      checklistTotal: 4,
+      photoCount: 3,
+      addOnCount: 1,
+      reportReady: true,
+      allowedSections: ['overview', 'checklist', 'photos'],
+    })).toEqual([
+      { id: 'overview', label: 'Overview', context: 'At a glance' },
+      { id: 'checklist', label: 'Checklist', context: '2/4' },
+      { id: 'photos', label: 'Photos', context: '3' },
+    ]);
+  });
 });
