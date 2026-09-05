@@ -682,6 +682,13 @@ test('authenticated navigation moves from a phone bar to a tablet rail', async (
 });
 
 test('field Route prioritizes progress, current stop, and up-next work', async ({ page }) => {
+  const now = new Date();
+  const serviceDate = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+  let activeServiceDate = serviceDate;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     window.sessionStorage.setItem('grover.local-reviewer-id', 'crew-lead');
@@ -694,7 +701,7 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
         crew_id: 'crew_1001',
         crew_name: 'North Route Crew',
         organization_id: 'org_demo_landscaping',
-        service_date: '2026-08-22',
+        service_date: activeServiceDate,
         status: 'published',
         route_status: 'manual',
         stops: [
@@ -772,6 +779,17 @@ test('field Route prioritizes progress, current stop, and up-next work', async (
   await expect(currentStop.getByText('Mesa HOA entrance', { exact: true })).toBeVisible();
   await expect(upNextStop.getByText('Citrus Grove', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  activeServiceDate = '2020-01-02';
+  await page.reload();
+  await page.getByRole('navigation', { name: 'Mobile workspace' })
+    .getByRole('button', { name: 'Route', exact: true }).click();
+  const historicalRoute = page.locator('#today-route');
+  await expect(historicalRoute.getByText('Past route', { exact: true })).toBeVisible();
+  await expect(historicalRoute.getByText('Thursday, January 2, 2020', { exact: true })).toBeVisible();
+  await expect(historicalRoute.getByText('Read only', { exact: true })).toBeVisible();
+  await expect(historicalRoute.getByRole('button', { name: /Start stop|Finish stop/ })).toHaveCount(0);
+  await expect(historicalRoute.getByText('Route changes', { exact: true })).toHaveCount(0);
 });
 
 test('field Jobs supports compact status and customer filtering', async ({ page }) => {

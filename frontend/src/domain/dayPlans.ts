@@ -23,6 +23,66 @@ export interface DayPlan {
   stops: DayPlanStop[];
 }
 
+export type RouteDateContext = {
+  kind: 'past' | 'today' | 'upcoming' | 'unknown';
+  label: 'Past route' | 'Today’s route' | 'Upcoming route' | 'Route date unavailable';
+  dateLabel: string;
+  mutable: boolean;
+};
+
+const serviceDatePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function dateKey(year: number, month: number, day: number): number {
+  return year * 10_000 + month * 100 + day;
+}
+
+export function classifyRouteDate(serviceDate: string, now = new Date()): RouteDateContext {
+  const match = serviceDatePattern.exec(serviceDate);
+  if (!match) {
+    return {
+      kind: 'unknown',
+      label: 'Route date unavailable',
+      dateLabel: 'Service date unavailable',
+      mutable: false,
+    };
+  }
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const serviceDay = new Date(year, month - 1, day, 12);
+  if (
+    serviceDay.getFullYear() !== year
+    || serviceDay.getMonth() !== month - 1
+    || serviceDay.getDate() !== day
+  ) {
+    return {
+      kind: 'unknown',
+      label: 'Route date unavailable',
+      dateLabel: 'Service date unavailable',
+      mutable: false,
+    };
+  }
+
+  const serviceKey = dateKey(year, month, day);
+  const todayKey = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const dateLabel = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(serviceDay);
+
+  if (serviceKey < todayKey) {
+    return { kind: 'past', label: 'Past route', dateLabel, mutable: false };
+  }
+  if (serviceKey > todayKey) {
+    return { kind: 'upcoming', label: 'Upcoming route', dateLabel, mutable: false };
+  }
+  return { kind: 'today', label: 'Today’s route', dateLabel, mutable: true };
+}
+
 export const seedDayPlan: DayPlan = {
   id: 'day_plan_2026_06_15_crew_1001',
   crewId: 'crew_1001',

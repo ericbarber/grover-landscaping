@@ -5,7 +5,13 @@ import {
 } from '../api/dayPlanAmendmentsClient';
 import { DayPlanRequestError, fetchCrewDayPlan } from '../api/dayPlansClient';
 import { updateStopProgress } from '../api/stopProgressClient';
-import { emptyCrewDayPlan, getTotalEstimatedMinutes, seedDayPlan, type DayPlan } from '../domain/dayPlans';
+import {
+  classifyRouteDate,
+  emptyCrewDayPlan,
+  getTotalEstimatedMinutes,
+  seedDayPlan,
+  type DayPlan,
+} from '../domain/dayPlans';
 import { isJobSelectionButtonText } from '../domain/jobSelection';
 import {
   enqueueDayPlanAmendmentMutation,
@@ -115,6 +121,10 @@ function servicePriceLabel(service: ServiceCatalogItem): string {
   return `$${(service.defaultPriceCents / 100).toFixed(2)}`;
 }
 
+function queuedChangeStatusLabel(syncState: 'pending' | 'failed' | 'conflict'): string {
+  return syncState === 'pending' ? 'Saved on device' : 'Needs attention';
+}
+
 export function DayPlanPanel({
   actorId,
   jobDetailsEnabled = true,
@@ -165,6 +175,22 @@ export function DayPlanPanel({
   const visibleStops = showAllStops
     ? dayPlan.stops
     : dayPlan.stops.slice(focusedStopStart, focusedStopStart + 2);
+  const routeDate = classifyRouteDate(dayPlan.serviceDate);
+  const routeIsMutable = routeDate.mutable && source !== 'missing' && source !== 'unavailable';
+  const routeProgressEnabled = stopProgressEnabled && routeIsMutable;
+  const routeAmendmentsEnabled = routeChangesEnabled && routeIsMutable;
+  const amendmentNeedsAttention = offlineAmendmentMutations.some(
+    (mutation) => mutation.syncState === 'failed' || mutation.syncState === 'conflict',
+  );
+  const routeConfidenceStatus: RouteProgressSyncStatus = !routeIsMutable
+    ? 'read_only'
+    : queueStorageUnavailable || offlineSummary.failed > 0 || conflictMutationCount > 0 || amendmentNeedsAttention
+      ? 'needs_attention'
+      : isReplayingMutations || isReplayingAmendments || syncStatus === 'syncing'
+        ? 'syncing'
+        : pendingMutationCount > 0 || offlineAmendmentMutations.length > 0 || syncStatus === 'local'
+          ? 'local'
+          : 'synced';
 
   function clickMatchingJobCard(customerName: string) {
     const buttons = Array.from(document.querySelectorAll('article button'));
@@ -194,6 +220,8 @@ export function DayPlanPanel({
     stopId?: string,
     service?: ServiceCatalogItem,
   ) {
+    if (!routeAmendmentsEnabled) return;
+
     const request: DayPlanAmendmentRequest = {
       id: `local_amendment_${dayPlan.id}_${amendmentType}_${Date.now()}`,
       dayPlanId: dayPlan.id,
@@ -329,6 +357,8 @@ export function DayPlanPanel({
   }
 
   function advanceStop(stopId: string) {
+    if (!routeProgressEnabled) return;
+
     setStopStates((current) => {
       const persistedStatus = dayPlan.stops.find((stop) => stop.id === stopId)?.stopStatus;
       const nextState = getNextStopStatus(resolveStopStatus(current[stopId], persistedStatus));
@@ -339,6 +369,8 @@ export function DayPlanPanel({
   }
 
   function resetRouteProgress() {
+    if (!routeProgressEnabled) return;
+
     clearStopStates(dayPlan.id);
     setStopStates(resetStopStates());
     if (pendingMutationCount > 0) {
@@ -530,6 +562,7 @@ export function DayPlanPanel({
           setDayPlan(apiDayPlan);
           setStopStates(loadStopStates(apiDayPlan.id));
           setSource('api');
+          setSyncStatus('synced');
         }
       })
       .catch((error: unknown) => {
@@ -538,10 +571,12 @@ export function DayPlanPanel({
             setDayPlan(emptyCrewDayPlan(seedDayPlan.crewId));
             setStopStates({});
             setSource(error.status === 404 ? 'missing' : 'unavailable');
+            setSyncStatus('local');
           } else {
             setDayPlan(seedDayPlan);
             setStopStates(loadStopStates(seedDayPlan.id));
             setSource('local');
+            setSyncStatus('local');
           }
         }
       });
@@ -615,16 +650,11 @@ export function DayPlanPanel({
     <section className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="order-1 flex flex-col items-start justify-between gap-3 min-[380px]:flex-row">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Crew day plan</p>
-          <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
-          <p className="mt-1 text-sm text-slate-600">{dayPlan.serviceDate}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Source: {source === 'api'
-              ? 'local API'
-              : source === 'local'
-                ? 'browser fallback'
-                : 'persisted route status'}
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Crew day plan · {routeDate.label}
           </p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">{dayPlan.crewName}</h2>
+          <p className="mt-1 text-sm text-slate-600">{routeDate.dateLabel}</p>
           {queueStorageUnavailable && (
             <WorkspaceStatusNotice
               className="mt-2"
@@ -691,7 +721,7 @@ export function DayPlanPanel({
                           {stop?.customerName ?? `Stop ${mutation.stopId}`}
                         </p>
                         <p className="mt-1 text-slate-700">
-                          Set to {mutation.status.replace('_', ' ')} · {mutation.syncState}
+                          Set to {mutation.status.replace('_', ' ')} · {queuedChangeStatusLabel(mutation.syncState)}
                         </p>
                         <p className="mt-1 text-slate-600">
                           Queued {new Date(mutation.createdAt).toLocaleString()}
@@ -757,18 +787,20 @@ export function DayPlanPanel({
         </div>
       </div>
 
-      <section aria-label="Today’s route progress" className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-grover-md">
+      <section aria-label={`${routeDate.label} progress`} className="order-2 mt-5 rounded-2xl bg-forest p-5 text-white shadow-grover-md">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">Today’s route</p>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-sand">{routeDate.label}</p>
             <p className="mt-2 text-3xl font-black">
               {completedStops} <span className="text-xl text-emerald-100">of {dayPlan.stops.length}</span>
             </p>
             <p className="mt-1 text-sm font-bold text-emerald-100">stops complete</p>
           </div>
-          <WorkspaceStatusBadge className="border-white/15 bg-white/10 text-white" tone="neutral">
-            {syncStatusLabel(syncStatus)}
-          </WorkspaceStatusBadge>
+          <span aria-live="polite">
+            <WorkspaceStatusBadge className="border-white/15 bg-white/10 text-white" tone="neutral">
+              {syncStatusLabel(routeConfidenceStatus)}
+            </WorkspaceStatusBadge>
+          </span>
         </div>
         <div
           aria-label={`${completionPercent}% of route complete`}
@@ -786,24 +818,30 @@ export function DayPlanPanel({
         </div>
       </section>
 
-      {!jobDetailsEnabled && !stopProgressEnabled && !routeChangesEnabled ? (
+      {!routeIsMutable || (!jobDetailsEnabled && !stopProgressEnabled && !routeChangesEnabled) ? (
         <WorkspaceStatusNotice
           className="order-3 mt-4"
           compact
-          detail="Job execution, evidence, and route-change actions are not enabled for this rollout unit."
-          title="Today’s route is read only."
+          detail={!routeIsMutable
+            ? routeDate.kind === 'past'
+              ? 'Historical stop progress and route changes cannot be edited.'
+              : routeDate.kind === 'upcoming'
+                ? 'Stop progress and route changes become available on the service day.'
+                : 'Stop progress and route changes stay unavailable until the service date is valid.'
+            : 'Job execution, evidence, and route-change actions are not enabled for this rollout unit.'}
+          title={`${routeDate.label} is read only.`}
           tone="info"
         />
       ) : null}
 
-      {routeChangesEnabled ? <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
+      {routeAmendmentsEnabled ? <details className="order-4 mt-4 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-3">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-emerald-950 [&::-webkit-details-marker]:hidden">
           Route changes
           <span className="text-xs font-medium text-emerald-700">Add a stop</span>
         </summary>
         <div className="border-t border-emerald-200 pt-3">
           <p className="text-xs leading-5 text-emerald-800">
-            Submit an amendment for manager review. Browser fallback remains available offline.
+            Submit an amendment for manager review. Requests are saved on this device while offline.
           </p>
           <button
             className="mt-3 w-full rounded-xl bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 sm:w-auto"
@@ -855,7 +893,7 @@ export function DayPlanPanel({
                   </span>
                 </div>
                 <p className="mt-2 text-[11px] font-medium text-slate-500">
-                  {request.persisted ? 'Synced with manager workflow' : 'Saved locally; sync pending'}
+                  {request.persisted ? 'Synced' : 'Saved on device'}
                 </p>
               </article>
             ))}
@@ -888,7 +926,7 @@ export function DayPlanPanel({
                     </p>
                     <p className="mt-1 text-slate-700">
                       {stop?.customerName ?? mutation.service?.name ?? 'Route-level request'} ·{' '}
-                      {mutation.syncState}
+                      {queuedChangeStatusLabel(mutation.syncState)}
                     </p>
                     {mutation.note && <p className="mt-1 text-slate-600">{mutation.note}</p>}
                     <p className="mt-1 text-slate-600">
@@ -1035,7 +1073,7 @@ export function DayPlanPanel({
                 </button>
               ) : <div>{stopSummary}</div>}
 
-              {stopProgressEnabled ? <button
+              {routeProgressEnabled ? <button
                 className={`mt-3 min-h-11 w-full rounded-xl border px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${index === 0 ? 'border-forest bg-forest text-white hover:bg-emerald-900' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'}`}
                 disabled={localState === 'finished'}
                 onClick={() => advanceStop(stop.id)}
@@ -1044,7 +1082,7 @@ export function DayPlanPanel({
                 {actionLabel}
               </button> : null}
 
-              {routeChangesEnabled ? <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
+              {routeAmendmentsEnabled ? <details className="mt-3 rounded-xl border border-slate-200 bg-white px-3">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-slate-600 [&::-webkit-details-marker]:hidden">
                   Stop options
                   <span className="font-normal text-slate-500">Skip or add service</span>

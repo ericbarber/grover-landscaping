@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Ready for next slice | Prototype families have authoritative classifications | Frontend truth/recovery adoption |
+| Repository | Active | Crew route date/confidence truth is adopted | Yard Owner protected-read recovery |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -261,6 +261,30 @@ Exit evidence:
 
 - The gallery, design README, adoption tracker, and dated mirror point to one
   artifact-family inventory with no claim that prototype polish proves shipping.
+
+### UX4 — Frontend truth and recovery
+
+State: in progress.
+
+Delivered:
+
+- Classify crew routes against the active local service day as Past, Today’s,
+  Upcoming, or date unavailable and show a complete human-readable date.
+- Make non-current routes read only in both the interface and mutation handlers.
+- Replace transport/source descriptions with the bounded Syncing, Saved on
+  device, Synced, Needs attention, and Read only confidence vocabulary.
+
+Next deliver:
+
+- Reconcile Yard Owner loading, valid-empty, ended-access, inconsistent, and
+  unavailable reads with explicit retry and Home recovery while preserving the
+  existing fail-closed authorization contract.
+
+Exit evidence:
+
+- Date classification has timezone-safe domain coverage, a phone route journey
+  proves current mutation and historical read-only behavior, and protected Yard
+  Owner outcomes never reveal stale or illustrative property facts.
 
 ## Later, not active
 

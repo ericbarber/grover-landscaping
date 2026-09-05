@@ -77,6 +77,11 @@ unit feeds and inactive tool panels from mounting or loading in the background.
 The authenticated shell also removes repeated hosted identity chrome, moves
 sign-out into the responsive workspace shell, and measures fixed-navigation
 clearance rather than relying on a guessed phone footer height.
+Crew route truth now classifies the local service day before offering writes:
+past, upcoming, and invalid-date routes are read only, current routes retain
+their authorized field actions, and user confidence uses persistence meaning
+instead of API/browser transport names. Yard Owner protected-read recovery is
+the next repository UX slice.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also
 require authoritative backend roles.
 
