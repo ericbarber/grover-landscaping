@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Ready for next slice | All-persona manager continuity is complete | Authenticated shell compression |
+| Repository | Ready for next slice | Manager continuity and shell compression are complete | Prototype reconciliation |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -228,6 +228,22 @@ Exit evidence:
 
 - Suspended, unknown, and earlier managed units cannot activate or preload later
   tools; manager schedule, Recovery, and completion-report handoffs remain intact.
+
+### UX2 — Authenticated shell compression
+
+State: delivered.
+
+Deliver:
+
+- Remove repeated hosted identity/persona chrome without losing sign-out.
+- Keep local-review identity controls visibly isolated as diagnostic chrome.
+- Measure fixed mobile navigation height and reserve exact content clearance.
+- Reuse one browser assertion at narrow widths and 200% zoom.
+
+Exit evidence:
+
+- Chromium and WebKit keep the final Home action above fixed navigation at 320,
+  390, and 430px and at simulated 200% zoom.
 
 ## Later, not active
 

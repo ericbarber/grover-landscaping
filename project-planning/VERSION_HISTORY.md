@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-05: Compressed the authenticated application shell. Hosted account
+  identity and sign-out now live in the desktop rail or a compact mobile menu,
+  local-review identity chrome remains explicitly diagnostic, and the duplicate
+  Home identity card is removed. A ResizeObserver-backed clearance tracks the
+  real fixed-navigation height; reusable Chromium and WebKit checks pass at
+  320, 390, and 430px and at simulated 200% zoom. All 509 frontend tests,
+  TypeScript, and the production build pass.
 - 2026-09-05: Delivered rollout-aware manager continuity. Authorized Manage
   categories now show concise schedule, report, delivery, activity, and
   recovery urgency or exact enabled-tool counts; later-unit feeds do not load

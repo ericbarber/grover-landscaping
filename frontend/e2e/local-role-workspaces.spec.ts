@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectActionAboveMobileWorkspaceNavigation } from './support/mobileWorkspaceLayout';
 
 const reviewers = [
   ['organization-owner', 'Olivia — Organization Owner', 'OrganizationOwner'],
@@ -241,6 +242,39 @@ test('desktop management categories are filtered for portfolio and support roles
   await expect(page.getByRole('button', { name: /Recovery/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Schedule/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Customers/ })).toHaveCount(0);
+});
+
+test('mobile Home keeps its final action clear of fixed navigation', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.sessionStorage.setItem('grover.local-reviewer-id', 'manager');
+  });
+
+  for (const viewport of [
+    { width: 320, height: 700 },
+    { width: 390, height: 844 },
+    { width: 430, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/app');
+    const workspaceActions = page.locator('section.grover-card').filter({
+      has: page.getByText('Your workspace', { exact: true }),
+    });
+    const finalAction = workspaceActions.getByRole('button').last();
+    await expectActionAboveMobileWorkspaceNavigation(page, finalAction);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app');
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = '2';
+  });
+  const zoomedWorkspaceActions = page.locator('section.grover-card').filter({
+    has: page.getByText('Your workspace', { exact: true }),
+  });
+  await expectActionAboveMobileWorkspaceNavigation(
+    page,
+    zoomedWorkspaceActions.getByRole('button').last(),
+  );
 });
 
 test('property manager enters the connected portfolio command center on phone and desktop', async ({ page }) => {

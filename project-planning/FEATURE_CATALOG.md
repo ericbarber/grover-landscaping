@@ -84,6 +84,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   wordmark, editorial greeting hierarchy, warm/paper materials, forest manager
   navigation, mobile header and bottom-navigation surfaces, and exact style
   regression coverage
+- Compressed hosted application shell with account controls consolidated into
+  the desktop rail or mobile account menu, local-review-only diagnostic chrome,
+  duplicate Home identity removed, and measured final-action clearance above
+  the fixed phone navigation
 - Prototype-aligned provider invitation and assessment entry shell with shared
   wordmark, type roles, acquisition materials, action/card geometry, and guarded
   privacy-boundary emphasis

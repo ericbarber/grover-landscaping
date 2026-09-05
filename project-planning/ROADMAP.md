@@ -74,6 +74,9 @@ smoke now has a credential-safe executable contract for exact projection,
 cumulative/forbidden capabilities, authorized reads, and cross-resource denial.
 Manager Home now adds unit-bounded status and urgency while preventing later-
 unit feeds and inactive tool panels from mounting or loading in the background.
+The authenticated shell also removes repeated hosted identity chrome, moves
+sign-out into the responsive workspace shell, and measures fixed-navigation
+clearance rather than relying on a guessed phone footer height.
 Its hosted evidence remains external; Dispatcher and Billing Administrator also
 require authoritative backend roles.
 

@@ -24,6 +24,10 @@ export function authGateState(input: {
   return 'ready';
 }
 
+export function authGateShowsEnvironmentChrome(authMode: string | null): boolean {
+  return authMode === 'disabled' || authMode === 'local_review';
+}
+
 function FullScreenMessage({ children }: { children: ReactNode }) {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-8 sm:px-6 sm:py-12">
@@ -161,6 +165,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
+  if (!authGateShowsEnvironmentChrome(auth.authMode)) {
+    return <>{children}</>;
+  }
+
   return (
     <>
       <aside className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900 bg-slate-950 px-4 py-2 text-sm text-slate-200">
@@ -194,13 +202,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
               ))}
             </select>
           </label>
-        ) : auth.authMode === 'cognito' ? (
-          <button
-            className="rounded-lg border border-slate-600 px-3 py-1.5 font-semibold hover:border-slate-400"
-            onClick={() => void auth.signOut()}
-          >
-            Sign out
-          </button>
         ) : null}
       </aside>
       {children}

@@ -318,7 +318,7 @@ export function WorkspaceHomePanel({
       ) : null}
 
       {secondaryActions.length > 0 ? (
-        <section className="grover-card p-4 lg:col-span-8">
+        <section className="grover-card p-4 lg:col-span-12">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
             Your workspace
           </p>
@@ -341,12 +341,6 @@ export function WorkspaceHomePanel({
         </section>
       ) : null}
 
-      <article className="grover-card p-4 text-sm text-slate-600 lg:col-span-4">
-        <p className="font-bold text-slate-900">Signed in as {signedInName}</p>
-        <p className="mt-1 text-xs leading-5">
-          {persona.description}
-        </p>
-      </article>
     </section>
   );
 }

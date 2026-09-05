@@ -101,9 +101,11 @@ Next design slices:
    report, delivery, activity, and recovery state for concise urgency, falls
    back to exact enabled-tool counts when no authoritative summary exists, and
    mounts only the selected authorized destination.
-3. Shell compression: remove redundant hosted identity/persona presentation and
-   prove final-action clearance above the phone bottom bar at narrow widths and
-   zoom.
+3. Shell compression: delivered. Hosted identity/account controls now live in
+   the desktop rail or a compact mobile account menu, local-review identity
+   chrome remains explicitly diagnostic, the duplicate Home identity card is
+   removed, and measured navigation height protects final actions at 320, 390,
+   and 430 px plus 200% zoom.
 4. Prototype reconciliation: reclassify older artifacts explicitly as current
    mirror, adopted behavior, design direction, or historical input.
 
