@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { PropertyCompletionReportSummary } from '../api/client';
 import {
   customerVisitStatusLabel,
@@ -16,8 +16,10 @@ import {
   type PropertyPortfolio,
 } from '../domain/propertyPortfolios';
 import { projectBidTotalCents, type ProjectBid } from '../domain/stopProgress';
+import { CustomerVisitRecommendationsPanel } from './CustomerVisitRecommendationsPanel';
 import { WorkspaceIcon } from './WorkspaceIcon';
 import { WorkspaceStatusBadge, WorkspaceStatusNotice } from './WorkspaceStatus';
+import { CustomerVisitQuestions } from './YardOwnerPortalPanel';
 
 type PortfolioDestination = 'overview' | 'properties' | 'proof' | 'approvals';
 
@@ -27,6 +29,36 @@ const destinations: Array<{ id: PortfolioDestination; label: string }> = [
   { id: 'proof', label: 'Proof' },
   { id: 'approvals', label: 'Approvals' },
 ];
+
+export interface PropertyManagerPortfolioCapabilities {
+  portfolioRead: boolean;
+  propertySearch: boolean;
+  serviceHistory: boolean;
+  deliveredProof: boolean;
+  questionsAndDecisions: boolean;
+}
+
+export function propertyManagerPortfolioCapabilities(
+  rolloutUnit: string | null | undefined,
+): PropertyManagerPortfolioCapabilities {
+  if (rolloutUnit === undefined) {
+    return {
+      portfolioRead: true,
+      propertySearch: true,
+      serviceHistory: true,
+      deliveredProof: true,
+      questionsAndDecisions: true,
+    };
+  }
+
+  return {
+    portfolioRead: ['p1', 'p2', 'p3', 'p4'].includes(rolloutUnit ?? ''),
+    propertySearch: ['p2', 'p3', 'p4'].includes(rolloutUnit ?? ''),
+    serviceHistory: ['p2', 'p3', 'p4'].includes(rolloutUnit ?? ''),
+    deliveredProof: ['p2', 'p3', 'p4'].includes(rolloutUnit ?? ''),
+    questionsAndDecisions: ['p3', 'p4'].includes(rolloutUnit ?? ''),
+  };
+}
 
 function dateLabel(value: string): string {
   return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
@@ -54,6 +86,7 @@ function serviceFrequencyLabel(value: CustomerPropertyProfile['serviceFrequency'
 
 export function PropertyManagerPortfolioPanel({
   customer,
+  rolloutUnit,
   portfolios,
   properties,
   links,
@@ -67,6 +100,7 @@ export function PropertyManagerPortfolioPanel({
   providerDisplayName,
 }: {
   customer: CustomerAccountProfile;
+  rolloutUnit?: string | null;
   portfolios: PropertyPortfolio[];
   properties: CustomerPropertyProfile[];
   links: PortfolioPropertyLink[];
@@ -79,6 +113,13 @@ export function PropertyManagerPortfolioPanel({
   hasProjectBidHistoryError: boolean;
   providerDisplayName: string;
 }) {
+  const capabilities = propertyManagerPortfolioCapabilities(rolloutUnit);
+  const visibleDestinations = destinations.filter(({ id }) => (
+    id === 'overview'
+    || id === 'properties'
+    || (id === 'proof' && capabilities.deliveredProof)
+    || (id === 'approvals' && capabilities.questionsAndDecisions)
+  ));
   const [destination, setDestination] = useState<PortfolioDestination>('overview');
   const [portfolioId, setPortfolioId] = useState('all');
   const [search, setSearch] = useState('');
@@ -107,11 +148,42 @@ export function PropertyManagerPortfolioPanel({
   const visibleReports = visibleProperties.flatMap(
     (property) => completionReportsByProperty[property.id] ?? [],
   ).sort((left, right) => right.deliveredAt.localeCompare(left.deliveredAt));
-  const pendingBids = projectBids.filter((bid) => bid.status === 'sent');
+  const interactiveVisits = capabilities.questionsAndDecisions
+    ? visibleVisits.filter((visit) => visit.customerVisitReference)
+    : [];
+  const pendingBids = capabilities.questionsAndDecisions
+    ? projectBids.filter((bid) => bid.status === 'sent')
+    : [];
   const filteredProperties = visibleProperties.filter((property) => (
     `${property.displayName} ${property.address}`.toLowerCase().includes(search.trim().toLowerCase())
   ));
-  const hasPartialData = hasReportHistoryError || hasProjectBidHistoryError;
+  const hasPartialData = (capabilities.deliveredProof && hasReportHistoryError)
+    || (capabilities.questionsAndDecisions && hasProjectBidHistoryError);
+  const destinationIsVisible = visibleDestinations.some(({ id }) => id === destination);
+
+  useEffect(() => {
+    if (destinationIsVisible) return;
+    setDestination('overview');
+  }, [destinationIsVisible]);
+
+  useEffect(() => {
+    if (capabilities.propertySearch) return;
+    setSearch('');
+  }, [capabilities.propertySearch]);
+
+  if (!capabilities.portfolioRead) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-paper p-6 shadow-grover-md" data-property-manager-portfolio>
+        <p className="grover-eyebrow">Property portfolio</p>
+        <WorkspaceStatusNotice
+          className="mt-4"
+          detail="Ask an organization administrator to confirm this account’s portfolio rollout assignment."
+          title="Portfolio access is not enabled for this account."
+          tone="neutral"
+        />
+      </section>
+    );
+  }
 
   if (customerProperties.length === 0) {
     return (
@@ -136,7 +208,11 @@ export function PropertyManagerPortfolioPanel({
             <p className="text-xs font-black uppercase tracking-[0.18em] text-sand">Property portfolio</p>
             <h1 className="mt-2 font-display text-3xl font-black">Service confidence across every location.</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-200">
-              Customer-safe readiness, delivered proof, and decisions for {customer.displayName}.
+              {capabilities.questionsAndDecisions
+                ? `Customer-safe readiness, delivered proof, and decisions for ${customer.displayName}.`
+                : capabilities.deliveredProof
+                  ? `Customer-safe readiness and delivered proof for ${customer.displayName}.`
+                  : `Customer-safe readiness and next service for ${customer.displayName}.`}
             </p>
           </div>
           <label className="text-xs font-black uppercase tracking-wide text-slate-200">
@@ -161,8 +237,12 @@ export function PropertyManagerPortfolioPanel({
         </div>
       </header>
 
-      <nav aria-label="Property portfolio" className="grid grid-cols-4 border-b border-slate-200 bg-slate-50 p-2">
-        {destinations.map((item) => (
+      <nav
+        aria-label="Property portfolio"
+        className="grid border-b border-slate-200 bg-slate-50 p-2"
+        style={{ gridTemplateColumns: `repeat(${visibleDestinations.length}, minmax(0, 1fr))` }}
+      >
+        {visibleDestinations.map((item) => (
           <button
             aria-current={destination === item.id ? 'page' : undefined}
             className={`min-h-12 rounded-xl px-2 text-xs font-black sm:text-sm ${destination === item.id ? 'bg-emerald-800 text-white shadow-grover-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900'}`}
@@ -179,7 +259,11 @@ export function PropertyManagerPortfolioPanel({
         <WorkspaceStatusNotice
           className="mb-5"
           compact
-          detail="Next-service summaries below use the explicit local-review fixture. Delivered proof and recommendations use protected API history when available."
+          detail={capabilities.questionsAndDecisions
+            ? 'Next-service summaries use the explicit local-review fixture. Delivered proof and recommendations use protected API history when available.'
+            : capabilities.deliveredProof
+              ? 'Next-service summaries use the explicit local-review fixture. Delivered proof uses protected API history when available.'
+              : 'Next-service summaries below use the explicit local-review fixture.'}
           title="Local review data boundary"
           tone="info"
         />
@@ -198,12 +282,18 @@ export function PropertyManagerPortfolioPanel({
             <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h1 className="font-display text-4xl font-black text-forest">Start with what needs attention.</h1>
-                <p className="mt-2 text-sm text-slate-600">Readiness, exceptions, proof, and decisions stay connected to their properties.</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  {capabilities.questionsAndDecisions
+                    ? 'Readiness, exceptions, proof, and decisions stay connected to their properties.'
+                    : capabilities.deliveredProof
+                      ? 'Readiness, exceptions, and delivered proof stay connected to their properties.'
+                      : 'Readiness, next service, and customer-safe exceptions stay connected to their properties.'}
+                </p>
               </div>
               {selectedPortfolio ? <WorkspaceStatusBadge tone="neutral">{portfolioTypeLabel(selectedPortfolio.portfolioType)}</WorkspaceStatusBadge> : null}
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Portfolio summary">
+            <div className={`mt-6 grid gap-3 sm:grid-cols-2 ${capabilities.questionsAndDecisions ? 'xl:grid-cols-4' : 'xl:grid-cols-3'}`} aria-label="Portfolio summary">
               <article className="rounded-2xl border border-slate-200 bg-white p-4">
                 <p className="grover-eyebrow">Properties</p><p className="mt-2 text-3xl font-black text-forest">{visibleProperties.length}</p><p className="mt-1 text-xs text-slate-500">Connected locations</p>
               </article>
@@ -213,9 +303,9 @@ export function PropertyManagerPortfolioPanel({
               <article className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <p className="grover-eyebrow">Open exceptions</p><p className="mt-2 text-3xl font-black text-amber-950">{exceptionProperties.length}</p><p className="mt-1 text-xs text-amber-800">Weather or reschedule</p>
               </article>
-              <article className="rounded-2xl border border-clay/30 bg-clay/10 p-4">
+              {capabilities.questionsAndDecisions ? <article className="rounded-2xl border border-clay/30 bg-clay/10 p-4">
                 <p className="grover-eyebrow">Waiting on you</p><p className="mt-2 text-3xl font-black text-forest">{hasProjectBidHistoryError ? '—' : pendingBids.length}</p><p className="mt-1 text-xs text-slate-600">Recommendation decisions</p>
-              </article>
+              </article> : null}
             </div>
 
             <div className="mt-5 grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
@@ -225,7 +315,7 @@ export function PropertyManagerPortfolioPanel({
                   <button className="min-h-11 text-sm font-black text-emerald-800" onClick={() => setDestination('properties')} type="button">All properties →</button>
                 </div>
                 {exceptionProperties.length === 0 && pendingBids.length === 0 ? (
-                  <WorkspaceStatusNotice className="mt-4" detail="No service exception or customer decision is waiting in the available records." title="No portfolio actions need attention." tone="success" />
+                  <WorkspaceStatusNotice className="mt-4" detail={capabilities.questionsAndDecisions ? 'No service exception or customer decision is waiting in the available records.' : 'No customer-safe service exception is waiting in the available records.'} title="No portfolio actions need attention." tone="success" />
                 ) : (
                   <div className="mt-3 divide-y divide-slate-200">
                     {exceptionProperties.map((property) => {
@@ -236,11 +326,11 @@ export function PropertyManagerPortfolioPanel({
                         </article>
                       );
                     })}
-                    {pendingBids.map((bid) => (
+                    {capabilities.questionsAndDecisions ? pendingBids.map((bid) => (
                       <article className="py-4" key={bid.id}>
                         <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-black text-forest">Recommendation decision</h3><p className="mt-1 text-sm text-slate-600">{currencyLabel(projectBidTotalCents(bid))} · {bid.lineItems.length} scope item{bid.lineItems.length === 1 ? '' : 's'}</p></div>{bid.shareUrl ? <a className="grover-button-secondary" href={bid.shareUrl}>Review</a> : <WorkspaceStatusBadge tone="warning">Decision needed</WorkspaceStatusBadge>}</div>
                       </article>
-                    ))}
+                    )) : null}
                   </div>
                 )}
               </section>
@@ -260,17 +350,29 @@ export function PropertyManagerPortfolioPanel({
             <p className="grover-eyebrow">Portfolio coverage</p>
             <h1 className="mt-2 font-display text-4xl font-black text-forest">Every property, one accountable view.</h1>
             <p className="mt-2 text-sm text-slate-600">Provider status is customer-safe; crew, route, and production details stay private.</p>
-            <label className="mt-5 block max-w-md text-xs font-black uppercase tracking-wide text-slate-600">Search properties<input aria-label="Search portfolio properties" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-medium normal-case tracking-normal" onChange={(event) => setSearch(event.target.value)} placeholder="Name or address" type="search" value={search} /></label>
+            {capabilities.propertySearch ? <label className="mt-5 block max-w-md text-xs font-black uppercase tracking-wide text-slate-600">Search properties<input aria-label="Search portfolio properties" className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-medium normal-case tracking-normal" onChange={(event) => setSearch(event.target.value)} placeholder="Name or address" type="search" value={search} /></label> : null}
             <div className="mt-5 grid gap-3">
               {filteredProperties.map((property) => {
                 const visit = nextVisitByProperty.get(property.id);
                 const portfolio = portfolioDetails.find((detail) => detail.properties.some((candidate) => candidate.id === property.id));
                 return (
-                  <article className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,.8fr)_minmax(0,.8fr)_auto] md:items-center" key={property.id}>
-                    <div><h2 className="font-black text-forest">{property.displayName}</h2><p className="mt-1 text-sm text-slate-600">{property.address}</p><p className="mt-1 text-xs text-slate-500">{portfolio?.displayName ?? 'Not grouped'}</p></div>
-                    <div><p className="text-xs font-black uppercase tracking-wide text-slate-500">Provider</p><p className="mt-1 text-sm font-bold text-slate-700">{providerDisplayName}</p></div>
-                    <div><p className="text-xs font-black uppercase tracking-wide text-slate-500">Cadence</p><p className="mt-1 text-sm font-bold text-slate-700">{serviceFrequencyLabel(property.serviceFrequency)}</p>{visit ? <p className="mt-1 text-xs text-slate-500">{dateLabel(visit.scheduledDate)} · {visit.arrivalWindow}</p> : null}</div>
-                    <WorkspaceStatusBadge tone={isVisitException(visit) ? 'warning' : visit ? 'success' : 'neutral'}>{visit ? customerVisitStatusLabel(visit.status) : 'Schedule pending'}</WorkspaceStatusBadge>
+                  <article className="rounded-2xl border border-slate-200 bg-white p-4" key={property.id}>
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,.8fr)_minmax(0,.8fr)_auto] md:items-center">
+                      <div><h2 className="font-black text-forest">{property.displayName}</h2><p className="mt-1 text-sm text-slate-600">{property.address}</p><p className="mt-1 text-xs text-slate-500">{portfolio?.displayName ?? 'Not grouped'}</p></div>
+                      <div><p className="text-xs font-black uppercase tracking-wide text-slate-500">Provider</p><p className="mt-1 text-sm font-bold text-slate-700">{providerDisplayName}</p></div>
+                      <div><p className="text-xs font-black uppercase tracking-wide text-slate-500">Cadence</p><p className="mt-1 text-sm font-bold text-slate-700">{serviceFrequencyLabel(property.serviceFrequency)}</p>{visit ? <p className="mt-1 text-xs text-slate-500">{dateLabel(visit.scheduledDate)} · {visit.arrivalWindow}</p> : null}</div>
+                      <WorkspaceStatusBadge tone={isVisitException(visit) ? 'warning' : visit ? 'success' : 'neutral'}>{visit ? customerVisitStatusLabel(visit.status) : 'Schedule pending'}</WorkspaceStatusBadge>
+                    </div>
+                    {capabilities.serviceHistory ? <details className="mt-4 border-t border-slate-200 pt-3">
+                      <summary className="min-h-11 cursor-pointer py-3 text-sm font-black text-emerald-800">Service history</summary>
+                      <ol className="space-y-2">
+                        {visibleVisits.filter((candidate) => candidate.propertyId === property.id).map((candidate) => (
+                          <li className="rounded-xl bg-slate-50 p-3 text-sm text-slate-700" key={candidate.id}>
+                            <strong className="text-forest">{dateLabel(candidate.scheduledDate)}</strong> · {candidate.serviceTitle} · {customerVisitStatusLabel(candidate.status)}
+                          </li>
+                        ))}
+                      </ol>
+                    </details> : null}
                   </article>
                 );
               })}
@@ -302,6 +404,25 @@ export function PropertyManagerPortfolioPanel({
             <p className="mt-2 text-sm text-slate-600">Review customer-safe scope and total before responding.</p>
             {isLoadingProjectBids ? <p className="mt-5 text-sm font-bold text-slate-600" role="status">Loading recommendations…</p> : null}
             <div className="mt-5 space-y-3">
+              {interactiveVisits.map((visit) => {
+                const property = visibleProperties.find((candidate) => candidate.id === visit.propertyId);
+                return (
+                  <article className="rounded-2xl border border-sky-200 bg-sky-50 p-5" key={`questions-${visit.id}`}>
+                    <p className="grover-eyebrow">{property?.displayName ?? 'Portfolio property'}</p>
+                    <h2 className="mt-2 text-xl font-black text-forest">{visit.serviceTitle}</h2>
+                    <p className="mt-1 text-sm text-slate-600">{dateLabel(visit.scheduledDate)} · {visit.arrivalWindow}</p>
+                    <CustomerVisitQuestions visit={visit} />
+                    <CustomerVisitRecommendationsPanel customerVisitReference={visit.customerVisitReference as string} />
+                  </article>
+                );
+              })}
+              {interactiveVisits.length === 0 ? (
+                <WorkspaceStatusNotice
+                  detail="Visit questions and versioned recommendations appear after the provider publishes customer-safe context for an exact property visit."
+                  title="No visit-specific decisions are ready."
+                  tone="neutral"
+                />
+              ) : null}
               {projectBids.map((bid) => (
                 <article className="rounded-2xl border border-slate-200 bg-white p-5" key={bid.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="grover-eyebrow">Account recommendation</p><h2 className="mt-2 text-xl font-black text-forest">{bid.lineItems[0]?.service.name ?? 'Additional service'}</h2><p className="mt-2 text-sm text-slate-600">{bid.lineItems.length} scope item{bid.lineItems.length === 1 ? '' : 's'} · {currencyLabel(projectBidTotalCents(bid))}</p></div><WorkspaceStatusBadge tone={bid.status === 'sent' ? 'warning' : bid.status === 'approved' || bid.status === 'converted' ? 'success' : 'neutral'}>{bid.status === 'sent' ? 'Decision needed' : bid.status.replace('_', ' ')}</WorkspaceStatusBadge></div>
