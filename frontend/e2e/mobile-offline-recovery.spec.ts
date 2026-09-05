@@ -326,10 +326,7 @@ test('confirms membership profile was not changed during persisted write outages
     .locator('xpath=ancestor::section[1]');
   const displayName = memberships.getByLabel('Display name').first();
   await displayName.fill('Write Outage User');
-  await memberships
-    .getByRole('button', { name: 'Save display name' })
-    .first()
-    .click({ force: true });
+  await memberships.getByRole('button', { name: 'Save display name' }).first().click();
   await expect(memberships.getByRole('status')).toContainText(
     'The display name was not changed',
   );
@@ -1284,34 +1281,11 @@ test('queues route progress during interruption and replays after recovery', asy
   expect(resetResponse.ok()).toBe(true);
   await page.evaluate(async () => {
     localStorage.clear();
-    const queue = await import('/src/domain/offlineMutationQueue.ts');
-    const bootstrapMutation = await queue.enqueueStopProgressMutation({
-      organizationId: 'org_demo_landscaping',
-      actorId: 'local-development-user',
-      dayPlanId: 'reset-bootstrap',
-      stopId: 'reset-bootstrap',
-      status: 'pending',
-    });
-    await queue.removeOfflineMutation(bootstrapMutation.id);
     await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('grover-field-offline', 3);
+      const request = indexedDB.deleteDatabase('grover-field-offline');
+      request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        const database = request.result;
-        const stores = Array.from(database.objectStoreNames);
-        if (stores.length === 0) {
-          database.close();
-          resolve();
-          return;
-        }
-        const transaction = database.transaction(stores, 'readwrite');
-        transaction.onerror = () => reject(transaction.error);
-        transaction.oncomplete = () => {
-          database.close();
-          resolve();
-        };
-        stores.forEach((store) => transaction.objectStore(store).clear());
-      };
+      request.onblocked = () => reject(new Error('offline database reset was blocked'));
     });
   });
   const accessReady = page.waitForResponse(
