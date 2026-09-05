@@ -64,7 +64,9 @@ separates untouched legacy subjects from managed cohorts, keeps suspension
 default off, shapes desktop/mobile destinations from the lowest common unit
 across current scopes, and gates Yard Owner visit,
 proof, question, and recommendation controls cumulatively. Remaining persona
-controls and protected per-unit smoke remain; Dispatcher and Billing
+management categories and tools now follow cumulative unit boundaries as well,
+including progressive Support recovery/privacy exposure and fail-closed unknown
+units. Field/portfolio controls and protected per-unit smoke remain; Dispatcher and Billing
 Administrator also require authoritative backend roles.
 
 ## Delivered UX Context

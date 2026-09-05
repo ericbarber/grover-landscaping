@@ -118,6 +118,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   enrollment, keeps suspended cohorts default off, shapes desktop/mobile persona
   destinations by cumulative unit, and gates Yard Owner visit, proof, question,
   and recommendation controls without changing API authorization
+- Cumulative manager-workspace composition for company, property-management,
+  dispatch, billing, and support personas, with unit-bounded categories/tools
+  and suspended or unknown managed units exposing no management tools
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

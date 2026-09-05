@@ -1387,7 +1387,7 @@ export function App() {
   }, [activePersona.id, providerEntryMode]);
 
   useEffect(() => {
-    const sections = managerWorkspaceSectionsForPersona(activePersona.id);
+    const sections = managerWorkspaceSectionsForPersona(activePersona.id, managedPersonaUnit);
     if (
       managerWorkspaceSection
       && !sections.some((section) => section.id === managerWorkspaceSection)
@@ -1399,12 +1399,16 @@ export function App() {
     if (
       managerWorkspaceSection
       && managerWorkspaceTool
-      && !managerWorkspaceToolsForPersona(activePersona.id, managerWorkspaceSection)
+      && !managerWorkspaceToolsForPersona(
+        activePersona.id,
+        managerWorkspaceSection,
+        managedPersonaUnit,
+      )
         .some((tool) => tool.id === managerWorkspaceTool)
     ) {
       setManagerWorkspaceTool(null);
     }
-  }, [activePersona.id, managerWorkspaceSection, managerWorkspaceTool]);
+  }, [activePersona.id, managedPersonaUnit, managerWorkspaceSection, managerWorkspaceTool]);
 
   function changeMobileView(
     destination: MobileWorkspaceView,
@@ -3445,6 +3449,7 @@ export function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
+              rolloutUnit={managedPersonaUnit}
             />
           ) : null}
           {managerWorkspaceSection ? (
@@ -3460,6 +3465,7 @@ export function App() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               personaId={activePersona.id}
+              rolloutUnit={managedPersonaUnit}
               section={managerWorkspaceSection}
             />
           ) : null}

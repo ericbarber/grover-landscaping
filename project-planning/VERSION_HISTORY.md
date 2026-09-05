@@ -23,6 +23,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-05: Shaped manager-style workspace internals by rollout unit. Company
+  Owner and Manager categories progress from readiness through schedule,
+  customers/team, and reports/recovery; Property Manager stays bounded to its
+  P4 tools; and Support progresses from read-only activity triage through
+  access/delivery, evidence/exception, and privacy recovery. Suspended and
+  unknown managed units expose no management category or tool, while legacy
+  menus remain unchanged.
 - 2026-09-05: Added the first production rollout composition slice. Projection
   version 2 distinguishes untouched legacy subjects from managed cohorts, and
   retained suspension remains managed/default-off instead of restoring legacy
