@@ -15,7 +15,7 @@ for account access or live-service evidence.
 
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
-| Repository | Ready for next slice | Manager continuity and shell compression are complete | Prototype reconciliation |
+| Repository | Ready for next slice | Prototype families have authoritative classifications | Frontend truth/recovery adoption |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -244,6 +244,23 @@ Exit evidence:
 
 - Chromium and WebKit keep the final Home action above fixed navigation at 320,
   390, and 430px and at simulated 200% zoom.
+
+### UX3 — Prototype reconciliation
+
+State: delivered.
+
+Deliver:
+
+- Classify each prototype, high-fidelity set, and wireframe family by its current
+  review purpose.
+- Distinguish dated production mirrors from adopted behavior and historical
+  visual input.
+- Preserve explicit product gates and illustrative-data boundaries.
+
+Exit evidence:
+
+- The gallery, design README, adoption tracker, and dated mirror point to one
+  artifact-family inventory with no claim that prototype polish proves shipping.
 
 ## Later, not active
 

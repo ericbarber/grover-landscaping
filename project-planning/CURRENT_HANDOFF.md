@@ -94,8 +94,14 @@ The repository-owned all-persona rollout foundation and smoke contract are
 complete for the currently authoritative roles. Hosted per-unit execution waits
 on R2 identities, exact resource fixtures, and operator ownership. Dispatcher/
 Billing role creation and P2 concern/preference behavior each remain separate
-product decisions. The next safe repository UX slice is prototype
-reconciliation; it may not be represented as hosted rollout evidence.
+product decisions. The next safe repository UX slice is frontend truth/recovery
+adoption; it may not be represented as hosted rollout evidence.
+
+Prototype reconciliation is complete. Start design review from
+[`../design/ARTIFACT_STATUS.md`](../design/ARTIFACT_STATUS.md): it separates
+the September 3 current mirror, adopted workflow behavior, proposed direction,
+historical composition, and product-gated boundaries without treating a
+prototype render as production evidence.
 
 ### Parallel external lane: R2 and R3
 

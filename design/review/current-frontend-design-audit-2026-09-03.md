@@ -191,11 +191,12 @@ visual tuning.
    are consolidated into the desktop rail and compact mobile account menu,
    local-review chrome is isolated, and measured navigation clearance is
    validated at 320, 390, and 430px plus 200% zoom.
-5. **Prototype reconciliation.** Reclassify older public/customer artifacts as
-   design direction or historical input, and refresh only the prototypes needed
-   by the next production slice.
+5. **Prototype reconciliation — delivered September 5, 2026.** The artifact-
+   family inventory classifies dated mirrors, adopted behavior, design direction,
+   historical input, and product-gated boundaries; only the prototype needed by
+   the next production slice should be refreshed.
 
-Phases 2 and 5 remain recommendations rather than delivered behavior.
+Phase 2 remains a recommendation rather than delivered behavior.
 Product-gated concern,
 provider-contact, notification/preference, external-review, marketplace, and
 billing work remains governed by the existing delivery plan.
