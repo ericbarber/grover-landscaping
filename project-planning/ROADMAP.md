@@ -40,6 +40,11 @@ and contextual questions/decisions. Live enablement still requires protected
 hosting plus server-derived account capabilities, audited cohorts, operational
 owners, per-unit smoke, and rollback; the design does not bypass the separate
 concern/preference product gate.
+The same functional-unit prototype now covers Crew Leads separately: read-only
+day-plan visibility precedes stop writes, evidence, and route-change recovery.
+Field enablement requires exact membership/crew scope, supported-device and
+offline-data handling, protected per-unit smoke, manager response ownership,
+and rollback that preserves queued work.
 
 ## Delivered UX Context
 

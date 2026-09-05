@@ -94,6 +94,11 @@ boundary; inclusion here alone does not mean a feature shipped.
   U2 visit tracking, U3 delivered proof, and U4 contextual questions and
   recommendation decisions; server-derived account capabilities, audited
   cohorts, protected unit smoke, and rollback remain implementation work
+- Design-ready Crew Lead minimal rollout with C1 read-only day-plan visibility,
+  C2 offline-resilient stop execution, C3 field proof, and C4 route changes/
+  recovery; server-derived crew capabilities, supported-device operations,
+  protected field smoke, and queued-work-safe rollback remain implementation
+  work
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

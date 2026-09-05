@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Yard Owner functional-unit rollout, current-state audit, and truth/recovery states are delivered | Implement account-scoped rollout control, then prototype manager continuity |
+| Design | Yard Owner and Crew Lead functional-unit rollout plus current-state/recovery reviews are delivered | Implement server-derived account/crew rollout control, then prototype manager continuity |
 
 ## Status Legend
 
@@ -58,12 +58,20 @@ Current state:
   launch boundary; disabled units are absent rather than exposed as unfinished
   destinations. Server-derived account capabilities, audited cohorts, protected
   unit smoke, and reversible enablement are designed but not implemented.
+- The same rollout prototype now adds Crew Lead C1 day-plan visibility, C2 stop
+  execution, C3 field proof, and C4 changes/recovery. C1 exposes only Home and
+  Route; execution controls and Jobs/Job destinations appear with C2, while
+  evidence and amendment/recovery work remain cumulative contextual units.
+  Offline replay, device/privacy handling, manager response ownership, protected
+  field smoke, and non-destructive queued-work rollback remain implementation
+  and operational gates.
 
 Next design slices:
 
-1. Yard Owner rollout control: add server-derived account capabilities,
-   auditable cohort membership, capability-shaped navigation, and protected
-   per-unit smoke/rollback without weakening route authorization.
+1. Functional rollout control: add server-derived Yard Owner account and Crew
+   Lead membership/crew capabilities, auditable cohort membership, capability-
+   shaped navigation, and protected per-unit smoke/rollback without weakening
+   API authorization or discarding queued field work.
 2. Manager continuity: add authorized status and urgency to the six-category
    Manage overview without duplicating its destination tools.
 3. Shell compression: remove redundant hosted identity/persona presentation and

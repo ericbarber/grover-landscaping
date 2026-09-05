@@ -3,15 +3,29 @@
     "id": "yard-owner-minimal-rollout-desktop-v1",
     "area": "current",
     "status": "validated-rollout-design",
-    "source": "../prototypes/yard-owner-minimal-rollout/index.html#u1",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#owner/u1",
     "preview": "current/yard-owner-minimal-rollout-desktop-v1.png"
   },
   {
     "id": "yard-owner-minimal-rollout-mobile-v1",
     "area": "current",
     "status": "validated-rollout-design",
-    "source": "../prototypes/yard-owner-minimal-rollout/index.html#u4",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#owner/u4",
     "preview": "current/yard-owner-minimal-rollout-mobile-v1.png"
+  },
+  {
+    "id": "crew-lead-minimal-rollout-desktop-v1",
+    "area": "current",
+    "status": "validated-rollout-design",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#crew/c1",
+    "preview": "current/crew-lead-minimal-rollout-desktop-v1.png"
+  },
+  {
+    "id": "crew-lead-minimal-rollout-mobile-v1",
+    "area": "current",
+    "status": "validated-rollout-design",
+    "source": "../prototypes/yard-owner-minimal-rollout/index.html#crew/c4",
+    "preview": "current/crew-lead-minimal-rollout-mobile-v1.png"
   },
   {
     "id": "current-frontend-desktop-v1",
