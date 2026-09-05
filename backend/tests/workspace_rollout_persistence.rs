@@ -80,6 +80,7 @@ async fn exact_scope_rollout_is_cumulative_audited_and_suspensible() {
         other => panic!("rollout-enabled access summary should load, got {other:?}"),
     };
     assert_eq!(summary.workspace_rollout.rollout_mode, "cohort");
+    assert_eq!(summary.workspace_rollout.enforcement_mode, "managed");
     let owner_rollout = summary
         .workspace_rollout
         .personas
@@ -120,6 +121,7 @@ async fn exact_scope_rollout_is_cumulative_audited_and_suspensible() {
         other => panic!("suspended access summary should load default off, got {other:?}"),
     };
     assert_eq!(summary.workspace_rollout.rollout_mode, "default_off");
+    assert_eq!(summary.workspace_rollout.enforcement_mode, "managed");
     assert!(summary
         .workspace_rollout
         .personas

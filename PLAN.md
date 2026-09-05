@@ -71,13 +71,18 @@ Current state:
   organization-owner and organization-scoped support operations now list and
   mutate exact membership-derived enrollments without accepting client role or
   scope. Actor retry keys, exact versions, lifecycle validation, and immutable
-  receipts make enable/advance/suspend/resume safe to retry. The projection
-  does not yet shape navigation and no live cohort has been enabled.
+  receipts make enable/advance/suspend/resume safe to retry. Projection version
+  2 distinguishes untouched legacy users from managed cohorts, so suspension
+  cannot restore the old full menu. Desktop and mobile workspace destinations
+  now follow cumulative units; Yard Owner U2–U4 also gate Visits, delivered
+  Proof, and question/recommendation controls. Remaining manager, field,
+  portfolio, and support contextual controls are not yet shaped, and no live
+  cohort has been enabled.
 
 Next design slices:
 
-1. Functional rollout control: shape navigation and contextual controls from
-   the delivered projection, then add protected per-unit success and denial
+1. Functional rollout control: shape remaining contextual controls from the
+   delivered projection, then add protected per-unit success and denial
    smoke without weakening API authorization or discarding queued work. Dispatcher
    and Billing Administrator require an explicit backend role contract before
    either projection can be enabled.

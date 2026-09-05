@@ -13,6 +13,11 @@ capability flags, pilot cohorts, or protected hosting are live. Existing API
 authorization remains authoritative. The browser may hide an unavailable unit,
 but it may never grant one.
 
+The shared projection, audited cohort administration, managed-versus-legacy
+state, cumulative desktop/mobile destinations, and Yard Owner U2–U4 contextual
+composition are now delivered. Other persona-specific contextual controls,
+protected unit smoke, operational enablement, and hosted cohorts remain.
+
 ## Production persona source
 
 The rollout follows `frontend/src/domain/workspacePersona.ts`, including its

@@ -114,6 +114,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   that derive persona and resource scope from the target membership, enforce
   exact versions and forward-only units, and replay actor mutation keys without
   duplicate audit; no live cohort is claimed
+- Managed-versus-legacy rollout composition that preserves existing users until
+  enrollment, keeps suspended cohorts default off, shapes desktop/mobile persona
+  destinations by cumulative unit, and gates Yard Owner visit, proof, question,
+  and recommendation controls without changing API authorization
 - Compact Yard Owner visit history with one expanded customer-safe progress,
   update, questions, recommendations, and proof surface at a time, validated in
   Chromium and iPhone/WebKit phone journeys

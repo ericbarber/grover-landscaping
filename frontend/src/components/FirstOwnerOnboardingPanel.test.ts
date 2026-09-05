@@ -17,6 +17,7 @@ describe('first owner onboarding steps', () => {
       memberships: [],
       workspaceRollout: {
         contractVersion: 1,
+        enforcementMode: 'legacy',
         rolloutMode: 'default_off',
         personas: [],
       },
@@ -31,6 +32,7 @@ describe('first owner onboarding steps', () => {
       claimRoles: ['OrganizationOwner'],
       workspaceRollout: {
         contractVersion: 1,
+        enforcementMode: 'legacy',
         rolloutMode: 'default_off',
         personas: [],
       },

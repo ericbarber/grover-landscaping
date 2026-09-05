@@ -459,6 +459,7 @@ describe('core API client mapping', () => {
       claimRoles: ['OrganizationOwner'],
       workspaceRollout: {
         contractVersion: 1,
+        enforcementMode: 'legacy',
         rolloutMode: 'default_off',
         personas: [{
           personaId: 'company-owner',

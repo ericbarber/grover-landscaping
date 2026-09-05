@@ -23,6 +23,13 @@
   private Compose activation, PostgreSQL readiness, and HTTPS Serve route for
   commit `1bd623731b308994d2136da89ad6ca9013b0755b`. Later passing `main`
   pushes deploy automatically while pull requests remain validation-only.
+- 2026-09-05: Added the first production rollout composition slice. Projection
+  version 2 distinguishes untouched legacy subjects from managed cohorts, and
+  retained suspension remains managed/default-off instead of restoring legacy
+  navigation. Desktop and mobile workspace destinations now follow each
+  persona's cumulative unit; Yard Owner U2–U4 additionally gate Visits,
+  delivered Proof, and question/recommendation controls. Unknown units fail to
+  Home, while older version-1 responses remain compatibility-safe.
 - 2026-09-05: Added guarded organization rollout administration. Active
   OrganizationOwner or organization-scoped SupportAdmin memberships can list
   retained cohort state and enable, advance, suspend, or resume an exact target

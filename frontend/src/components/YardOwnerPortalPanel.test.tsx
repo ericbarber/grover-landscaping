@@ -11,10 +11,14 @@ const commonProps = {
   onRetryVisits: vi.fn(),
 };
 
-function renderVisit(overrides: Partial<Parameters<typeof YardOwnerPortalPanel>[0]['visits'][number]>) {
+function renderVisit(
+  overrides: Partial<Parameters<typeof YardOwnerPortalPanel>[0]['visits'][number]>,
+  rolloutUnit?: string,
+) {
   return renderToStaticMarkup(
     <YardOwnerPortalPanel
       {...commonProps}
+      rolloutUnit={rolloutUnit}
       properties={[{
         id: 'property_1', customerId: 'account_1', organizationId: 'org_1', displayName: 'Home',
       }]}
@@ -131,6 +135,27 @@ describe('Yard Owner persisted visit states', () => {
     expect(available).not.toContain('release_id');
     expect(unreleased).toContain('questions become available after your provider finishes preparing');
     expect(unreleased).not.toContain('Ask about this visit');
+  });
+
+  it('adds Yard Owner destinations and contextual controls only with their unit', () => {
+    const deliveredVisit = {
+      customerVisitReference: 'customer_visit_0123456789abcdef0123456789abcdef',
+      deliveredProofAvailable: true,
+    };
+    const u2 = renderVisit(deliveredVisit, 'u2');
+    const u3 = renderVisit(deliveredVisit, 'u3');
+    const u4 = renderVisit(deliveredVisit, 'u4');
+
+    expect(u2).toContain('Visits');
+    expect(u2).not.toContain('>Proof<');
+    expect(u2).not.toContain('>Account<');
+    expect(u2).not.toContain('Open delivered proof');
+    expect(u2).not.toContain('Ask about this visit');
+    expect(u3).toContain('>Proof<');
+    expect(u3).toContain('Open delivered proof');
+    expect(u3).not.toContain('Ask about this visit');
+    expect(u4).toContain('Open delivered proof');
+    expect(u4).toContain('Ask about this visit');
   });
 
   it('presents explicit en-route, care, and weather states on the shared progress rail', () => {
