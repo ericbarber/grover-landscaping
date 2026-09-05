@@ -62,31 +62,28 @@ entry opens the exact exception, including a tested mobile focus and overflow
 handoff. The slice passes strict Clippy, 417 backend tests, TypeScript, 485
 frontend tests, the production build, and focused browser validation.
 
-### Design ready: Yard Owner and Crew Lead minimal rollout
+### Partial adoption: all-persona minimal rollout
 
-The portal now has a validated four-unit rollout design: U1 read-only care
-visibility, U2 visit tracking, U3 delivered proof, and U4 contextual questions/
-recommendation decisions. U1 is the minimum owner-visible launch; capabilities
-not enabled for an account are absent rather than rendered as unfinished
-destinations. Production still needs server-derived account capabilities,
-audited default-off cohorts, protected per-unit smoke, and non-destructive
-rollback. Concern/preferences and appreciation/external reviews retain their
-separate product gates.
-The shared prototype also stages Crew Lead C1 read-only day-plan visibility,
-C2 offline-resilient stop execution, C3 field proof, and C4 route changes/
-recovery. Field enablement additionally requires exact crew scope, supported-
-device/offline-data operations, manager response ownership, protected field
-smoke, and rollback that preserves queued work.
+The validated rollout map now covers all ten signed-in persona designs and 36
+cumulative units. Migration 123 and `/me/access` adopt the shared control-plane
+foundation: exact user/persona/organization/scope enrollments apply only to
+current server-derived roles, units are cumulative, suspension is the rollback
+path, and lifecycle events are immutable. Product capabilities remain default
+off without an exact active enrollment. There is no guarded enrollment API or
+React navigation shaping yet, and no live cohort is claimed.
+
+Dispatcher and Billing Administrator remain design-only role keys because the
+authoritative backend/API role union does not contain them. Do not synthesize
+either from Manager. Concern/preferences and appreciation/external reviews
+retain their separate product gates.
 
 ### Next input boundary
 
-No repository implementation phase is active. Continue with R2 when the owning
-Render/AWS access and deployment inputs exist, implement the reviewed server-
-derived Yard Owner account and Crew Lead membership/crew capability foundation
-as a separate authorized slice, or define
-the P2 concern/preference support, response, retention, privacy, and escalation
-boundary before implementing that product-gated unit. Do not guess external or
-P2 inputs.
+The next safe rollout slice is a guarded owner/support enrollment read and
+enable/advance/suspend/resume API over the delivered persistence, followed by
+capability-shaped React composition and protected per-unit smoke. Dispatcher/
+Billing role creation, R2 provisioning, and P2 concern/preference behavior each
+remain separate decision or external-input boundaries.
 
 ### Parallel external lane: R2 and R3
 
@@ -114,8 +111,8 @@ The latest published main gate includes:
 - repository layout checks;
 - zero-finding frontend high/critical dependency audit;
 - TypeScript, all 485 frontend tests, and the production frontend build;
-- all 122 SQLx migrations, Rust formatting, strict all-target/all-feature
-  Clippy on Rust 1.98, and all 417 backend tests;
+- all 123 SQLx migrations, Rust formatting, strict all-target/all-feature
+  Clippy, and all 425 backend tests;
 - Terraform formatting and development/production module validation;
 - all 68 Chromium mobile/desktop, Firefox desktop, and WebKit mobile journeys;
 - the Yard Owner assurance contract and its failure-policy tests; and

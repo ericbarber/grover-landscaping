@@ -3,7 +3,9 @@ use crate::local_review::{
     local_reviewer_by_user_id, local_reviewer_profiles, LOCAL_REVIEW_ORGANIZATION_ID,
 };
 use crate::workspace_rollout::{
-    default_workspace_rollout_projection, WorkspaceRolloutAssignment, WorkspaceRolloutProjection,
+    apply_workspace_rollout_enrollments, default_workspace_rollout_projection,
+    load_active_workspace_rollout_enrollments, WorkspaceRolloutAssignment,
+    WorkspaceRolloutProjection,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -309,8 +311,18 @@ impl OrganizationRepository {
                 scope_id: membership.scope_id.clone(),
             })
             .collect::<Vec<_>>();
-        let workspace_rollout =
+        let mut workspace_rollout =
             default_workspace_rollout_projection(&claim_roles, &rollout_assignments);
+        if let Some(pool) = &self.pool {
+            let enrollments = match load_active_workspace_rollout_enrollments(pool, user_id).await {
+                Ok(enrollments) => enrollments,
+                Err(error) => {
+                    tracing::error!(%error, user_id, "workspace rollout enrollment read failed");
+                    return OrganizationResourceResult::Unavailable;
+                }
+            };
+            apply_workspace_rollout_enrollments(&mut workspace_rollout, &enrollments);
+        }
 
         OrganizationResourceResult::Found(PrincipalAccessSummary {
             user_id: user_id.to_string(),

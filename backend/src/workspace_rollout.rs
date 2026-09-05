@@ -1,5 +1,6 @@
 use crate::access_control::AccessRole;
 use serde::{Deserialize, Serialize};
+use sqlx::{PgPool, Row};
 use std::collections::{BTreeMap, HashSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -30,6 +31,15 @@ pub struct WorkspaceRolloutScope {
     pub scope_type: String,
     pub scope_id: Option<String>,
     pub organization_id: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WorkspaceRolloutEnrollment {
+    pub persona_id: String,
+    pub organization_id: Option<String>,
+    pub scope_type: String,
+    pub scope_id: Option<String>,
+    pub enabled_unit: String,
 }
 
 const YARD_OWNER: &[&str] = &[
@@ -75,6 +85,14 @@ const SUPPORT: &[&str] = &[
     "privacy_and_erasure_recovery",
 ];
 
+const YARD_OWNER_UNITS: &[&str] = &["u1", "u2", "u3", "u4"];
+const PROPERTY_MANAGER_UNITS: &[&str] = &["p1", "p2", "p3", "p4"];
+const CREW_LEAD_UNITS: &[&str] = &["c1", "c2", "c3", "c4"];
+const CREW_MEMBER_UNITS: &[&str] = &["cm1", "cm2", "cm3", "cm4"];
+const COMPANY_OWNER_UNITS: &[&str] = &["o1", "o2", "o3", "o4"];
+const COMPANY_MANAGER_UNITS: &[&str] = &["m1", "m2", "m3", "m4"];
+const SUPPORT_UNITS: &[&str] = &["s1", "s2", "s3", "s4"];
+
 fn persona_for_role(role: &AccessRole) -> &'static str {
     match role {
         AccessRole::OrganizationOwner => "company-owner",
@@ -97,6 +115,19 @@ fn capability_keys(persona_id: &str) -> &'static [&'static str] {
         "company-manager" => COMPANY_MANAGER,
         "support" => SUPPORT,
         "general" => &["access_resolution"],
+        _ => &[],
+    }
+}
+
+fn unit_ids(persona_id: &str) -> &'static [&'static str] {
+    match persona_id {
+        "yard-owner" => YARD_OWNER_UNITS,
+        "property-manager" => PROPERTY_MANAGER_UNITS,
+        "crew-lead" => CREW_LEAD_UNITS,
+        "crew-member" => CREW_MEMBER_UNITS,
+        "company-owner" => COMPANY_OWNER_UNITS,
+        "company-manager" => COMPANY_MANAGER_UNITS,
+        "support" => SUPPORT_UNITS,
         _ => &[],
     }
 }
@@ -193,6 +224,70 @@ pub fn default_workspace_rollout_projection(
         contract_version: 1,
         rollout_mode: "default_off".to_string(),
         personas,
+    }
+}
+
+pub async fn load_active_workspace_rollout_enrollments(
+    pool: &PgPool,
+    subject_user_id: &str,
+) -> Result<Vec<WorkspaceRolloutEnrollment>, sqlx::Error> {
+    let rows = sqlx::query(
+        r#"
+        SELECT persona_id, organization_id, scope_type, scope_id, enabled_unit
+        FROM workspace_rollout_enrollments
+        WHERE subject_user_id = $1
+          AND status = 'active'
+        ORDER BY persona_id, organization_id NULLS FIRST, scope_type, scope_id NULLS FIRST
+        "#,
+    )
+    .bind(subject_user_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| WorkspaceRolloutEnrollment {
+            persona_id: row.get("persona_id"),
+            organization_id: row.get("organization_id"),
+            scope_type: row.get("scope_type"),
+            scope_id: row.get("scope_id"),
+            enabled_unit: row.get("enabled_unit"),
+        })
+        .collect())
+}
+
+pub fn apply_workspace_rollout_enrollments(
+    projection: &mut WorkspaceRolloutProjection,
+    enrollments: &[WorkspaceRolloutEnrollment],
+) {
+    let mut applied = false;
+    for persona in &mut projection.personas {
+        let Some(enrollment) = enrollments.iter().find(|enrollment| {
+            enrollment.persona_id == persona.persona_id
+                && enrollment.organization_id == persona.scope.organization_id
+                && enrollment.scope_type == persona.scope.scope_type
+                && enrollment.scope_id == persona.scope.scope_id
+        }) else {
+            continue;
+        };
+        let Some(enabled_index) = unit_ids(&persona.persona_id)
+            .iter()
+            .position(|unit_id| *unit_id == enrollment.enabled_unit)
+        else {
+            continue;
+        };
+
+        for capability in capability_keys(&persona.persona_id)
+            .iter()
+            .take(enabled_index + 1)
+        {
+            persona.capabilities.insert((*capability).to_string(), true);
+        }
+        persona.enabled_unit = Some(enrollment.enabled_unit.clone());
+        applied = true;
+    }
+    if applied {
+        projection.rollout_mode = "cohort".to_string();
     }
 }
 
@@ -297,6 +392,65 @@ mod tests {
             default_workspace_rollout_projection(&[AccessRole::OrganizationOwner], &[]);
         assert_eq!(projection.personas[0].persona_id, "company-owner");
         assert_eq!(projection.personas[0].scope.scope_type, "identity");
+        assert!(projection.personas[0]
+            .capabilities
+            .values()
+            .all(|enabled| !enabled));
+    }
+
+    #[test]
+    fn exact_scope_enrollment_enables_cumulative_capabilities_only() {
+        let assignments = [assignment(AccessRole::CrewMember, "crew", Some("crew-1"))];
+        let mut projection = default_workspace_rollout_projection(&[], &assignments);
+
+        apply_workspace_rollout_enrollments(
+            &mut projection,
+            &[WorkspaceRolloutEnrollment {
+                persona_id: "crew-member".to_string(),
+                organization_id: Some("org-1".to_string()),
+                scope_type: "crew".to_string(),
+                scope_id: Some("crew-1".to_string()),
+                enabled_unit: "cm3".to_string(),
+            }],
+        );
+
+        assert_eq!(projection.rollout_mode, "cohort");
+        assert_eq!(projection.personas[0].enabled_unit.as_deref(), Some("cm3"));
+        assert!(projection.personas[0].capabilities["assigned_work"]);
+        assert!(projection.personas[0].capabilities["job_execution"]);
+        assert!(projection.personas[0].capabilities["field_evidence"]);
+        assert!(!projection.personas[0].capabilities["personal_recovery"]);
+    }
+
+    #[test]
+    fn mismatched_scope_or_unknown_unit_never_enables_a_projection() {
+        let assignments = [assignment(
+            AccessRole::PropertyOwner,
+            "property",
+            Some("property-1"),
+        )];
+        let mut projection = default_workspace_rollout_projection(&[], &assignments);
+        let enrollments = [
+            WorkspaceRolloutEnrollment {
+                persona_id: "yard-owner".to_string(),
+                organization_id: Some("org-1".to_string()),
+                scope_type: "property".to_string(),
+                scope_id: Some("property-2".to_string()),
+                enabled_unit: "u4".to_string(),
+            },
+            WorkspaceRolloutEnrollment {
+                persona_id: "yard-owner".to_string(),
+                organization_id: Some("org-1".to_string()),
+                scope_type: "property".to_string(),
+                scope_id: Some("property-1".to_string()),
+                enabled_unit: "not-a-unit".to_string(),
+            },
+        ];
+
+        apply_workspace_rollout_enrollments(&mut projection, &enrollments);
+
+        assert_eq!(projection.rollout_mode, "default_off");
+        assert_eq!(projection.personas[0].enabled_unit, None);
         assert!(projection.personas[0]
             .capabilities
             .values()
