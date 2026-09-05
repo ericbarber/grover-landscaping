@@ -47,7 +47,7 @@ design/
 │   ├── shared/                         # Canonical tokens and shell primitives
 │   ├── yard-crew-acquisition/           # Provider entry, opportunity, assessment, and support
 │   ├── yard-owner-acquisition/         # Private yard-to-provider journey
-│   ├── yard-owner-minimal-rollout/     # Functional-unit customer enablement
+│   ├── yard-owner-minimal-rollout/     # Yard Owner and Crew Lead functional rollout
 │   └── yard-owner-portal/              # Validated customer confidence journey
 ├── review/
 │   ├── checklist.md                   # Questions for each design review
@@ -57,6 +57,7 @@ design/
 │   ├── application-working-design-delivery-plan.md # Remaining application phases
 │   ├── yard-owner-portal-plan.md       # Yard Owner audit and phased acceptance
 │   ├── yard-owner-minimal-rollout-plan.md # Account-scoped rollout units and gates
+│   ├── crew-lead-minimal-rollout-plan.md # Crew-scoped field rollout units and gates
 │   ├── yard-owner-portal-handoff.md    # Production contract mapping
 │   ├── yard-owner-portal-v2-enhancement-plan.md # Service-lifecycle phases
 │   ├── yard-owner-portal-v2-handoff.md # V2 states and adoption contracts
@@ -206,8 +207,8 @@ refresh their review captures with:
 node design/tools/validate-frontend-truth-recovery.mjs --capture
 ```
 
-Validate the Yard Owner functional-unit rollout and refresh its desktop/mobile
-captures with:
+Validate the Yard Owner and Crew Lead functional-unit rollout and refresh all
+four desktop/mobile captures with:
 
 ```bash
 node design/tools/validate-yard-owner-minimal-rollout.mjs --capture
@@ -221,9 +222,10 @@ renderer or a design-tool account to see a proposed screen.
 1. Start with the
    [prototype adoption tracker](../project-planning/PROTOTYPE_ADOPTION.md) to see
    what is adopted, partial, design ready, product-gated, or only a future concept.
-2. Start customer rollout review with the
-   [Yard Owner minimal rollout](prototypes/yard-owner-minimal-rollout/index.html)
-   and its [unit gates](review/yard-owner-minimal-rollout-plan.md).
+2. Start functional rollout review with the shared
+   [Yard Owner and Crew Lead prototype](prototypes/yard-owner-minimal-rollout/index.html),
+   then compare the [customer unit gates](review/yard-owner-minimal-rollout-plan.md)
+   with the [field unit gates](review/crew-lead-minimal-rollout-plan.md).
 3. Compare the [current frontend mirror](prototypes/current-frontend-review/index.html)
    with its [detailed audit](review/current-frontend-design-audit-2026-09-03.md).
    This dated artifact records production parity; the other prototypes remain

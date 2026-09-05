@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-04: Extended the functional-unit rollout design to Crew Leads. C1
+  exposes a useful read-only Home/Route day plan; C2 adds offline-resilient stop
+  execution and Jobs/Job, C3 field proof, and C4 route changes/recovery. The
+  shared prototype switches Yard Owner and Crew Lead personas without mixing
+  authorization or disabled destinations, and validation covers every unit at
+  1440px, 390px, and 320px with responsive navigation, touch targets, overflow,
+  and bottom-bar clearance. Capability control and live cohorts remain unbuilt.
 - 2026-09-04: Designed a minimal Yard Owner rollout in four cumulative,
   independently enableable customer units. U1 launches one complete read-only
   Home promise; U2 adds visit tracking, U3 delivered proof, and U4 contextual

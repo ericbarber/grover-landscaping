@@ -62,7 +62,7 @@ entry opens the exact exception, including a tested mobile focus and overflow
 handoff. The slice passes strict Clippy, 417 backend tests, TypeScript, 485
 frontend tests, the production build, and focused browser validation.
 
-### Design ready: Yard Owner minimal rollout
+### Design ready: Yard Owner and Crew Lead minimal rollout
 
 The portal now has a validated four-unit rollout design: U1 read-only care
 visibility, U2 visit tracking, U3 delivered proof, and U4 contextual questions/
@@ -72,12 +72,18 @@ destinations. Production still needs server-derived account capabilities,
 audited default-off cohorts, protected per-unit smoke, and non-destructive
 rollback. Concern/preferences and appreciation/external reviews retain their
 separate product gates.
+The shared prototype also stages Crew Lead C1 read-only day-plan visibility,
+C2 offline-resilient stop execution, C3 field proof, and C4 route changes/
+recovery. Field enablement additionally requires exact crew scope, supported-
+device/offline-data operations, manager response ownership, protected field
+smoke, and rollback that preserves queued work.
 
 ### Next input boundary
 
 No repository implementation phase is active. Continue with R2 when the owning
-Render/AWS access and deployment inputs exist, implement the reviewed Yard Owner
-account-capability rollout foundation as a separate authorized slice, or define
+Render/AWS access and deployment inputs exist, implement the reviewed server-
+derived Yard Owner account and Crew Lead membership/crew capability foundation
+as a separate authorized slice, or define
 the P2 concern/preference support, response, retention, privacy, and escalation
 boundary before implementing that product-gated unit. Do not guess external or
 P2 inputs.
