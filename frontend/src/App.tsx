@@ -81,6 +81,8 @@ import {
 import { workspaceGuidanceForRoles, workspaceRolesForAccess } from './domain/workspaceAccess';
 import {
   workspacePersonasForRoles,
+  workspaceEnabledUnitForPersona,
+  workspacePersonaForRollout,
   workspaceSurfacesForPersona,
   type WorkspacePersonaId,
 } from './domain/workspacePersona';
@@ -1331,10 +1333,17 @@ export function App() {
   const jobDetailRef = useRef<HTMLDivElement>(null);
   const providerEntryOpened = useRef(false);
   const mobileScrollPositions = useRef<Partial<Record<MobileWorkspaceView, number>>>({});
-  const activePersona = availablePersonas.find(
+  const activePersonaWithoutRollout = availablePersonas.find(
     (persona) => persona.id === activePersonaId,
   ) ?? initialPersona;
+  const activePersona = useMemo(
+    () => workspacePersonaForRollout(activePersonaWithoutRollout, auth.workspaceRollout),
+    [activePersonaWithoutRollout, auth.workspaceRollout],
+  );
   const workspaceSurfaces = workspaceSurfacesForPersona(activePersona.id);
+  const managedPersonaUnit = auth.workspaceRollout?.enforcementMode === 'managed'
+    ? workspaceEnabledUnitForPersona(activePersona.id, auth.workspaceRollout)
+    : undefined;
   const homeCustomerVisits = activePersona.id === 'yard-owner'
     ? customerPortalVisits
     : activePersona.id === 'property-manager'
@@ -1363,6 +1372,11 @@ export function App() {
     setActivePersonaId(initialPersona.id);
     setMobileView(initialPersona.defaultView);
   }, [activePersonaId, availablePersonas, initialPersona]);
+
+  useEffect(() => {
+    if (activePersona.navigation.some(({ view }) => view === mobileView)) return;
+    setMobileView(activePersona.defaultView);
+  }, [activePersona, mobileView]);
 
   useEffect(() => {
     if (!providerEntryMode || providerEntryOpened.current || activePersona.id !== 'company-owner') return;
@@ -3401,6 +3415,7 @@ export function App() {
             ) : (
               <YardOwnerPortalPanel
                 customerDisplayName={auth.displayName}
+                rolloutUnit={activePersona.id === 'yard-owner' ? managedPersonaUnit : undefined}
                 properties={customerPortalProperties}
                 visits={customerPortalVisits}
                 isLoadingVisits={isLoadingCustomerPortalVisits}

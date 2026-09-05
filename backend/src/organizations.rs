@@ -4,7 +4,7 @@ use crate::local_review::{
 };
 use crate::workspace_rollout::{
     apply_workspace_rollout_enrollments, default_workspace_rollout_projection,
-    list_organization_workspace_rollout_enrollments, load_active_workspace_rollout_enrollments,
+    list_organization_workspace_rollout_enrollments, load_workspace_rollout_enrollments,
     mutate_membership_workspace_rollout, UpdateWorkspaceRolloutEnrollmentRequest,
     WorkspaceRolloutAssignment, WorkspaceRolloutEnrollmentRecord, WorkspaceRolloutMutationResult,
     WorkspaceRolloutProjection, WorkspaceRolloutStoreMutationResult,
@@ -316,7 +316,7 @@ impl OrganizationRepository {
         let mut workspace_rollout =
             default_workspace_rollout_projection(&claim_roles, &rollout_assignments);
         if let Some(pool) = &self.pool {
-            let enrollments = match load_active_workspace_rollout_enrollments(pool, user_id).await {
+            let enrollments = match load_workspace_rollout_enrollments(pool, user_id).await {
                 Ok(enrollments) => enrollments,
                 Err(error) => {
                     tracing::error!(%error, user_id, "workspace rollout enrollment read failed");
