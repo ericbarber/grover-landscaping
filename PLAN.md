@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | Repository adoption is complete for rollout composition and audited frontend continuity | Await hosted cohort evidence or the Dispatcher/Billing role decision |
+| Design | A separate task-first minimalist prototype now covers all ten personas; existing rollout composition remains the capability contract | Review the simplified journeys, then adopt approved persona families in bounded React slices |
 
 ## Status Legend
 
@@ -87,6 +87,14 @@ Current state:
   report, activity, notification, or photo-recovery feeds. Only the exact
   selected authorized tool panel mounts, preventing hidden tools from running
   their own reads. No live cohort has been enabled.
+- The separate [minimalist persona experience](design/prototypes/minimalist-personas/README.md)
+  now gives all ten personas a task-first design direction rather than reusing
+  the rollout prototype as a UX target. Customer, field, operations,
+  administrative, and no-role contexts each lead with one first answer, one
+  primary action, no more than four destinations, a short queue, progressive
+  task detail, and explicit omitted scope. Attention, on-track, and no-current-
+  work scenarios are interactive and URL-addressable; illustrative actions do
+  not persist or imply new authorization.
 
 Next design slices:
 
@@ -122,6 +130,11 @@ Next design slices:
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary
    values now explicitly use the interface family.
+7. Minimalist persona experiences: delivered as validated design direction.
+   All ten personas have distinct task-first hierarchy and content across three
+   scenarios and responsive desktop/mobile compositions. Production adoption
+   has not started; review the customer and field families first, then adopt
+   approved patterns without widening role or product authority.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1029,6 +1042,10 @@ Current state:
 
 Next design work:
 
+- Conduct task-comprehension and content review against the validated
+  minimalist persona prototype, starting with Yard Owner and Property Manager;
+  adopt only approved family patterns into React and keep capability rollout as
+  the separate authorization contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application

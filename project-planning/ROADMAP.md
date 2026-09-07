@@ -52,6 +52,13 @@ no-role fallback have explicit minimum promises, cumulative authority,
 dependencies, omissions, evidence gates, and rollback alongside the existing
 Yard Owner and Crew Lead contracts. The next repository slice is a shared
 server-derived rollout control plane; the design is not live enablement.
+A separate minimalist working design now covers those same ten personas without
+using the capability map as a UX substitute. It gives each role a distinct
+first answer, primary task, compact destination set, short supporting queue,
+progressive detail, explicit omissions, and attention/on-track/no-current-work
+scenarios across customer, field, operations, administrative, and access
+contexts. It is validated design direction awaiting human review and bounded
+family-by-family React adoption; it does not widen rollout or authorization.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

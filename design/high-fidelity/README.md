@@ -23,6 +23,16 @@ roles: server projection, cohort persistence/administration, cumulative
 composition, manager continuity, and protected smoke are implemented. It is not
 hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
 
+## Minimalist persona experience direction
+
+| Artifact | Review images | Purpose |
+| --- | --- | --- |
+| [`../prototypes/minimalist-personas/index.html`](../prototypes/minimalist-personas/index.html) | [Customer desktop](current/minimalist-personas-customer-desktop-v1.png) · [Field mobile](current/minimalist-personas-field-mobile-v1.png) · [Operations desktop](current/minimalist-personas-operations-desktop-v1.png) · [Administration mobile](current/minimalist-personas-admin-mobile-v1.png) | Ten task-first experiences with no more than four destinations, one primary action, a short queue, progressive detail, explicit omissions, and three review scenarios |
+
+This artifact is design direction. It simplifies experience hierarchy without
+claiming a new backend role, persistence contract, hosted cohort, or production
+adoption.
+
 The V2 public artifact is interactive and browser-validated. Its theme, split
 hero, persona continuity, Plan–Care–Proof tour, direct signup paths, and
 conversion-state contracts are adopted in the production React page; the static

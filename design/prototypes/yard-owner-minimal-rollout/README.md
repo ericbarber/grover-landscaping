@@ -24,6 +24,11 @@ detailed boundaries.
 This is a rollout design. It does not implement server-derived capability
 projection, enable a cohort, call an API, or persist interactions.
 
+It is also not the current task-first UX direction. Use the separate
+[minimalist persona prototype](../minimalist-personas/index.html) to review the
+simplified first answer, primary action, navigation, and responsive experience
+for each persona.
+
 Validate all 36 persona/unit combinations at desktop, mobile, and narrow-phone
 viewports and refresh gallery captures with:
 

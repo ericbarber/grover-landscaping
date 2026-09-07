@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minimalist persona experiences · Grover</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../shared/grover-foundation.css">
+</head>
+<body data-prototype="minimalist-personas" data-persona="owner" data-family="customer" data-scenario="attention">
+  <aside class="prototype-note review-bar" aria-label="Prototype review controls">
+    <div class="review-intro"><strong>Minimalist persona experiences</strong><span>One outcome, one primary action, only essential context. Illustrative data is not saved.</span></div>
+    <label>Persona<select id="persona-picker"></select></label>
+    <label>Scenario<select id="scenario-picker">
+      <option value="attention">Needs attention</option>
+      <option value="ready">On track</option>
+      <option value="empty">No current work</option>
+    </select></label>
+    <a class="prototype-review-link" href="../../review/minimalist-persona-prototype-plan.md">Read plan</a>
+  </aside>
+
+  <div class="sr-only" id="announcer" aria-live="polite"></div>
+  <div class="app-shell">
+    <aside class="desktop-rail">
+      <a class="brand" href="#owner/attention/today" aria-label="Grover minimalist persona prototype">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span>
+      </a>
+      <div class="rail-context"><span id="rail-family">Customer workspace</span><strong id="rail-role">Yard Owner</strong></div>
+      <nav id="desktop-nav" aria-label="Workspace destinations"></nav>
+      <div class="rail-account"><span id="rail-identity">Jamie R.</span><button type="button" id="account-button">Account</button></div>
+    </aside>
+
+    <header class="mobile-header">
+      <a class="brand" href="#owner/attention/today" aria-label="Grover minimalist persona prototype">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 5C14 7 7 13 6 25c8-1 15-6 20-20Z"/><path d="M8 23 22 9"/></svg><span>Grover</span>
+      </a>
+      <button type="button" id="mobile-account-button" aria-label="Open account menu"><span id="mobile-initials">JR</span></button>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <header class="page-intro">
+        <div><span class="eyebrow" id="page-context">Sonoran House</span><h1 id="page-title">Know what happens next.</h1><p id="page-promise">Your next visit and anything you need to do—nothing else competing for attention.</p></div>
+        <span class="confidence" id="confidence">Visit confirmed</span>
+      </header>
+
+      <section class="workspace-grid" aria-label="Current workspace">
+        <article class="focus-card" id="focus-card">
+          <div class="focus-heading"><div><span class="eyebrow" id="focus-label">Next visit</span><h2 id="focus-title">Tuesday, September 8</h2></div><span class="status-pill" id="focus-status">Confirmed</span></div>
+          <p class="focus-copy" id="focus-copy">Routine yard care is scheduled for 8:00–10:00 AM.</p>
+          <div class="focus-facts" id="focus-facts"></div>
+          <div class="focus-actions"><button class="button button-primary" type="button" id="primary-action">Review preparation</button><button class="button button-secondary" type="button" id="why-button" aria-expanded="false" aria-controls="why-panel">Why this comes first</button></div>
+          <div class="why-panel" id="why-panel" hidden><strong>Why this comes first</strong><p id="why-copy"></p></div>
+        </article>
+
+        <aside class="support-panel" aria-labelledby="support-title">
+          <span class="eyebrow">Only what supports this task</span>
+          <h2 id="support-title">A short, useful queue</h2>
+          <div class="task-list" id="task-list"></div>
+        </aside>
+
+        <section class="boundary-card" aria-labelledby="boundary-title">
+          <div><span class="eyebrow">Kept out of the way</span><h2 id="boundary-title">A deliberately smaller workspace</h2></div>
+          <p id="boundary-copy"></p>
+        </section>
+      </section>
+
+      <section class="task-detail" id="task-detail" aria-labelledby="detail-title" hidden>
+        <div class="detail-heading"><div><span class="eyebrow" id="detail-label">Focused task</span><h2 id="detail-title">Review preparation</h2></div><button type="button" class="icon-button" id="close-detail" aria-label="Close task detail">×</button></div>
+        <p id="detail-copy"></p>
+        <ol id="detail-steps"></ol>
+        <div class="detail-actions"><button class="button button-primary" type="button" id="complete-action">Done</button><button class="button button-secondary" type="button" id="cancel-action">Back</button></div>
+      </section>
+
+      <section class="completion" id="completion" role="status" hidden>
+        <span aria-hidden="true">✓</span><div><strong id="completion-title">Task complete</strong><p id="completion-copy"></p></div><button type="button" class="button button-secondary" id="reset-action">Reset prototype</button>
+      </section>
+    </main>
+
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Workspace destinations"></nav>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

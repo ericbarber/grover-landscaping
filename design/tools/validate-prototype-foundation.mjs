@@ -16,6 +16,7 @@ const prototypes = [
   { name: 'Current frontend review', path: 'prototypes/current-frontend-review/index.html', hash: '#company-home', nav: '.workspace-rail' },
   { name: 'Frontend truth and recovery', path: 'prototypes/frontend-truth-recovery/index.html', hash: '#crew/synced', nav: '.app-rail' },
   { name: 'Functional-unit rollout', path: 'prototypes/yard-owner-minimal-rollout/index.html', hash: '#overview/map', nav: '.desktop-rail' },
+  { name: 'Minimalist persona experiences', path: 'prototypes/minimalist-personas/index.html', hash: '#owner/attention/today', nav: '.desktop-rail' },
 ];
 
 const expectedTokens = {

@@ -11,6 +11,12 @@ application targets. The homeowner assistant and multi-vendor portfolio remain
 separate future product modes and are not promoted into current-product design by
 this plan.
 
+Workflow completeness and interface simplicity are related but separate review
+layers. The [minimalist persona experience plan](minimalist-persona-prototype-plan.md)
+defines the task-first frontend direction for all ten personas; the phases below
+continue to define the deeper cross-persona workflow and state coverage required
+before production handoff.
+
 ## Delivery strategy
 
 ### Design workflows, not directories

@@ -77,6 +77,10 @@ boundary; inclusion here alone does not mean a feature shipped.
 
 ## Persona Workspaces
 
+- Validated minimalist task-first design direction for all ten signed-in
+  personas, separating experience simplicity from functional-unit enablement:
+  one first answer, one primary action, up to four destinations, a short queue,
+  progressive task detail, explicit exclusions, and three responsive scenarios
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

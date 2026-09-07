@@ -22,6 +22,7 @@ counts, people, dates, providers, or customer claims are production facts.
 
 | Artifact family | Primary classification | Exact boundary |
 | --- | --- | --- |
+| `prototypes/minimalist-personas/` | Design direction | Ten personas have distinct task-first hierarchy, destinations, primary actions, short queues, explicit omissions, and attention/on-track/no-work scenarios. Illustrative actions are non-persistent and do not add roles or product authority. |
 | `prototypes/current-frontend-review/` | Current mirror | September 3, 2026 baseline only. Manager continuity and shell compression delivered afterward are intentionally absent. |
 | `prototypes/yard-owner-minimal-rollout/` | Adopted behavior | The version-2 projection, cohort persistence/administration, cumulative navigation, persona composition, manager continuity, and protected runner are implemented for authoritative roles. Hosted cohort execution and explicit Dispatcher/Billing backend roles remain external or gated. |
 | `prototypes/frontend-truth-recovery/` | Adopted behavior | Yard Owner protected-read exits and Crew Route date/persistence vocabulary are adopted. Illustrative prototype records remain non-production examples. |
@@ -36,6 +37,7 @@ counts, people, dates, providers, or customer claims are production facts.
 
 | Artifact family | Primary classification | Exact boundary |
 | --- | --- | --- |
+| `high-fidelity/current/minimalist-personas-*` | Design direction | Responsive browser captures of customer, field, operations, and administrative task-first experiences; not production parity or implementation evidence. |
 | `high-fidelity/current/current-frontend-*` | Current mirror | September 3 capture pair associated with the dated mirror. |
 | `high-fidelity/current/*minimal-rollout*` | Adopted behavior | Functional-unit contracts are adopted in the repository; images do not prove live cohort enablement. |
 | `high-fidelity/current/frontend-truth-recovery-*` | Adopted behavior | State hierarchy and vocabulary are adopted; the static example data is illustrative. |

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-07: Created a separate minimalist persona working design for all ten
+  signed-in roles. Each customer, field, operations, administrative, and
+  no-role experience now has a distinct first answer, one primary action, no
+  more than four destinations, a short queue, progressive task detail, explicit
+  omitted scope, and attention/on-track/no-work scenarios. Browser validation
+  covers every persona, scenario, and destination at 1440px, 390px, and 320px;
+  the artifact remains design direction rather than production adoption.
 - 2026-09-05: Codified and applied the authenticated typography-role boundary.
   Editorial type remains on audience, place, service, date, and delivered-care
   moments; Yard Owner and Property Manager destinations, field and manager task

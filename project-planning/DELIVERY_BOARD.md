@@ -16,6 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
+| Design review | Minimalist persona prototype validated | Ten task-first persona experiences separate UX simplicity from capability rollout | Human workflow/content review, then bounded family-by-family React adoption |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -301,6 +302,31 @@ Exit evidence:
 
 - Focused component assertions distinguish editorial promises from operational
   task headings; the full frontend suite and production build remain green.
+
+### UX6 — Minimalist persona experience direction
+
+State: delivered as design direction; production adoption not started.
+
+Deliver:
+
+- Separate task-first experience design from functional-unit rollout control.
+- Give all ten personas one first answer, one primary action, no more than four
+  destinations, a short supporting queue, progressive detail, and explicit
+  omitted scope.
+- Provide distinct customer, field, operations, administrative, and no-role
+  compositions with attention, on-track, and no-current-work scenarios.
+
+Exit evidence:
+
+- All persona, scenario, and destination combinations pass browser validation
+  at 1440px, 390px, and 320px with stable URLs, one page heading, keyboard focus
+  return, 44px phone targets, no horizontal overflow, and final-content
+  clearance above fixed navigation.
+
+Next design gate:
+
+- Conduct human workflow and content review, beginning with Yard Owner and
+  Property Manager, before any family-by-family React adoption.
 
 ## Later, not active
 

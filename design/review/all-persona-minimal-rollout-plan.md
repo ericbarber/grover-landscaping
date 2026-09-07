@@ -13,6 +13,11 @@ capability flags, pilot cohorts, or protected hosting are live. Existing API
 authorization remains authoritative. The browser may hide an unavailable unit,
 but it may never grant one.
 
+This plan is not the task-level frontend simplicity target. Review the separate
+[minimalist persona experience plan](minimalist-persona-prototype-plan.md) for
+each role's first answer, primary task, compact navigation, responsive
+composition, and intentionally omitted interface scope.
+
 The shared projection, audited cohort administration, managed-versus-legacy
 state, cumulative desktop/mobile destinations, and Yard Owner U2–U4 contextual
 composition are now delivered. Manager-style categories and tools also follow

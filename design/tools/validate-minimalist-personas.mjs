@@ -1,0 +1,124 @@
+import { mkdir } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { chromium } from '../../frontend/node_modules/playwright/index.mjs';
+
+const designRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const prototypePath = resolve(designRoot, 'prototypes/minimalist-personas/index.html');
+const captureRoot = resolve(designRoot, 'high-fidelity/current');
+const capture = process.argv.includes('--capture');
+
+const contracts = {
+  owner: { family: 'customer', title: 'Know what happens next.', views: ['today', 'visits', 'proof'] },
+  'property-manager': { family: 'customer', title: 'Start with the property that needs you.', views: ['overview', 'properties', 'proof', 'approvals'] },
+  crew: { family: 'field', title: 'Start with the current stop.', views: ['route', 'jobs', 'recovery'] },
+  'crew-member': { family: 'field', title: 'Focus on your assigned work.', views: ['work', 'route', 'saved'] },
+  'company-owner': { family: 'operations', title: 'Know whether the business is ready.', views: ['home', 'operations', 'customers', 'team'] },
+  'company-manager': { family: 'operations', title: 'Resolve what threatens today’s service.', views: ['today', 'schedule', 'customers', 'recovery'] },
+  dispatcher: { family: 'operations', title: 'Make the day publishable.', views: ['plan', 'crews', 'changes'] },
+  'billing-admin': { family: 'admin', title: 'Start with incomplete billing evidence.', views: ['readiness', 'accounts', 'handoffs'] },
+  support: { family: 'admin', title: 'Own the incident before opening tools.', views: ['incidents', 'activity', 'access'] },
+  general: { family: 'access', title: 'Finish access before work appears.', views: ['home'] },
+};
+const scenarios = ['attention', 'ready', 'empty'];
+
+function check(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+const browser = await chromium.launch({ headless: true });
+try {
+  if (capture) await mkdir(captureRoot, { recursive: true });
+  for (const viewport of [{ name: 'desktop', width: 1440, height: 1000 }, { name: 'mobile', width: 390, height: 844 }, { name: 'narrow', width: 320, height: 720 }]) {
+    const page = await browser.newPage({ viewport });
+    const errors = [];
+    page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(`${pathToFileURL(prototypePath).href}#owner/attention/today`, { waitUntil: 'load' });
+
+    check(await page.locator('#persona-picker option').count() === 10, `${viewport.name}: expected ten personas`);
+    check(await page.locator('#scenario-picker option').count() === 3, `${viewport.name}: expected three scenarios`);
+
+    for (const [persona, contract] of Object.entries(contracts)) {
+      await page.selectOption('#persona-picker', persona);
+      check(await page.locator('body').getAttribute('data-persona') === persona, `${viewport.name}/${persona}: wrong persona`);
+      check(await page.locator('body').getAttribute('data-family') === contract.family, `${viewport.name}/${persona}: wrong family`);
+      check((await page.locator('#page-title').textContent()) === contract.title, `${viewport.name}/${persona}: wrong priority title`);
+      check(await page.locator('#desktop-nav button').count() === contract.views.length, `${viewport.name}/${persona}: wrong desktop navigation count`);
+      check(contract.views.length <= 4, `${viewport.name}/${persona}: minimalist navigation exceeds four destinations`);
+
+      for (const scenario of scenarios) {
+        await page.selectOption('#scenario-picker', scenario);
+        check(await page.locator('body').getAttribute('data-scenario') === scenario, `${viewport.name}/${persona}/${scenario}: wrong scenario`);
+        const factCount = await page.locator('#focus-facts span').count();
+        check(factCount >= 1 && factCount <= 3, `${viewport.name}/${persona}/${scenario}: essential facts must stay between one and three`);
+        check(await page.locator('#task-list button').count() >= 1, `${viewport.name}/${persona}/${scenario}: missing short queue`);
+        check(await page.locator('h1:visible').count() === 1, `${viewport.name}/${persona}/${scenario}: expected one visible h1`);
+        check((await page.locator('#boundary-copy').textContent()).trim().length > 40, `${viewport.name}/${persona}/${scenario}: missing scope boundary`);
+
+        for (const view of contract.views) {
+          const nav = viewport.name === 'desktop' ? '#desktop-nav' : '#mobile-nav';
+          await page.locator(`${nav} [data-view="${view}"]`).click();
+          check(new URL(page.url()).hash === `#${persona}/${scenario}/${view}`, `${viewport.name}/${persona}/${scenario}/${view}: unstable hash`);
+          check(await page.locator(`${nav} [aria-current="page"]`).getAttribute('data-view') === view, `${viewport.name}/${persona}/${scenario}/${view}: active destination missing`);
+          const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+          check(overflow <= 1, `${viewport.name}/${persona}/${scenario}/${view}: horizontal overflow is ${overflow}px`);
+        }
+      }
+    }
+
+    await page.selectOption('#persona-picker', 'owner');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Review preparation' }).click();
+    check(await page.locator('#task-detail').isVisible(), `${viewport.name}: primary task detail did not open`);
+    check(await page.locator('#close-detail').evaluate((element) => element === document.activeElement), `${viewport.name}: detail focus did not move`);
+    await page.locator('#close-detail').click();
+    check(!(await page.locator('#task-detail').isVisible()), `${viewport.name}: primary task detail did not close`);
+    check(await page.getByRole('button', { name: 'Review preparation' }).evaluate((element) => element === document.activeElement), `${viewport.name}: detail focus did not return`);
+    await page.getByRole('button', { name: 'Why this comes first' }).click();
+    check(await page.locator('#why-panel').isVisible(), `${viewport.name}: rationale disclosure did not open`);
+    await page.getByRole('button', { name: 'Review preparation' }).click();
+    await page.locator('#complete-action').click();
+    check(await page.locator('#completion').isVisible(), `${viewport.name}: prototype confirmation did not appear`);
+    check((await page.locator('#completion-copy').textContent()).includes('No production data was changed'), `${viewport.name}: prototype boundary is missing from confirmation`);
+    await page.locator('#reset-action').click();
+    check(!(await page.locator('#completion').isVisible()), `${viewport.name}: prototype confirmation did not reset`);
+
+    if (viewport.name === 'desktop') {
+      check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
+      check(!(await page.locator('.mobile-nav').isVisible()), 'desktop: mobile navigation visible');
+    } else {
+      check(!(await page.locator('.desktop-rail').isVisible()), `${viewport.name}: desktop rail visible`);
+      check(await page.locator('.mobile-nav').isVisible(), `${viewport.name}: mobile navigation hidden`);
+      const targets = await page.locator('.mobile-nav button').evaluateAll((buttons) => buttons.map((button) => {
+        const { width, height } = button.getBoundingClientRect();
+        return { width, height };
+      }));
+      check(targets.every(({ width, height }) => width >= 44 && height >= 44), `${viewport.name}: mobile target below 44px`);
+      await page.evaluate(() => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      });
+      const clearance = await page.evaluate(() => document.querySelector('.mobile-nav').getBoundingClientRect().top - document.querySelector('.boundary-card').getBoundingClientRect().bottom);
+      check(clearance >= 0, `${viewport.name}: final workspace content is obscured by navigation (${clearance}px clearance)`);
+    }
+    check(errors.length === 0, `${viewport.name}: browser errors: ${errors.join('; ')}`);
+
+    if (capture && viewport.name === 'desktop') {
+      await page.goto(`${pathToFileURL(prototypePath).href}#owner/attention/today`, { waitUntil: 'load' });
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-customer-desktop-v1.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#company-manager/attention/today`, { waitUntil: 'load' });
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-operations-desktop-v1.png'), fullPage: true });
+    }
+    if (capture && viewport.name === 'mobile') {
+      await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/work`, { waitUntil: 'load' });
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-field-mobile-v1.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#support/attention/incidents`, { waitUntil: 'load' });
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-admin-mobile-v1.png'), fullPage: true });
+    }
+    await page.close();
+  }
+  console.log('Minimalist persona validation passed for 10 personas, 3 scenarios, all destinations, and 3 viewports.');
+} finally {
+  await browser.close();
+}
