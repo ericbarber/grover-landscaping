@@ -70,6 +70,7 @@ silently revisit settled product structure.
 | D-063 | Minimalist persona UX | Separate task-first experience design from functional-unit rollout control; give every persona one first answer, one primary action, no more than four minimum destinations, a short supporting queue, progressive detail, and explicit omitted scope. | Accepted for working design | 2026-09-07 | Product/design |
 | D-064 | Minimalist customer journeys | Connect Yard Owner preparation, Visits, and delivered Proof and Property Manager exceptions, Properties, Proof, and versioned Approvals through exact destination content and one explicit next step; require a choice before illustrative confirmation and retain the non-persistence boundary. | Accepted for working design | 2026-09-08 | Product/design |
 | D-065 | Minimalist field journeys | Let Crew Lead coordinate Route, ordered Jobs, and office-reviewed route recovery while limiting Crew Member to assigned Work, read-only Route context, and personal device-held recovery; never imply that a prototype action mutated a published plan or persisted queued evidence. | Accepted for working design | 2026-09-08 | Product/design |
+| D-066 | Minimalist operations journeys | Separate Company Owner business readiness, Company Manager service risk and exact plan/customer impact, and Dispatcher publishability and crew fit; do not synthesize backend Dispatcher authority, grant field execution, or imply that illustrative choices changed a published plan. | Accepted for working design | 2026-09-08 | Product/design |
 
 ## Open review questions
 

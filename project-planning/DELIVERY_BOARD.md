@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | Customer and field minimalist journeys connected | Customer confidence, Crew Lead route coordination, and Crew Member assigned-work recovery now use exact task flows | Deepen Company Owner/Manager/Dispatcher operations journeys; run human review in parallel |
+| Design review | Customer, field, and operations minimalist journeys connected | Customer confidence, field authority, and distinct owner/manager/dispatcher decision horizons now use exact task flows | Deepen Billing/Support/no-role administrative journeys; run human review in parallel |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -368,11 +368,30 @@ Exit evidence:
   content, route-request choices, device-held evidence language, connected
   hashes, phone action clearance, and Crew Lead/Crew Member authority separation.
 
+Following slice: completed by UX9.
+
+### UX9 — Minimalist provider operations depth
+
+State: delivered as design direction; production adoption not started.
+
+Deliver:
+
+- Connect Company Owner business readiness to Team, Operations, and Customers.
+- Connect Company Manager service risk to an exact Schedule version, customer
+  impact, and Recovery.
+- Connect Dispatcher publishability to crew fit and a new-plan response without
+  adding field execution authority or an implemented backend role.
+
+Exit evidence:
+
+- Browser validation covers exact operations destination content, required
+  choices, connected hashes, focus return, responsive clearance, plan-version
+  language, and owner/manager/dispatcher authority separation.
+
 Next prototype slice:
 
-- Deepen Company Owner, Company Manager, and Dispatcher operations journeys
-  while retaining their separate readiness, service-risk, and publishability
-  priorities.
+- Deepen Billing Administrator, Support Administrator, and no-role fallback
+  journeys while retaining product gates and protected-data boundaries.
 
 ## Later, not active
 

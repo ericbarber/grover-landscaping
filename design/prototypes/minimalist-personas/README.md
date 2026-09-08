@@ -26,6 +26,13 @@ plan unchanged until office review. Crew Member moves from personal task
 readiness to a read-only crew Route and personal device-held recovery without
 receiving publish, reassignment, or crew coordination controls.
 
+The operations family now keeps three different decision horizons. Company
+Owner moves from business readiness into Team, Operations, and Customers;
+Company Manager moves from the current service risk into an exact Schedule
+version, customer impact, and Recovery; Dispatcher moves from plan
+publishability into crew fit and a new-plan response. Dispatcher remains a
+design-only role and no illustrative choice changes production data.
+
 The experience follows the
 [minimalist persona plan](../../review/minimalist-persona-prototype-plan.md).
 

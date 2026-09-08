@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-08: Connected the minimalist provider-operations prototype while
+  preserving distinct decision horizons. Company Owner business readiness now
+  continues into Team, Operations, and Customers; Company Manager service risk
+  continues through exact Schedule versions, customer impact, and Recovery;
+  Dispatcher publishability continues through crew fit and a new-plan response
+  without gaining field execution authority or an implemented backend role.
 - 2026-09-08: Connected the minimalist field prototype without collapsing Crew
   Lead and Crew Member authority. Crew Lead route readiness continues through
   ordered Jobs to office-reviewed route recovery; Crew Member assigned work

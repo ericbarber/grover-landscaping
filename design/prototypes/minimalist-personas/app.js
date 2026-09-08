@@ -160,6 +160,64 @@ const personas = {
   },
 };
 
+const operationsViews = {
+  'company-owner': {
+    operations: viewStates('Owner operations', 'Only owner-level impact',
+      { title: 'Tomorrow’s fourth route is not ready', status: 'Blocked', copy: 'The owner sees the business impact and responsible role without inheriting dispatch controls.', facts: ['5 customers affected', 'Crew Lead invitation pending', 'Manager owns the plan'], action: 'Review readiness', nextView: 'team', nextLabel: 'Review team access' },
+      { title: 'Today and tomorrow are staffed', status: 'Operational', copy: 'Detailed route coordination stays with operations while the owner sees business confidence.', facts: ['4 routes operating today', '4 leads ready tomorrow', 'No owner decision required'] },
+      { title: 'No service work is scheduled', status: 'Setup stage', copy: 'Operations detail remains absent until customers, crews, and approved work exist.', facts: ['0 published routes', '0 active crews', 'Company setup incomplete'], nextView: 'home', nextLabel: 'Open company readiness' }),
+    customers: viewStates('Customer readiness', 'Relationships needing ownership',
+      { title: 'One new account needs an owner decision', status: 'Needs review', copy: 'The owner sees only the relationship blocker, not every service record.', facts: ['Ocotillo House', 'Relationship not activated', 'No work scheduled'], action: 'Review account readiness', optionsLabel: 'Next owner', options: ['Keep with Company Owner', 'Assign follow-up to Company Manager', 'Leave unactivated'], confirmLabel: 'Preview handoff', nextView: 'home', nextLabel: 'Return home' },
+      { title: 'All active accounts are service-ready', status: 'Current', copy: 'Routine property and visit detail remains with the operating team.', facts: ['26 active accounts', '0 access blockers', '0 owner decisions'] },
+      { title: 'No customer relationships exist', status: 'No accounts', copy: 'The owner sees a setup path instead of an empty operational dashboard.', facts: ['0 active accounts', 'No private intake exposed', 'Company setup available'], nextView: 'home', nextLabel: 'Open company readiness' }),
+    team: viewStates('Team access', 'Access with business impact',
+      { title: 'Crew Lead invitation is still pending', status: 'Route impact', copy: 'The exact recipient, role, and affected route stay together before an access action.', facts: ['Jordan C. · Crew Lead', 'Sent September 2', 'Tomorrow’s West route blocked'], action: 'Resolve invitation', optionsLabel: 'Invitation action', options: ['Reissue to the same recipient', 'Revoke and create a corrected invitation', 'Leave pending and assign another lead'], confirmLabel: 'Preview access action', nextView: 'operations', nextLabel: 'Review route readiness' },
+      { title: 'Four crews have active leads', status: 'Ready', copy: 'Only staffing and access exceptions remain on the owner surface.', facts: ['4 active leads', '18 active members', '0 critical invites'] },
+      { title: 'Invite the first teammate', status: 'Action needed', copy: 'No operating roles or crews exist yet.', facts: ['Owner access active', 'No other members', 'No crews created'] }),
+  },
+  'company-manager': {
+    schedule: viewStates('Schedule', 'Plan changes, not metrics',
+      { title: 'West route cannot publish as arranged', status: 'Needs correction', copy: 'One proposed move resolves the arrival risk without hiding plan version or customer impact.', facts: ['Cactus Way · 30 minutes', 'North route has capacity', '2 windows change'], action: 'Review balancing move', optionsLabel: 'Plan correction', options: ['Move Cactus Way to North route', 'Keep routes and revise customer windows', 'Return the plan to draft'], confirmLabel: 'Preview version 8', nextView: 'customers', nextLabel: 'Review customer impact' },
+      { title: 'Version 7 is published and on track', status: 'Published', copy: 'The current version and remaining risk stay visible without reopening planning controls.', facts: ['18 stops assigned', '4 crews within capacity', '0 unpublished changes'] },
+      { title: 'Build today’s first plan', status: 'Draft needed', copy: 'Approved visits and crew capacity appear before any publish action.', facts: ['18 approved visits', '4 crews available', 'No plan version'] }),
+    customers: viewStates('Customer impact', 'Affected visits only',
+      { title: 'Two arrival windows would change', status: 'Review before publish', copy: 'Customer-safe consequences appear beside the proposed schedule correction.', facts: ['Cactus Way · 25 minutes earlier', 'Palm Avenue · 15 minutes later', 'No update sent'], action: 'Review update impact', nextView: 'schedule', nextLabel: 'Return to schedule' },
+      { title: 'No customer update is waiting', status: 'Clear', copy: 'Routine account administration stays out of the daily-operations path.', facts: ['0 changed windows', '0 unanswered questions', '26 accounts ready'] },
+      { title: 'No active customers are available', status: 'No accounts', copy: 'The manager cannot create owner-level relationships from this surface.', facts: ['0 authorized accounts', 'No setup control', 'Owner owns activation'], nextView: 'today', nextLabel: 'Open today' }),
+    recovery: viewStates('Operational recovery', 'Exceptions by impact',
+      { title: 'One proof upload needs recovery', status: 'Customer-visible risk', copy: 'The original field evidence stays linked while the manager chooses an accountable recovery path.', facts: ['Palm Avenue · September 8', 'Photo remains on device', 'Proof not delivered'], action: 'Review recovery', optionsLabel: 'Recovery owner', options: ['Keep recovery assigned to me', 'Hand back to Crew Lead with context', 'Escalate storage failure to Support'], confirmLabel: 'Preview recovery action', nextView: 'today', nextLabel: 'Return to today' },
+      { title: 'No urgent exception is open', status: 'Clear', copy: 'Resolved outcomes remain available without competing with current operations.', facts: ['0 urgent exceptions', '1 resolved today', 'All proof current'] },
+      { title: 'No recovery history exists', status: 'Clear', copy: 'An empty queue is valid, not a failed load.', facts: ['0 open exceptions', '0 resolved exceptions', 'Reads current'], nextView: 'today', nextLabel: 'Open today' }),
+  },
+  dispatcher: {
+    crews: viewStates('Crew workload', 'Capacity that affects the plan',
+      { title: 'West crew can accept Cactus Way', status: '45 minutes open', copy: 'Availability, travel, and lead coverage support one bounded assignment decision.', facts: ['West crew · 4 stops', '12-minute travel addition', 'Crew Lead active'], action: 'Review crew fit', nextView: 'plan', nextLabel: 'Return to day plan' },
+      { title: 'All four crews are within capacity', status: 'Balanced', copy: 'Only publish-relevant staffing and workload facts appear.', facts: ['4 active leads', '18 assigned stops', '0 capacity blockers'] },
+      { title: 'No crew is available for this date', status: 'Blocked', copy: 'The dispatcher can identify the dependency but cannot change team membership.', facts: ['0 available crews', '14 approved visits', 'Manager owns staffing'], optionsLabel: 'Operations handoff', options: ['Send to Company Manager', 'Return day plan to draft'], confirmLabel: 'Preview handoff' }),
+    changes: viewStates('Schedule changes', 'Requests awaiting a plan',
+      { title: 'Cactus Way access changed', status: 'New plan needed', copy: 'The request resolves through another exact day-plan version, never a silent field edit.', facts: ['Current plan · Version 7', 'Stop 3 access unavailable', 'Crew on current stop'], action: 'Review plan change', optionsLabel: 'Version 8 response', options: ['Move the stop to Friday', 'Assign a later window today', 'Reject change and keep version 7'], confirmLabel: 'Preview version 8', nextView: 'plan', nextLabel: 'Return to day plan' },
+      { title: 'No field request is waiting', status: 'Clear', copy: 'Published history remains available without field execution controls.', facts: ['0 open requests', 'Version 7 active', 'Last correction retained'] },
+      { title: 'No plan exists to change', status: 'No plan', copy: 'The workspace stays empty until a published plan receives a field request.', facts: ['No published version', 'No field requests', 'Visits remain in planning'], nextView: 'plan', nextLabel: 'Open day plan' }),
+  },
+};
+
+function viewStates(label, queueTitle, attention, ready, empty) {
+  const normalize = (item) => ({
+    label,
+    title: item.title,
+    status: item.status,
+    copy: item.copy,
+    facts: item.facts,
+    action: item.action ?? `Review ${label.toLowerCase()}`,
+    steps: item.steps ?? [`Confirm the exact ${label.toLowerCase()} context.`, 'Review the current owner and consequence.', 'Return to the primary operations priority.'],
+    queueTitle,
+    queue: item.queue ?? item.facts.slice(0, 2).map((fact, index) => [index === 0 ? label : 'Context', fact]),
+    ...(item.options ? { optionsLabel: item.optionsLabel, options: item.options, confirmLabel: item.confirmLabel } : {}),
+    ...(item.nextView ? { nextView: item.nextView, nextLabel: item.nextLabel } : {}),
+  });
+  return { attention: normalize(attention), ready: normalize(ready), empty: normalize(empty) };
+}
+
 const personaViews = {
   owner: {
     visits: {
@@ -216,11 +274,16 @@ const personaViews = {
   },
 };
 
+Object.assign(personaViews, operationsViews);
+
 const personaConnections = {
   owner: { today: { attention: { nextView: 'visits', nextLabel: 'Continue to visits', optionType: 'checkbox', optionsLabel: 'Preparation check', options: ['Side gate will be unlocked', 'Pets will be inside'], confirmLabel: 'Confirm preparation' } } },
   'property-manager': { overview: { attention: { nextView: 'properties', nextLabel: 'Open Mesa Court', optionsLabel: 'Access response', options: ['Use the on-site office call box', 'Hold until access is confirmed', 'Ask a visit-specific question'], confirmLabel: 'Preview response' } } },
   crew: { route: { attention: { nextView: 'jobs', nextLabel: 'Continue to jobs', optionType: 'checkbox', optionsLabel: 'Field readiness check', options: ['Property and scope confirmed', 'Access and safety notes reviewed'], confirmLabel: 'Confirm crew ready' } } },
   'crew-member': { work: { attention: { nextView: 'saved', nextLabel: 'Continue to saved work', optionType: 'checkbox', optionsLabel: 'Task readiness check', options: ['Assignment confirmed', 'Task instruction reviewed'], confirmLabel: 'Start task in prototype' } } },
+  'company-owner': { home: { attention: { nextView: 'team', nextLabel: 'Continue to team access', optionsLabel: 'Owner response', options: ['Review the pending Crew Lead invitation', 'Assign another active lead to tomorrow’s route'], confirmLabel: 'Preview owner action' } } },
+  'company-manager': { today: { attention: { nextView: 'schedule', nextLabel: 'Continue to schedule', optionsLabel: 'Coordination path', options: ['Balance the route before publishing', 'Keep the route and revise customer windows', 'Return the plan to draft'], confirmLabel: 'Review plan correction' } } },
+  dispatcher: { plan: { attention: { nextView: 'crews', nextLabel: 'Review crew fit', optionsLabel: 'Proposed assignment', options: ['Assign Cactus Way to West crew', 'Leave unassigned and return to draft'], confirmLabel: 'Preview assignment' } } },
 };
 
 const icons = { today: '⌂', visits: '▤', proof: '✓', overview: '⌂', properties: '▦', approvals: '✓', route: '⌁', jobs: '▤', recovery: '↻', work: '✓', saved: '↻', home: '⌂', operations: '▦', customers: '◇', team: '◎', schedule: '▦', plan: '▦', crews: '◎', changes: '↻', readiness: '✓', accounts: '◇', handoffs: '↗', incidents: '!', activity: '▤', access: '◇' };

@@ -69,7 +69,11 @@ The subsequent field depth slice connects Crew Lead Route readiness, ordered
 Jobs, and office-reviewed Recovery while connecting Crew Member assigned Work,
 read-only Route context, and personal device-held recovery. Readiness checks,
 no-silent-plan-change language, queued-evidence preservation, and authority
-separation are validated; operations is the next prototype depth slice.
+separation are validated.
+The operations depth slice now connects Company Owner business readiness,
+Company Manager service risk and exact plan versions, and Dispatcher
+publishability and crew fit without collapsing their authority or implying a
+production Dispatcher role. Administration is the next prototype depth slice.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

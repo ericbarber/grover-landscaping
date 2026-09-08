@@ -88,6 +88,9 @@ boundary; inclusion here alone does not mean a feature shipped.
 - Connected minimalist field journeys linking Crew Lead Route, ordered Jobs,
   and office-reviewed Recovery while limiting Crew Member to assigned Work,
   read-only Route context, and personal device-held recovery
+- Connected minimalist operations journeys separating Company Owner business
+  readiness, Company Manager service risk and exact plan versions, and
+  Dispatcher publishability and crew fit without adding field authority
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

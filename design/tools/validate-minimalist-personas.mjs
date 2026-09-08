@@ -153,6 +153,40 @@ try {
     check((await page.locator('#focus-title').textContent()) === 'You are at stop 1 of 4', `${viewport.name}: Crew Member Route reused generic content`);
     check(await page.getByText('Route publishing', { exact: false }).count() === 1, `${viewport.name}: Crew Member authority boundary is missing`);
 
+    await page.selectOption('#persona-picker', 'company-owner');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Review invitation' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: Company Owner response choices are missing`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#company-owner/attention/team', `${viewport.name}: Company Owner journey did not continue to Team`);
+    check((await page.locator('#focus-title').textContent()) === 'Crew Lead invitation is still pending', `${viewport.name}: Company Owner Team reused generic content`);
+
+    await page.selectOption('#persona-picker', 'company-manager');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Balance route' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 3, `${viewport.name}: Company Manager coordination choices are missing`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#company-manager/attention/schedule', `${viewport.name}: Company Manager journey did not continue to Schedule`);
+    check((await page.locator('#focus-title').textContent()) === 'West route cannot publish as arranged', `${viewport.name}: Company Manager Schedule reused generic content`);
+    await page.locator(`${fieldNav} [data-view="recovery"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'One proof upload needs recovery', `${viewport.name}: Company Manager Recovery reused generic content`);
+
+    await page.selectOption('#persona-picker', 'dispatcher');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Assign stop' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: Dispatcher assignment choices are missing`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#dispatcher/attention/crews', `${viewport.name}: Dispatcher journey did not continue to Crews`);
+    check((await page.locator('#focus-title').textContent()) === 'West crew can accept Cactus Way', `${viewport.name}: Dispatcher Crews reused generic content`);
+    await page.locator(`${fieldNav} [data-view="changes"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'Cactus Way access changed', `${viewport.name}: Dispatcher Changes reused generic content`);
+
     if (viewport.name === 'desktop') {
       check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
       check(!(await page.locator('.mobile-nav').isVisible()), 'desktop: mobile navigation visible');
@@ -184,6 +218,9 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew/attention/recovery`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review route options' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-field-journey-desktop-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#company-manager/attention/schedule`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review balancing move' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-operations-journey-desktop-v2.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/work`, { waitUntil: 'load' });
@@ -196,6 +233,9 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/saved`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Choose recovery' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-field-journey-mobile-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#dispatcher/attention/changes`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review plan change' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-operations-journey-mobile-v2.png'), fullPage: true });
     }
     await page.close();
   }

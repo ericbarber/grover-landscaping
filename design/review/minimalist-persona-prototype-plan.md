@@ -96,6 +96,12 @@ Deliver distinct Company Owner, Company Manager, and Dispatcher views. Owner
 starts with business readiness, Manager with service risk, and Dispatcher with
 publishability.
 
+Delivered detail: Owner invitation readiness connects to Team while preserving
+business context in Operations and Customers. Manager service risk connects to
+an exact schedule correction, customer impact, and recovery. Dispatcher plan
+readiness connects to crew fit and a new version response without receiving
+field execution authority or silently changing the published plan.
+
 Exit: each role receives one role-appropriate queue and action rather than a
 shared generic management dashboard.
 
@@ -125,7 +131,7 @@ references.
 | M0 — Shared minimalist shell | Validated | Human shell and content-density review |
 | M1 — Customer confidence | Connected destination prototype validated | Yard Owner and Property Manager task-comprehension review |
 | M2 — Field focus | Connected destination prototype validated | Crew Lead/Crew Member outdoor and physical-device review |
-| M3 — Provider operations | Validated | Owner/Manager/Dispatcher workflow review; Dispatcher role remains product-gated |
+| M3 — Provider operations | Connected destination prototype validated | Owner/Manager/Dispatcher workflow review; Dispatcher role remains product-gated |
 | M4 — Administrative focus | Validated | Billing/Support workflow review; Billing role remains product-gated |
 | M5 — States and convergence | Automated browser evidence complete | Moderated users, physical devices, and assistive-technology sessions |
 
