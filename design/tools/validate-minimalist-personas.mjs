@@ -78,11 +78,39 @@ try {
     await page.getByRole('button', { name: 'Why this comes first' }).click();
     check(await page.locator('#why-panel').isVisible(), `${viewport.name}: rationale disclosure did not open`);
     await page.getByRole('button', { name: 'Review preparation' }).click();
+    check(await page.locator('#detail-option-list input').count() === 2, `${viewport.name}: owner preparation choices are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: incomplete preparation can be confirmed`);
+    await page.locator('#detail-option-list input').first().check();
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: partial preparation can be confirmed`);
+    await page.locator('#detail-option-list input').last().check();
     await page.locator('#complete-action').click();
     check(await page.locator('#completion').isVisible(), `${viewport.name}: prototype confirmation did not appear`);
     check((await page.locator('#completion-copy').textContent()).includes('No production data was changed'), `${viewport.name}: prototype boundary is missing from confirmation`);
     await page.locator('#reset-action').click();
-    check(!(await page.locator('#completion').isVisible()), `${viewport.name}: prototype confirmation did not reset`);
+    check(new URL(page.url()).hash === '#owner/attention/visits', `${viewport.name}: owner journey did not continue to Visits`);
+    check((await page.locator('#focus-title').textContent()) === 'Two visits tell the whole story', `${viewport.name}: owner Visits reused generic content`);
+    const customerNav = viewport.name === 'desktop' ? '#desktop-nav' : '#mobile-nav';
+    await page.locator(`${customerNav} [data-view="proof"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'August 25 care is ready to review', `${viewport.name}: owner Proof reused generic content`);
+    await page.getByRole('button', { name: 'Review delivered proof' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: owner proof response choices are missing`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    check(await page.locator('#completion').isVisible(), `${viewport.name}: owner proof response was not confirmed`);
+    await page.locator('#reset-action').click();
+
+    await page.selectOption('#persona-picker', 'property-manager');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Resolve access' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 3, `${viewport.name}: property access choices are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: property access response can be confirmed without a choice`);
+    await page.locator('#detail-option-list input').first().check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#property-manager/attention/properties', `${viewport.name}: property journey did not continue to Properties`);
+    check((await page.locator('#focus-title').textContent()) === 'Mesa Court is blocked by access', `${viewport.name}: Properties reused generic content`);
+    await page.locator(`${customerNav} [data-view="approvals"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'Mesa Court recommendation needs a response', `${viewport.name}: Approvals reused generic content`);
 
     if (viewport.name === 'desktop') {
       check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
@@ -109,12 +137,18 @@ try {
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-customer-desktop-v1.png'), fullPage: true });
       await page.goto(`${pathToFileURL(prototypePath).href}#company-manager/attention/today`, { waitUntil: 'load' });
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-operations-desktop-v1.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#owner/attention/proof`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review delivered proof' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-customer-journey-desktop-v2.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/work`, { waitUntil: 'load' });
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-field-mobile-v1.png'), fullPage: true });
       await page.goto(`${pathToFileURL(prototypePath).href}#support/attention/incidents`, { waitUntil: 'load' });
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-personas-admin-mobile-v1.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#property-manager/attention/approvals`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review recommendation' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-customer-journey-mobile-v2.png'), fullPage: true });
     }
     await page.close();
   }

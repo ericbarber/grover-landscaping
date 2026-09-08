@@ -27,7 +27,7 @@ hosted cohort evidence, and Dispatcher/Billing backend roles remain gated.
 
 | Artifact | Review images | Purpose |
 | --- | --- | --- |
-| [`../prototypes/minimalist-personas/index.html`](../prototypes/minimalist-personas/index.html) | [Customer desktop](current/minimalist-personas-customer-desktop-v1.png) · [Field mobile](current/minimalist-personas-field-mobile-v1.png) · [Operations desktop](current/minimalist-personas-operations-desktop-v1.png) · [Administration mobile](current/minimalist-personas-admin-mobile-v1.png) | Ten task-first experiences with no more than four destinations, one primary action, a short queue, progressive detail, explicit omissions, and three review scenarios |
+| [`../prototypes/minimalist-personas/index.html`](../prototypes/minimalist-personas/index.html) | [Customer journey desktop](current/minimalist-customer-journey-desktop-v2.png) · [Customer journey mobile](current/minimalist-customer-journey-mobile-v2.png) · [Field mobile](current/minimalist-personas-field-mobile-v1.png) · [Operations desktop](current/minimalist-personas-operations-desktop-v1.png) · [Administration mobile](current/minimalist-personas-admin-mobile-v1.png) | Ten task-first experiences with no more than four destinations, one primary action, a short queue, progressive detail, explicit omissions, and three review scenarios; customer destinations additionally form connected working journeys |
 
 This artifact is design direction. It simplifies experience hierarchy without
 claiming a new backend role, persistence contract, hosted cohort, or production

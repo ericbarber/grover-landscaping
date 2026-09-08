@@ -81,6 +81,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   personas, separating experience simplicity from functional-unit enablement:
   one first answer, one primary action, up to four destinations, a short queue,
   progressive task detail, explicit exclusions, and three responsive scenarios
+- Connected minimalist customer journeys linking Yard Owner preparation,
+  Visits, and delivered Proof plus Property Manager portfolio exceptions,
+  Properties, delivered Proof, and exact-version Approvals with required
+  illustrative choices and explicit non-persistence
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

@@ -1,5 +1,12 @@
 # Version History
 
+- 2026-09-08: Deepened the minimalist customer prototype into connected
+  destination journeys. Yard Owner preparation now continues through Visits to
+  delivered Proof; Property Manager portfolio attention continues through the
+  exact property and delivered evidence to version-bound Approvals. Required
+  prototype choices, disabled incomplete confirmation, focus return, stable
+  URLs, and the next useful destination are browser-validated without implying
+  a production write or wider customer authority.
 - 2026-09-07: Created a separate minimalist persona working design for all ten
   signed-in roles. Each customer, field, operations, administrative, and
   no-role experience now has a distinct first answer, one primary action, no

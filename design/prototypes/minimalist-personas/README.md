@@ -13,6 +13,13 @@ open persona-specific destinations, inspect the primary task, reveal its
 rationale, and complete the illustrative primary action. Nothing calls an API
 or persists.
 
+The customer family now includes connected destination-level journeys. Yard
+Owner moves from next-visit preparation through Visits to delivered Proof;
+Property Manager moves from the portfolio exception through the exact property,
+delivered evidence, and a version-bound decision. Contextual choices must be
+made before illustrative confirmation, and every completion can continue to
+the next useful destination without implying a production write.
+
 The experience follows the
 [minimalist persona plan](../../review/minimalist-persona-prototype-plan.md).
 

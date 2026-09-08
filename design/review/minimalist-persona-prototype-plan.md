@@ -62,6 +62,16 @@ confidence and explicit decisions over operational metrics.
 Exit: each customer can answer what happens next, what needs action, and where
 delivered proof lives without seeing provider-private information.
 
+Delivered detail:
+
+- Yard Owner: Today preparation → Visits chronology → immutable delivered Proof.
+- Property Manager: portfolio exception → exact Property → delivered Proof →
+  version-bound Approval.
+- Preparation checkboxes and access/proof/approval choices block illustrative
+  confirmation until the required selection is present.
+- Completion offers the next useful destination and repeats that no production
+  data changed.
+
 ### M2 — Field focus
 
 Deliver distinct Crew Lead and Crew Member views optimized for outdoor phone
@@ -103,7 +113,7 @@ references.
 | Phase | Repository status | Remaining review |
 | --- | --- | --- |
 | M0 — Shared minimalist shell | Validated | Human shell and content-density review |
-| M1 — Customer confidence | Validated | Yard Owner and Property Manager task-comprehension review |
+| M1 — Customer confidence | Connected destination prototype validated | Yard Owner and Property Manager task-comprehension review |
 | M2 — Field focus | Validated | Crew Lead/Crew Member outdoor and physical-device review |
 | M3 — Provider operations | Validated | Owner/Manager/Dispatcher workflow review; Dispatcher role remains product-gated |
 | M4 — Administrative focus | Validated | Billing/Support workflow review; Billing role remains product-gated |

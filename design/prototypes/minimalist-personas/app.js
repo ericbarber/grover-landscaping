@@ -160,6 +160,43 @@ const personas = {
   },
 };
 
+const customerViews = {
+  owner: {
+    visits: {
+      attention: { label: 'Next and recent', title: 'Two visits tell the whole story', status: 'One upcoming', copy: 'The next confirmed visit stays first; completed care stays available without a calendar dashboard.', facts: ['Sep 8 · Confirmed', 'Aug 25 · Complete', 'Aug 11 · Complete'], action: 'Open September 8 visit', steps: ['Review the confirmed arrival window.', 'Confirm planned care and preparation.', 'Continue to delivered proof when ready.'], queueTitle: 'Visits in useful order', queue: [['September 8', 'Confirmed · 8:00–10:00 AM'], ['August 25', 'Complete · Proof delivered']], nextView: 'proof', nextLabel: 'Continue to proof' },
+      ready: { label: 'Today’s visit', title: 'Care is underway at Sonoran House', status: 'In progress', copy: 'The current visit is separated from history so the live update stays easy to find.', facts: ['Arrived at 8:26 AM', 'Routine care in progress', 'Completion update comes next'], action: 'Follow today’s visit', steps: ['Review the latest provider update.', 'Confirm what work is underway.', 'Return for delivered proof after completion.'], queueTitle: 'Current, then history', queue: [['Today', 'Care in progress'], ['August 25', 'Complete · Proof delivered']], nextView: 'today', nextLabel: 'Return to today' },
+      empty: { label: 'Visit history', title: 'No upcoming visit is scheduled', status: 'History only', copy: 'Completed visits remain available without suggesting that future service exists.', facts: ['Aug 25 · Complete', 'Aug 11 · Complete', 'No upcoming date'], action: 'Open August 25 visit', steps: ['Open the completed visit.', 'Review its service summary.', 'Continue to delivered proof.'], queueTitle: 'Completed visits', queue: [['August 25', 'Routine care · Complete'], ['August 11', 'Routine care · Complete']], nextView: 'proof', nextLabel: 'Review its proof' },
+    },
+    proof: {
+      attention: { label: 'Latest delivered proof', title: 'August 25 care is ready to review', status: 'Delivered', copy: 'Only the provider-reviewed completion snapshot appears here.', facts: ['6 checklist items complete', '3 reviewed photos', 'No owner decision required'], action: 'Review delivered proof', steps: ['Confirm the completed service and date.', 'Review the customer-safe checklist.', 'Inspect the reviewed before-and-after evidence.'], queueTitle: 'Delivered, not draft', queue: [['August 25', '3 photos · 6 tasks'], ['August 11', '2 photos · 6 tasks']], optionsLabel: 'Was this proof understandable?', options: ['Yes, the completed care is clear', 'I need to ask about this visit'], confirmLabel: 'Record prototype response' },
+      ready: { label: 'Proof reviewed', title: 'Latest care is clear', status: 'Reviewed', copy: 'The delivered snapshot remains available as immutable service history.', facts: ['Reviewed today', 'August 25 service', 'No open decision'], action: 'Review again', steps: ['Open the delivered snapshot.', 'Compare the checklist and photos.', 'Return to proof history.'], queueTitle: 'Recent proof', queue: [['August 25', 'Reviewed'], ['August 11', 'Delivered']] },
+      empty: { label: 'Delivered proof', title: 'No proof has been delivered yet', status: 'Not available', copy: 'Draft work and unpublished photos stay hidden until a completed visit is reviewed and delivered.', facts: ['No published snapshot', 'No draft evidence exposed', 'Visit history remains available'], action: 'Return to visits', steps: ['Open visit history.', 'Review the current visit state.', 'Return when proof is delivered.'], queueTitle: 'What is available', queue: [['Visits', 'Service history only']], nextView: 'visits', nextLabel: 'Open visits' },
+    },
+  },
+  'property-manager': {
+    properties: {
+      attention: { label: 'Property readiness', title: 'Mesa Court is blocked by access', status: 'Needs decision', copy: 'The property view keeps the exact visit, access gap, and customer-safe response together.', facts: ['Tomorrow · 9:00–11:00 AM', 'Gate instruction missing', '11 other properties ready'], action: 'Update access instruction', steps: ['Confirm the Mesa Court property.', 'Review the instruction currently on file.', 'Choose the customer-safe access response.'], queueTitle: 'Only exceptions first', queue: [['Mesa Court', 'Access blocks tomorrow'], ['Juniper Row', 'Weather change acknowledged']], optionsLabel: 'Access response', options: ['Use the on-site office call box', 'Hold the visit until access is confirmed', 'Ask the provider a visit-specific question'], confirmLabel: 'Preview response', nextView: 'overview', nextLabel: 'Return to overview' },
+      ready: { label: 'Property readiness', title: 'All 12 properties are ready', status: 'Current', copy: 'Search and property detail remain available without crowding the overview with twelve equal cards.', facts: ['12 ready properties', '4 confirmed visits', '0 access blockers'], action: 'Review property list', steps: ['Scan authorized properties.', 'Open one exact property.', 'Return to portfolio readiness.'], queueTitle: 'Upcoming service', queue: [['Mesa Court', 'Tomorrow · Confirmed'], ['Juniper Row', 'Friday · Confirmed']] },
+      empty: { label: 'Authorized properties', title: 'No properties are assigned', status: 'No access', copy: 'Property data stays withheld until an active portfolio or property grant exists.', facts: ['No records loaded', 'No search results invented', 'Access guidance remains available'], action: 'Review access guidance', steps: ['Confirm the signed-in account.', 'Check for a portfolio invitation.', 'Contact the named administrator.'], queueTitle: 'Safe recovery', queue: [['Account access', 'No active grants']] },
+    },
+    proof: {
+      attention: { label: 'Newest delivered work', title: 'Three property reports are ready', status: 'Delivered', copy: 'Proof is grouped by property and date, with unpublished provider evidence excluded.', facts: ['Mesa Court · Sep 3', 'Juniper Row · Sep 2', 'Ocotillo Place · Aug 30'], action: 'Review Mesa Court proof', steps: ['Confirm the exact property and visit.', 'Review the delivered checklist.', 'Inspect only customer-safe evidence.'], queueTitle: 'Delivered reports', queue: [['Mesa Court', 'Sep 3 · 4 photos'], ['Juniper Row', 'Sep 2 · 3 photos'], ['Ocotillo Place', 'Aug 30 · 2 photos']], nextView: 'approvals', nextLabel: 'Continue to decisions' },
+      ready: { label: 'Proof status', title: 'All new reports have been reviewed', status: 'Current', copy: 'Delivered evidence remains searchable by property without creating an attention state.', facts: ['3 reviewed this week', '12 properties covered', '0 missing reports'], action: 'Browse proof history', steps: ['Choose an authorized property.', 'Open a delivered report.', 'Return to the current portfolio.'], queueTitle: 'Recently reviewed', queue: [['Mesa Court', 'Reviewed today'], ['Juniper Row', 'Reviewed yesterday']] },
+      empty: { label: 'Delivered proof', title: 'No reports are available', status: 'No proof', copy: 'The portfolio can remain valid even when no completed service has produced delivered proof.', facts: ['No delivered reports', 'No draft evidence shown', 'Properties remain available'], action: 'Return to properties', steps: ['Open authorized properties.', 'Review upcoming service.', 'Return after a report is delivered.'], queueTitle: 'Available now', queue: [['Properties', '12 authorized records']], nextView: 'properties', nextLabel: 'Open properties' },
+    },
+    approvals: {
+      attention: { label: 'Decision queue', title: 'Mesa Court recommendation needs a response', status: 'Due Friday', copy: 'The exact recommendation version and property context stay together before any decision is recorded.', facts: ['Irrigation repair · Version 2', '$285 approved scope', 'No work scheduled by a decision'], action: 'Review recommendation', steps: ['Confirm property, scope, price, and version.', 'Choose approve, ask a question, or decide later.', 'Review the non-scheduling consequence.'], queueTitle: 'Decisions, not notifications', queue: [['Mesa Court', 'Recommendation · Due Friday'], ['Juniper Row', 'Question answered']], optionsLabel: 'Response to version 2', options: ['Approve this exact recommendation', 'Ask a question before deciding', 'Decide later'], confirmLabel: 'Preview decision', nextView: 'overview', nextLabel: 'Return to overview' },
+      ready: { label: 'Decision history', title: 'No portfolio decisions are waiting', status: 'Clear', copy: 'Past receipts remain available without turning completed decisions into active work.', facts: ['2 decisions this month', 'Both receipts retained', 'No overdue questions'], action: 'Review decision history', steps: ['Choose a property decision.', 'Review the exact version and response.', 'Return to the clear queue.'], queueTitle: 'Recent outcomes', queue: [['Mesa Court', 'Approved · Version 1'], ['Ocotillo Place', 'Declined · Version 3']] },
+      empty: { label: 'Decision queue', title: 'No questions or approvals exist', status: 'No decisions', copy: 'An empty decision queue does not imply missing property or service access.', facts: ['No recommendations waiting', 'No unanswered questions', 'Portfolio remains current'], action: 'Return to overview', steps: ['Open portfolio readiness.', 'Review any service exceptions.', 'Return when a decision is published.'], queueTitle: 'Portfolio state', queue: [['Overview', '12 properties current']], nextView: 'overview', nextLabel: 'Open overview' },
+    },
+  },
+};
+
+const customerConnections = {
+  owner: { today: { attention: { nextView: 'visits', nextLabel: 'Continue to visits', optionsLabel: 'Preparation check', options: ['Side gate will be unlocked', 'Pets will be inside'], confirmLabel: 'Confirm preparation' } } },
+  'property-manager': { overview: { attention: { nextView: 'properties', nextLabel: 'Open Mesa Court', optionsLabel: 'Access response', options: ['Use the on-site office call box', 'Hold until access is confirmed', 'Ask a visit-specific question'], confirmLabel: 'Preview response' } } },
+};
+
 const icons = { today: '⌂', visits: '▤', proof: '✓', overview: '⌂', properties: '▦', approvals: '✓', route: '⌁', jobs: '▤', recovery: '↻', work: '✓', saved: '↻', home: '⌂', operations: '▦', customers: '◇', team: '◎', schedule: '▦', plan: '▦', crews: '◎', changes: '↻', readiness: '✓', accounts: '◇', handoffs: '↗', incidents: '!', activity: '▤', access: '◇' };
 const personaPicker = document.querySelector('#persona-picker');
 const scenarioPicker = document.querySelector('#scenario-picker');
@@ -168,6 +205,7 @@ const detail = document.querySelector('#task-detail');
 const completion = document.querySelector('#completion');
 let state = { persona: 'owner', scenario: 'attention', view: 'today' };
 let lastTrigger = null;
+let completionTarget = null;
 
 personaPicker.innerHTML = Object.entries(personas).map(([key, persona]) => `<option value="${key}">${persona.name}</option>`).join('');
 
@@ -185,7 +223,8 @@ function render(announce = true) {
   state.view = availableView.id;
   const scenario = scenarioFor(persona);
   const isPrimaryView = state.view === persona.nav[0].id;
-  const focus = isPrimaryView ? scenario : {
+  const designedView = customerViews[state.persona]?.[state.view]?.[state.scenario];
+  const baseFocus = isPrimaryView ? scenario : designedView ?? {
     label: availableView.label,
     title: availableView.title,
     status: state.scenario === 'empty' ? 'No current work' : 'Focused view',
@@ -195,6 +234,7 @@ function render(announce = true) {
     steps: [`Review the ${availableView.label.toLowerCase()} context.`, 'Open one exact record.', 'Return to the priority view when finished.'],
     queue: scenario.queue,
   };
+  const focus = { ...baseFocus, ...(customerConnections[state.persona]?.[state.view]?.[state.scenario] ?? {}) };
 
   document.body.dataset.persona = state.persona;
   document.body.dataset.family = persona.family;
@@ -217,6 +257,7 @@ function render(announce = true) {
   document.querySelector('#primary-action').textContent = focus.action;
   document.querySelector('#why-copy').textContent = persona.why;
   document.querySelector('#boundary-copy').textContent = persona.boundary;
+  document.querySelector('#support-title').textContent = focus.queueTitle ?? 'A short, useful queue';
   document.querySelector('#task-list').innerHTML = focus.queue.map(([title, value], index) => `<button type="button" data-queue-index="${index}"><span>${title}</span><strong>${value}</strong><i aria-hidden="true">→</i></button>`).join('');
   document.querySelector('#desktop-nav').innerHTML = navMarkup(persona, state.view);
   document.querySelector('#mobile-nav').innerHTML = navMarkup(persona, state.view);
@@ -238,21 +279,42 @@ function bindDynamicControls(focus, persona) {
   }));
   document.querySelectorAll('[data-queue-index]').forEach((button) => button.addEventListener('click', () => {
     const [title, value] = focus.queue[Number(button.dataset.queueIndex)];
-    openDetail(button, `Review ${title.toLowerCase()}`, value, [`Confirm this ${title.toLowerCase()} belongs to ${persona.context}.`, 'Review the current status and owner.', 'Return to the priority task.']);
+    openDetail(button, { title: `Review ${title.toLowerCase()}`, copy: value, steps: [`Confirm this ${title.toLowerCase()} belongs to ${persona.context}.`, 'Review the current status and owner.', 'Return to the priority task.'] });
   }));
-  document.querySelector('#primary-action').onclick = (event) => openDetail(event.currentTarget, focus.action, focus.copy, focus.steps);
+  document.querySelector('#primary-action').onclick = (event) => openDetail(event.currentTarget, { ...focus, title: focus.action });
 }
 
-function openDetail(trigger, title, copy, steps) {
+function openDetail(trigger, task) {
   lastTrigger = trigger;
-  document.querySelector('#detail-title').textContent = title;
-  document.querySelector('#detail-copy').textContent = copy;
-  document.querySelector('#detail-steps').innerHTML = steps.map((step) => `<li>${step}</li>`).join('');
+  completionTarget = task.nextView ? { view: task.nextView, label: task.nextLabel } : null;
+  document.querySelector('#detail-title').textContent = task.title;
+  document.querySelector('#detail-copy').textContent = task.copy;
+  document.querySelector('#detail-steps').innerHTML = task.steps.map((step) => `<li>${step}</li>`).join('');
+  const options = document.querySelector('#detail-options');
+  const optionList = document.querySelector('#detail-option-list');
+  const completeButton = document.querySelector('#complete-action');
+  if (task.options?.length) {
+    document.querySelector('#detail-options-label').textContent = task.optionsLabel ?? 'Choose a response';
+    const type = task.optionsLabel === 'Preparation check' ? 'checkbox' : 'radio';
+    optionList.innerHTML = task.options.map((option, index) => `<label><input type="${type}" name="detail-response" value="${index}"><span>${option}</span></label>`).join('');
+    options.hidden = false;
+    completeButton.disabled = true;
+    completeButton.textContent = task.confirmLabel ?? 'Preview response';
+    optionList.querySelectorAll('input').forEach((input) => input.addEventListener('change', () => {
+      const selected = optionList.querySelectorAll('input:checked').length;
+      completeButton.disabled = type === 'checkbox' ? selected < task.options.length : selected === 0;
+    }));
+  } else {
+    options.hidden = true;
+    optionList.innerHTML = '';
+    completeButton.disabled = false;
+    completeButton.textContent = task.confirmLabel ?? 'Done';
+  }
   detail.hidden = false;
   completion.hidden = true;
   detail.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   document.querySelector('#close-detail').focus({ preventScroll: true });
-  document.querySelector('#announcer').textContent = `${title} detail opened`;
+  document.querySelector('#announcer').textContent = `${task.title} detail opened`;
 }
 
 function closeDetail() {
@@ -273,13 +335,21 @@ document.querySelector('#complete-action').addEventListener('click', () => {
   detail.hidden = true;
   document.querySelector('#completion-title').textContent = `${action} recorded in this prototype`;
   document.querySelector('#completion-copy').textContent = 'This confirms the interaction design only. No production data was changed.';
+  document.querySelector('#reset-action').textContent = completionTarget?.label ?? 'Return to workspace';
   completion.hidden = false;
   document.querySelector('#reset-action').focus({ preventScroll: true });
 });
 document.querySelector('#reset-action').addEventListener('click', () => {
   completion.hidden = true;
+  if (completionTarget) {
+    state.view = completionTarget.view;
+    completionTarget = null;
+    render();
+    main.focus({ preventScroll: true });
+    return;
+  }
   lastTrigger?.focus({ preventScroll: true });
-  document.querySelector('#announcer').textContent = 'Prototype reset';
+  document.querySelector('#announcer').textContent = 'Returned to workspace';
 });
 personaPicker.addEventListener('change', () => {
   state.persona = personaPicker.value;

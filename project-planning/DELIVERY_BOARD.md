@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | Minimalist persona prototype validated | Ten task-first persona experiences separate UX simplicity from capability rollout | Human workflow/content review, then bounded family-by-family React adoption |
+| Design review | Customer minimalist journeys connected | Yard Owner Today/Visits/Proof and Property Manager Overview/Properties/Proof/Approvals use exact task content and progressive decisions | Deepen Crew Lead/Crew Member field journeys; run customer human review in parallel |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -327,6 +327,30 @@ Next design gate:
 
 - Conduct human workflow and content review, beginning with Yard Owner and
   Property Manager, before any family-by-family React adoption.
+
+### UX7 — Minimalist customer journey depth
+
+State: delivered as design direction; production adoption not started.
+
+Deliver:
+
+- Replace generic Yard Owner Visits/Proof and Property Manager Properties/
+  Proof/Approvals content with destination-specific task hierarchy.
+- Connect preparation, visit chronology, delivered evidence, portfolio
+  exceptions, and version-bound decisions through explicit next destinations.
+- Require illustrative preparation or decision choices before confirmation and
+  repeat that no production data changes.
+
+Exit evidence:
+
+- Browser validation covers exact customer destination content, disabled
+  confirmation, keyboard focus, connected hashes, recovery scenarios, mobile
+  clearance, and customer/provider scope boundaries at all reference viewports.
+
+Next prototype slice:
+
+- Deepen Crew Lead and Crew Member Route, Jobs, evidence, and personal recovery
+  without granting Crew Member coordination authority.
 
 ## Later, not active
 

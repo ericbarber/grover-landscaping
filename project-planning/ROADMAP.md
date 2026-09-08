@@ -59,6 +59,12 @@ progressive detail, explicit omissions, and attention/on-track/no-current-work
 scenarios across customer, field, operations, administrative, and access
 contexts. It is validated design direction awaiting human review and bounded
 family-by-family React adoption; it does not widen rollout or authorization.
+The first depth slice now connects the customer family: Yard Owner preparation,
+Visits, and delivered Proof form one short journey, while Property Manager
+portfolio exceptions continue through exact Properties and Proof to version-
+bound Approvals. Required prototype choices, disabled incomplete confirmation,
+and next-destination continuity are validated; the field family is the next
+prototype depth slice.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

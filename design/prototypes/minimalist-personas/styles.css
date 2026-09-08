@@ -60,7 +60,14 @@ body[data-scenario="attention"] .status-pill { background: var(--sand-soft); col
 .task-detail ol { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; margin: 1rem 0; padding: 0; counter-reset: steps; list-style: none; }
 .task-detail li { min-height: 88px; border-radius: .75rem; background: #f7f4ec; padding: .85rem; color: var(--slate); font-size: .76rem; line-height: 1.45; counter-increment: steps; }
 .task-detail li::before { content: counter(steps); width: 24px; height: 24px; display: grid; place-items: center; margin-bottom: .5rem; border-radius: 50%; background: var(--evergreen); color: white; font-size: .68rem; font-weight: 900; }
+.detail-options { margin: 1rem 0; border: 0; padding: 0; }
+.detail-options legend { margin-bottom: .6rem; color: var(--evergreen); font-size: .76rem; font-weight: 900; }
+.detail-options > div { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: .55rem; }
+.detail-options label { min-height: 54px; display: flex; align-items: center; gap: .65rem; border: 1px solid var(--line); border-radius: .75rem; background: white; padding: .7rem; color: var(--slate); font-size: .76rem; font-weight: 750; line-height: 1.35; cursor: pointer; }
+.detail-options label:has(input:checked) { border-color: var(--evergreen); background: #edf4ef; color: var(--evergreen); }
+.detail-options input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--evergreen); }
 .detail-actions { display: flex; gap: .6rem; }
+.detail-actions button:disabled { cursor: not-allowed; opacity: .48; box-shadow: none; }
 .completion { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .8rem; border-color: #abc7b7; background: #edf4ef; }
 .completion[hidden], .task-detail[hidden] { display: none; }
 .completion > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--positive); color: white; font-weight: 900; }
@@ -102,6 +109,7 @@ body[data-family="access"] .focus-card { border-top: 5px solid var(--slate); }
   .focus-actions .button, .detail-actions .button { width: 100%; }
   .boundary-card { grid-column: auto; grid-template-columns: 1fr; gap: .5rem; }
   .task-detail ol { grid-template-columns: 1fr; }
+  .detail-options > div { grid-template-columns: 1fr; }
   .task-detail li { min-height: 70px; }
   .completion { grid-template-columns: auto 1fr; }
   .completion .button { grid-column: 1 / -1; width: 100%; }
