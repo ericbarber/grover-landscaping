@@ -112,6 +112,47 @@ try {
     await page.locator(`${customerNav} [data-view="approvals"]`).click();
     check((await page.locator('#focus-title').textContent()) === 'Mesa Court recommendation needs a response', `${viewport.name}: Approvals reused generic content`);
 
+    await page.selectOption('#persona-picker', 'crew');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Start stop' }).click();
+    check(await page.locator('#detail-option-list input[type="checkbox"]').count() === 2, `${viewport.name}: Crew Lead readiness checks are missing`);
+    check(await page.locator('#complete-action').isDisabled(), `${viewport.name}: Crew Lead can start without readiness`);
+    for (const input of await page.locator('#detail-option-list input').all()) await input.check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#crew/attention/jobs', `${viewport.name}: Crew Lead journey did not continue to Jobs`);
+    check((await page.locator('#focus-title').textContent()) === 'Four stops, one route decision', `${viewport.name}: Crew Lead Jobs reused generic content`);
+    const fieldNav = viewport.name === 'desktop' ? '#desktop-nav' : '#mobile-nav';
+    await page.locator(`${fieldNav} [data-view="recovery"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'Cactus Way access changed', `${viewport.name}: Crew Lead Recovery reused generic content`);
+    await page.getByRole('button', { name: 'Review route options' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 3, `${viewport.name}: Crew Lead route-request choices are missing`);
+    await page.locator('#close-detail').click();
+
+    await page.selectOption('#persona-picker', 'crew-member');
+    await page.selectOption('#scenario-picker', 'attention');
+    await page.getByRole('button', { name: 'Start task' }).click();
+    check(await page.locator('#detail-option-list input[type="checkbox"]').count() === 2, `${viewport.name}: Crew Member readiness checks are missing`);
+    for (const input of await page.locator('#detail-option-list input').all()) await input.check();
+    await page.locator('#complete-action').click();
+    await page.locator('#reset-action').click();
+    check(new URL(page.url()).hash === '#crew-member/attention/saved', `${viewport.name}: Crew Member journey did not continue to Saved`);
+    check((await page.locator('#focus-title').textContent()) === 'One photo is waiting to upload', `${viewport.name}: Crew Member Saved reused generic content`);
+    await page.getByRole('button', { name: 'Choose recovery' }).click();
+    check(await page.locator('#detail-option-list input[type="radio"]').count() === 2, `${viewport.name}: Crew Member recovery choices are missing`);
+    if (viewport.name !== 'desktop') {
+      await page.evaluate(() => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      });
+      const actionClearance = await page.evaluate(() => document.querySelector('.mobile-nav').getBoundingClientRect().top - document.querySelector('#cancel-action').getBoundingClientRect().bottom);
+      check(actionClearance >= 0, `${viewport.name}: recovery actions are obscured by navigation (${actionClearance}px clearance)`);
+    }
+    await page.locator('#close-detail').click();
+    await page.locator(`${fieldNav} [data-view="route"]`).click();
+    check((await page.locator('#focus-title').textContent()) === 'You are at stop 1 of 4', `${viewport.name}: Crew Member Route reused generic content`);
+    check(await page.getByText('Route publishing', { exact: false }).count() === 1, `${viewport.name}: Crew Member authority boundary is missing`);
+
     if (viewport.name === 'desktop') {
       check(await page.locator('.desktop-rail').isVisible(), 'desktop: rail hidden');
       check(!(await page.locator('.mobile-nav').isVisible()), 'desktop: mobile navigation visible');
@@ -140,6 +181,9 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#owner/attention/proof`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review delivered proof' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-customer-journey-desktop-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#crew/attention/recovery`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Review route options' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-field-journey-desktop-v2.png'), fullPage: true });
     }
     if (capture && viewport.name === 'mobile') {
       await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/work`, { waitUntil: 'load' });
@@ -149,6 +193,9 @@ try {
       await page.goto(`${pathToFileURL(prototypePath).href}#property-manager/attention/approvals`, { waitUntil: 'load' });
       await page.getByRole('button', { name: 'Review recommendation' }).click();
       await page.screenshot({ path: resolve(captureRoot, 'minimalist-customer-journey-mobile-v2.png'), fullPage: true });
+      await page.goto(`${pathToFileURL(prototypePath).href}#crew-member/attention/saved`, { waitUntil: 'load' });
+      await page.getByRole('button', { name: 'Choose recovery' }).click();
+      await page.screenshot({ path: resolve(captureRoot, 'minimalist-field-journey-mobile-v2.png'), fullPage: true });
     }
     await page.close();
   }

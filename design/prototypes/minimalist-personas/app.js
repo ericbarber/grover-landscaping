@@ -160,7 +160,7 @@ const personas = {
   },
 };
 
-const customerViews = {
+const personaViews = {
   owner: {
     visits: {
       attention: { label: 'Next and recent', title: 'Two visits tell the whole story', status: 'One upcoming', copy: 'The next confirmed visit stays first; completed care stays available without a calendar dashboard.', facts: ['Sep 8 · Confirmed', 'Aug 25 · Complete', 'Aug 11 · Complete'], action: 'Open September 8 visit', steps: ['Review the confirmed arrival window.', 'Confirm planned care and preparation.', 'Continue to delivered proof when ready.'], queueTitle: 'Visits in useful order', queue: [['September 8', 'Confirmed · 8:00–10:00 AM'], ['August 25', 'Complete · Proof delivered']], nextView: 'proof', nextLabel: 'Continue to proof' },
@@ -190,11 +190,37 @@ const customerViews = {
       empty: { label: 'Decision queue', title: 'No questions or approvals exist', status: 'No decisions', copy: 'An empty decision queue does not imply missing property or service access.', facts: ['No recommendations waiting', 'No unanswered questions', 'Portfolio remains current'], action: 'Return to overview', steps: ['Open portfolio readiness.', 'Review any service exceptions.', 'Return when a decision is published.'], queueTitle: 'Portfolio state', queue: [['Overview', '12 properties current']], nextView: 'overview', nextLabel: 'Open overview' },
     },
   },
+  crew: {
+    jobs: {
+      attention: { label: 'Assigned jobs', title: 'Four stops, one route decision', status: 'Current plan', copy: 'The crew sees ordered work while the active stop and office request remain unmistakable.', facts: ['Oak Street · Current', 'Juniper Lane · Up next', 'Cactus Way · Office request'], action: 'Open Oak Street job', steps: ['Confirm the exact property and planned scope.', 'Review crew-safe access and safety notes.', 'Continue into field evidence or route recovery.'], queueTitle: 'Ordered for this crew', queue: [['1 · Oak Street', 'Current · 55 minutes'], ['2 · Juniper Lane', 'Ready · 45 minutes'], ['3 · Cactus Way', 'Change requested']], nextView: 'recovery', nextLabel: 'Review route request' },
+      ready: { label: 'Assigned jobs', title: 'Three stops complete, one remains', status: 'On track', copy: 'Completed work is compact while the next assigned stop stays first.', facts: ['3 of 4 complete', 'Cactus Way · Next', 'All saved work synced'], action: 'Open Cactus Way job', steps: ['Confirm the next property.', 'Review its assigned scope.', 'Continue to the stop when the crew is ready.'], queueTitle: 'Current order', queue: [['4 · Cactus Way', 'Ready · 35 minutes'], ['Completed', '3 stops']] },
+      empty: { label: 'Assigned jobs', title: 'No jobs are published today', status: 'Clear day', copy: 'The crew receives no placeholder stops or execution controls.', facts: ['No assigned jobs', 'No published route', 'No device-held changes'], action: 'Return to route', steps: ['Open the route view.', 'Confirm the selected service date.', 'Contact the office only if work was expected.'], queueTitle: 'Available now', queue: [['Route', 'No published work']], nextView: 'route', nextLabel: 'Open route' },
+    },
+    recovery: {
+      attention: { label: 'Route request', title: 'Cactus Way access changed', status: 'Office review', copy: 'The published stop remains unchanged until the Crew Lead sends a request and the office responds.', facts: ['Stop 3 of 4', 'Gate access unavailable', 'No silent route mutation'], action: 'Review route options', steps: ['Confirm the affected stop and access change.', 'Choose a request without rewriting the plan.', 'Send the request for office review.'], queueTitle: 'Recovery beside the route', queue: [['Cactus Way', 'Access change · Needs response'], ['Device queue', 'No unsynced progress']], optionsLabel: 'Crew Lead request', options: ['Request a skip for office review', 'Keep the stop and ask an access question', 'Wait and decide after the current stop'], confirmLabel: 'Preview route request', nextView: 'route', nextLabel: 'Return to route' },
+      ready: { label: 'Field recovery', title: 'No route issue needs attention', status: 'Clear', copy: 'Resolved requests and synchronized field work stay available as concise history.', facts: ['0 open route requests', '0 progress conflicts', 'Last sync 2 minutes ago'], action: 'Review recovery history', steps: ['Open the latest resolved request.', 'Review its published-plan outcome.', 'Return to the active route.'], queueTitle: 'Recent outcomes', queue: [['Palm Avenue', 'Request resolved · Kept stop']] },
+      empty: { label: 'Field recovery', title: 'Nothing is saved on this device', status: 'Clear', copy: 'No recovery controls appear when there is no queued work, conflict, or route request.', facts: ['0 queued changes', '0 conflicts', 'No active route'], action: 'Return to route', steps: ['Open the route view.', 'Confirm no work is assigned.', 'Return when a plan is published.'], queueTitle: 'Available now', queue: [['Route', 'No published work']], nextView: 'route', nextLabel: 'Open route' },
+    },
+  },
+  'crew-member': {
+    route: {
+      attention: { label: 'Crew route · Read only', title: 'You are at stop 1 of 4', status: 'Current stop', copy: 'The route provides location and sequence context without exposing publish or reassignment controls.', facts: ['Oak Street · Current', 'Juniper Lane · Up next', 'Crew Lead coordinates changes'], action: 'Review current stop', steps: ['Confirm the crew’s current property.', 'Review the next stop for context.', 'Return to your assigned task.'], queueTitle: 'Context, not authority', queue: [['Current', 'Oak Street · Stop 1'], ['Up next', 'Juniper Lane · Stop 2']], nextView: 'work', nextLabel: 'Return to my work' },
+      ready: { label: 'Crew route · Read only', title: 'The crew is on stop 3 of 4', status: 'On track', copy: 'Sequence and progress remain visible while coordination stays with the Crew Lead.', facts: ['Palm Avenue · Current', 'Cactus Way · Final stop', 'No route action available'], action: 'Return to my work', steps: ['Review the current crew stop.', 'Confirm your active assignment.', 'Return to the task view.'], queueTitle: 'Crew position', queue: [['Current', 'Palm Avenue · Stop 3'], ['Final', 'Cactus Way · Stop 4']], nextView: 'work', nextLabel: 'Open my work' },
+      empty: { label: 'Crew route · Read only', title: 'No route is assigned today', status: 'Clear day', copy: 'No customer or route detail loads when this crew has no published plan.', facts: ['No stops loaded', 'No assignment controls', 'Crew Lead contact available'], action: 'Return to my work', steps: ['Confirm the selected date.', 'Review personal assignment state.', 'Ask the Crew Lead only if work was expected.'], queueTitle: 'Available now', queue: [['My work', 'No assigned task']], nextView: 'work', nextLabel: 'Open my work' },
+    },
+    saved: {
+      attention: { label: 'Saved on this device', title: 'One photo is waiting to upload', status: 'Needs signal', copy: 'The photo remains attached to the exact task and is never described as persisted before server confirmation.', facts: ['Oak Street · Front hedges', 'Saved at 9:18 AM', 'Original remains on this device'], action: 'Choose recovery', steps: ['Confirm the task and saved evidence.', 'Choose retry or Crew Lead handoff.', 'Keep the original until confirmation.'], queueTitle: 'Only your saved work', queue: [['Photo upload', 'Oak Street · Waiting'], ['Progress', 'All other changes synced']], optionsLabel: 'Recovery choice', options: ['Retry when a connection is available', 'Keep safely on device and tell the Crew Lead'], confirmLabel: 'Preview recovery', nextView: 'work', nextLabel: 'Return to my work' },
+      ready: { label: 'Personal recovery', title: 'All your changes are synced', status: 'Synced', copy: 'Confirmed work stays out of the recovery queue.', facts: ['0 waiting uploads', '0 progress conflicts', 'Last sync 2 minutes ago'], action: 'Return to my work', steps: ['Confirm the empty recovery queue.', 'Open the active assignment.', 'Continue the current task.'], queueTitle: 'Device state', queue: [['Changes', 'All confirmed']], nextView: 'work', nextLabel: 'Open my work' },
+      empty: { label: 'Personal recovery', title: 'Nothing is saved on this device', status: 'Clear', copy: 'There is no personal queued work to retry or hand off.', facts: ['0 queued changes', '0 conflicts', 'No assigned task'], action: 'Return to my work', steps: ['Confirm no saved work exists.', 'Open personal assignments.', 'Return when work is assigned.'], queueTitle: 'Available now', queue: [['My work', 'No assigned task']], nextView: 'work', nextLabel: 'Open my work' },
+    },
+  },
 };
 
-const customerConnections = {
-  owner: { today: { attention: { nextView: 'visits', nextLabel: 'Continue to visits', optionsLabel: 'Preparation check', options: ['Side gate will be unlocked', 'Pets will be inside'], confirmLabel: 'Confirm preparation' } } },
+const personaConnections = {
+  owner: { today: { attention: { nextView: 'visits', nextLabel: 'Continue to visits', optionType: 'checkbox', optionsLabel: 'Preparation check', options: ['Side gate will be unlocked', 'Pets will be inside'], confirmLabel: 'Confirm preparation' } } },
   'property-manager': { overview: { attention: { nextView: 'properties', nextLabel: 'Open Mesa Court', optionsLabel: 'Access response', options: ['Use the on-site office call box', 'Hold until access is confirmed', 'Ask a visit-specific question'], confirmLabel: 'Preview response' } } },
+  crew: { route: { attention: { nextView: 'jobs', nextLabel: 'Continue to jobs', optionType: 'checkbox', optionsLabel: 'Field readiness check', options: ['Property and scope confirmed', 'Access and safety notes reviewed'], confirmLabel: 'Confirm crew ready' } } },
+  'crew-member': { work: { attention: { nextView: 'saved', nextLabel: 'Continue to saved work', optionType: 'checkbox', optionsLabel: 'Task readiness check', options: ['Assignment confirmed', 'Task instruction reviewed'], confirmLabel: 'Start task in prototype' } } },
 };
 
 const icons = { today: '⌂', visits: '▤', proof: '✓', overview: '⌂', properties: '▦', approvals: '✓', route: '⌁', jobs: '▤', recovery: '↻', work: '✓', saved: '↻', home: '⌂', operations: '▦', customers: '◇', team: '◎', schedule: '▦', plan: '▦', crews: '◎', changes: '↻', readiness: '✓', accounts: '◇', handoffs: '↗', incidents: '!', activity: '▤', access: '◇' };
@@ -223,7 +249,7 @@ function render(announce = true) {
   state.view = availableView.id;
   const scenario = scenarioFor(persona);
   const isPrimaryView = state.view === persona.nav[0].id;
-  const designedView = customerViews[state.persona]?.[state.view]?.[state.scenario];
+  const designedView = personaViews[state.persona]?.[state.view]?.[state.scenario];
   const baseFocus = isPrimaryView ? scenario : designedView ?? {
     label: availableView.label,
     title: availableView.title,
@@ -234,7 +260,7 @@ function render(announce = true) {
     steps: [`Review the ${availableView.label.toLowerCase()} context.`, 'Open one exact record.', 'Return to the priority view when finished.'],
     queue: scenario.queue,
   };
-  const focus = { ...baseFocus, ...(customerConnections[state.persona]?.[state.view]?.[state.scenario] ?? {}) };
+  const focus = { ...baseFocus, ...(personaConnections[state.persona]?.[state.view]?.[state.scenario] ?? {}) };
 
   document.body.dataset.persona = state.persona;
   document.body.dataset.family = persona.family;
@@ -295,7 +321,7 @@ function openDetail(trigger, task) {
   const completeButton = document.querySelector('#complete-action');
   if (task.options?.length) {
     document.querySelector('#detail-options-label').textContent = task.optionsLabel ?? 'Choose a response';
-    const type = task.optionsLabel === 'Preparation check' ? 'checkbox' : 'radio';
+    const type = task.optionType ?? 'radio';
     optionList.innerHTML = task.options.map((option, index) => `<label><input type="${type}" name="detail-response" value="${index}"><span>${option}</span></label>`).join('');
     options.hidden = false;
     completeButton.disabled = true;

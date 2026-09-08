@@ -85,6 +85,9 @@ boundary; inclusion here alone does not mean a feature shipped.
   Visits, and delivered Proof plus Property Manager portfolio exceptions,
   Properties, delivered Proof, and exact-version Approvals with required
   illustrative choices and explicit non-persistence
+- Connected minimalist field journeys linking Crew Lead Route, ordered Jobs,
+  and office-reviewed Recovery while limiting Crew Member to assigned Work,
+  read-only Route context, and personal device-held recovery
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

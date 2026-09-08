@@ -1,5 +1,11 @@
 # Version History
 
+- 2026-09-08: Connected the minimalist field prototype without collapsing Crew
+  Lead and Crew Member authority. Crew Lead route readiness continues through
+  ordered Jobs to office-reviewed route recovery; Crew Member assigned work
+  continues through read-only route context to personal device-held recovery.
+  Readiness-gated start, route-request choices, queued-evidence preservation,
+  responsive action clearance, and exact destination content are validated.
 - 2026-09-08: Deepened the minimalist customer prototype into connected
   destination journeys. Yard Owner preparation now continues through Visits to
   delivered Proof; Property Manager portfolio attention continues through the

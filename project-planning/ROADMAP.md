@@ -63,8 +63,13 @@ The first depth slice now connects the customer family: Yard Owner preparation,
 Visits, and delivered Proof form one short journey, while Property Manager
 portfolio exceptions continue through exact Properties and Proof to version-
 bound Approvals. Required prototype choices, disabled incomplete confirmation,
-and next-destination continuity are validated; the field family is the next
-prototype depth slice.
+and next-destination continuity are validated; the field family follows as the
+second depth slice.
+The subsequent field depth slice connects Crew Lead Route readiness, ordered
+Jobs, and office-reviewed Recovery while connecting Crew Member assigned Work,
+read-only Route context, and personal device-held recovery. Readiness checks,
+no-silent-plan-change language, queued-evidence preservation, and authority
+separation are validated; operations is the next prototype depth slice.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate
 role scopes collapse, and all product capabilities are default off. G1 access

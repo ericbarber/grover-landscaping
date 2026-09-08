@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | The task-first prototype covers all ten personas and now connects the complete Yard Owner and Property Manager destination journeys | Deepen the Crew Lead and Crew Member field journeys while customer task-comprehension review proceeds |
+| Design | Customer and field families now have connected task-first journeys with explicit customer and crew authority boundaries | Deepen Company Owner, Company Manager, and Dispatcher operations journeys while human review proceeds |
 
 ## Status Legend
 
@@ -101,6 +101,12 @@ Current state:
   decision choices disable illustrative confirmation until a response exists;
   completion links to the next useful destination and repeats the non-
   persistence boundary.
+- The field refinement slice replaces generic secondary content with exact Crew
+  Lead Jobs/Recovery and Crew Member read-only Route/personal Saved-work
+  compositions. Crew readiness blocks illustrative start until the assignment,
+  access, and safety context is checked. Route requests preserve the published
+  plan for office review; Crew Member recovery preserves device-held evidence
+  without adding coordination authority.
 
 Next design slices:
 
@@ -136,11 +142,11 @@ Next design slices:
    place, service, and delivered-care moments. Authenticated task destinations,
    operational headings, loading/failure states, decisions, queues, and monetary
    values now explicitly use the interface family.
-7. Minimalist persona experiences: baseline delivered as validated design
-   direction. The Yard Owner and Property Manager families now have connected,
-   destination-specific customer journeys across all three scenarios. Next,
-   deepen Crew Lead and Crew Member Route/Jobs/recovery interactions without
-   widening field authority. Production adoption has not started.
+7. Minimalist persona experiences: baseline plus connected customer and field
+   families are delivered as validated design direction across all three
+   scenarios. Next, deepen Company Owner, Company Manager, and Dispatcher
+   operations destinations without collapsing their distinct authority.
+   Production adoption has not started.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.
@@ -1048,11 +1054,11 @@ Current state:
 
 Next design work:
 
-- Conduct customer task-comprehension review against the connected minimalist
-  Yard Owner and Property Manager journeys while the next prototype slice
-  deepens Crew Lead/Crew Member field execution and personal recovery. Adopt
-  only approved family patterns into React and keep capability rollout as the
-  separate authorization contract.
+- Conduct customer and field task-comprehension review against the connected
+  minimalist journeys while the next prototype slice deepens Company Owner,
+  Company Manager, and Dispatcher operations. Adopt only approved family
+  patterns into React and keep capability rollout as the separate authorization
+  contract.
 - Adopt the Yard Owner proposal interfaces, separate proposal conversation, and
   explicit activation boundary before widening the provider-discovery surface.
 - Continue production visual convergence through the authenticated application

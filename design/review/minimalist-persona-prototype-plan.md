@@ -80,6 +80,16 @@ use. Crew Lead coordinates the route; Crew Member acts only on assigned work.
 Exit: both roles can identify the next task in one glance, while authority
 differences remain visible without explanatory clutter.
 
+Delivered detail:
+
+- Crew Lead: current Route readiness → ordered Jobs → route-request Recovery
+  that never silently changes the published plan.
+- Crew Member: current assigned Work → read-only crew Route → personal Saved
+  work with retry or Crew Lead handoff.
+- Readiness checks block illustrative start actions until field context is
+  confirmed; recovery choices preserve the original device-held evidence.
+- Phone validation keeps the final recovery actions above fixed navigation.
+
 ### M3 — Provider operations
 
 Deliver distinct Company Owner, Company Manager, and Dispatcher views. Owner
@@ -114,7 +124,7 @@ references.
 | --- | --- | --- |
 | M0 — Shared minimalist shell | Validated | Human shell and content-density review |
 | M1 — Customer confidence | Connected destination prototype validated | Yard Owner and Property Manager task-comprehension review |
-| M2 — Field focus | Validated | Crew Lead/Crew Member outdoor and physical-device review |
+| M2 — Field focus | Connected destination prototype validated | Crew Lead/Crew Member outdoor and physical-device review |
 | M3 — Provider operations | Validated | Owner/Manager/Dispatcher workflow review; Dispatcher role remains product-gated |
 | M4 — Administrative focus | Validated | Billing/Support workflow review; Billing role remains product-gated |
 | M5 — States and convergence | Automated browser evidence complete | Moderated users, physical devices, and assistive-technology sessions |

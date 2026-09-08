@@ -1,5 +1,19 @@
 [
   {
+    "id": "minimalist-field-journey-desktop-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#crew/attention/recovery",
+    "preview": "current/minimalist-field-journey-desktop-v2.png"
+  },
+  {
+    "id": "minimalist-field-journey-mobile-v2",
+    "area": "current",
+    "status": "validated-design-direction",
+    "source": "../prototypes/minimalist-personas/index.html#crew-member/attention/saved",
+    "preview": "current/minimalist-field-journey-mobile-v2.png"
+  },
+  {
     "id": "minimalist-customer-journey-desktop-v2",
     "area": "current",
     "status": "validated-design-direction",

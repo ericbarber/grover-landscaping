@@ -20,6 +20,12 @@ delivered evidence, and a version-bound decision. Contextual choices must be
 made before illustrative confirmation, and every completion can continue to
 the next useful destination without implying a production write.
 
+The field family is connected separately. Crew Lead moves from current-stop
+readiness through ordered Jobs to a route request that leaves the published
+plan unchanged until office review. Crew Member moves from personal task
+readiness to a read-only crew Route and personal device-held recovery without
+receiving publish, reassignment, or crew coordination controls.
+
 The experience follows the
 [minimalist persona plan](../../review/minimalist-persona-prototype-plan.md).
 
