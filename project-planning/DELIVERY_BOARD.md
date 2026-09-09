@@ -16,7 +16,7 @@ for account access or live-service evidence.
 | Lane | State | Current outcome | Next gate |
 | --- | --- | --- | --- |
 | Repository | Repository-owned rollout UX complete | All audited continuity slices are adopted | R2 hosted cohort evidence or Dispatcher/Billing role decision |
-| Design review | SX3 contextual service-thread paths delivered | Five core perspectives plus seven exception/recovery paths preserve one lifecycle and fail-closed access | SX4 comparative participant sessions |
+| Design review | SX4 comparison package ready | Matched, counterbalanced tasks and adoption gates cover five core perspectives plus contextual exceptions | Conduct participant sessions and synthesize evidence |
 | Private review | Available | Tailscale review serves the React app and PostgreSQL-backed API in explicit `local_review` mode | Keep it healthy for remote product validation |
 | Protected hosting | External prerequisite | Render readiness returns `404`; no protected deployment is available | Owning-account access, deployed Render Blueprint, Cognito state, and test identity/token |
 | Product expansion | Decision required | Core workflows plus exact activity-to-Recovery exception handoff are delivered | Decide P2 support ownership, response, retention, privacy, and escalation boundaries |
@@ -438,8 +438,9 @@ Following design phase: UX12.
 
 ### UX12 — Simplified post-MVP product experience
 
-State: SX0 experience reset plus SX1 core, SX2 owner/portfolio, and SX3
-contextual exception prototypes delivered; SX4 participant evidence next.
+State: SX0 experience reset plus SX1 core, SX2 owner/portfolio, SX3 contextual
+exceptions, and the SX4 comparison package delivered; participant evidence
+next.
 
 Deliver:
 
@@ -462,8 +463,9 @@ Exit evidence:
 
 Next design phase:
 
-- SX4 moderated current-product versus service-thread task sessions and
-  evidence-led information-architecture refinement.
+- Conduct the prepared SX4 current-product versus service-thread sessions,
+  synthesize anonymous evidence, and revise the information architecture before
+  production adoption planning.
 
 ## Later, not active
 

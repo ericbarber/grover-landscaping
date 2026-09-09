@@ -1,5 +1,10 @@
 # Version History
 
+- 2026-09-09: Prepared the SX4 current-product versus service-thread study.
+  Five core and four exception tasks now have matched outcome prompts,
+  counterbalanced sequence, observable completion/context/authority fields,
+  critical stop rules, bounded adoption gates, an anonymous session template,
+  and an explicit prohibition on treating the package as participant evidence.
 - 2026-09-09: Added seven contextual paths to the simplified service-thread
   design: plan conflict, field connectivity loss, proof correction, minimized
   owned Support, product-gated completion readiness, ended access, and

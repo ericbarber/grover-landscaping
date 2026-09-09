@@ -87,7 +87,9 @@ Manager, and Crew Lead across decision, release, field work/recovery, and proof.
 Seven contextual paths now exercise plan conflict, device-held offline work,
 proof correction, minimized Support, product-gated completion readiness, ended
 access, and inconsistent authorization without creating new feature silos.
-Comparative participant sessions are next; Dispatcher and Crew Member remain
+The SX4 study package now specifies matched, counterbalanced current/new tasks,
+observation fields, safety/privacy stop rules, and adoption gates. Comparative
+participant sessions and synthesis are next; Dispatcher and Crew Member remain
 available for later specialization rather than defining the core thread.
 The first control-plane slices are now delivered in `GET /me/access`: versioned
 persona/scope projections come only from active server-side access, duplicate

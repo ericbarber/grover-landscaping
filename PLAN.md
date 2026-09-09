@@ -15,7 +15,7 @@ infer execution order from section position.
 | Private review | Tailscale React/PostgreSQL review is available in explicit local-review mode | Preserve for remote validation |
 | Protected hosting | No healthy Render/Cognito deployment is available from the current environment | R1 preflight, then external R2 provisioning and R3 smoke |
 | Product | Core workflows plus activity-to-Recovery exception handoff are delivered | P2 Yard Owner concern/preference boundary requires a product decision |
-| Design | SX3 validates the five-role service thread plus seven contextual exception/recovery paths | Run comparative workflow sessions before production adoption planning |
+| Design | SX4 comparative study package is ready against the validated five-role service thread and seven contextual paths | Conduct counterbalanced participant sessions before production adoption planning |
 
 ## Status Legend
 
@@ -152,6 +152,10 @@ Current state:
   paths. Operational exceptions retain the exact service context; Support and
   readiness return to its accountable manager moment; access failures keep
   protected service and property data out of the document.
+- The [SX4 comparative study](design/review/simplified-product-experience-comparative-study.md)
+  is ready with matched current/new tasks, counterbalanced sequence, exact
+  observation fields, severity/stop rules, adoption gates, and a session-note
+  template. Participant evidence has not yet been collected.
 
 Next design slices:
 
@@ -197,8 +201,9 @@ Next design slices:
    Owner, Property Manager, Company Owner, Company Manager, and Crew Lead
    without feature-silo context changes or duplicate lifecycles. SX3 validates
    seven contextual exception, recovery, Support, and product-gated readiness
-   paths without widening authority. SX4 comparative sessions are next;
-   research materials remain usable, but no participant evidence is inferred.
+   paths without widening authority. The SX4 comparative study package is
+   delivered and participant sessions are next; research materials remain
+   usable, but no participant evidence is inferred.
 
 Concern handling, provider contact, preferences, external reviews, marketplace,
 and billing remain behind their existing product or external gates.

@@ -248,6 +248,8 @@ renderer or a design-tool account to see a proposed screen.
    role-filtered service thread. Review the clean-slate
    [service-thread prototype](prototypes/simplified-service-thread/index.html),
    then use the
+   [SX4 comparative study](review/simplified-product-experience-comparative-study.md)
+   for matched current/new tasks and the
    [WF1 session guide](review/minimal-product-workflow-session-guide.md) to run
    consistent interviews and FigJam workshops; its earlier MVP framing is
    superseded.

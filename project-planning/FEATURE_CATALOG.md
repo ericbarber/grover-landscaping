@@ -106,6 +106,10 @@ boundary; inclusion here alone does not mean a feature shipped.
   product-gated completion readiness, ended access, and inconsistent property
   authorization; access failures keep protected records absent and Support or
   readiness returns to the accountable service moment
+- Executable SX4 comparative study package with equivalent current/new task
+  facts, counterbalanced order, core and exception outcome prompts, observable
+  context-change and authority measures, critical stop rules, decision gates,
+  and an anonymous session-note template; participant evidence remains pending
 - Shared authenticated Home with signed-in identity, persona context, source-
   appropriate work/sync summary, persona-specific quick actions, and a direct
   action from the current priority notice

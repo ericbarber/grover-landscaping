@@ -358,7 +358,8 @@ Delivered evidence:
 
 ### SX4 — Evidence-led refinement
 
-State: next; requires moderated participant sessions.
+State: comparison package delivered; moderated participant sessions and
+synthesis pending.
 
 - Run current-product and new-design task sessions with the same outcome
   prompts.
@@ -368,6 +369,15 @@ State: next; requires moderated participant sessions.
 
 Exit: observed evidence supports the simpler workflow and documents remaining
 tradeoffs.
+
+Prepared evidence:
+
+- The [comparative study](simplified-product-experience-comparative-study.md)
+  defines equivalent current-product and service-thread conditions,
+  counterbalanced sequence, persona-specific outcome tasks, exception tasks,
+  observation fields, critical stop rules, and production-adoption gates.
+- No participant outcome, comprehension, time, confidence, or preference result
+  is claimed by the prepared package.
 
 ### SX5 — Visual system and production adoption
 

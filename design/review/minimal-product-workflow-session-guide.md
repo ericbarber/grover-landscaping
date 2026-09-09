@@ -10,6 +10,9 @@ Last updated: 2026-09-08
 > [Simplified Product Experience Plan](simplified-product-experience-plan.md).
 > Use this guide's neutral questions, evidence protocol, and facilitation
 > structure for the post-MVP redesign rather than an MVP scope exercise.
+> Use the prepared
+> [SX4 comparative study](simplified-product-experience-comparative-study.md)
+> when comparing the current product with the service-thread design.
 
 ## Purpose
 
